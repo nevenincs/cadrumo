@@ -66,6 +66,7 @@ semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"
+export_refs = ["modelo-390-page-02b-casilla-recargo-tipo-1.cuota"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
@@ -83,6 +84,7 @@ semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
+export_refs = ["modelo-390-page-02b-casilla-recargo-tipo-0-62.cuota"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
@@ -118,5 +120,6 @@ semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"
+export_refs = ["modelo-390-page-02b-casilla-recargo-tipo-0-26.cuota"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]

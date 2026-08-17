@@ -1,0 +1,724 @@
+# Modelo 151 (2025-y-siguientes) -- casillas of design record M15105000.
+#
+# Authored from the bundled AEAT diseno de registro aeat-dr-151-2023
+# (sha256 7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9).
+# `number` carries AEAT's OWN printed box reference where the design prints
+# one, and the campo's inclusive position range where it does not: this
+# edition brackets a box number on nearly every data row, and that printed
+# number is a better identifier than a byte range because it survives the
+# renumbering a later edition applies to positions.
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.tipo-de-renta-01"
+number = "13-14"
+segmento = "M15105000"
+section = ["p05", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f006"]
+
+# AEAT campo: Ingresos íntegros [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.ingresos-integros-02"
+number = "15-31"
+segmento = "M15105000"
+section = ["p05", "ingresos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f007"]
+
+# AEAT campo: Gastos de personal [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-personal-03"
+number = "32-48"
+segmento = "M15105000"
+section = ["p05", "gastos-de-personal"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f008"]
+
+# AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suministro-04"
+number = "49-65"
+segmento = "M15105000"
+section = ["p05", "gastos-de-aprovisionamiento-de-materiales-y-de-suministros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f009"]
+
+# AEAT campo: Rendimiento neto: positivo [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-positivo-05"
+number = "66-82"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-positivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f010"]
+
+# AEAT campo: Rendimiento neto: negativo [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-negativo-07"
+number = "83-99"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-negativo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f011"]
+
+# AEAT campo: Rentención o ingreso a cuenta [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rentencion-o-ingreso-a-cuenta-06"
+number = "100-116"
+segmento = "M15105000"
+section = ["p05", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f012"]
+
+# AEAT campo: Actividad: Código y tipo de actividad [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-codigo-y-tipo-de-actividad-10"
+number = "117-117"
+segmento = "M15105000"
+section = ["p05", "actividad-codigo-y-tipo-de-actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f013"]
+
+# AEAT campo: Actividad: Grupo o epígrafe IAE [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-grupo-o-epigrafe-iae-11"
+number = "121-124"
+segmento = "M15105000"
+section = ["p05", "actividad-grupo-o-epigrafe-iae"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f015"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-rendimiento-inte-12"
+number = "125-141"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f016"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-impuesto-satisfe-13"
+number = "142-158"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f017"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.tipo-de-renta-01-02"
+number = "159-160"
+segmento = "M15105000"
+section = ["p05", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f018"]
+
+# AEAT campo: Ingresos íntegros [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.ingresos-integros-02-02"
+number = "161-177"
+segmento = "M15105000"
+section = ["p05", "ingresos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f019"]
+
+# AEAT campo: Gastos de personal [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-personal-03-02"
+number = "178-194"
+segmento = "M15105000"
+section = ["p05", "gastos-de-personal"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f020"]
+
+# AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-02"
+number = "195-211"
+segmento = "M15105000"
+section = ["p05", "gastos-de-aprovisionamiento-de-materiales-y-de-suministros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f021"]
+
+# AEAT campo: Rendimiento neto: positivo [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-positivo-05-02"
+number = "212-228"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-positivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f022"]
+
+# AEAT campo: Rendimiento neto: negativo [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-negativo-07-02"
+number = "229-245"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-negativo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f023"]
+
+# AEAT campo: Rentención o ingreso a cuenta [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rentencion-o-ingreso-a-cuenta-06-02"
+number = "246-262"
+segmento = "M15105000"
+section = ["p05", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f024"]
+
+# AEAT campo: Actividad: Código y tipo de actividad [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-codigo-y-tipo-de-actividad-10-02"
+number = "263-263"
+segmento = "M15105000"
+section = ["p05", "actividad-codigo-y-tipo-de-actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f025"]
+
+# AEAT campo: Actividad: Grupo o epígrafe IAE [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-grupo-o-epigrafe-iae-11-02"
+number = "267-270"
+segmento = "M15105000"
+section = ["p05", "actividad-grupo-o-epigrafe-iae"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f027"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-rendimiento-i-12-02"
+number = "271-287"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f028"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-02"
+number = "288-304"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f029"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.tipo-de-renta-01-03"
+number = "305-306"
+segmento = "M15105000"
+section = ["p05", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f030"]
+
+# AEAT campo: Ingresos íntegros [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.ingresos-integros-02-03"
+number = "307-323"
+segmento = "M15105000"
+section = ["p05", "ingresos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f031"]
+
+# AEAT campo: Gastos de personal [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-personal-03-03"
+number = "324-340"
+segmento = "M15105000"
+section = ["p05", "gastos-de-personal"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f032"]
+
+# AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-03"
+number = "341-357"
+segmento = "M15105000"
+section = ["p05", "gastos-de-aprovisionamiento-de-materiales-y-de-suministros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f033"]
+
+# AEAT campo: Rendimiento neto: positivo [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-positivo-05-03"
+number = "358-374"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-positivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f034"]
+
+# AEAT campo: Rendimiento neto: negativo [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-negativo-07-03"
+number = "375-391"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-negativo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f035"]
+
+# AEAT campo: Rentención o ingreso a cuenta [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rentencion-o-ingreso-a-cuenta-06-03"
+number = "392-408"
+segmento = "M15105000"
+section = ["p05", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f036"]
+
+# AEAT campo: Actividad: Código y tipo de actividad [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-codigo-y-tipo-de-actividad-10-03"
+number = "409-409"
+segmento = "M15105000"
+section = ["p05", "actividad-codigo-y-tipo-de-actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f037"]
+
+# AEAT campo: Actividad: Grupo o epígrafe IAE [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-grupo-o-epigrafe-iae-11-03"
+number = "413-416"
+segmento = "M15105000"
+section = ["p05", "actividad-grupo-o-epigrafe-iae"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f039"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-rendimiento-i-12-03"
+number = "417-433"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f040"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-03"
+number = "434-450"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f041"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.tipo-de-renta-01-04"
+number = "451-452"
+segmento = "M15105000"
+section = ["p05", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f042"]
+
+# AEAT campo: Ingresos íntegros [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.ingresos-integros-02-04"
+number = "453-469"
+segmento = "M15105000"
+section = ["p05", "ingresos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f043"]
+
+# AEAT campo: Gastos de personal [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-personal-03-04"
+number = "470-486"
+segmento = "M15105000"
+section = ["p05", "gastos-de-personal"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f044"]
+
+# AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-04"
+number = "487-503"
+segmento = "M15105000"
+section = ["p05", "gastos-de-aprovisionamiento-de-materiales-y-de-suministros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f045"]
+
+# AEAT campo: Rendimiento neto: positivo [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-positivo-05-04"
+number = "504-520"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-positivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f046"]
+
+# AEAT campo: Rendimiento neto: negativo [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-negativo-07-04"
+number = "521-537"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-negativo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f047"]
+
+# AEAT campo: Rentención o ingreso a cuenta [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rentencion-o-ingreso-a-cuenta-06-04"
+number = "538-554"
+segmento = "M15105000"
+section = ["p05", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f048"]
+
+# AEAT campo: Actividad: Código y tipo de actividad [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-codigo-y-tipo-de-actividad-10-04"
+number = "555-555"
+segmento = "M15105000"
+section = ["p05", "actividad-codigo-y-tipo-de-actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f049"]
+
+# AEAT campo: Actividad: Grupo o epígrafe IAE [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-grupo-o-epigrafe-iae-11-04"
+number = "559-562"
+segmento = "M15105000"
+section = ["p05", "actividad-grupo-o-epigrafe-iae"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f051"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-rendimiento-i-12-04"
+number = "563-579"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f052"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-04"
+number = "580-596"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f053"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.tipo-de-renta-01-05"
+number = "597-598"
+segmento = "M15105000"
+section = ["p05", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f054"]
+
+# AEAT campo: Ingresos íntegros [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.ingresos-integros-02-05"
+number = "599-615"
+segmento = "M15105000"
+section = ["p05", "ingresos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f055"]
+
+# AEAT campo: Gastos de personal [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-personal-03-05"
+number = "616-632"
+segmento = "M15105000"
+section = ["p05", "gastos-de-personal"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f056"]
+
+# AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-05"
+number = "633-649"
+segmento = "M15105000"
+section = ["p05", "gastos-de-aprovisionamiento-de-materiales-y-de-suministros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f057"]
+
+# AEAT campo: Rendimiento neto: positivo [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-positivo-05-05"
+number = "650-666"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-positivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f058"]
+
+# AEAT campo: Rendimiento neto: negativo [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rendimiento-neto-negativo-07-05"
+number = "667-683"
+segmento = "M15105000"
+section = ["p05", "rendimiento-neto-negativo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f059"]
+
+# AEAT campo: Rentención o ingreso a cuenta [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.rentencion-o-ingreso-a-cuenta-06-05"
+number = "684-700"
+segmento = "M15105000"
+section = ["p05", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f060"]
+
+# AEAT campo: Actividad: Código y tipo de actividad [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-codigo-y-tipo-de-actividad-10-05"
+number = "701-701"
+segmento = "M15105000"
+section = ["p05", "actividad-codigo-y-tipo-de-actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f061"]
+
+# AEAT campo: Actividad: Grupo o epígrafe IAE [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.actividad-grupo-o-epigrafe-iae-11-05"
+number = "705-708"
+segmento = "M15105000"
+section = ["p05", "actividad-grupo-o-epigrafe-iae"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f063"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-rendimiento-i-12-05"
+number = "709-725"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f064"]
+
+# AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-05"
+number = "726-742"
+segmento = "M15105000"
+section = ["p05", "datos-adicionales-actividad-emprendedora-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina05.f065"]

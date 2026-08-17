@@ -71,7 +71,7 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 _EJERCICIO = 2026
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _INPUT_CUOTA = Decimal("10.50")
-_REVISION = "2009-y-siguientes"
+_REVISION = "2009-2022"
 
 
 def _raw(provider_id: str) -> RawTransaction:

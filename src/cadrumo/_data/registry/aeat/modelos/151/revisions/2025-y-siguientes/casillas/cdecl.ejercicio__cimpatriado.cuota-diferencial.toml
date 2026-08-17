@@ -47,6 +47,7 @@ input_kind = "bound"
 binding = "modelo-151-impatriado-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f040"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.base-liquidable-ahorro"
@@ -58,6 +59,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f041"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-integra-general"
@@ -71,6 +73,7 @@ input_kind = "computed"
 formula = "modelo-151-cuota-integra-general"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f042"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-integra-ahorro"
@@ -83,6 +86,7 @@ input_kind = "computed"
 formula = "modelo-151-cuota-integra-ahorro"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f043"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.retenciones"
@@ -95,6 +99,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f056"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-diferencial"
@@ -107,3 +112,4 @@ input_kind = "computed"
 formula = "modelo-151-cuota-diferencial"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2023.pagina10.f066"]

@@ -1,0 +1,10 @@
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0.base"
+number = "663"
+section = ["operaciones-regimen-general", "recargo-equivalencia"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-390-page-02b-casilla-recargo-tipo-0.base"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]

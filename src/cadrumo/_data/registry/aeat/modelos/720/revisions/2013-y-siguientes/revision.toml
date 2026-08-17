@@ -90,3 +90,18 @@ source_refs = [
     "aeat-modelo-720-procedure",
     "boe-modelo-720-2013-form",
 ]
+
+[revisions."2013-y-siguientes".family_dispositions.verification_predicates]
+reason = "A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 720 calculates nothing: it declares calculation_class = \"informative\", its formulas family is already dispositioned inapplicable on the same ground, and measured on the revision itself its seven casillas declare zero formula_ids, none is input_kind computed, and there is no base and no cuota casilla. The declaration reports the existence and valuation of bienes y derechos situados en el extranjero under RD 1065/2007 arts. 42 bis, 42 ter and 54 bis; it settles no tax, so there is no computed result for an implication to constrain. The under-declaration risk this family exists to catch is real but lives elsewhere: an unreported foreign asset surfaces on the taxpayer's OWN IRPF or IS return as a ganancia patrimonial no justificada, which is where a predicate could bind a base to a cuota."
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "orden-hap-72-2013:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]

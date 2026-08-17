@@ -20,3 +20,18 @@ source_refs = [
     "boe-modelo-202-base-order",
     "boe-modelo-202-2025-amendment",
 ]
+
+[revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
+reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
+legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]
+
+[revisions."2025-y-siguientes".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."
+legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]
+
+[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "Every casilla continuidad evolution names a continuidad_id, and no continuidad chain is declared for modelo 202 -- nor for any modelo in this registry, where every casilla_continuidad_evolutions family is a disposition and not one evolution has ever been authored. An entry here could name no chain. This revision DOES have a strictly-earlier sibling and its boxes DO continue across the split, so this is a deferral with a named unblocker, not a claim that nothing evolved."
+legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]

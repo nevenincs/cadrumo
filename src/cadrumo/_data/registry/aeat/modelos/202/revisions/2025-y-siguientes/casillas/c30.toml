@@ -11,3 +11,4 @@ binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
 constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions"] }
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+export_refs = ["m202-2025.pagina02.f034"]

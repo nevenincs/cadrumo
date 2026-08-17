@@ -133,7 +133,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
         modelo="303",
         filing_year=2025,
         period=_FILING_PERIOD,
-        revision_id="2009-y-siguientes",
+        revision_id="2009-2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(_FILING_PERIOD, reference="test:ledger-modelo-staleness")
     revision_id = derive_calculation_revision_id(
@@ -242,7 +242,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureO
         modelo=ModeloCode("303"),
         filing_year=2025,
         period=_FILING_PERIOD,
-        revision_id="2009-y-siguientes",
+        revision_id="2009-2022",
         name="303-2025-1T",
         created_at=_NOW,
         updated_at=_NOW,

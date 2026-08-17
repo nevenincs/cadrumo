@@ -1,0 +1,945 @@
+# Modelo 151 (2025-y-siguientes) -- casillas of design record M15103000.
+#
+# Authored from the bundled AEAT diseno de registro aeat-dr-151-2023
+# (sha256 7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9).
+# `number` carries AEAT's OWN printed box reference where the design prints
+# one, and the campo's inclusive position range where it does not: this
+# edition brackets a box number on nearly every data row, and that printed
+# number is a better identifier than a byte range because it survives the
+# renumbering a later edition applies to positions.
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.tipo-de-renta-01"
+number = "13-14"
+segmento = "M15103000"
+section = ["p03", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f006"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.naturaleza-02"
+number = "15-15"
+segmento = "M15103000"
+section = ["p03", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f007"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.valoracion-03"
+number = "16-32"
+segmento = "M15103000"
+section = ["p03", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f008"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-04"
+number = "33-49"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f009"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-repercutidos-05"
+number = "50-66"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f010"]
+
+# AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rendimiento-integro-renta-inmobiliaria-imputada-06"
+number = "67-83"
+segmento = "M15103000"
+section = ["p03", "rendimiento-integro-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f011"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rentencion-o-ingreso-a-cuenta-07"
+number = "84-100"
+segmento = "M15103000"
+section = ["p03", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f012"]
+
+# AEAT campo: Pagador. NIF [50]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-nif-50"
+number = "101-109"
+segmento = "M15103000"
+section = ["p03", "pagador-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f013"]
+
+# AEAT campo: Pagador. F/J [51]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-f-j-51"
+number = "110-110"
+segmento = "M15103000"
+section = ["p03", "pagador-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f014"]
+
+# AEAT campo: Pagador. Apellidos y nombre o razón social [52]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-apellidos-y-nombre-o-razon-social-52"
+number = "111-190"
+segmento = "M15103000"
+section = ["p03", "pagador-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f015"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-rendimiento-integro-08"
+number = "191-207"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f016"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-09"
+number = "208-224"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f017"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-10"
+number = "225-229"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f018"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-11"
+number = "230-234"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f019"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-12"
+number = "235-235"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f020"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-13"
+number = "236-236"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f021"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-14"
+number = "237-256"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f022"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.tipo-de-renta-01-02"
+number = "257-258"
+segmento = "M15103000"
+section = ["p03", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f023"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.naturaleza-02-02"
+number = "259-259"
+segmento = "M15103000"
+section = ["p03", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f024"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.valoracion-03-02"
+number = "260-276"
+segmento = "M15103000"
+section = ["p03", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f025"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-04-02"
+number = "277-293"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f026"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-repercutidos-05-02"
+number = "294-310"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f027"]
+
+# AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rendimiento-integro-renta-inmobiliaria-imputada-06-02"
+number = "311-327"
+segmento = "M15103000"
+section = ["p03", "rendimiento-integro-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f028"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rentencion-o-ingreso-a-cuenta-07-02"
+number = "328-344"
+segmento = "M15103000"
+section = ["p03", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f029"]
+
+# AEAT campo: Pagador. NIF [50]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-nif-50-02"
+number = "345-353"
+segmento = "M15103000"
+section = ["p03", "pagador-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f030"]
+
+# AEAT campo: Pagador. F/J [51]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-f-j-51-02"
+number = "354-354"
+segmento = "M15103000"
+section = ["p03", "pagador-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f031"]
+
+# AEAT campo: Pagador. Apellidos y nombre o razón social [52]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-02"
+number = "355-434"
+segmento = "M15103000"
+section = ["p03", "pagador-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f032"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-02"
+number = "435-451"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f033"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-02"
+number = "452-468"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f034"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-02"
+number = "469-473"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f035"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-02"
+number = "474-478"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f036"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-02"
+number = "479-479"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f037"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-02"
+number = "480-480"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f038"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-02"
+number = "481-500"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f039"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.tipo-de-renta-01-03"
+number = "501-502"
+segmento = "M15103000"
+section = ["p03", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f040"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.naturaleza-02-03"
+number = "503-503"
+segmento = "M15103000"
+section = ["p03", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f041"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.valoracion-03-03"
+number = "504-520"
+segmento = "M15103000"
+section = ["p03", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f042"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-04-03"
+number = "521-537"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f043"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-repercutidos-05-03"
+number = "538-554"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f044"]
+
+# AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rendimiento-integro-renta-inmobiliaria-imputada-06-03"
+number = "555-571"
+segmento = "M15103000"
+section = ["p03", "rendimiento-integro-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f045"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rentencion-o-ingreso-a-cuenta-07-03"
+number = "572-588"
+segmento = "M15103000"
+section = ["p03", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f046"]
+
+# AEAT campo: Pagador. NIF [50]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-nif-50-03"
+number = "589-597"
+segmento = "M15103000"
+section = ["p03", "pagador-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f047"]
+
+# AEAT campo: Pagador. F/J [51]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-f-j-51-03"
+number = "598-598"
+segmento = "M15103000"
+section = ["p03", "pagador-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f048"]
+
+# AEAT campo: Pagador. Apellidos y nombre o razón social [52]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-03"
+number = "599-678"
+segmento = "M15103000"
+section = ["p03", "pagador-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f049"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-03"
+number = "679-695"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f050"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-03"
+number = "696-712"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f051"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-03"
+number = "713-717"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f052"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-03"
+number = "718-722"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f053"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-03"
+number = "723-723"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f054"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-03"
+number = "724-724"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f055"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-03"
+number = "725-744"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f056"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.tipo-de-renta-01-04"
+number = "745-746"
+segmento = "M15103000"
+section = ["p03", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f057"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.naturaleza-02-04"
+number = "747-747"
+segmento = "M15103000"
+section = ["p03", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f058"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.valoracion-03-04"
+number = "748-764"
+segmento = "M15103000"
+section = ["p03", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f059"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-04-04"
+number = "765-781"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f060"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.ingresos-a-cuenta-repercutidos-05-04"
+number = "782-798"
+segmento = "M15103000"
+section = ["p03", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f061"]
+
+# AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rendimiento-integro-renta-inmobiliaria-imputada-06-04"
+number = "799-815"
+segmento = "M15103000"
+section = ["p03", "rendimiento-integro-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f062"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.rentencion-o-ingreso-a-cuenta-07-04"
+number = "816-832"
+segmento = "M15103000"
+section = ["p03", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f063"]
+
+# AEAT campo: Pagador. NIF [50]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-nif-50-04"
+number = "833-841"
+segmento = "M15103000"
+section = ["p03", "pagador-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f064"]
+
+# AEAT campo: Pagador. F/J [51]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-f-j-51-04"
+number = "842-842"
+segmento = "M15103000"
+section = ["p03", "pagador-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f065"]
+
+# AEAT campo: Pagador. Apellidos y nombre o razón social [52]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-04"
+number = "843-922"
+segmento = "M15103000"
+section = ["p03", "pagador-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f066"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-04"
+number = "923-939"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f067"]
+
+# AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-04"
+number = "940-956"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f068"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-04"
+number = "957-961"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f069"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-04"
+number = "962-966"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f070"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-04"
+number = "967-967"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f071"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-04"
+number = "968-968"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f072"]
+
+# AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04"
+number = "969-988"
+segmento = "M15103000"
+section = ["p03", "datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f073"]
+
+# AEAT campo: RESTO. Rendimiento integro/Renta inmobiliaria imputada [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.resto-rendimiento-integro-renta-inmobiliaria-imputada-06"
+number = "989-1005"
+segmento = "M15103000"
+section = ["p03", "resto-rendimiento-integro-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f074"]
+
+# AEAT campo: RESTO. Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.resto-rentencion-o-ingreso-a-cuenta-07"
+number = "1006-1022"
+segmento = "M15103000"
+section = ["p03", "resto-rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f075"]
+
+# AEAT campo: Total rendimientos íntegros/Renta inmobiliaria imputada [15]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.total-rendimientos-integros-renta-inmobiliaria-imputada-15"
+number = "1023-1039"
+segmento = "M15103000"
+section = ["p03", "total-rendimientos-integros-renta-inmobiliaria-imputada"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f076"]
+
+# AEAT campo: Total retenciones o ingresos a cuenta [16]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p03.total-retenciones-o-ingresos-a-cuenta-16"
+number = "1040-1056"
+segmento = "M15103000"
+section = ["p03", "total-retenciones-o-ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina03.f077"]

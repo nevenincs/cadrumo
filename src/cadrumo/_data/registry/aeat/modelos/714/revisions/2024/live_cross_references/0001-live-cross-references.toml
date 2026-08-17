@@ -1,0 +1,37 @@
+# Both surfaces are READ-ONLY and forbid every write verb, which is the standing
+# prohibition on live AEAT submission rather than a per-modelo choice: this
+# application builds, validates and exports, and the human files outside it.
+[[revisions."2024".live_cross_references]]
+id = "modelo-714-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-714-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-31"]
+source_refs = ["boe-modelo-714-layout"]
+
+[[revisions."2024".live_cross_references]]
+id = "modelo-714-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-714-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure"]

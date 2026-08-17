@@ -37,7 +37,7 @@ from ....core import Period, scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
-from ...user_profile import UserProfileFact, UserProfileRecord
+from ...user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
 from .._errors import ModeloValidationError
 from .._repository import (
@@ -93,6 +93,7 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
 def _seed_ready_profile(bucket_id: str) -> None:
     seed_test_profile_record(
         UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,

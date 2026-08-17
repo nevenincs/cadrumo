@@ -1,0 +1,30 @@
+[[revisions.2015-2022.export_layouts]]
+id = 'generated-modelo-151-2015-2022-fichero'
+
+[[revisions.2015-2022.export_layouts.records]]
+id = 'm151-page-04'
+record_type = 'page-04'
+order = 3
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f074'
+offset = 989
+length = 12
+kind = 'literal'
+literal = '</T15104000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[revisions.2015-2022.export_layouts.records.row_field_casilla_ids]

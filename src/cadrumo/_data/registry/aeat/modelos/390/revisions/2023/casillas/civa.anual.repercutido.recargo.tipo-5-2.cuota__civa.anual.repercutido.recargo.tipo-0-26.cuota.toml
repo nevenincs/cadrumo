@@ -85,6 +85,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2023"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-tipo-0-62-cuota"]
 
 # Box [36] - "Recargo de equivalencia - Tipo 0,5% - Cuota". LIVA art. 161.3,
 # paired with the art. 91.dos super-reduced 4 % rate. Vigencia: todo el

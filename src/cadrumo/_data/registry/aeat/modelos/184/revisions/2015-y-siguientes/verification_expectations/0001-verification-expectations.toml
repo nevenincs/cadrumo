@@ -5,7 +5,6 @@ computed_casilla_ids = [
     "decl.tipo-declaracion",
     "tipo2.clave",
     "tipo2.subclave",
-    "tipo2.miembro-nif",
     "tipo2.renta-atribuible-importe",
 ]
 tolerance = "0.00"

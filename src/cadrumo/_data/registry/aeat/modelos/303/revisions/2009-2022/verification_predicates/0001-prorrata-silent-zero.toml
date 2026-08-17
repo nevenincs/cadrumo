@@ -1,0 +1,45 @@
+# Prorrata settlement silent-under-declaration ADVISORY.
+#
+# Casilla 44 is the annual settlement regularizacion for the definitive
+# prorrata percentage (LIVA art. 105.Cuatro). The governed
+# `PRORRATA_REGULARIZACION` binding row `modelo-303-prorrata-regularizacion-
+# casilla-44` and its live resolver are BOTH in service on this revision as
+# well: the calculation-order seam materialises the four current-year source
+# casillas and the resolver feeds casilla 44 as a bound input on the calculate
+# path. Casilla 44 nonetheless stays `input_kind = "manual"` with no formula,
+# and that is deliberate rather than pending, for the reason recorded at the
+# casilla declaration itself: art. 105.Cuatro derives it from the PROVISIONAL
+# percentage (art. 105.Uno, the PRIOR year's definitive, held in the
+# profile-scoped prorrata register) and from the year's cuotas soportadas
+# across the regularised quarters (art. 105.Seis). Neither is a casilla of this
+# revision, so the value is not expressible as a single-period registry
+# formula, and the cross-period carry is owned by the binding + resolver
+# mechanism alone - adding a formula would model one value twice.
+#
+# When annual prorrata volumes are declared, a zero/absent casilla 44 would
+# otherwise let the verify gate grant verified_complete with no finding even
+# though the provisional carry and annual regularizacion must be confirmed.
+#
+# ADVISORY (non-blocking): a zero regularizacion can be legitimate once the
+# operator has confirmed the provisional carry and definitive calculation, so
+# the verify gate prompts rather than refuses. The Art. 94 full-deduction
+# default stays untouched because fully-taxable filings leave the annual
+# prorrata volume antecedent absent/zero.
+#
+# This 2009-2022 revision mirrors the identical predicate authored on
+# the later explicit record-design revisions. Both revisions declare the same
+# casilla 44 as manual, the same annual prorrata volume casillas and the same
+# prorrata_regularizacion binding, and LIVA art. 105 is law-invariant across
+# both windows: the consolidated text records exactly one amendment to it
+# (art. 5.5 of Ley 14/2000, BOE-A-2000-24357, in force 2001-01-01) and that
+# amendment modifies apartado Tres only, leaving apartados Uno, Cuatro and Seis
+# - the three this guard rests on - untouched since the original 1992 text.
+# This revision's window opens in 2009, after that amendment, so both windows
+# are governed by identical wording. Without this mirror, an amended filing for
+# any year from 2009 to 2022 that declares annual prorrata volumes and leaves
+# casilla 44 blank passes verify with zero findings.
+[[revisions.2009-2022.verification_predicates]]
+predicate_id = "modelo-303-2009-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
+expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]

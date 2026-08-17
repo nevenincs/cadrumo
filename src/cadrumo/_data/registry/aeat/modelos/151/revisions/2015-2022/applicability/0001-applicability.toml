@@ -1,0 +1,17 @@
+# Modelo 151 applicability.
+#
+# An impatriado is a RESIDENT IRPF contribuyente, not a non-resident: LIRPF art.
+# 93 lets a natural person who acquires Spanish tax residence by displacement
+# elect to determine the IRPF debt under the IRNR rules while keeping
+# contribuyente status. The distinction matters exactly here -- classifying this
+# modelo as non_resident_irnr would route the taxpayer to Modelo 210 and hide the
+# regime that Modelo 151 exists to file.
+
+[[revisions."2015-2022".applicability]]
+id = "m151-2015-2022-impatriado"
+applicable_entity_types = ["natural_person"]
+applicable_fiscal_residencies = ["resident_irpf"]
+applicable_reason = "Modelo 151: la persona física residente que ha optado por el régimen especial de trabajadores desplazados a territorio español (art. 93 LIRPF) presenta esta autoliquidación anual del IRPF, en la que la deuda tributaria se determina con arreglo a las normas del Impuesto sobre la Renta de no Residentes."
+not_applicable_reason = "Modelo 151 no aplica: el régimen especial del art. 93 LIRPF corresponde únicamente a la persona física residente que lo ha ejercitado mediante la comunicación del Modelo 149. Una persona física residente que no ha optado por el régimen especial presenta el Modelo 100. Un contribuyente NON_RESIDENT_IRNR no es contribuyente del IRPF y presenta el Modelo 210."
+cuota_bearing = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-2"]

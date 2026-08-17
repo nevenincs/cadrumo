@@ -59,3 +59,17 @@ source_refs = [
     "aeat-modelo-115-guia-censal",
     "aeat-modelo-115-180-folleto-actividades",
 ]
+
+[revisions."2019-y-siguientes".family_dispositions.dependency_classifications]
+reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 115 derives from none. It reports the retenciones the retenedor itself practised on rentas from arrendamiento de inmuebles urbanos in the period, aggregated from its own ledger rather than folded in from another return. The dependency in this family runs the OTHER way: modelo 180 is the annual resumen that summarises the four 115 filings, so it is 180 that classifies a dependency on 115, exactly as modelo 180's own declarante totals record. Nothing upstream of 115 exists to classify, so the family is inapplicable by this modelo's position in the chain rather than merely unpopulated."
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
+    "orden-2000-11-20:apartado-primero",
+    "ley-35-2006:art-101",
+]
+source_refs = [
+    "aeat-dr-115-2019-v13",
+    "aeat-modelo-115-obligaciones-retenedor",
+    "aeat-modelo-115-guia-censal",
+]

@@ -1,0 +1,880 @@
+# Modelo 151 (2025-y-siguientes) -- casillas of design record M15104000.
+#
+# Authored from the bundled AEAT diseno de registro aeat-dr-151-2023
+# (sha256 7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9).
+# `number` carries AEAT's OWN printed box reference where the design prints
+# one, and the campo's inclusive position range where it does not: this
+# edition brackets a box number on nearly every data row, and that printed
+# number is a better identifier than a byte range because it survives the
+# renumbering a later edition applies to positions.
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01"
+number = "13-14"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f006"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02"
+number = "15-15"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f007"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03"
+number = "16-32"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f008"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04"
+number = "33-49"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f009"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05"
+number = "50-66"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f010"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06"
+number = "67-83"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f011"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07"
+number = "84-100"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f012"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-02"
+number = "101-102"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f013"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-02"
+number = "103-103"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f014"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-02"
+number = "104-120"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f015"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-02"
+number = "121-137"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f016"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-02"
+number = "138-154"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f017"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-02"
+number = "155-171"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f018"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-02"
+number = "172-188"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f019"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-03"
+number = "189-190"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f020"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-03"
+number = "191-191"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f021"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-03"
+number = "192-208"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f022"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-03"
+number = "209-225"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f023"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-03"
+number = "226-242"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f024"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-03"
+number = "243-259"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f025"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-03"
+number = "260-276"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f026"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-04"
+number = "277-278"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f027"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-04"
+number = "279-279"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f028"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-04"
+number = "280-296"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f029"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-04"
+number = "297-313"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f030"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-04"
+number = "314-330"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f031"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-04"
+number = "331-347"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f032"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-04"
+number = "348-364"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f033"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-05"
+number = "365-366"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f034"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-05"
+number = "367-367"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f035"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-05"
+number = "368-384"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f036"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-05"
+number = "385-401"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f037"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-05"
+number = "402-418"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f038"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-05"
+number = "419-435"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f039"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-05"
+number = "436-452"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f040"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-06"
+number = "453-454"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f041"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-06"
+number = "455-455"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f042"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-06"
+number = "456-472"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f043"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-06"
+number = "473-489"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f044"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-06"
+number = "490-506"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f045"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-06"
+number = "507-523"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f046"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-06"
+number = "524-540"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f047"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-07"
+number = "541-542"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f048"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-07"
+number = "543-543"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f049"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-07"
+number = "544-560"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f050"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-07"
+number = "561-577"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f051"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-07"
+number = "578-594"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f052"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-07"
+number = "595-611"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f053"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-07"
+number = "612-628"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f054"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-08"
+number = "629-630"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f055"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-08"
+number = "631-631"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f056"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-08"
+number = "632-648"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f057"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-08"
+number = "649-665"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f058"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-08"
+number = "666-682"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f059"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-08"
+number = "683-699"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f060"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-08"
+number = "700-716"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f061"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.tipo-de-renta-01-09"
+number = "717-718"
+segmento = "M15104000"
+section = ["p04", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f062"]
+
+# AEAT campo: Naturaleza [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.naturaleza-02-09"
+number = "719-719"
+segmento = "M15104000"
+section = ["p04", "naturaleza"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f063"]
+
+# AEAT campo: Valoración [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.valoracion-03-09"
+number = "720-736"
+segmento = "M15104000"
+section = ["p04", "valoracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f064"]
+
+# AEAT campo: Ingresos a cuenta [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-04-09"
+number = "737-753"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f065"]
+
+# AEAT campo: Ingresos a cuenta repercutidos [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.ingresos-a-cuenta-repercutidos-05-09"
+number = "754-770"
+segmento = "M15104000"
+section = ["p04", "ingresos-a-cuenta-repercutidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f066"]
+
+# AEAT campo: Rendimiento integro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rendimiento-integro-06-09"
+number = "771-787"
+segmento = "M15104000"
+section = ["p04", "rendimiento-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f067"]
+
+# AEAT campo: Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.rentencion-o-ingreso-a-cuenta-07-09"
+number = "788-804"
+segmento = "M15104000"
+section = ["p04", "rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f068"]
+
+# AEAT campo: RESTO. Rendimientos íntegro [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.resto-rendimientos-integro-06"
+number = "805-821"
+segmento = "M15104000"
+section = ["p04", "resto-rendimientos-integro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f069"]
+
+# AEAT campo: RESTO. Rentención o ingreso a cuenta [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.resto-rentencion-o-ingreso-a-cuenta-07"
+number = "822-838"
+segmento = "M15104000"
+section = ["p04", "resto-rentencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f070"]
+
+# AEAT campo: Total rendimientos íntegros [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.total-rendimientos-integros-08"
+number = "839-855"
+segmento = "M15104000"
+section = ["p04", "total-rendimientos-integros"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f071"]
+
+# AEAT campo: Total retenciones o ingresos a cuenta [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p04.total-retenciones-o-ingresos-a-cuenta-09"
+number = "856-872"
+segmento = "M15104000"
+section = ["p04", "total-retenciones-o-ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina04.f072"]

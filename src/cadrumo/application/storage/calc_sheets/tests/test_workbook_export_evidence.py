@@ -39,7 +39,7 @@ _RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
 def _metadata() -> SheetExportMetadata:
     return SheetExportMetadata(
         modelo_id="303",
-        revision_id="2009-y-siguientes",
+        revision_id="2009-2022",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         engine_version="test",
@@ -157,7 +157,7 @@ def test_offline_export_emits_machine_readable_evidence_sidecar() -> None:
     assert sidecar["schema_version"] == "calc-sheets-evidence-sidecar/v1"
     assert sidecar["workbook_sha256"] == export.workbook_sha256
     assert sidecar["metadata"]["modelo_id"] == "303"
-    assert sidecar["metadata"]["revision_id"] == "2009-y-siguientes"
+    assert sidecar["metadata"]["revision_id"] == "2009-2022"
     assert sidecar["metadata"]["registry_sha"] == "abcd1234"
     assert sidecar["evidence"]["snapshot_fingerprint"] == "f" * 64
     assert sidecar["evidence"]["contributor_rows"][0]["transaction_id"] == "c" * 64

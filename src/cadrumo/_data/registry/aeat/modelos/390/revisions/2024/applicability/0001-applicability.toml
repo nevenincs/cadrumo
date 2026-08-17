@@ -1,0 +1,7 @@
+[[revisions."2024".applicability]]
+id = "m390-seed"
+applicable_entity_types = ["legal_entity", "natural_person", "attribution_entity"]
+applicable_reason = "Modelo 390 (declaracion-resumen anual del IVA): el sujeto pasivo obligado a presentar autoliquidaciones periodicas de IVA resume en el las operaciones del ejercicio, conforme al articulo 164.Uno.6 de la Ley 37/1992 y al articulo 71.7 del Reglamento del IVA."
+not_applicable_reason = "Modelo 390 no aplica: el resumen anual solo corresponde al sujeto pasivo del IVA obligado a autoliquidacion periodica y no exonerado de presentarlo."
+cuota_bearing = false
+legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

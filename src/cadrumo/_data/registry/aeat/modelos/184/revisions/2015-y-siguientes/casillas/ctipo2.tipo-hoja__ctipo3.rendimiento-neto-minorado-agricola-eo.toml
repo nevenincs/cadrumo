@@ -19,7 +19,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f008"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.clave-pais"
 number = "80-81"
@@ -31,7 +31,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f011"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.regimen-determinacion-rendimientos"
 number = "82"
@@ -43,7 +43,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f012"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.tipo-actividad"
 number = "83"
@@ -55,7 +55,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f013"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.epigrafe-iae"
 number = "84-87"
@@ -67,7 +67,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f014"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.cesionario-nif"
 number = "88-96"
@@ -79,7 +79,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f015"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.cesionario-denominacion"
 number = "97-116"
@@ -91,7 +91,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f016"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.fecha-adquisicion"
 number = "117-124"
@@ -103,7 +103,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f017", "m184-2025.entidad.f018", "m184-2025.entidad.f019"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.valor-liquidativo"
 number = "125-137"
@@ -115,7 +115,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f020"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.valor-adquisicion"
 number = "138-150"
@@ -127,7 +127,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f021"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.ingresos-integros"
 number = "151-164"
@@ -139,7 +139,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f022"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos"
 number = "165-176"
@@ -151,7 +151,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f023"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.porcentaje-reduccion"
 number = "191-195"
@@ -163,7 +163,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f025"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.renta-atribuible-con-reduccion"
 number = "196-207"
@@ -175,7 +175,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f026"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.ganancias-perdidas"
 number = "208-220"
@@ -187,7 +187,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f027"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.base-deduccion"
 number = "221-232"
@@ -199,7 +199,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f028"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.retenciones"
 number = "233-244"
@@ -211,7 +211,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f029"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.situacion-inmueble"
 number = "245"
@@ -223,7 +223,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f030"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.referencia-catastral"
 number = "246-265"
@@ -235,7 +235,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f031"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.criterio-cobros-pagos"
 number = "396"
@@ -247,7 +247,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f054"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.dias-arrendamiento"
 number = "498-500"
@@ -259,7 +259,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f075"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.gastos-personal"
 number = "266-277"
@@ -271,7 +271,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f032", "m184-2025.entidad.f033"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.consumos-explotacion"
 number = "278-289"
@@ -283,7 +283,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f034", "m184-2025.entidad.f035"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.tributos-deducibles"
 number = "290-301"
@@ -295,7 +295,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f036", "m184-2025.entidad.f037"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.arrendamientos-canones"
 number = "302-313"
@@ -307,7 +307,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f038", "m184-2025.entidad.f039"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.reparaciones-conservacion"
 number = "314-325"
@@ -319,7 +319,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f040", "m184-2025.entidad.f041"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.servicios-profesionales"
 number = "326-337"
@@ -331,7 +331,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f042", "m184-2025.entidad.f043"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.suministros"
 number = "338-349"
@@ -343,7 +343,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f044", "m184-2025.entidad.f045"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.gastos-financieros"
 number = "350-361"
@@ -355,7 +355,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f046", "m184-2025.entidad.f047"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.amortizaciones"
 number = "362-373"
@@ -367,7 +367,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f048", "m184-2025.entidad.f049"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.provisiones"
 number = "374-385"
@@ -379,7 +379,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f050", "m184-2025.entidad.f051"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.otros-gastos-deducibles"
 number = "386-395"
@@ -391,7 +391,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f052", "m184-2025.entidad.f053"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-financiacion"
 number = "397-407"
@@ -403,7 +403,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f055", "m184-2025.entidad.f056"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
 number = "408-418"
@@ -415,7 +415,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f057", "m184-2025.entidad.f058"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
 number = "419-429"
@@ -427,7 +427,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f059", "m184-2025.entidad.f060"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.tributos-recargos"
 number = "430-439"
@@ -439,7 +439,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f061", "m184-2025.entidad.f062"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
 number = "440-450"
@@ -451,7 +451,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f063", "m184-2025.entidad.f064"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
 number = "451-460"
@@ -463,7 +463,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f065", "m184-2025.entidad.f066"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.primas-seguros"
 number = "461-470"
@@ -475,7 +475,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f067", "m184-2025.entidad.f068"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
 number = "471-480"
@@ -487,7 +487,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f069", "m184-2025.entidad.f070"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
 number = "481-488"
@@ -499,7 +499,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f071", "m184-2025.entidad.f072"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
 number = "489-497"
@@ -511,7 +511,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.entidad.f073", "m184-2025.entidad.f074"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.miembro-nif"
 number = "18-26"
@@ -523,7 +523,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f005"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.representante-fiscal-nif"
 number = "27-35"
@@ -535,7 +535,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f006"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.miembro-nombre"
 number = "36-75"
@@ -547,7 +547,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f007"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.tipo-hoja"
 number = "76"
@@ -559,7 +559,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f008"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.codigo-provincia"
 number = "77-78"
@@ -571,7 +571,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f009"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.clave-pais"
 number = "79-80"
@@ -583,7 +583,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f010"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.clave-tipo-participe"
 number = "81"
@@ -595,7 +595,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f011"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.miembro-a-31-diciembre"
 number = "82"
@@ -607,7 +607,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f012"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.dias-miembro"
 number = "83-85"
@@ -619,7 +619,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f013"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.porcentaje-participacion"
 number = "86-92"
@@ -631,7 +631,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f014"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.clave"
 number = "93"
@@ -643,7 +643,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f015"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.subclave"
 number = "94-95"
@@ -655,7 +655,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f016"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.importe"
 number = "96-108"
@@ -667,7 +667,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f017"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.reduccion"
 number = "109-119"
@@ -679,7 +679,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f018"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.domicilio-fiscal"
 number = "120-159"
@@ -691,7 +691,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f019"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.provisiones-gastos-dificil-justificacion"
 number = "160-171"
@@ -703,7 +703,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f020"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.naturaleza-inmueble"
 number = "172"
@@ -715,7 +715,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f021"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.situacion-inmueble"
 number = "173"
@@ -727,7 +727,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f022"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.referencia-catastral"
 number = "174-193"
@@ -739,7 +739,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f023"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.clave-declarado"
 number = "194"
@@ -751,7 +751,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f024"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.porcentaje-titularidad-inmueble"
 number = "195-199"
@@ -763,7 +763,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f025"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.dias-arrendamiento"
 number = "200-202"
@@ -775,7 +775,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f026"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.rendimiento-neto-previo-eo"
 number = "203-215"
@@ -787,7 +787,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-
+export_refs = ["m184-2025.socio.f027"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "tipo3.rendimiento-neto-minorado-agricola-eo"
 number = "216-229"
@@ -799,3 +799,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+export_refs = ["m184-2025.socio.f028"]

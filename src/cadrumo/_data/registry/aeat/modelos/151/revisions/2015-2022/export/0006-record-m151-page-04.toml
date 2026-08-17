@@ -1,0 +1,1382 @@
+[[revisions.2015-2022.export_layouts]]
+id = 'generated-modelo-151-2015-2022-fichero'
+
+[[revisions.2015-2022.export_layouts.records]]
+id = 'm151-page-04'
+record_type = 'page-04'
+order = 3
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '151'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '04'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f006'
+offset = 13
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-01'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f007'
+offset = 15
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-01'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f008'
+offset = 16
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f009'
+offset = 33
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f010'
+offset = 50
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f011'
+offset = 67
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f012'
+offset = 84
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f013'
+offset = 101
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f014'
+offset = 103
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f015'
+offset = 104
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f016'
+offset = 121
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f017'
+offset = 138
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f018'
+offset = 155
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f019'
+offset = 172
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f020'
+offset = 189
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-03'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f021'
+offset = 191
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-03'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f022'
+offset = 192
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f023'
+offset = 209
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f024'
+offset = 226
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f025'
+offset = 243
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f026'
+offset = 260
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f027'
+offset = 277
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-04'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f028'
+offset = 279
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-04'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f029'
+offset = 280
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f030'
+offset = 297
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f031'
+offset = 314
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f032'
+offset = 331
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f033'
+offset = 348
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f034'
+offset = 365
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-05'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f035'
+offset = 367
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-05'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f036'
+offset = 368
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f037'
+offset = 385
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f038'
+offset = 402
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f039'
+offset = 419
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f040'
+offset = 436
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f041'
+offset = 453
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-06'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f042'
+offset = 455
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-06'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f043'
+offset = 456
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f044'
+offset = 473
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f045'
+offset = 490
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f046'
+offset = 507
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f047'
+offset = 524
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f048'
+offset = 541
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-07'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f049'
+offset = 543
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-07'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f050'
+offset = 544
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f051'
+offset = 561
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f052'
+offset = 578
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f053'
+offset = 595
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f054'
+offset = 612
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f055'
+offset = 629
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-08'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f056'
+offset = 631
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-08'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f057'
+offset = 632
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f058'
+offset = 649
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f059'
+offset = 666
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f060'
+offset = 683
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f061'
+offset = 700
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f062'
+offset = 717
+length = 2
+kind = 'casilla'
+casilla_id = 'p04.tipo-de-renta-1-09'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f063'
+offset = 719
+length = 1
+kind = 'casilla'
+casilla_id = 'p04.naturaleza-2-09'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f064'
+offset = 720
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.valoracion-3-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f065'
+offset = 737
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-4-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f066'
+offset = 754
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.ingresos-a-cuenta-repercutidos-5-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f067'
+offset = 771
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rendimiento-integro-6-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f068'
+offset = 788
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.rentencion-o-ingreso-a-cuenta-7-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f069'
+offset = 805
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.resto-rendimientos-integro-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f070'
+offset = 822
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.resto-rentencion-o-ingreso-a-cuenta-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f071'
+offset = 839
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.total-rendimientos-integros-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f072'
+offset = 856
+length = 17
+kind = 'casilla'
+casilla_id = 'p04.total-retenciones-o-ingresos-a-cuenta-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[[revisions.2015-2022.export_layouts.records.fields]]
+id = 'm151-2015.pagina04.f073'
+offset = 873
+length = 116
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hap-2783-2015:art-1',
+]
+source_refs = ['aeat-dr-151-2015']
+
+[revisions.2015-2022.export_layouts.records.row_field_casilla_ids]

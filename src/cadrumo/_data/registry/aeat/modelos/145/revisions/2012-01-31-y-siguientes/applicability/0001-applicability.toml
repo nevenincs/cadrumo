@@ -1,0 +1,13 @@
+[[revisions."2012-01-31-y-siguientes".applicability]]
+id = "m145-seed"
+applicable_entity_types = ["natural_person"]
+# No required_payer_fact: every member of PayerFact is a fact about someone who
+# PAYS or trades (pays_withheld_income, pays_rent_with_retencion,
+# trades_intracommunity, ...), and modelo 145 is submitted by the PERCEPTOR --
+# the person who receives the rendimientos, not the one who satisfies them. The
+# field is optional, so it is left unset rather than fitted to the nearest
+# payer-side member, which would assert the wrong side of the relationship.
+applicable_reason = "Modelo 145 (comunicacion de datos al pagador): el perceptor de rendimientos del trabajo comunica a quien se los satisface su situacion personal y familiar, que determina el importe exceptuado de retener, el tipo de retencion aplicable y sus regularizaciones (RD 439/2007 art. 88.1)."
+not_applicable_reason = "Modelo 145 no aplica: la comunicacion solo corresponde a la persona fisica que percibe rendimientos del trabajo sujetos a retencion, y no a quien los satisface ni a una entidad."
+cuota_bearing = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]

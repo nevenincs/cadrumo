@@ -1,0 +1,1390 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-151-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm151-page-08'
+record_type = 'page-08'
+order = 7
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '151'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '08'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f006'
+offset = 13
+length = 2
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-renta-01'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f007'
+offset = 15
+length = 13
+kind = 'casilla'
+casilla_id = 'p08.numero-justificante-del-modelo-211-54'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f008'
+offset = 28
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-transmision-adquisicion-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f009'
+offset = 45
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-adquisicion-adquisicion-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f010'
+offset = 62
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.diferencia-adquisicion-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f011'
+offset = 79
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-o-perdida-adquisicion-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f012'
+offset = 96
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-transmision-mejora-o-2a-adquisicion-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f013'
+offset = 113
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisicion-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f014'
+offset = 130
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.diferencia-mejora-o-2a-adquisicion-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f015'
+offset = 147
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-o-perdida-mejora-o-2a-adquisicion-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f016'
+offset = 164
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-patrimonial-total-obtenida-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f017'
+offset = 181
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.retencion-o-ingreso-a-cuenta-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f018'
+offset = 198
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-adquisicion-55'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f019'
+offset = 206
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-mejora-o-2a-adquisicion-56'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f020'
+offset = 214
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-transmision-57'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f021'
+offset = 222
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.cuota-de-participacion-58'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f022'
+offset = 227
+length = 9
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-nif-59'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f023'
+offset = 236
+length = 1
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-f-j-60'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f024'
+offset = 237
+length = 80
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-apellidos-y-nombre-o-razon-social-61'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f025'
+offset = 317
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-via-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f026'
+offset = 322
+length = 50
+kind = 'casilla'
+casilla_id = 'p08.nombre-de-la-via-publica-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f027'
+offset = 372
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-numeracion-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f028'
+offset = 375
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.numero-de-casa-29'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f029'
+offset = 380
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.calificador-de-numero-30'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f030'
+offset = 383
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.bloque-31'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f031'
+offset = 386
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.portal-32'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f032'
+offset = 389
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.escalera-33'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f033'
+offset = 392
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.planta-34'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f034'
+offset = 395
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.puerta-35'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f035'
+offset = 398
+length = 40
+kind = 'casilla'
+casilla_id = 'p08.datos-complementarios-de-domicilio-36'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f036'
+offset = 438
+length = 30
+kind = 'casilla'
+casilla_id = 'p08.localidad-poblacion-37'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f037'
+offset = 468
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.codigo-postal-38'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f038'
+offset = 473
+length = 2
+kind = 'casilla'
+casilla_id = 'p08.provincia-39'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f039'
+offset = 475
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.municipio-40'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f040'
+offset = 480
+length = 20
+kind = 'casilla'
+casilla_id = 'p08.referencia-catastral-53'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f041'
+offset = 500
+length = 1
+kind = 'casilla'
+casilla_id = 'p08.documento-publico-o-privado-62'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+]
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f042'
+offset = 501
+length = 100
+kind = 'casilla'
+casilla_id = 'p08.notario-o-fedetario-64'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f043'
+offset = 601
+length = 20
+kind = 'casilla'
+casilla_id = 'p08.numero-de-protocolo-65'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f044'
+offset = 621
+length = 2
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-renta-01-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f045'
+offset = 623
+length = 13
+kind = 'casilla'
+casilla_id = 'p08.numero-justificante-del-modelo-211-54-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f046'
+offset = 636
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-transmision-adquisicion-02-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f047'
+offset = 653
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-adquisicion-adquisicion-03-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f048'
+offset = 670
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.diferencia-adquisicion-04-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f049'
+offset = 687
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-o-perdida-adquisicion-05-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f050'
+offset = 704
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-transmision-mejora-o-2a-adquisicion-06-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f051'
+offset = 721
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisici-07-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f052'
+offset = 738
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.diferencia-mejora-o-2a-adquisicion-08-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f053'
+offset = 755
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-o-perdida-mejora-o-2a-adquisicion-09-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f054'
+offset = 772
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.ganancia-patrimonial-total-obtenida-10-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f055'
+offset = 789
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.retencion-o-ingreso-a-cuenta-11-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f056'
+offset = 806
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-adquisicion-55-02'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f057'
+offset = 814
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-mejora-o-2a-adquisicion-56-02'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f058'
+offset = 822
+length = 8
+kind = 'casilla'
+casilla_id = 'p08.fecha-de-transmision-57-02'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f059'
+offset = 830
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.cuota-de-participacion-58-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f060'
+offset = 835
+length = 9
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-nif-59-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f061'
+offset = 844
+length = 1
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-f-j-60-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f062'
+offset = 845
+length = 80
+kind = 'casilla'
+casilla_id = 'p08.adquiriente-apellidos-y-nombre-o-razon-social-61-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f063'
+offset = 925
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-via-26-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f064'
+offset = 930
+length = 50
+kind = 'casilla'
+casilla_id = 'p08.nombre-de-la-via-publica-27-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f065'
+offset = 980
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.tipo-de-numeracion-28-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f066'
+offset = 983
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.numero-de-casa-29-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f067'
+offset = 988
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.calificador-de-numero-30-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f068'
+offset = 991
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.bloque-31-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f069'
+offset = 994
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.portal-32-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f070'
+offset = 997
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.escalera-33-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f071'
+offset = 1000
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.planta-34-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f072'
+offset = 1003
+length = 3
+kind = 'casilla'
+casilla_id = 'p08.puerta-35-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f073'
+offset = 1006
+length = 40
+kind = 'casilla'
+casilla_id = 'p08.datos-complementarios-de-domicilio-36-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f074'
+offset = 1046
+length = 30
+kind = 'casilla'
+casilla_id = 'p08.localidad-poblacion-37-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

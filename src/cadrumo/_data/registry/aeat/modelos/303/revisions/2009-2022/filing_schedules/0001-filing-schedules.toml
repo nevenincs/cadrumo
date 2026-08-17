@@ -1,0 +1,15 @@
+[[revisions.2009-2022.filing_schedules]]
+id = "modelo-303-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2009-2022.filing_schedules.profile_conditions]]
+field = "iva.regime"
+op = "not_equals"
+value = "EXENTO"
+explanation = "Autonomos not in an exempt IVA regime file Modelo 303 quarterly IVA self-assessments."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]

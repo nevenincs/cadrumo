@@ -1,0 +1,7 @@
+[[revisions."2019-2022".application_links]]
+id = "modelo-180-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-procedure"]

@@ -1,0 +1,128 @@
+# Modelo 202 Informacion adicional casillas.
+#
+# AEAT prints these eleven 17-position amount slots with NO bracketed box
+# number, unlike every liquidacion slot on the same record. They carry declared
+# amounts and the design gives each its own slot, so they are casillas; their
+# ids are slugs taken from AEAT's own label rather than invented numbers, which
+# would assert an official identity the design does not print.
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.importe-excluido-quita-espera"
+number = "informacion-adicional.importe-excluido-quita-espera"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f028"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.integrado-base-imponible-quita-espera"
+number = "informacion-adicional.integrado-base-imponible-quita-espera"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f029"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
+number = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f030"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.rentas-reversion-deterioros"
+number = "informacion-adicional.rentas-reversion-deterioros"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f031"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.reserva-inversiones-canarias"
+number = "informacion-adicional.reserva-inversiones-canarias"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f032"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.bonificacion-ley-19-1994-art-26"
+number = "informacion-adicional.bonificacion-ley-19-1994-art-26"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f033"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.no-computable-regimen-zec"
+number = "informacion-adicional.no-computable-regimen-zec"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f034"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
+number = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f035"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.excluido-aumento-capital-art-17-2"
+number = "informacion-adicional.excluido-aumento-capital-art-17-2"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f036"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
+number = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f037"]
+
+[[revisions."2023-2024".casillas]]
+id = "informacion-adicional.bonificacion-art-34-lis"
+number = "informacion-adicional.bonificacion-art-34-lis"
+section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+export_refs = ["m202-2023.pagina02.f038"]

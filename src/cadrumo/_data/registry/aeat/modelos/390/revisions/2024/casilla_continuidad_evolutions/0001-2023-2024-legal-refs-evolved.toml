@@ -1,0 +1,86 @@
+# The nine reduced-rate tiers each gain real-decreto-ley-4-2024:art-1: the
+# temporary IVA reduction on basic foodstuffs, which RDL 4/2024 art. 1 extended
+# into 2024. Measured, not assumed -- these are exactly the nine shared
+# continuidad_ids whose legal_refs tuple differs between the 2023 and 2024
+# revisions, and no label changed on any of them.
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-2-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-5-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-5"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-7-5-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-26-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-26"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-62-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-1-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-1"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-2-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-2"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-5-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-5"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-7-5-2023-2024-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]

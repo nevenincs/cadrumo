@@ -225,10 +225,11 @@ legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-rect-sustituto-nif-filler"
+id = "modelo-349-rect-sustituto-nif"
 offset = 179
 length = 17
-kind = "filler"
+kind = "casilla"
+casilla_id = "sustituto.nif"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -238,10 +239,11 @@ legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-rect-sustituto-apellidos-filler"
+id = "modelo-349-rect-sustituto-apellidos"
 offset = 196
 length = 40
-kind = "filler"
+kind = "casilla"
+casilla_id = "sustituto.apellidos-razon-social"
 data_type = "text"
 required = false
 padding = "right_space"

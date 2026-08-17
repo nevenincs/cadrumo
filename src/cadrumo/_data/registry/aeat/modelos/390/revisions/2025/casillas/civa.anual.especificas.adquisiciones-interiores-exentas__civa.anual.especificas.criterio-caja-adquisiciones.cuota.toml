@@ -1,12 +1,15 @@
 # Modelo 390 apartado 11, "Operaciones especificas" (pagina 7 of the
 # Diseno de Registros). Eleven boxes, each occupying exactly one position.
 #
-# Apartado 12 ("Prorratas", boxes [114]-[118]) is NOT registered here: on
-# this page each of those box numbers occupies FIVE distinct positions, one
-# per declared activity, and whether that is one casilla carried forward or
-# five separate casillas is an open scope question. Registering it either
-# way without that ruling would either render one activity's value into all
-# five rows or invent five box numbers AEAT does not print.
+# Apartado 12 ("Prorratas", boxes [114]-[118]) is NOT registered here, and
+# correctly so: on this page each of those box numbers occupies FIVE
+# distinct positions, one per declared activity. One casilla carried forward
+# would render a single activity's value into all five rows; five casillas
+# would invent box numbers AEAT does not print. Neither is the answer -- the
+# rows are operator-supplied per-slot data, carried by position-addressed
+# manual_input bindings that hold no box number at all, the same way Modelo
+# 131 files its repeating Actividad 1..N slots. See the page 7 export-layout
+# and bindings fragments.
 #
 # Every box number, offset and length is transcribed verbatim from this
 # revision's own bundled Diseno de Registros (source aeat-dr-390-2025,

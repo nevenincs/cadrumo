@@ -7,9 +7,19 @@ id = "modelo-390-2024-fichero-boe"
 # deduction slots of the page are not modelled; the record still closes at
 # its official length through the end-of-record identifier at 1508.
 
+# Pagina 5, apartado 6 (Operaciones en regimen simplificado). Its two
+# actividad blocks are repeating operator-supplied modulo rows -- epigrafe
+# IAE, unidades and importe per modulo, indice corrector, cuota minima and
+# the derived cuota -- carried by per-slot manual_input bindings in the
+# sibling bindings fragment, the same shape Modelo 131 files. A binding is
+# addressed by POSITION and carries no box number, so the repeated rows need
+# neither one casilla smeared across both actividades nor invented box
+# numbers. Scale is read from the design's own Contenido column: a modulo
+# unit count is "8 enteros 2 decimales", not an integer.
 [[revisions."2024".export_layouts.records]]
 id = "modelo-390-page-05"
 record_type = "page_05"
+binding_record = "page_5"
 order = 6
 encoding = "latin-1"
 line_ending = "none"

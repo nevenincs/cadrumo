@@ -10,3 +10,4 @@ input_kind = "computed"
 formula = "modelo-202-2023-2024-total-correcciones-aumentos"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+export_refs = ["m202-2023.pagina01.f032"]

@@ -1,0 +1,7 @@
+[[revisions."2022".applicability]]
+id = "m714-seed"
+applicable_entity_types = ["natural_person"]
+applicable_reason = "Modelo 714 (Impuesto sobre el Patrimonio): la persona fisica cuya cuota tributaria resulte a ingresar conforme al articulo 37 de la Ley 19/1991, o cuyo valor de bienes y derechos supere los 2.000.000 de euros aun resultando cuota negativa, queda obligada a declarar."
+not_applicable_reason = "Modelo 714 no aplica: el Impuesto sobre el Patrimonio solo alcanza a la persona fisica, y solo cuando resulte cuota a ingresar o el valor de sus bienes y derechos supere el umbral de declaracion."
+cuota_bearing = true
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]

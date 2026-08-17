@@ -1,7 +1,7 @@
 """Tests for :func:`~cadrumo.application.registry.diff_registry_revisions`.
 
 Grounds the diff against *real* revision pairs shipped in the bundled registry
--- the Modelo 303 pair spanning its 2023 rulebook change (``2009-y-siguientes``
+-- the Modelo 303 pair spanning its 2023 rulebook change (``2009-2022``
 and ``2023``) and, for the legal-grounding dimension, the two Modelo 180
 revisions (``2019-2022`` and the one Orden HFP/1284/2023 approved). Every
 expected count and identifier below was read off the registry TOML tree, never
@@ -61,7 +61,7 @@ from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Modelo 303's 2023 rulebook change: "2009-y-siguientes" covers filing years
+# Modelo 303's 2023 rulebook change: "2009-2022" covers filing years
 # 2009-2022 and "2023" covers 2023 alone, the modelo having since split again
 # for 2024 onward. These are the modelo's real, declared revision boundaries --
 # not synthetic fixtures.
@@ -122,7 +122,7 @@ def test_diff_registry_revisions_reports_no_change_within_one_revision() -> None
     report = diff_registry_revisions("303", from_year=2015, to_year=2020)
 
     assert report.same_revision is True
-    assert report.from_revision_id == report.to_revision_id == "2009-y-siguientes"
+    assert report.from_revision_id == report.to_revision_id == "2009-2022"
     assert report.added_casillas == ()
     assert report.removed_casillas == ()
     assert report.renumbered_casillas == ()
@@ -136,16 +136,16 @@ def test_diff_registry_revisions_resolves_the_real_m303_revision_boundary() -> N
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
     assert report.same_revision is False
-    assert report.from_revision_id == "2009-y-siguientes"
+    assert report.from_revision_id == "2009-2022"
     assert report.to_revision_id == "2023"
 
 
 def test_diff_registry_revisions_surfaces_real_added_casillas() -> None:
-    """The 2023 M303 revision adds real casillas absent from 2009-y-siguientes.
+    """The 2023 M303 revision adds real casillas absent from 2009-2022.
 
     ``iva.autoconsumo.promotor.base`` / ``iva.autoconsumo.promotor.cuota`` are
     the real property-developer self-consumption casillas the 2023 revision
-    introduces; they do not exist under ``2009-y-siguientes``.
+    introduces; they do not exist under ``2009-2022``.
     """
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
@@ -299,7 +299,7 @@ def test_diff_registry_revisions_stays_silent_on_a_formula_both_revisions_share(
 
 
 def test_diff_registry_revisions_surfaces_real_added_bindings() -> None:
-    """Bindings introduced by the 2023 revision that had no counterpart in 2009-y-siguientes."""
+    """Bindings introduced by the 2023 revision that had no counterpart in 2009-2022."""
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
     added_ids = {binding.id for binding in report.added_bindings}

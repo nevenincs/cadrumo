@@ -1,0 +1,47 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-151-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm151-page-01'
+record_type = 'page-01'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina01.f076'
+offset = 1002
+length = 137
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina01.f077'
+offset = 1139
+length = 12
+kind = 'literal'
+literal = '</T15101000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

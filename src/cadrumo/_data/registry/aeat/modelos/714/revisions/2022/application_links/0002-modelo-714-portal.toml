@@ -1,0 +1,7 @@
+[[revisions."2022".application_links]]
+id = "modelo-714-portal"
+surface = "portal"
+consumer = "portal_m714_patrimonio"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

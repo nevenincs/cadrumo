@@ -1,0 +1,13 @@
+# One annual schedule and one period. This revision's own period_selector
+# declares periods = ["0A"], and the schedule agrees with it rather than
+# restating a calendar: the filing DATES live on deadline_windows, which
+# this revision already declares, and WHO must file lives on applicability.
+# Carries no profile_conditions, the shape 41 of the tree's 69 schedules
+# already use (modelo 100's annual rows among them); an absent condition
+# states no obligation claim, it defers that question to applicability.
+[[revisions."2024".filing_schedules]]
+id = "modelo-714-anual"
+period_kind = "annual"
+periods = ["0A"]
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]

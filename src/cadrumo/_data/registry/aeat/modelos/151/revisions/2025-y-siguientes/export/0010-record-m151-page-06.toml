@@ -1,0 +1,1127 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-151-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm151-page-06'
+record_type = 'page-06'
+order = 5
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '151'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '06'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f006'
+offset = 13
+length = 2
+kind = 'casilla'
+casilla_id = 'p06.tipo-de-renta-01'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f007'
+offset = 15
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.ingresos-integros-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f008'
+offset = 32
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-personal-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f009'
+offset = 49
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-aprovisionamiento-de-materiales-y-de-suministro-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f010'
+offset = 66
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-positivo-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f011'
+offset = 83
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-negativo-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f012'
+offset = 100
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rentencion-o-ingreso-a-cuenta-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f013'
+offset = 117
+length = 1
+kind = 'casilla'
+casilla_id = 'p06.actividad-codigo-y-tipo-de-actividad-10'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f014'
+offset = 118
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f015'
+offset = 121
+length = 4
+kind = 'casilla'
+casilla_id = 'p06.actividad-grupo-o-epigrafe-iae-11'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f016'
+offset = 125
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-rendimiento-inte-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f017'
+offset = 142
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-impuesto-satisfe-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f018'
+offset = 159
+length = 2
+kind = 'casilla'
+casilla_id = 'p06.tipo-de-renta-01-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f019'
+offset = 161
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.ingresos-integros-02-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f020'
+offset = 178
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-personal-03-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f021'
+offset = 195
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f022'
+offset = 212
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-positivo-05-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f023'
+offset = 229
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-negativo-07-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f024'
+offset = 246
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rentencion-o-ingreso-a-cuenta-06-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f025'
+offset = 263
+length = 1
+kind = 'casilla'
+casilla_id = 'p06.actividad-codigo-y-tipo-de-actividad-10-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f026'
+offset = 264
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f027'
+offset = 267
+length = 4
+kind = 'casilla'
+casilla_id = 'p06.actividad-grupo-o-epigrafe-iae-11-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f028'
+offset = 271
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-rendimiento-i-12-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f029'
+offset = 288
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-impuesto-sati-13-02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f030'
+offset = 305
+length = 2
+kind = 'casilla'
+casilla_id = 'p06.tipo-de-renta-01-03'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f031'
+offset = 307
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.ingresos-integros-02-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f032'
+offset = 324
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-personal-03-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f033'
+offset = 341
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f034'
+offset = 358
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-positivo-05-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f035'
+offset = 375
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-negativo-07-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f036'
+offset = 392
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rentencion-o-ingreso-a-cuenta-06-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f037'
+offset = 409
+length = 1
+kind = 'casilla'
+casilla_id = 'p06.actividad-codigo-y-tipo-de-actividad-10-03'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f038'
+offset = 410
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f039'
+offset = 413
+length = 4
+kind = 'casilla'
+casilla_id = 'p06.actividad-grupo-o-epigrafe-iae-11-03'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f040'
+offset = 417
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-rendimiento-i-12-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f041'
+offset = 434
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-impuesto-sati-13-03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f042'
+offset = 451
+length = 2
+kind = 'casilla'
+casilla_id = 'p06.tipo-de-renta-01-04'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f043'
+offset = 453
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.ingresos-integros-02-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f044'
+offset = 470
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-personal-03-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f045'
+offset = 487
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.gastos-de-aprovisionamiento-de-materiales-y-de-suminis-04-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f046'
+offset = 504
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-positivo-05-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f047'
+offset = 521
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rendimiento-neto-negativo-07-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f048'
+offset = 538
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.rentencion-o-ingreso-a-cuenta-06-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f049'
+offset = 555
+length = 1
+kind = 'casilla'
+casilla_id = 'p06.actividad-codigo-y-tipo-de-actividad-10-04'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f050'
+offset = 556
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f051'
+offset = 559
+length = 4
+kind = 'casilla'
+casilla_id = 'p06.actividad-grupo-o-epigrafe-iae-11-04'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f052'
+offset = 563
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-rendimiento-i-12-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f053'
+offset = 580
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.datos-adicionales-actividad-emprendedora-impuesto-sati-13-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f054'
+offset = 597
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.resto-rendimiento-neto-positivo-05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f055'
+offset = 614
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.resto-rendimiento-neto-negativo-07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f056'
+offset = 631
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.resto-rentencion-o-ingreso-a-cuenta-06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f057'
+offset = 648
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.total-rendimientos-netos-positivos-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f058'
+offset = 665
+length = 17
+kind = 'casilla'
+casilla_id = 'p06.total-retenciones-o-ingresos-a-cuenta-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f059'
+offset = 682
+length = 107
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina06.f060'
+offset = 789
+length = 12
+kind = 'literal'
+literal = '</T15106000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

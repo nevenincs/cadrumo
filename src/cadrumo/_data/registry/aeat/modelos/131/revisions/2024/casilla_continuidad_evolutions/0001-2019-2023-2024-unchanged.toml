@@ -1,0 +1,151 @@
+# Continuity from revision 2019-2023 into 2024, one row per concept both
+# revisions declare. Every one is "unchanged", and that is a MEASURED result
+# rather than a default: for all 16 shared continuidad_ids the legal_refs
+# tuples are identical between the two revisions and the Spanish labels are
+# byte-identical in the locale catalogue. The nine module-unit concepts the
+# 2024 revision introduces (irpf-pf-modulos-*) get no row: a concept with no
+# prior revision has no transition to declare, and none was retired.
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-diferencia-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-diferencia"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-resultado-declaracion-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-resultado-declaracion"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-resultados-negativos-anteriores-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-suma-rendimientos-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-suma-rendimientos"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-total-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-total"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-volumen-agrario-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-volumen-agrario"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-modulos-volumen-sin-datos-base-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-modulos-volumen-sin-datos-base"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-irpf-pf-saldo-negativo-fin-periodo-2019-2023-2024-unchanged"
+continuidad_id = "irpf-pf-saldo-negativo-fin-periodo"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-minoracion-rendimientos-actividades-economicas-2019-2023-2024-unchanged"
+continuidad_id = "minoracion-rendimientos-actividades-economicas"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-pago-fraccionado-previo-2019-2023-2024-unchanged"
+continuidad_id = "pago-fraccionado-previo"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-pago-fraccionado-previo-agrario-2019-2023-2024-unchanged"
+continuidad_id = "pago-fraccionado-previo-agrario"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-pago-fraccionado-previo-datos-base-2019-2023-2024-unchanged"
+continuidad_id = "pago-fraccionado-previo-datos-base"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-pago-fraccionado-previo-sin-datos-base-2019-2023-2024-unchanged"
+continuidad_id = "pago-fraccionado-previo-sin-datos-base"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-prestamo-vivienda-habitual-2019-2023-2024-unchanged"
+continuidad_id = "prestamo-vivienda-habitual"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-resultado-anteriores-autoliquidaciones-2019-2023-2024-unchanged"
+continuidad_id = "resultado-anteriores-autoliquidaciones"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-retenciones-ingresos-a-cuenta-2019-2023-2024-unchanged"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]

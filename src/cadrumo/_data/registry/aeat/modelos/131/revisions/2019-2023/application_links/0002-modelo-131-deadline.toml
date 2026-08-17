@@ -1,0 +1,7 @@
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]

@@ -1,0 +1,54 @@
+# Filing year 2023 only, with close dates READ from AEAT's own Calendario del
+# Contribuyente rather than derived from the statutory rule: RIRPF art. 111 fixes
+# the plazo ("Los tres primeros trimestres, entre el dia 1 y el 20 de los meses
+# de abril, julio y octubre" / "Cuarto trimestre, entre el dia 1 y el 30 del mes
+# de enero") but the published day moves for weekends and holidays, and a filing
+# deadline written from the rule rather than the calendar is a filing-grade harm.
+# The bundled 2023 calendar prints "Hasta el 20 de abril / julio / octubre --
+# Estimacion objetiva: 131" and the 2024 calendar "Hasta el 30 de enero --
+# Estimacion objetiva: 131".
+#
+# Filing years 2019 to 2022 are NOT declared: AEAT's calendars are bundled from
+# 2023 onward only, so their close dates cannot be read from any source this
+# repository holds. A window per governed year is not required -- modelo 115's
+# open-ended revision declares 2026 alone -- so this family carries what is
+# grounded rather than guessed dates for the four earlier years.
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-131-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-131-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-131-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-131-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-calendario-contribuyente-2024"]

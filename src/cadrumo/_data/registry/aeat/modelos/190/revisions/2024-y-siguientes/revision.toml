@@ -68,3 +68,8 @@ source_refs = [
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2025-amendment",
 ]
+
+[revisions."2024-y-siguientes".family_dispositions.parameters]
+reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 190 applies none: both of its formulas are op = 'add', summing the per-perceptor percepciones and retenciones into the declarante totals, and an addition applies nothing to what it sums. The retencion rate reaching these figures was set by the retenedor at payment time under RD 439/2007 arts. 80 to 86 and consumed by the quarterly modelo 111; this annual resumen receives the already-withheld amounts. Contrast modelo 115, which DOES hold one, because its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]

@@ -22,9 +22,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-tipo-de-renta-1-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f006"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -36,9 +36,9 @@ data_type = "text"
 semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-naturaleza-2-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f007"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -50,9 +50,9 @@ data_type = "money"
 semantic_role = "m151_valoracion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-valoracion-3-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f008"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -64,9 +64,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-4-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f009"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -78,9 +78,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-repercutidos-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f010"]
 
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [6]
 [[revisions."2015-2022".casillas]]
@@ -92,9 +92,9 @@ data_type = "money"
 semantic_role = "m151_rendimiento-integro-renta-inmobiliaria-imputada-6"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f011"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -106,9 +106,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-7"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f012"]
 
 # AEAT campo: Pagador. NIF
 [[revisions."2015-2022".casillas]]
@@ -120,9 +120,9 @@ data_type = "nif"
 semantic_role = "m151_pagador-nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nif-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f013"]
 
 # AEAT campo: Pagador. F/J
 [[revisions."2015-2022".casillas]]
@@ -134,9 +134,9 @@ data_type = "text"
 semantic_role = "m151_pagador-f-j"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-f-j-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f014"]
 
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -148,9 +148,9 @@ data_type = "text"
 semantic_role = "m151_pagador-apellidos-o-razon-social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-apellidos-o-razon-social-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f015"]
 
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
@@ -162,9 +162,9 @@ data_type = "text"
 semantic_role = "m151_pagador-nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nombre-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f016"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [8]
 [[revisions."2015-2022".casillas]]
@@ -176,9 +176,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f017"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [9]
 [[revisions."2015-2022".casillas]]
@@ -190,9 +190,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f018"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2015-2022".casillas]]
@@ -204,9 +204,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f019"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2015-2022".casillas]]
@@ -218,9 +218,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f020"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2015-2022".casillas]]
@@ -232,9 +232,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f021"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2015-2022".casillas]]
@@ -246,9 +246,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f022"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2015-2022".casillas]]
@@ -260,9 +260,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f023"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -274,9 +274,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-tipo-de-renta-1-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f024"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -288,9 +288,9 @@ data_type = "text"
 semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-naturaleza-2-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f025"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -302,9 +302,9 @@ data_type = "money"
 semantic_role = "m151_valoracion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-valoracion-3-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f026"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -316,9 +316,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-4-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f027"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -330,9 +330,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-repercutidos-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f028"]
 
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [6]
 [[revisions."2015-2022".casillas]]
@@ -344,9 +344,9 @@ data_type = "money"
 semantic_role = "m151_rendimiento-integro-renta-inmobiliaria-imputada-6"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f029"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -358,9 +358,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-7"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f030"]
 
 # AEAT campo: Pagador. NIF
 [[revisions."2015-2022".casillas]]
@@ -372,9 +372,9 @@ data_type = "nif"
 semantic_role = "m151_pagador-nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nif-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f031"]
 
 # AEAT campo: Pagador. F/J
 [[revisions."2015-2022".casillas]]
@@ -386,9 +386,9 @@ data_type = "text"
 semantic_role = "m151_pagador-f-j"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-f-j-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f032"]
 
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -400,9 +400,9 @@ data_type = "text"
 semantic_role = "m151_pagador-apellidos-o-razon-social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-apellidos-o-razon-social-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f033"]
 
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
@@ -414,9 +414,9 @@ data_type = "text"
 semantic_role = "m151_pagador-nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nombre-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f034"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [8]
 [[revisions."2015-2022".casillas]]
@@ -428,9 +428,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f035"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [9]
 [[revisions."2015-2022".casillas]]
@@ -442,9 +442,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f036"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2015-2022".casillas]]
@@ -456,9 +456,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f037"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2015-2022".casillas]]
@@ -470,9 +470,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f038"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2015-2022".casillas]]
@@ -484,9 +484,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f039"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2015-2022".casillas]]
@@ -498,9 +498,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f040"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2015-2022".casillas]]
@@ -512,9 +512,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f041"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -526,9 +526,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-tipo-de-renta-1-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f042"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -540,9 +540,9 @@ data_type = "text"
 semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-naturaleza-2-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f043"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -554,9 +554,9 @@ data_type = "money"
 semantic_role = "m151_valoracion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-valoracion-3-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f044"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -568,9 +568,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-4-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f045"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -582,9 +582,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-repercutidos-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f046"]
 
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [6]
 [[revisions."2015-2022".casillas]]
@@ -596,9 +596,9 @@ data_type = "money"
 semantic_role = "m151_rendimiento-integro-renta-inmobiliaria-imputada-6"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f047"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -610,9 +610,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-7"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f048"]
 
 # AEAT campo: Pagador. NIF
 [[revisions."2015-2022".casillas]]
@@ -624,9 +624,9 @@ data_type = "nif"
 semantic_role = "m151_pagador-nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nif-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f049"]
 
 # AEAT campo: Pagador. F/J
 [[revisions."2015-2022".casillas]]
@@ -638,9 +638,9 @@ data_type = "text"
 semantic_role = "m151_pagador-f-j"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-f-j-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f050"]
 
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -652,9 +652,9 @@ data_type = "text"
 semantic_role = "m151_pagador-apellidos-o-razon-social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-apellidos-o-razon-social-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f051"]
 
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
@@ -666,9 +666,9 @@ data_type = "text"
 semantic_role = "m151_pagador-nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nombre-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f052"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [8]
 [[revisions."2015-2022".casillas]]
@@ -680,9 +680,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f053"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [9]
 [[revisions."2015-2022".casillas]]
@@ -694,9 +694,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f054"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2015-2022".casillas]]
@@ -708,9 +708,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f055"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2015-2022".casillas]]
@@ -722,9 +722,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f056"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2015-2022".casillas]]
@@ -736,9 +736,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f057"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2015-2022".casillas]]
@@ -750,9 +750,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f058"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2015-2022".casillas]]
@@ -764,9 +764,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f059"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -778,9 +778,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-tipo-de-renta-1-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f060"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -792,9 +792,9 @@ data_type = "text"
 semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-naturaleza-2-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f061"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -806,9 +806,9 @@ data_type = "money"
 semantic_role = "m151_valoracion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-valoracion-3-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f062"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -820,9 +820,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-4-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f063"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -834,9 +834,9 @@ data_type = "money"
 semantic_role = "m151_ingresos-a-cuenta-repercutidos-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f064"]
 
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [6]
 [[revisions."2015-2022".casillas]]
@@ -848,9 +848,9 @@ data_type = "money"
 semantic_role = "m151_rendimiento-integro-renta-inmobiliaria-imputada-6"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f065"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -862,9 +862,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-7"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f066"]
 
 # AEAT campo: Pagador. NIF
 [[revisions."2015-2022".casillas]]
@@ -876,9 +876,9 @@ data_type = "nif"
 semantic_role = "m151_pagador-nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nif-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f067"]
 
 # AEAT campo: Pagador. F/J
 [[revisions."2015-2022".casillas]]
@@ -890,9 +890,9 @@ data_type = "text"
 semantic_role = "m151_pagador-f-j"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-f-j-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f068"]
 
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -904,9 +904,9 @@ data_type = "text"
 semantic_role = "m151_pagador-apellidos-o-razon-social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-apellidos-o-razon-social-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f069"]
 
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
@@ -918,9 +918,9 @@ data_type = "text"
 semantic_role = "m151_pagador-nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-pagador-nombre-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f070"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [8]
 [[revisions."2015-2022".casillas]]
@@ -932,9 +932,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f071"]
 
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [9]
 [[revisions."2015-2022".casillas]]
@@ -946,9 +946,9 @@ data_type = "money"
 semantic_role = "m151_datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f072"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2015-2022".casillas]]
@@ -960,9 +960,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f073"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2015-2022".casillas]]
@@ -974,9 +974,9 @@ data_type = "decimal"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f074"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2015-2022".casillas]]
@@ -988,9 +988,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f075"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2015-2022".casillas]]
@@ -1002,9 +1002,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f076"]
 
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2015-2022".casillas]]
@@ -1016,9 +1016,9 @@ data_type = "text"
 semantic_role = "m151_datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f077"]
 
 # AEAT campo: RESTO. Rendimiento integro/Renta inmobiliaria imputada [6]
 [[revisions."2015-2022".casillas]]
@@ -1029,9 +1029,9 @@ section = ["p03", "resto"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-resto-rendimiento-inte-inmobiliaria-imputada-6"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f078"]
 
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -1043,9 +1043,9 @@ data_type = "money"
 semantic_role = "m151_resto-rentencion-o-ingreso-a-cuenta-7"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-resto-rentencion-o-ingreso-a-cuenta-7"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f079"]
 
 # AEAT campo: Total rendimientos íntegros/Renta inmobiliaria imputada [15]
 [[revisions."2015-2022".casillas]]
@@ -1056,9 +1056,9 @@ section = ["p03", "total-rendimientos-biliaria-imputada-15"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-total-rendimientos-int-nmobiliaria-imputada-15"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f080"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [16]
 [[revisions."2015-2022".casillas]]
@@ -1069,6 +1069,6 @@ section = ["p03", "total-retenciones-o-ingresos-a-cuenta-16"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p03-total-retenciones-o-ingresos-a-cuenta-16"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina03.f081"]

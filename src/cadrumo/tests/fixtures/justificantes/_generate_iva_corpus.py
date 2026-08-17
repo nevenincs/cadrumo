@@ -48,12 +48,12 @@ class _Modelo303CorpusFixture:
       compensacion-disponible   = 0                [pendiente-posteriores + generada = 0]
 
     ``new_template`` distinguishes the post-2022 Modelo 303 profiles (True) from
-    the 2009-y-siguientes profile (False, legacy fixtures 2021â€“2022).
+    the 2009-2022 profile (False, legacy fixtures 2021â€“2022).
     The new closure chain (boxes 64/66/71) applies only for new_template=True.
 
     Registry source:
       src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml
-      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml
+      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-2022/revision.toml
     """
 
     filename: str
@@ -105,7 +105,7 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
 
 
 _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
-    # --- 2009-y-siguientes (legacy) revision: 2021-2T through 2022-4T ---
+    # --- 2009-2022 (legacy) revision: 2021-2T through 2022-4T ---
     _Modelo303CorpusFixture(
         filename="303/2021-2T.pdf",
         ejercicio="2021",
@@ -351,7 +351,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
       iva.compensacion-aplicada-periodo,
       iva.compensacion-pendiente-periodos-posteriores,
       iva.resultado, and 71.
-    - new_template=False (2009-y-siguientes legacy): 4-casilla profile â€”
+    - new_template=False (2009-2022 legacy): 4-casilla profile â€”
       boxes 27, 29, 45, and iva.resultado-regimen-general only.
 
     Formula consistency (both revisions):

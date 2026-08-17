@@ -1,0 +1,78 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+# The recargo de equivalencia 0 % and 0,62 % tiers of apartado 5. Every
+# recargo tier must be enumerated wherever the cuota devengada is totalled,
+# or a recargo filer under-declares and the annual return stops reconciling
+# against the summed quarters. The 0,5 %, 1,4 %, 1,75 % and 5,2 % tiers were
+# already wired; boxes [663]/[664] and [665]/[666] were the gap, and [666]
+# existed as a casilla that reached no export slot at all.
+#
+# Offsets and lengths transcribed from aeat-dr-390-2023.
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+# Box [663] - recargo de equivalencia tier, Pag. 2 offset 1237, length 17.
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-0-base"
+offset = 1237
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# Box [664] - recargo de equivalencia tier, Pag. 2 offset 1254, length 17.
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-0-cuota"
+offset = 1254
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# Box [665] - recargo de equivalencia tier, Pag. 2 offset 1305, length 17.
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-0-62-base"
+offset = 1305
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# Box [666] - recargo de equivalencia tier, Pag. 2 offset 1322, length 17.
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-0-62-cuota"
+offset = 1322
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

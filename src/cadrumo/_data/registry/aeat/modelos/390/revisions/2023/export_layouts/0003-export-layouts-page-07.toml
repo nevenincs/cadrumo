@@ -8,8 +8,16 @@ id = "modelo-390-2023-fichero-boe"
 # join unique and per-record.
 #
 # The apartado 12 prorrata block (30 positions: five activity rows of
-# [114]-[118] plus five free-text activity names) is NOT written here. See
-# the sibling casilla fragment for why.
+# [114]-[118] plus five free-text activity names) is carried by per-slot
+# manual_input bindings, not by fields authored here. The sibling casilla
+# fragment records the reason no casilla exists for them: a printed box
+# number repeated across five activity rows is neither one casilla carried
+# forward nor five casillas AEAT never numbered. A binding is addressed by
+# POSITION and carries no box number, so it invents nothing and smears
+# nothing across the rows. Modelo 131 files its repeating Actividad 1..N
+# slots exactly this way. derive_export_layouts_from_bindings materialises
+# the coordinates from the selectors, which is what binding_record below
+# turns on.
 #
 # Offsets and lengths are transcribed verbatim from aeat-dr-390-2023 (sha256 179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7).
 #
@@ -36,6 +44,7 @@ id = "modelo-390-2023-fichero-boe"
 [[revisions."2023".export_layouts.records]]
 id = "modelo-390-page-07"
 record_type = "page_07"
+binding_record = "page_7"
 order = 7
 encoding = "latin-1"
 line_ending = "none"
@@ -96,16 +105,18 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023"]
 
-# NOT AUTHORED, deliberately: indicador de pagina complementaria at
-# offset 12, length 1. AEAT declares its contenido as
-# 'Blanco (No complementaria) o "C" (Complementaria)' -- a real
-# operator datum whose wire alphabet is blank or "C". No carrier in this
-# registry can emit it: data_type "boolean" renders the canonical "X" and
-# blank only (_fixed_width_codec._render_boolean), a literal would force "C"
-# onto every filing, and a filler would silently blank a real flag. Authoring
-# it any of those ways would write wrong bytes, so the position is left
-# unwritten and reported instead. Paginas 5 and 7 are the only two pages
-# carrying this flag; every other page declares the position 'En blanco'.
+# Indicador de pagina complementaria at offset 12, length 1: carried by a
+# manual_input binding, listed with the prorrata slots in the sibling
+# bindings fragment. AEAT declares its contenido as
+# 'Blanco (No complementaria) o "C" (Complementaria)'. This position was
+# once left unwritten on the finding that no carrier could emit that
+# alphabet -- data_type "boolean" renders the canonical "X" and blank only
+# (_fixed_width_codec._render_boolean), a literal would force "C" onto every
+# filing, and a filler would silently blank a real flag. That enumeration
+# omitted the carrier that fits: a text-typed manual_input binding renders
+# the operator's own value, so "C" and blank are exactly the two bytes it
+# can emit. Paginas 5 and 7 are the only two pages carrying this flag;
+# every other page declares the position 'En blanco'.
 
 [[revisions."2023".export_layouts.records.fields]]
 id = "modelo-390-page-07-casilla-adquisiciones-interiores-exentas"

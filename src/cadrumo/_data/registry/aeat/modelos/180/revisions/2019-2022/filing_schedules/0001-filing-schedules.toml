@@ -1,0 +1,19 @@
+# Modelo 180 is the ANNUAL resumen of the four quarterly modelo 115
+# autoliquidaciones, so it has exactly one schedule and one period. This
+# revision's own period_selector declares periods = ["0A"], and the schedule
+# agrees with it rather than restating a calendar: the filing DATES live on
+# deadline_windows, which is a separate family and a separate evidence question.
+[[revisions."2019-2022".filing_schedules]]
+id = "modelo-180-anual"
+period_kind = "annual"
+periods = ["0A"]
+# No profile_conditions: modelo 180 has ONE annual schedule that applies to
+# every retenedor obliged to file it, and the user-profile schema declares no
+# predicate that narrows it. The quarterly/monthly split that modelo 111 and
+# 115 condition on is a property of the AUTOLIQUIDACION cadence and has no
+# counterpart here: the annual resumen is filed once whichever cadence the
+# retenedor used during the year.
+profile_condition_mode = "all"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-180-ayuda-presentacion", "aeat-modelo-180-procedure"]
+

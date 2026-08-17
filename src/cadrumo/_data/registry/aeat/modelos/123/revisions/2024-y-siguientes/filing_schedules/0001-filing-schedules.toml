@@ -1,0 +1,20 @@
+# Modelo 123 is filed quarterly by the ordinary retenedor; this revision's own
+# period_selector declares the four quarterly periods and nothing else, so the
+# monthly gran-empresa cadence the Calendario del Contribuyente lists alongside
+# it ("Grandes empresas: ... 123 ...") is out of this revision's scope rather
+# than a schedule it could express.
+[[revisions."2024-y-siguientes".filing_schedules]]
+id = "modelo-123-2024-y-siguientes-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = false
+explanation = "Modelo 123 trimestral para el retenedor no sujeto a autoliquidacion mensual por gran empresa."
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["aeat-modelo-123-procedure"]

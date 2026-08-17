@@ -1,0 +1,29 @@
+# Under-declaration advisory (no-silent-under-declaration). The two casilla ids
+# here are nearly homographs and mean opposite things, so read them carefully:
+# 'decl.total-percepciones' (136-144, semantic_role total_percepciones_count) is
+# the COUNT of percepciones and is input_kind = bound from this application's own
+# store, while 'decl.percepciones-total' (145-160, semantic_role
+# total_percepciones_amount) is the MONEY total, computed by this revision's own
+# formula as the sum of the per-perceptor amounts. The count and the money reach
+# the resumen by different routes, so a positive count against a zero total is a
+# real disagreement rather than an arithmetic identity.
+#
+# That disagreement is what an annual resumen exists to expose. Modelo 190 is
+# what AEAT reconciles the year's modelo 111 autoliquidaciones against, so a
+# resumen naming perceptores while totalling no percepciones means either the
+# quarterly chain or the perceptor records are incomplete, and the operator
+# should see that before filing.
+#
+# The count-to-percepciones pairing is deliberate. Pairing percepciones with
+# retenciones would false-fire: withholding on rendimientos del trabajo is scaled
+# to the payer's projected annual rate and is lawfully ZERO below the thresholds,
+# which is the objection modelo 100's own predicates record and the reason modelo
+# 111's predicate keys on its actividades economicas block instead.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor with no perceptores never fires it.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-190-percepciones-anuales-cuando-perceptores-declarados"
+expression = 'implies_nonzero(["decl.total-percepciones", "decl.percepciones-total"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "ley-35-2006:art-101"]

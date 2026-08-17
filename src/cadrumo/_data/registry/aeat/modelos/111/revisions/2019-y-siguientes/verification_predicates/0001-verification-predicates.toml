@@ -1,0 +1,29 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla 08 is the
+# IMPORTE of dinerario percepciones paid for ACTIVIDADES ECONOMICAS in the period
+# and casilla 09 is the retencion practised on them. Both are input_kind =
+# "bound", aggregated from the ledger rather than typed, and neither is computed
+# from the other: 09 is bound independently, so a positive 08 with a zero 09 is a
+# real observation about the filing rather than an arithmetic identity. The
+# retenedor paid a professional and reported withholding nothing.
+#
+# The ACTIVIDADES ECONOMICAS block is the antecedent and NOT the trabajo block
+# (01/02/03), which was considered and refused for the reason modelo 100's own
+# retencion predicates record: withholding on rendimientos del trabajo is scaled
+# to the payer's projected annual rate and is lawfully ZERO below the withholding
+# thresholds, so a retenedor paying a low-wage employee correctly reports trabajo
+# percepciones with no retencion, and an antecedent keyed there would fire on
+# exactly those filers. Retencion on actividades economicas carries no such
+# threshold -- it is a flat rate on the satisfied amount (RD 439/2007 art. 95) --
+# so a positive importe with zero retencion has no lawful ordinary reading.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor who paid no professionals in the period never
+# fires it. It stays advisory because the operator, not this application, files:
+# a reduced or zero rate can apply in narrow cases the ledger does not model, and
+# a blocking rule would refuse a legitimate draft rather than let the operator
+# weigh it.
+[[revisions."2019-y-siguientes".verification_predicates]]
+predicate_id = "modelo-111-retencion-actividades-economicas-cuando-importe-positivo"
+expression = 'implies_nonzero(["08", "09"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-101"]

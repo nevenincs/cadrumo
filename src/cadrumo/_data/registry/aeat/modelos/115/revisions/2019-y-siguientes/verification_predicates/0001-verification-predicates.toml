@@ -1,0 +1,28 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla 01 is the
+# NUMBER OF PERCEPTORES the retenedor paid urban rent to in the period and
+# casilla 02 is the BASE de retenciones those payments make up. Both are
+# input_kind = "bound": they are aggregated from the ledger rather than typed by
+# the operator, and a draft declaring perceptores while resolving a zero base is
+# the shape this family exists to surface -- rent was paid to somebody, and the
+# amount withheld on it went unreported.
+#
+# The antecedent is 01 and NOT 02, and the consequent is 02 and NOT 03, because
+# the 02 -> 03 pairing would be TAUTOLOGICAL: casilla 03 is computed by this
+# revision's own formula as percent(02, irpf.urban_rental_withholding_rate), so a
+# positive 02 mechanically produces a positive 03 for any non-zero rate and the
+# predicate could never fire on an engine-computed draft. It would assert that
+# the engine's own arithmetic worked. 01 and 02 are independently bound from the
+# ledger, so their disagreement is a real observation about the filing.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor with no perceptores in the period never fires
+# it -- 115 is filed quarterly even for a quarter with no arrendamiento activity.
+# It stays advisory rather than blocking because the operator, not this
+# application, files: an alert the operator can weigh is the safeguard here, and
+# a blocking rule on a bound-value disagreement would refuse drafts whose ledger
+# is merely incomplete at the moment of calculation.
+[[revisions."2019-y-siguientes".verification_predicates]]
+predicate_id = "modelo-115-base-retenciones-declarada-cuando-perceptores-positivos"
+expression = 'implies_nonzero(["01", "02"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "ley-35-2006:art-101"]

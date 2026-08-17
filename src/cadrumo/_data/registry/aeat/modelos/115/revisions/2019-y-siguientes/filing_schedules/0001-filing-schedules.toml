@@ -1,0 +1,21 @@
+# This revision's own period_selector declares ONLY the four quarterly periods,
+# so the quarterly schedule is the whole of what it can express. The monthly
+# regime that grandes empresas file under (RD 439/2007 art. 108, the same
+# threshold Modelo 111 splits on) is deliberately NOT declared here: authoring a
+# monthly schedule against a revision whose selector admits no monthly period
+# would assert a filing this revision cannot resolve.
+[[revisions."2019-y-siguientes".filing_schedules]]
+id = "modelo-115-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-115-guia-censal"]
+
+[[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = false
+explanation = "Modelo 115 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa."
+legal_refs = ["rd-439-2007:art-108", "orden-2000-11-20:apartado-primero"]
+source_refs = ["aeat-modelo-115-obligaciones-retenedor"]

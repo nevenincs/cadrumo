@@ -1,0 +1,79 @@
+# Dates mirror modelo 130's reviewed windows for the same filing years:
+# both are pagos fraccionados del IRPF filing on the ONE plazo RIRPF art. 111
+# fixes -- 'Los tres primeros trimestres, entre el dia 1 y el 20 de los meses
+# de abril, julio y octubre' and 'Cuarto trimestre, entre el dia 1 y el 30 del
+# mes de enero' -- so the working-day rolling is identical and is not
+# recomputed here. payment_cutoff_on is omitted: the domiciliacion cutoff is a
+# separate AEAT operational date with no grounded source in this corpus.
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-131-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-21
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows.applicability_conditions]]
+field = "irpf.estimation_regime"
+op = "equals"
+value = "objetiva"
+explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; la modalidad directa liquida el pago fraccionado en el modelo 130."
+legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-131-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-21
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows.applicability_conditions]]
+field = "irpf.estimation_regime"
+op = "equals"
+value = "objetiva"
+explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; la modalidad directa liquida el pago fraccionado en el modelo 130."
+legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-131-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows.applicability_conditions]]
+field = "irpf.estimation_regime"
+op = "equals"
+value = "objetiva"
+explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; la modalidad directa liquida el pago fraccionado en el modelo 130."
+legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-131-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-30
+legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2025".deadline_windows.applicability_conditions]]
+field = "irpf.estimation_regime"
+op = "equals"
+value = "objetiva"
+explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; la modalidad directa liquida el pago fraccionado en el modelo 130."
+legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-modelo-131-procedure"]

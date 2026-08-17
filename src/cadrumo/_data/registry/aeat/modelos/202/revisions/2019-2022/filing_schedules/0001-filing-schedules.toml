@@ -1,0 +1,22 @@
+# Modelo 202 filing schedule.
+#
+# LIS art. 40 fixes three pagos fraccionados a year -- April, October and
+# December -- for every contribuyente del Impuesto sobre Sociedades, and that
+# shape does not vary by edition. Carried unchanged from the 2025 sibling,
+# citing this revision's own instructions edition.
+
+[[revisions."2019-2022".filing_schedules]]
+id = "modelo-202-2019-2022-trimestral"
+period_kind = "quarterly"
+periods = ["1P", "2P", "3P"]
+profile_condition_mode = "all"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]
+
+[[revisions."2019-2022".filing_schedules.profile_conditions]]
+field = "taxpayer.entity_type"
+op = "equals"
+value = "legal_entity"
+explanation = "Las entidades juridicas contribuyentes del Impuesto sobre Sociedades presentan el Modelo 202 en abril, octubre y diciembre."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]

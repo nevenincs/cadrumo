@@ -1,3 +1,9 @@
+# The three ledger-fed aggregates below are internal calculation surface, not
+# AEAT form boxes. This revision now carries its design's own numbered totals --
+# [38] total cuota devengada, [62] total a deducir, [63] diferencia -- as
+# casillas addressed by the generated export layout, exactly as the 2026 sibling
+# does. These slugs feed those boxes rather than filing a slot of their own, so
+# they are internal_only, mirroring the sibling's identical declaration.
 [[revisions."2008-2025".casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
@@ -66,6 +72,7 @@ data_type = "money"
 semantic_role = "iva_cuota_devengada_total"
 required = false
 input_kind = "computed"
+internal_only = true
 formula = "modelo-322-iva-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2024-2025"]
@@ -78,6 +85,7 @@ data_type = "money"
 semantic_role = "iva_cuota_deducible_total"
 required = false
 input_kind = "computed"
+internal_only = true
 formula = "modelo-322-iva-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2024-2025"]
@@ -90,6 +98,7 @@ data_type = "money"
 semantic_role = "iva_resultado_regimen_general"
 required = false
 input_kind = "computed"
+internal_only = true
 formula = "modelo-322-iva-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2024-2025"]

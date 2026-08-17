@@ -1,0 +1,52 @@
+# Targets are matched by the PRINTED BOX NUMBER, not by label, and that choice is
+# forced by this form rather than preferred. Modelo 216 prints the same label
+# twice: the bundled AEAT instructions give "Casilla 05 Numero de rentas" under
+# the heading "Dividendos y otras rentas de participacion en fondos propios de
+# entidades" and "Casilla 06 Numero de rentas" under "Resto de rentas", and the
+# same repetition runs through the base (08/09) and retenciones (11/12) rows and
+# again across the whole rentas-no-sometidas block (14/15, 17/18). A named_label
+# pattern cannot separate them, and Modelo 100's own profile records that the
+# parser rejects an ambiguous label match rather than guessing. The box numbers
+# are unique on the form and are exactly this revision's casilla ids.
+#
+# Grounded against the AEAT-published instructions bundled for this revision at
+# corpus/aeat_official/instructions/modelo_216/files/
+# modelo-216-instrucciones-2024-y-siguientes.html, which enumerates every box
+# this profile targets and states what each holds -- e.g. "Casilla 13
+# Retenciones e ingresos a cuenta: Se consignara el importe total de las
+# retenciones e ingresos a cuenta declaradas en las casillas 11 y 12" and
+# "Casilla 21 Resultado a ingresar. Debera consignarse en esta casilla el
+# importe correspondiente a la resta de las casillas 13 y 20".
+#
+# The TOTALS and the settlement rows are targeted, not the per-block components.
+# Extraction here reconciles a filed 216 against the engine, and every component
+# is already summed into a total this revision computes by its own formula, so
+# the totals carry the reconcilable figures while keeping the target set to boxes
+# whose meaning the instructions state without reference to a heading above them.
+#
+# provisional_pending_specimen: no filed or synthetic Modelo 216 justificante is
+# bundled to round-trip this profile against, so it is declared provisional and
+# review_required rather than strict. The patterns rest on AEAT-published text
+# alone; a specimen is what would earn a strict confidence.
+[[revisions."2024-y-siguientes".extraction_profiles]]
+id = "modelo-216-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "07", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "10", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "13", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "16", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "19", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "20", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "21", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
+confidence = "review_required"
+provisional_pending_specimen = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout", "aeat-dr-216-2024"]

@@ -1,0 +1,258 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-151-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm151-page-08'
+record_type = 'page-08'
+order = 7
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f075'
+offset = 1076
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.codigo-postal-38-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f076'
+offset = 1081
+length = 2
+kind = 'casilla'
+casilla_id = 'p08.provincia-39-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f077'
+offset = 1083
+length = 5
+kind = 'casilla'
+casilla_id = 'p08.municipio-40-02'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f078'
+offset = 1088
+length = 20
+kind = 'casilla'
+casilla_id = 'p08.referencia-catastral-53-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f079'
+offset = 1108
+length = 1
+kind = 'casilla'
+casilla_id = 'p08.documento-publico-o-privado-62-02'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+]
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f080'
+offset = 1109
+length = 100
+kind = 'casilla'
+casilla_id = 'p08.notario-o-fedetario-64-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f081'
+offset = 1209
+length = 20
+kind = 'casilla'
+casilla_id = 'p08.numero-de-protocolo-65-02'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f082'
+offset = 1229
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.resto-ganancia-patrimonial-total-obtenida-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f083'
+offset = 1246
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.resto-retencion-o-ingreso-a-cuenta-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f084'
+offset = 1263
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.total-ganancias-patrimoniales-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f085'
+offset = 1280
+length = 17
+kind = 'casilla'
+casilla_id = 'p08.total-retenciones-o-ingresos-a-cuenta-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f086'
+offset = 1297
+length = 92
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm151-2023.pagina08.f087'
+offset = 1389
+length = 12
+kind = 'literal'
+literal = '</T15108000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-93',
+    'rd-439-2007:art-113',
+    'orden-hfp-1338-2023:art-1',
+]
+source_refs = ['aeat-dr-151-2023']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

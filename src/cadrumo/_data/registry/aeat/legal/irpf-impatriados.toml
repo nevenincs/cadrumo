@@ -251,3 +251,94 @@ required_text = [
     "Aprobación del modelo 151",
     "desplazados a territorio español",
 ]
+
+# Modelo 151's obligados and plazo provisions, one pair per governing orden.
+#
+# Both were read out of the BUNDLED consolidated text before this entry was
+# authored, not from a summary. Art. 2 of each orden grounds who files: RIRPF
+# art. 114 obliges every IRPF contribuyente to whom the regimen especial applies
+# to present and sign the model. Art. 3.1 of each grounds the window WITHOUT
+# stating a date -- the plazo "sera el mismo que se apruebe cada ejercicio, con
+# caracter general, para las declaraciones del Impuesto sobre la Renta de las
+# Personas Fisicas" -- which is exactly why this modelo's deadline_windows are a
+# per-year factual claim and not derivable from its own orden.
+
+[legal."orden-hap-2783-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2783-2015.html#a2"
+document_id = "BOE-A-2015-14021"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-14021"
+published_at = 2015-12-23
+effective_from = 2015-12-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-16
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HAP/2783/2015 art 2: obligados a presentar el modelo 151. Remite al articulo 114 del Reglamento del IRPF (RD 439/2007) y obliga a los contribuyentes del IRPF a los que resulte de aplicacion el regimen especial de trabajadores desplazados vigente desde 1 de enero de 2015 a presentar y suscribir el modelo aprobado en el articulo 1. Verified against the bundled consolidated corpus file before authoring."
+required_text = [
+    "Obligados a presentar el modelo 151",
+    "estarán obligados a presentar y suscribir el modelo de declaración",
+]
+
+[legal."orden-hap-2783-2015:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2783-2015.html#a3"
+document_id = "BOE-A-2015-14021"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-14021"
+published_at = 2015-12-23
+effective_from = 2015-12-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-16
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HAP/2783/2015 art 3.1: plazo de presentacion del modelo 151. Fija el plazo por REMISION al de la declaracion general del IRPF aprobado cada ejercicio, sin enunciar fechas propias, salvo el plazo especifico de domiciliacion bancaria del art. 4.2. Verified against the bundled consolidated corpus file before authoring."
+required_text = [
+    "Plazo y formas de presentación del modelo 151",
+    "será el mismo que se apruebe cada ejercicio, con carácter general",
+]
+
+[legal."orden-hfp-1338-2023:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1338-2023.html#a2"
+document_id = "BOE-A-2023-25416"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-25416"
+published_at = 2023-12-15
+effective_from = 2023-12-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-16
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HFP/1338/2023 art 2: obligados a presentar el modelo 151. Misma remision al articulo 114 del Reglamento del IRPF que su predecesora, con el ambito subjetivo ampliado por la Ley 28/2022 a trabajadores, profesionales, emprendedores e inversores desplazados. Verified against the bundled consolidated corpus file before authoring."
+required_text = [
+    "Obligados a presentar el modelo 151",
+    "estarán obligados a presentar y suscribir el modelo de declaración",
+]
+
+[legal."orden-hfp-1338-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1338-2023.html#a3"
+document_id = "BOE-A-2023-25416"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-25416"
+published_at = 2023-12-15
+effective_from = 2023-12-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-16
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HFP/1338/2023 art 3.1: plazo de presentacion del modelo 151, fijado por la misma remision al plazo general del IRPF de cada ejercicio que la Orden HAP/2783/2015 art 3.1. Verified against the bundled consolidated corpus file before authoring."
+required_text = [
+    "Plazo y formas de presentación del modelo 151",
+    "será el mismo que se apruebe cada ejercicio, con carácter general",
+]

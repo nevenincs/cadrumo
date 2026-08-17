@@ -1,42 +1,21 @@
-# No-silent-under-declaration advisory: aggregate base-to-retenciones link.
+# Under-declaration advisory (no-silent-under-declaration). casilla 03 is the
+# numero_rentas_total and casilla 06 the base_rentas_total. Neither is
+# derived from the other -- they are separate declarations about the same
+# period -- so a positive count against a zero base is a real observation
+# about the filing rather than an arithmetic identity.
 #
-# Casilla 06 ("Base de retenciones e ingresos a cuenta. Totales") = [04] + [05]
-# and casilla 09 ("Retenciones e ingresos a cuenta. Totales") = [07] + [08]
-# (modelo-123-total-base / modelo-123-total-retenciones formulas,
-# Orden HAC/56/2024 Anexo II form text). Both totals fold in from
-# independently manual leaf casillas: 04/05 are the per-category bases
-# (dividendos/participaciones, resto de rentas), 07/08 are the matching
-# per-category retenciones the payer practised. A positive base total with a
-# zero retenciones total has no legitimate cause under RD 439/2007 art. 90
-# (19 por ciento general withholding rate on rendimientos del capital
-# mobiliario, LIRPF art. 101): every base euro entered in 04 or 05
-# corresponds to a payment the payer was obligated to withhold against.
+# The count-to-base pairing is used deliberately in preference to
+# base-to-retencion, which would be the obvious choice and is unsafe here for
+# the reason modelo 115's own predicate records: where a revision computes the
+# retencion from the base, the implication holds by the arithmetic. It does not
+# hold by arithmetic here, but the same reasoning selects the pair furthest
+# from the engine's own additions.
 #
-# Design decision (aggregate 06->09, not per-category 04->07 / 05->08): the
-# per-category split was considered and rejected. Guarding each category
-# independently risks false positives the aggregate avoids -- a filer with
-# activity concentrated in one category (e.g. base_dividendos > 0,
-# base_resto = 0) would still need retenciones_dividendos > 0 under a
-# per-category guard, but the aggregate correctly tolerates a zero in one
-# category's retencion leaf as long as the OTHER category's retencion
-# covers the implication, while still catching the case neither leaf does.
-# The aggregate is the false-positive-free choice that still surfaces the
-# genuine silent-zero case (all-base, no-retencion). ADVISORY (non-blocking):
-# the implication holds trivially when casilla 06 is absent or non-positive,
-# so a filer with no retenible activity in the quarter raises nothing.
-#
-# rd-439-2007:art-75 closes DFR-M123-RIRPF-EXONERATION-CORPUS: its apartado 3
-# is the type-based retention-exoneration list (rentas exceptuadas de la obligacion
-# de retener). Only letras b) (Letras del Tesoro / valores del Banco de
-# España) and c) (primas de conversion de obligaciones en acciones) reach
-# rendimientos del capital mobiliario, and both describe income with no
-# "base de retencion" to enter under art. 90 -- so neither can ever surface
-# as a positive casilla 04/05 with a zero casilla 07/08. No other letra in
-# the apartado-3 list reaches capital mobiliario. This confirms, with
-# verbatim BOE text, that the exoneration list does not create a legitimate
-# positive-base/zero-retencion case for this guard.
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent
+# is at or below zero, so a retenedor with no rentas in the period never fires
+# it -- modelo 123 is filed quarterly even for a quarter with no activity.
 [[revisions."2024-y-siguientes".verification_predicates]]
-predicate_id = "modelo-123-2024-base-total-implica-retenciones-total"
-expression = 'implies_nonzero(["06", "09"])'
+predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas"
+expression = 'implies_nonzero(["03", "06"])'
 finding_kind = "ADVISORY"
-legal_refs = ["rd-439-2007:art-90", "rd-439-2007:art-75", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "ley-35-2006:art-101"]
