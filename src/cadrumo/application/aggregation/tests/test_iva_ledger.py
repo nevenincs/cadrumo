@@ -139,7 +139,7 @@ def _revision_with_iva_bindings(revision_id: str, *bindings: DataBindingDefiniti
 
 def _modelo_303_iva_revision() -> ModeloRevision:
     return _revision_with_iva_bindings(
-        "2009-y-siguientes",
+        "2009-2022",
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory.DOMESTIC_GENERAL,),

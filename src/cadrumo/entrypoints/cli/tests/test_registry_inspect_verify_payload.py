@@ -82,7 +82,7 @@ def test_registry_tree_result_round_trips_a_populated_revision_detail_row() -> N
             revision_details=[
                 {
                     "modelo": "303",
-                    "revision": "2009-y-siguientes",
+                    "revision": "2009-2022",
                     "legal_refs": ["ley-37-1992:art-78"],
                     "source_refs": ["aeat-modelo-303-instrucciones-2026"],
                     "export_layout_ids": [],

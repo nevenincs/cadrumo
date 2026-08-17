@@ -98,12 +98,12 @@ class TestS01CreationGate:
         """An explicit --revision that is NOT the law-determined revision is refused.
 
         M303 has three revisions:
-        - ``2009-y-siguientes`` covers 2009-2022
+        - ``2009-2022`` covers 2009-2022
            - 2023, two 2024 epochs, and 2025 have distinct filing windows
         - ``2026-y-siguientes`` covers 2026-onwards
 
         For year 2026, period 1T the law-determined revision is ``2026-y-siguientes``.
-        Supplying ``2009-y-siguientes`` (a real revision that does NOT cover 2026)
+        Supplying ``2009-2022`` (a real revision that does NOT cover 2026)
         must be refused.
         """
         with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
@@ -111,11 +111,11 @@ class TestS01CreationGate:
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id="2009-y-siguientes",
+                registry_revision_id="2009-2022",
             )
         msg = str(exc_info.value)
         # Must name the requested revision
-        assert "2009-y-siguientes" in msg
+        assert "2009-2022" in msg
         # Must name the law-determined revision
         assert "2026-y-siguientes" in msg
         # Must state the binding is fixed by law
@@ -132,10 +132,10 @@ class TestS01CreationGate:
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id="2009-y-siguientes",
+                registry_revision_id="2009-2022",
             )
         msg = str(exc_info.value)
-        assert "2009-y-siguientes" in msg, "message must name the requested revision"
+        assert "2009-2022" in msg, "message must name the requested revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         # Should direct operator to re-create without --revision
         assert "re-create" in msg.lower() or "--revision" in msg.lower() or "without" in msg.lower()
@@ -218,7 +218,7 @@ class TestS02CalcTimeAssertion:
         """Construct a WorkUnit whose revision_id is stale (no longer law-determined).
 
         For M303 2026 1T the current law-determined revision is ``2026-y-siguientes``.
-        We pin ``revision_id=2009-y-siguientes`` (a real registry revision,
+        We pin ``revision_id=2009-2022`` (a real registry revision,
         but one that covers 2009-2022, not 2026).  After a hypothetical registry
         correction this is the shape a pre-gate unit would have.
 
@@ -226,7 +226,7 @@ class TestS02CalcTimeAssertion:
         creation gate would refuse this unit; we are simulating the
         post-creation-correction scenario that the calc-time assertion guards.
         """
-        stale_revision_id = "2009-y-siguientes"
+        stale_revision_id = "2009-2022"
         work_unit_id = derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="303",
@@ -268,7 +268,7 @@ class TestS02CalcTimeAssertion:
 
         msg = str(exc_info.value)
         # Must name the work unit's stale revision
-        assert "2009-y-siguientes" in msg, "message must name the stale (pinned) revision"
+        assert "2009-2022" in msg, "message must name the stale (pinned) revision"
         # Must name the current law-determined revision
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         # Must direct operator to re-create the work unit
@@ -337,12 +337,12 @@ class TestS02RevisionForWorkUnitAssertion:
         """``_revision_for_work_unit`` refuses when the unit's revision_id is stale.
 
         Uses M303 2026 1T: the law-determined revision is ``2026-y-siguientes``;
-        the seeded unit pins the stale ``2009-y-siguientes``.
+        the seeded unit pins the stale ``2009-2022``.
         """
         from .._calculate_input import _revision_for_work_unit
 
         bucket_id, _ = work_unit_repo
-        stale_revision_id = "2009-y-siguientes"
+        stale_revision_id = "2009-2022"
         work_unit_id = derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="303",
@@ -369,7 +369,7 @@ class TestS02RevisionForWorkUnitAssertion:
             _revision_for_work_unit(work_unit_id)
 
         msg = str(exc_info.value)
-        assert "2009-y-siguientes" in msg, "message must name the stale (pinned) revision"
+        assert "2009-2022" in msg, "message must name the stale (pinned) revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         assert "re-create" in msg.lower()
 
@@ -471,7 +471,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
     ) -> None:
         """A real, period-declared, but year-wrong revision id is refused at creation.
 
-        Mirrors the sibling scenario one level down: ``2009-y-siguientes`` is a
+        Mirrors the sibling scenario one level down: ``2009-2022`` is a
         real M303 revision declaring the ``1T`` period token, but it covers
         2009-2022, not 2026. Calling ``create_work_unit`` directly -- the shape
         every one of the ~90 direct callers uses -- must refuse exactly as
@@ -487,12 +487,12 @@ class TestS03CreateWorkUnitDoorReconfirmation:
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision_id="2009-y-siguientes",
+                revision_id="2009-2022",
                 repository=repo,
                 clock=_T0,
             )
         msg = str(exc_info.value)
-        assert "2009-y-siguientes" in msg
+        assert "2009-2022" in msg
         assert "2026-y-siguientes" in msg
 
         # No work unit was persisted for the refused key.
@@ -501,7 +501,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2009-y-siguientes",
+            revision_id="2009-2022",
         )
         assert repo.load().get(stray_id) is None
 
