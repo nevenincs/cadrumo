@@ -67,7 +67,7 @@ at least one entry).
 
 Usage::
 
-    python -m dev.registry_authoring.transcribe_structural_family_dispositions [--apply] [--json OUT.json]
+    python -m dev.registry.analysis.transcribe_structural_family_dispositions [--apply] [--json OUT.json]
 
 Default is a dry run: prints what would be written (and what is held back for
 lack of evidence), writes nothing. ``--apply`` performs the writes, then
