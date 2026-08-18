@@ -73,4 +73,4 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2025.entidad.f024"]
+export_refs = ["m184-2025.entidad.f027"]

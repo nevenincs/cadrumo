@@ -36,7 +36,6 @@ reconcile_when_present_casilla_ids = [
     "10",
     "154",
     "155",
-    "166",
     "167",
     "iva.autoconsumo.promotor.cuota",
     "iva.prorrata-porcentaje",

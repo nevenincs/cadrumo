@@ -129,6 +129,7 @@ from ._export import derive_export_layouts_from_bindings
 from ._record_design import _naturaleza_or_none, extract_record_design
 from ._record_design_schema import RecordDesignField, RecordDesignSheet
 from ._schema import (
+    AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -813,6 +814,7 @@ def _missing_report(
     records: Sequence[ExportRecordDefinition],
     *,
     envelope: FilingEnvelopeDefinition | None = None,
+    auxiliary_header: AuxiliaryEnvelopeHeaderDefinition | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
     layout_written: set[int] = set()
@@ -877,12 +879,21 @@ def _missing_report(
             # Modelo 232 showed exactly that, blaming dr23201 fields for writing
             # into DR23200's administración bytes.
             #
-            # Consulting nothing states the truth: this layout emits no bytes for
-            # the header, so every required header position is genuinely missing
-            # and is attributed to the header itself.
+            # A declared header is emitted byte-for-byte over its prefix spans:
+            # every one of its required positions carries a real value at filing
+            # time (literals, modelo, year, period, product identity), so the
+            # full extent counts as written. A layout that declares none
+            # genuinely emits nothing for the header, and every required
+            # position is attributed to the header itself.
             consulted = ()
-            written = set()
-            emitted = set()
+            if auxiliary_header is not None:
+                # Design offsets are one-based, so the declared extent covers
+                # bytes @1..@extent exactly.
+                written = set(range(1, auxiliary_header.prefix_extent + 1))
+                emitted = written
+            else:
+                written = set()
+                emitted = set()
         else:
             consulted = tuple(field for record in records for field in record.fields)
             written = layout_written
@@ -951,7 +962,12 @@ def _layout_failure(
         if isinstance(read, str):
             return f"{prefix}: fixed-width export layout {layout.id!r} cannot be checked because {read}"
         sheets.extend(read)
-    required, missing, lines = _missing_report(sheets, layout.records, envelope=layout.filing_envelope)
+    required, missing, lines = _missing_report(
+        sheets,
+        layout.records,
+        envelope=layout.filing_envelope,
+        auxiliary_header=layout.auxiliary_envelope_header,
+    )
     if not missing:
         return None
     coverage = 100.0 * (required - missing) / required if required else 0.0

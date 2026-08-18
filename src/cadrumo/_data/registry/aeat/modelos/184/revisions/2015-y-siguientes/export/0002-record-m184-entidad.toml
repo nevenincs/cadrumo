@@ -398,16 +398,15 @@ source_refs = ['aeat-dr-184-2025']
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
 id = 'm184-2025.entidad.f020'
 offset = 125
-length = 13
+length = 11
 kind = 'casilla'
 casilla_id = 'tipo2.valor-liquidativo'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -419,17 +418,16 @@ source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
 id = 'm184-2025.entidad.f021'
-offset = 138
-length = 13
+offset = 136
+length = 2
 kind = 'casilla'
-casilla_id = 'tipo2.valor-adquisicion'
-data_type = 'decimal'
+casilla_id = 'tipo2.valor-liquidativo'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -441,6 +439,48 @@ source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
 id = 'm184-2025.entidad.f022'
+offset = 138
+length = 11
+kind = 'casilla'
+casilla_id = 'tipo2.valor-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f023'
+offset = 149
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.valor-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f024'
 offset = 151
 length = 14
 kind = 'casilla'
@@ -460,18 +500,17 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f023'
+id = 'm184-2025.entidad.f025'
 offset = 165
-length = 12
+length = 10
 kind = 'casilla'
 casilla_id = 'tipo2.gastos'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -482,7 +521,28 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f024'
+id = 'm184-2025.entidad.f026'
+offset = 175
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f027'
 offset = 177
 length = 14
 kind = 'casilla'
@@ -502,18 +562,17 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f025'
+id = 'm184-2025.entidad.f028'
 offset = 191
-length = 5
+length = 3
 kind = 'casilla'
 casilla_id = 'tipo2.porcentaje-reduccion'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -524,7 +583,28 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f026'
+id = 'm184-2025.entidad.f029'
+offset = 194
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.porcentaje-reduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f030'
 offset = 196
 length = 12
 kind = 'casilla'
@@ -544,18 +624,17 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f027'
+id = 'm184-2025.entidad.f031'
 offset = 208
-length = 13
+length = 11
 kind = 'casilla'
 casilla_id = 'tipo2.ganancias-perdidas'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -566,18 +645,38 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f028'
+id = 'm184-2025.entidad.f032'
+offset = 219
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.ganancias-perdidas'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f033'
 offset = 221
-length = 12
+length = 10
 kind = 'casilla'
 casilla_id = 'tipo2.base-deduccion'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -588,18 +687,38 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f029'
+id = 'm184-2025.entidad.f034'
+offset = 231
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.base-deduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f035'
 offset = 233
-length = 12
+length = 10
 kind = 'casilla'
 casilla_id = 'tipo2.retenciones'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'unsigned-integer'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -610,7 +729,28 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f030'
+id = 'm184-2025.entidad.f036'
+offset = 243
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2015-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f037'
 offset = 245
 length = 1
 kind = 'casilla'
@@ -631,7 +771,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f031'
+id = 'm184-2025.entidad.f038'
 offset = 246
 length = 20
 kind = 'casilla'
@@ -651,7 +791,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f032'
+id = 'm184-2025.entidad.f039'
 offset = 266
 length = 10
 kind = 'casilla'
@@ -672,7 +812,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f033'
+id = 'm184-2025.entidad.f040'
 offset = 276
 length = 2
 kind = 'casilla'
@@ -693,7 +833,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f034'
+id = 'm184-2025.entidad.f041'
 offset = 278
 length = 10
 kind = 'casilla'
@@ -714,7 +854,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f035'
+id = 'm184-2025.entidad.f042'
 offset = 288
 length = 2
 kind = 'casilla'
@@ -735,7 +875,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f036'
+id = 'm184-2025.entidad.f043'
 offset = 290
 length = 10
 kind = 'casilla'
@@ -756,7 +896,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f037'
+id = 'm184-2025.entidad.f044'
 offset = 300
 length = 2
 kind = 'casilla'
@@ -777,7 +917,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f038'
+id = 'm184-2025.entidad.f045'
 offset = 302
 length = 10
 kind = 'casilla'
@@ -798,7 +938,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f039'
+id = 'm184-2025.entidad.f046'
 offset = 312
 length = 2
 kind = 'casilla'
@@ -819,7 +959,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f040'
+id = 'm184-2025.entidad.f047'
 offset = 314
 length = 10
 kind = 'casilla'
@@ -840,7 +980,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f041'
+id = 'm184-2025.entidad.f048'
 offset = 324
 length = 2
 kind = 'casilla'
@@ -861,7 +1001,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f042'
+id = 'm184-2025.entidad.f049'
 offset = 326
 length = 10
 kind = 'casilla'
@@ -882,7 +1022,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f043'
+id = 'm184-2025.entidad.f050'
 offset = 336
 length = 2
 kind = 'casilla'
@@ -903,7 +1043,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f044'
+id = 'm184-2025.entidad.f051'
 offset = 338
 length = 10
 kind = 'casilla'
@@ -924,7 +1064,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f045'
+id = 'm184-2025.entidad.f052'
 offset = 348
 length = 2
 kind = 'casilla'
@@ -945,7 +1085,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f046'
+id = 'm184-2025.entidad.f053'
 offset = 350
 length = 10
 kind = 'casilla'
@@ -966,7 +1106,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f047'
+id = 'm184-2025.entidad.f054'
 offset = 360
 length = 2
 kind = 'casilla'
@@ -987,7 +1127,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f048'
+id = 'm184-2025.entidad.f055'
 offset = 362
 length = 10
 kind = 'casilla'
@@ -1008,7 +1148,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f049'
+id = 'm184-2025.entidad.f056'
 offset = 372
 length = 2
 kind = 'casilla'
@@ -1029,7 +1169,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f050'
+id = 'm184-2025.entidad.f057'
 offset = 374
 length = 10
 kind = 'casilla'
@@ -1050,7 +1190,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f051'
+id = 'm184-2025.entidad.f058'
 offset = 384
 length = 2
 kind = 'casilla'
@@ -1071,7 +1211,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f052'
+id = 'm184-2025.entidad.f059'
 offset = 386
 length = 8
 kind = 'casilla'
@@ -1092,7 +1232,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f053'
+id = 'm184-2025.entidad.f060'
 offset = 394
 length = 2
 kind = 'casilla'
@@ -1113,7 +1253,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f054'
+id = 'm184-2025.entidad.f061'
 offset = 396
 length = 1
 kind = 'casilla'
@@ -1134,7 +1274,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f055'
+id = 'm184-2025.entidad.f062'
 offset = 397
 length = 9
 kind = 'casilla'
@@ -1155,7 +1295,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f056'
+id = 'm184-2025.entidad.f063'
 offset = 406
 length = 2
 kind = 'casilla'
@@ -1176,7 +1316,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f057'
+id = 'm184-2025.entidad.f064'
 offset = 408
 length = 9
 kind = 'casilla'
@@ -1197,7 +1337,7 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f058'
+id = 'm184-2025.entidad.f065'
 offset = 417
 length = 2
 kind = 'casilla'
@@ -1218,158 +1358,11 @@ legal_refs = [
 source_refs = ['aeat-dr-184-2025']
 
 [[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f059'
+id = 'm184-2025.entidad.f066'
 offset = 419
 length = 9
 kind = 'casilla'
 casilla_id = 'tipo2.gastos-inmobiliario.intereses-gastos-reparacion'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f060'
-offset = 428
-length = 2
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.intereses-gastos-reparacion'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f061'
-offset = 430
-length = 8
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.tributos-recargos'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f062'
-offset = 438
-length = 2
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.tributos-recargos'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f063'
-offset = 440
-length = 9
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.saldos-dudoso-cobro'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f064'
-offset = 449
-length = 2
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.saldos-dudoso-cobro'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f065'
-offset = 451
-length = 8
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.cantidades-devengadas-terceros'
-data_type = 'integer'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = false
-value_policy = 'unsigned-integer'
-legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
-]
-source_refs = ['aeat-dr-184-2025']
-
-[[revisions.2015-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.entidad.f066'
-offset = 459
-length = 2
-kind = 'casilla'
-casilla_id = 'tipo2.gastos-inmobiliario.cantidades-devengadas-terceros'
 data_type = 'integer'
 required = false
 padding = 'left_zero'

@@ -252,6 +252,53 @@ class FilingEnvelopeDefinition(RegistryModel):
         return self
 
 
+class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
+    """Static total-less page-zero header declaration carried by a generated layout.
+
+    The fixed 328-byte header that opens a design whose records are fixed
+    (Modelo 232's ``DR23200``; Modelo 390's page zero). It shares the filing
+    envelope's prefix grammar -- the same thirteen roles in canonical order and
+    the same emitted literals -- and declares no body, closer or total: the
+    layout's records are the payload.
+
+    A declaration, not an instance payload, for the same reason its envelope
+    sibling is: period and product-identity values are filing-instance facts
+    the application filing boundary owns at render time.
+    """
+
+    schema_version: Literal[1] = 1
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    record_identity: str = Field(min_length=1)
+    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
+    prefix_extent: int = Field(gt=0)
+    product_identity_requirement: Literal["aeat-product-software-identity-v1"]
+
+    @model_validator(mode="after")
+    def _require_complete_static_header(self) -> AuxiliaryEnvelopeHeaderDefinition:
+        roles = tuple(field.role for field in self.prefix_fields)
+        if len(set(roles)) != len(roles):
+            raise RegistryValidationError(
+                f"auxiliary envelope header {self.record_identity!r} prefix declaration repeats a role: {roles!r}",
+            )
+        if not _is_subsequence(roles, tuple(FilingEnvelopePrefixRole)):
+            raise RegistryValidationError(
+                f"auxiliary envelope header {self.record_identity!r} prefix roles must appear in "
+                "canonical source order",
+            )
+        if FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG in roles:
+            raise RegistryValidationError(
+                f"auxiliary envelope header {self.record_identity!r} may not carry a composed opening tag",
+            )
+        declared_extent = sum(field.length for field in self.prefix_fields)
+        if declared_extent != self.prefix_extent:
+            raise RegistryValidationError(
+                f"auxiliary envelope header {self.record_identity!r} declares a {self.prefix_extent}-byte "
+                f"extent but its prefix fields sum to {declared_extent}",
+            )
+        return self
+
+
 def _is_subsequence(candidate: tuple[object, ...], universe: tuple[object, ...]) -> bool:
     """Return whether ``candidate`` appears within ``universe`` in order."""
     remaining = iter(universe)
@@ -756,6 +803,16 @@ class ExportLayoutDefinition(RegistryModel):
     case the records are its body members rather than the whole file.
     """
 
+    auxiliary_envelope_header: AuxiliaryEnvelopeHeaderDefinition | None = None
+    """Total-less 328-byte page-zero header emitted before this layout's records.
+
+    Absent for every layout whose design declares no such header. Present where
+    the design prints one (Modelo 232's ``DR23200``; Modelo 390's page zero):
+    the records remain the payload and the header is emitted as their prefix.
+    A layout declaring both this and a filing envelope is refused, since no
+    design composes a variable body behind a total-less page-zero header.
+    """
+
     dictionary_path_overrides: tuple[XmlDictionaryPathOverride, ...] = Field(default_factory=tuple)
     """Dictionary rows whose AEAT-declared path is corrected before use.
 
@@ -875,7 +932,24 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
             "which reads no dictionary",
         )
     envelope = layout.filing_envelope
+    auxiliary_header = layout.auxiliary_envelope_header
+    if envelope is not None and auxiliary_header is not None:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares both a filing envelope and an auxiliary envelope "
+            "header, which no design composes",
+        )
     if envelope is None:
+        if auxiliary_header is None:
+            return
+        if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} declares an auxiliary envelope header on a "
+                "non-fixed-width layout",
+            )
+        if auxiliary_header.source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} auxiliary envelope header source must be included in source_refs",
+            )
         return
     if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         raise RegistryValidationError(

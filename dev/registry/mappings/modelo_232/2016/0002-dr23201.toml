@@ -266,8 +266,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f021"
-kind = "casilla"
-casilla_id = "vinculada-1-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -396,8 +395,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f031"
-kind = "casilla"
-casilla_id = "vinculada-2-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -526,8 +524,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f041"
-kind = "casilla"
-casilla_id = "vinculada-3-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -656,8 +653,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f051"
-kind = "casilla"
-casilla_id = "vinculada-4-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -786,8 +782,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f061"
-kind = "casilla"
-casilla_id = "vinculada-5-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -942,8 +937,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f073"
-kind = "binding"
-binding = "modelo-232-2016.page_01.900-919.vinculada-metodo-1-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1033,8 +1027,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f080"
-kind = "binding"
-binding = "modelo-232-2016.page_01.1016-1035.vinculada-metodo-2-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1124,8 +1117,7 @@ record_identity = "DR23201"
 
 [[entries]]
 export_field_id = "m232-2016.dr23201.f087"
-kind = "binding"
-binding = "modelo-232-2016.page_01.1132-1151.vinculada-metodo-3-reservado-nombre"
+kind = "filler"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]

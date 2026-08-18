@@ -91,6 +91,14 @@ def parse_export_payload(
         return _parse_xml_dictionary_payload(layout, payload, source_root=source_root, sources=sources)
 
     cursor = 0
+    if layout.auxiliary_envelope_header is not None:
+        # The total-less page-zero header opens the payload ahead of the
+        # records. Its bytes carry filing-instance facts (year, period,
+        # product identity) this parser does not hold, so the skip is exact
+        # extent rather than content re-derivation; a payload whose header is
+        # absent or wrong-length misaligns every following record start and
+        # still refuses on the records' own literals.
+        cursor = layout.auxiliary_envelope_header.prefix_extent
     parsed: list[ParsedExportFieldValue] = []
     records = tuple(sorted(layout.records, key=lambda item: item.order))
     for index, record in enumerate(records):

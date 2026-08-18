@@ -55,10 +55,6 @@ casilla_id = "vinculada-1-razon-social"
 number = "3.vinculada.1.razon-social"
 
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "vinculada-1-reservado-nombre"
-number = "3.vinculada.1.reservado-nombre"
-
-[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-1-tipo-operacion"
 number = "3.vinculada.1.tipo-operacion"
 
@@ -93,10 +89,6 @@ number = "3.vinculada.2.provincia-pais"
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-2-razon-social"
 number = "3.vinculada.2.razon-social"
-
-[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "vinculada-2-reservado-nombre"
-number = "3.vinculada.2.reservado-nombre"
 
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-2-tipo-operacion"
@@ -135,10 +127,6 @@ casilla_id = "vinculada-3-razon-social"
 number = "3.vinculada.3.razon-social"
 
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "vinculada-3-reservado-nombre"
-number = "3.vinculada.3.reservado-nombre"
-
-[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-3-tipo-operacion"
 number = "3.vinculada.3.tipo-operacion"
 
@@ -175,10 +163,6 @@ casilla_id = "vinculada-4-razon-social"
 number = "3.vinculada.4.razon-social"
 
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "vinculada-4-reservado-nombre"
-number = "3.vinculada.4.reservado-nombre"
-
-[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-4-tipo-operacion"
 number = "3.vinculada.4.tipo-operacion"
 
@@ -213,10 +197,6 @@ number = "3.vinculada.5.provincia-pais"
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-5-razon-social"
 number = "3.vinculada.5.razon-social"
-
-[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "vinculada-5-reservado-nombre"
-number = "3.vinculada.5.reservado-nombre"
 
 [[revisions."2018-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "vinculada-5-tipo-operacion"

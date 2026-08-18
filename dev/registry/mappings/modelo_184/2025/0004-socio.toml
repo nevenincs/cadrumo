@@ -12,11 +12,13 @@ kind = "literal"
 literal = "2"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1671
 ordinal = "1"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f002"
@@ -24,11 +26,13 @@ kind = "literal"
 literal = "184"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1673
 ordinal = "2"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f003"
@@ -36,11 +40,13 @@ kind = "draft"
 draft_attribute = "filing_year"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1675
 ordinal = "3"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f004"
@@ -48,11 +54,13 @@ kind = "header"
 producer_key = "taxpayer.tax_id"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1682
 ordinal = "4"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f005"
@@ -60,11 +68,13 @@ kind = "casilla"
 casilla_id = "tipo3.miembro-nif"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1685
 ordinal = "5"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f006"
@@ -72,11 +82,13 @@ kind = "casilla"
 casilla_id = "tipo3.representante-fiscal-nif"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1708
 ordinal = "6"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f007"
@@ -84,11 +96,13 @@ kind = "casilla"
 casilla_id = "tipo3.miembro-nombre"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1726
 ordinal = "7"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f008"
@@ -96,11 +110,13 @@ kind = "casilla"
 casilla_id = "tipo3.tipo-hoja"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1741
 ordinal = "8"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f009"
@@ -108,11 +124,13 @@ kind = "casilla"
 casilla_id = "tipo3.codigo-provincia"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1743
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f010"
@@ -120,11 +138,13 @@ kind = "casilla"
 casilla_id = "tipo3.clave-pais"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1781
 ordinal = "10"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f011"
@@ -132,11 +152,13 @@ kind = "casilla"
 casilla_id = "tipo3.clave-tipo-participe"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1791
 ordinal = "11"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f012"
@@ -144,11 +166,13 @@ kind = "casilla"
 casilla_id = "tipo3.miembro-a-31-diciembre"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1796
 ordinal = "12"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f013"
@@ -156,11 +180,13 @@ kind = "casilla"
 casilla_id = "tipo3.dias-miembro"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1800
 ordinal = "13"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
 
 [[entries]]
 export_field_id = "m184-2025.socio.f014"
@@ -168,185 +194,252 @@ kind = "casilla"
 casilla_id = "tipo3.porcentaje-participacion"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
-source_row = 1803
-ordinal = "14"
+source_row = 1809
+ordinal_absent = true
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2025.socio.f015"
 kind = "casilla"
+casilla_id = "tipo3.porcentaje-participacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1811
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[[entries]]
+export_field_id = "m184-2025.socio.f016"
+kind = "casilla"
 casilla_id = "tipo3.clave"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1814
 ordinal = "15"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f016"
+export_field_id = "m184-2025.socio.f017"
 kind = "casilla"
 casilla_id = "tipo3.subclave"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1834
 ordinal = "16"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f017"
+export_field_id = "m184-2025.socio.f018"
 kind = "casilla"
 casilla_id = "tipo3.importe"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 1903
 ordinal = "17"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
-[[entries]]
-export_field_id = "m184-2025.socio.f018"
-kind = "casilla"
-casilla_id = "tipo3.reduccion"
-legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-184-2025"]
-[entries.anchor]
-sheet = "Tipo 2 - Registro De Socio, Heredero,"
-source_row = 2035
-ordinal = "18"
-record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2025.socio.f019"
 kind = "casilla"
+casilla_id = "tipo3.reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2069
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[[entries]]
+export_field_id = "m184-2025.socio.f020"
+kind = "casilla"
+casilla_id = "tipo3.reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2071
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[[entries]]
+export_field_id = "m184-2025.socio.f021"
+kind = "casilla"
 casilla_id = "tipo3.domicilio-fiscal"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2074
 ordinal = "19"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f020"
+export_field_id = "m184-2025.socio.f022"
 kind = "casilla"
 casilla_id = "tipo3.provisiones-gastos-dificil-justificacion"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2078
 ordinal = "20"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f021"
+export_field_id = "m184-2025.socio.f023"
 kind = "casilla"
 casilla_id = "tipo3.naturaleza-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2094
 ordinal = "21"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f022"
+export_field_id = "m184-2025.socio.f024"
 kind = "casilla"
 casilla_id = "tipo3.situacion-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2102
 ordinal = "22"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f023"
+export_field_id = "m184-2025.socio.f025"
 kind = "casilla"
 casilla_id = "tipo3.referencia-catastral"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2120
 ordinal = "23"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f024"
+export_field_id = "m184-2025.socio.f026"
 kind = "casilla"
 casilla_id = "tipo3.clave-declarado"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2129
 ordinal = "24"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f025"
+export_field_id = "m184-2025.socio.f027"
 kind = "casilla"
 casilla_id = "tipo3.porcentaje-titularidad-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2139
 ordinal = "25"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f026"
+export_field_id = "m184-2025.socio.f028"
 kind = "casilla"
 casilla_id = "tipo3.dias-arrendamiento"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2154
 ordinal = "26"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f027"
+export_field_id = "m184-2025.socio.f029"
 kind = "casilla"
 casilla_id = "tipo3.rendimiento-neto-previo-eo"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
-source_row = 2163
-ordinal = "27"
+source_row = 2183
+ordinal_absent = true
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
-export_field_id = "m184-2025.socio.f028"
+export_field_id = "m184-2025.socio.f030"
+kind = "casilla"
+casilla_id = "tipo3.rendimiento-neto-previo-eo"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2185
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[[entries]]
+export_field_id = "m184-2025.socio.f031"
 kind = "casilla"
 casilla_id = "tipo3.rendimiento-neto-minorado-agricola-eo"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2192
 ordinal = "28"
 record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
+
 [[entries]]
-export_field_id = "m184-2025.socio.f029"
+export_field_id = "m184-2025.socio.f032"
 kind = "filler"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
+
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Socio, Heredero,"
 source_row = 2222

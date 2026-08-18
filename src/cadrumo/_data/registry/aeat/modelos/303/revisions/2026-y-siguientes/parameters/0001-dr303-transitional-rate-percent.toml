@@ -1,12 +1,9 @@
-# Tipo % (rate) for boxes [154] and [166] in this revision.
-#
-# AEAT neutralises both transitional Tipo % boxes to a zero constant from this
-# design onward: the bundled diseno declares Constante "00000" at both slots, so
-# the RD-ley 4/2024 transitional rungs (5,00 / 7,50 / 2,00) cannot legally occur
-# in any period this revision covers. Those dated windows are therefore NOT
-# carried here -- the sibling revisions covering 2023 and 2024 own them. Copying
-# a window a revision cannot reach leaves a rung dormant at best and a vehicle
-# for mis-declaration at worst.
+# Tipo % values for boxes [154] and [166]. This revision's own bundled
+# diseño declares both constants as `Constante "00000"`: the RD-ley 4/2024
+# transitional windows ended on 31 December 2024, so the 2026 design
+# mandates zero and the rungs carry no rate this revision's filing periods
+# can lawfully resolve to. The dated 2024-pinned windows belong to the two
+# 2024-covering revisions and to no other.
 
 [[revisions.2026-y-siguientes.parameters]]
 id = "m303-dr303-154-transitional-rate-percent"
@@ -18,7 +15,7 @@ source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
 [[revisions.2026-y-siguientes.parameters.values]]
 value = "0.00"
 date_axis = "filing_period"
-valid_from = 2026-01-01
+valid_from = 2025-01-01
 
 [[revisions.2026-y-siguientes.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -34,7 +31,7 @@ source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
 [[revisions.2026-y-siguientes.parameters.values]]
 value = "0.00"
 date_axis = "filing_period"
-valid_from = 2026-01-01
+valid_from = 2025-01-01
 
 [[revisions.2026-y-siguientes.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

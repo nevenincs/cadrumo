@@ -39,19 +39,6 @@ source_refs = ["aeat-dr-232-2018"]
 export_refs = ["m232-2018.dr23201.f020"]
 
 [[revisions."2018-y-siguientes".casillas]]
-id = "vinculada-1-reservado-nombre"
-number = "3.vinculada.1.reservado-nombre"
-section = ["vinculadas", "1"]
-data_type = "text"
-semantic_role = "related_party_reserved_1"
-required = false
-input_kind = "informational"
-binding = "modelo-232-2018.page_01.220-239.vinculada-1-reservado-nombre"
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f021"]
-
-[[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-tipo-vinculacion"
 number = "3.vinculada.1.tipo-vinculacion"
 section = ["vinculadas", "1"]
@@ -167,19 +154,6 @@ binding = "modelo-232-2018.page_01.281-340.vinculada-2-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
 export_refs = ["m232-2018.dr23201.f030"]
-
-[[revisions."2018-y-siguientes".casillas]]
-id = "vinculada-2-reservado-nombre"
-number = "3.vinculada.2.reservado-nombre"
-section = ["vinculadas", "2"]
-data_type = "text"
-semantic_role = "related_party_reserved_2"
-required = false
-input_kind = "informational"
-binding = "modelo-232-2018.page_01.341-360.vinculada-2-reservado-nombre"
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f031"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-tipo-vinculacion"
@@ -299,19 +273,6 @@ source_refs = ["aeat-dr-232-2018"]
 export_refs = ["m232-2018.dr23201.f040"]
 
 [[revisions."2018-y-siguientes".casillas]]
-id = "vinculada-3-reservado-nombre"
-number = "3.vinculada.3.reservado-nombre"
-section = ["vinculadas", "3"]
-data_type = "text"
-semantic_role = "related_party_reserved_3"
-required = false
-input_kind = "informational"
-binding = "modelo-232-2018.page_01.462-481.vinculada-3-reservado-nombre"
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f041"]
-
-[[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-tipo-vinculacion"
 number = "3.vinculada.3.tipo-vinculacion"
 section = ["vinculadas", "3"]
@@ -429,19 +390,6 @@ source_refs = ["aeat-dr-232-2018"]
 export_refs = ["m232-2018.dr23201.f050"]
 
 [[revisions."2018-y-siguientes".casillas]]
-id = "vinculada-4-reservado-nombre"
-number = "3.vinculada.4.reservado-nombre"
-section = ["vinculadas", "4"]
-data_type = "text"
-semantic_role = "related_party_reserved_4"
-required = false
-input_kind = "informational"
-binding = "modelo-232-2018.page_01.583-602.vinculada-4-reservado-nombre"
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f051"]
-
-[[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-tipo-vinculacion"
 number = "3.vinculada.4.tipo-vinculacion"
 section = ["vinculadas", "4"]
@@ -557,19 +505,6 @@ binding = "modelo-232-2018.page_01.644-703.vinculada-5-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
 export_refs = ["m232-2018.dr23201.f060"]
-
-[[revisions."2018-y-siguientes".casillas]]
-id = "vinculada-5-reservado-nombre"
-number = "3.vinculada.5.reservado-nombre"
-section = ["vinculadas", "5"]
-data_type = "text"
-semantic_role = "related_party_reserved_5"
-required = false
-input_kind = "informational"
-binding = "modelo-232-2018.page_01.704-723.vinculada-5-reservado-nombre"
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f061"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-tipo-vinculacion"

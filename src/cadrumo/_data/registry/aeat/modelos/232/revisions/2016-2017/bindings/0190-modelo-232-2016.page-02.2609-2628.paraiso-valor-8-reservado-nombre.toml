@@ -1,6 +1,0 @@
-[[revisions."2016-2017".bindings]]
-id = "modelo-232-2016.page_02.2609-2628.paraiso-valor-8-reservado-nombre"
-source = "manual_input"
-selector = { record = "page_02", field = "paraiso-valor-8-reservado-nombre", offset = 2609, length = 20, data_type = "text" }
-legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2016"]
