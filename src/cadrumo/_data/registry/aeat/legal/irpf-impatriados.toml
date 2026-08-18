@@ -146,11 +146,11 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_151/files/modelo-151-procedure.html"
-sha256 = "e1a2a58ca8852868facf2222f2ec16657d4875b85245346c5c8413705b346428"
-bytes = 853
-retrieved_at = 2026-05-27
+sha256 = "7b510f05d74b3575102b5c731ff7c60c7d56c1a78b1eaefab62fcb49dce010be"
+bytes = 24595
+retrieved_at = 2026-08-18
 applies_from = 2008-01-01
-source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml"
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G615.shtml"
 review_status = "reviewed"
 
 # Retiered 2026-08-15: this 915-byte orden excerpt carries no annex section
