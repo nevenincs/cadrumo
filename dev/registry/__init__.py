@@ -1,6 +1,6 @@
 """AEAT registry authoring-tree developer tooling (not shipped in the wheel)."""
 
-from ._semantic_map import (
+from .pipeline._semantic_map import (
     EnvelopePrefixField,
     EnvelopeTotalAnchor,
     FilingEnvelopePrefixRole,
@@ -10,7 +10,7 @@ from ._semantic_map import (
     SemanticMapRecord,
     VariableEnvelopeSemantic,
 )
-from ._semantic_map_loader import (
+from .pipeline._semantic_map_loader import (
     SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
     SemanticMapFragment,
     load_semantic_map,

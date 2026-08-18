@@ -650,7 +650,7 @@ def run_census() -> CensusReport:
         completeness is a static property, and binding a gate to a two-regime
         load trace would make it slow without making it stricter.
     """
-    from dev.registry.load_census_classification import classify_universe, stale_rules
+    from dev.registry.analysis.load_census_classification import classify_universe, stale_rules
 
     graph = build_runtime_graph()
     closure = static_load_closure(graph)

@@ -21,11 +21,6 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ._generated_tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    validate_generated_export_tree,
-)
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
@@ -36,6 +31,11 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    validate_generated_export_tree,
+)
 
 __all__ = [
     "CheckedGeneratedExportTree",

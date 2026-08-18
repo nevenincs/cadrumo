@@ -12,8 +12,8 @@ from enum import StrEnum
 import pytest
 from pydantic import ValidationError
 
-from .._workbook_parity_models import WorkbookRunnerAvailability
-from .._workbook_parity_types import WorkbookKind
+from ..parity._workbook_parity_models import WorkbookRunnerAvailability
+from ..parity._workbook_parity_types import WorkbookKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from cadrumo.core import STRICT_FROZEN_CONFIG, CasillaId, Period, hydrate_scenario_filing_period
 from cadrumo.core.time import now
 from cadrumo.domain.calculations.registry import (
     RegistrySnapshotError,
@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry import (
     selector_period_matches_request,
 )
 
-from ._scenario_filing_period import hydrate_scenario_filing_period
 from ._workbook_parity import (
     SyntheticInputSet,
     WorkbookArtefactReport,

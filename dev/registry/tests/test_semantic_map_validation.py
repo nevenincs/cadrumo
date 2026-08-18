@@ -15,10 +15,10 @@ from cadrumo.core import (
 )
 from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_revision_inspection
 
-from .. import _semantic_map_validation
-from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
-from .._semantic_map import SemanticMap
-from .._semantic_map_validation import SemanticMapAnomalyException, validate_semantic_map
+from ..pipeline import _semantic_map_validation
+from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_validation import SemanticMapAnomalyException, validate_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

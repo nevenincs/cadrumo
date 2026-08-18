@@ -29,8 +29,12 @@ from cadrumo.domain.calculations.registry import (
     ValidatedRegistryAuthority,
 )
 
-from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField, load_record_design_intermediate
-from ._semantic_map_validation import validate_inspection_source_authority
+from ..pipeline._record_design_ir import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    load_record_design_intermediate,
+)
+from ..pipeline._semantic_map_validation import validate_inspection_source_authority
 
 __all__ = [
     "DP30302_EPOCHS",

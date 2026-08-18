@@ -6,17 +6,21 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
-from dev.registry._record_design_ir import (
+
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry import (
+    RecordDesignRelativeSuffixMarker,
+    RecordDesignSheet,
+    extract_record_design,
+    load_catalogue_file,
+    resolve_record_design_binary,
+)
+
+from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignIntermediateRelativeSuffixMarker,
     load_record_design_intermediate,
 )
-
-from .....core.resources import bundled_path
-from .._corpus_catalogue import resolve_record_design_binary
-from .._loader import load_catalogue_file
-from .._record_design import extract_record_design
-from .._record_design_schema import RecordDesignRelativeSuffixMarker, RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

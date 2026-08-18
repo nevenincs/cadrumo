@@ -18,7 +18,7 @@ from cadrumo.core import FilingProducerKey
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import load_catalogue_file
 
-from .._record_design_ir import load_record_design_intermediate
+from ..pipeline._record_design_ir import load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

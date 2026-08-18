@@ -13,17 +13,17 @@ from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError
 
-from .. import _generated_tree_check
-from .._export_tree import ExportTreeTransportProfile
-from .._generated_tree_check import (
-    GeneratedExportTreeCheckContext,
-    check_generated_export_tree,
-)
-from .._provenance_manifest import (
+from ..pipeline import _tree_check
+from ..pipeline._export_tree import ExportTreeTransportProfile
+from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
+)
+from ..pipeline._tree_check import (
+    GeneratedExportTreeCheckContext,
+    check_generated_export_tree,
 )
 from .test_export_tree import (
     _wire_evidence,
@@ -246,7 +246,7 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_inspectio
 
 def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
     """The permanent check API must not regain an obsolete migration or publish route."""
-    module = ast.parse(inspect.getsource(_generated_tree_check))
+    module = ast.parse(inspect.getsource(_tree_check))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
     imported_modules = {
@@ -268,4 +268,4 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
     assert not forbidden.intersection(referenced_names)
     assert not forbidden.intersection(attribute_names)
     assert "dev.registry._generated_tree_publication" not in imported_modules
-    assert "legacy" not in inspect.getsource(_generated_tree_check).casefold()
+    assert "legacy" not in inspect.getsource(_tree_check).casefold()

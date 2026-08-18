@@ -8,13 +8,17 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
-from .. import RegistryRevisionInspection, bundled_revision_inspection
+from cadrumo.core import scan_directory
+from cadrumo.domain.calculations.registry import (
+    RegistryRevisionInspection,
+    bundled_revision_inspection,
+)
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[6]
+_REPOSITORY_ROOT = REPO_ROOT
 _SOURCE_ROOT = _REPOSITORY_ROOT / "src" / "cadrumo"
 _INSPECTION_SYMBOLS = frozenset(
     {
@@ -29,11 +33,11 @@ _RUNTIME_BOUNDARY_ROOTS = (
     _SOURCE_ROOT / "entrypoints",
 )
 _STATIC_CONSUMERS = (
-    _REPOSITORY_ROOT / "dev" / "registry" / "_semantic_map_validation.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "_semantic_map_join.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "_dp30302_field_matrix.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "_export_tree.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "_variable_envelope.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_validation.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_join.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "_dp30302_field_matrix.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_export_tree.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_variable_envelope.py",
 )
 _LEGACY_STATIC_SYMBOLS = frozenset(
     {

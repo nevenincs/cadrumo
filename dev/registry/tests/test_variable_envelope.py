@@ -15,21 +15,21 @@ from cadrumo.domain.calculations.registry import (
     load_registry_tree,
 )
 
-from .._record_design_ir import (
+from ..pipeline._record_design_ir import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateSource,
     RecordDesignIntermediateVariableEnvelope,
     load_record_design_intermediate,
 )
-from .._semantic_map import (
+from ..pipeline._semantic_map import (
     EnvelopePrefixField,
     EnvelopeTotalAnchor,
     FilingEnvelopePrefixRole,
     SemanticMapAnchor,
     VariableEnvelopeSemantic,
 )
-from .._variable_envelope import (
+from ..pipeline._variable_envelope import (
     FilingEnvelopeProvenance,
     compile_filing_envelope_definition,
     validate_variable_envelope,
@@ -213,7 +213,7 @@ def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definit
 
 def test_static_generator_has_no_instance_carrier_vocabulary() -> None:
     """DP30300 compilation retains grammar only; application owns filing bytes."""
-    source = Path("dev/registry/_variable_envelope.py").read_text(encoding="utf-8")
+    source = Path("dev/registry/pipeline/_variable_envelope.py").read_text(encoding="utf-8")
 
     forbidden = {
         "M303EnvelopeGenerationInput",

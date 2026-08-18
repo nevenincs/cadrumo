@@ -24,7 +24,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.modelo_embed_classification import (
+
+from ..analysis.modelo_embed_classification import (
     Classification,
     ClassificationEntry,
     EvidenceKind,
