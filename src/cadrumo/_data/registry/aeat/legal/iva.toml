@@ -147,6 +147,18 @@ applies_from = 2003-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.shtml"
 review_status = "reviewed"
 
+[sources."aeat-modelo-309-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_309/files/modelo-309-instrucciones.html"
+sha256 = "f612c64781f74ed9192700cc222493e08e1b05b7e821420248e99e7d21c6fb59"
+bytes = 18880
+retrieved_at = 2026-08-18
+applies_from = 2003-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-309-iva-declaracion-liquidacion-periodica_/instrucciones-modelo-309.html"
+review_status = "reviewed"
+
 [sources."boe-modelo-309-2003-form"]
 evidence_tier = "layout_authority"
 authority = "boe"
