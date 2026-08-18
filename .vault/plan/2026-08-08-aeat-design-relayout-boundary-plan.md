@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-18'
-body_hash: 'sha256:8505d0b5308af53ce1582e440833b426170beb9537ff4dc7040593b03c0860fc'
+body_hash: 'sha256:1935613aa4a1e67debc0d7600e40867608c35f50cf90d5a4e1464c7b0f3a30c0'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -179,7 +179,7 @@ Run the hardened gate and the full tree with owner triage, record the divergence
 
 - [x] `W05.P11.S57` - Run the hardened span gate at HEAD and record its verdict, then prove it non-vacuous by withholding one authored revision from the tree through a runtime mutation from outside the repository and confirming it reds again; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
 - [x] `W05.P11.S58` - Run the per-modelo export completeness, workbook parity and fichero-BOE parity gates for every authored revision and record each verdict, treating a vacuous pass over an absent manifest as a failure; `src/cadrumo/tests/`.
-- [ ] `W05.P11.S59` - Run the full-tree suite sequentially, capture the complete output to a log file read back from disk rather than a truncated pipe, and record owner-surface failures separately from unrelated peer churn; `src/cadrumo/`.
+- [x] `W05.P11.S59` - Run the full-tree suite sequentially, capture the complete output to a log file read back from disk rather than a truncated pipe, and record owner-surface failures separately from unrelated peer churn; `src/cadrumo/`.
 - [x] `W05.P11.S60` - Record in the campaign audit document that the first accepted record's no-implementation-action ruling for Modelo 200 was overtaken by a record-set-change finding, so a later reader does not read the record as still in force on that point; `.vault/audit/`.
 - [x] `W05.P11.S61` - Record in the campaign audit document every filing year this plan deliberately leaves refusing rather than correctly exported, stated beside what the standing goal still asks for that the narrowing excludes; `.vault/audit/`.
 - [x] `W05.P11.S62` - Submit this plan's closure summary to a fresh-context honesty review by an independent reviewer given the two accepted records and the commit ranges, and open a Step with a verification gate for every item it returns; `.vault/audit/`.

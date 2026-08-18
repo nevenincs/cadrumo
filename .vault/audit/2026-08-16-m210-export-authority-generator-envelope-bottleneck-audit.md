@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#m210-export-authority'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:352b3ff6bb67cc54b2d0ffbcc41aed438ee0af1050731da364067fbe97034856'
+body_hash: 'sha256:33711a8f8884c8ac95b9c67741e3a73636bb4ec5ea0d2269670e124fe56b7f59'
 related:
   - "[[2026-08-16-m210-export-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"

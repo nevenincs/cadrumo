@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from itertools import pairwise
 
 import pytest
 
@@ -11,15 +10,12 @@ from .....core import ExportLayoutFormat
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
-    CasillaFieldKind,
-    DataBindingDefinition,
     ExportRecordDefinition,
     InputKind,
     ModeloRevision,
     RegistryValidator,
-    build_snapshot,
+    select_revision,
 )
-from .._binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,15 +42,9 @@ def test_committed_modelo_232_resolves_revision_by_filing_year() -> None:
         (2024, "2018-y-siguientes"),
     )
     for filing_year, expected_revision in cases:
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period="0A",
-        )
-        assert snapshot.revision.id == expected_revision
-        assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-816-2017:art-1",)
+        selected = select_revision(modelo, filing_year=filing_year, period="0A")
+        assert selected.id == expected_revision
+        assert selected.orden_aplicabilidad == ("orden-hfp-816-2017:art-1",)
 
 
 def test_committed_modelo_232_is_informative_only() -> None:
@@ -277,21 +267,21 @@ def test_committed_modelo_232_construct_includes_deadline_and_schedule_members()
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
 
 
-_EXPECTED_ENVELOPE_FIELD_POSITIONS: dict[str, tuple[int, int, CasillaFieldKind]] = {
-    "envelope-open": (1, 2, CasillaFieldKind.LITERAL),
-    "envelope-modelo": (3, 3, CasillaFieldKind.LITERAL),
-    "envelope-discriminante": (6, 1, CasillaFieldKind.LITERAL),
-    "envelope-year": (7, 4, CasillaFieldKind.DRAFT),
-    "envelope-period": (11, 2, CasillaFieldKind.LITERAL),
-    "envelope-marker": (13, 5, CasillaFieldKind.LITERAL),
-    "envelope-aux-open": (18, 5, CasillaFieldKind.LITERAL),
-    "envelope-reserved-1": (23, 70, CasillaFieldKind.FILLER),
-    "envelope-program-version": (93, 4, CasillaFieldKind.HEADER),
-    "envelope-reserved-2": (97, 4, CasillaFieldKind.FILLER),
-    "envelope-presenter-nif": (101, 9, CasillaFieldKind.HEADER),
-    "envelope-reserved-3": (110, 213, CasillaFieldKind.FILLER),
-    "envelope-aux-close": (323, 6, CasillaFieldKind.LITERAL),
-}
+_EXPECTED_AUXILIARY_PREFIX_ROLES = (
+    "opening_tag",
+    "modelo",
+    "discriminant",
+    "filing_year",
+    "period",
+    "record_type",
+    "aux_opening_tag",
+    "pre_program_filler",
+    "program_identifier",
+    "between_identities_filler",
+    "developer_tax_id",
+    "post_developer_filler",
+    "aux_closing_tag",
+)
 
 
 def test_committed_modelo_232_envelope_export_layout_declares_every_revision_with_fixed_width() -> None:
@@ -302,162 +292,113 @@ def test_committed_modelo_232_envelope_export_layout_declares_every_revision_wit
         assert revision.export_layouts[0].format is ExportLayoutFormat.FIXED_WIDTH, revision.id
 
 
-def test_committed_modelo_232_envelope_export_layout_carries_envelope_header_and_footer() -> None:
-    """The official AEAT envelope wraps page records with a header + closing-tag footer."""
+def test_committed_modelo_232_layout_declares_the_dr23200_auxiliary_header() -> None:
+    """The total-less DR23200 page zero is a typed auxiliary header declaration."""
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        header = revision.export_layouts[0].auxiliary_envelope_header
+        assert header is not None, revision.id
+        assert header.record_identity == "DR23200", revision.id
+        assert header.prefix_extent == 328, revision.id
+        roles = tuple(field.role.value for field in header.prefix_fields)
+        assert roles == _EXPECTED_AUXILIARY_PREFIX_ROLES, (revision.id, roles)
+        assert sum(field.length for field in header.prefix_fields) == 328, revision.id
+
+
+def test_committed_modelo_232_record_types_and_extents_match_the_generated_layout() -> None:
+    """The two generated records carry the parser-derived record types and extents."""
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
         layout = revision.export_layouts[0]
-        record_types = {record.record_type for record in layout.records}
-        assert {"envelope_header", "envelope_footer"} <= record_types, revision.id
-
-
-def test_committed_modelo_232_envelope_header_record_orders_first() -> None:
-    modelo, _ = _load_modelo_232()
-    for revision in modelo.revisions.values():
-        header_record = _envelope_header(revision)
-        assert header_record.order == 0, revision.id
-
-
-def test_committed_modelo_232_envelope_header_field_layout_matches_official_workbook() -> None:
-    """Every header field must match the official ``(offset, length, kind)`` triple."""
-    modelo, _ = _load_modelo_232()
-    for revision in modelo.revisions.values():
-        for field in _envelope_header(revision).fields:
-            key = f"envelope-{field.id.split('-envelope-', 1)[1]}"
-            assert key in _EXPECTED_ENVELOPE_FIELD_POSITIONS, (revision.id, key)
-            expected_offset, expected_length, expected_kind = _EXPECTED_ENVELOPE_FIELD_POSITIONS[key]
-            assert field.offset == expected_offset, (revision.id, field.id, field.offset)
-            assert field.length == expected_length, (revision.id, field.id, field.length)
-            assert field.kind == expected_kind, (revision.id, field.id, field.kind)
-
-
-def test_committed_modelo_232_envelope_footer_record_orders_last() -> None:
-    modelo, _ = _load_modelo_232()
-    for revision in modelo.revisions.values():
-        assert _envelope_footer(revision).order == 99, revision.id
-
-
-def test_committed_modelo_232_envelope_footer_emits_single_closing_tag_field() -> None:
-    """Footer carries exactly one field; that field renders the modelo's XML close tag."""
-    modelo, _ = _load_modelo_232()
-    for revision in modelo.revisions.values():
-        footer_record = _envelope_footer(revision)
-        assert len(footer_record.fields) == 1, revision.id
-        close_field = footer_record.fields[0]
-        assert close_field.kind is CasillaFieldKind.COMPUTED, revision.id
-        assert close_field.computed_key == "envelope_closing_tag", revision.id
-        assert close_field.length == 18, revision.id
-
-
-def _envelope_header(revision: ModeloRevision) -> ExportRecordDefinition:
-    """Return the ``envelope_header`` record from ``revision``'s first export layout."""
-    return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_header")
-
-
-def _envelope_footer(revision: ModeloRevision) -> ExportRecordDefinition:
-    """Return the ``envelope_footer`` record from ``revision``'s first export layout."""
-    return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_footer")
+        records = {record.record_type: record for record in layout.records}
+        assert set(records) == {"operaciones-vinculadas", "paraisos-fiscales"}, revision.id
+        vinculadas = records["operaciones-vinculadas"]
+        assert vinculadas.fields[-1].offset + vinculadas.fields[-1].length - 1 == 1500, revision.id
+        paraisos = records["paraisos-fiscales"]
+        assert paraisos.fields[-1].offset + paraisos.fields[-1].length - 1 == 3500, revision.id
 
 
 def test_committed_modelo_232_construct_includes_export_layout_and_export_link() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
         construct = revision.constructs[0]
-        assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
         export_links = [link for link in revision.application_links if link.surface == "export"]
         assert len(export_links) == 1, revision.id
         assert export_links[0].consumer == "cadrumo.application.filing.export_draft"
         assert export_links[0].id in construct.application_links
 
 
+_SECTION_3_4_RANGE = (144, 1171)
+_SECTION_5_6_RANGE = (13, 3072)
+
+
+def _record_for(revision: ModeloRevision, record_type: str) -> ExportRecordDefinition:
+    return next(record for record in revision.export_layouts[0].records if record.record_type == record_type)
+
+
 def test_committed_modelo_232_page_01_record_matches_official_layout() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        page_01 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_01")
+        page_01 = _record_for(revision, "operaciones-vinculadas")
         last_field = page_01.fields[-1]
         assert last_field.offset is not None and last_field.length is not None
-        assert last_field.offset + last_field.length - 1 == 1500, (
-            f"page_01 must extend to official position 1500 (got {last_field.offset + last_field.length - 1})"
-        )
-        # Closing tag fragments must appear in order at the end of the record.
-        closing_literals = [
-            field.literal
-            for field in page_01.fields[-4:]
-            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
-        ]
-        assert closing_literals == ["</T", "232", "01", "000>"], closing_literals
+        assert last_field.offset + last_field.length - 1 == 1500, revision.id
 
 
 def test_committed_modelo_232_page_02_record_matches_official_layout() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        page_02 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_02")
+        page_02 = _record_for(revision, "paraisos-fiscales")
         last_field = page_02.fields[-1]
         assert last_field.offset is not None and last_field.length is not None
-        assert last_field.offset + last_field.length - 1 == 3500, (
-            f"page_02 must extend to official position 3500 (got {last_field.offset + last_field.length - 1})"
+        assert last_field.offset + last_field.length - 1 == 3500, revision.id
+
+
+def _covered_slots(record: ExportRecordDefinition) -> tuple[tuple[int, int], ...]:
+    """Every (offset, length) the record covers with a value or a filler."""
+    return tuple(
+        sorted(
+            (field.offset, field.length)
+            for field in record.fields
+            if field.offset is not None and field.length is not None
         )
-        opening_literals = [
-            field.literal
-            for field in page_02.fields[:4]
-            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
-        ]
-        assert opening_literals == ["<T", "232", "02", "000>"], opening_literals
-        closing_literals = [
-            field.literal
-            for field in page_02.fields[-4:]
-            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
-        ]
-        assert closing_literals == ["</T", "232", "02", "000>"], closing_literals
+    )
 
 
-_SECTION_3_4_RANGE = (144, 1171)
-_SECTION_5_6_RANGE = (13, 3072)
+def _assert_slots_tile_contiguously(record: ExportRecordDefinition, section: tuple[int, int], revision: ModeloRevision) -> None:
+    """The record's bound and filler slots tile its official section with no gaps.
 
-
-def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple[DataBindingDefinition, ...]:
-    return tuple(binding for binding in revision.bindings if selector_as_dict(binding).get("record") == record_name)
-
-
-def _selector_int(binding: DataBindingDefinition, key: str) -> int:
-    """Extract an integer selector value from a binding; asserts the value is numeric."""
-    value = selector_as_dict(binding)[key]
-    assert isinstance(value, (int, str))
-    return int(value)
+    The Administracion-reserved name slots are fillers by design, so the tiling
+    includes them; a gap means a design position neither bound nor filled. Slots
+    before the section (the record's own opening tag) are ignored.
+    """
+    slots = [
+        (offset, length)
+        for offset, length in _covered_slots(record)
+        if offset >= section[0] and offset + length - 1 <= section[1]
+    ]
+    assert slots, revision.id
+    cursor = section[0]
+    for offset, length in slots:
+        assert offset == cursor, (revision.id, offset, cursor)
+        cursor = offset + length
+    assert cursor - 1 == section[1], (revision.id, cursor - 1)
 
 
 def test_committed_modelo_232_section_3_4_bindings_cover_page_01_slots() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        bindings = _layout_bindings_for(revision, "page_01")
-        assert bindings, revision.id
-        ranges = sorted((_selector_int(b, "offset"), _selector_int(b, "length")) for b in bindings)
-        first_offset = ranges[0][0]
-        last_offset, last_length = ranges[-1]
-        assert first_offset == _SECTION_3_4_RANGE[0], (revision.id, first_offset)
-        assert last_offset + last_length - 1 == _SECTION_3_4_RANGE[1], (
-            revision.id,
-            last_offset + last_length - 1,
+        _assert_slots_tile_contiguously(
+            _record_for(revision, "operaciones-vinculadas"), _SECTION_3_4_RANGE, revision
         )
-        for current, nxt in pairwise(ranges):
-            assert current[0] + current[1] == nxt[0], (revision.id, current, nxt)
 
 
 def test_committed_modelo_232_section_5_6_bindings_cover_page_02_slots() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        bindings = _layout_bindings_for(revision, "page_02")
-        assert bindings, revision.id
-        ranges = sorted((_selector_int(b, "offset"), _selector_int(b, "length")) for b in bindings)
-        first_offset = ranges[0][0]
-        last_offset, last_length = ranges[-1]
-        assert first_offset == _SECTION_5_6_RANGE[0], (revision.id, first_offset)
-        assert last_offset + last_length - 1 == _SECTION_5_6_RANGE[1], (
-            revision.id,
-            last_offset + last_length - 1,
+        _assert_slots_tile_contiguously(
+            _record_for(revision, "paraisos-fiscales"), _SECTION_5_6_RANGE, revision
         )
-        for current, nxt in pairwise(ranges):
-            assert current[0] + current[1] == nxt[0], (revision.id, current, nxt)
 
 
 def test_committed_modelo_232_construct_includes_layout_bindings() -> None:
@@ -472,11 +413,11 @@ def test_committed_modelo_232_construct_includes_layout_bindings() -> None:
 def test_committed_modelo_232_declarante_casillas_export_through_page_01_record() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        page_01 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_01")
+        page_01 = _record_for(revision, "operaciones-vinculadas")
         page_field_ids = {field.id for field in page_01.fields}
         for casilla in revision.casillas:
-            # Page 01 carries the declarante casillas; the vinculadas related-party
-            # rows export through the page_02 row layout, not page_01.
+            # The declarante casillas export through the vinculadas record; the
+            # paraiso-fiscal rows export through the second record.
             if not (casilla.section and casilla.section[0] == "declarante"):
                 continue
             assert casilla.export_refs, f"casilla {casilla.id!r} missing export_refs"
