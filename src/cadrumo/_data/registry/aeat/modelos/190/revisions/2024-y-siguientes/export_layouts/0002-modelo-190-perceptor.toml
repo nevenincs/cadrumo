@@ -71,6 +71,7 @@ foral_retention_navarra = "perc.retenciones-forales-navarra"
 foral_retention_araba = "perc.retenciones-forales-araba"
 foral_retention_gipuzkoa = "perc.retenciones-forales-gipuzkoa"
 foral_retention_bizkaia = "perc.retenciones-forales-bizkaia"
+emerging_stock_excess_clave = "perc.excesos-acciones-emergentes"
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-record-type"
@@ -1145,17 +1146,24 @@ legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-excesos-entrega-acciones"
+id = "modelo-190-perc-excesos-acciones-emergentes"
 offset = 388
 length = 1
-kind = "filler"
-# Design campo 36, 388 EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES. Only for clave A, and only when position 108-147 has content; "0. En el resto de supuestos de retribuciones en especie", which is the value ceros writes.
+kind = "binding"
+binding = "modelo-190-perceptor-row-excesos-acciones-emergentes"
+# Design campo 36, 388 EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES: clave 1
+# when the in-kind percepciones include emerging-company stock over the
+# art. 42.3.f) exempt amount, 0 for the rest of the in-kind retributions.
+# Declared only for clave A and only when the especie block has content: the
+# resolver refuses a row with in-kind percepciones but no recorded clave, and
+# a clave without in-kind percepciones, and writes spaces when the field is
+# not to be completed.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]

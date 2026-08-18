@@ -259,6 +259,7 @@ _M190_DECLARED_FIELDS = frozenset(
         "incapacity_kind_ingreso_a_cuenta",
         "incapacity_kind_repercutido",
         "complemento_infancia_clave",
+        "emerging_stock_excess_clave",
         "foral_retention_estatal",
         "foral_retention_navarra",
         "foral_retention_araba",
@@ -463,11 +464,13 @@ def test_build_withholding_rows_sums_repercutido_and_defaults_accrual_year() -> 
     rows = _build(
         _observation(
             **_COMPLETE_CLAVE_A,
+            emerging_stock_excess_clave=0,
             ingreso_a_cuenta_repercutido=Decimal("300"),
             source_id="row-1",
         ),
         _observation(
             **_COMPLETE_CLAVE_A,
+            emerging_stock_excess_clave=0,
             ingreso_a_cuenta_repercutido=Decimal("200"),
             accrual_year=2023,
             source_id="row-2",
@@ -729,6 +732,24 @@ def test_build_withholding_rows_foral_split_follows_clave_e_totals() -> None:
     # Exclusively Estatal: the one subfield carries the full sum.
     row = _build(_observation(**e_facts, foral_retention_estatal=Decimal("3200")))[0]
     assert row["foral_retention_estatal"] == Decimal("3200")
+
+
+def test_build_withholding_rows_emerging_stock_clave_follows_especie_content() -> None:
+    """Design campo 36 is recorded only for clave A rows whose especie block has
+    content; both claves are recorded facts, and the field is spaces when the
+    design says not to complete it."""
+    with_especie = {**_COMPLETE_CLAVE_A, "percibido_especie": Decimal("12000")}
+    row = _build(_observation(**with_especie, emerging_stock_excess_clave=0))[0]
+    assert row["emerging_stock_excess_clave"] == "0"
+    with pytest.raises(RegistryValidationError, match="emerging_stock_excess_clave"):
+        # Especie content obligates the clave.
+        _build(_observation(**with_especie))
+    with pytest.raises(RegistryValidationError, match="especie block has content"):
+        # The clave without in-kind percepciones contradicts the design.
+        _build(_observation(**_COMPLETE_CLAVE_A, emerging_stock_excess_clave=0))
+    with pytest.raises(RegistryValidationError, match="declares only for clave A"):
+        _build(_observation(clave=RetencionClave.G, emerging_stock_excess_clave=1))
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["emerging_stock_excess_clave"] == " "
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

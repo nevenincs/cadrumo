@@ -103,6 +103,7 @@ _WithholdingRowField = Literal[
     "foral_retention_araba",
     "foral_retention_gipuzkoa",
     "foral_retention_bizkaia",
+    "emerging_stock_excess_clave",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -305,6 +306,11 @@ class WithholdingObservation(BaseModel):
     foral_retention_bizkaia: Decimal = Decimal("0")
     """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
     de Bizkaia (design positions 375-387); the design's own zeros when none."""
+    emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the row's in-kind percepciones include emerging-company stock over
+    the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
+    of the in-kind retributions -- both recorded facts, declared only for clave A
+    and only when the especie block has content."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -1008,6 +1014,32 @@ def _finalise_withholding_row(
                 f"the row's retenciones practicadas plus ingresos a cuenta ({clave_e_total})",
             )
 
+    if "emerging_stock_excess_clave" in required_fields:
+        stock = row.get("emerging_stock_excess_clave")
+        especie_content = (
+            row["percibido_especie"] != 0
+            or row["ingreso_a_cuenta"] != 0
+            or row["ingreso_a_cuenta_repercutido"] != 0
+        )
+        if stock is not None and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "emerging_stock_excess_clave, which design campo 36 declares only for clave A",
+            )
+        if stock is not None and not especie_content:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "emerging_stock_excess_clave without any in-kind percepcion, which design "
+                "campo 36 declares only when the especie block has content",
+            )
+        if stock is None and clave == "A" and especie_content:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "in-kind percepciones but no emerging_stock_excess_clave, which design "
+                "campo 36 requires then (clave 0 for the rest of the in-kind retributions)",
+            )
+        finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
+
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
     finalised["disability_clave"] = str(disability) if disability is not None else " "
@@ -1098,6 +1130,7 @@ def _build_withholding_rows(
                 "accrual_year",
                 "housing_loan_communication_clave",
                 "complemento_infancia_clave",
+                "emerging_stock_excess_clave",
                 *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )

@@ -563,6 +563,7 @@ def assemble_withholding_observations(
                     **_optional_int_kwarg(fields, "third_child_compute"),
                     **_optional_int_kwarg(fields, "housing_loan_communication_clave"),
                     **_optional_int_kwarg(fields, "complemento_infancia_clave"),
+                    **_optional_int_kwarg(fields, "emerging_stock_excess_clave"),
                 ),
             )
         except (ValidationError, ValueError) as exc:
