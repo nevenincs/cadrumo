@@ -19,6 +19,7 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
+from .....core.identity import canonical_profile_bucket_id
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ._kdf_supervision import (
     unlock_profile_custody_material,
@@ -260,7 +261,7 @@ def profile_custody_recovery_aad_for(
                 maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
                 subject="profile recovery KDF",
             ),
-            "profile_id": str(profile_id),
+            "profile_id": canonical_profile_bucket_id(profile_id),
             "recovery_generation": recovery_generation,
             "schema_version": 1,
         },

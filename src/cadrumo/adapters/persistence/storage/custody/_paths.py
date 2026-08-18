@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from .....core import StorageCategory, bucket_scoped_storage_path, storage_location
+from .....core.identity import canonical_profile_bucket_id
 from .._path_safety import safe_repository_id
 from ..errors import PathContainmentError
 
@@ -65,7 +66,7 @@ def profile_custody_directory_name(profile_id: object) -> str:
                 "violation": "profile_id_not_uuid",
             },
         )
-    return safe_repository_id(str(profile_id), context=_PROFILE_ID_PATH_CONTEXT)
+    return safe_repository_id(canonical_profile_bucket_id(profile_id), context=_PROFILE_ID_PATH_CONTEXT)
 
 
 def profile_custody_path(

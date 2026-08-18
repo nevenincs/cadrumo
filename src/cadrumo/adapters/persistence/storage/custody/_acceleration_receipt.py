@@ -6,7 +6,6 @@ later process skip the passphrase. The AEAT authority session -- an encrypted
 row inside the bucket, revocable only with the key -- is the artefact that
 owns the word "session" in this codebase, and conflating the two has produced
 a wrong architectural premise more than once.
-
 The "logged in" state minted by ``aeat config login`` survives across CLI
 processes as two split-knowledge artefacts, either of which is useless
 alone:
@@ -56,6 +55,7 @@ See Also:
         The in-process materialisation this persisted record re-opens.
 """
 
+
 from __future__ import annotations
 
 import binascii
@@ -77,6 +77,7 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
+from .....core.identity import canonical_profile_bucket_id
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
@@ -245,7 +246,7 @@ def _associated_data(
             "dek_epoch": dek_epoch,
             "idle_deadline": idle_deadline.isoformat(),
             "issued_at": issued_at.isoformat(),
-            "profile_id": str(profile_id),
+            "profile_id": canonical_profile_bucket_id(profile_id),
             "schema_version": schema_version,
             "session_id": str(session_id),
         },
@@ -602,7 +603,7 @@ def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
 
     return keystore_sidecar_path(
         storage_root=storage_root,
-        bucket_id=str(profile_id),
+        bucket_id=canonical_profile_bucket_id(profile_id),
         filename=PROFILE_SESSION_FILENAME,
     )
 
@@ -896,7 +897,7 @@ def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
             if not _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
                 raise AccelerationReceiptRevocationError(
                     translated_message="errors.fail.fail_acceleration_receipt_revocation",
-                    context={"profile_id": str(profile_id)},
+                    context={"profile_id": canonical_profile_bucket_id(profile_id)},
                 )
     except ProfileCustodyRecordError as exc:
         _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)

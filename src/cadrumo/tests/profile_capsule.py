@@ -5,7 +5,6 @@ and auth tests still need to seed a record while exercising a real active
 bucket session, so this module composes the production capsule lifecycle and
 binds the exact record session around each read or replacement.
 """
-
 from __future__ import annotations
 
 from base64 import b64encode
@@ -32,6 +31,7 @@ from ..application.user_profile._profile_record_repository import (
     ProfileRecordRepository,
     bound_profile_record_session,
 )
+from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
 from ..domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -165,7 +165,7 @@ def bound_test_profile_record(
     root: Path | None = None,
 ) -> Iterator[ProfileRecordRepository]:
     """Yield the current repository while its real record session is bound."""
-    identity = UUID(str(profile_id))
+    identity = UUID(canonical_profile_bucket_id(profile_id))
     storage_root = effective_storage_root(root)
     session = _record_session(identity, root=storage_root)
     try:
@@ -181,7 +181,7 @@ def load_test_profile_record(
     root: Path | None = None,
 ) -> UserProfileRecord:
     """Read one current record through a bound real capsule session."""
-    identity = UUID(str(profile_id))
+    identity = UUID(canonical_profile_bucket_id(profile_id))
     with bound_test_profile_record(identity, root=root) as repository:
         return repository.load(identity)
 
@@ -230,7 +230,7 @@ def upsert_test_profile_facts(
     application-side upsert command, and every write still goes through the
     real revision compare-and-swap.
     """
-    identity = UUID(str(profile_id))
+    identity = UUID(canonical_profile_bucket_id(profile_id))
     storage_root = effective_storage_root(root)
     with bound_test_profile_record(identity, root=storage_root) as repository:
         current = repository.load(identity)
@@ -298,7 +298,7 @@ def publish_test_profile_capsule(
     revision-one record with no facts, left deliberately incomplete, because
     completing setup is a separate operator act.
     """
-    identity = UUID(str(profile_id))
+    identity = UUID(canonical_profile_bucket_id(profile_id))
     storage_root = effective_storage_root(root)
     dek = _test_bucket_key(str(identity), purpose="dek")
     envelope = _new_test_envelope(identity)

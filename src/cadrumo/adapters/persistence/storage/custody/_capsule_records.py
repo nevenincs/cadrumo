@@ -20,7 +20,7 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from .....core.identity import PrefixedContentDigest, ProfileLabel
+from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
 from .....core.time import now as _now
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import ProfileCustodyPasswordReadOperation
@@ -318,7 +318,7 @@ class ProfileCustodyDeletionMarker(BaseModel):
         payload: dict[str, object] = {
             "schema_version": 1,
             "owner": "application-local-custody",
-            "profile_id": str(profile_id),
+            "profile_id": canonical_profile_bucket_id(profile_id),
             "transaction_id": str(transaction_id),
             "inventory_digest": inventory_digest,
         }

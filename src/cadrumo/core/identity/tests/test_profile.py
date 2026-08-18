@@ -15,10 +15,12 @@ See Also:
 
 from __future__ import annotations
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import ValidationError
+
+from cadrumo.core.identity import canonical_profile_bucket_id
 
 from ....tests.fixtures.identity_holder import single_field_holder
 from .. import ProfileId
@@ -56,3 +58,23 @@ def test_profile_id_constraint_accepts_valid_values(profile_id: str, expected: s
 def test_profile_id_constraint_rejects_invalid_values(profile_id: str) -> None:
     with pytest.raises(ValidationError):
         _Holder.build(profile_id)
+
+
+def test_canonical_profile_bucket_id_returns_the_canonical_spelling() -> None:
+    """Either spelling of a profile id yields the one canonical bucket string."""
+    canonical = "00000000-0000-4000-8000-000000000000"
+    assert canonical_profile_bucket_id(canonical) == canonical
+    assert canonical_profile_bucket_id(UUID(canonical)) == canonical
+
+
+def test_canonical_profile_bucket_id_agrees_with_the_pydantic_boundary() -> None:
+    """The helper and the ProfileId alias cannot drift."""
+    canonical = "00000000-0000-4000-8000-000000000000"
+    assert canonical_profile_bucket_id(canonical) == ProfileId(canonical)
+
+
+def test_canonical_profile_bucket_id_refuses_non_v4_identities() -> None:
+    """A non-v4 or malformed uuid is refused, not re-typed."""
+    for bad in ("00000000-0000-0000-0000-000000000000", "not-a-uuid", ""):
+        with pytest.raises(ValueError):
+            canonical_profile_bucket_id(bad)
