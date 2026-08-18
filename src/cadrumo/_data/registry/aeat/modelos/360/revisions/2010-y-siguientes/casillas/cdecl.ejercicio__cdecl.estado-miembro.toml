@@ -1,5 +1,6 @@
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.ejercicio"
+export_refs = ["modelo-360-decl-ejercicio"]
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +12,7 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.estado-miembro"
+export_refs = ["modelo-360-decl-estado-miembro"]
 number = "estado-miembro"
 section = ["declarante"]
 data_type = "text"

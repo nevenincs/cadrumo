@@ -1,0 +1,2804 @@
+# Modelo 360 casillas: the AD-HOC refund request's operator values. Every
+# value is the operator's own datum; the modelo computes nothing, which is
+# why the formula family stays empty.
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.presentacion-pruebas"
+number = "17-17"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "presentacion_pruebas"
+export_refs = ["modelo-360-decl-presentacion-pruebas"]
+# Design presentacion en pruebas 0/1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.calidad-datos"
+number = "18-18"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "calidad_datos"
+export_refs = ["modelo-360-decl-calidad-datos"]
+# Design nivel de calidad de datos 1/2.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.causa-presentacion"
+number = "25-25"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "causa_presentacion"
+export_refs = ["modelo-360-decl-causa-presentacion"]
+# Design causa de presentacion " "/"0"/"1".
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.prorrata-anterior"
+number = "26-26"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "prorrata_anterior_comunicacion"
+export_refs = ["modelo-360-decl-prorrata-anterior"]
+# Design comunicacion de la prorrata definitiva 0/1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.num-registro-anterior"
+number = "27-42"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "registro_anterior_numero"
+export_refs = ["modelo-360-decl-num-registro-anterior"]
+# Design numero de registro de la declaracion anterior.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante-email"
+number = "194-293"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_email"
+export_refs = ["modelo-360-decl-solicitante-email"]
+# Design solicitante email.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante-telefono"
+number = "294-308"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_telefono"
+export_refs = ["modelo-360-decl-solicitante-telefono"]
+# Design solicitante telefono.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.tipo-via"
+number = "309-313"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_tipo_via"
+export_refs = ["modelo-360-decl-solicitante-direccion-tipo-via"]
+# Direccion en Espana Tipo de via.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.nombre-via"
+number = "314-363"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_nombre_via"
+export_refs = ["modelo-360-decl-solicitante-direccion-nombre-via"]
+# Direccion en Espana Nombre de la via publica.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.tipo-numero"
+number = "364-366"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_tipo_numero"
+export_refs = ["modelo-360-decl-solicitante-direccion-tipo-numero"]
+# Direccion en Espana Tipo numero.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.numero-casa"
+number = "367-371"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_numero_casa"
+export_refs = ["modelo-360-decl-solicitante-direccion-numero-casa"]
+# Direccion en Espana Numero de casa / KM.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.calificador-numero"
+number = "372-374"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_calificador_numero"
+export_refs = ["modelo-360-decl-solicitante-direccion-calificador-numero"]
+# Direccion en Espana Calificador del numero.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.bloque"
+number = "375-377"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_bloque"
+export_refs = ["modelo-360-decl-solicitante-direccion-bloque"]
+# Direccion en Espana Bloque.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.portal"
+number = "378-380"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_portal"
+export_refs = ["modelo-360-decl-solicitante-direccion-portal"]
+# Direccion en Espana Portal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.escalera"
+number = "381-383"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_escalera"
+export_refs = ["modelo-360-decl-solicitante-direccion-escalera"]
+# Direccion en Espana Escalera.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.planta"
+number = "384-386"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_planta"
+export_refs = ["modelo-360-decl-solicitante-direccion-planta"]
+# Direccion en Espana Planta.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.puerta"
+number = "387-389"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_puerta"
+export_refs = ["modelo-360-decl-solicitante-direccion-puerta"]
+# Direccion en Espana Puerta.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.complemento"
+number = "390-429"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_complemento"
+export_refs = ["modelo-360-decl-solicitante-direccion-complemento"]
+# Direccion en Espana Complemento domicilio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.localidad"
+number = "430-459"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_localidad"
+export_refs = ["modelo-360-decl-solicitante-direccion-localidad"]
+# Direccion en Espana Localidad / Poblacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.codigo-postal"
+number = "460-464"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_codigo_postal"
+export_refs = ["modelo-360-decl-solicitante-direccion-codigo-postal"]
+# Direccion en Espana Codigo postal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.municipio"
+number = "465-494"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_municipio"
+export_refs = ["modelo-360-decl-solicitante-direccion-municipio"]
+# Direccion en Espana Nombre del municipio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.direccion.provincia"
+number = "495-496"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_direccion_provincia"
+export_refs = ["modelo-360-decl-solicitante-direccion-provincia"]
+# Direccion en Espana Provincia.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.extranjero.domicilio"
+number = "497-644"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_extranjero_domicilio"
+export_refs = ["modelo-360-decl-solicitante-extranjero-domicilio"]
+# Direccion en el extranjero Domicilio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.extranjero.poblacion"
+number = "645-674"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_extranjero_poblacion"
+export_refs = ["modelo-360-decl-solicitante-extranjero-poblacion"]
+# Direccion en el extranjero Poblacion / Ciudad.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.extranjero.codigo-postal"
+number = "675-684"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_extranjero_codigo_postal"
+export_refs = ["modelo-360-decl-solicitante-extranjero-codigo-postal"]
+# Direccion en el extranjero Codigo postal (ZIP).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.extranjero.region"
+number = "685-714"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_extranjero_region"
+export_refs = ["modelo-360-decl-solicitante-extranjero-region"]
+# Direccion en el extranjero Provincia / Region / Estado.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.extranjero.pais"
+number = "715-716"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_extranjero_pais"
+export_refs = ["modelo-360-decl-solicitante-extranjero-pais"]
+# Direccion en el extranjero Pais ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.apartado.numero"
+number = "717-726"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_apartado_numero"
+export_refs = ["modelo-360-decl-solicitante-apartado-numero"]
+# Apartado de correos en Espana Numero del apartado de correos.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.apartado.localidad"
+number = "727-756"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_apartado_localidad"
+export_refs = ["modelo-360-decl-solicitante-apartado-localidad"]
+# Apartado de correos en Espana Localidad / Poblacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.apartado.codigo-postal"
+number = "757-761"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_apartado_codigo_postal"
+export_refs = ["modelo-360-decl-solicitante-apartado-codigo-postal"]
+# Apartado de correos en Espana Codigo postal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.apartado.municipio"
+number = "762-791"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_apartado_municipio"
+export_refs = ["modelo-360-decl-solicitante-apartado-municipio"]
+# Apartado de correos en Espana Nombre del municipio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.apartado.provincia"
+number = "792-793"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_apartado_provincia"
+export_refs = ["modelo-360-decl-solicitante-apartado-provincia"]
+# Apartado de correos en Espana Provincia.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante-establecido"
+number = "794-794"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_establecido_iva"
+export_refs = ["modelo-360-decl-solicitante-establecido"]
+# Design establecido en el territorio de aplicacion del IVA 0/1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante-hacienda-foral"
+number = "795-796"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_hacienda_foral"
+export_refs = ["modelo-360-decl-solicitante-hacienda-foral"]
+# Design hacienda foral de establecimiento.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante-delegacion"
+number = "797-798"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "solicitante_delegacion"
+export_refs = ["modelo-360-decl-solicitante-delegacion"]
+# Design delegacion de solicitantes establecidos en Canarias, Ceuta o Melilla.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-1"
+number = "799-803"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-1"]
+# Design NACE 1 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-1"
+number = "804-805"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-1"]
+# Design NACE 1 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-1"
+number = "806-830"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-1"]
+# Design NACE 1 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-2"
+number = "831-835"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-2"]
+# Design NACE 2 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-2"
+number = "836-837"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-2"]
+# Design NACE 2 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-2"
+number = "838-862"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-2"]
+# Design NACE 2 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-3"
+number = "863-867"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-3"]
+# Design NACE 3 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-3"
+number = "868-869"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-3"]
+# Design NACE 3 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-3"
+number = "870-894"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-3"]
+# Design NACE 3 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-4"
+number = "895-899"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-4"]
+# Design NACE 4 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-4"
+number = "900-901"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-4"]
+# Design NACE 4 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-4"
+number = "902-926"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-4"]
+# Design NACE 4 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-5"
+number = "927-931"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-5"]
+# Design NACE 5 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-5"
+number = "932-933"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-5"]
+# Design NACE 5 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-5"
+number = "934-958"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-5"]
+# Design NACE 5 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-6"
+number = "959-963"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-6"]
+# Design NACE 6 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-6"
+number = "964-965"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-6"]
+# Design NACE 6 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-6"
+number = "966-990"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-6"]
+# Design NACE 6 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-7"
+number = "991-995"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-7"]
+# Design NACE 7 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-7"
+number = "996-997"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-7"]
+# Design NACE 7 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-7"
+number = "998-1022"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-7"]
+# Design NACE 7 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-8"
+number = "1023-1027"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-8"]
+# Design NACE 8 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-8"
+number = "1028-1029"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-8"]
+# Design NACE 8 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-8"
+number = "1030-1054"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-8"]
+# Design NACE 8 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-9"
+number = "1055-1059"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-9"]
+# Design NACE 9 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-9"
+number = "1060-1061"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-9"]
+# Design NACE 9 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-9"
+number = "1062-1086"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-9"]
+# Design NACE 9 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-10"
+number = "1087-1091"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_codigo"
+export_refs = ["modelo-360-decl-solicitante-nace-10"]
+# Design NACE 10 codigo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-idioma-10"
+number = "1092-1093"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_idioma"
+export_refs = ["modelo-360-decl-solicitante-nace-idioma-10"]
+# Design NACE 10 idioma ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.solicitante.nace-descripcion-10"
+number = "1094-1118"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "nace_descripcion"
+export_refs = ["modelo-360-decl-solicitante-nace-descripcion-10"]
+# Design NACE 10 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante-nif"
+number = "1119-1127"
+section = ["devolucion", "solicitud"]
+data_type = "nif"
+semantic_role = "representante_nif"
+export_refs = ["modelo-360-decl-representante-nif"]
+# Design representante NIF.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante-nombre"
+number = "1128-1252"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_nombre"
+export_refs = ["modelo-360-decl-representante-nombre"]
+# Design representante apellidos y nombre o denominacion social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante-email"
+number = "1253-1352"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_email"
+export_refs = ["modelo-360-decl-representante-email"]
+# Design representante email.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante-telefono"
+number = "1353-1367"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_telefono"
+export_refs = ["modelo-360-decl-representante-telefono"]
+# Design representante telefono.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.tipo-via"
+number = "1368-1372"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_tipo_via"
+export_refs = ["modelo-360-decl-representante-direccion-tipo-via"]
+# Direccion en Espana Tipo de via.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.nombre-via"
+number = "1373-1422"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_nombre_via"
+export_refs = ["modelo-360-decl-representante-direccion-nombre-via"]
+# Direccion en Espana Nombre de la via publica.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.tipo-numero"
+number = "1423-1425"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_tipo_numero"
+export_refs = ["modelo-360-decl-representante-direccion-tipo-numero"]
+# Direccion en Espana Tipo numero.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.numero-casa"
+number = "1426-1430"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_numero_casa"
+export_refs = ["modelo-360-decl-representante-direccion-numero-casa"]
+# Direccion en Espana Numero de casa / KM.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.calificador-numero"
+number = "1431-1433"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_calificador_numero"
+export_refs = ["modelo-360-decl-representante-direccion-calificador-numero"]
+# Direccion en Espana Calificador del numero.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.bloque"
+number = "1434-1436"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_bloque"
+export_refs = ["modelo-360-decl-representante-direccion-bloque"]
+# Direccion en Espana Bloque.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.portal"
+number = "1437-1439"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_portal"
+export_refs = ["modelo-360-decl-representante-direccion-portal"]
+# Direccion en Espana Portal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.escalera"
+number = "1440-1442"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_escalera"
+export_refs = ["modelo-360-decl-representante-direccion-escalera"]
+# Direccion en Espana Escalera.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.planta"
+number = "1443-1445"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_planta"
+export_refs = ["modelo-360-decl-representante-direccion-planta"]
+# Direccion en Espana Planta.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.puerta"
+number = "1446-1448"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_puerta"
+export_refs = ["modelo-360-decl-representante-direccion-puerta"]
+# Direccion en Espana Puerta.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.complemento"
+number = "1449-1488"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_complemento"
+export_refs = ["modelo-360-decl-representante-direccion-complemento"]
+# Direccion en Espana Complemento domicilio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.localidad"
+number = "1489-1518"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_localidad"
+export_refs = ["modelo-360-decl-representante-direccion-localidad"]
+# Direccion en Espana Localidad / Poblacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.codigo-postal"
+number = "1519-1523"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_codigo_postal"
+export_refs = ["modelo-360-decl-representante-direccion-codigo-postal"]
+# Direccion en Espana Codigo postal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.municipio"
+number = "1524-1553"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_municipio"
+export_refs = ["modelo-360-decl-representante-direccion-municipio"]
+# Direccion en Espana Nombre del municipio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.direccion.provincia"
+number = "1554-1555"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_direccion_provincia"
+export_refs = ["modelo-360-decl-representante-direccion-provincia"]
+# Direccion en Espana Provincia.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.extranjero.domicilio"
+number = "1556-1703"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_extranjero_domicilio"
+export_refs = ["modelo-360-decl-representante-extranjero-domicilio"]
+# Direccion en el extranjero Domicilio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.extranjero.poblacion"
+number = "1704-1733"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_extranjero_poblacion"
+export_refs = ["modelo-360-decl-representante-extranjero-poblacion"]
+# Direccion en el extranjero Poblacion / Ciudad.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.extranjero.codigo-postal"
+number = "1734-1743"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_extranjero_codigo_postal"
+export_refs = ["modelo-360-decl-representante-extranjero-codigo-postal"]
+# Direccion en el extranjero Codigo postal (ZIP).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.extranjero.region"
+number = "1744-1773"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_extranjero_region"
+export_refs = ["modelo-360-decl-representante-extranjero-region"]
+# Direccion en el extranjero Provincia / Region / Estado.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.extranjero.pais"
+number = "1774-1775"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_extranjero_pais"
+export_refs = ["modelo-360-decl-representante-extranjero-pais"]
+# Direccion en el extranjero Pais ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.apartado.numero"
+number = "1776-1785"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_apartado_numero"
+export_refs = ["modelo-360-decl-representante-apartado-numero"]
+# Apartado de correos en Espana Numero del apartado de correos.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.apartado.localidad"
+number = "1786-1815"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_apartado_localidad"
+export_refs = ["modelo-360-decl-representante-apartado-localidad"]
+# Apartado de correos en Espana Localidad / Poblacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.apartado.codigo-postal"
+number = "1816-1820"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_apartado_codigo_postal"
+export_refs = ["modelo-360-decl-representante-apartado-codigo-postal"]
+# Apartado de correos en Espana Codigo postal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.apartado.municipio"
+number = "1821-1850"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_apartado_municipio"
+export_refs = ["modelo-360-decl-representante-apartado-municipio"]
+# Apartado de correos en Espana Nombre del municipio.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.representante.apartado.provincia"
+number = "1851-1852"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "representante_apartado_provincia"
+export_refs = ["modelo-360-decl-representante-apartado-provincia"]
+# Apartado de correos en Espana Provincia.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.bancario-titular"
+number = "1912-1936"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "bancario_titular"
+export_refs = ["modelo-360-decl-bancario-titular"]
+# Design titular de la cuenta, nombre.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.bancario-calidad"
+number = "1937-1937"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "bancario_calidad"
+export_refs = ["modelo-360-decl-bancario-calidad"]
+# Design titular en calidad de "A" solicitante / representante.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.bancario-iban"
+number = "1938-1971"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "bancario_iban"
+export_refs = ["modelo-360-decl-bancario-iban"]
+# Design IBAN.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.bancario-bic"
+number = "1972-1982"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "bancario_bic"
+export_refs = ["modelo-360-decl-bancario-bic"]
+# Design banco BIC.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.bancario-divisa"
+number = "1983-1985"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "bancario_divisa"
+export_refs = ["modelo-360-decl-bancario-divisa"]
+# Design divisa ISO 4217, por defecto EUR.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-1"
+number = "1986-2001"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-1"]
+# Design anexo 1 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-1"
+number = "2004-2043"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-1"]
+# Design anexo 1 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-2"
+number = "2104-2119"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-2"]
+# Design anexo 2 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-2"
+number = "2122-2161"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-2"]
+# Design anexo 2 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-3"
+number = "2222-2237"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-3"]
+# Design anexo 3 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-3"
+number = "2240-2279"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-3"]
+# Design anexo 3 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-4"
+number = "2340-2355"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-4"]
+# Design anexo 4 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-4"
+number = "2358-2397"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-4"]
+# Design anexo 4 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-5"
+number = "2458-2473"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-5"]
+# Design anexo 5 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-5"
+number = "2476-2515"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-5"]
+# Design anexo 5 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-6"
+number = "2576-2591"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-6"]
+# Design anexo 6 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-6"
+number = "2594-2633"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-6"]
+# Design anexo 6 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-7"
+number = "2694-2709"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-7"]
+# Design anexo 7 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-7"
+number = "2712-2751"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-7"]
+# Design anexo 7 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-8"
+number = "2812-2827"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-8"]
+# Design anexo 8 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-8"
+number = "2830-2869"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-8"]
+# Design anexo 8 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-9"
+number = "2930-2945"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-9"]
+# Design anexo 9 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-9"
+number = "2948-2987"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-9"]
+# Design anexo 9 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-registro-10"
+number = "3048-3063"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_registro"
+export_refs = ["modelo-360-decl-anexo-registro-10"]
+# Design anexo 10 numero de registro.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.anexo-descripcion-10"
+number = "3066-3105"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "anexo_descripcion"
+export_refs = ["modelo-360-decl-anexo-descripcion-10"]
+# Design anexo 10 descripcion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-numero"
+number = "11-15"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_numero"
+export_refs = ["modelo-360-decl-op1-numero"]
+# Design operacion 1 numero de operacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-tipo"
+number = "17-19"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_tipo"
+export_refs = ["modelo-360-decl-op1-tipo"]
+# Design operacion 1 tipo "P".
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-factura"
+number = "20-69"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_factura"
+export_refs = ["modelo-360-decl-op1-factura"]
+# Design operacion 1 numero factura.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-fecha"
+number = "70-77"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_fecha"
+export_refs = ["modelo-360-decl-op1-fecha"]
+# Design operacion 1 fecha de emision.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-1"
+number = "78-87"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-1"]
+# Design operacion 1 bienes y servicios codigo row 1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-1"
+number = "88-89"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-1"]
+# Design operacion 1 idioma row 1 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-1"
+number = "90-339"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-1"]
+# Design operacion 1 descripcion row 1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-2"
+number = "340-349"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-2"]
+# Design operacion 1 bienes y servicios codigo row 2.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-2"
+number = "350-351"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-2"]
+# Design operacion 1 idioma row 2 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-2"
+number = "352-601"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-2"]
+# Design operacion 1 descripcion row 2.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-3"
+number = "602-611"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-3"]
+# Design operacion 1 bienes y servicios codigo row 3.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-3"
+number = "612-613"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-3"]
+# Design operacion 1 idioma row 3 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-3"
+number = "614-863"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-3"]
+# Design operacion 1 descripcion row 3.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-4"
+number = "864-873"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-4"]
+# Design operacion 1 bienes y servicios codigo row 4.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-4"
+number = "874-875"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-4"]
+# Design operacion 1 idioma row 4 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-4"
+number = "876-1125"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-4"]
+# Design operacion 1 descripcion row 4.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-5"
+number = "1126-1135"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-5"]
+# Design operacion 1 bienes y servicios codigo row 5.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-5"
+number = "1136-1137"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-5"]
+# Design operacion 1 idioma row 5 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-5"
+number = "1138-1387"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-5"]
+# Design operacion 1 descripcion row 5.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-6"
+number = "1388-1397"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-6"]
+# Design operacion 1 bienes y servicios codigo row 6.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-6"
+number = "1398-1399"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-6"]
+# Design operacion 1 idioma row 6 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-6"
+number = "1400-1649"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-6"]
+# Design operacion 1 descripcion row 6.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-7"
+number = "1650-1659"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-7"]
+# Design operacion 1 bienes y servicios codigo row 7.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-7"
+number = "1660-1661"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-7"]
+# Design operacion 1 idioma row 7 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-7"
+number = "1662-1911"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-7"]
+# Design operacion 1 descripcion row 7.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-8"
+number = "1912-1921"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-8"]
+# Design operacion 1 bienes y servicios codigo row 8.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-8"
+number = "1922-1923"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-8"]
+# Design operacion 1 idioma row 8 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-8"
+number = "1924-2173"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-8"]
+# Design operacion 1 descripcion row 8.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-9"
+number = "2174-2183"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-9"]
+# Design operacion 1 bienes y servicios codigo row 9.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-9"
+number = "2184-2185"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-9"]
+# Design operacion 1 idioma row 9 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-9"
+number = "2186-2435"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-9"]
+# Design operacion 1 descripcion row 9.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-codigo-10"
+number = "2436-2445"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op1-codigo-10"]
+# Design operacion 1 bienes y servicios codigo row 10.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-idioma-10"
+number = "2446-2447"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op1-idioma-10"]
+# Design operacion 1 idioma row 10 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-descripcion-10"
+number = "2448-2697"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op1-descripcion-10"]
+# Design operacion 1 descripcion row 10.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-base"
+number = "2698-2712"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_base"
+export_refs = ["modelo-360-decl-op1-base"]
+# Design operacion 1 base imponible.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-cuota"
+number = "2713-2727"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_cuota"
+export_refs = ["modelo-360-decl-op1-cuota"]
+# Design operacion 1 cuota IVA.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-prorrata"
+number = "2728-2732"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_prorrata"
+export_refs = ["modelo-360-decl-op1-prorrata"]
+# Design operacion 1 prorrata %.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-importe"
+number = "2733-2747"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_importe"
+export_refs = ["modelo-360-decl-op1-importe"]
+# Design operacion 1 importe solicitado a devolver.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-divisa"
+number = "2748-2750"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_divisa"
+export_refs = ["modelo-360-decl-op1-divisa"]
+# Design operacion 1 divisa ISO 4217.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-simplificada"
+number = "2751-2751"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_simplificada"
+export_refs = ["modelo-360-decl-op1-simplificada"]
+# Design operacion 1 indicador de simplificada 0/1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-pais-nvat"
+number = "2752-2753"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais_nvat"
+export_refs = ["modelo-360-decl-op1-proveedor-pais-nvat"]
+# Design operacion 1 proveedor pais emisor del NVAT ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-nvat"
+number = "2754-2768"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_nvat"
+export_refs = ["modelo-360-decl-op1-proveedor-nvat"]
+# Design operacion 1 proveedor NVAT.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-pais-referencia"
+number = "2769-2770"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais_referencia"
+export_refs = ["modelo-360-decl-op1-proveedor-pais-referencia"]
+# Design operacion 1 proveedor pais emisor de la referencia fiscal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-referencia-fiscal"
+number = "2771-2820"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_referencia_fiscal"
+export_refs = ["modelo-360-decl-op1-proveedor-referencia-fiscal"]
+# Design operacion 1 proveedor referencia fiscal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-nombre"
+number = "2821-2945"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_nombre"
+export_refs = ["modelo-360-decl-op1-proveedor-nombre"]
+# Design operacion 1 proveedor apellidos y nombre o denominacion social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-direccion"
+number = "2946-3093"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_direccion"
+export_refs = ["modelo-360-decl-op1-proveedor-direccion"]
+# Design operacion 1 proveedor direccion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-telefono"
+number = "3094-3108"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_telefono"
+export_refs = ["modelo-360-decl-op1-proveedor-telefono"]
+# Design operacion 1 proveedor telefono.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op1-proveedor-pais"
+number = "3109-3110"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais"
+export_refs = ["modelo-360-decl-op1-proveedor-pais"]
+# Design operacion 1 proveedor pais ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-numero"
+number = "3111-3115"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_numero"
+export_refs = ["modelo-360-decl-op2-numero"]
+# Design operacion 2 numero de operacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-tipo"
+number = "3117-3119"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_tipo"
+export_refs = ["modelo-360-decl-op2-tipo"]
+# Design operacion 2 tipo "P".
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-factura"
+number = "3120-3169"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_factura"
+export_refs = ["modelo-360-decl-op2-factura"]
+# Design operacion 2 numero factura.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-fecha"
+number = "3170-3177"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_fecha"
+export_refs = ["modelo-360-decl-op2-fecha"]
+# Design operacion 2 fecha de emision.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-1"
+number = "3178-3187"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-1"]
+# Design operacion 2 bienes y servicios codigo row 1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-1"
+number = "3188-3189"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-1"]
+# Design operacion 2 idioma row 1 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-1"
+number = "3190-3439"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-1"]
+# Design operacion 2 descripcion row 1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-2"
+number = "3440-3449"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-2"]
+# Design operacion 2 bienes y servicios codigo row 2.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-2"
+number = "3450-3451"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-2"]
+# Design operacion 2 idioma row 2 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-2"
+number = "3452-3701"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-2"]
+# Design operacion 2 descripcion row 2.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-3"
+number = "3702-3711"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-3"]
+# Design operacion 2 bienes y servicios codigo row 3.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-3"
+number = "3712-3713"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-3"]
+# Design operacion 2 idioma row 3 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-3"
+number = "3714-3963"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-3"]
+# Design operacion 2 descripcion row 3.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-4"
+number = "3964-3973"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-4"]
+# Design operacion 2 bienes y servicios codigo row 4.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-4"
+number = "3974-3975"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-4"]
+# Design operacion 2 idioma row 4 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-4"
+number = "3976-4225"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-4"]
+# Design operacion 2 descripcion row 4.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-5"
+number = "4226-4235"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-5"]
+# Design operacion 2 bienes y servicios codigo row 5.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-5"
+number = "4236-4237"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-5"]
+# Design operacion 2 idioma row 5 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-5"
+number = "4238-4487"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-5"]
+# Design operacion 2 descripcion row 5.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-6"
+number = "4488-4497"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-6"]
+# Design operacion 2 bienes y servicios codigo row 6.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-6"
+number = "4498-4499"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-6"]
+# Design operacion 2 idioma row 6 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-6"
+number = "4500-4749"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-6"]
+# Design operacion 2 descripcion row 6.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-7"
+number = "4750-4759"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-7"]
+# Design operacion 2 bienes y servicios codigo row 7.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-7"
+number = "4760-4761"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-7"]
+# Design operacion 2 idioma row 7 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-7"
+number = "4762-5011"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-7"]
+# Design operacion 2 descripcion row 7.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-8"
+number = "5012-5021"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-8"]
+# Design operacion 2 bienes y servicios codigo row 8.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-8"
+number = "5022-5023"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-8"]
+# Design operacion 2 idioma row 8 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-8"
+number = "5024-5273"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-8"]
+# Design operacion 2 descripcion row 8.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-9"
+number = "5274-5283"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-9"]
+# Design operacion 2 bienes y servicios codigo row 9.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-9"
+number = "5284-5285"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-9"]
+# Design operacion 2 idioma row 9 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-9"
+number = "5286-5535"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-9"]
+# Design operacion 2 descripcion row 9.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-codigo-10"
+number = "5536-5545"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_codigo"
+export_refs = ["modelo-360-decl-op2-codigo-10"]
+# Design operacion 2 bienes y servicios codigo row 10.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-idioma-10"
+number = "5546-5547"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_idioma"
+export_refs = ["modelo-360-decl-op2-idioma-10"]
+# Design operacion 2 idioma row 10 ISO 639-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-descripcion-10"
+number = "5548-5797"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_descripcion"
+export_refs = ["modelo-360-decl-op2-descripcion-10"]
+# Design operacion 2 descripcion row 10.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-base"
+number = "5798-5812"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_base"
+export_refs = ["modelo-360-decl-op2-base"]
+# Design operacion 2 base imponible.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-cuota"
+number = "5813-5827"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_cuota"
+export_refs = ["modelo-360-decl-op2-cuota"]
+# Design operacion 2 cuota IVA.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-prorrata"
+number = "5828-5832"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_prorrata"
+export_refs = ["modelo-360-decl-op2-prorrata"]
+# Design operacion 2 prorrata %.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-importe"
+number = "5833-5847"
+section = ["devolucion", "solicitud"]
+data_type = "money"
+semantic_role = "operacion_importe"
+export_refs = ["modelo-360-decl-op2-importe"]
+# Design operacion 2 importe solicitado a devolver.
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"], source_refs = ["aeat-dr-360-2010"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-divisa"
+number = "5848-5850"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_divisa"
+export_refs = ["modelo-360-decl-op2-divisa"]
+# Design operacion 2 divisa ISO 4217.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-simplificada"
+number = "5851-5851"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "operacion_simplificada"
+export_refs = ["modelo-360-decl-op2-simplificada"]
+# Design operacion 2 indicador de simplificada 0/1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-pais-nvat"
+number = "5852-5853"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais_nvat"
+export_refs = ["modelo-360-decl-op2-proveedor-pais-nvat"]
+# Design operacion 2 proveedor pais emisor del NVAT ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-nvat"
+number = "5854-5868"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_nvat"
+export_refs = ["modelo-360-decl-op2-proveedor-nvat"]
+# Design operacion 2 proveedor NVAT.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-pais-referencia"
+number = "5869-5870"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais_referencia"
+export_refs = ["modelo-360-decl-op2-proveedor-pais-referencia"]
+# Design operacion 2 proveedor pais emisor de la referencia fiscal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-referencia-fiscal"
+number = "5871-5920"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_referencia_fiscal"
+export_refs = ["modelo-360-decl-op2-proveedor-referencia-fiscal"]
+# Design operacion 2 proveedor referencia fiscal.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-nombre"
+number = "5921-6045"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_nombre"
+export_refs = ["modelo-360-decl-op2-proveedor-nombre"]
+# Design operacion 2 proveedor apellidos y nombre o denominacion social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-direccion"
+number = "6046-6193"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_direccion"
+export_refs = ["modelo-360-decl-op2-proveedor-direccion"]
+# Design operacion 2 proveedor direccion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-telefono"
+number = "6194-6208"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_telefono"
+export_refs = ["modelo-360-decl-op2-proveedor-telefono"]
+# Design operacion 2 proveedor telefono.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.op2-proveedor-pais"
+number = "6209-6210"
+section = ["devolucion", "solicitud"]
+data_type = "text"
+semantic_role = "proveedor_pais"
+export_refs = ["modelo-360-decl-op2-proveedor-pais"]
+# Design operacion 2 proveedor pais ISO 3166-1.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]

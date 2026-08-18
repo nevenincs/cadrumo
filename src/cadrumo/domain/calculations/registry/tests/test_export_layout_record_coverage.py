@@ -652,14 +652,19 @@ def test_a_constant_split_across_cells_is_still_read(
 def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    """The word stays required, so an enumeration is never mistaken for a constant.
+    """The declaration word stays required, so an enumeration is never mistaken for a constant.
 
     Reading a quoted value out of any row would take Modelo 111's período cell
     (``"01" ... "12" o "1T" … "4T"``) as the constant ``01`` and join the sheet
     to the WRONG record -- a confident wrong answer, which is worse than the
     missing one this fix removes. Every constant must come from a row AEAT
-    itself marks ``Constante``.
+    itself marks ``Constante`` -- or from the identifier-block rows whose
+    vocabulary ("identificador de modelo y página", "fin de registro") names
+    the fixed ``<T`` delimiters directly, which is how Modelo 360's design
+    declares them without the word.
     """
+    from .._validate_export_layout_coverage import _IDENTIFIER_VOCABULARY
+
     modelos, catalogues = registry_tree
     checked = 0
     for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
@@ -668,6 +673,8 @@ def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
                 constants = _sheet_constants(sheet)
                 for field in sheet.fields:
                     if any(text and _CONSTANT_WORD.search(text) for text in (field.content, field.description)):
+                        continue
+                    if any(text and _IDENTIFIER_VOCABULARY.search(text) for text in (field.content, field.description)):
                         continue
                     checked += 1
                     assert (field.offset, field.length) not in constants, (
