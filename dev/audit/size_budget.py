@@ -40,8 +40,11 @@ the tree.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT / "src") not in sys.path:  # pragma: no cover - import bootstrap
@@ -50,16 +53,76 @@ if str(_REPO_ROOT / "src") not in sys.path:  # pragma: no cover - import bootstr
 from cadrumo.tests import (  # noqa: E402
     CALLABLE_POLICY,
     MODULE_POLICY,
-    SIZE_BUDGET_BASELINE_PATH,
-    SizeBudgetBaseline,
     assert_real_corpus,
     build_limits,
     evaluate_budget,
-    load_size_budget_baseline,
     measure_callable_lines,
     measure_module_lines,
-    write_size_budget_baseline,
 )
+
+SIZE_BUDGET_BASELINE_PATH: Final[Path] = _REPO_ROOT / "dev" / "audit" / "size_budget_baseline.json"
+"""Committed, generated limit table consumed by the pytest size ratchet."""
+
+
+@dataclass(frozen=True)
+class SizeBudgetBaseline:
+    """The committed, generated limit tables plus their preserved prose notes."""
+
+    modules: dict[str, int]
+    callables: dict[str, int]
+    notes: dict[str, str]
+
+
+_BASELINE_COMMENT = (
+    "GENERATED limit table for the dev-side size ratchet. Do NOT hand-edit the 'modules' or "
+    "'callables' numbers: regenerate with `python -m dev.audit.size_budget --write-baseline`, "
+    "then review and commit the diff. Every limit is a measured size plus a declared headroom, "
+    "and the gate fails BOTH when an entry grows past its limit and when a limit drifts further "
+    "above its subject than the declared slack tolerance, so a pin cannot silently outlive the "
+    "size it was taken from. 'notes' is the one hand-maintained section: prose only, never "
+    "numbers, carried forward verbatim across regeneration and dropped when its key disappears. "
+    "Keys are repo-relative POSIX paths, and 'path::function' for callables."
+)
+
+
+def load_size_budget_baseline(path: Path = SIZE_BUDGET_BASELINE_PATH) -> SizeBudgetBaseline:
+    """Load the committed baseline, or an empty one when none is committed yet."""
+    if not path.is_file():
+        return SizeBudgetBaseline(modules={}, callables={}, notes={})
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return SizeBudgetBaseline(
+        modules={str(key): int(value) for key, value in document.get("modules", {}).items()},
+        callables={str(key): int(value) for key, value in document.get("callables", {}).items()},
+        notes={str(key): str(value) for key, value in document.get("notes", {}).items()},
+    )
+
+
+def write_size_budget_baseline(
+    baseline: SizeBudgetBaseline,
+    *,
+    scanned_modules: int,
+    scanned_callables: int,
+    path: Path = SIZE_BUDGET_BASELINE_PATH,
+) -> None:
+    """Write the generated baseline, preserving notes whose keys survived."""
+    live_keys = set(baseline.modules) | set(baseline.callables)
+    document = {
+        "_comment": _BASELINE_COMMENT,
+        "generated": {
+            "scanned_modules": scanned_modules,
+            "scanned_callables": scanned_callables,
+            "module_entries": len(baseline.modules),
+            "callable_entries": len(baseline.callables),
+        },
+        "notes": {key: value for key, value in sorted(baseline.notes.items()) if key in live_keys},
+        "modules": dict(sorted(baseline.modules.items())),
+        "callables": dict(sorted(baseline.callables.items())),
+    }
+    path.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def _emit(label: str, lines: tuple[str, ...]) -> None:

@@ -160,12 +160,8 @@ def test_the_consumers_pass_the_thresholds_this_gate_asserts() -> None:
     """
 
     repo_root = REPO_ROOT
-    ledger = (
-        repo_root / "src" / "cadrumo" / "application" / "aggregation" / "tests" / "test_ledger_scale_benchmark.py"
-    ).read_text(encoding="utf-8")
-    cold_start = (
-        repo_root / "src" / "cadrumo" / "entrypoints" / "cli" / "tests" / "test_lazy_command_tree.py"
-    ).read_text(encoding="utf-8")
+    ledger = (repo_root / "dev" / "ci" / "tests" / "test_ledger_scale_benchmark.py").read_text(encoding="utf-8")
+    cold_start = (repo_root / "dev" / "ci" / "tests" / "test_lazy_command_tree.py").read_text(encoding="utf-8")
 
     assert f"_P95_WALL_ADVISORY_SECONDS = {_LEDGER_WALL_S}" in ledger
     assert f"_P95_WEDGE_WALL_TO_CPU_RATIO = {_LEDGER_RATIO}" in ledger

@@ -2,7 +2,7 @@
 
 import pytest
 
-from cadrumo.tests.test_locale_translation_honesty import _reserved_token_offenders
+from .test_locale_translation_honesty import _reserved_token_offenders
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

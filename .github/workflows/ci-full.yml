@@ -99,7 +99,7 @@ jobs:
         run: uv run --no-sync aeat app registry verify
 
       - name: Audit oracle bindings
-        run: uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
+        run: uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
       - name: Test (unit)
         # No junit artifact (zero Actions-artifact posture); the durations
@@ -201,7 +201,7 @@ jobs:
         # The `perf` marker is NOT the escape hatch here: it is absent from
         # _CI_INCAPABLE_MARKERS and the perf lane is path-scoped to
         # dev/packaging, so marking them would make them CI-unreachable and red
-        # test_lane_reachability.py instead.
+        # dev/tests/test_lane_reachability.py instead.
         #
         # SIZING WARNING: the 6 errors were a local artefact (a stale on-disk
         # cohort directory). On CI that path is absent, so the fixture takes the
@@ -351,7 +351,7 @@ jobs:
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
         run: |
           uv run --no-sync pytest -n 8 \
-            src/cadrumo/tests/test_roundtrip_coverage.py \
+            dev/tests/test_roundtrip_coverage.py \
             src/cadrumo/application/ledger/tests \
             src/cadrumo/adapters/persistence/storage \
             src/cadrumo/adapters/persistence/profile \
