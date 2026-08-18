@@ -32,6 +32,10 @@ disability_clave = "perc.discapacidad"
 contract_relation_clave = "perc.contrato-relacion"
 unit_convivencia_titular_clave = "perc.titular-unidad-convivencia"
 geographic_mobility_clave = "perc.movilidad-geografica"
+reducciones_aplicables = "perc.reducciones-aplicables"
+gastos_deducibles = "perc.gastos-deducibles"
+pension_compensatoria = "perc.pension-compensatoria"
+anualidades_alimentos = "perc.anualidades-alimentos"
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-record-type"
@@ -474,37 +478,48 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-reducciones-aplicables"
 offset = 171
 length = 13
-kind = "filler"
-# Design campo 22, 171-183 REDUCCIONES APLICABLES. Cadrumo's withholding store carries gross amounts and retencion only, not the perceptor's IRPF reduction base.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-reducciones"
+# Design campo 22, 171-183 REDUCCIONES APLICABLES (art. 18.2/18.3, DT 11/12,
+# art. 32.1): the reductions the payer actually considered; the design's own
+# zeros when none. Declared for claves A, B (01, 03, 04, 99), C, E, F (01-06),
+# G (01-06, 08), H and I.
+data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-gastos-deducibles"
 offset = 184
 length = 13
-kind = "filler"
-# Design campo 23, 184-196 GASTOS DEDUCIBLES. Not held by the withholding store.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-gastos-deducibles"
+# Design campo 23, 184-196 GASTOS DEDUCIBLES (art. 19.2 a)-c)): the expenses
+# the payer considered to determine the retention rate; the design's own zeros
+# when none. Declared for claves A, B (01, 03, 04, 99), C, E (01, 02) and
+# exceptionally L.05, L.10, L.27.
+data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-pensiones-compensatorias"
 offset = 197
 length = 13
-kind = "filler"
-# Design campo 24, 197-209 PENSIONES COMPENSATORIAS. Not held by the withholding store.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-pension-compensatoria"
+# Design campo 24, 197-209 PENSIONES COMPENSATORIAS: the annual compensatory
+# pension to the spouse by judicial resolution; the design's own zeros when
+# none. Declared for claves A, B (01, 03, 04, 99) and C.
+data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
@@ -516,9 +531,12 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-anualidades-alimentos"
 offset = 210
 length = 13
-kind = "filler"
-# Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS. Not held by the withholding store.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-anualidades-alimentos"
+# Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS: the annual food annuities
+# to children by judicial decision; the design's own zeros when none. Declared
+# for claves A, B (01, 03, 04, 99) and C.
+data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"

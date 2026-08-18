@@ -64,6 +64,10 @@ _WithholdingRowField = Literal[
     "ingreso_a_cuenta",
     "ingreso_a_cuenta_repercutido",
     "accrual_year",
+    "reducciones_aplicables",
+    "gastos_deducibles",
+    "pension_compensatoria",
+    "anualidades_alimentos",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -162,6 +166,18 @@ class WithholdingObservation(BaseModel):
     """Ejercicio de devengo (design positions 148-151), declared only for atrasos
     devengados in earlier exercises or reintegros of earlier-exercise amounts;
     every other row writes the design's own zeros."""
+    reducciones_aplicables: Decimal = Decimal("0")
+    """Art. 18.2/18.3, DT 11/12 and art. 32.1 reductions the payer actually
+    considered (design positions 171-183); the design's own zeros when none."""
+    gastos_deducibles: Decimal = Decimal("0")
+    """Art. 19.2 a)-c) deductible expenses the payer considered to determine the
+    retention rate (design positions 184-196); the design's own zeros when none."""
+    pension_compensatoria: Decimal = Decimal("0")
+    """Annual compensatory pension to the spouse by judicial resolution (design
+    positions 197-209); the design's own zeros when none."""
+    anualidades_alimentos: Decimal = Decimal("0")
+    """Annual food annuities to children by judicial decision (design positions
+    210-222); the design's own zeros when none."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -186,6 +202,10 @@ class WithholdingObservation(BaseModel):
         "retencion_practicada",
         "ingreso_a_cuenta",
         "ingreso_a_cuenta_repercutido",
+        "reducciones_aplicables",
+        "gastos_deducibles",
+        "pension_compensatoria",
+        "anualidades_alimentos",
     )
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
@@ -435,6 +455,10 @@ def resolve_withholding_binding_row_values(
 
 _DATOS_ADICIONALES_CLAVES: frozenset[str] = frozenset({"A", "C"})
 _DATOS_ADICIONALES_B_SUBCLAVES: frozenset[str] = frozenset({"01", "03", "04", "99"})
+_REDUCCIONES_F_G_SUBCLAVES: frozenset[str] = frozenset({"01", "02", "03", "04", "05", "06"})
+_REDUCCIONES_G_SUBCLAVES: frozenset[str] = frozenset({"01", "02", "03", "04", "05", "06", "08"})
+_GASTOS_E_SUBCLAVES: frozenset[str] = frozenset({"01", "02"})
+_GASTOS_L_SUBCLAVES: frozenset[str] = frozenset({"05", "10", "27"})
 
 
 def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
@@ -446,6 +470,42 @@ def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
     if str(clave) in _DATOS_ADICIONALES_CLAVES:
         return True
     return str(clave) == "B" and subclave in _DATOS_ADICIONALES_B_SUBCLAVES
+
+
+def _declares_reducciones(clave: object, subclave: object) -> bool:
+    """True for the claves the design's REDUCCIONES APLICABLES campo (171-183) applies to.
+
+    Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E``, ``F
+    (subclaves 01 a 06)``, ``G (subclaves 01 a 06 y 08)``, ``H`` e ``I``.
+    """
+    token = str(clave)
+    if token in {"A", "C", "E", "H", "I"}:
+        return True
+    if token == "B":
+        return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
+    if token == "F":
+        return str(subclave) in _REDUCCIONES_F_G_SUBCLAVES
+    if token == "G":
+        return str(subclave) in _REDUCCIONES_G_SUBCLAVES
+    return False
+
+
+def _declares_gastos(clave: object, subclave: object) -> bool:
+    """True for the claves the design's GASTOS DEDUCIBLES campo (184-196) applies to.
+
+    Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E (subclaves 01
+    y 02)``, and exceptionally ``L.05``, ``L.10`` and ``L.27``.
+    """
+    token = str(clave)
+    if token in {"A", "C"}:
+        return True
+    if token == "B":
+        return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
+    if token == "E":
+        return str(subclave) in _GASTOS_E_SUBCLAVES
+    if token == "L":
+        return str(subclave) in _GASTOS_L_SUBCLAVES
+    return False
 
 
 def _require_consistent_identity_facts(
@@ -620,6 +680,35 @@ def _finalise_withholding_row(
                 "equals the perceptor's own NIF, which the design campo 17 excludes",
             )
 
+    if "reducciones_aplicables" in required_fields:
+        if row.get("reducciones_aplicables") not in (None, Decimal("0")) and not _declares_reducciones(clave, subclave):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "reducciones_aplicables, which design campo 22 declares only for claves A, "
+                "B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I",
+            )
+    if "gastos_deducibles" in required_fields:
+        if row.get("gastos_deducibles") not in (None, Decimal("0")) and not _declares_gastos(clave, subclave):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "gastos_deducibles, which design campo 23 declares only for claves A, "
+                "B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27",
+            )
+    if "pension_compensatoria" in required_fields:
+        if row.get("pension_compensatoria") not in (None, Decimal("0")) and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "pension_compensatoria, which design campo 24 declares only for claves A, "
+                "B (01, 03, 04, 99) and C",
+            )
+    if "anualidades_alimentos" in required_fields:
+        if row.get("anualidades_alimentos") not in (None, Decimal("0")) and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "anualidades_alimentos, which design campo 25 declares only for claves A, "
+                "B (01, 03, 04, 99) and C",
+            )
+
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
     finalised["disability_clave"] = str(disability) if disability is not None else " "
@@ -671,6 +760,10 @@ def _build_withholding_rows(
             "retencion_practicada": Decimal("0"),
             "ingreso_a_cuenta": Decimal("0"),
             "ingreso_a_cuenta_repercutido": Decimal("0"),
+            "reducciones_aplicables": Decimal("0"),
+            "gastos_deducibles": Decimal("0"),
+            "pension_compensatoria": Decimal("0"),
+            "anualidades_alimentos": Decimal("0"),
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
@@ -701,16 +794,28 @@ def _build_withholding_rows(
         prev_retencion = bucket["retencion_practicada"]
         prev_ingreso = bucket["ingreso_a_cuenta"]
         prev_repercutido = bucket["ingreso_a_cuenta_repercutido"]
+        prev_reducciones = bucket["reducciones_aplicables"]
+        prev_gastos = bucket["gastos_deducibles"]
+        prev_pension = bucket["pension_compensatoria"]
+        prev_anualidades = bucket["anualidades_alimentos"]
         assert isinstance(prev_dinerario, Decimal)
         assert isinstance(prev_especie, Decimal)
         assert isinstance(prev_retencion, Decimal)
         assert isinstance(prev_ingreso, Decimal)
         assert isinstance(prev_repercutido, Decimal)
+        assert isinstance(prev_reducciones, Decimal)
+        assert isinstance(prev_gastos, Decimal)
+        assert isinstance(prev_pension, Decimal)
+        assert isinstance(prev_anualidades, Decimal)
         bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
         bucket["percibido_especie"] = prev_especie + observation.percibido_especie
         bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
         bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
         bucket["ingreso_a_cuenta_repercutido"] = prev_repercutido + observation.ingreso_a_cuenta_repercutido
+        bucket["reducciones_aplicables"] = prev_reducciones + observation.reducciones_aplicables
+        bucket["gastos_deducibles"] = prev_gastos + observation.gastos_deducibles
+        bucket["pension_compensatoria"] = prev_pension + observation.pension_compensatoria
+        bucket["anualidades_alimentos"] = prev_anualidades + observation.anualidades_alimentos
     return tuple(
         _finalise_withholding_row(accum[key], required_fields=required_fields)
         for key in sorted(accum.keys())

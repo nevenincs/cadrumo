@@ -225,6 +225,10 @@ _M190_DECLARED_FIELDS = frozenset(
         "geographic_mobility_clave",
         "ingreso_a_cuenta_repercutido",
         "accrual_year",
+        "reducciones_aplicables",
+        "gastos_deducibles",
+        "pension_compensatoria",
+        "anualidades_alimentos",
     }
 )
 
@@ -443,6 +447,59 @@ def test_build_withholding_rows_sums_repercutido_and_defaults_accrual_year() -> 
     assert row["ingreso_a_cuenta_repercutido"] == Decimal("500")
     assert row["accrual_year"] == "2023"
     assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["accrual_year"] == "0000"
+
+
+def test_build_withholding_rows_sums_deduction_side_amounts() -> None:
+    """The four deduction-side money campos accumulate across observations and
+    default to the design's own zeros when no observation carries an amount."""
+    rows = _build(
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            reducciones_aplicables=Decimal("1000"),
+            gastos_deducibles=Decimal("2000"),
+            pension_compensatoria=Decimal("3000"),
+            anualidades_alimentos=Decimal("4000"),
+        ),
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            source_id="row-2",
+            reducciones_aplicables=Decimal("500"),
+            gastos_deducibles=Decimal("250"),
+        ),
+    )
+    row = rows[0]
+    assert row["reducciones_aplicables"] == Decimal("1500")
+    assert row["gastos_deducibles"] == Decimal("2250")
+    assert row["pension_compensatoria"] == Decimal("3000")
+    assert row["anualidades_alimentos"] == Decimal("4000")
+
+    empty = _build(_observation(**_COMPLETE_CLAVE_A))[0]
+    assert empty["reducciones_aplicables"] == Decimal("0")
+    assert empty["gastos_deducibles"] == Decimal("0")
+    assert empty["pension_compensatoria"] == Decimal("0")
+    assert empty["anualidades_alimentos"] == Decimal("0")
+
+
+def test_build_withholding_rows_refuses_deduction_amounts_outside_their_claves() -> None:
+    """A nonzero deduction-side amount on a row whose clave the design does not
+    declare is contradictory input; a zero amount is the design's no-content."""
+    with pytest.raises(RegistryValidationError, match="reducciones_aplicables"):
+        _build(_observation(clave=RetencionClave.D, reducciones_aplicables=Decimal("100")))
+    with pytest.raises(RegistryValidationError, match="gastos_deducibles"):
+        _build(_observation(clave=RetencionClave.D, gastos_deducibles=Decimal("100")))
+    with pytest.raises(RegistryValidationError, match="pension_compensatoria"):
+        _build(_observation(clave=RetencionClave.G, pension_compensatoria=Decimal("100")))
+    with pytest.raises(RegistryValidationError, match="anualidades_alimentos"):
+        _build(_observation(clave=RetencionClave.G, anualidades_alimentos=Decimal("100")))
+    # E.02 declares gastos; G.06 declares reducciones: eligible rows pass.
+    row = _build(
+        _observation(clave=RetencionClave.E, subclave="02", gastos_deducibles=Decimal("120"))
+    )[0]
+    assert row["gastos_deducibles"] == Decimal("120")
+    row = _build(
+        _observation(clave=RetencionClave.G, subclave="06", reducciones_aplicables=Decimal("120"))
+    )[0]
+    assert row["reducciones_aplicables"] == Decimal("120")
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

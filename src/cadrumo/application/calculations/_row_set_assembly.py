@@ -487,6 +487,16 @@ def assemble_withholding_observations(
                     ingreso_a_cuenta_repercutido=coerce_decimal(
                         fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
                     ),
+                    reducciones_aplicables=coerce_decimal(
+                        fields.get("reducciones_aplicables"), default=Decimal("0")
+                    ),
+                    gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
+                    pension_compensatoria=coerce_decimal(
+                        fields.get("pension_compensatoria"), default=Decimal("0")
+                    ),
+                    anualidades_alimentos=coerce_decimal(
+                        fields.get("anualidades_alimentos"), default=Decimal("0")
+                    ),
                     # The design's optional identity facts: forwarded verbatim
                     # when the row carries them, left to the observation model's
                     # None defaults otherwise -- the resolver applies the design's
