@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:90ef9a735969964a6bff49e066cf4dffb6a86201621277e774efbbd90302da30'
+body_hash: 'sha256:ea12512cc66e0699b89221cec53cddbe2dd7fcbf0ed91c01556b54febb264233'
 step_id: 'S164'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -128,3 +128,5 @@ passes; its pre-repair failure is itself the proof the assertion still bites.
   key-schedule code touched. The key-management confirmation the contract requires
   before removing a derivation branch does NOT hold today, which is an independent
   reason the retired surface was left standing.
+
+- 2026-08-18 re-verification at HEAD: the ruling stands and its terminal state has arrived. The hard-cutover absence gate passes 12/12; the master_key facade documents the shared-master providers, backend resolver and passphrase-callback alias as deleted (the ordered population-(b) deletion has landed); the custody facade still declares current-format profile-scoped custody. The package split is the intended end state, structurally enforced — the row is closed as confirmed-ruling, no code change.
