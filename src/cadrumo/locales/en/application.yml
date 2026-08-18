@@ -1385,7 +1385,7 @@ application:
         this profile. Autonomic deductions and the autonomic part of the tax scale
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
       modify_descendants_via_door: Descendants are not part of profile edit. Manage
-        them with '{command}'.
+        them through the descendants command.
       modify_no_resume: Changes in modify mode are staged only - leaving without submitting
         discards them; save-and-resume is available on profile create only.
       setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create

@@ -1507,7 +1507,7 @@ application:
         de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
         triar una altra comunitat.
       modify_descendants_via_door: Els descendents no formen part de l'edició del
-        perfil. Gestiona'ls amb '{command}'.
+        perfil. Gestiona'ls amb el comandament de descendents.
       modify_no_resume: 'Els canvis en mode edició només queden preparats: sortir
         sense enviar els descarta; desar i reprendre només està disponible en crear
         el perfil.'
