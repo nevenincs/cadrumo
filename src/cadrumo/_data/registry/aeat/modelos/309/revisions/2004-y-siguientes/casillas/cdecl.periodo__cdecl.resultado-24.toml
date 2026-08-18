@@ -394,6 +394,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-base-01"
 number = "653-669"
+form_number = "01"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_01"
@@ -408,6 +409,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-tipo-02"
 number = "670-674"
+form_number = "02"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_02"
@@ -421,6 +423,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-cuota-03"
 number = "675-691"
+form_number = "03"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_03"
@@ -435,6 +438,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-base-25"
 number = "692-708"
+form_number = "25"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_25"
@@ -449,6 +453,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-tipo-26"
 number = "709-713"
+form_number = "26"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_26"
@@ -462,6 +467,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-cuota-27"
 number = "714-730"
+form_number = "27"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_27"
@@ -476,6 +482,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-base-04"
 number = "731-747"
+form_number = "04"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_04"
@@ -490,6 +497,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-tipo-05"
 number = "748-752"
+form_number = "05"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_05"
@@ -503,6 +511,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-cuota-06"
 number = "753-769"
+form_number = "06"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_06"
@@ -517,6 +526,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-base-07"
 number = "770-786"
+form_number = "07"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_07"
@@ -531,6 +541,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-tipo-08"
 number = "787-791"
+form_number = "08"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_08"
@@ -544,6 +555,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.rg-cuota-09"
 number = "792-808"
+form_number = "09"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_09"
@@ -558,6 +570,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-base-10"
 number = "809-825"
+form_number = "10"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_10"
@@ -572,6 +585,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-tipo-11"
 number = "826-830"
+form_number = "11"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_11"
@@ -585,6 +599,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-cuota-12"
 number = "831-847"
+form_number = "12"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_12"
@@ -599,6 +614,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-base-13"
 number = "848-864"
+form_number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_13"
@@ -613,6 +629,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-tipo-14"
 number = "865-869"
+form_number = "14"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_14"
@@ -626,6 +643,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-cuota-15"
 number = "870-886"
+form_number = "15"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_15"
@@ -640,6 +658,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-base-16"
 number = "887-903"
+form_number = "16"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_16"
@@ -654,6 +673,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-tipo-17"
 number = "904-908"
+form_number = "17"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_17"
@@ -667,6 +687,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-cuota-18"
 number = "909-925"
+form_number = "18"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_18"
@@ -681,6 +702,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-base-19"
 number = "926-942"
+form_number = "19"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_19"
@@ -695,6 +717,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-tipo-20"
 number = "943-947"
+form_number = "20"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_20"
@@ -708,6 +731,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.re-cuota-21"
 number = "948-964"
+form_number = "21"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_21"
@@ -722,6 +746,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.cuota-devengada-22"
 number = "965-981"
+form_number = "22"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "cuota_devengada_22"
@@ -737,6 +762,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.a-deducir-23"
 number = "982-998"
+form_number = "23"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "a_deducir_23"
@@ -751,6 +777,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.resultado-24"
 number = "999-1015"
+form_number = "24"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "resultado_24"
