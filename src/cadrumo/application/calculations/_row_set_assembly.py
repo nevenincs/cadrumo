@@ -293,10 +293,29 @@ def _optional_text_kwarg(
     raw = fields.get(key)
     if raw is None:
         return {}
-    text = _coerce_text(raw)
+    # Stripped: the resolver's no-content for space-filled design slots is a
+    # run of spaces, which must read back as absent rather than as a value.
+    text = _coerce_text(raw).strip()
     if not text:
         return {}
     return {key: text}
+
+
+def _optional_int_kwarg(fields: Mapping[str, Decimal | str], key: str) -> dict[str, int]:
+    """Pass an integer-clave fact only when the row supplies a non-empty value.
+
+    The integer counterpart of :func:`_optional_text_kwarg`: cells arrive as
+    ``Decimal`` or ``str``, and the target field is a plain ``int`` clave, so the
+    value is routed through its decimal text so a fractional cell
+    (``"1.5"``) refuses instead of truncating.
+    """
+    raw = fields.get(key)
+    if raw is None:
+        return {}
+    text = format(raw, "f") if isinstance(raw, Decimal) else str(raw).strip()
+    if not text:
+        return {}
+    return {key: int(text)}
 
 
 class _OperationKindCodeKwarg(TypedDict, total=False):
@@ -465,9 +484,23 @@ def assemble_withholding_observations(
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
                     retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
                     ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
+                    ingreso_a_cuenta_repercutido=coerce_decimal(
+                        fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
+                    ),
+                    # The design's optional identity facts: forwarded verbatim
+                    # when the row carries them, left to the observation model's
+                    # None defaults otherwise -- the resolver applies the design's
+                    # per-clave completion rules at resolve time.
+                    **_optional_text_kwarg(fields, "representative_tax_id"),
+                    **_optional_text_kwarg(fields, "spouse_or_unit_titular_tax_id"),
+                    **_optional_int_kwarg(fields, "disability_clave"),
+                    **_optional_int_kwarg(fields, "contract_relation_clave"),
+                    **_optional_int_kwarg(fields, "unit_convivencia_titular_clave"),
+                    **_optional_int_kwarg(fields, "geographic_mobility_clave"),
+                    **_optional_int_kwarg(fields, "accrual_year"),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 

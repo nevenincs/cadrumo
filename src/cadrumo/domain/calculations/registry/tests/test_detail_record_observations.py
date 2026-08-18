@@ -34,6 +34,7 @@ from .._withholding_bindings import (
     WithholdingObservation,
     _build_withholding_rows,
 )
+from .._errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -194,6 +195,271 @@ def test_build_withholding_rows_omits_the_key_for_an_unstated_country() -> None:
 
     assert stated["country_code"] == "FR"
     assert "country_code" not in unstated
+
+
+# ---------------------------------------------------------------------------
+# Withholding row design-completion rules (Modelo 190 Tipo 2)
+# ---------------------------------------------------------------------------
+
+
+_M190_DECLARED_FIELDS = frozenset(
+    {
+        "perceptor_tax_id",
+        "perceptor_legal_name",
+        "clave",
+        "subclave",
+        "percibido_dinerario",
+        "percibido_especie",
+        "retencion_practicada",
+        "ingreso_a_cuenta",
+        "country_code",
+        "province_code",
+        "territorial_deduction_clave",
+        "perceptor_birth_year",
+        "perceptor_situacion_familiar",
+        "representative_tax_id",
+        "spouse_or_unit_titular_tax_id",
+        "disability_clave",
+        "contract_relation_clave",
+        "unit_convivencia_titular_clave",
+        "geographic_mobility_clave",
+        "ingreso_a_cuenta_repercutido",
+        "accrual_year",
+    }
+)
+
+#: The complete fact set the design mandates for a clave A row.
+_COMPLETE_CLAVE_A = {
+    "perceptor_birth_year": 1985,
+    "perceptor_situacion_familiar": 1,
+    "disability_clave": 0,
+    "contract_relation_clave": 1,
+    "geographic_mobility_clave": 0,
+}
+
+
+def _observation(**overrides: object) -> WithholdingObservation:
+    base: dict[str, object] = {
+        "source_id": "row-1",
+        "perceptor_tax_id": "12345678A",
+        "perceptor_legal_name": "Perceptor One",
+        "transaction_date": date(2025, 12, 31),
+        "clave": RetencionClave.A,
+    }
+    base.update(overrides)
+    return WithholdingObservation(**base)
+
+
+def _build(*observations: WithholdingObservation, declared: bool = True) -> tuple[dict[str, object], ...]:
+    fields = _M190_DECLARED_FIELDS if declared else frozenset()
+    return tuple(
+        dict(row)
+        for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=fields)
+    )
+
+
+def test_build_withholding_rows_completes_a_declared_clave_a_row() -> None:
+    rows = _build(_observation(**_COMPLETE_CLAVE_A))
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["perceptor_birth_year"] == "1985"
+    assert row["perceptor_situacion_familiar"] == "1"
+    assert row["disability_clave"] == "0"
+    assert row["contract_relation_clave"] == "1"
+    assert row["geographic_mobility_clave"] == "0"
+    assert row["representative_tax_id"] == " " * 9
+    assert row["spouse_or_unit_titular_tax_id"] == " " * 9
+    assert row["unit_convivencia_titular_clave"] == " "
+    assert row["accrual_year"] == "0000"
+    assert row["ingreso_a_cuenta_repercutido"] == Decimal("0")
+
+
+def test_build_withholding_rows_refuses_clave_a_without_contract_or_mobility() -> None:
+    """The design records a contract type and a mobility flag on every clave-A
+    row -- clave 0/1 are recorded facts, never a default -- so an eligible row
+    whose observation carries neither refuses instead of filing a silent blank."""
+    with pytest.raises(RegistryValidationError, match="contract_relation_clave"):
+        _build(
+            _observation(
+                **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "contract_relation_clave"}
+            )
+        )
+    with pytest.raises(RegistryValidationError, match="geographic_mobility_clave"):
+        _build(
+            _observation(
+                **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "geographic_mobility_clave"}
+            )
+        )
+
+
+def test_build_withholding_rows_refuses_eligible_row_without_birth_situation_disability() -> None:
+    for missing in ("perceptor_birth_year", "perceptor_situacion_familiar", "disability_clave"):
+        with pytest.raises(RegistryValidationError, match=missing):
+            _build(
+                _observation(
+                    **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != missing}
+                )
+            )
+
+
+def test_build_withholding_rows_writes_design_no_content_for_ineligible_claves() -> None:
+    """A clave G row is outside the design's datos-adicionales block: the numeric
+    slots carry the design's own zeros and the clave-restricted one-digit slots
+    carry spaces, with no refusal."""
+    rows = _build(_observation(clave=RetencionClave.G, subclave="01"))
+
+    row = rows[0]
+    assert row["perceptor_birth_year"] == "0000"
+    assert row["perceptor_situacion_familiar"] == "0"
+    assert row["disability_clave"] == " "
+    assert row["contract_relation_clave"] == " "
+    assert row["unit_convivencia_titular_clave"] == " "
+    assert row["geographic_mobility_clave"] == " "
+    assert row["accrual_year"] == "0000"
+
+
+def test_build_withholding_rows_does_not_enforce_undeclared_fields() -> None:
+    """Modelo 193 rows share this observation class but declare none of the
+    datos-adicionales fields, so a fact-less clave-A row must not refuse when the
+    resolving revision never asked for those fields."""
+    rows = _build(_observation(), declared=False)
+    assert len(rows) == 1
+
+
+def test_build_withholding_rows_refuses_out_of_context_facts() -> None:
+    """A fact the design restricts to certain claves arriving on a row outside
+    those claves is contradictory input, not data to silently drop."""
+    with pytest.raises(RegistryValidationError, match="contract_relation_clave"):
+        _build(_observation(clave=RetencionClave.G, contract_relation_clave=1))
+    with pytest.raises(RegistryValidationError, match="disability_clave"):
+        _build(_observation(clave=RetencionClave.D, disability_clave=0))
+    with pytest.raises(RegistryValidationError, match="perceptor_birth_year"):
+        _build(_observation(clave=RetencionClave.G, perceptor_birth_year=1990))
+
+
+def test_build_withholding_rows_spouse_nif_follows_situacion_and_differs_from_perceptor() -> None:
+    spouse = "98765432B"
+    with pytest.raises(RegistryValidationError, match="spouse_or_unit_titular_tax_id"):
+        # Situacion familiar 2 obligates the spouse NIF.
+        _build(
+            _observation(
+                **{
+                    **_COMPLETE_CLAVE_A,
+                    "perceptor_situacion_familiar": 2,
+                }
+            )
+        )
+    with pytest.raises(RegistryValidationError, match="equals the perceptor's own NIF"):
+        _build(
+            _observation(
+                **{
+                    **_COMPLETE_CLAVE_A,
+                    "perceptor_situacion_familiar": 2,
+                    "spouse_or_unit_titular_tax_id": "12345678A",
+                }
+            )
+        )
+    with pytest.raises(RegistryValidationError, match="declares only when"):
+        # Situacion familiar 1 declares no spouse: the fact contradicts the design.
+        _build(_observation(**_COMPLETE_CLAVE_A, spouse_or_unit_titular_tax_id=spouse))
+    row = _build(
+        _observation(
+            **{
+                **_COMPLETE_CLAVE_A,
+                "perceptor_situacion_familiar": 2,
+                "spouse_or_unit_titular_tax_id": spouse,
+            }
+        )
+    )[0]
+    assert row["spouse_or_unit_titular_tax_id"] == spouse
+
+
+def test_build_withholding_rows_l29_requires_titular_clave_and_spouse_when_titular_two() -> None:
+    titular_nif = "98765432B"
+    with pytest.raises(RegistryValidationError, match="unit_convivencia_titular_clave"):
+        _build(_observation(clave=RetencionClave.L, subclave="29"))
+    with pytest.raises(RegistryValidationError, match="spouse_or_unit_titular_tax_id"):
+        _build(_observation(clave=RetencionClave.L, subclave="29", unit_convivencia_titular_clave=2))
+    row = _build(
+        _observation(
+            clave=RetencionClave.L,
+            subclave="29",
+            unit_convivencia_titular_clave=1,
+        )
+    )[0]
+    assert row["unit_convivencia_titular_clave"] == "1"
+    assert row["spouse_or_unit_titular_tax_id"] == " " * 9
+    row = _build(
+        _observation(
+            clave=RetencionClave.L,
+            subclave="29",
+            unit_convivencia_titular_clave=2,
+            spouse_or_unit_titular_tax_id=titular_nif,
+        )
+    )[0]
+    assert row["spouse_or_unit_titular_tax_id"] == titular_nif
+
+
+def test_build_withholding_rows_merges_a_fact_carried_only_by_a_later_observation() -> None:
+    """First observation carries no contract type, the second does: the cohort's
+    row must end with the fact, not with the first-touch absence."""
+    rows = _build(
+        _observation(**{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "contract_relation_clave"}),
+        _observation(**_COMPLETE_CLAVE_A, source_id="row-2", percibido_dinerario=Decimal("100")),
+    )
+    assert len(rows) == 1
+    assert rows[0]["contract_relation_clave"] == "1"
+    assert rows[0]["percibido_dinerario"] == Decimal("100")
+
+
+def test_build_withholding_rows_still_refuses_a_contradicting_later_observation() -> None:
+    def _with_contract(clave: int, **extra: object) -> WithholdingObservation:
+        facts = {key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "contract_relation_clave"}
+        return _observation(**facts, contract_relation_clave=clave, **extra)
+
+    with pytest.raises(RegistryValidationError, match="disagree on 'contract_relation_clave'"):
+        _build(
+            _with_contract(1),
+            _with_contract(2, source_id="row-2"),
+        )
+
+
+def test_build_withholding_rows_sums_repercutido_and_defaults_accrual_year() -> None:
+    rows = _build(
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            ingreso_a_cuenta_repercutido=Decimal("300"),
+            source_id="row-1",
+        ),
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            ingreso_a_cuenta_repercutido=Decimal("200"),
+            accrual_year=2023,
+            source_id="row-2",
+        ),
+    )
+    row = rows[0]
+    assert row["ingreso_a_cuenta_repercutido"] == Decimal("500")
+    assert row["accrual_year"] == "2023"
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["accrual_year"] == "0000"
+
+
+def test_withholding_observation_design_claves_are_bounded() -> None:
+    with pytest.raises(ValidationError):
+        _observation(disability_clave=4)
+    with pytest.raises(ValidationError):
+        _observation(contract_relation_clave=0)
+    with pytest.raises(ValidationError):
+        _observation(contract_relation_clave=5)
+    with pytest.raises(ValidationError):
+        _observation(unit_convivencia_titular_clave=3)
+    with pytest.raises(ValidationError):
+        _observation(geographic_mobility_clave=2)
+    with pytest.raises(ValidationError):
+        _observation(accrual_year=1899)
+    with pytest.raises(ValidationError):
+        _observation(representative_tax_id="1234567A")  # 8 chars, not a 9-byte NIF
 
 
 # ---------------------------------------------------------------------------

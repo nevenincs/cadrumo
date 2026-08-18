@@ -50,12 +50,20 @@ _WithholdingRowField = Literal[
     "territorial_deduction_clave",
     "perceptor_birth_year",
     "perceptor_situacion_familiar",
+    "representative_tax_id",
+    "spouse_or_unit_titular_tax_id",
+    "disability_clave",
+    "contract_relation_clave",
+    "unit_convivencia_titular_clave",
+    "geographic_mobility_clave",
     "clave",
     "subclave",
     "percibido_dinerario",
     "percibido_especie",
     "retencion_practicada",
     "ingreso_a_cuenta",
+    "ingreso_a_cuenta_repercutido",
+    "accrual_year",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -128,6 +136,32 @@ class WithholdingObservation(BaseModel):
     perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
+    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    """NIF of the perceptor's legal representative, declared by the design only when
+    the perceptor is under 14; every other row writes the design's own spaces."""
+    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
+    unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
+    disability_clave: int | None = Field(default=None, ge=0, le=3)
+    """Perceptor disability degree clave (0 none/<33%, 1 33-65%, 2 33-65% needing
+    third-party help or reduced mobility, 3 >=65%), declared for claves A, B
+    (subclaves 01, 03, 04, 99) and C."""
+    contract_relation_clave: int | None = Field(default=None, ge=1, le=4)
+    """Contract-or-relation type clave (1 general, 2 under-a-year/artists, 3 other
+    special dependent relations, 4 sporadic peonadas), declared for clave A only."""
+    unit_convivencia_titular_clave: int | None = Field(default=None, ge=1, le=2)
+    """Whether the perceptor is the unidad de convivencia's titular (1 yes, 2 no),
+    declared for clave L.29 only."""
+    geographic_mobility_clave: int | None = Field(default=None, ge=0, le=1)
+    """Art. 19.2.f) geographic-mobility deduction flag (1 entitled, 0 not),
+    declared for clave A only."""
+    ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
+    """Ingresos a cuenta efectuados on non-incapacidad especie payments that the
+    payer repercutido to the perceptor (design positions 135-147)."""
+    accrual_year: int | None = Field(default=None, ge=1900, le=2100)
+    """Ejercicio de devengo (design positions 148-151), declared only for atrasos
+    devengados in earlier exercises or reintegros of earlier-exercise amounts;
+    every other row writes the design's own zeros."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -146,7 +180,13 @@ class WithholdingObservation(BaseModel):
             return RetencionClave(value)
         return value
 
-    @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
+    @field_validator(
+        "percibido_dinerario",
+        "percibido_especie",
+        "retencion_practicada",
+        "ingreso_a_cuenta",
+        "ingreso_a_cuenta_repercutido",
+    )
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
@@ -376,7 +416,10 @@ def resolve_withholding_binding_row_values(
         grouping = cohort_key[0]
         _, sample_selector = members[0]
         scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
-        rows = _build_withholding_rows(grouping, scope_filtered)
+        required_fields = frozenset(
+            selector.row_field for _, selector in members if selector.row_field is not None
+        )
+        rows = _build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
         for binding, selector in members:
             assert selector.row_field is not None
             for row_index, row in enumerate(rows, start=1):
@@ -406,35 +449,197 @@ def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
 
 
 def _require_consistent_identity_facts(
-    bucket: Mapping[str, Decimal | str],
+    bucket: dict[str, Decimal | str],
     observation: WithholdingObservation,
     *,
     fields: tuple[str, ...],
 ) -> None:
-    """Refuse a cohort whose later observation contradicts an earlier identity fact.
+    """Merge one cohort observation's identity facts and refuse contradictions.
 
     Amounts accumulate, but a perceptor has ONE province, one birth year and one
-    family situation; two observations disagreeing on one of them is a finding
-    the resolver must surface rather than silently keep the first value.
+    family situation: the first observation that carries a fact sets it, a later
+    observation that disagrees is a finding the resolver must surface rather than
+    silently keep the first value, and a later observation that carries nothing
+    leaves the established fact alone.
     """
     for field in fields:
         stored = bucket.get(field)
         incoming = getattr(observation, field)
-        if stored is None or incoming is None:
+        if incoming is None:
             continue
-        if field in ("perceptor_birth_year", "perceptor_situacion_familiar"):
-            stored = str(stored)
-            incoming = str(incoming)
-        if stored != incoming:
+        if stored is None:
+            bucket[field] = incoming
+        elif stored != incoming:
             raise RegistryValidationError(
                 f"withholding rows for perceptor {observation.perceptor_tax_id!r} disagree on "
                 f"{field!r}: {stored!r} vs {incoming!r}",
             )
 
 
+_CLAVE_L29_SUBCLAVE = "29"
+
+
+def _is_clave_l29(clave: object, subclave: object) -> bool:
+    """True for the clave L.29 the design's unidad-de-convivencia block applies to."""
+    return str(clave) == "L" and str(subclave) == _CLAVE_L29_SUBCLAVE
+
+
+def _finalise_withholding_row(
+    row: Mapping[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+) -> Mapping[str, Decimal | str]:
+    """Apply the design's per-clave completion rules to one accumulated row.
+
+    The accumulation pass merges observations and their optional facts; this pass
+    turns that into the record content the design defines. Every rule that can
+    refuse is gated on ``required_fields`` -- the row fields the RESOLVING
+    revision's bindings declare -- because modelo 193 rows share this observation
+    class and its store, and a refusal for a field 193 never asks for would be
+    cross-modelo noise.
+
+    For each declared field:
+
+    * a fact the design restricts to certain claves REFUSES when it arrives on a
+      row outside those claves, and REFUSES again when the design marks it as
+      always recorded for the row's clave and no observation carries it -- a
+      payer that must have recorded the datum and did not is a filing defect,
+      never a silent blank;
+    * the spouse/titular NIF is declared only when its triggering fact is present
+      (situacion familiar 2, or L.29 with titular clave 2) and refuses then, and
+      never equals the perceptor's own NIF;
+    * every other row carries the design's own no-content: spaces for the
+      NIF/one-digit claves the design does not declare, zeros for the numeric
+      fields whose design says "en cualquier otro caso se rellenará a ceros".
+    """
+    finalised = dict(row)
+    clave = str(row["clave"])
+    subclave = str(row["subclave"])
+    perceptor_tax_id = str(row["perceptor_tax_id"])
+    datos_adicionales = _declares_datos_adicionales(clave, subclave)
+    is_clave_a = clave == "A"
+    is_clave_l29 = _is_clave_l29(clave, subclave)
+
+    birth_year = row.get("perceptor_birth_year")
+    situacion = row.get("perceptor_situacion_familiar")
+    disability = row.get("disability_clave")
+    spouse = row.get("spouse_or_unit_titular_tax_id")
+    contract = row.get("contract_relation_clave")
+    titular = row.get("unit_convivencia_titular_clave")
+    mobility = row.get("geographic_mobility_clave")
+
+    if "perceptor_birth_year" in required_fields:
+        if birth_year is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "perceptor_birth_year, which design campo 15 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and birth_year is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "perceptor_birth_year (design campo 15): no observation carries it",
+            )
+    if "perceptor_situacion_familiar" in required_fields:
+        if situacion is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "perceptor_situacion_familiar, which design campo 16 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and situacion is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "perceptor_situacion_familiar (design campo 16): no observation carries it",
+            )
+    if "disability_clave" in required_fields:
+        if disability is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "disability_clave, which design campo 18 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and disability is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "disability_clave (design campo 18, clave 0 for no disability): no observation carries it",
+            )
+    if "contract_relation_clave" in required_fields:
+        if contract is not None and not is_clave_a:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "contract_relation_clave, which design campo 19 declares only for clave A",
+            )
+        if is_clave_a and contract is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+                "contract_relation_clave (design campo 19): no observation carries it",
+            )
+    if "unit_convivencia_titular_clave" in required_fields:
+        if titular is not None and not is_clave_l29:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "unit_convivencia_titular_clave, which design campo 20 declares only for clave L.29",
+            )
+        if is_clave_l29 and titular is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
+                "unit_convivencia_titular_clave (design campo 20): no observation carries it",
+            )
+    if "geographic_mobility_clave" in required_fields:
+        if mobility is not None and not is_clave_a:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "geographic_mobility_clave, which design campo 21 declares only for clave A",
+            )
+        if is_clave_a and mobility is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+                "geographic_mobility_clave (design campo 21): no observation carries it",
+            )
+    if "spouse_or_unit_titular_tax_id" in required_fields:
+        situacion_declared = "perceptor_situacion_familiar" in required_fields
+        titular_declared = "unit_convivencia_titular_clave" in required_fields
+        spouse_context = (
+            datos_adicionales and situacion_declared and situacion is not None and str(situacion) == "2"
+        ) or (is_clave_l29 and titular_declared and titular is not None and str(titular) == "2")
+        if spouse is not None and not spouse_context and (situacion_declared or titular_declared):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "spouse_or_unit_titular_tax_id, which design campo 17 declares only when "
+                "situacion familiar is 2 or clave L.29 has titular clave 2",
+            )
+        if spouse_context and spouse is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "spouse_or_unit_titular_tax_id (design campo 17): no observation carries it",
+            )
+        if spouse is not None and spouse == perceptor_tax_id:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r}: spouse_or_unit_titular_tax_id "
+                "equals the perceptor's own NIF, which the design campo 17 excludes",
+            )
+
+    finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
+    finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
+    finalised["disability_clave"] = str(disability) if disability is not None else " "
+    finalised["contract_relation_clave"] = str(contract) if is_clave_a else " "
+    finalised["unit_convivencia_titular_clave"] = str(titular) if is_clave_l29 else " "
+    finalised["geographic_mobility_clave"] = str(mobility) if is_clave_a else " "
+    finalised["spouse_or_unit_titular_tax_id"] = spouse if spouse is not None else " " * 9
+
+    representative = row.get("representative_tax_id")
+    finalised["representative_tax_id"] = representative if representative is not None else " " * 9
+    accrual_year = row.get("accrual_year")
+    finalised["accrual_year"] = str(accrual_year) if accrual_year is not None else "0000"
+    return finalised
+
+
 def _build_withholding_rows(
     grouping: _WithholdingGrouping,
     observations: tuple[WithholdingObservation, ...],
+    *,
+    required_fields: frozenset[str] = frozenset(),
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group withholding observations into rows keyed by perceptor and optionally clave."""
     accum: dict[tuple[str | None, str, str, str], dict[str, Decimal | str]] = {}
@@ -465,6 +670,7 @@ def _build_withholding_rows(
             "percibido_especie": Decimal("0"),
             "retencion_practicada": Decimal("0"),
             "ingreso_a_cuenta": Decimal("0"),
+            "ingreso_a_cuenta_repercutido": Decimal("0"),
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
@@ -472,17 +678,6 @@ def _build_withholding_rows(
             identity["province_code"] = observation.province_code
         if observation.territorial_deduction_clave is not None:
             identity["territorial_deduction_clave"] = observation.territorial_deduction_clave
-        if _declares_datos_adicionales(observation.clave, observation.subclave):
-            # The design only asks for these facts on the listed claves; for any
-            # other row the design's own no-content is the correct value, not an
-            # absence.
-            identity["perceptor_birth_year"] = observation.perceptor_birth_year if observation.perceptor_birth_year is not None else "0000"
-            identity["perceptor_situacion_familiar"] = (
-                observation.perceptor_situacion_familiar if observation.perceptor_situacion_familiar is not None else "0"
-            )
-        else:
-            identity["perceptor_birth_year"] = "0000"
-            identity["perceptor_situacion_familiar"] = "0"
         bucket = accum.setdefault(key, identity)
         _require_consistent_identity_facts(
             bucket,
@@ -492,21 +687,34 @@ def _build_withholding_rows(
                 "territorial_deduction_clave",
                 "perceptor_birth_year",
                 "perceptor_situacion_familiar",
+                "representative_tax_id",
+                "spouse_or_unit_titular_tax_id",
+                "disability_clave",
+                "contract_relation_clave",
+                "unit_convivencia_titular_clave",
+                "geographic_mobility_clave",
+                "accrual_year",
             ),
         )
         prev_dinerario = bucket["percibido_dinerario"]
         prev_especie = bucket["percibido_especie"]
         prev_retencion = bucket["retencion_practicada"]
         prev_ingreso = bucket["ingreso_a_cuenta"]
+        prev_repercutido = bucket["ingreso_a_cuenta_repercutido"]
         assert isinstance(prev_dinerario, Decimal)
         assert isinstance(prev_especie, Decimal)
         assert isinstance(prev_retencion, Decimal)
         assert isinstance(prev_ingreso, Decimal)
+        assert isinstance(prev_repercutido, Decimal)
         bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
         bucket["percibido_especie"] = prev_especie + observation.percibido_especie
         bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
         bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
-    return tuple(accum[key] for key in sorted(accum.keys()))
+        bucket["ingreso_a_cuenta_repercutido"] = prev_repercutido + observation.ingreso_a_cuenta_repercutido
+    return tuple(
+        _finalise_withholding_row(accum[key], required_fields=required_fields)
+        for key in sorted(accum.keys())
+    )
 
 
 class WithholdingClaveBreakdown(BaseModel):

@@ -1,0 +1,102 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas for the
+# design's identificacion and clave-coded positions: representative NIF, the
+# non-incapacidad especie block's repercutidos amount, ejercicio de devengo,
+# the spouse/unit-titular NIF, and the four clave-restricted one-digit claves.
+# Same template-slot contract as the sibling casilla fragments.
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.nif-representante-legal"
+number = "27-35"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.ingresos-a-cuenta-repercutidos"
+number = "135-147"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "ingresos_a_cuenta_repercutidos"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.ejercicio-devengo"
+number = "148-151"
+section = ["perceptor", "percepcion"]
+data_type = "year"
+semantic_role = "devengo_year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.nif-conyuge-titular-unidad"
+number = "158-166"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_spouse_or_unit_titular_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.discapacidad"
+number = "167"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+semantic_role = "payee_disability_clave"
+# Design clave 0-3, always recorded for claves A, B (01, 03, 04, 99) and C;
+# clave 0 is the recorded "no disability" fact, never a default.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.contrato-relacion"
+number = "168"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_contract_relation_clave"
+# Design clave 1-4, always recorded for clave A; different contract types on
+# one perceptor must split into separate records per the design.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.titular-unidad-convivencia"
+number = "169"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+semantic_role = "payee_unit_convivencia_titular_clave"
+# Design clave 1-2, always recorded for clave L.29; clave 2 obligates the
+# titular's NIF in perc.nif-conyuge-titular-unidad.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "perc.movilidad-geografica"
+number = "170"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_geographic_mobility_clave"
+# Design clave 0-1 (art. 19.2.f) mobility deduction), always recorded for
+# clave A; clave 0 is the recorded "not entitled" fact, never a default.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

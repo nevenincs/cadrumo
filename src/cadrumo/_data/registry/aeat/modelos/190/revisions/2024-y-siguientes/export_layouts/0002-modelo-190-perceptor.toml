@@ -20,6 +20,18 @@ percibido_dinerario = "perc.percepcion-dineraria"
 percibido_especie = "perc.percepcion-especie"
 retencion_practicada = "perc.retenciones-practicadas"
 ingreso_a_cuenta = "perc.ingresos-a-cuenta"
+province_code = "perc.provincia"
+territorial_deduction_clave = "perc.ceuta-melilla"
+perceptor_birth_year = "perc.ano-nacimiento"
+perceptor_situacion_familiar = "perc.situacion-familiar"
+representative_tax_id = "perc.nif-representante-legal"
+ingreso_a_cuenta_repercutido = "perc.ingresos-a-cuenta-repercutidos"
+accrual_year = "perc.ejercicio-devengo"
+spouse_or_unit_titular_tax_id = "perc.nif-conyuge-titular-unidad"
+disability_clave = "perc.discapacidad"
+contract_relation_clave = "perc.contrato-relacion"
+unit_convivencia_titular_clave = "perc.titular-unidad-convivencia"
+geographic_mobility_clave = "perc.movilidad-geografica"
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-record-type"
@@ -97,16 +109,16 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-nif-representante-legal"
 offset = 27
 length = 9
-kind = "filler"
-# Design campo 6, 27-35. Written only when the perceptor is under 14, in
-# which case AEAT wants the legal representative's NIF. The withholding
-# observation model carries no representative identity, so there is no
-# fact to write; the design states "En cualquier otro caso el contenido
-# de este campo se rellenara a espacios."
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-representante"
+# Design campo 6, 27-35: declared only when the perceptor is under 14. The
+# resolver emits the exact 9-byte content -- the representative's NIF when an
+# observation carries it, the design's own spaces ("en cualquier otro caso se
+# rellenara a espacios") otherwise.
 data_type = "text"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
@@ -288,13 +300,13 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-ingresos-a-cuenta-repercutidos"
 offset = 135
 length = 13
-kind = "filler"
-# Design campo 12 subdivision 135-147 INGRESOS A CUENTA REPERCUTIDOS: the
-# part of the ingreso a cuenta the payer passed on to the perceptor.
-# WithholdingObservation carries ingreso_a_cuenta as one amount with no
-# repercutido split, so no fact resolves this slot; ceros is the design's
-# numeric no-content fill.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido"
+# Design campo 12 subdivision 135-147 INGRESOS A CUENTA REPERCUTIDOS: the part
+# of the ingreso a cuenta the payer passed on to the perceptor, carried by the
+# observation; ceros is the design's own no-content when no amount was
+# repercutido.
+data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
@@ -306,8 +318,12 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-ejercicio-devengo"
 offset = 148
 length = 4
-kind = "filler"
-# Design campo 13, 148-151 EJERCICIO DEVENGO: only for atrasos whose devengo belongs to an earlier ejercicio. The withholding observation carries a transaction_date but no devengo ejercicio, so no fact resolves it.
+kind = "binding"
+binding = "modelo-190-perceptor-row-ejercicio-devengo"
+# Design campo 13, 148-151 EJERCICIO DEVENGO: declared only for atrasos whose
+# devengo belongs to an earlier ejercicio or reintegros of earlier-exercise
+# amounts; the resolver writes the design's own zeros ("0000") for every other
+# row.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -368,12 +384,16 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-nif-conyuge"
 offset = 158
 length = 9
-kind = "filler"
-# Design campo 17, 158-166 NIF DEL CONYUGE / NIF DEL TITULAR DE LA UNIDAD DE CONVIVENCIA. Cadrumo holds no perceptor spouse identity.
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-conyuge-titular"
+# Design campo 17, 158-166 NIF DEL CONYUGE / NIF DEL TITULAR DE LA UNIDAD DE
+# CONVIVENCIA: the spouse's NIF when situacion familiar is 2 (claves A/B/C), the
+# titular's NIF for clave L.29 with titular clave 2; the resolver refuses a value
+# equal to the perceptor's own NIF and writes spaces elsewhere.
 data_type = "text"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
@@ -382,26 +402,34 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-discapacidad"
 offset = 167
 length = 1
-kind = "filler"
-# Design campo 18, 167 DISCAPACIDAD (claves 0-3). Cadrumo holds no perceptor disability grade.
+kind = "binding"
+binding = "modelo-190-perceptor-row-discapacidad"
+# Design campo 18, 167 DISCAPACIDAD (claves 0-3), always recorded for claves
+# A, B (01, 03, 04, 99) and C -- clave 0 is the recorded "no disability" fact;
+# the resolver refuses an eligible row whose observation carries no clave and
+# writes spaces for claves the design does not declare.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-contrato-relacion"
 offset = 168
 length = 1
-kind = "filler"
-# Design campo 19, 168 CONTRATO O RELACION (claves 1-4). Cadrumo holds no employment-contract classification.
+kind = "binding"
+binding = "modelo-190-perceptor-row-contrato-relacion"
+# Design campo 19, 168 CONTRATO O RELACION (claves 1-4), always recorded for
+# clave A; different contract types on one perceptor split into separate
+# records per the design. The resolver refuses a clave-A row whose observation
+# carries no clave and writes spaces for other claves.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
@@ -410,12 +438,16 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-titular-unidad-convivencia"
 offset = 169
 length = 1
-kind = "filler"
-# Design campo 20, 169 TITULAR UNIDAD DE CONVIVENCIA. Cadrumo holds no such fact.
+kind = "binding"
+binding = "modelo-190-perceptor-row-titular-unidad"
+# Design campo 20, 169 TITULAR UNIDAD DE CONVIVENCIA (claves 1-2), always
+# recorded for clave L.29; clave 2 obligates the campo 17 NIF. The resolver
+# refuses an L.29 row whose observation carries no clave and writes spaces
+# elsewhere.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
@@ -424,14 +456,18 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-movilidad-geografica"
 offset = 170
 length = 1
-kind = "filler"
-# Design campo 21, 170 MOVILIDAD GEOGRAFICA. Cadrumo holds no such fact.
+kind = "binding"
+binding = "modelo-190-perceptor-row-movilidad-geografica"
+# Design campo 21, 170 MOVILIDAD GEOGRAFICA (claves 0-1, art. 19.2.f)), always
+# recorded for clave A -- clave 0 is the recorded "not entitled" fact; the
+# resolver refuses a clave-A row whose observation carries no clave and writes
+# spaces elsewhere.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
