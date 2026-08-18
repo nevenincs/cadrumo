@@ -51,15 +51,9 @@ from .._profile_record_repository import (
 )
 from .._registration import register_profile_with_credentials
 from .._repository import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
     UserProfileSnapshotRepository,
     user_profile_snapshot_object_key,
-)
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    UserProfileSnapshot,
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
