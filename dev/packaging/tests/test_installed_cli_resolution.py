@@ -1,11 +1,13 @@
 """Installed MCP subprocess resolution is independent of checkout and ``PATH``.
 
 This is a real distribution test, not an in-process unit test. It builds the
-committed three-wheel cohort, installs ``cadrumo[agent]`` into a fresh stdlib
-virtual environment, launches that environment's absolute ``cadrumo-mcp``
-console script outside the checkout, removes product scripts and ``PYTHONPATH``
-from the child environment, and completes the public grounded Modelo 200 MCP
-itinerary through the direct calculation tool and observation resource.
+committed three-wheel cohort plus the sibling ``cadrumo-harness`` wheel (the
+retired ``cadrumo[agent]`` extra no longer exists, so the harness installs as
+its own distribution), installs them into a fresh stdlib virtual environment,
+launches that environment's absolute ``cadrumo-mcp`` console script outside
+the checkout, removes product scripts and ``PYTHONPATH`` from the child
+environment, and completes the public grounded Modelo 200 MCP itinerary
+through the direct calculation tool and observation resource.
 
 The call can succeed only if the installed server resolves and executes the
 ``aeat`` console script beside itself. A source import, ambient executable, or
@@ -21,6 +23,7 @@ from pathlib import Path
 import pytest
 from dev.packaging._smoke_common import (
     build_companion_wheels,
+    build_harness_wheel,
     build_wheel,
     create_pip_venv,
     head_extract,
@@ -43,7 +46,7 @@ def _installed_script(venv: Path, name: str) -> Path:
 
 @pytest.fixture(scope="module")
 def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
-    """Build and install one committed command/data/agent cohort."""
+    """Build and install one committed command/data/harness cohort."""
     uv = shutil.which("uv")
     assert uv is not None, "uv is required to build the real installed cohort"
 
@@ -51,6 +54,7 @@ def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tup
     build_root = head_extract(_REPO_ROOT, work_dir)
     root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
+    harness_wheel = build_harness_wheel(work_dir, uv, build_root=build_root)
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     run_checked(
         [
@@ -60,7 +64,8 @@ def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tup
             "install",
             "--disable-pip-version-check",
             "--no-cache-dir",
-            f"{root_wheel.resolve()}[agent]",
+            str(root_wheel.resolve()),
+            str(harness_wheel.resolve()),
             *(str(wheel.resolve()) for wheel in data_wheels),
         ],
         cwd=work_dir,

@@ -86,6 +86,7 @@ def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxE
         source_refs=_SOURCE_REFS,
         notice_codes=_NOTICE,
         checkout_imports_removed=True,
+        ambient_product_executables_removed=True,
         commands=(version_command, calculate),
     )
 
@@ -170,6 +171,31 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     assert cli_oracle["target_value"] == _TARGET_VALUE
 
 
+def test_cli_only_lane_records_an_absent_mcp_leg(tmp_path: Path) -> None:
+    """A lane that ships no MCP leg mints with the absent marker, not a fabricated proof."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    tax = _tax_evidence(tmp_path)
+
+    evidence = build_installed_oracle_evidence(
+        row_id="homebrew-linux-x86-64",
+        cohort=cohort,
+        tax_evidence=tax,
+        acquisition=_acquisition(),
+        destination=_destination(cohort),
+    )
+
+    assert evidence.result.status is EvidenceStatus.PASSED
+    # Only the real aeat executable is attested; no cadrumo-mcp identity exists.
+    assert {exe.name for exe in evidence.isolation.installed_executables} == {"aeat"}
+    assert all(len(exe.sha256) == 64 for exe in evidence.isolation.installed_executables)
+    # The isolation facts come from the tax oracle's real captured environment.
+    assert evidence.isolation.checkout_imports_removed is True
+    assert evidence.isolation.ambient_product_executables_removed is True
+    # The absent leg is recorded honestly, and an assertion names it.
+    assert evidence.result.observations["mcp_oracle"] is None
+    assert any("ships no MCP leg" in assertion for assertion in evidence.result.assertions)
+
+
 def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
     """The record lands flat as {row_id}-{evidence_id}.json and re-validates."""
     cohort = _release_cohort(tmp_path / "cohort")
@@ -199,18 +225,16 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
 def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> None:
     """The CLI reconstructs oracle evidence from JSON and emits the flat record.
 
-    Mirrors the PowerShell Scoop path: the lane writes tax-evidence.json /
-    mcp-evidence.json (the oracles' to_jsonable output), then the thin CLI binds
-    the cohort and emits without re-running the oracle.
+    Mirrors the PowerShell Scoop path: the CLI-only lane writes tax-evidence.json
+    (the tax oracle's to_jsonable output), then the thin CLI binds the cohort
+    and emits without re-running the oracle, recording the MCP leg absent.
     """
     import json
 
     cohort_dir = tmp_path / "cohort"
     _release_cohort(cohort_dir)
     tax_json = tmp_path / "tax-evidence.json"
-    mcp_json = tmp_path / "mcp-evidence.json"
     tax_json.write_text(json.dumps(_tax_evidence(tmp_path).to_jsonable()), encoding="utf-8")
-    mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
     exit_code = main(
@@ -221,8 +245,6 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
             str(cohort_dir),
             "--tax-evidence",
             str(tax_json),
-            "--mcp-evidence",
-            str(mcp_json),
             "--acquisition-mechanism",
             "scoop",
             "--acquisition-source",
@@ -243,6 +265,9 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     assert reloaded.row_id == "scoop-windows-x86-64"
     assert reloaded.result.status is EvidenceStatus.PASSED
     assert reloaded.acquisition.mechanism == "scoop"
+    # The CLI-only lane's record marks the MCP leg absent and attests one exe.
+    assert reloaded.result.observations["mcp_oracle"] is None
+    assert {exe.name for exe in reloaded.isolation.installed_executables} == {"aeat"}
 
 
 def _launch_transcript(cwd: Path) -> CommandTranscript:
@@ -472,6 +497,11 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
 
     tax_mapping = _tax_evidence(tmp_path).to_jsonable()
     del tax_mapping["checkout_imports_removed"]
+    with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
+        _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
+
+    tax_mapping = _tax_evidence(tmp_path).to_jsonable()
+    del tax_mapping["ambient_product_executables_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 

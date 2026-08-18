@@ -333,19 +333,13 @@ function Invoke-InstalledOracle {
         [string]$AeatCommand,
 
         [Parameter(Mandatory = $true)]
-        [string]$McpCommand,
-
-        [Parameter(Mandatory = $true)]
         [string]$OutputDir
     )
 
     $python = (Resolve-Path (Join-Path $Prefix "venv\Scripts\python.exe")).Path
     $taxEvidence = Join-Path $OutputDir "tax-evidence.json"
-    $mcpEvidence = Join-Path $OutputDir "mcp-evidence.json"
     $taxState = Join-Path $OutputDir "tax-state"
     $taxWork = Join-Path $OutputDir "tax-work"
-    $mcpState = Join-Path $OutputDir "mcp-state"
-    $mcpWork = Join-Path $OutputDir "mcp-work"
 
     # The Scoop manifest's pre_install pinned the transitive closure through
     # `uv pip install --constraint constraints.txt`; assert the venv it produced
@@ -367,13 +361,6 @@ function Invoke-InstalledOracle {
             "--work-dir", $taxWork,
             "--output", $taxEvidence
         ) -OutputPath (Join-Path $OutputDir "tax-oracle.log")
-        Invoke-Native -FilePath $python -ArgumentList @(
-            "-m", "dev.packaging.installed_mcp_oracle",
-            "--server", $McpCommand,
-            "--storage-root", $mcpState,
-            "--work-dir", $mcpWork,
-            "--output", $mcpEvidence
-        ) -OutputPath (Join-Path $OutputDir "mcp-oracle.log")
     }
     finally {
         Pop-Location
@@ -381,7 +368,6 @@ function Invoke-InstalledOracle {
 
     return @{
         tax_evidence = (Resolve-Path $taxEvidence).Path
-        mcp_evidence = (Resolve-Path $mcpEvidence).Path
     }
 }
 
@@ -483,7 +469,6 @@ function Invoke-HostSmoke {
         }
         $prefix = (Resolve-Path ([string]$prefixOutput[0])).Path
         $aeat = Get-ScoopCommandPath -CommandName "aeat" -ScoopRoot $scoopRoot
-        $mcp = Get-ScoopCommandPath -CommandName "cadrumo-mcp" -ScoopRoot $scoopRoot
 
         Invoke-Native -FilePath $aeat -ArgumentList @("--version")
 
@@ -550,11 +535,9 @@ function Invoke-HostSmoke {
         }
         $prefix = (Resolve-Path ([string]$prefixOutput[0])).Path
         $aeat = Get-ScoopCommandPath -CommandName "aeat" -ScoopRoot $scoopRoot
-        $mcp = Get-ScoopCommandPath -CommandName "cadrumo-mcp" -ScoopRoot $scoopRoot
         $oracleEvidence = Invoke-InstalledOracle `
             -Prefix $prefix `
             -AeatCommand $aeat `
-            -McpCommand $mcp `
             -OutputDir $runEvidence
 
         $evidence = [ordered]@{
@@ -584,14 +567,15 @@ function Invoke-HostSmoke {
             python_preexisting = $pythonWasInstalled
             installed_prefix = $prefix
             aeat_command = $aeat
-            mcp_command = $mcp
             persisted_marker = $marker
             persisted_marker_sha256 = $reinstalledMarkerHash
             update_preserved_persistence = $true
             uninstall_preserved_persistence = $true
             reinstall_preserved_persistence = $true
             tax_evidence = $oracleEvidence.tax_evidence
-            mcp_evidence = $oracleEvidence.mcp_evidence
+            # The manifest is CLI-only; cadrumo-mcp ships in the sibling
+            # cadrumo-harness distribution, which Scoop does not install.
+            mcp_evidence = $null
         }
     }
     finally {

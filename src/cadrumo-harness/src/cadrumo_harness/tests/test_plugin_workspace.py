@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -132,9 +133,16 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     assert "aeat" not in mcp["mcpServers"]
     server = mcp["mcpServers"]["cadrumo"]
     assert server["command"] == "uvx"
+    # The retired cadrumo[agent] extra is gone: the launcher pin names the
+    # sibling cadrumo-harness distribution at its OWN declared version (the
+    # harness is versioned independently, so the plugin version must not leak
+    # into the pin).
+    harness_pyproject = tomllib.loads(
+        (Path(__file__).resolve().parents[4] / "pyproject.toml").read_text(encoding=_UTF_8),
+    )
     assert server["args"] == [
         "--from",
-        "cadrumo[agent]==1.2.3",
+        f"cadrumo-harness=={harness_pyproject['project']['version']}",
         "cadrumo-mcp",
     ]
     assert not (tmp_path / "artifacts").exists()

@@ -12,6 +12,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import sys
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
@@ -88,6 +89,7 @@ class InstalledTaxEvidence:
     source_refs: tuple[str, ...]
     notice_codes: tuple[str, ...]
     checkout_imports_removed: bool
+    ambient_product_executables_removed: bool
     commands: tuple[CommandResult, ...]
 
     def to_jsonable(self) -> dict[str, Any]:
@@ -119,6 +121,18 @@ def checkout_imports_removed(environment: Mapping[str, str]) -> bool:
     isolation actually held rather than asserting it unconditionally.
     """
     return "PYTHONPATH" not in environment and "PYTHONHOME" not in environment
+
+
+def ambient_product_executables_removed(environment: Mapping[str, str]) -> bool:
+    """True when no ambient ``cadrumo-mcp`` could fake an MCP-leg claim.
+
+    The oracle drives an absolute installed ``aeat``, so the only product
+    executable that could sneak an MCP-leg claim into a CLI-only lane's
+    environment is a ``cadrumo-mcp`` already on PATH. This reads the fact back
+    off the real captured environment, so the emitted evidence records what
+    isolation actually held rather than asserting it unconditionally.
+    """
+    return shutil.which("cadrumo-mcp", path=environment.get("PATH", "")) is None
 
 
 def isolated_product_environment(storage_root: Path) -> dict[str, str]:
@@ -470,6 +484,7 @@ def run_installed_tax_oracle(
         source_refs=tuple(str(value) for value in target["source_refs"]),
         notice_codes=tuple(sorted(notice_codes)),
         checkout_imports_removed=checkout_imports_removed(environment),
+        ambient_product_executables_removed=ambient_product_executables_removed(environment),
         commands=tuple(commands),
     )
 

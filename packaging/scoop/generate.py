@@ -155,14 +155,13 @@ def generate_manifest(
         "Set-Content -LiteralPath (Join-Path $dir 'constraints.txt') -Value @'\n"
         f"{constraints_body}\n"
         "'@ -Encoding ascii",
-        f"$root = (Join-Path $dir '{root.path.name}') + '[agent]'; "
+        f"$root = (Join-Path $dir '{root.path.name}'); "
         f"& uv pip install --python {python_path} --no-cache "
         "--constraint (Join-Path $dir 'constraints.txt') $root "
         f"(Join-Path $dir '{manuals.path.name}') (Join-Path $dir '{official.path.name}'); "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",
         f"& uv pip check --python {python_path}; if ($LASTEXITCODE -ne 0) {{ throw 'uv pip check failed' }}",
         _wrapper_script("aeat"),
-        _wrapper_script("cadrumo-mcp"),
     ]
     return {
         "version": version,
@@ -183,13 +182,12 @@ def generate_manifest(
         "pre_install": pre_install,
         "bin": [
             ["aeat.cmd", "aeat"],
-            ["cadrumo-mcp.cmd", "cadrumo-mcp"],
         ],
         "persist": ["state"],
         "notes": [
             "Cadrumo state persists across Scoop updates.",
             "Verify with: aeat --version",
-            "MCP clients launch the installed server with: cadrumo-mcp",
+            "The agent-facing MCP launcher ships in the separate cadrumo-harness distribution.",
         ],
     }
 

@@ -64,6 +64,7 @@ _PLUGIN_DIR = ".claude-plugin"
 _PLUGIN_MANIFEST = "plugin.json"
 _PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
 _PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
+_HARNESS_DISTRIBUTION = "cadrumo-harness"
 _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # Bilingual (English + Spanish) product copy, approved through this project's
 # docs-authority process. The labeled sections (English: / Español:) satisfy
@@ -432,12 +433,17 @@ def _cohort_wheels(cohort: _PluginPythonCohort) -> dict[str, Path]:
 
 def _mcp_args(version: str, cohort: _PluginPythonCohort | None) -> list[str]:
     if cohort is None:
-        return ["--from", f"{_PYPI_DISTRIBUTION}[agent]=={version}", _MCP_CONSOLE_SCRIPT]
+        # The harness distribution is versioned independently of the cohort and
+        # pins itself: ``uvx`` resolves the harness's own published version.
+        return ["--from", f"{_HARNESS_DISTRIBUTION}=={_metadata.version(_HARNESS_DISTRIBUTION)}", _MCP_CONSOLE_SCRIPT]
+    # The harness wheel is deliberately NOT a cohort member (independent
+    # version line); the cohort form pins the harness by its own published
+    # version and layers the cohort data wheels beside it.
     root = f"{_CLAUDE_PLUGIN_ROOT}/{_PLUGIN_ARTIFACTS_SUBDIR.as_posix()}"
     wheels = _cohort_wheels(cohort)
     return [
         "--from",
-        f"{root}/{wheels['cadrumo'].name}[agent]",
+        f"{_HARNESS_DISTRIBUTION}=={_metadata.version(_HARNESS_DISTRIBUTION)}",
         "--with",
         f"{root}/{wheels['cadrumo-data-manuals'].name}",
         "--with",
