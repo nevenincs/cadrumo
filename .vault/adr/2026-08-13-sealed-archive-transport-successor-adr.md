@@ -7,9 +7,9 @@ related:
   - "[[2026-08-13-profile-password-custody-research]]"
 supersedes:
   - '2026-06-03-bucket-sealed-archive-adr'
-modified: '2026-08-13'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:0620dbeb6c598e4cb04bfe1190d7ec086dcc2b6fb10af04dfce7ffdb423b0839'
+body_hash: 'sha256:a57faf7ce7008691ef47f193c16a880d071e82f38ba939676ee50f717d88acc9'
 ---
 # `sealed-archive-transport` adr: `sealed archive transport boundary` | (**status:** `accepted`)
 
@@ -42,3 +42,5 @@ Transport safety can remain stable while custody formats change through explicit
 ## Consequences
 
 Optional recovery never changes archive completeness. Transport code cannot choose an unlock mechanism.
+
+2026-08-18 amendment (campaign-close proof, S24): the canonical verb is `restore --artifact`, not `restore-recover`; the composite spelling was retired before shipping.

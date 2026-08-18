@@ -8,9 +8,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-08-13'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:66fa32033755bab1b2a282497e46b3d25e6192930d5408cb0561a7f72161d4f0'
+body_hash: 'sha256:ca20a8c5e9a376bc1c484f28c1af18821b40f92c9f76a773fe1ccd8e7a60e268'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
@@ -109,3 +109,5 @@ The selected model is the only option that makes the supplied profile password i
 ## Consequences
 
 Every profile carries its own password envelope and DEK proof. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Recovery becomes optional without weakening disaster recovery. Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.
+
+2026-08-18 amendment (campaign-close proof, S24): the canonical verb spelling `restore-recover` was superseded before shipping — HEAD mounts one verb, `restore`, with `--artifact` selecting the recovery door (S16/S15 execution records). This record's references to `restore-recover` are historical and must be read as `restore --artifact`.
