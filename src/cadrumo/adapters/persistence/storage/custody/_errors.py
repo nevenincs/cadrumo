@@ -45,6 +45,7 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
         *,
         context: Mapping[str, object] | None = None,
         recovery_guidance: tuple[ProfileCustodyRecoveryGuidance, ...] = (),
+        translated_message: str | None = None,
     ) -> None:
         payload: dict[str, object] = {"refusal": refusal.value}
         if recovery_guidance:
@@ -53,7 +54,7 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
             payload.update(
                 (key, value) for key, value in context.items() if key not in {"refusal", "recovery_guidance"}
             )
-        super().__init__(refusal.value, context=payload)
+        super().__init__(refusal.value, context=payload, translated_message=translated_message)
         self.refusal = refusal
         self.recovery_guidance = recovery_guidance
 

@@ -1049,6 +1049,12 @@ errors:
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
       no s'ha pogut resoldre al canal de vincle correcte.
+    refused_profile_custody_kdf_resource_limit: L'equip no pot assignar els recursos
+      de derivació de clau sol·licitats.
+    refused_profile_custody_kdf_supervision_unavailable: La supervisió de derivació
+      de clau no està disponible en aquest equip.
+    refused_profile_custody_legacy: L'emmagatzematge conté custòdia retirada; el restabliment
+      destructiu i la nova inscripció són l'única via.
     refused_profile_displaced_session_retirement: No s'ha pogut revocar la sessió
       emmagatzemada del perfil seleccionat anteriorment, de manera que no s'ha creat
       el perfil nou.

@@ -47,7 +47,7 @@ from .. import BucketMaintenanceService, DiskUsageBucketCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-maintenance-disk-usage-test"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000d1d1"
 
 
 @pytest.fixture
@@ -114,7 +114,7 @@ def test_disk_usage_measures_a_non_active_bucket_without_opening_a_session(
     exactly like ``preview_discard_sandbox`` already relies on for a
     non-active sandbox.
     """
-    other_bucket_id = "bucket-maintenance-disk-usage-other"
+    other_bucket_id = "1f6b0000-0000-4000-8000-0000000007e7"
     other_paths = provision_bucket_directory(runtime.settings.cadrumo_local_storage_root, other_bucket_id)
     (other_paths.blobs_dir / "other-artefact.bin").write_bytes(b"\x01" * 512)
 

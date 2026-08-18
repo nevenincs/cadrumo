@@ -32,7 +32,7 @@ from .. import BrowseBucketCommand, BucketMaintenanceService
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BUCKET_ID = "bucket-maintenance-browse-test"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-000000000b0b"
 _OBJECT_WRITTEN_AT = datetime(2026, 5, 28, 11, 30, 0, tzinfo=UTC)
 
 
@@ -105,8 +105,16 @@ def test_browse_namespace_filter_restricts_returned_rows(runtime: TestRuntimePro
 
 
 def test_browse_on_empty_bucket_returns_empty_rows(runtime: TestRuntimeProfile) -> None:
-    """A bucket with no secure-object writes yields an empty inventory."""
+    """A bucket with no writes beyond the profile record shows only that record.
+
+    The provisioning door publishes the capsule AND writes the profile record
+    as a secure-object row, so a freshly provisioned bucket is never empty;
+    the browse inventory must show exactly the record row and nothing else.
+    """
     result = BucketMaintenanceService().browse(BrowseBucketCommand(bucket_id=runtime.bucket_id))
 
     assert result.bucket_id == runtime.bucket_id
-    assert result.rows == ()
+    assert [row.namespace for row in result.rows] == [
+        "cadrumo.application.user_profile.value",
+        "cadrumo.domain.buckets.event_history",
+    ]

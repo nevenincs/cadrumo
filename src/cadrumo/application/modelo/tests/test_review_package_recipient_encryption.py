@@ -683,7 +683,7 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
     stored_bucket_id: str,
 ) -> None:
     """A real encrypted row cannot claim a different or ambiguous bucket identity."""
-    target_bucket_id = "recip-enc-keypair-owner"
+    target_bucket_id = "1f6b0000-0000-4000-8000-00000000e0e0"
     private_key = X25519PrivateKey.generate()
     misplaced = RecipientEncryptionKeypair(
         bucket_id=stored_bucket_id,
@@ -724,7 +724,7 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
     tmp_path: Path,
 ) -> None:
     """Concurrent first use returns one persisted X25519 keypair, which decrypts a real package."""
-    bucket_id = "recip-enc-keypair-concurrent"
+    bucket_id = "1f6b0000-0000-4000-8000-000000000c0c"
     worker_count = 12
     gate = threading.Barrier(worker_count)
     result_lock = threading.Lock()

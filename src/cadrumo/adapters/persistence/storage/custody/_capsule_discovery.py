@@ -146,6 +146,7 @@ def refuse_retired_profile_custody_paths(capsules_root: Path, *, keystore_root: 
     raise ProfileCustodyRefusedError(
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         context=context,
+        translated_message="errors.refused.refused_profile_custody_legacy",
         recovery_guidance=(
             ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
             ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,

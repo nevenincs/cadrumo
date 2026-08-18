@@ -103,11 +103,17 @@ def close_fd(fd: int | None) -> None:
 
 
 def resource_refusal() -> ProfileCustodyRefusedError:
-    return ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_RESOURCE_LIMIT)
+    return ProfileCustodyRefusedError(
+        ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
+        translated_message="errors.refused.refused_profile_custody_kdf_resource_limit",
+    )
 
 
 def supervision_refusal() -> ProfileCustodyRefusedError:
-    return ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE)
+    return ProfileCustodyRefusedError(
+        ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
+        translated_message="errors.refused.refused_profile_custody_kdf_supervision_unavailable",
+    )
 
 
 def windows_available_memory_bytes() -> int:
