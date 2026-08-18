@@ -184,6 +184,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.descendiente",
+            target_command_key="config.profile.descendiente",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.create",
             target_command_key="config.profile.create",
             argument_specifications=(

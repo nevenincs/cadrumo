@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
-    from ...core.json_contract import Notice
+    from ...core.json_contract import Notice, ResolvedNoticeAction
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
@@ -1562,11 +1562,7 @@ def _emit_wizard_success(
     resolved_modify_descendants_message = (
         modify_descendants_message
         if modify_descendants_message is not None
-        else tr(
-            "application.wizard.notices.modify_descendants_via_door",
-            default="Descendants are not part of profile edit. Manage them with '{command}'.",
-            command=_DESCENDIENTE_DOOR_COMMAND,
-        )
+        else tr("application.wizard.notices.modify_descendants_via_door")
     )
     ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
     notices = _wizard_success_notices(
@@ -1576,6 +1572,7 @@ def _emit_wizard_success(
         modify_no_resume_message=resolved_modify_no_resume_message,
         modify_descendants_via_door=modify_descendants_via_door,
         modify_descendants_message=resolved_modify_descendants_message,
+        modify_descendants_action=_resolved_descendientes_action(),
         ccaa_defaulted=ccaa_defaulted,
         ccaa_message=ccaa_message,
     )
@@ -1667,6 +1664,18 @@ def _echo_wizard_success_text(
     _echo_wizard_text(lines, payload=result)
 
 
+def _resolved_descendientes_action() -> ResolvedNoticeAction | None:
+    """Resolve the typed descendiente door for the success notice.
+
+    The catalogue entry fails closed on an unknown id, so the notice's
+    executable action always names a live verb or the emission refuses —
+    the failure mode the old literal-command message could not have.
+    """
+    from ..operator_actions import next_action
+
+    return next_action("operator.profile.descendiente")
+
+
 def _wizard_success_notices(
     mode: WizardPersistMode,
     *,
@@ -1675,6 +1684,7 @@ def _wizard_success_notices(
     modify_no_resume_message: str,
     modify_descendants_via_door: bool,
     modify_descendants_message: str,
+    modify_descendants_action: ResolvedNoticeAction | None = None,
     ccaa_defaulted: bool,
     ccaa_message: str,
 ) -> list[Notice]:
@@ -1712,6 +1722,7 @@ def _wizard_success_notices(
                 severity=NoticeSeverity.INFO,
                 code=_MODIFY_DESCENDANTS_DOOR_CODE,
                 message=modify_descendants_message,
+                action=modify_descendants_action,
             ),
         )
     if ccaa_defaulted:
@@ -1811,11 +1822,7 @@ def _execute_wizard_command(
     # render in the language the command entered with — the same pre-render
     # discipline the error path uses for a translated refusal.
     modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
-    modify_descendants_message = tr(
-        "application.wizard.notices.modify_descendants_via_door",
-        default="Descendants are not part of profile edit. Manage them with '{command}'.",
-        command=_DESCENDIENTE_DOOR_COMMAND,
-    )
+    modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
     save_exit_message = tr("application.wizard.notices.setup_saved_resume_later", name=profile_name)
     _refuse_foral_ccaa(canonical, explicit_flags)
     # Interactive create is the facts-as-checkpoint path: the store mints
