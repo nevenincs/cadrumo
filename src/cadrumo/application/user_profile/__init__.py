@@ -92,213 +92,749 @@ from ._language_resolver import register_language_resolver as _register_language
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
-        UserProfileFact,
-        UserProfileFactValue,
-        UserProfileRecord,
+        UserProfileFact as UserProfileFact,
+    )
+    from ...domain.user_profile import (
+        UserProfileFactValue as UserProfileFactValue,
+    )
+    from ...domain.user_profile import (
+        UserProfileRecord as UserProfileRecord,
+    )
+    from ._aggregate import (
+        ProfileRestoreAuthority as ProfileRestoreAuthority,
     )
     from ._bundle import (
-        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
-        UnsupportedBundleSchemaVersionError,
-        deserialize_profile_bundle,
-        register_imported_profile_bundle,
-        serialize_profile_bundle,
-        validate_bundle_payload,
+        SUPPORTED_BUNDLE_SCHEMA_VERSIONS as SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+    )
+    from ._bundle import (
+        UnsupportedBundleSchemaVersionError as UnsupportedBundleSchemaVersionError,
+    )
+    from ._bundle import (
+        deserialize_profile_bundle as deserialize_profile_bundle,
+    )
+    from ._bundle import (
+        register_imported_profile_bundle as register_imported_profile_bundle,
+    )
+    from ._bundle import (
+        serialize_profile_bundle as serialize_profile_bundle,
+    )
+    from ._bundle import (
+        validate_bundle_payload as validate_bundle_payload,
     )
     from ._bundle_encryption import (
-        EncryptedProfileBundleError,
-        EncryptedProfileBundleExport,
-        decrypt_profile_bundle_with_passphrase,
-        encrypt_profile_bundle_for_passphrase,
+        EncryptedProfileBundleError as EncryptedProfileBundleError,
+    )
+    from ._bundle_encryption import (
+        EncryptedProfileBundleExport as EncryptedProfileBundleExport,
+    )
+    from ._bundle_encryption import (
+        decrypt_profile_bundle_with_passphrase as decrypt_profile_bundle_with_passphrase,
+    )
+    from ._bundle_encryption import (
+        encrypt_profile_bundle_for_passphrase as encrypt_profile_bundle_for_passphrase,
     )
     from ._bundle_export import (
-        PreparedProfileExport,
-        ProfileBundleExportPurpose,
-        ProfileBundleExportReconcileFailure,
-        ProfileBundleExportReconciliation,
-        ProfileBundleExportRequest,
-        ProfileBundleExportResult,
-        ProfileBundleExportTarget,
-        ProfileBundleExportTransport,
-        bundle_data_categories,
-        bundle_excluded_data_categories,
-        export_profile_bundle,
-        prepare_profile_export,
-        publish_prepared_export,
-        reconcile_prepared_exports,
+        PreparedProfileExport as PreparedProfileExport,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportPurpose as ProfileBundleExportPurpose,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportReconcileFailure as ProfileBundleExportReconcileFailure,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportReconciliation as ProfileBundleExportReconciliation,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportRequest as ProfileBundleExportRequest,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportResult as ProfileBundleExportResult,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportTarget as ProfileBundleExportTarget,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportTransport as ProfileBundleExportTransport,
+    )
+    from ._bundle_export import (
+        bundle_data_categories as bundle_data_categories,
+    )
+    from ._bundle_export import (
+        bundle_excluded_data_categories as bundle_excluded_data_categories,
+    )
+    from ._bundle_export import (
+        export_profile_bundle as export_profile_bundle,
+    )
+    from ._bundle_export import (
+        prepare_profile_export as prepare_profile_export,
+    )
+    from ._bundle_export import (
+        publish_prepared_export as publish_prepared_export,
+    )
+    from ._bundle_export import (
+        reconcile_prepared_exports as reconcile_prepared_exports,
     )
     from ._bundle_export_operation import (
-        ProfileBundleExportJournalRepository,
+        ProfileBundleExportJournalRepository as ProfileBundleExportJournalRepository,
     )
     from ._capabilities import (
-        CapabilityDecision,
-        CapabilitySource,
-        cloud_evidence_upload_eligible_for_active_profile,
-        resolve_active_capability,
-        resolve_capability,
+        CapabilityDecision as CapabilityDecision,
     )
-    from ._capsule_record import ProfileRecordSession
+    from ._capabilities import (
+        CapabilitySource as CapabilitySource,
+    )
+    from ._capabilities import (
+        cloud_evidence_upload_eligible_for_active_profile as cloud_evidence_upload_eligible_for_active_profile,
+    )
+    from ._capabilities import (
+        resolve_active_capability as resolve_active_capability,
+    )
+    from ._capabilities import (
+        resolve_capability as resolve_capability,
+    )
+    from ._capsule_archive import (
+        ProfileCapsuleArchiveError as ProfileCapsuleArchiveError,
+    )
+    from ._capsule_archive import (
+        ProfileCapsuleArchiveInspection as ProfileCapsuleArchiveInspection,
+    )
+    from ._capsule_archive import (
+        ProfileCapsuleArchiveReceipt as ProfileCapsuleArchiveReceipt,
+    )
+    from ._capsule_archive import (
+        export_profile_capsule_archive as export_profile_capsule_archive,
+    )
+    from ._capsule_archive import (
+        inspect_profile_capsule_archive as inspect_profile_capsule_archive,
+    )
+    from ._capsule_archive import (
+        read_profile_capsule_archive as read_profile_capsule_archive,
+    )
+    from ._capsule_record import (
+        ProfileRecordSession as ProfileRecordSession,
+    )
+    from ._capsule_restore import (
+        ProfileCapsuleSource as ProfileCapsuleSource,
+    )
+    from ._capsule_restore import (
+        ProfileCapsuleSourceError as ProfileCapsuleSourceError,
+    )
+    from ._capsule_restore import (
+        ProfileRestoreOutcome as ProfileRestoreOutcome,
+    )
+    from ._capsule_restore import (
+        read_profile_capsule_source as read_profile_capsule_source,
+    )
+    from ._capsule_restore import (
+        restore_profile_capsule_with_password as restore_profile_capsule_with_password,
+    )
+    from ._capsule_restore import (
+        restore_profile_capsule_with_recovery_artifact as restore_profile_capsule_with_recovery_artifact,
+    )
+    from ._capsule_restore import (
+        restore_profile_from_source_with_password as restore_profile_from_source_with_password,
+    )
+    from ._capsule_restore import (
+        restore_profile_from_source_with_recovery_artifact as restore_profile_from_source_with_recovery_artifact,
+    )
     from ._censo_errors import (
-        CensoSyncError,
+        CensoSyncError as CensoSyncError,
     )
     from ._censo_sync import (
-        CENSAL_ADOPTABLE_PATHS,
-        CENSO_SOURCE_TAG,
-        CensalIdentityMismatchError,
-        CensalReconciliation,
-        CensoSyncService,
-        apply_censal_read,
-        censal_facts_from_read,
-        reconcile_censal_read,
+        CENSAL_ADOPTABLE_PATHS as CENSAL_ADOPTABLE_PATHS,
+    )
+    from ._censo_sync import (
+        CENSO_SOURCE_TAG as CENSO_SOURCE_TAG,
+    )
+    from ._censo_sync import (
+        CensalIdentityMismatchError as CensalIdentityMismatchError,
+    )
+    from ._censo_sync import (
+        CensalReconciliation as CensalReconciliation,
+    )
+    from ._censo_sync import (
+        CensoSyncService as CensoSyncService,
+    )
+    from ._censo_sync import (
+        apply_censal_read as apply_censal_read,
+    )
+    from ._censo_sync import (
+        censal_facts_from_read as censal_facts_from_read,
+    )
+    from ._censo_sync import (
+        reconcile_censal_read as reconcile_censal_read,
     )
     from ._commands import (
-        CompleteSetupCommand,
-        EditProfileFieldCommand,
-        EditProfileSectionCommand,
-        ProfileImportResult,
-        ProfileLifecycleResult,
-        ProfilePreflightReport,
-        ProfilePreflightRequirement,
-        ProfileSnapshot,
-        ProfileSnapshotRequest,
-        ProfileStaleCheckReport,
-        ProfileValidationIssue,
-        ProfileValidationReport,
-        RegisterProfileCommand,
+        CompleteSetupCommand as CompleteSetupCommand,
+    )
+    from ._commands import (
+        EditProfileFieldCommand as EditProfileFieldCommand,
+    )
+    from ._commands import (
+        EditProfileSectionCommand as EditProfileSectionCommand,
+    )
+    from ._commands import (
+        ProfileImportResult as ProfileImportResult,
+    )
+    from ._commands import (
+        ProfileLifecycleResult as ProfileLifecycleResult,
+    )
+    from ._commands import (
+        ProfilePreflightReport as ProfilePreflightReport,
+    )
+    from ._commands import (
+        ProfilePreflightRequirement as ProfilePreflightRequirement,
+    )
+    from ._commands import (
+        ProfileSnapshot as ProfileSnapshot,
+    )
+    from ._commands import (
+        ProfileSnapshotRequest as ProfileSnapshotRequest,
+    )
+    from ._commands import (
+        ProfileStaleCheckReport as ProfileStaleCheckReport,
+    )
+    from ._commands import (
+        ProfileValidationIssue as ProfileValidationIssue,
+    )
+    from ._commands import (
+        ProfileValidationReport as ProfileValidationReport,
+    )
+    from ._commands import (
+        RegisterProfileCommand as RegisterProfileCommand,
     )
     from ._completeness import (
-        conditional_profile_missing_required,
-        iva_regime_required,
-        missing_required_field_paths,
-        profile_section_rows,
+        conditional_profile_missing_required as conditional_profile_missing_required,
+    )
+    from ._completeness import (
+        iva_regime_required as iva_regime_required,
+    )
+    from ._completeness import (
+        missing_required_field_paths as missing_required_field_paths,
+    )
+    from ._completeness import (
+        profile_section_rows as profile_section_rows,
     )
     from ._cotejo_apply import (
-        CENSO_CERTIFICATE_AXIS_PREFIX,
-        CENSO_DIVERGENCE_NOTICE_CODE,
-        CENSO_DIVERGENCE_PREFIX,
-        CENSO_UNADOPTED_EVIDENCE_FIELDS,
-        CensoDivergence,
-        apply_cotejo,
-        censo_divergence_notice,
-        censo_unadopted_evidence,
-        divergence_facts,
-        open_censo_divergences,
+        CENSO_CERTIFICATE_AXIS_PREFIX as CENSO_CERTIFICATE_AXIS_PREFIX,
+    )
+    from ._cotejo_apply import (
+        CENSO_DIVERGENCE_NOTICE_CODE as CENSO_DIVERGENCE_NOTICE_CODE,
+    )
+    from ._cotejo_apply import (
+        CENSO_DIVERGENCE_PREFIX as CENSO_DIVERGENCE_PREFIX,
+    )
+    from ._cotejo_apply import (
+        CENSO_UNADOPTED_EVIDENCE_FIELDS as CENSO_UNADOPTED_EVIDENCE_FIELDS,
+    )
+    from ._cotejo_apply import (
+        CensoDivergence as CensoDivergence,
+    )
+    from ._cotejo_apply import (
+        apply_cotejo as apply_cotejo,
+    )
+    from ._cotejo_apply import (
+        censo_divergence_notice as censo_divergence_notice,
+    )
+    from ._cotejo_apply import (
+        censo_unadopted_evidence as censo_unadopted_evidence,
+    )
+    from ._cotejo_apply import (
+        divergence_facts as divergence_facts,
+    )
+    from ._cotejo_apply import (
+        open_censo_divergences as open_censo_divergences,
     )
     from ._custody_carry import (
-        TYPED_CATEGORY_NAMESPACES,
-        carried_namespace_definitions,
-        restore_carried_objects,
-        serialize_carried_objects,
+        TYPED_CATEGORY_NAMESPACES as TYPED_CATEGORY_NAMESPACES,
     )
-    from ._custody_pointer import ProfileCustodyPointerSnapshot
+    from ._custody_carry import (
+        carried_namespace_definitions as carried_namespace_definitions,
+    )
+    from ._custody_carry import (
+        restore_carried_objects as restore_carried_objects,
+    )
+    from ._custody_carry import (
+        serialize_carried_objects as serialize_carried_objects,
+    )
+    from ._custody_pointer import (
+        ProfileCustodyPointerSnapshot as ProfileCustodyPointerSnapshot,
+    )
     from ._custody_ports import (
-        ProfileBucketSessionPort,
-        ProfileCustodyEnvelopePort,
-        ProfileCustodyPasswordMaterialPort,
-        ProfileCustodyRecoveryEnvelopePort,
-        ProfileCustodySecureObjectRepositoryPort,
-        ProfileCustodySentinelPort,
-        ProfilePersistedSessionPort,
-        ProfileSessionResumeOutcomePort,
+        ProfileBucketSessionPort as ProfileBucketSessionPort,
+    )
+    from ._custody_ports import (
+        ProfileBucketStoragePathsPort as ProfileBucketStoragePathsPort,
+    )
+    from ._custody_ports import (
+        ProfileBucketStoragePort as ProfileBucketStoragePort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyBucketEventHistoryPort as ProfileCustodyBucketEventHistoryPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyEnvelopePort as ProfileCustodyEnvelopePort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyLocalRecordStore as ProfileCustodyLocalRecordStore,
+    )
+    from ._custody_ports import (
+        ProfileCustodyPasswordMaterialPort as ProfileCustodyPasswordMaterialPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecordSessionMaterial as ProfileCustodyRecordSessionMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecoveryEnrollmentMaterial as ProfileCustodyRecoveryEnrollmentMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecoveryEnvelopePort as ProfileCustodyRecoveryEnvelopePort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRegistrationMaterial as ProfileCustodyRegistrationMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodySecureObjectNamespace as ProfileCustodySecureObjectNamespace,
+    )
+    from ._custody_ports import (
+        ProfileCustodySecureObjectRawRowPort as ProfileCustodySecureObjectRawRowPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodySecureObjectRecordPort as ProfileCustodySecureObjectRecordPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodySecureObjectRepositoryPort as ProfileCustodySecureObjectRepositoryPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodySentinelPort as ProfileCustodySentinelPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyUnlockPort as ProfileCustodyUnlockPort,
+    )
+    from ._custody_ports import (
+        ProfileLoginThrottleEvaluationPort as ProfileLoginThrottleEvaluationPort,
+    )
+    from ._custody_ports import (
+        ProfilePersistedSessionPort as ProfilePersistedSessionPort,
+    )
+    from ._custody_ports import (
+        ProfileRecordCryptoError as ProfileRecordCryptoError,
+    )
+    from ._custody_ports import (
+        ProfileRecordCryptoPort as ProfileRecordCryptoPort,
+    )
+    from ._custody_ports import (
+        ProfileRecordEncryptedBlob as ProfileRecordEncryptedBlob,
+    )
+    from ._custody_ports import (
+        ProfileRecoveryArtifactWarning as ProfileRecoveryArtifactWarning,
+    )
+    from ._custody_ports import (
+        ProfileSecureObjectInventoryPort as ProfileSecureObjectInventoryPort,
+    )
+    from ._custody_ports import (
+        ProfileSessionResumeOutcomePort as ProfileSessionResumeOutcomePort,
+    )
+    from ._custody_ports import (
+        canonical_snapshot_bytes as canonical_snapshot_bytes,
+    )
+    from ._custody_ports import (
+        canonical_snapshot_digest as canonical_snapshot_digest,
+    )
+    from ._custody_ports import (
+        canonical_snapshot_payload as canonical_snapshot_payload,
+    )
+    from ._custody_ports import (
+        committed_profile_custody_inventory as committed_profile_custody_inventory,
+    )
+    from ._custody_ports import (
+        create_profile_custody_registration_material as create_profile_custody_registration_material,
+    )
+    from ._custody_ports import (
+        create_profile_recovery_enrollment_material as create_profile_recovery_enrollment_material,
+    )
+    from ._custody_ports import (
+        default_profile_bucket_event_history_repository as default_profile_bucket_event_history_repository,
+    )
+    from ._custody_ports import (
+        default_profile_bucket_storage as default_profile_bucket_storage,
+    )
+    from ._custody_ports import (
+        default_profile_custody_local_record_store as default_profile_custody_local_record_store,
+    )
+    from ._custody_ports import (
+        default_profile_record_crypto_port as default_profile_record_crypto_port,
+    )
+    from ._custody_ports import (
+        default_profile_secure_object_inventory as default_profile_secure_object_inventory,
+    )
+    from ._custody_ports import (
+        ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
+    )
+    from ._custody_ports import (
+        export_profile_recovery_artifact as export_profile_recovery_artifact,
+    )
+    from ._custody_ports import (
+        load_profile_custody_data_file as load_profile_custody_data_file,
+    )
+    from ._custody_ports import (
+        load_profile_custody_password_material as load_profile_custody_password_material,
+    )
+    from ._custody_ports import (
+        parse_profile_custody_envelope as parse_profile_custody_envelope,
+    )
+    from ._custody_ports import (
+        parse_profile_custody_recovery_envelope as parse_profile_custody_recovery_envelope,
+    )
+    from ._custody_ports import (
+        parse_profile_custody_sentinel as parse_profile_custody_sentinel,
+    )
+    from ._custody_ports import (
+        profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
+    )
+    from ._custody_ports import (
+        profile_bind_bucket_session as profile_bind_bucket_session,
+    )
+    from ._custody_ports import (
+        profile_bucket_session_open as profile_bucket_session_open,
+    )
+    from ._custody_ports import (
+        profile_bucket_session_open_resumed as profile_bucket_session_open_resumed,
+    )
+    from ._custody_ports import (
+        profile_close_bucket_session as profile_close_bucket_session,
+    )
+    from ._custody_ports import (
+        profile_current_bucket_session as profile_current_bucket_session,
+    )
+    from ._custody_ports import (
+        profile_custody_owner_root as profile_custody_owner_root,
+    )
+    from ._custody_ports import (
+        profile_custody_record_session_material as profile_custody_record_session_material,
+    )
+    from ._custody_ports import (
+        profile_custody_recovery_envelope_path as profile_custody_recovery_envelope_path,
+    )
+    from ._custody_ports import (
+        profile_custody_secure_object_key_digest as profile_custody_secure_object_key_digest,
+    )
+    from ._custody_ports import (
+        profile_custody_secure_object_namespace as profile_custody_secure_object_namespace,
+    )
+    from ._custody_ports import (
+        profile_custody_secure_object_repository as profile_custody_secure_object_repository,
+    )
+    from ._custody_ports import (
+        profile_delete_session as profile_delete_session,
+    )
+    from ._custody_ports import (
+        profile_evaluate_login_throttle as profile_evaluate_login_throttle,
+    )
+    from ._custody_ports import (
+        profile_is_authentication_failure as profile_is_authentication_failure,
+    )
+    from ._custody_ports import (
+        profile_is_keyring_unavailable as profile_is_keyring_unavailable,
+    )
+    from ._custody_ports import (
+        profile_is_password_authentication_failure as profile_is_password_authentication_failure,
+    )
+    from ._custody_ports import (
+        profile_is_persisted_session as profile_is_persisted_session,
+    )
+    from ._custody_ports import (
+        profile_mint_session as profile_mint_session,
+    )
+    from ._custody_ports import (
+        profile_record_login_failure as profile_record_login_failure,
+    )
+    from ._custody_ports import (
+        profile_refuse_unsecured_bucket_with_real_profile as profile_refuse_unsecured_bucket_with_real_profile,
+    )
+    from ._custody_ports import (
+        profile_reset_login_throttle as profile_reset_login_throttle,
+    )
+    from ._custody_ports import (
+        profile_resume_session as profile_resume_session,
+    )
+    from ._custody_ports import (
+        profile_session_path as profile_session_path,
+    )
+    from ._custody_ports import (
+        profile_session_serves_bucket as profile_session_serves_bucket,
+    )
+    from ._custody_ports import (
+        profile_zeroise as profile_zeroise,
+    )
+    from ._custody_ports import (
+        prove_profile_recovery_artifact as prove_profile_recovery_artifact,
+    )
+    from ._custody_ports import (
+        refuse_profile_login_without_password_channel as refuse_profile_login_without_password_channel,
+    )
+    from ._custody_ports import (
+        replace_profile_custody_data_file as replace_profile_custody_data_file,
+    )
+    from ._custody_ports import (
+        replace_profile_custody_envelope as replace_profile_custody_envelope,
+    )
+    from ._custody_ports import (
+        unlock_profile_custody_password as unlock_profile_custody_password,
+    )
+    from ._custody_ports import (
+        verify_profile_custody_dek_against_sentinel as verify_profile_custody_dek_against_sentinel,
     )
     from ._custody_repository import (
-        ProfileCustodyTransactionRepository,
-        compare_and_swap_profile_pointer,
-        profile_custody_transaction_lock,
+        ProfileCustodyTransactionRepository as ProfileCustodyTransactionRepository,
+    )
+    from ._custody_repository import (
+        compare_and_swap_profile_pointer as compare_and_swap_profile_pointer,
+    )
+    from ._custody_repository import (
+        profile_custody_transaction_lock as profile_custody_transaction_lock,
     )
     from ._custody_transactions import (
-        ProfileCustodyDeleteConfirmation,
-        ProfileCustodyHoldAssessment,
-        ProfileCustodyHoldEvidence,
-        ProfileCustodyInventoryWitness,
-        ProfileCustodyTransactionConflictError,
-        ProfileCustodyTransactionCorruptError,
-        ProfileCustodyTransactionError,
-        ProfileCustodyTransactionJournal,
-        ProfileCustodyTransactionOperation,
-        ProfileCustodyTransactionReceipt,
-        ProfileCustodyTransactionRefusalError,
-        ProfileCustodyTransactionState,
+        ProfileCustodyDeleteConfirmation as ProfileCustodyDeleteConfirmation,
     )
-    from ._fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-    from ._filing_baseline import missing_filing_baseline_flags
-    from ._keys_validation import list_profile_key_records, validate_profile_values
-    from ._language_resolver import resolve_profile_output_language_hint
-    from ._lifecycle import ProfileCapsuleLifecycle
+    from ._custody_transactions import (
+        ProfileCustodyHoldAssessment as ProfileCustodyHoldAssessment,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyHoldEvidence as ProfileCustodyHoldEvidence,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyInventoryWitness as ProfileCustodyInventoryWitness,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionConflictError as ProfileCustodyTransactionConflictError,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionCorruptError as ProfileCustodyTransactionCorruptError,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionError as ProfileCustodyTransactionError,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionJournal as ProfileCustodyTransactionJournal,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionOperation as ProfileCustodyTransactionOperation,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionReceipt as ProfileCustodyTransactionReceipt,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionRefusalError as ProfileCustodyTransactionRefusalError,
+    )
+    from ._custody_transactions import (
+        ProfileCustodyTransactionState as ProfileCustodyTransactionState,
+    )
+    from ._fact_write import (
+        ProfileFactWriteDoor as ProfileFactWriteDoor,
+    )
+    from ._fact_write import (
+        apply_profile_fact_changes as apply_profile_fact_changes,
+    )
+    from ._filing_baseline import (
+        missing_filing_baseline_flags as missing_filing_baseline_flags,
+    )
+    from ._keys_validation import (
+        list_profile_key_records as list_profile_key_records,
+    )
+    from ._keys_validation import (
+        validate_profile_values as validate_profile_values,
+    )
+    from ._language_resolver import (
+        resolve_profile_output_language_hint as resolve_profile_output_language_hint,
+    )
+    from ._lifecycle import (
+        ProfileCapsuleLifecycle as ProfileCapsuleLifecycle,
+    )
     from ._login_session import (
-        ProfileLoginOutcome,
-        ProfileLoginThrottledError,
-        bind_resumed_profile_session,
-        close_profile_session_artefacts,
-        login_profile,
-        logout_active_profile,
-        resolve_login_target,
+        ProfileLoginOutcome as ProfileLoginOutcome,
+    )
+    from ._login_session import (
+        ProfileLoginThrottledError as ProfileLoginThrottledError,
+    )
+    from ._login_session import (
+        bind_resumed_profile_session as bind_resumed_profile_session,
+    )
+    from ._login_session import (
+        close_profile_session_artefacts as close_profile_session_artefacts,
+    )
+    from ._login_session import (
+        login_profile as login_profile,
+    )
+    from ._login_session import (
+        logout_active_profile as logout_active_profile,
+    )
+    from ._login_session import (
+        resolve_login_target as resolve_login_target,
     )
     from ._overview import (
-        MASKED_PLACEHOLDER,
-        ProfileFieldChoice,
-        ProfileFieldView,
-        ProfileOverview,
-        ProfileSectionView,
-        build_profile_overview,
-        mask_profile_field,
-        profile_field_choices,
-        resolve_profile_field_label_for_path,
+        MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
+    )
+    from ._overview import (
+        ProfileFieldChoice as ProfileFieldChoice,
+    )
+    from ._overview import (
+        ProfileFieldView as ProfileFieldView,
+    )
+    from ._overview import (
+        ProfileOverview as ProfileOverview,
+    )
+    from ._overview import (
+        ProfileSectionView as ProfileSectionView,
+    )
+    from ._overview import (
+        build_profile_overview as build_profile_overview,
+    )
+    from ._overview import (
+        mask_profile_field as mask_profile_field,
+    )
+    from ._overview import (
+        profile_field_choices as profile_field_choices,
+    )
+    from ._overview import (
+        resolve_profile_field_label_for_path as resolve_profile_field_label_for_path,
+    )
+    from ._passphrase_rotation import (
+        ProfilePassphraseRotationError as ProfilePassphraseRotationError,
+    )
+    from ._passphrase_rotation import (
+        ProfilePassphraseRotationOutcome as ProfilePassphraseRotationOutcome,
+    )
+    from ._passphrase_rotation import (
+        rotate_profile_passphrase as rotate_profile_passphrase,
     )
     from ._preflight import (
-        ProfilePreflightService,
-        build_profile_preflight_requirement,
-        format_profile_path_requirements,
-        format_profile_preflight_requirement,
-        format_profile_selector_requirements,
+        ProfilePreflightService as ProfilePreflightService,
     )
-    from ._profile_pointer_transaction import active_profile_pointer_transaction
+    from ._preflight import (
+        build_profile_preflight_requirement as build_profile_preflight_requirement,
+    )
+    from ._preflight import (
+        format_profile_path_requirements as format_profile_path_requirements,
+    )
+    from ._preflight import (
+        format_profile_preflight_requirement as format_profile_preflight_requirement,
+    )
+    from ._preflight import (
+        format_profile_selector_requirements as format_profile_selector_requirements,
+    )
+    from ._profile_pointer_transaction import (
+        active_profile_pointer_transaction as active_profile_pointer_transaction,
+    )
     from ._profile_record_repository import (
-        ProfileRecordRepository,
-        activate_profile_record_session,
-        bound_profile_record_session,
-        close_active_profile_record_session,
-        profile_record_session_if_authenticated,
-        require_profile_record_session,
+        ProfileRecordRepository as ProfileRecordRepository,
     )
-    from ._profile_repository import CommittedProfileRepository, ProfileNotFoundError, ProfileSummary
+    from ._profile_record_repository import (
+        activate_profile_record_session as activate_profile_record_session,
+    )
+    from ._profile_record_repository import (
+        bound_profile_record_session as bound_profile_record_session,
+    )
+    from ._profile_record_repository import (
+        close_active_profile_record_session as close_active_profile_record_session,
+    )
+    from ._profile_record_repository import (
+        profile_record_session_if_authenticated as profile_record_session_if_authenticated,
+    )
+    from ._profile_record_repository import (
+        require_profile_record_session as require_profile_record_session,
+    )
+    from ._profile_repository import (
+        CommittedProfileRepository as CommittedProfileRepository,
+    )
+    from ._profile_repository import (
+        ProfileNotFoundError as ProfileNotFoundError,
+    )
+    from ._profile_repository import (
+        ProfileSummary as ProfileSummary,
+    )
     from ._projections import (
-        EffectiveFact,
-        fact_value,
-        facts_to_values,
-        projection_for_taxpayer,
-        record_to_effective_facts,
-        record_to_path_values,
-        record_to_values,
-        snapshot_to_values,
+        EffectiveFact as EffectiveFact,
+    )
+    from ._projections import (
+        fact_value as fact_value,
+    )
+    from ._projections import (
+        facts_to_values as facts_to_values,
+    )
+    from ._projections import (
+        projection_for_taxpayer as projection_for_taxpayer,
+    )
+    from ._projections import (
+        record_to_effective_facts as record_to_effective_facts,
+    )
+    from ._projections import (
+        record_to_path_values as record_to_path_values,
+    )
+    from ._projections import (
+        record_to_values as record_to_values,
+    )
+    from ._projections import (
+        snapshot_to_values as snapshot_to_values,
     )
     from ._recovery_custody import (
-        ProfileRecoveryArtifactReceipt,
-        ProfileRecoveryEnrollment,
-        enroll_profile_recovery,
-        export_profile_recovery_artifact,
-        restore_profile_from_recovery_artifact,
-        restore_profile_with_password,
+        ProfileRecoveryArtifactReceipt as ProfileRecoveryArtifactReceipt,
+    )
+    from ._recovery_custody import (
+        ProfileRecoveryEnrollment as ProfileRecoveryEnrollment,
+    )
+    from ._recovery_custody import (
+        enroll_profile_recovery as enroll_profile_recovery,
+    )
+    from ._recovery_custody import (
+        restore_profile_from_recovery_artifact as restore_profile_from_recovery_artifact,
+    )
+    from ._recovery_custody import (
+        restore_profile_with_password as restore_profile_with_password,
     )
     from ._registration import (
-        PASSPHRASE_MINIMUM_LENGTH,
-        PassphraseAssessment,
-        ProfileRegistrationError,
-        ProfileRegistrationOutcome,
-        assess_passphrase,
-        register_profile_with_credentials,
+        PASSPHRASE_MINIMUM_LENGTH as PASSPHRASE_MINIMUM_LENGTH,
+    )
+    from ._registration import (
+        PassphraseAssessment as PassphraseAssessment,
+    )
+    from ._registration import (
+        ProfileRegistrationError as ProfileRegistrationError,
+    )
+    from ._registration import (
+        ProfileRegistrationOutcome as ProfileRegistrationOutcome,
+    )
+    from ._registration import (
+        assess_passphrase as assess_passphrase,
+    )
+    from ._registration import (
+        register_profile_with_credentials as register_profile_with_credentials,
     )
     from ._repository import (
-        USER_PROFILE_SNAPSHOT_NAMESPACE,
-        UserProfileSnapshotRepository,
-        user_profile_snapshot_object_key,
+        USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_NAMESPACE,
     )
-    from ._section_rows import next_section_row_index, section_row_facts
+    from ._repository import (
+        UserProfileSnapshotRepository as UserProfileSnapshotRepository,
+    )
+    from ._repository import (
+        user_profile_snapshot_object_key as user_profile_snapshot_object_key,
+    )
+    from ._section_rows import (
+        next_section_row_index as next_section_row_index,
+    )
+    from ._section_rows import (
+        section_row_facts as section_row_facts,
+    )
     from ._validation import (
-        COMPLETENESS_ISSUE_CODES,
-        ProfileValidationService,
-        reject_invalid_profile_facts,
+        COMPLETENESS_ISSUE_CODES as COMPLETENESS_ISSUE_CODES,
     )
-
+    from ._validation import (
+        ProfileValidationService as ProfileValidationService,
+    )
+    from ._validation import (
+        reject_invalid_profile_facts as reject_invalid_profile_facts,
+    )
 # An explicit register call replaces a side-effect import so the
 # registration point is greppable rather than hidden behind a
 # suppression-protected import. Runs after all module-level imports settle so
