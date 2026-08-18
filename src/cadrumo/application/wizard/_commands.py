@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Annotated
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
     from ...core.json_contract import Notice, ResolvedNoticeAction
+    from ...domain.user_profile import UserProfileFact
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
@@ -977,6 +978,49 @@ def _collect_flag_values(
             if canonical_value is not None:
                 canonical[question.id] = canonical_value
     return canonical
+
+
+def scripted_profile_facts(
+    flow: WizardFlow,
+    kwargs: Mapping[str, object],
+) -> tuple[UserProfileFact, ...]:
+    """Project a scripted ``create``'s field flags into initial profile facts.
+
+    Creation is the credential door's authority, not this flow's: a profile
+    exists only once a passphrase has wrapped its DEK. That leaves the field
+    flags of a scripted ``config profile create`` with nowhere to land, because
+    the flow's own create arm is retired and its patch arm is bound to ``edit``
+    and to an already-authenticated session. This is the seam between the two.
+    The projection is deliberately PURE -- it writes nothing and opens no
+    session, so the caller hands the result to the registration door and the
+    facts are published inside the create transaction that already holds the
+    record session, rather than through a second unlock afterwards.
+
+    The foral refusal fires here, before the caller registers anything, exactly
+    as it does on the flow's own command body: a foral CCAA token must refuse
+    rather than produce a profile that then has to be corrected.
+
+    No filing-baseline check applies. A profile created this way is born
+    ``INCOMPLETE`` on purpose, so demanding the full filing baseline would
+    refuse the very state the create door exists to produce.
+
+    Args:
+        flow: The setup flow whose questions name the accepted flags.
+        kwargs: The verb's parsed keyword arguments, keyed by parameter name.
+
+    Returns:
+        The supplied flags as facts, empty when the caller named none.
+    """
+    from ...domain.user_profile import UserProfileFact
+    from ._persistence import profile_values_from_patch
+
+    canonical = _collect_flag_values(flow, dict(kwargs))
+    _refuse_foral_ccaa(canonical, canonical)
+    if not canonical:
+        return ()
+    return tuple(
+        UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, canonical).items()
+    )
 
 
 def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> dict[str, str]:
@@ -1960,4 +2004,5 @@ __all__ = [
     "build_wizard_command",
     "next_step_command_for_profile_values",
     "profile_next_step_modelo",
+    "scripted_profile_facts",
 ]

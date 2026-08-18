@@ -118,7 +118,8 @@ def register_profile_from_scripted_invocation(
     leaves a real profile the operator can correct instead of nothing.
     """
     from ....application.user_profile import ProfileRegistrationError, register_profile_with_credentials
-    from ....application.wizard import ConfigProfileCreateResult, ProfileWizardStatus
+    from ....application.wizard import ConfigProfileCreateResult, ProfileWizardStatus, scripted_profile_facts
+    from ....core.wizard_catalogue import get_setup_flow
 
     supplied = kwargs.get("profile_name")
     label = supplied.strip() if isinstance(supplied, str) else ""
@@ -127,11 +128,18 @@ def register_profile_from_scripted_invocation(
             translated_message="cli.config.profile.create_name_required",
         )
 
+    # Projected BEFORE the passphrase is resolved so a refused flag -- a foral
+    # CCAA token, an unparseable value -- costs the operator nothing: no
+    # prompt, no profile, nothing to undo. The facts then ride INTO the create
+    # transaction, which already holds the record session, rather than being
+    # written through a second unlock once registration has closed it.
+    facts = scripted_profile_facts(get_setup_flow(), kwargs)
     passphrase = resolve_creation_passphrase()
     try:
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
+            facts=facts,
             recovery_handover=_recovery_handover_or_none(),
         )
     except ProfileRegistrationError:

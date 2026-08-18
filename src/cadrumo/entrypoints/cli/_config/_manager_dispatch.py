@@ -104,20 +104,16 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             # credential registration door itself rather than hand the
             # operator a refusal that names a capability no surface offered.
             #
-            # Only the BARE form is taken natively. An invocation carrying
-            # profile field flags keeps the flow, because the flow is where
-            # those values are validated -- the foral-CCAA refusal, the
-            # legal-entity form requirement and the IRNR redirect all fire in
-            # its body. Handling those here would drop the operator's supplied
-            # facts on the floor and register a bare profile instead, which is
-            # a silent under-declaration: the flags vanish and the refusal that
-            # should have fired does not.
+            # BOTH forms are taken natively, the bare one and the one carrying
+            # profile field flags. Routing the flagged form back to the flow
+            # was a dead end rather than a safeguard: the flow refuses `create`
+            # before it validates anything, so the invocation the operator
+            # action catalogue projects as the recovery for a clean-root
+            # refusal could never succeed. The registration door now applies
+            # those flags itself, through the flow's own validation and fact
+            # authority, so the values are neither stranded nor dropped.
             scripted_ctx = kwargs.get("ctx")
-            if (
-                mode == "create"
-                and isinstance(scripted_ctx, _TyperClickContext)
-                and not has_explicit_profile_fields(kwargs)
-            ):
+            if mode == "create" and isinstance(scripted_ctx, _TyperClickContext):
                 from ._scripted_registration import register_profile_from_scripted_invocation
 
                 return register_profile_from_scripted_invocation(scripted_ctx, kwargs)

@@ -47,6 +47,7 @@ from ._commands import (
     build_wizard_command,
     next_step_command_for_profile_values,
     profile_next_step_modelo,
+    scripted_profile_facts,
     setup_flow_definition,
 )
 from ._compiler import ensure_profile_keys_registered
@@ -156,6 +157,7 @@ __all__ = [
     "register_taxpayer_projection_validator",
     "resolve_profile_schema_copy",
     "resolve_profile_terminology_copy",
+    "scripted_profile_facts",
     "setup_flow_definition",
     "validate_unidad_familiar_conjunta",
     "validate_widget_answer",
