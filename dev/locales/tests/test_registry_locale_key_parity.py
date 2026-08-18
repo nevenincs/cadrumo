@@ -27,7 +27,7 @@ from cadrumo.core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_LOCALES_DIR = Path(__file__).resolve().parents[2] / "locales"
+_LOCALES_DIR = Path(__file__).resolve().parents[2] / "src" / "cadrumo" / "locales"
 _LOCALES = ("en", "es", "ca", "hu")
 
 # Returned verbatim when a key has no catalogue entry, so a miss is detectable

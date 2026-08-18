@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-18'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:cee8882fb53fdf09f916a0b6e22b675668bc4b9135ae7943d7cf453c2b587346'
+body_hash: 'sha256:c5d57c305859fc6c28986db41c438c840388f17313b9cdb7e2c0beb471d6eb2b'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -36,10 +36,25 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S13]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W02-P04-S20]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W02-P05-S22]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W02-P05-S23]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W03-P07-S31]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W03-P07-S33]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W03-P07-S34]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S43]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S44]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04a-P12-S83]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04a-P12-S84]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04a-P12-S85]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04a-P12-S86]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P10-S63]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S57]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S58]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S59]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S60]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S61]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S62]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S66]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S70]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S75]]'
@@ -53,6 +68,7 @@ related:
   - '[[2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-modelo-200-verification-reconciliation-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit]]'
+  - '[[2026-08-18-aeat-design-relayout-boundary-audit]]'
 ---
 
 # `aeat-design-relayout-boundary` feature index
@@ -74,6 +90,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit` - `aeat-design-relayout-boundary` audit: `Blocked Wave carry-forward: the three modelo authoring Waves remain open, not superseded, pending the sibling generator`
 - `2026-08-14-aeat-design-relayout-boundary-modelo-200-verification-reconciliation-audit` - `aeat-design-relayout-boundary` audit: `Modelo 200 filing-capability gap: ownership, decomposition and verification-method reconciliation`
 - `2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit` - `aeat-design-relayout-boundary` audit: `row disposition and carry-forward close`
+- `2026-08-18-aeat-design-relayout-boundary-audit` - `aeat-design-relayout-boundary` audit: `deliberately-refusing filing years`
 
 ### exec
 
@@ -111,6 +128,21 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S75` - Decide whether the ambiguous-revision refusal's localised sentence should name the filing year, deferred deliberately rather than overlooked - the year already reaches the operator through structured context and the raiser-supplied suggestion so the omission costs clarity rather than actionability, while changing the text means the four locale catalogues which currently carry several agents' uncommitted translations, so the trade was judged not worth it for information already delivered
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S81` - Report to the Modelo 720 owner that its 2013-y-siguientes revision claims filing year 2012 while its only declared layout design applies from 2013, a one-year underhang rather than the multi-year drift this campaign addresses - either the period selector reaches a year before AEAT published a record design for the modelo, or the source catalogue's applies_from is a year conservative, and deciding which needs someone who knows the modelo's first filing year rather than an outside guess. Outside this campaign's scope and reported for the same reason the Modelo 123 finding was: scope governs what is changed, not what is reported
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S82` - Build the identity-pattern canary the 2026-05-30 security audit recommended and nobody built, reusing the sanitiser's existing residual-identity detection rather than a second copy - pattern plus the project's own control-letter checksum via validate_identity, findings that never carry the matched text, and path-scoped exclusions with a stated reason each rather than any value allowlist since an allowlist would itself carry the identifier. Census measured first across 40325 text files: 2247 checksum-valid occurrences in 778 files, 33 distinct values, split 1922 in tests, 272 in vault, 15 in docs, 15 in eleven production-source files, 12 in locales - so pattern plus checksum alone is unusable as a gate and the fixture convention is undocumented
+- `2026-08-08-aeat-design-relayout-boundary-W02-P04-S20` - `aeat-design-relayout-boundary` execution record: `W02.P04.S20`
+- `2026-08-08-aeat-design-relayout-boundary-W02-P05-S22` - `aeat-design-relayout-boundary` execution record: `W02.P05.S22`
+- `2026-08-08-aeat-design-relayout-boundary-W02-P05-S23` - `aeat-design-relayout-boundary` execution record: `W02.P05.S23`
+- `2026-08-08-aeat-design-relayout-boundary-W03-P07-S31` - `aeat-design-relayout-boundary` execution record: `W03.P07.S31`
+- `2026-08-08-aeat-design-relayout-boundary-W03-P07-S33` - `aeat-design-relayout-boundary` execution record: `W03.P07.S33`
+- `2026-08-08-aeat-design-relayout-boundary-W03-P07-S34` - `aeat-design-relayout-boundary` execution record: `W03.P07.S34`
+- `2026-08-08-aeat-design-relayout-boundary-W04a-P12-S83` - `aeat-design-relayout-boundary` execution record: `W04a.P12.S83`
+- `2026-08-08-aeat-design-relayout-boundary-W04a-P12-S84` - `aeat-design-relayout-boundary` execution record: `W04a.P12.S84`
+- `2026-08-08-aeat-design-relayout-boundary-W04a-P12-S85` - `aeat-design-relayout-boundary` execution record: `W04a.P12.S85`
+- `2026-08-08-aeat-design-relayout-boundary-W04a-P12-S86` - `aeat-design-relayout-boundary` execution record: `W04a.P12.S86`
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S57` - `aeat-design-relayout-boundary` execution record: `W05.P11.S57`
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S58` - `aeat-design-relayout-boundary` execution record: `W05.P11.S58`
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S59` - Run the full-tree suite sequentially, capture the complete output to a log file read back from disk rather than a truncated pipe, and record owner-surface failures separately from unrelated peer churn
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S61` - Record in the campaign audit document every filing year this plan deliberately leaves refusing rather than correctly exported, stated beside what the standing goal still asks for that the narrowing excludes
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S62` - Submit this plan's closure summary to a fresh-context honesty review by an independent reviewer given the two accepted records and the commit ranges, and open a Step with a verification gate for every item it returns
 
 ### plan
 
