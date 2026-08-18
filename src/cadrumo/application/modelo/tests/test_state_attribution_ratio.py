@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact, UserProfileFactValue, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
 from .._profile_binding import (
     ProfileBindingResolutionError,
     _inject_derived_state_attribution_facts,
@@ -70,7 +70,7 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope() -> None:
 
 
 def _common_profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -84,7 +84,7 @@ def _common_profile() -> UserProfileRecord:
 
 
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

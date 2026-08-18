@@ -50,7 +50,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
@@ -165,7 +165,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
 def _seed_ready_profile(*, profile_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,

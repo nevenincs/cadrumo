@@ -65,7 +65,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection
@@ -191,7 +191,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

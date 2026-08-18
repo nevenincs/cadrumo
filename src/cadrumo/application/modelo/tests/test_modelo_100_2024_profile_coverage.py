@@ -13,6 +13,7 @@ from ....core import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import InputKind, RegistrySnapshot
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
@@ -99,7 +100,7 @@ def _snapshot_2024() -> RegistrySnapshot:
 
 
 def _full_profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

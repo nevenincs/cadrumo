@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, RegistryModeloObservation
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
@@ -88,7 +88,7 @@ _M131_PAGOS_RELATION = "renta-2024-rel-131-pagos-fraccionados"
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

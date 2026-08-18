@@ -18,7 +18,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...user_profile import CensoSyncService
 
@@ -124,7 +124,7 @@ def _declare_home_office_m2(bucket_id: str) -> None:
         UserProfileFact(path=path, value=Decimal(value)) for path, value in _home_office_censo_facts().items()
     )
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=m2_facts,
         ),

@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import calculate_modelo_revision, create_work_unit
@@ -34,7 +34,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _store_objective_estimation_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

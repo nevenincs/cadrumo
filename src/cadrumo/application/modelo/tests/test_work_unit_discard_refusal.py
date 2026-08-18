@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import NoRecoveryOutcome, Period
 from ....domain.modelos import WorkUnit, WorkUnitState
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitMutationRefusedError
@@ -56,7 +56,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,

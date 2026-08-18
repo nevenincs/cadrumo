@@ -81,7 +81,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.usage_ratios import UsageRatioProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -458,7 +458,7 @@ def _seed_taxpayer_profile() -> None:
     # display_name MUST equal the manifest label isolated_runtime_profile created
     # ("Test runtime profile") — CommittedProfileView._validate_cross_store_agreement
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),

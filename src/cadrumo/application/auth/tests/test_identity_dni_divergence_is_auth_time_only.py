@@ -30,7 +30,7 @@ import pytest
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import (
     bound_test_profile_record,
     replace_test_profile_record,
@@ -60,7 +60,7 @@ def _register_with_tax_id() -> None:
     call rather than a record field.
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),

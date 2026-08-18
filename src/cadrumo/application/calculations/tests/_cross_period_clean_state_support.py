@@ -34,7 +34,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_filing_record_id,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
@@ -76,7 +76,7 @@ def _store_ready_profile(
     tax_id: str = "X1234567L",
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),

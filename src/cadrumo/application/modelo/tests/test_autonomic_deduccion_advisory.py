@@ -41,7 +41,7 @@ from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
@@ -86,7 +86,7 @@ def seeded_bucket(tmp_path: Path) -> Iterator[str]:
 
 
 def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=facts,
         created_at=_CLOCK,

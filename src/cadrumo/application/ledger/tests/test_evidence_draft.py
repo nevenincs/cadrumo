@@ -42,7 +42,7 @@ from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
@@ -398,7 +398,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
 
         clock = datetime(2026, 1, 1, tzinfo=UTC)
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),

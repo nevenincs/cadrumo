@@ -34,7 +34,7 @@ from ....domain.contribuyente import (
     compute_deduccion_maternidad_0611,
     descendant_facts_from_list,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_binding import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -54,7 +54,7 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 def _record(*descendientes: DescendantInfo) -> UserProfileRecord:
     facts = tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes))
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,

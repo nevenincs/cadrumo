@@ -268,7 +268,7 @@ class UserProfileRecord(BaseModel):
     schema_version: int = Field(default_factory=_canonical_payload_schema_version, ge=1)
     profile_id: _ProfileId
     facts: tuple[UserProfileFact, ...] = Field(default=())
-    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE
+    setup_state: ProfileSetupState
     record_revision: int = Field(default=1, ge=1)
     previous_record_digest: ContentDigest | None = None
     content_digest: ContentDigestOrAbsent = ""

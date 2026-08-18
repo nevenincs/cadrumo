@@ -42,7 +42,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import ModeloAggregationBindingError
@@ -114,7 +114,7 @@ def _blocking_transaction() -> Transaction:
 
 def _seed_profile(bucket_id: str, *, iva_regime: str, m303_regime_composition: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="iva.regime", value=iva_regime),

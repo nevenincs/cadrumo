@@ -33,7 +33,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...tests import register_wizard_catalogue
 from .. import (
@@ -59,7 +59,7 @@ _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_
 
 
 def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

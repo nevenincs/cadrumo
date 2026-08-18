@@ -42,7 +42,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -125,7 +125,7 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     if incn is not None:
         facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=tuple(facts),
             created_at=_CLOCK,

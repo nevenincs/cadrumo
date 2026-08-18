@@ -55,7 +55,7 @@ from ....domain.deadlines import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -138,7 +138,7 @@ def _activity_start_date_for_period(period_token: str) -> date:
 
 def _store_operator_profile(*, period_token: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

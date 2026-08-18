@@ -41,7 +41,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
@@ -163,7 +163,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         )
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=tuple(facts),
         created_at=_CLOCK,
@@ -173,7 +173,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),

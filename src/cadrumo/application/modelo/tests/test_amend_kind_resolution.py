@@ -55,7 +55,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -109,7 +109,7 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

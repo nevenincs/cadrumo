@@ -65,7 +65,7 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
@@ -228,7 +228,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     channel. Mirrors
     ``test_modelo_100_pagos_fraccionados_fold_in_live._seed_taxpayer_unit_profile``.
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

@@ -45,7 +45,7 @@ from ....domain.modelos import (
     WorkUnit,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
@@ -259,7 +259,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
@@ -292,7 +292,7 @@ def _file_flow_runtime(tmp_path: Path) -> Iterator[_FileFlowRuntime]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

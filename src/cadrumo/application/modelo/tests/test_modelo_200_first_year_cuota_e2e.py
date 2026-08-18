@@ -54,7 +54,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import CalculationObservationRepository
 from ...tests import register_wizard_catalogue
@@ -95,7 +95,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
     modalidad-cuota filer. ``incn_prior_12_months`` 500.000 <= the
     6.000.000 LIS art. 40.3 threshold -> ART_40_2_OPTIONAL (modalidad cuota).
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

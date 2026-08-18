@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core import M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...tests import register_wizard_catalogue
@@ -43,7 +43,7 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

@@ -20,6 +20,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
+from ....domain.user_profile import ProfileSetupState
 from .._values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -55,7 +56,7 @@ def test_record_refuses_a_non_utc_lifecycle_instant(field: str, instant: datetim
 
 @pytest.mark.parametrize("instant", _REFUSED_INSTANTS, ids=_REFUSED_IDS)
 def test_snapshot_refuses_a_non_utc_created_at(instant: datetime) -> None:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=_facts(),
         created_at=_UTC_INSTANT,
@@ -68,7 +69,7 @@ def test_snapshot_refuses_a_non_utc_created_at(instant: datetime) -> None:
 
 def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:
     """Hydration is the path that mattered: a stored naive value must not reload."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=_facts(),
         created_at=_UTC_INSTANT,
@@ -82,7 +83,7 @@ def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:
 
 
 def test_a_utc_record_round_trips_canonically() -> None:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=_facts(),
         created_at=_UTC_INSTANT,

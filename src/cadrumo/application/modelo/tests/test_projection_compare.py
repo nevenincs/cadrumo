@@ -20,7 +20,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -106,7 +106,7 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -196,7 +196,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),

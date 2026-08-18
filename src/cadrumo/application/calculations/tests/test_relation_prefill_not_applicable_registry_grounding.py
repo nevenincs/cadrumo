@@ -34,7 +34,7 @@ import pytest
 
 from ....core import Modelo
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._relation_prefill import (
@@ -60,7 +60,7 @@ def _m100_snapshot(filing_year: int) -> RegistrySnapshot:
 
 def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> None:
     """Persist a real encrypted bucket profile carrying ``extra_facts``."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="00000000T"),

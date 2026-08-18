@@ -41,7 +41,7 @@ from ....core import (
 )
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -84,7 +84,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     ):
         register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_PROFILE_FACTS,
                 created_at=_T,

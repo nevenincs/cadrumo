@@ -18,7 +18,7 @@ from ....domain.calculations.registry import load_modelo_directory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
@@ -118,7 +118,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
 
 def _seed_m210_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

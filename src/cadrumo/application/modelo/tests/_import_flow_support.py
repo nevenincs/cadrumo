@@ -26,7 +26,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -106,7 +106,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
 def _seed_ready_profile(*, bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,

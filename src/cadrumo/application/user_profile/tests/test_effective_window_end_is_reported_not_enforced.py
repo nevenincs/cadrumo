@@ -28,6 +28,7 @@ from datetime import date
 import pytest
 
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
@@ -47,7 +48,7 @@ def _warned_paths(*facts: UserProfileFact) -> set[str | None]:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
 
 
 def test_a_closed_window_still_projects_its_value() -> None:

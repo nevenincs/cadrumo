@@ -60,7 +60,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -148,7 +148,7 @@ def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist the M130 natural-person profile required by the work-unit gate."""
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

@@ -38,7 +38,7 @@ from ....core import (
     resolve_active_bucket_id,
 )
 from ....domain.deadlines import ObligationStatus
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -76,7 +76,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T,

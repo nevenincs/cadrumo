@@ -263,19 +263,18 @@ def test_load_refuses_a_persisted_payload_with_a_required_field_deleted(
 def test_load_refuses_a_persisted_payload_with_a_defaultable_field_deleted(
     capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
 ) -> None:
-    """Anti-tautology: dropping a DEFAULTABLE field must not load cleanly either.
+    """Anti-tautology: dropping a REQUIRED field must not load cleanly.
 
-    This is the harder half and the specific regression the populated fixture
-    exists for. ``setup_state`` has a default, so a naive strict model would
-    happily re-default it and hand back a record that differs from what was
-    written without raising -- the silent shape of the bug. The record's
-    content digest is what makes that impossible: it is computed over every
-    other field, so a dropped field re-derives a digest that no longer
-    matches the persisted one and the load refuses instead of lying.
+    ``setup_state`` no longer carries a default (the silent-COMPLETE hazard was
+    removed by making the field required), so a payload with the field deleted
+    is refused at the model boundary itself -- the deletion is visible as a
+    missing-field ValidationError instead of being re-defaulted. The populated
+    fixture still matters: a record written with an explicit non-default state
+    is the only honest specimen to mutate.
     """
     session, written, root = capsule
-    assert written.setup_state is not UserProfileRecord.model_fields["setup_state"].default, (
-        "the fixture must not persist the default setup_state, or deleting it proves nothing"
+    assert written.setup_state is not ProfileSetupState.COMPLETE, (
+        "the fixture must not persist the COMPLETE setup_state, or deleting it proves nothing"
     )
     advance_to_revision_two(session, root, written)
     _rewrite_persisted_payload(session, root, lambda payload: payload.pop("setup_state"))
@@ -285,4 +284,4 @@ def test_load_refuses_a_persisted_payload_with_a_defaultable_field_deleted(
 
     cause = refusal.value.__cause__
     assert isinstance(cause, ValidationError)
-    assert "content digest does not match" in str(cause)
+    assert "setup_state" in str(cause)

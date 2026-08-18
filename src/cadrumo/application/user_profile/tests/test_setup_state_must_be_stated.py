@@ -137,7 +137,7 @@ def test_a_record_that_never_stated_its_setup_state_is_refused_at_the_writer(tmp
         store = _live_store(outcome.profile_id)
         current = store.load().record
 
-        unstated = UserProfileRecord(
+        unstated = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             schema_id=current.schema_id,
             schema_version=current.schema_version,
             profile_id=current.profile_id,

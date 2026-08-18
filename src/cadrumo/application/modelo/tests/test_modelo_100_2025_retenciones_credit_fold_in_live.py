@@ -64,7 +64,7 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...aggregation import (
@@ -229,7 +229,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     source mesh's profile resolver auto-fills these — no profile fact is
     hand-fed through the caller channel.
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

@@ -17,7 +17,7 @@ from ....adapters.outbound.aeat.sede import (
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ...modelo import resolve_profile_sourced_bindings
@@ -60,7 +60,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
@@ -73,7 +73,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
 
 def _registered_modelo_profile() -> UserProfileRecord:
     """Supply one calculation-relevant fact for every registered modelo profile surface."""
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="censo.status", value="alta"),

@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.errors import SecureObjectRevisionConflict
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.modelos import CalculationRevisionState, ExternalEvidenceKind, WorkUnit
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
@@ -102,7 +102,7 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

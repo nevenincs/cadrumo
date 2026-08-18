@@ -33,7 +33,7 @@ import pytest
 
 from ....core import NoRecoveryOutcome
 from ....domain.iva import IvaTerritorialScope
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._confirm_establishment import _filer_scope
 from .._evidence_draft import PurchaseInvoiceEvidenceInputError
 from .._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
@@ -49,7 +49,7 @@ def _profile(postcode: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if postcode is not None:
         facts = (*facts, UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=postcode))
-    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
 
 
 @pytest.mark.parametrize(

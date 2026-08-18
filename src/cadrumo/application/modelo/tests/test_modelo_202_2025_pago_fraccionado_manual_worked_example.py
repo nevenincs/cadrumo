@@ -93,7 +93,7 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthority
 from ....domain.period import calculation_filing_date
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from .. import (
     BucketAggregationCalculationResult,
@@ -145,7 +145,7 @@ def _seed_sociedad_m_profile() -> None:
     (clave 03) is the applicable one - matching the manual's scenario, which
     never mentions the art. 40.3 obligation.
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),

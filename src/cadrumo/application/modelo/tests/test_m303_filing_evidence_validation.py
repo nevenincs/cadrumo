@@ -32,7 +32,7 @@ from ....domain.modelos import (
     WorkUnit,
     derive_work_unit_id,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -153,7 +153,7 @@ def _store_profile(
     iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),

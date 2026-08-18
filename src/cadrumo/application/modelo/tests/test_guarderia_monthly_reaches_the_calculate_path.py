@@ -35,7 +35,7 @@ from ....domain.contribuyente import (
     descendant_facts_from_list,
     parse_guarderia_mensual,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,7 +56,7 @@ def _snapshot() -> RegistrySnapshot:
 
 def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
     """Resolve the profile-sourced bindings for a record carrying *descendientes*."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(
             UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)
@@ -213,7 +213,7 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
     operator can fix once told where it is, and skipping the row instead would
     silently under-count the cap population and drop that child's spend.
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=(
             UserProfileFact(path="renta_family.descendiente.0.birth_date", value="not-a-date"),

@@ -33,6 +33,7 @@ import typer
 from ....application.modelo import WorkUnitNotFoundError
 from ....core import CasillaId, validated_casilla_id
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....domain.user_profile import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
@@ -54,7 +55,7 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
     from ....tests.profile_capsule import seed_test_profile_record
 
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -438,7 +439,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c200000-0000-4000-8000-000000000002") as runtime:
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=runtime.bucket_id,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="B12345674"),

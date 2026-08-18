@@ -51,7 +51,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.usage_ratios import UsageRatioProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .. import (
@@ -1081,7 +1081,7 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if ccaa_value is not None:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
     )
@@ -1178,7 +1178,7 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 
 def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="33333333-3333-4333-8333-333333333333",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )

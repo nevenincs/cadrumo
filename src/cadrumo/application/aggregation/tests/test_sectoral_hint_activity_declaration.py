@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
@@ -47,7 +47,7 @@ def bucket_id() -> str:
 def _save_profile(*facts: UserProfileFact) -> None:
     """Persist a profile carrying ``facts`` through the real repository."""
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
             created_at=_CLOCK,
