@@ -996,9 +996,15 @@ def scripted_profile_facts(
     facts are published inside the create transaction that already holds the
     record session, rather than through a second unlock afterwards.
 
-    The foral refusal fires here, before the caller registers anything, exactly
-    as it does on the flow's own command body: a foral CCAA token must refuse
-    rather than produce a profile that then has to be corrected.
+    A refused value refuses HERE, before the caller registers anything, so a
+    foral CCAA token costs the operator no profile to correct afterwards.
+
+    The foral check is not redundant with the question validators. Dropping it
+    does still refuse -- the widget validator behind the CCAA question raises
+    too -- but it refuses as a generic wizard-validation failure instead of the
+    domain refusal that names the Concierto Económico and the foral tax office
+    the operator actually has to file with. The flow's own command body calls
+    it for the same reason. It runs first so the good message wins.
 
     No filing-baseline check applies. A profile created this way is born
     ``INCOMPLETE`` on purpose, so demanding the full filing baseline would
