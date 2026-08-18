@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:e9ff978e5e27b4e10c81c237cb6c6662dd851f1efc2974c550bed47b0f57ead0'
+body_hash: 'sha256:01fae6951bfbcd33c1400e6369c3af2d7f68299f7854383c48390ee3fc09813f'
 step_id: 'S17'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -125,3 +125,5 @@ were not reintroduced.
 
 No commit was made and no plan checkbox was set. Every capture lives under the
 session scratchpad directory, not the repository.
+
+- 2026-08-18 re-verification and close as confirmed-ruling. Provider-channel work landed at HEAD (commit 0c388e878a: bucket-session imports resolve through the storage facade; no entrypoints module imports a master-key provider submodule; the status-frontend docstring is corrected). The remaining channel `CADRUMO_SECRET_PASSPHRASE` is current design, not legacy: it has a typed Settings home (`core/config.py:454`), live consumers across the login authority, operator scope, scripted registration and preflight, and is the only channel a headless/CI host can reach any verb with — removing it is out of entrypoints scope and was escalated, not abandoned. TUI login reads zero env vars (masked input); nothing in the locale catalogues orphans today. The row is closed with its standing goal met: the old environment/provider channels are gone or ruled current; a scoped replacement (per-verb secrets-fd + documented cross-process story) is a future design question, not this row.

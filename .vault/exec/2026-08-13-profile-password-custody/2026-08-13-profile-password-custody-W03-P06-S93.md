@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:07a6e96ed0c9523fddcb80b0406c744c838a4dcbeb0669106eac3bf1dfff2e33'
+body_hash: 'sha256:acfa497ea4f3b104df36d720b932fa2d2a60470d27cc276b8d1023053685db92'
 step_id: 'S93'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -184,3 +184,5 @@ the campaign rather than closed here.
 inventory had drifted by five ids added by another session. The pin was updated
 to match the declared flow, which is the response the gate's own docstring
 prescribes.
+
+- 2026-08-18 completion of the residual cluster named above (commit 61cf0a57f7). Retired the remaining absent-verb modules: rename maintenance events (negative pin kept), export roundtrip (11 retired, payload-contract test kept), subject-access-request (all retired), import idempotency (all retired). Re-founded the lifecycle-navigation module on the live surfaces: active-delete refusal, delete-success with the `deleted\ttrue` shape (target created through the production door so the legal-hold snapshot the preflight requires exists — the test seeding door deliberately records none per the S205 ruling), name reuse after delete, and a negative pin for the retired rename verb. Trimmed the surface-inventory verb list to the live set and re-founded the create-wizard module on the scripted arm. Relocated `test_cli_module_size.py` to `dev/audit/tests/` beside its moved baseline owner, fixing the collection error that blocked collect-only on the whole CLI test tree since the c0a7feef24 relocation; regenerated both audit baselines with the gate's own tool. Routed finding: the size gate now runs again after being uncollectable at HEAD and reports standing growth — six modules (`_config/__init__.py`, `_app_live.py`, `_app_live_payloads.py`, `_common.py`, `_ledger_read_cli.py`, `_modelo_discovery_cli.py`) and one callable (`_modelo_review_package_cli.py::review_package_build`) over budget; not laundered with `--accept-growth`, routed to the CLI module owners. Gates: touched modules green under `-m integration`; verb-input-schema/json-schema-conformance/repair-policy untouched; collect-only on the CLI trees clean (988 collected, 0 errors); ruff clean.
