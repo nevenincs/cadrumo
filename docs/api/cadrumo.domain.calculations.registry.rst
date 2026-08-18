@@ -54,6 +54,7 @@ Submodules
    cadrumo.domain.calculations.registry._formula_runtime_m131
    cadrumo.domain.calculations.registry._formula_runtime_ops
    cadrumo.domain.calculations.registry._formula_text_inputs
+   cadrumo.domain.calculations.registry._gasto193_bindings
    cadrumo.domain.calculations.registry._groi_oracle
    cadrumo.domain.calculations.registry._handoff_paths
    cadrumo.domain.calculations.registry._handoffs
@@ -176,4 +177,5 @@ Submodules
    cadrumo.domain.calculations.registry._validation_memoization
    cadrumo.domain.calculations.registry._verdict_cache
    cadrumo.domain.calculations.registry._verification_tolerance
+   cadrumo.domain.calculations.registry._withholding296_bindings
    cadrumo.domain.calculations.registry._withholding_bindings

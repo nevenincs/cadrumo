@@ -16,28 +16,19 @@ from uuid import UUID
 from cadrumo.application.user_profile import (
     committed_profile_custody_inventory,
     default_profile_bucket_storage,
-    default_profile_secure_object_inventory,
 )
 
-from ...core import StorageCategory, require_active_bucket_id, storage_location
+from ...application.filing import FilingRetentionAuthority
 from ...core.hashing import CONTENT_DIGEST_PREFIX
-from ...core.paths import directory_byte_total
 from ...core.time import now
 from ...domain.buckets import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
-from ..filing import FilingRetentionAuthority
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     AssessBucketDeletionCommand,
-    BrowseBucketCommand,
-    BrowseBucketResult,
     BucketDeletionAssessment,
-    BucketDiskUsageSubdirRow,
-    BucketNamespaceInventoryRow,
-    DiskUsageBucketCommand,
-    DiskUsageBucketResult,
 )
 from ._deletion_paths import validated_bucket_deletion_paths
 
@@ -105,7 +96,7 @@ class BucketMaintenanceService:
 
     def assess_deletion(self, command: AssessBucketDeletionCommand) -> BucketDeletionAssessment:
         """Observe one deletion target: existence, label, contents and retention.
-
+        
         Retention is answered WITHOUT a session, and the distinction matters
         because it is why this surface can answer at all. Producing the filing
         retention position still needs the bucket's key -- it summarises the
@@ -114,7 +105,7 @@ class BucketMaintenanceService:
         creation and filing persistence. A deletion preflight runs against
         profiles it has NOT unlocked, so it reads that snapshot rather than the
         modelo records, which are encrypted under a key nobody here holds.
-
+        
         ``setup_state`` stays absent for the same reason it always did: it lives
         inside the encrypted profile record and no unauthenticated read can
         reach it. The field is optional on the assessment precisely so this
@@ -154,50 +145,12 @@ class BucketMaintenanceService:
                 bucket_id=command.bucket_id,
             ),
         )
-
-    def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
-        """List namespaces for the already-authenticated active capsule only."""
-        if require_active_bucket_id() != command.bucket_id:
-            raise ProfileNotFoundError("bucket browse requires its authenticated active custody session")
-        repository = default_profile_secure_object_inventory()
-        namespaces = repository.list_namespaces()
-        if command.namespace_filter is not None:
-            namespaces = tuple(namespace for namespace in namespaces if command.namespace_filter in namespace)
-        rows = tuple(
-            BucketNamespaceInventoryRow(namespace=namespace, row_count=len(repository.list_keys(namespace)))
-            for namespace in namespaces
-        )
-        return BrowseBucketResult(bucket_id=command.bucket_id, rows=rows)
-
-    def disk_usage(self, command: DiskUsageBucketCommand) -> DiskUsageBucketResult:
-        """Measure fixed custody directories without opening encrypted data."""
-        from ...core.config import load_settings
-
-        storage = default_profile_bucket_storage()
-        paths = storage.resolve(load_settings().cadrumo_local_storage_root, command.bucket_id)
-        rows: list[BucketDiskUsageSubdirRow] = []
-        total_bytes = 0
-        # Only current hierarchy members are measured. The retired plaintext
-        # bucket manifest was counted here as an extra file, which made this
-        # the one site treating it as an ordinary member of a current bucket:
-        # nothing writes one, and a store carrying one is a store custody
-        # discovery refuses outright.
-        for name, directory in (
-            (storage_location(StorageCategory.BUCKET_DATABASE).subpath, paths.db_dir),
-            (storage_location(StorageCategory.BUCKET_BLOBS).subpath, paths.blobs_dir),
-        ):
-            byte_count, file_count = directory_byte_total(directory, tolerate_errors=True)
-            rows.append(BucketDiskUsageSubdirRow(subdir=name, total_bytes=byte_count, file_count=file_count))
-            total_bytes += byte_count
-        return DiskUsageBucketResult(bucket_id=command.bucket_id, total_bytes=total_bytes, subdirs=tuple(rows))
-
-
 def _observed_deletion_fingerprint(
     *,
     root: Path,
     profile_id: UUID,
     bucket_id: str,
-) -> BucketDeletionFingerprint:
+    ) -> BucketDeletionFingerprint:
     """Fold the committed capsule's exact contents into the deletion fingerprint.
 
     The three facts the contract carries are exactly what the custody inventory
@@ -216,15 +169,15 @@ def _observed_deletion_fingerprint(
     # Broad on purpose: any inventory failure at all must block, never soften.
     except Exception as exc:
         raise BucketDeleteRefusedError(
-            "current custody deletion cannot fingerprint this target: its committed capsule "
-            "could not be inventoried, so a later resume could not tell whether the target "
-            "changed beneath the operation.",
-            context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
-        ) from exc
+        "current custody deletion cannot fingerprint this target: its committed capsule "
+        "could not be inventoried, so a later resume could not tell whether the target "
+        "changed beneath the operation.",
+        context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
+    ) from exc
     return BucketDeletionFingerprint(
-        digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
-        file_count=len(inventory.entries),
-        total_bytes=inventory.total_bytes,
+    digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
+    file_count=len(inventory.entries),
+    total_bytes=inventory.total_bytes,
     )
 
 
@@ -288,6 +241,7 @@ def _assessed_filing_retention(
                 "retention_snapshot": "unreadable",
             },
         ) from exc
+
 
 
 __all__ = ["BucketMaintenanceService"]

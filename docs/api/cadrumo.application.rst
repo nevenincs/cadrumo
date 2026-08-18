@@ -35,7 +35,6 @@ Subpackages
    cadrumo.application.operator_surface
    cadrumo.application.overview
    cadrumo.application.portals
-   cadrumo.application.profile_custody
    cadrumo.application.prorrata_register
    cadrumo.application.registry
    cadrumo.application.review

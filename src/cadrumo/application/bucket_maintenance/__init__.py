@@ -5,7 +5,7 @@ command/result contracts for profile-scoped storage maintenance. The
 service is currently a **read-only** surface over the current-capsule
 primitives: target locking (``deletion_target_locks``), a deletion
 pre-assessment (``assess_deletion``), namespace-level inventory
-(``browse``), and on-disk footprint measurement (``disk_usage``).
+(the browse and disk-usage surfaces were retired with their producerless contracts).
 
 Bucket rename, bucket delete, bucket archive (reversible dormancy),
 bucket restore, sealed-archive export/import/inspect, and the earlier
@@ -43,26 +43,14 @@ from __future__ import annotations
 
 from ._contracts import (
     AssessBucketDeletionCommand,
-    BrowseBucketCommand,
-    BrowseBucketResult,
     BucketDeletionAssessment,
     BucketDeletionFingerprint,
-    BucketDiskUsageSubdirRow,
-    BucketNamespaceInventoryRow,
-    DiskUsageBucketCommand,
-    DiskUsageBucketResult,
 )
 from ._service import BucketMaintenanceService
 
 __all__ = [
     "AssessBucketDeletionCommand",
-    "BrowseBucketCommand",
-    "BrowseBucketResult",
     "BucketDeletionAssessment",
     "BucketDeletionFingerprint",
-    "BucketDiskUsageSubdirRow",
     "BucketMaintenanceService",
-    "BucketNamespaceInventoryRow",
-    "DiskUsageBucketCommand",
-    "DiskUsageBucketResult",
 ]
