@@ -21,9 +21,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Every surface that names a registry snapshot. Each must route through the
 #: canonical identifier rather than rebuilding one inline -- an inline rebuild is
 #: how the four divergent formats arose in the first place.
+# The development-side workbook parity surface routes through the same owner
+# but cannot be named here: this suite holds no path into that tree. Its
+# canonical-routing check is owned by the development-side parity tests.
 _EMITTING_SURFACES: Final[tuple[str, ...]] = (
     "src/cadrumo/domain/calculations/registry/tests/_scenarios.py",
-    "dev/registry/_workbook_parity.py",
     "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py",
 )
 

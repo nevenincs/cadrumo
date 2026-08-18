@@ -17,7 +17,7 @@ sole selection key -- that every consumer paired it with the canonical source id
 or the content hash and failed closed on a mismatch, making these checks mere
 hardening. That described ``resolve_record_design_binary``, which does perform
 exactly those cross-checks and which **no shipped runtime path calls**: its only
-non-test callers are the ``dev/`` export-tree generator.
+non-test callers are the registry authoring export-tree generator.
 
 What the shipped code actually does is use ``record_design_epoch is not None`` as
 a bare PRESENCE filter at three sites, selecting on the ``applies_from`` /

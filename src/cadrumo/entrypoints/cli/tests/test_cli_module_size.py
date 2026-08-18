@@ -6,7 +6,7 @@ See Also:
         without bespoke filesystem walking.
     :mod:`~tests.test_codebase_size_budgets`
         Codebase-wide sibling ratchet. Both gates now read the SAME generated
-        limit table, ``dev/audit/size_budget_baseline.json``, so this CLI-scoped
+        limit table, the committed size-budget baseline, so this CLI-scoped
         view cannot drift away from it.
 
 CLI modules must stay bounded so they decompose without breaking public

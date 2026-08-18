@@ -136,7 +136,7 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     stand-in storage.
 
     ``manager_actions()`` is passed for the same reason it now is in
-    ``dev/tui/_surfaces.py``: building the screen without it renders cleanly
+    the TUI reference-surface module: building the screen without it renders cleanly
     and shows a manager with zero buttons, which is exactly the bug this
     enrollment exists to catch on a real terminal render rather than by hand.
     """
@@ -167,7 +167,7 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
     unlocked, so this logs back out before building the screen, matching
     the machine state ``login`` exists for. ``choices`` and ``preselected``
     come from the real frontend functions rather than being reproduced here,
-    for the same reason ``dev/tui/_surfaces.py`` now does: a hand-built
+    for the same reason the TUI reference-surface module now does: a hand-built
     choice list or a dropped preselection is the identical stand-in shape
     that bug was.
     """

@@ -437,7 +437,7 @@ from ._legal import (
 # ModeloRevisionSource, ModeloSource, discover_modelo_sources and
 # load_modelo_source stay imported here (no external caller needs the
 # demotion to break) but are not in __all__ below: the raw-loader facade is
-# demoted per W01.P04.S10, and dev.quality.import_hygiene_scan reds a new
+# demoted per W01.P04.S10, and the import-hygiene scanner reds a new
 # production import of these four (each had zero cross-package production OR
 # test consumers, confirmed by an AST scan, not a grep). The remaining raw
 # loaders below (load_registry_tree, load_legal_parameters_only,
@@ -684,7 +684,7 @@ from ._schema_verification import (
 # build_snapshot stays imported here but is not in __all__: demoted per
 # W01.P04.S34, the same unguarded-entry-point class as the raw-loader family
 # S10 already demoted -- it has zero production callers outside this package,
-# confirmed by an AST scan, and dev.quality.import_hygiene_scan reds a new
+# confirmed by an AST scan, and the import-hygiene scanner reds a new
 # production import. Cross-package TEST callers resolve it through the
 # tests-support facade (domain.calculations.registry.tests.build_snapshot)
 # instead of reaching into this demoted attribute directly, so it stays a

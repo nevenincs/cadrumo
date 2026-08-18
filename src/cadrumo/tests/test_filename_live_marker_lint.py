@@ -11,7 +11,7 @@ the local read verbs, the oracle contract, or the CLI surface wiring without
 touching AEAT).
 
 The check is AST- and token-backed; it does not import the inspected modules.
-It is the filename-scope companion to :mod:`test_marker_integrity`, which
+It is the filename-scope companion to the marker-integrity ratchet, which
 governs the marker taxonomy itself.
 """
 
@@ -111,7 +111,7 @@ def _live_prefixed_test_modules() -> list[Path]:
 
     The scan is a filesystem glob and deliberately does not consult git, so an
     untracked module is in scope — matching :func:`_discover_test_modules` in
-    the companion :mod:`test_marker_integrity`. In a worktree where several
+    the companion marker-integrity ratchet. In a worktree where several
     agents hold uncommitted work at once, a mis-declared ``test_live_*`` module
     is caught before it is committed rather than after. The cost is that a red
     here may name a file absent at HEAD, so triage starts with

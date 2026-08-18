@@ -5,7 +5,7 @@ argument", "Invalid value", the help panel headings) onto catalogue entries so a
 Spanish operator does not meet half a refusal in English. Some of those keys
 reach :func:`tr` through a lookup TABLE rather than as a literal first argument,
 and the locale scaffold's extractor only sees ``tr("literal")`` — so a
-table-routed key is invisible to ``python -m dev.locales scaffold``, can never be
+table-routed key is invisible to the locale catalogue scaffolder, can never be
 scaffolded, and silently falls back to its English default in all four locales.
 
 That is exactly how ``cli.help.missing_argument``, ``cli.help.missing_option``

@@ -356,7 +356,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     invocations (not simulated via env vars, and not the same process
     twice) against a throwaway scratch package materialised under this
     test's OWN ``tmp_path`` -- never under the tracked ``src/cadrumo`` tree,
-    which every source-tree AST gate (``dev/quality/import_hygiene_scan.py``, the
+    which every source-tree AST gate (the import-hygiene scanner, the
     codebase-size and layering ratchets) walks and reads live. An earlier
     version of this proof wrote its scratch module directly into this real
     ``tests/`` directory; under a parallel ``-n`` run that write/run/unlink

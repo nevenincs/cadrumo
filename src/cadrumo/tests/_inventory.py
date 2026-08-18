@@ -34,8 +34,6 @@ UTF8_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md
 """Line tokens that exempt hash-protocol UTF-8 literals from text-I/O ratchets."""
 
 _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
-PROJECT_TEST_ROOTS: tuple[Path, ...] = (REPO_ROOT / "dev", REPO_ROOT / "docs")
-"""Project-level test roots outside the ``src/cadrumo`` package tree."""
 
 _PRUNED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"__pycache__", ".git", ".venv", ".pytest_cache"})
 """Directory names no source scan ever wants, pruned before descending."""
@@ -204,38 +202,6 @@ def discover_test_control_modules() -> tuple[Path, ...]:
         if path.name == "conftest.py" or "tests" in relative_parts:
             modules.add(path)
     return tuple(sorted(modules))
-
-
-@cache
-def project_test_modules() -> tuple[Path, ...]:
-    """Return project-level ``test_*.py`` modules outside ``src/cadrumo``."""
-    collected: set[Path] = set()
-    for root in PROJECT_TEST_ROOTS:
-        if not root.exists():
-            continue
-        collected.update(path for path in python_files_under(root) if path.name.startswith("test_"))
-    return tuple(sorted(collected))
-
-
-@cache
-def project_test_control_modules() -> tuple[Path, ...]:
-    """Return project-level tests plus support/conftest modules outside ``src/cadrumo``."""
-    modules = set(project_test_modules())
-    for root in PROJECT_TEST_ROOTS:
-        if not root.exists():
-            continue
-        for path in python_files_under(root):
-            if "__pycache__" in path.parts or path.name == "__init__.py":
-                continue
-            relative_parts = path.relative_to(root).parts
-            if path.name == "conftest.py" or "tests" in relative_parts:
-                modules.add(path)
-    return tuple(sorted(modules))
-
-
-@cache
-def all_test_control_modules() -> tuple[Path, ...]:
-    return tuple(sorted(set(discover_test_control_modules()) | set(project_test_control_modules())))
 
 
 @cache

@@ -19,8 +19,8 @@ Two properties are therefore enforced together:
   making it fail converts a decaying ceiling into a self-correcting one.
 
 Limits are GENERATED, never hand-written, because the hand-maintained numbers
-are what went stale rather than the mechanism. Regenerate with
-``python -m dev.audit.size_budget --write-baseline``; review and commit the diff.
+are what went stale rather than the mechanism. Regenerate with the size-budget
+authoring tool; review and commit the diff.
 
 Headroom policy, stated explicitly so no comment has to claim it: an entry is
 pinned at its measured size plus five percent (floored at a small absolute
@@ -39,7 +39,6 @@ passes is the exact defect class this gate exists to refuse.
 from __future__ import annotations
 
 import ast
-import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -53,24 +52,17 @@ __all__ = [
     "MIN_SCANNED_CALLABLES",
     "MIN_SCANNED_MODULES",
     "MODULE_POLICY",
-    "SIZE_BUDGET_BASELINE_PATH",
     "BudgetPolicy",
     "EmptyScanError",
-    "SizeBudgetBaseline",
     "assert_real_corpus",
     "build_limits",
     "callable_key",
     "evaluate_budget",
-    "load_size_budget_baseline",
     "measure_callable_lines",
     "measure_module_lines",
     "scan_callable_lines",
     "scan_module_lines",
-    "write_size_budget_baseline",
 ]
-
-SIZE_BUDGET_BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "audit" / "size_budget_baseline.json"
-"""Committed, generated limit table consumed by the pytest size ratchet."""
 
 MIN_SCANNED_MODULES: Final[int] = 2000
 """Floor on the scanned module count; a walk returning fewer is broken, not clean."""
@@ -307,65 +299,3 @@ def evaluate_budget(
             )
 
     return BudgetVerdict(over_budget=tuple(over_budget), stale=tuple(stale))
-
-
-@dataclass(frozen=True)
-class SizeBudgetBaseline:
-    """The committed, generated limit tables plus their preserved prose notes."""
-
-    modules: dict[str, int]
-    callables: dict[str, int]
-    notes: dict[str, str]
-
-
-_BASELINE_COMMENT = (
-    "GENERATED limit table for the size ratchet in "
-    "src/cadrumo/tests/test_codebase_size_budgets.py. Do NOT hand-edit the 'modules' or "
-    "'callables' numbers: regenerate with `python -m dev.audit.size_budget --write-baseline`, "
-    "then review and commit the diff. Every limit is a measured size plus a declared headroom, "
-    "and the gate fails BOTH when an entry grows past its limit and when a limit drifts further "
-    "above its subject than the declared slack tolerance, so a pin cannot silently outlive the "
-    "size it was taken from. 'notes' is the one hand-maintained section: prose only, never "
-    "numbers, carried forward verbatim across regeneration and dropped when its key disappears. "
-    "Keys are repo-relative POSIX paths, and 'path::function' for callables."
-)
-
-
-def load_size_budget_baseline(path: Path = SIZE_BUDGET_BASELINE_PATH) -> SizeBudgetBaseline:
-    """Load the committed baseline, or an empty one when none is committed yet."""
-    if not path.is_file():
-        return SizeBudgetBaseline(modules={}, callables={}, notes={})
-    document = json.loads(path.read_text(encoding=_UTF_8))
-    return SizeBudgetBaseline(
-        modules={str(key): int(value) for key, value in document.get("modules", {}).items()},
-        callables={str(key): int(value) for key, value in document.get("callables", {}).items()},
-        notes={str(key): str(value) for key, value in document.get("notes", {}).items()},
-    )
-
-
-def write_size_budget_baseline(
-    baseline: SizeBudgetBaseline,
-    *,
-    scanned_modules: int,
-    scanned_callables: int,
-    path: Path = SIZE_BUDGET_BASELINE_PATH,
-) -> None:
-    """Write the generated baseline, preserving notes whose keys survived."""
-    live_keys = set(baseline.modules) | set(baseline.callables)
-    document = {
-        "_comment": _BASELINE_COMMENT,
-        "generated": {
-            "scanned_modules": scanned_modules,
-            "scanned_callables": scanned_callables,
-            "module_entries": len(baseline.modules),
-            "callable_entries": len(baseline.callables),
-        },
-        "notes": {key: value for key, value in sorted(baseline.notes.items()) if key in live_keys},
-        "modules": dict(sorted(baseline.modules.items())),
-        "callables": dict(sorted(baseline.callables.items())),
-    }
-    path.write_text(
-        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
-        encoding=_UTF_8,
-        newline="\n",
-    )

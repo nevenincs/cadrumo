@@ -1,7 +1,7 @@
 """Product-side reader and search over the bundled Terminology Handbook.
 
 The Handbook concept fragments under ``_data/terminology/concepts/*.toml`` are
-authored/compiled by the ``dev.docs.terminology_handbook`` dev tooling, which is
+authored/compiled by the terminology-handbook authoring tooling, which is
 NOT shipped in the wheel. This module is the shipped, product-side consumer: a
 lean strict loader that projects each concept for a requested locale and a
 simple in-memory search over the small concept set.
@@ -51,7 +51,7 @@ _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 #: Canonical kebab-case shape for a Terminology Handbook ``concept_id``:
 #: an immutable Spanish stem, lowercase, hyphen-separated. Shared with the
-#: dev-only authoring schema (``dev.docs.terminology_handbook._schema``,
+#: unshipped authoring schema (the authoring tooling's schema module,
 #: which imports these three constants from this package) so a malformed
 #: id is refused identically on both sides of the shipping boundary rather
 #: than passing this lean product reader while failing strict authoring
@@ -122,7 +122,7 @@ def _as_str_object_dict(value: object) -> dict[str, object] | None:
 def _validated_concept_id(token: str) -> str:
     """Refuse a ``concept_id`` outside the canonical kebab-case shape.
 
-    Mirrors ``dev.docs.terminology_handbook._schema._ConceptId``, which
+    Mirrors the authoring tooling's ``_ConceptId`` schema, which
     imports :data:`CONCEPT_ID_PATTERN` from this module: a malformed id
     (too short, uppercase, non-kebab-case) is refused here rather than
     silently producing a searchable concept with a garbage identifier.

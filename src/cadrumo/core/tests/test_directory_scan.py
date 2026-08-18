@@ -352,7 +352,7 @@ def test_the_lazy_shape_validates_its_pattern_before_returning(tree: Path) -> No
 def test_the_root_is_always_an_argument_and_never_a_repo_anchor() -> None:
     """Neither entry point may grow a default root, and the module holds no anchor.
 
-    ``dev/`` tooling imports this primitive and scans the repo root, ``dev/``,
+    The development tooling tree imports this primitive and scans the repo root,
     ``docs/``, build outputs and temp directories. A convenience default
     pointing at the package tree -- the shape
     ``cadrumo/tests/_inventory.py`` legitimately uses, because it is test
@@ -372,7 +372,7 @@ def test_the_root_is_always_an_argument_and_never_a_repo_anchor() -> None:
 def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
     """A relative root works and its results stay relative, exactly as pathlib's do.
 
-    ``dev/`` callers routinely pass ``Path("dev")`` rather than an absolute
+    Some callers routinely pass a relative path segment rather than an absolute
     path. Resolving the root here would hand those callers absolute results
     where ``Path.glob`` gave them relative ones.
     """

@@ -13,10 +13,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from dev.registry._scenario_filing_period import hydrate_scenario_filing_period
 from pydantic import BaseModel, Field, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period
+from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period, hydrate_scenario_filing_period
 from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot

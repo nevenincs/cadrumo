@@ -5,7 +5,7 @@ The cross-package raw-registry-orchestration check this module carried
 ``build_snapshot`` / ``load_registry_tree``) is superseded by the
 project-wide ratcheting import-hygiene gate,
 ``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
-``dev/quality/import_hygiene_scan.py`` and ``dev/quality/import_hygiene_baseline.json``). Its
+the import-hygiene scanner and its checked-in baseline). Its
 former allowlist
 (``_authority.py``, both package ``__init__.py`` files,
 ``legal_parameters.py``, ``_imputacion_parameters.py``,

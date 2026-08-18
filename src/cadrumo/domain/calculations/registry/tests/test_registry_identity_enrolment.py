@@ -6,7 +6,7 @@ second digest derivation is how a build and a runtime come to disagree about
 which tree they are looking at -- and that disagreement is silent, because both
 sides produce a plausible hex string.
 
-So this gate scans the whole first-party surface, ``src/`` AND ``dev/``, and
+So this gate scans the whole first-party surface, the shipped package and the development tooling tree, and
 requires:
 
 * the stamp filename literal to appear in exactly one module;

@@ -115,15 +115,15 @@ def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
 
 def test_retired_english_family_is_absent_from_code_and_locale_surfaces() -> None:
     repository_root = Path(__file__).parents[4]
-    assert _retired_family_occurrences(repository_root / "src", repository_root / "dev") == set()
+    assert _retired_family_occurrences(repository_root / "src", repository_root / "scaffold") == set()
 
 
 def test_retired_family_scan_bites_on_a_non_python_dev_surface(tmp_path: Path) -> None:
-    planted = tmp_path / "dev" / "locales" / "planted.yml"
+    planted = tmp_path / "scaffold" / "locales" / "planted.yml"
     planted.parent.mkdir(parents=True)
     retired_token = "official_" + "status"
     planted.write_text(f"filter:\n  {retired_token}: retired\n", encoding="utf-8")
 
-    assert _retired_family_occurrences(tmp_path / "dev") == {
+    assert _retired_family_occurrences(tmp_path / "scaffold") == {
         (planted.as_posix(), retired_token),
     }

@@ -439,7 +439,7 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
 
     Epochs are also asserted UNIQUE per modelo, because the epoch is the key the
     generator's semantic-map and render-profile trees are addressed by
-    (``dev/registry/mappings/modelo_<n>/<epoch>/``). Two designs for one modelo
+    (the authored registry mapping tree). Two designs for one modelo
     sharing an epoch cannot both be mapped, and AEAT does re-lay a form out
     mid-ejercicio -- which is exactly what the grammar's optional sub-year label
     ("2024-early", "2024-late") exists to distinguish.
