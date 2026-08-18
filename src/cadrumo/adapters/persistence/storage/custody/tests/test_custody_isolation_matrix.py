@@ -19,12 +19,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import (
+from .. import (
     ProfileCustodyEnvelope,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
 )
-from cadrumo.application.user_profile import (
+from ......application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileRecordSession,
     create_profile_custody_registration_material,
@@ -35,8 +35,8 @@ from cadrumo.application.user_profile import (
     restore_profile_from_source_with_recovery_artifact,
     unlock_profile_custody_password,
 )
-from cadrumo.domain.user_profile import ProfileSetupState, UserProfileRecord
-from cadrumo.tests.secure_sql import isolated_profile_storage_root
+from ......domain.user_profile import ProfileSetupState, UserProfileRecord
+from ......tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -99,7 +99,7 @@ class _EnrolledProfile:
 
     def export(self, target: Path) -> None:
         export_profile_recovery_artifact(
-            self.enrollment.envelope,
+            self.enrollment,
             current_password=self.password,
             password_envelope=self.envelope,
             sentinel=self.sentinel,

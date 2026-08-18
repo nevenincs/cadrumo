@@ -473,9 +473,6 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
-        export_profile_recovery_artifact as export_profile_recovery_artifact,
-    )
-    from ._custody_ports import (
         load_profile_custody_data_file as load_profile_custody_data_file,
     )
     from ._custody_ports import (
@@ -788,6 +785,9 @@ if TYPE_CHECKING:
         enroll_profile_recovery as enroll_profile_recovery,
     )
     from ._recovery_custody import (
+        export_profile_recovery_artifact as export_profile_recovery_artifact,
+    )
+    from ._recovery_custody import (
         restore_profile_from_recovery_artifact as restore_profile_from_recovery_artifact,
     )
     from ._recovery_custody import (
@@ -883,7 +883,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "create_profile_recovery_enrollment_material": "._custody_ports",
     "default_profile_bucket_event_history_repository": "._custody_ports",
     "default_profile_record_crypto_port": "._custody_ports",
-    "export_profile_recovery_artifact": "._custody_ports",
+    "export_profile_recovery_artifact": "._recovery_custody",
     "load_profile_custody_data_file": "._custody_ports",
     "parse_profile_custody_envelope": "._custody_ports",
     "parse_profile_custody_recovery_envelope": "._custody_ports",
