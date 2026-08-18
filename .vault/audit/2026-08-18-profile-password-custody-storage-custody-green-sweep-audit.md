@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:6270a19fd567f9d86f1d5ea7d61caee82bf9cfe4598574dab5b1a765dbe48c27'
+body_hash: 'sha256:7d29c320830d5be61f245e5f03f90caabdd4d434b8189d27b2d50d4063fd7781'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -107,6 +107,45 @@ an enrolled profile whose only key went nowhere. The CLI door passes a handover
 and carries dedicated coverage. The outstanding deferral is narrower than the
 row's wording suggests: it is the full-screen creation door only, whose
 terminal-direct channel cannot render inside the full-screen display.
+
+### The lifecycle was driven end to end, not inferred from unit results
+
+Every verb was exercised against real encrypted storage rather than argued from
+green tests. Create in both arms, list, edit, logout, delete, sealed-archive
+export and inspect, and restore all returned success, and a full
+create-with-facts, export, logout, delete, restore, login cycle returned the
+profile with its facts byte-identical. The sealed archive was a real encrypted
+artefact of a few kilobytes whose header inspects without decrypting.
+
+Two refusals met on the way were correct rather than defects, and both name
+their remedy: deleting the ACTIVE profile is refused and points at logout, and
+a headless restore refuses to take a secret from a terminal that is not there
+and points at the bounded stdin channel.
+
+One apparent defect did not survive checking. Restoring under a NEW label is
+refused on the ORIGINATING host even after the profile is deleted, which reads
+like the archive carrying a label the export documentation says it does not
+carry. It does not: on a genuinely fresh storage root the same archive restores
+under a new label with its facts intact. What refuses on the original host is
+the surviving label-head record, which keeps a UUID's label lineage after the
+capsule is gone -- lineage protection working, not a leak. Deletion also
+deliberately leaves its journal, receipts and holds behind, which the custody
+decision requires: the audit trail must outlive the data it describes.
+
+That fresh-root restore is the accepted decision's central promise -- a profile
+password restores a backup on a fresh host without keyring access -- and it was
+confirmed on a host that demonstrably has no keyring at all.
+
+### The keychain failures are a property of the host, and provably so
+
+Fourteen session-resume cases fail in the ordinary integration lane because the
+Windows credential store refuses every call with "a specified logon session does
+not exist", the error a non-interactive logon produces. That was measured
+directly against the credential store rather than inferred from the failures.
+They are unmarked for the credential-store lane, so they cannot pass on any
+headless host including CI. Marking them would move fourteen cases out of the
+default lane, which is a coverage decision belonging to the harness campaign
+rather than a repair to make in passing.
 
 ## Recommendations
 
