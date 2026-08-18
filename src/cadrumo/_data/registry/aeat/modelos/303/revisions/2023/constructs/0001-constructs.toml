@@ -126,9 +126,7 @@ formulas = [
     # projections they feed: [154] is the rate [155] multiplies, [166] the rate
     # [167] multiplies. Both rate formulas shipped without construct ownership.
     "modelo-303-dr303-154-rate",
-    "modelo-303-dr303-166-rate",
     "modelo-303-dr303-155-projection",
-    "modelo-303-dr303-167-projection",
     "modelo-303-dr303-10-projection",
     "modelo-303-dr303-11-projection",
     "modelo-303-dr303-13-projection",

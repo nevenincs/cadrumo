@@ -31,8 +31,6 @@
 #
 #   [153]/[155]  reducido tier, transitional   Constante "00500", then "00750"
 #                                              from period 10/4T 2024 (Nota 8)
-#   [165]/[167]  super-reducido tier, transit. Constante "00200" (Nota 10),
-#                                              fillable from period 10/4T 2024
 #
 # [153] admits BOTH 5 % and 7,5 % because AEAT reuses the one rung across the
 # flip: Nota 8 changes the mandated constant at the 10/4T 2024 boundary rather
@@ -91,50 +89,6 @@ required_text = ["modelo 303"]
 categories = ["domestic_reduced"]
 rate_kinds = ["reduced"]
 applied_rates = ["0.05", "0.075"]
-flow_direction = "repercutido"
-fact = "iva_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
-[revisions.2023.bindings.aggregation]
-op = "sum"
-
-[[revisions.2023.bindings]]
-id = "modelo-303-iva-repercutido-super-reducido-transitorio-base"
-source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2023.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2023.bindings.selector]
-categories = ["domestic_super_reduced"]
-rate_kinds = ["super_reduced"]
-applied_rates = ["0.02"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
-[revisions.2023.bindings.aggregation]
-op = "sum"
-
-[[revisions.2023.bindings]]
-id = "modelo-303-iva-repercutido-super-reducido-transitorio-cuota"
-source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2023.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2023.bindings.selector]
-categories = ["domestic_super_reduced"]
-rate_kinds = ["super_reduced"]
-applied_rates = ["0.02"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 
