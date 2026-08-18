@@ -1,0 +1,17 @@
+# Modelo 185 record-design parity anchor for the 2003-2025 span. Declares
+# the bundled orden-hac-96-2003 form-and-layout-approval order as the layout
+# authority. This scheduling/applicability-grade revision carries no calc
+# formulas, so runner_required is false: the anchor pins the official
+# form-approval provenance without asserting a verified fixed-width
+# byte-position record design (no authoritative Modelo 185 DR is bundled for
+# this span).
+
+[[revisions."2003-2025".workbook_parity_refs]]
+id = "modelo-185-orden-static-layout-2003"
+workbook_source = "enrolled-modelo-185-layout-2003"
+fixture_id = "modelo-185-orden-hac-96-2003-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-layout-2003"]

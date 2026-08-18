@@ -126,3 +126,25 @@ applies_from = 2003-01-31
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
 review_status = "reviewed"
+
+# Same bundled orden-hac-96-2003 HTML, registered a second time under
+# layout_authority tier for the per-revision workbook-parity-coverage gate of
+# the 2003-2025 span. This orden approves the modelo 185 disenos fisicos y
+# logicos, so it IS the layout-approval instrument; it is not the AEAT Diseño
+# de Registros fichero-BOE fixed-width layout, which is not bundled. It
+# grounds only the static form-approval layout, honestly satisfying the
+# parity gate without asserting a verified byte-position design.
+[sources."enrolled-modelo-185-layout-2003"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-96-2003.html"
+sha256 = "1da7979396dc545e9850df39a5dc0f66080f2b6b1551ae0e6c21d0048f9438d7"
+bytes = 44022
+retrieved_at = 2026-08-15
+published_at = 2003-01-30
+applies_from = 2003-01-31
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
+review_status = "reviewed"
+
