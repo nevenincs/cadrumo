@@ -476,7 +476,7 @@ ignore_imports =
     cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.auth._sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
-    cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**

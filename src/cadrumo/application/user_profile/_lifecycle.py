@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...core import BucketPointer
-from ...domain.user_profile import ProfileCustodyLabelAuthorityProtocol, UserProfileRecord
+from ...domain.user_profile import UserProfileRecord
 from ..profile_custody import verify_profile_custody_dek_against_sentinel
 from ._aggregate import CommittedProfileView, ProfileRestoreAuthority
 from ._capsule_record import (
@@ -49,7 +49,6 @@ class ProfileCapsuleLifecycle:
     def __init__(self, *, root: Path | None = None) -> None:
         self._profiles = CommittedProfileRepository(root=root)
         self._transactions = _ProfileCustodyTransactionCapability(root=self._profiles.root)
-        self._label_authority: ProfileCustodyLabelAuthorityProtocol = self._transactions
 
     @property
     def root(self) -> Path:
@@ -176,23 +175,6 @@ class ProfileCapsuleLifecycle:
                 expected_revision=expected_revision,
                 expected_content_digest=expected_content_digest,
             )
-
-    def rename_label(
-        self,
-        *,
-        profile_id: UUID,
-        label: str,
-        expected_label_revision: int,
-        expected_content_digest: str,
-    ) -> CommittedProfileView:
-        """Delegate label mutation to the canonical custody transaction owner."""
-        self._label_authority.rename_label(
-            profile_id=profile_id,
-            label=label,
-            expected_label_revision=expected_label_revision,
-            expected_content_digest=expected_content_digest,
-        )
-        return self._profiles.load(profile_id)
 
     def _stage_and_validate_restore_database(
         self,

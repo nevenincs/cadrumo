@@ -142,8 +142,9 @@ def test_a_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) ->
 def test_a_changed_custody_record_still_refuses_the_prepared_deletion(tmp_path: Path) -> None:
     """The marker's reason for existing, exercised through a real mutation.
 
-    Renaming the profile label rewrites a durable custody record through the
-    production custody-transaction writer. The operator confirmed a specific
+    The label CAS writer that once carried this mutation was removed as a
+    verified-dead surface, so the durable custody record is perturbed directly,
+    as the marker-level sibling test does. The operator confirmed a specific
     inventory; the capsule is no longer that inventory, so the deletion must
     refuse rather than destroy what it was not shown.
 
@@ -158,14 +159,9 @@ def test_a_changed_custody_record_still_refuses_the_prepared_deletion(tmp_path: 
             lifecycle = ProfileCapsuleLifecycle(root=storage_root)
             journal = lifecycle.prepare_delete(profile_id=profile_id)
             confirmation = lifecycle.confirm_delete(journal)
-            view = lifecycle.select(str(profile_id))
 
-            lifecycle.rename_label(
-                profile_id=profile_id,
-                label="Renamed after the operator confirmed",
-                expected_label_revision=view.label_revision,
-                expected_content_digest=view.label_content_digest,
-            )
+            label_record = _capsule_of(storage_root, profile_id) / _LABEL_RECORD_RELATIVE_PATH
+            label_record.write_bytes(label_record.read_bytes().replace(b"1", b"2", 1))
 
             with pytest.raises(ProfileCustodyTransactionConflictError):
                 lifecycle.delete(confirmation)

@@ -14,5 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.bucket_maintenance._contracts
-   cadrumo.application.bucket_maintenance._manifest_digest
+   cadrumo.application.bucket_maintenance._deletion_paths
    cadrumo.application.bucket_maintenance._service

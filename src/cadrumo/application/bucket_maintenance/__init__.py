@@ -14,11 +14,11 @@ sandbox lifecycle (``create_sandbox`` / ``discard_sandbox`` /
 removed from this package when profile identity moved onto the
 encrypted custody capsule; see
 :mod:`application.user_profile` (``ProfileCapsuleLifecycle``) for the
-surviving create/restore/select/delete primitives. Bucket rename lives
-on as ``ProfileCapsuleLifecycle.rename_label``; bucket delete lives on
-as ``ProfileCapsuleLifecycle.prepare_delete`` /
+surviving create/restore/select/delete primitives. Bucket rename has no
+successor primitive; bucket delete lives on as
+``ProfileCapsuleLifecycle.prepare_delete`` /
 ``confirm_delete`` / ``delete``, consumed today only by the durable
-all-profile ``application.config_reset`` flow. Neither has a
+all-profile ``application.config_reset`` flow. Bucket delete has no
 single-target operator route; bucket archive, bucket restore, and
 sealed-archive export/import/inspect have no successor primitive at
 all. :meth:`BucketMaintenanceService.assess_deletion` is the retention
@@ -33,7 +33,7 @@ it can measure a non-active bucket without opening a storage session.
 See Also:
     :mod:`application.user_profile`
         ``ProfileCapsuleLifecycle``, the custody transaction owner for
-        create, restore, select, rename and delete.
+        create, restore, select and delete.
     :mod:`application.config_reset`
         The durable all-profile reset flow, the sole current caller of
         ``ProfileCapsuleLifecycle.delete``.

@@ -22,7 +22,6 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._login_throttle
    cadrumo.adapters.persistence.storage.master_key._master_key
    cadrumo.adapters.persistence.storage.master_key._master_key_derivation
-   cadrumo.adapters.persistence.storage.master_key._master_key_io
    cadrumo.adapters.persistence.storage.master_key._master_key_records
    cadrumo.adapters.persistence.storage.master_key._master_key_tax_id
    cadrumo.adapters.persistence.storage.master_key._provider_session
