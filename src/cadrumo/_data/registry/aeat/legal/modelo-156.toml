@@ -73,7 +73,10 @@ review_status = "reviewed"
 # reconciled: it asserted an ejercicio AEAT does not state and the document
 # itself contradicts. Removing it deletes a false span; it does not create a
 # true one, which is why nothing was transferred here.
+# record_design_epoch: AEAT publishes this design as 156_HAC_3580_2003.pdf, the Orden HAC/3580/2003 edition; the revision it backs is 2003-y-siguientes.
 [sources."enrolled-modelo-156-layout"]
+record_design_epoch = "2003"
+applies_from = 2003-12-18
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
