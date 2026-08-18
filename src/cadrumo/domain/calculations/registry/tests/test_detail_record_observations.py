@@ -253,6 +253,17 @@ _M190_DECLARED_FIELDS = frozenset(
         "second_child_compute",
         "third_child_compute",
         "housing_loan_communication_clave",
+        "incapacity_cash_perception",
+        "incapacity_cash_withholding",
+        "incapacity_kind_value",
+        "incapacity_kind_ingreso_a_cuenta",
+        "incapacity_kind_repercutido",
+        "complemento_infancia_clave",
+        "foral_retention_estatal",
+        "foral_retention_navarra",
+        "foral_retention_araba",
+        "foral_retention_gipuzkoa",
+        "foral_retention_bizkaia",
     }
 )
 
@@ -406,26 +417,20 @@ def test_build_withholding_rows_spouse_nif_follows_situacion_and_differs_from_pe
 
 def test_build_withholding_rows_l29_requires_titular_clave_and_spouse_when_titular_two() -> None:
     titular_nif = "98765432B"
+    l29 = {
+        "clave": RetencionClave.L,
+        "subclave": "29",
+        "complemento_infancia_clave": 1,
+    }
     with pytest.raises(RegistryValidationError, match="unit_convivencia_titular_clave"):
-        _build(_observation(clave=RetencionClave.L, subclave="29"))
+        _build(_observation(**l29))
     with pytest.raises(RegistryValidationError, match="spouse_or_unit_titular_tax_id"):
-        _build(_observation(clave=RetencionClave.L, subclave="29", unit_convivencia_titular_clave=2))
-    row = _build(
-        _observation(
-            clave=RetencionClave.L,
-            subclave="29",
-            unit_convivencia_titular_clave=1,
-        )
-    )[0]
+        _build(_observation(**l29, unit_convivencia_titular_clave=2))
+    row = _build(_observation(**l29, unit_convivencia_titular_clave=1))[0]
     assert row["unit_convivencia_titular_clave"] == "1"
     assert row["spouse_or_unit_titular_tax_id"] == " " * 9
     row = _build(
-        _observation(
-            clave=RetencionClave.L,
-            subclave="29",
-            unit_convivencia_titular_clave=2,
-            spouse_or_unit_titular_tax_id=titular_nif,
-        )
+        _observation(**l29, unit_convivencia_titular_clave=2, spouse_or_unit_titular_tax_id=titular_nif)
     )[0]
     assert row["spouse_or_unit_titular_tax_id"] == titular_nif
 
@@ -604,6 +609,126 @@ def test_build_withholding_rows_refuses_family_counts_outside_their_claves() -> 
     row = _build(_observation(clave=RetencionClave.G, descendants_rest_total=0))[0]
     assert row["descendants_rest_total"] == "0"
     assert row["housing_loan_communication_clave"] == " "
+
+
+def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None:
+    """The incap blocks are the design's own split of the row's magnitudes:
+    cash parts on claves A/B.01, in-kind parts on clave A, zeros elsewhere."""
+    row = _build(
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            incapacity_cash_perception=Decimal("3000"),
+            incapacity_cash_withholding=Decimal("450"),
+            incapacity_kind_value=Decimal("1200"),
+            incapacity_kind_ingreso_a_cuenta=Decimal("200"),
+            incapacity_kind_repercutido=Decimal("200"),
+        )
+    )[0]
+    assert row["incapacity_cash_perception"] == Decimal("3000")
+    assert row["incapacity_cash_withholding"] == Decimal("450")
+    assert row["incapacity_kind_value"] == Decimal("1200")
+    # B.01 declares the dineraria block only.
+    row_b01 = _build(
+        _observation(
+            clave=RetencionClave.B,
+            subclave="01",
+            perceptor_birth_year=1960,
+            perceptor_situacion_familiar=1,
+            disability_clave=0,
+            housing_loan_communication_clave=0,
+            incapacity_cash_perception=Decimal("900"),
+        )
+    )[0]
+    assert row_b01["incapacity_cash_perception"] == Decimal("900")
+    with pytest.raises(RegistryValidationError, match="incapacity_cash_perception"):
+        _build(_observation(clave=RetencionClave.G, incapacity_cash_perception=Decimal("1")))
+    with pytest.raises(RegistryValidationError, match="incapacity_kind_value"):
+        _build(
+            _observation(
+                clave=RetencionClave.B,
+                subclave="01",
+                perceptor_birth_year=1960,
+                perceptor_situacion_familiar=1,
+                disability_clave=0,
+                housing_loan_communication_clave=0,
+                incapacity_kind_value=Decimal("1"),
+            )
+        )
+    with pytest.raises(RegistryValidationError, match="incapacity_kind_ingreso_a_cuenta"):
+        _build(_observation(clave=RetencionClave.G, incapacity_kind_ingreso_a_cuenta=Decimal("1")))
+
+
+def test_withholding_totals_include_the_incapacidad_parts() -> None:
+    """The resumen-anual magnitudes are the row's FULL totals: the design's
+    split of the base and incap blocks must not under-count the summary."""
+    from .._withholding_bindings import percibido_total, retencion_total
+
+    observations = (
+        _observation(
+            **_COMPLETE_CLAVE_A,
+            percibido_dinerario=Decimal("7000"),
+            percibido_especie=Decimal("1000"),
+            retencion_practicada=Decimal("1050"),
+            ingreso_a_cuenta=Decimal("150"),
+            incapacity_cash_perception=Decimal("3000"),
+            incapacity_cash_withholding=Decimal("450"),
+            incapacity_kind_value=Decimal("1200"),
+            incapacity_kind_ingreso_a_cuenta=Decimal("200"),
+            incapacity_kind_repercutido=Decimal("200"),
+        ),
+    )
+    assert percibido_total(observations) == Decimal("12200")
+    assert retencion_total(observations) == Decimal("1850")
+
+
+def test_build_withholding_rows_l29_requires_complemento_infancia_clave() -> None:
+    with pytest.raises(RegistryValidationError, match="complemento_infancia_clave"):
+        _build(_observation(clave=RetencionClave.L, subclave="29", unit_convivencia_titular_clave=1))
+    with pytest.raises(RegistryValidationError, match="complemento_infancia_clave"):
+        _build(_observation(**_COMPLETE_CLAVE_A, complemento_infancia_clave=1))
+    row = _build(
+        _observation(
+            clave=RetencionClave.L,
+            subclave="29",
+            unit_convivencia_titular_clave=1,
+            complemento_infancia_clave=2,
+        )
+    )[0]
+    assert row["complemento_infancia_clave"] == "2"
+
+
+def test_build_withholding_rows_foral_split_follows_clave_e_totals() -> None:
+    """Design campo 35 is declared exclusively for clave E and must sum to the
+    row's retenciones practicadas plus ingresos a cuenta."""
+    e_facts = {
+        "clave": RetencionClave.E,
+        "retencion_practicada": Decimal("3000"),
+        "ingreso_a_cuenta": Decimal("200"),
+    }
+    with pytest.raises(RegistryValidationError, match="require foral retentions"):
+        _build(_observation(**e_facts))
+    with pytest.raises(RegistryValidationError, match="declares exclusively for clave E"):
+        _build(_observation(**_COMPLETE_CLAVE_A, foral_retention_estatal=Decimal("1")))
+    with pytest.raises(RegistryValidationError, match="requires to equal"):
+        _build(
+            _observation(
+                **e_facts,
+                foral_retention_estatal=Decimal("3000"),
+                foral_retention_navarra=Decimal("300"),
+            )
+        )
+    row = _build(
+        _observation(
+            **e_facts,
+            foral_retention_estatal=Decimal("2500"),
+            foral_retention_navarra=Decimal("700"),
+        )
+    )[0]
+    assert row["foral_retention_estatal"] == Decimal("2500")
+    assert row["foral_retention_navarra"] == Decimal("700")
+    # Exclusively Estatal: the one subfield carries the full sum.
+    row = _build(_observation(**e_facts, foral_retention_estatal=Decimal("3200")))[0]
+    assert row["foral_retention_estatal"] == Decimal("3200")
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

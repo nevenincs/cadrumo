@@ -92,6 +92,17 @@ _WithholdingRowField = Literal[
     "second_child_compute",
     "third_child_compute",
     "housing_loan_communication_clave",
+    "incapacity_cash_perception",
+    "incapacity_cash_withholding",
+    "incapacity_kind_value",
+    "incapacity_kind_ingreso_a_cuenta",
+    "incapacity_kind_repercutido",
+    "complemento_infancia_clave",
+    "foral_retention_estatal",
+    "foral_retention_navarra",
+    "foral_retention_araba",
+    "foral_retention_gipuzkoa",
+    "foral_retention_bizkaia",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -142,6 +153,9 @@ class WithholdingObservation(BaseModel):
     clave: RetencionClave
     subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
     percibido_dinerario: Decimal = Decimal("0")
+    """The NON-incapacidad part of the row's dineraria percepciones: the design's
+    campo 11 excludes the incapacidad-laboral prestaciones, which file in their
+    own block (255-281), so the operator records them in the incap facts."""
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
@@ -256,6 +270,41 @@ class WithholdingObservation(BaseModel):
     """Whether the perceptor communicated vivienda-habitual loan amounts at some
     point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
     clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
+    incapacity_cash_perception: Decimal = Decimal("0")
+    """Dineraria incapacidad-laboral percepciones paid directly by the payer
+    (design positions 256-268); the design's own zeros when none."""
+    incapacity_cash_withholding: Decimal = Decimal("0")
+    """Retentions on the position-256 percepciones (design positions 269-281);
+    the design's own zeros when none -- a perceptor who suffered no retention
+    carries zeros by the design's own rule."""
+    incapacity_kind_value: Decimal = Decimal("0")
+    """Valoracion of in-kind incapacidad-laboral prestaciones under art. 43
+    (design positions 283-295); the design's own zeros when none."""
+    incapacity_kind_ingreso_a_cuenta: Decimal = Decimal("0")
+    """Ingresos a cuenta efectuados on the position-283 prestaciones (design
+    positions 296-308); the design's own zeros when none."""
+    incapacity_kind_repercutido: Decimal = Decimal("0")
+    """The part of the position-296 ingresos a cuenta repercutido to the
+    perceptor (design positions 309-321); the design's own zeros when none."""
+    complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
+    """Whether any mensualidad of the L.29 prestacion included the IMV complemento
+    de ayuda para la infancia (design position 322): clave 1 included, 2 not --
+    both are recorded facts, never defaults."""
+    foral_retention_estatal: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Hacienda Estatal
+    (design positions 323-335); the design's own zeros when none."""
+    foral_retention_navarra: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Comunidad Foral
+    de Navarra (design positions 336-348); the design's own zeros when none."""
+    foral_retention_araba: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Araba/Alava (design positions 349-361); the design's own zeros when none."""
+    foral_retention_gipuzkoa: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Gipuzkoa (design positions 362-374); the design's own zeros when none."""
+    foral_retention_bizkaia: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Bizkaia (design positions 375-387); the design's own zeros when none."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -284,6 +333,16 @@ class WithholdingObservation(BaseModel):
         "gastos_deducibles",
         "pension_compensatoria",
         "anualidades_alimentos",
+        "incapacity_cash_perception",
+        "incapacity_cash_withholding",
+        "incapacity_kind_value",
+        "incapacity_kind_ingreso_a_cuenta",
+        "incapacity_kind_repercutido",
+        "foral_retention_estatal",
+        "foral_retention_navarra",
+        "foral_retention_araba",
+        "foral_retention_gipuzkoa",
+        "foral_retention_bizkaia",
     )
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
@@ -438,21 +497,45 @@ def distinct_percepcion_keys(
 
 
 def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum percibido dinerario plus percibido en especie.
+    """Sum percibido dinerario, en especie, and both incapacidad-laboral parts.
 
-    Shared by the bound ``percibido_sum`` fact and the per-clave breakdown so
-    a change to what counts as percibido reaches both.
+    The base amount facts carry the NON-incapacidad part (the design field's own
+    meaning); the incapacidad blocks are separate parts the design files at
+    255-321, so the row's full percibido total is the four magnitudes together.
+    Shared by the bound ``percibido_sum`` fact and the per-clave breakdown so a
+    change to what counts as percibido reaches both.
     """
-    return sum((obs.percibido_dinerario + obs.percibido_especie for obs in observations), Decimal("0"))
+    return sum(
+        (
+            obs.percibido_dinerario
+            + obs.percibido_especie
+            + obs.incapacity_cash_perception
+            + obs.incapacity_kind_value
+            for obs in observations
+        ),
+        Decimal("0"),
+    )
 
 
 def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum retención practicada plus ingreso a cuenta.
+    """Sum retención practicada, ingreso a cuenta, and the incap retentions.
 
-    Shared by the bound ``retencion_sum`` fact and the per-clave breakdown so
-    a change to what counts as retenido reaches both.
+    The base amount facts carry the NON-incapacidad part; the retentions on the
+    incapacidad-laboral percepciones file in their own design block, so the
+    row's full retenido total is the four magnitudes together. Shared by the
+    bound ``retencion_sum`` fact and the per-clave breakdown so a change to what
+    counts as retenido reaches both.
     """
-    return sum((obs.retencion_practicada + obs.ingreso_a_cuenta for obs in observations), Decimal("0"))
+    return sum(
+        (
+            obs.retencion_practicada
+            + obs.ingreso_a_cuenta
+            + obs.incapacity_cash_withholding
+            + obs.incapacity_kind_ingreso_a_cuenta
+            for obs in observations
+        ),
+        Decimal("0"),
+    )
 
 
 def resolve_withholding_binding_values(
@@ -643,6 +726,13 @@ _DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
     "second_child_compute",
     "third_child_compute",
 )
+
+
+def _declares_incapacidad_dineraria(clave: object, subclave: object) -> bool:
+    """True for the claves the design's dineraria incapacidad-laboral block
+    (255-281) applies to: ``A`` and ``B.01``."""
+    token = str(clave)
+    return token == "A" or (token == "B" and str(subclave) == "01")
 
 
 def _is_clave_l29(clave: object, subclave: object) -> bool:
@@ -843,6 +933,81 @@ def _finalise_withholding_row(
         value = row.get(count_field)
         finalised[count_field] = str(value) if value is not None else "0"
 
+    # The design's incapacidad-laboral blocks hold the incap PART of each
+    # magnitude, and the base campos explicitly exclude it ("No se incluiran en
+    # este campo..."). The observation therefore carries the SPLIT: the base
+    # amount facts are the non-incapacidad part (the design field's own
+    # meaning), and the incap facts carry the part the design files at 255-321.
+    # The totals helpers (percibido_total / retencion_total) add the two parts
+    # back together, so the resumen-anual magnitudes stay the row's full total.
+    incap_dineraria = _declares_incapacidad_dineraria(clave, subclave)
+    incap_cash = row["incapacity_cash_perception"]
+    incap_kind_value = row["incapacity_kind_value"]
+    incap_kind_ingreso = row["incapacity_kind_ingreso_a_cuenta"]
+    assert isinstance(incap_cash, Decimal)
+    if "incapacity_cash_perception" in required_fields:
+        if incap_cash != 0 and not incap_dineraria:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_cash_perception, which design campo 32 declares only for claves A and B.01",
+            )
+    if "incapacity_kind_value" in required_fields:
+        if incap_kind_value != 0 and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_kind_value, which design campo 33 declares only for clave A",
+            )
+    if "incapacity_kind_ingreso_a_cuenta" in required_fields:
+        if incap_kind_ingreso != 0 and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_kind_ingreso_a_cuenta, which design campo 33 declares only for clave A",
+            )
+
+    if "complemento_infancia_clave" in required_fields:
+        complemento = row.get("complemento_infancia_clave")
+        if complemento is not None and not is_clave_l29:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "complemento_infancia_clave, which design campo 34 declares only for clave L.29",
+            )
+        if is_clave_l29 and complemento is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
+                "complemento_infancia_clave (design campo 34): no observation carries it",
+            )
+        finalised["complemento_infancia_clave"] = str(complemento) if complemento is not None else " "
+
+    if "foral_retention_estatal" in required_fields:
+        foral_parts = tuple(
+            row[field] for field in (
+                "foral_retention_estatal",
+                "foral_retention_navarra",
+                "foral_retention_araba",
+                "foral_retention_gipuzkoa",
+                "foral_retention_bizkaia",
+            )
+        )
+        foral_total = sum(foral_parts, Decimal("0"))
+        clave_e_total = row["retencion_practicada"] + row["ingreso_a_cuenta"]
+        if any(part != 0 for part in foral_parts) and clave != "E":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "foral retentions, which design campo 35 declares exclusively for clave E",
+            )
+        if clave == "E" and foral_total == 0 and clave_e_total != 0:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave E require "
+                "foral retentions (design campo 35): the payer must record where the "
+                "retenciones and ingresos a cuenta were ingresados",
+            )
+        if clave == "E" and foral_total != clave_e_total:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave E carry foral "
+                f"retentions summing to {foral_total}, which design campo 35 requires to equal "
+                f"the row's retenciones practicadas plus ingresos a cuenta ({clave_e_total})",
+            )
+
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
     finalised["disability_clave"] = str(disability) if disability is not None else " "
@@ -898,6 +1063,16 @@ def _build_withholding_rows(
             "gastos_deducibles": Decimal("0"),
             "pension_compensatoria": Decimal("0"),
             "anualidades_alimentos": Decimal("0"),
+            "incapacity_cash_perception": Decimal("0"),
+            "incapacity_cash_withholding": Decimal("0"),
+            "incapacity_kind_value": Decimal("0"),
+            "incapacity_kind_ingreso_a_cuenta": Decimal("0"),
+            "incapacity_kind_repercutido": Decimal("0"),
+            "foral_retention_estatal": Decimal("0"),
+            "foral_retention_navarra": Decimal("0"),
+            "foral_retention_araba": Decimal("0"),
+            "foral_retention_gipuzkoa": Decimal("0"),
+            "foral_retention_bizkaia": Decimal("0"),
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
@@ -922,6 +1097,7 @@ def _build_withholding_rows(
                 "geographic_mobility_clave",
                 "accrual_year",
                 "housing_loan_communication_clave",
+                "complemento_infancia_clave",
                 *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )
@@ -952,6 +1128,21 @@ def _build_withholding_rows(
         bucket["gastos_deducibles"] = prev_gastos + observation.gastos_deducibles
         bucket["pension_compensatoria"] = prev_pension + observation.pension_compensatoria
         bucket["anualidades_alimentos"] = prev_anualidades + observation.anualidades_alimentos
+        for amount_field in (
+            "incapacity_cash_perception",
+            "incapacity_cash_withholding",
+            "incapacity_kind_value",
+            "incapacity_kind_ingreso_a_cuenta",
+            "incapacity_kind_repercutido",
+            "foral_retention_estatal",
+            "foral_retention_navarra",
+            "foral_retention_araba",
+            "foral_retention_gipuzkoa",
+            "foral_retention_bizkaia",
+        ):
+            previous = bucket[amount_field]
+            assert isinstance(previous, Decimal)
+            bucket[amount_field] = previous + getattr(observation, amount_field)
     return tuple(
         _finalise_withholding_row(accum[key], required_fields=required_fields)
         for key in sorted(accum.keys())
@@ -1092,14 +1283,8 @@ def compute_withholding_totals_parity(
         collapse into ``is_consistent=True``.
     """
     rows = tuple(observations)
-    percepciones_row_total = sum(
-        (row.percibido_dinerario + row.percibido_especie for row in rows),
-        Decimal("0"),
-    )
-    retenciones_row_total = sum(
-        (row.retencion_practicada + row.ingreso_a_cuenta for row in rows),
-        Decimal("0"),
-    )
+    percepciones_row_total = percibido_total(rows)
+    retenciones_row_total = retencion_total(rows)
     percepciones_delta = percepciones_row_total - percepciones_summary_total
     retenciones_delta = retenciones_row_total - retenciones_summary_total
     is_consistent = abs(percepciones_delta) <= tolerance and abs(retenciones_delta) <= tolerance

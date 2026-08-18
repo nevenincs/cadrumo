@@ -497,6 +497,36 @@ def assemble_withholding_observations(
                     anualidades_alimentos=coerce_decimal(
                         fields.get("anualidades_alimentos"), default=Decimal("0")
                     ),
+                    incapacity_cash_perception=coerce_decimal(
+                        fields.get("incapacity_cash_perception"), default=Decimal("0")
+                    ),
+                    incapacity_cash_withholding=coerce_decimal(
+                        fields.get("incapacity_cash_withholding"), default=Decimal("0")
+                    ),
+                    incapacity_kind_value=coerce_decimal(
+                        fields.get("incapacity_kind_value"), default=Decimal("0")
+                    ),
+                    incapacity_kind_ingreso_a_cuenta=coerce_decimal(
+                        fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
+                    ),
+                    incapacity_kind_repercutido=coerce_decimal(
+                        fields.get("incapacity_kind_repercutido"), default=Decimal("0")
+                    ),
+                    foral_retention_estatal=coerce_decimal(
+                        fields.get("foral_retention_estatal"), default=Decimal("0")
+                    ),
+                    foral_retention_navarra=coerce_decimal(
+                        fields.get("foral_retention_navarra"), default=Decimal("0")
+                    ),
+                    foral_retention_araba=coerce_decimal(
+                        fields.get("foral_retention_araba"), default=Decimal("0")
+                    ),
+                    foral_retention_gipuzkoa=coerce_decimal(
+                        fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
+                    ),
+                    foral_retention_bizkaia=coerce_decimal(
+                        fields.get("foral_retention_bizkaia"), default=Decimal("0")
+                    ),
                     # The design's optional identity facts: forwarded verbatim
                     # when the row carries them, left to the observation model's
                     # None defaults otherwise -- the resolver applies the design's
@@ -532,6 +562,7 @@ def assemble_withholding_observations(
                     **_optional_int_kwarg(fields, "second_child_compute"),
                     **_optional_int_kwarg(fields, "third_child_compute"),
                     **_optional_int_kwarg(fields, "housing_loan_communication_clave"),
+                    **_optional_int_kwarg(fields, "complemento_infancia_clave"),
                 ),
             )
         except (ValidationError, ValueError) as exc:

@@ -627,3 +627,166 @@ source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-incapacidad-dineraria-percepcion"
+# Design campo 32 subdivision 256-268 PERCEPCION INTEGRA (Dineraria) DERIVADA DE INCAPACIDAD LABORAL, declared only for claves A and B.01; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "incapacity_cash_perception", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-incapacidad-dineraria-retenciones"
+# Design campo 32 subdivision 269-281 RETENCIONES PRACTICADAS SOBRE PRESTACIONES DERIVADAS DE INCAPACIDAD LABORAL; zeros when none, including for a perceptor who suffered no retention, per the design's own rule.
+source = "withholding"
+selector = { fact = "row_field", row_field = "incapacity_cash_withholding", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-incapacidad-especie-valoracion"
+# Design campo 33 subdivision 283-295 VALORACION DE LA PERCEPCION EN ESPECIE DERIVADA DE INCAPACIDAD LABORAL, declared only for clave A; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "incapacity_kind_value", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta"
+# Design campo 33 subdivision 296-308 INGRESOS A CUENTA EFECTUADOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "incapacity_kind_ingreso_a_cuenta", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-incapacidad-especie-repercutidos"
+# Design campo 33 subdivision 309-321 INGRESOS A CUENTA REPERCUTIDOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "incapacity_kind_repercutido", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-complemento-ayuda-infancia"
+# Design campo 34, 322 COMPLEMENTO AYUDA PARA LA INFANCIA: whether any mensualidad of the L.29 prestacion included the Ley 19/2021 IMV complemento; clave 1 included, 2 not, always recorded for clave L.29 -- both claves are recorded facts, never defaults.
+source = "withholding"
+selector = { fact = "row_field", row_field = "complemento_infancia_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-estatal"
+# Design campo 35 subdivision 323-335 HACIENDA ESTATAL: the clave-E retentions and ingresos a cuenta ingresados to the Hacienda Publica Estatal; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "foral_retention_estatal", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-navarra"
+# Design campo 35 subdivision 336-348 COMUNIDAD FORAL DE NAVARRA: the clave-E retentions and ingresos a cuenta ingresados to Navarra; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "foral_retention_navarra", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-araba"
+# Design campo 35 subdivision 349-361 DIPUTACION FORAL DE ARABA/ALAVA: the clave-E retentions and ingresos a cuenta ingresados to Araba/Alava; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "foral_retention_araba", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-gipuzkoa"
+# Design campo 35 subdivision 362-374 DIPUTACION FORAL DE GIPUZKOA: the clave-E retentions and ingresos a cuenta ingresados to Gipuzkoa; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "foral_retention_gipuzkoa", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-bizkaia"
+# Design campo 35 subdivision 375-387 DIPUTACION FORAL DE BIZKAIA: the clave-E retentions and ingresos a cuenta ingresados to Bizkaia; the design's own zeros when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "foral_retention_bizkaia", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
