@@ -10,6 +10,7 @@ import pytest
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
+from ....core.identity import canonical_bucket_id
 from ....core.time import now
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
@@ -21,7 +22,6 @@ from .._apoderado import (
     ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
     _ApoderadoConfigRepository,
-    _canonical_bucket_id,
 )
 from .._apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
@@ -441,8 +441,8 @@ class TestCanonicalBucketEquivalence:
         normaliser that also collapsed two identities would route bucket B's
         represented NIF into bucket A's repository.
         """
-        assert _canonical_bucket_id(self._WRAPPED) == _canonical_bucket_id(_PROFILE_BUCKET_ID)
-        assert _canonical_bucket_id(_SECONDARY_PROFILE_BUCKET_ID) != _canonical_bucket_id(_PROFILE_BUCKET_ID)
+        assert canonical_bucket_id(self._WRAPPED) == canonical_bucket_id(_PROFILE_BUCKET_ID)
+        assert canonical_bucket_id(_SECONDARY_PROFILE_BUCKET_ID) != canonical_bucket_id(_PROFILE_BUCKET_ID)
 
 
 class TestStoredConfigurationOwnership:
@@ -521,7 +521,7 @@ class TestStoredConfigurationOwnership:
         assert error.translated_message == "errors.integrity.integrity_apoderado_configuration_identity"
         assert error.context == {
             "bucket_id": foreign.bucket_id,
-            "repository_bucket_id": _canonical_bucket_id(_PROFILE_BUCKET_ID),
+            "repository_bucket_id": canonical_bucket_id(_PROFILE_BUCKET_ID),
         }
         assert get_registered_error_code(error).code == "INTEGRITY_APODERADO_CONFIGURATION_IDENTITY"
         assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
