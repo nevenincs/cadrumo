@@ -39,7 +39,13 @@ review_status = "reviewed"
 # file, sourced from its manifest.json (real, observed provenance, not
 # re-fetched). applies_from/record_design_epoch left undeclared: titled
 # "vigente" (currently in force) with no single coverage-start date stated.
+# AEAT states Orden EHA/3851/2007, de 26 de diciembre approved modelo 576 and "includes
+# the physical and logical designs". That orden is already catalogued in this file as
+# orden-eha-3851-2007:art-1 with effective_from 2008-01-01, which is the applicability date
+# used here (the epoch labels that applicability year, not the orden year). The design's own "Ej.Dev.<2008 / >=2008" conditional is consistent with it.
 [sources."enrolled-modelo-576-layout"]
+record_design_epoch = "2008"
+applies_from = 2008-01-01
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
