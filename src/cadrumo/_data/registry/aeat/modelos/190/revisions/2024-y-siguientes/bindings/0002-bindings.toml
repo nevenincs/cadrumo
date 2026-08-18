@@ -315,3 +315,315 @@ source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-menores-3-total"
+# Design campo 26, 223: descendants under 3 total (art. 58 minimo por descendientes); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_under_3_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-menores-3-entero"
+# Design campo 26, 224: of the position-223 descendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_under_3_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-resto-total"
+# Design campo 26, 225-226: remaining descendants total; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_rest_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-resto-entero"
+# Design campo 26, 227-228: of the position 225-226 descendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_rest_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-33-65-total"
+# Design campo 27, 229-230: disabled descendants 33-65% total (art. 60.2); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_33_65_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-33-65-entero"
+# Design campo 27, 231-232: of the 229-230 descendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_33_65_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-movilidad-total"
+# Design campo 27, 233-234: disabled 33-65% descendants with reduced mobility or third-party help need; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_mobility_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-movilidad-entero"
+# Design campo 27, 235-236: of the 233-234 descendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_mobility_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-65-total"
+# Design campo 27, 237-238: disabled descendants at 65% or more; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_65_plus_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-descendientes-disc-65-entero"
+# Design campo 27, 239-240: of the 237-238 descendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "descendants_disabled_65_plus_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-menores-75-total"
+# Design campo 28, 241: ascendants under 75 total (art. 59); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_under_75_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-menores-75-entero"
+# Design campo 28, 242: of the position-241 ascendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_under_75_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-75-mas-total"
+# Design campo 28, 243: ascendants at 75 or more; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_75_plus_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-75-mas-entero"
+# Design campo 28, 244: of the position-243 ascendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_75_plus_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-33-65-total"
+# Design campo 29, 245: disabled ascendants 33-65% total; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_33_65_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-33-65-entero"
+# Design campo 29, 246: of the position-245 ascendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_33_65_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-movilidad-total"
+# Design campo 29, 247: disabled 33-65% ascendants with reduced mobility or third-party help need; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_mobility_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero"
+# Design campo 29, 248: of the position-247 ascendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_mobility_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-65-total"
+# Design campo 29, 249: disabled ascendants at 65% or more; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_65_plus_total", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ascendientes-disc-65-entero"
+# Design campo 29, 250: of the position-249 ascendants, those computed por entero; zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "ascendants_disabled_65_plus_whole", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-computo-hijo-1"
+# Design campo 30, 251: first child computed por entero (1) or por mitad (2); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "first_child_compute", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-computo-hijo-2"
+# Design campo 30, 252: second child computed por entero (1) or por mitad (2); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "second_child_compute", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-computo-hijo-3"
+# Design campo 30, 253: third child computed por entero (1) or por mitad (2); zero when none.
+source = "withholding"
+selector = { fact = "row_field", row_field = "third_child_compute", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-prestamos-vivienda"
+# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B (01, 03, 04, 99) and C -- both claves are recorded facts, never defaults.
+source = "withholding"
+selector = { fact = "row_field", row_field = "housing_loan_communication_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]

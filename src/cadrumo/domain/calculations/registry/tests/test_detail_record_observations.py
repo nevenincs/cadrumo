@@ -229,6 +229,30 @@ _M190_DECLARED_FIELDS = frozenset(
         "gastos_deducibles",
         "pension_compensatoria",
         "anualidades_alimentos",
+        "descendants_under_3_total",
+        "descendants_under_3_whole",
+        "descendants_rest_total",
+        "descendants_rest_whole",
+        "descendants_disabled_33_65_total",
+        "descendants_disabled_33_65_whole",
+        "descendants_disabled_mobility_total",
+        "descendants_disabled_mobility_whole",
+        "descendants_disabled_65_plus_total",
+        "descendants_disabled_65_plus_whole",
+        "ascendants_under_75_total",
+        "ascendants_under_75_whole",
+        "ascendants_75_plus_total",
+        "ascendants_75_plus_whole",
+        "ascendants_disabled_33_65_total",
+        "ascendants_disabled_33_65_whole",
+        "ascendants_disabled_mobility_total",
+        "ascendants_disabled_mobility_whole",
+        "ascendants_disabled_65_plus_total",
+        "ascendants_disabled_65_plus_whole",
+        "first_child_compute",
+        "second_child_compute",
+        "third_child_compute",
+        "housing_loan_communication_clave",
     }
 )
 
@@ -239,6 +263,7 @@ _COMPLETE_CLAVE_A = {
     "disability_clave": 0,
     "contract_relation_clave": 1,
     "geographic_mobility_clave": 0,
+    "housing_loan_communication_clave": 0,
 }
 
 
@@ -500,6 +525,85 @@ def test_build_withholding_rows_refuses_deduction_amounts_outside_their_claves()
         _observation(clave=RetencionClave.G, subclave="06", reducciones_aplicables=Decimal("120"))
     )[0]
     assert row["reducciones_aplicables"] == Decimal("120")
+
+
+def test_build_withholding_rows_completes_family_composition_counts() -> None:
+    """Each count slot carries the design's own zero when no observation records
+    it, and the recorded count otherwise; the prestamos-vivienda clave is a
+    recorded fact on every eligible row."""
+    rows = _build(
+        _observation(
+            **{
+                **_COMPLETE_CLAVE_A,
+                "descendants_under_3_total": 1,
+                "descendants_under_3_whole": 1,
+                "descendants_rest_total": 2,
+                "descendants_rest_whole": 0,
+                "descendants_disabled_33_65_total": 1,
+                "descendants_disabled_33_65_whole": 1,
+                "descendants_disabled_mobility_total": 0,
+                "descendants_disabled_mobility_whole": 0,
+                "descendants_disabled_65_plus_total": 0,
+                "descendants_disabled_65_plus_whole": 0,
+                "ascendants_under_75_total": 2,
+                "ascendants_under_75_whole": 1,
+                "ascendants_75_plus_total": 0,
+                "ascendants_75_plus_whole": 0,
+                "ascendants_disabled_33_65_total": 0,
+                "ascendants_disabled_33_65_whole": 0,
+                "ascendants_disabled_mobility_total": 0,
+                "ascendants_disabled_mobility_whole": 0,
+                "ascendants_disabled_65_plus_total": 0,
+                "ascendants_disabled_65_plus_whole": 0,
+                "first_child_compute": 1,
+                "second_child_compute": 2,
+                "third_child_compute": 1,
+                "housing_loan_communication_clave": 1,
+            }
+        )
+    )
+    row = rows[0]
+    assert row["descendants_under_3_total"] == "1"
+    assert row["descendants_rest_total"] == "2"
+    assert row["descendants_disabled_65_plus_total"] == "0"
+    assert row["first_child_compute"] == "1"
+    assert row["second_child_compute"] == "2"
+    assert row["housing_loan_communication_clave"] == "1"
+
+    empty = _build(_observation(**_COMPLETE_CLAVE_A))[0]
+    for field in (
+        "descendants_under_3_total",
+        "descendants_rest_total",
+        "descendants_disabled_65_plus_total",
+        "ascendants_under_75_total",
+        "first_child_compute",
+    ):
+        assert empty[field] == "0"
+    assert empty["housing_loan_communication_clave"] == "0"
+
+
+def test_build_withholding_rows_refuses_eligible_row_without_housing_clave() -> None:
+    with pytest.raises(RegistryValidationError, match="housing_loan_communication_clave"):
+        _build(
+            _observation(
+                **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "housing_loan_communication_clave"}
+            )
+        )
+
+
+def test_build_withholding_rows_refuses_family_counts_outside_their_claves() -> None:
+    """A nonzero family count on a row outside claves A/B/C contradicts the
+    design; a zero count is the design's no-content."""
+    with pytest.raises(RegistryValidationError, match="descendants_under_3_total"):
+        _build(_observation(clave=RetencionClave.D, descendants_under_3_total=2))
+    with pytest.raises(RegistryValidationError, match="first_child_compute"):
+        _build(_observation(clave=RetencionClave.G, first_child_compute=1))
+    with pytest.raises(RegistryValidationError, match="housing_loan_communication_clave"):
+        _build(_observation(clave=RetencionClave.G, housing_loan_communication_clave=1))
+    # Zero counts are the design's no-content on any row.
+    row = _build(_observation(clave=RetencionClave.G, descendants_rest_total=0))[0]
+    assert row["descendants_rest_total"] == "0"
+    assert row["housing_loan_communication_clave"] == " "
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

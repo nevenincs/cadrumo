@@ -68,6 +68,30 @@ _WithholdingRowField = Literal[
     "gastos_deducibles",
     "pension_compensatoria",
     "anualidades_alimentos",
+    "descendants_under_3_total",
+    "descendants_under_3_whole",
+    "descendants_rest_total",
+    "descendants_rest_whole",
+    "descendants_disabled_33_65_total",
+    "descendants_disabled_33_65_whole",
+    "descendants_disabled_mobility_total",
+    "descendants_disabled_mobility_whole",
+    "descendants_disabled_65_plus_total",
+    "descendants_disabled_65_plus_whole",
+    "ascendants_under_75_total",
+    "ascendants_under_75_whole",
+    "ascendants_75_plus_total",
+    "ascendants_75_plus_whole",
+    "ascendants_disabled_33_65_total",
+    "ascendants_disabled_33_65_whole",
+    "ascendants_disabled_mobility_total",
+    "ascendants_disabled_mobility_whole",
+    "ascendants_disabled_65_plus_total",
+    "ascendants_disabled_65_plus_whole",
+    "first_child_compute",
+    "second_child_compute",
+    "third_child_compute",
+    "housing_loan_communication_clave",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -178,6 +202,60 @@ class WithholdingObservation(BaseModel):
     anualidades_alimentos: Decimal = Decimal("0")
     """Annual food annuities to children by judicial decision (design positions
     210-222); the design's own zeros when none."""
+    descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
+    """Descendants under 3 (design position 223), counted per art. 58 mínimo por
+    descendientes rules; the design's own zero when none."""
+    descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-223 descendants, those computed por entero (design 224)."""
+    descendants_rest_total: int | None = Field(default=None, ge=0, le=99)
+    """Remaining descendants (design positions 225-226)."""
+    descendants_rest_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the position 225-226 descendants, those computed por entero (227-228)."""
+    descendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled descendants 33-65% (design positions 229-230, art. 60.2)."""
+    descendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 229-230 descendants, those computed por entero (231-232)."""
+    descendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled 33-65% descendants with reduced mobility or third-party help need
+    (design positions 233-234)."""
+    descendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 233-234 descendants, those computed por entero (235-236)."""
+    descendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled descendants at 65% or more (design positions 237-238)."""
+    descendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 237-238 descendants, those computed por entero (239-240)."""
+    ascendants_under_75_total: int | None = Field(default=None, ge=0, le=9)
+    """Ascendants under 75 (design position 241, art. 59)."""
+    ascendants_under_75_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-241 ascendants, those computed por entero (242)."""
+    ascendants_75_plus_total: int | None = Field(default=None, ge=0, le=9)
+    """Ascendants at 75 or more (design position 243)."""
+    ascendants_75_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-243 ascendants, those computed por entero (244)."""
+    ascendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled ascendants 33-65% (design position 245)."""
+    ascendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-245 ascendants, those computed por entero (246)."""
+    ascendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled 33-65% ascendants with reduced mobility or third-party help need
+    (design position 247)."""
+    ascendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-247 ascendants, those computed por entero (248)."""
+    ascendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled ascendants at 65% or more (design position 249)."""
+    ascendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-249 ascendants, those computed por entero (250)."""
+    first_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the first child was computed for the retention rate (design position
+    251): 1 por entero, 2 por mitad."""
+    second_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the second child was computed (design position 252)."""
+    third_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the third child was computed (design position 253)."""
+    housing_loan_communication_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the perceptor communicated vivienda-habitual loan amounts at some
+    point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
+    clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -538,6 +616,34 @@ def _require_consistent_identity_facts(
 
 _CLAVE_L29_SUBCLAVE = "29"
 
+#: The design's family-composition count positions (223-253), all declared only
+#: for claves A, B (subclaves 01, 03, 04, 99) and C, all zeros when no content.
+_DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
+    "descendants_under_3_total",
+    "descendants_under_3_whole",
+    "descendants_rest_total",
+    "descendants_rest_whole",
+    "descendants_disabled_33_65_total",
+    "descendants_disabled_33_65_whole",
+    "descendants_disabled_mobility_total",
+    "descendants_disabled_mobility_whole",
+    "descendants_disabled_65_plus_total",
+    "descendants_disabled_65_plus_whole",
+    "ascendants_under_75_total",
+    "ascendants_under_75_whole",
+    "ascendants_75_plus_total",
+    "ascendants_75_plus_whole",
+    "ascendants_disabled_33_65_total",
+    "ascendants_disabled_33_65_whole",
+    "ascendants_disabled_mobility_total",
+    "ascendants_disabled_mobility_whole",
+    "ascendants_disabled_65_plus_total",
+    "ascendants_disabled_65_plus_whole",
+    "first_child_compute",
+    "second_child_compute",
+    "third_child_compute",
+)
+
 
 def _is_clave_l29(clave: object, subclave: object) -> bool:
     """True for the clave L.29 the design's unidad-de-convivencia block applies to."""
@@ -708,6 +814,34 @@ def _finalise_withholding_row(
                 "anualidades_alimentos, which design campo 25 declares only for claves A, "
                 "B (01, 03, 04, 99) and C",
             )
+    for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
+        if count_field not in required_fields:
+            continue
+        value = row.get(count_field)
+        if value is not None and int(value) != 0 and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                f"a nonzero {count_field}, which the design's family-composition campos "
+                "declare only for claves A, B (01, 03, 04, 99) and C",
+            )
+    if "housing_loan_communication_clave" in required_fields:
+        housing = row.get("housing_loan_communication_clave")
+        if housing is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "housing_loan_communication_clave, which design campo 27 declares only for "
+                "claves A, B (01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and housing is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "housing_loan_communication_clave (design campo 27, clave 0 for never "
+                "applied): no observation carries it",
+            )
+        finalised["housing_loan_communication_clave"] = str(housing) if housing is not None else " "
+    for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
+        value = row.get(count_field)
+        finalised[count_field] = str(value) if value is not None else "0"
 
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
@@ -787,6 +921,8 @@ def _build_withholding_rows(
                 "unit_convivencia_titular_clave",
                 "geographic_mobility_clave",
                 "accrual_year",
+                "housing_loan_communication_clave",
+                *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )
         prev_dinerario = bucket["percibido_dinerario"]

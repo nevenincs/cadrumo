@@ -32,6 +32,30 @@ disability_clave = "perc.discapacidad"
 contract_relation_clave = "perc.contrato-relacion"
 unit_convivencia_titular_clave = "perc.titular-unidad-convivencia"
 geographic_mobility_clave = "perc.movilidad-geografica"
+descendants_under_3_total = "perc.descendientes-menores-3-total"
+descendants_under_3_whole = "perc.descendientes-menores-3-entero"
+descendants_rest_total = "perc.descendientes-resto-total"
+descendants_rest_whole = "perc.descendientes-resto-entero"
+descendants_disabled_33_65_total = "perc.descendientes-discapacidad-33-65-total"
+descendants_disabled_33_65_whole = "perc.descendientes-discapacidad-33-65-entero"
+descendants_disabled_mobility_total = "perc.descendientes-discapacidad-movilidad-total"
+descendants_disabled_mobility_whole = "perc.descendientes-discapacidad-movilidad-entero"
+descendants_disabled_65_plus_total = "perc.descendientes-discapacidad-65-total"
+descendants_disabled_65_plus_whole = "perc.descendientes-discapacidad-65-entero"
+ascendants_under_75_total = "perc.ascendientes-menores-75-total"
+ascendants_under_75_whole = "perc.ascendientes-menores-75-entero"
+ascendants_75_plus_total = "perc.ascendientes-75-mas-total"
+ascendants_75_plus_whole = "perc.ascendientes-75-mas-entero"
+ascendants_disabled_33_65_total = "perc.ascendientes-discapacidad-33-65-total"
+ascendants_disabled_33_65_whole = "perc.ascendientes-discapacidad-33-65-entero"
+ascendants_disabled_mobility_total = "perc.ascendientes-discapacidad-movilidad-total"
+ascendants_disabled_mobility_whole = "perc.ascendientes-discapacidad-movilidad-entero"
+ascendants_disabled_65_plus_total = "perc.ascendientes-discapacidad-65-total"
+ascendants_disabled_65_plus_whole = "perc.ascendientes-discapacidad-65-entero"
+first_child_compute = "perc.computo-hijo-1"
+second_child_compute = "perc.computo-hijo-2"
+third_child_compute = "perc.computo-hijo-3"
+housing_loan_communication_clave = "perc.prestamos-vivienda-clave"
 reducciones_aplicables = "perc.reducciones-aplicables"
 gastos_deducibles = "perc.gastos-deducibles"
 pension_compensatoria = "perc.pension-compensatoria"
@@ -544,88 +568,365 @@ signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
+
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-hijos-descendientes"
+id = "modelo-190-perc-descendientes-menores-3-total"
 offset = 223
-length = 6
-kind = "filler"
-# Design campo 26, 223-228 HIJOS Y OTROS DESCENDIENTES, subdivided by AEAT into four counts. Cadrumo holds no perceptor family composition.
-data_type = "text"
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-total"
+# Design campo 26, 223: descendants under 3 total (art. 58 minimo por descendientes); zero when none.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-hijos-descendientes-discapacidad"
+id = "modelo-190-perc-descendientes-menores-3-entero"
+offset = 224
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-entero"
+# Design campo 26, 224: of the position-223 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-resto-total"
+offset = 225
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-total"
+# Design campo 26, 225-226: remaining descendants total; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-resto-entero"
+offset = 227
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-entero"
+# Design campo 26, 227-228: of the position 225-226 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-33-65-total"
 offset = 229
-length = 12
-kind = "filler"
-# Design campo 27, 229-240 HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD. Not held.
-data_type = "text"
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-total"
+# Design campo 27, 229-230: disabled descendants 33-65% total (art. 60.2); zero when none.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-ascendientes"
+id = "modelo-190-perc-descendientes-disc-33-65-entero"
+offset = 231
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-entero"
+# Design campo 27, 231-232: of the 229-230 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-movilidad-total"
+offset = 233
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-total"
+# Design campo 27, 233-234: disabled 33-65% descendants with reduced mobility or third-party help need; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-movilidad-entero"
+offset = 235
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-entero"
+# Design campo 27, 235-236: of the 233-234 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-65-total"
+offset = 237
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-total"
+# Design campo 27, 237-238: disabled descendants at 65% or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-65-entero"
+offset = 239
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-entero"
+# Design campo 27, 239-240: of the 237-238 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-menores-75-total"
 offset = 241
-length = 4
-kind = "filler"
-# Design campo 28, 241-244 ASCENDIENTES. Not held.
-data_type = "text"
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-total"
+# Design campo 28, 241: ascendants under 75 total (art. 59); zero when none.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-ascendientes-discapacidad"
+id = "modelo-190-perc-ascendientes-menores-75-entero"
+offset = 242
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-entero"
+# Design campo 28, 242: of the position-241 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-75-mas-total"
+offset = 243
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-total"
+# Design campo 28, 243: ascendants at 75 or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-75-mas-entero"
+offset = 244
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-entero"
+# Design campo 28, 244: of the position-243 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-33-65-total"
 offset = 245
-length = 6
-kind = "filler"
-# Design campo 29, 245-250 ASCENDIENTES CON DISCAPACIDAD. Not held.
-data_type = "text"
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-total"
+# Design campo 29, 245: disabled ascendants 33-65% total; zero when none.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-computo-tres-primeros-hijos"
-offset = 251
-length = 3
-kind = "filler"
-# Design campo 30, 251-253 COMPUTO DE LOS 3 PRIMEROS HIJOS. Not held.
-data_type = "text"
+id = "modelo-190-perc-ascendientes-disc-33-65-entero"
+offset = 246
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-entero"
+# Design campo 29, 246: of the position-245 ascendants, those computed por entero; zero when none.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-movilidad-total"
+offset = 247
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-total"
+# Design campo 29, 247: disabled 33-65% ascendants with reduced mobility or third-party help need; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-movilidad-entero"
+offset = 248
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero"
+# Design campo 29, 248: of the position-247 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-65-total"
+offset = 249
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-total"
+# Design campo 29, 249: disabled ascendants at 65% or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-65-entero"
+offset = 250
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-entero"
+# Design campo 29, 250: of the position-249 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-1"
+offset = 251
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-1"
+# Design campo 30, 251: first child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-2"
+offset = 252
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-2"
+# Design campo 30, 252: second child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-3"
+offset = 253
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-3"
+# Design campo 30, 253: third child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-comunicacion-prestamos-vivienda"
 offset = 254
 length = 1
-kind = "filler"
-# Design campo 31, 254 COMUNICACION PRESTAMOS VIVIENDA HABITUAL. Not held.
-data_type = "text"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestamos-vivienda"
+# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B (01, 03, 04, 99) and C -- both claves are recorded facts, never defaults.
+data_type = "integer"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
