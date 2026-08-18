@@ -61,7 +61,7 @@ def test_chain_resolution_returns_empty_under_non_aggregating_period() -> None:
     short-circuits to an empty mapping without demanding observations.
     """
 
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     values = resolve_relation_values_from_observations(revision, (), filing_year=2026, period="1T")
     assert values == {}
 
@@ -69,7 +69,7 @@ def test_chain_resolution_returns_empty_under_non_aggregating_period() -> None:
 def test_chain_resolution_obeys_target_period_under_non_annual_call() -> None:
     """Calling the resolver with a non-annual period must not aggregate the annual relations."""
 
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     # Even with full quarterly observations, asking for period "1T" must
     # return nothing — the receiver's relations all target "0A".
     casilla_quarters = {

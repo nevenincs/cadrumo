@@ -710,22 +710,69 @@ review:
 sheets:
   detalle:
     headers:
+      accrual_year: Ejercicio de devengo
       acquisition_date: Fecha de adquisición
       amount: Importe
       amount_donated: Importe donado
+      anualidades_alimentos: Anualidades por alimentos
+      ascendants_75_plus_total: Ascendientes ≥ 75 años (total)
+      ascendants_75_plus_whole: Ascendientes ≥ 75 años (enteros)
+      ascendants_disabled_33_65_total: Ascendientes con discapacidad 33-65% (total)
+      ascendants_disabled_33_65_whole: Ascendientes con discapacidad 33-65% (enteros)
+      ascendants_disabled_65_plus_total: Ascendientes con discapacidad ≥ 65% (total)
+      ascendants_disabled_65_plus_whole: Ascendientes con discapacidad ≥ 65% (enteros)
+      ascendants_disabled_mobility_total: Ascendientes con discapacidad y movilidad
+        reducida (total)
+      ascendants_disabled_mobility_whole: Ascendientes con discapacidad y movilidad
+        reducida (enteros)
+      ascendants_under_75_total: Ascendientes < 75 años (total)
+      ascendants_under_75_whole: Ascendientes < 75 años (enteros)
       asset_class_code: Clave del bien
       asset_identifier: Identificación del bien
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
       clave: Clave
+      complemento_infancia_clave: Complemento de ayuda a la infancia
+      contract_relation_clave: Contrato o relación
       counterparty_legal_name: Razón social de la contraparte
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
       currency_code: Código de divisa
       deduction_percentage: Porcentaje de deducción
+      descendants_disabled_33_65_total: Descendientes con discapacidad 33-65% (total)
+      descendants_disabled_33_65_whole: Descendientes con discapacidad 33-65% (enteros)
+      descendants_disabled_65_plus_total: Descendientes con discapacidad ≥ 65% (total)
+      descendants_disabled_65_plus_whole: Descendientes con discapacidad ≥ 65% (enteros)
+      descendants_disabled_mobility_total: Descendientes con discapacidad y movilidad
+        reducida (total)
+      descendants_disabled_mobility_whole: Descendientes con discapacidad y movilidad
+        reducida (enteros)
+      descendants_rest_total: Descendientes restantes (total)
+      descendants_rest_whole: Descendientes restantes (enteros)
+      descendants_under_3_total: Descendientes < 3 años (total)
+      descendants_under_3_whole: Descendientes < 3 años (enteros)
+      disability_clave: Discapacidad
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
+      emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
+      first_child_compute: Cómputo del 1.er hijo
+      foral_retention_araba: Retenciones e ingresos a cuenta ingresados a Araba/Álava
+      foral_retention_bizkaia: Retenciones e ingresos a cuenta ingresados a Bizkaia
+      foral_retention_estatal: Retenciones e ingresos a cuenta ingresados al Estado
+      foral_retention_gipuzkoa: Retenciones e ingresos a cuenta ingresados a Gipuzkoa
+      foral_retention_navarra: Retenciones e ingresos a cuenta ingresados a Navarra
+      gastos_deducibles: Gastos deducibles
+      geographic_mobility_clave: Movilidad geográfica
+      housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
+      incapacity_cash_perception: Percepción dineraria derivada de incapacidad laboral
+      incapacity_cash_withholding: Retención sobre prestaciones de incapacidad laboral
+      incapacity_kind_ingreso_a_cuenta: Ingresos a cuenta por prestaciones en especie
+        de incapacidad laboral
+      incapacity_kind_repercutido: Ingresos a cuenta repercutidos por incapacidad
+        laboral
+      incapacity_kind_value: Valoración en especie derivada de incapacidad laboral
       ingreso_a_cuenta: Ingreso a cuenta
+      ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
       is_recurrent: Donativo recurrente
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
@@ -734,19 +781,38 @@ sheets:
       operation_kind_code: Clave de operación
       party_legal_name: Razón social
       party_tax_id: NIF
+      pension_compensatoria: Pensión compensatoria
+      pension_prestacion_incapacidad: 'Prestación: incapacidad permanente'
+      pension_prestacion_jubilacion: 'Prestación: jubilación'
+      pension_prestacion_no_contributiva: 'Prestación: pensión no contributiva'
+      pension_prestacion_resto: 'Prestación: resto'
+      pension_prestacion_viudedad: 'Prestación: viudedad'
+      perceptor_birth_year: Año de nacimiento
       perceptor_legal_name: Apellidos y nombre del perceptor
+      perceptor_situacion_familiar: Situación familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
+      province_code: Provincia
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
+      reducciones_aplicables: Reducciones aplicables
       refund_amount: Importe a devolver
+      representative_tax_id: NIF del representante legal
       retencion_practicada: Retención practicada
+      second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
+      spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
+        convivencia
+      startup_fund_rendimientos_clave: Rendimientos por la gestión de fondos vinculados
+        al emprendimiento
       subclave: Subclave
       supplier_tax_id: NIF del proveedor
+      territorial_deduction_clave: Ceuta o Melilla / La Palma
+      third_child_compute: Cómputo del 3.er hijo
       transfer_pricing_method_code: Método de valoración
+      unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración
 topic:
   authentication:

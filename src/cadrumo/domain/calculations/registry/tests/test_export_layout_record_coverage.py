@@ -881,43 +881,51 @@ def test_a_position_two_cited_editions_share_is_counted_once(
 ) -> None:
     """A layout citing several design editions must not count shared positions twice.
 
-    Modelo 190 cites its 2024 and 2025 Diseños de Registro together, and the two
-    editions repeat every sheet they share. Counting each citation separately
-    inflated BOTH sides of the ratio -- it reported 102/106 where the union of
-    its editions declares 53 positions, 51 of them duplicated. The layout has to
-    write each position ONCE however many editions declare it, so a later
-    edition contributes only what it adds.
+    Modelo 190's 2024 and 2025 Diseños de Registro repeat every sheet they
+    share. Counting each citation separately inflated BOTH sides of the ratio --
+    it reported 102/106 where the union of its editions declares 53 positions,
+    51 of them duplicated. The layout has to write each position ONCE however
+    many editions declare it, so a later edition contributes only what it adds.
 
-    Pins the implication rather than the tally: for every multi-source layout,
-    the gate's own required count must equal the number of DISTINCT
-    (design record, coordinate) pairs its editions declare between them.
+    The live registry no longer ships a multi-edition layout -- the 190 revision
+    split scopes each revision to its own edition -- so the fixture synthesises
+    the historic dual citation over the real 2024 and 2025 designs and the real
+    perceptor record, and pins the implication rather than the tally: the gate's
+    own required count must equal the number of DISTINCT (design record,
+    coordinate) pairs the two editions declare between them.
     """
     modelos, catalogues = registry_tree
-    checked = 0
-    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
-        for layout in _fixed_width_layouts(revision):
-            if len(_design_sources(layout, catalogues.sources)) < 2:
-                continue
-            sheets = _design_sheets(layout, catalogues)
-            if not sheets:
-                continue
-            distinct = {
-                (sheet.name, position.offset, position.length)
-                for sheet in sheets
-                if _belongs_to_layout(sheet, layout.records)
-                for position in _required_positions(sheet)
-            }
-            raw = sum(len(_required_positions(sheet)) for sheet in sheets if _belongs_to_layout(sheet, layout.records))
-            if raw == len(distinct):
-                continue
-            checked += 1
-            required, _missing, _lines = _missing_report(sheets, layout.records)
-            assert required == len(distinct), (
-                f"layout {layout.id!r} counts {required} required positions where its cited editions "
-                f"declare {len(distinct)} distinct ones ({raw - len(distinct)} duplicated); a shared "
-                f"position must be satisfied once, not once per citation"
-            )
-    assert checked, "no layout cites editions sharing a position, so this rule is untested"
+    m190 = next(m for m in modelos if m.id == "190")
+    revision = m190.revisions["2025-y-siguientes"]
+    perceptor_record = next(
+        r for r in revision.export_layouts[0].records if r.record_type == "perceptor"
+    )
+    layout = ExportLayoutDefinition(
+        id="synthetic-190-dual-edition",
+        format=ExportLayoutFormat.FIXED_WIDTH,
+        source_refs=("aeat-dr-190-2024", "aeat-dr-190-2025"),
+        legal_refs=("orden-eha-3127-2009:art-1",),
+        records=(perceptor_record,),
+    )
+    sheets = _design_sheets(layout, catalogues)
+    assert len(sheets) >= 2, "the fixture must cite both 190 design editions"
+    distinct = {
+        (sheet.name, position.offset, position.length)
+        for sheet in sheets
+        if _belongs_to_layout(sheet, layout.records)
+        for position in _required_positions(sheet)
+    }
+    raw = sum(len(_required_positions(sheet)) for sheet in sheets if _belongs_to_layout(sheet, layout.records))
+    assert raw > len(distinct), (
+        "the synthetic dual-citation fixture must share positions across its two "
+        f"editions to be meaningful, but raw={raw} equals distinct={len(distinct)}"
+    )
+    required, _missing, _lines = _missing_report(sheets, layout.records)
+    assert required == len(distinct), (
+        f"the dual-citation layout counts {required} required positions where its cited "
+        f"editions declare {len(distinct)} distinct ones ({raw - len(distinct)} duplicated); "
+        "a shared position must be satisfied once, not once per citation"
+    )
 
 
 def test_an_eedd_delegated_position_is_excused_only_with_its_note_body(

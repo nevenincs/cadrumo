@@ -265,6 +265,12 @@ _M190_DECLARED_FIELDS = frozenset(
         "foral_retention_araba",
         "foral_retention_gipuzkoa",
         "foral_retention_bizkaia",
+        "startup_fund_rendimientos_clave",
+        "pension_prestacion_jubilacion",
+        "pension_prestacion_viudedad",
+        "pension_prestacion_incapacidad",
+        "pension_prestacion_no_contributiva",
+        "pension_prestacion_resto",
     }
 )
 
@@ -639,6 +645,11 @@ def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None
             perceptor_situacion_familiar=1,
             disability_clave=0,
             housing_loan_communication_clave=0,
+            pension_prestacion_jubilacion=0,
+            pension_prestacion_viudedad=0,
+            pension_prestacion_incapacidad=1,
+            pension_prestacion_no_contributiva=0,
+            pension_prestacion_resto=0,
             incapacity_cash_perception=Decimal("900"),
         )
     )[0]
@@ -654,6 +665,11 @@ def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None
                 perceptor_situacion_familiar=1,
                 disability_clave=0,
                 housing_loan_communication_clave=0,
+                pension_prestacion_jubilacion=0,
+                pension_prestacion_viudedad=0,
+                pension_prestacion_incapacidad=0,
+                pension_prestacion_no_contributiva=0,
+                pension_prestacion_resto=0,
                 incapacity_kind_value=Decimal("1"),
             )
         )
@@ -750,6 +766,46 @@ def test_build_withholding_rows_emerging_stock_clave_follows_especie_content() -
     with pytest.raises(RegistryValidationError, match="declares only for clave A"):
         _build(_observation(clave=RetencionClave.G, emerging_stock_excess_clave=1))
     assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["emerging_stock_excess_clave"] == " "
+
+
+def test_build_withholding_rows_2025_b01_prestacion_flags_are_mandatory() -> None:
+    """Each of the five 2025-edition prestacion flags is an always-recorded 0/1
+    fact on clave B.01 rows; elsewhere the field carries spaces."""
+    b01 = {
+        "clave": RetencionClave.B,
+        "subclave": "01",
+        "perceptor_birth_year": 1955,
+        "perceptor_situacion_familiar": 1,
+        "disability_clave": 0,
+        "housing_loan_communication_clave": 0,
+    }
+    with pytest.raises(RegistryValidationError, match="pension_prestacion_jubilacion"):
+        _build(_observation(**b01))
+    row = _build(
+        _observation(
+            **b01,
+            pension_prestacion_jubilacion=1,
+            pension_prestacion_viudedad=0,
+            pension_prestacion_incapacidad=0,
+            pension_prestacion_no_contributiva=0,
+            pension_prestacion_resto=0,
+        )
+    )[0]
+    assert row["pension_prestacion_jubilacion"] == "1"
+    assert row["pension_prestacion_viudedad"] == "0"
+    with pytest.raises(RegistryValidationError, match="pension_prestacion_jubilacion"):
+        _build(_observation(**_COMPLETE_CLAVE_A, pension_prestacion_jubilacion=1))
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["pension_prestacion_jubilacion"] == " "
+
+
+def test_build_withholding_rows_2025_startup_fund_clave_is_recorded_when_applicable() -> None:
+    """The 2025-edition startup-fund rendimientos clave is recorded-when-applicable:
+    spaces when the payer did not record it, refused outside clave A."""
+    row = _build(_observation(**_COMPLETE_CLAVE_A, startup_fund_rendimientos_clave=1))[0]
+    assert row["startup_fund_rendimientos_clave"] == "1"
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["startup_fund_rendimientos_clave"] == " "
+    with pytest.raises(RegistryValidationError, match="startup_fund_rendimientos_clave"):
+        _build(_observation(clave=RetencionClave.G, startup_fund_rendimientos_clave=0))
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

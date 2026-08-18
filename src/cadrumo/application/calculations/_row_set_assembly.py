@@ -564,6 +564,12 @@ def assemble_withholding_observations(
                     **_optional_int_kwarg(fields, "housing_loan_communication_clave"),
                     **_optional_int_kwarg(fields, "complemento_infancia_clave"),
                     **_optional_int_kwarg(fields, "emerging_stock_excess_clave"),
+                    **_optional_int_kwarg(fields, "startup_fund_rendimientos_clave"),
+                    **_optional_int_kwarg(fields, "pension_prestacion_jubilacion"),
+                    **_optional_int_kwarg(fields, "pension_prestacion_viudedad"),
+                    **_optional_int_kwarg(fields, "pension_prestacion_incapacidad"),
+                    **_optional_int_kwarg(fields, "pension_prestacion_no_contributiva"),
+                    **_optional_int_kwarg(fields, "pension_prestacion_resto"),
                 ),
             )
         except (ValidationError, ValueError) as exc:

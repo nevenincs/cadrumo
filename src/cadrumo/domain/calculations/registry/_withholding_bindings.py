@@ -104,6 +104,12 @@ _WithholdingRowField = Literal[
     "foral_retention_gipuzkoa",
     "foral_retention_bizkaia",
     "emerging_stock_excess_clave",
+    "startup_fund_rendimientos_clave",
+    "pension_prestacion_jubilacion",
+    "pension_prestacion_viudedad",
+    "pension_prestacion_incapacidad",
+    "pension_prestacion_no_contributiva",
+    "pension_prestacion_resto",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -311,6 +317,25 @@ class WithholdingObservation(BaseModel):
     the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
     of the in-kind retributions -- both recorded facts, declared only for clave A
     and only when the especie block has content."""
+    startup_fund_rendimientos_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the row's payments include D.A. 53a fund-management rendimientos
+    del trabajo (2025-edition design position 389): clave 1 yes, 0 the rest. The
+    cumplimentacion trigger is the payer's own composition judgment, so the clave
+    is recorded-when-applicable: spaces when absent, refused outside clave A."""
+    pension_prestacion_jubilacion: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include jubilacion (2025-edition
+    design position 390): each type's 0/1 flag is always recorded for B.01."""
+    pension_prestacion_viudedad: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include viudedad (position 391)."""
+    pension_prestacion_incapacidad: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include incapacidad permanente total o
+    parcial (position 392)."""
+    pension_prestacion_no_contributiva: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include pensiones no contributivas por
+    invalidez o jubilacion (position 393)."""
+    pension_prestacion_resto: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include the remaining non-exempt
+    art. 17.2.a).1a prestaciones (position 394)."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -705,6 +730,16 @@ def _require_consistent_identity_facts(
 
 _CLAVE_L29_SUBCLAVE = "29"
 
+#: The 2025 edition's five per-type prestacion flags (positions 390-394), each
+#: always recorded for clave B.01.
+_PENSION_PRESACION_TYPE_FIELDS: tuple[str, ...] = (
+    "pension_prestacion_jubilacion",
+    "pension_prestacion_viudedad",
+    "pension_prestacion_incapacidad",
+    "pension_prestacion_no_contributiva",
+    "pension_prestacion_resto",
+)
+
 #: The design's family-composition count positions (223-253), all declared only
 #: for claves A, B (subclaves 01, 03, 04, 99) and C, all zeros when no content.
 _DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
@@ -1040,6 +1075,32 @@ def _finalise_withholding_row(
             )
         finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
 
+    if "startup_fund_rendimientos_clave" in required_fields:
+        startup = row.get("startup_fund_rendimientos_clave")
+        if startup is not None and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "startup_fund_rendimientos_clave, which design campo 37 declares only for clave A",
+            )
+        finalised["startup_fund_rendimientos_clave"] = str(startup) if startup is not None else " "
+    is_clave_b01 = clave == "B" and subclave == "01"
+    for pension_field in _PENSION_PRESACION_TYPE_FIELDS:
+        if pension_field not in required_fields:
+            continue
+        value = row.get(pension_field)
+        if value is not None and not is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                f"{pension_field}, which design campo 38 declares only for clave B.01",
+            )
+        if value is None and is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave B.01 require "
+                f"{pension_field} (design campo 38): each prestacion type's 0/1 flag is always "
+                "recorded, and the 0 for a type not paid is a recorded fact",
+            )
+        finalised[pension_field] = str(value) if value is not None else " "
+
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
     finalised["disability_clave"] = str(disability) if disability is not None else " "
@@ -1131,6 +1192,8 @@ def _build_withholding_rows(
                 "housing_loan_communication_clave",
                 "complemento_infancia_clave",
                 "emerging_stock_excess_clave",
+                "startup_fund_rendimientos_clave",
+                *_PENSION_PRESACION_TYPE_FIELDS,
                 *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )

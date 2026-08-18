@@ -5,7 +5,70 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Declaració complementària
+            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
+              help: null
+              label: Correu electrònic de la persona amb qui relacionar-se
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
+              help: null
+              label: Import total de les percepcions
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: null
+              label: Cognoms i nom de la persona amb qui relacionar-se
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: null
+              label: Telèfon de la persona amb qui relacionar-se
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Import total de retencions i ingressos a compte
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaració substitutiva
+            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
+              help: null
+              label: Nombre total de percepcions
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Clau de percepció
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: Ingressos a compte efectuats sobre les percepcions en espècie
+            x-e1in4opedpkmc:
+              help: null
+              label: null
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Cognoms i nom o denominació del perceptor
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Percepció íntegra dinerària no derivada d'incapacitat laboral
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Valoració de la percepció en espècie no derivada d'incapacitat
+                laboral
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: Retencions practicades sobre les percepcions dineràries
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Subclau de percepció
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
+          field:
+            label: null
+        2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: null

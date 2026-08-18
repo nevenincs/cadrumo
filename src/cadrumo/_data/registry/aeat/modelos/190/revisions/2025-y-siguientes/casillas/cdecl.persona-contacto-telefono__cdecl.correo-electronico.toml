@@ -1,0 +1,116 @@
+# Modelo 190 Tipo 1 (registro de declarante) header casillas.
+#
+# These are the operator-supplied slots of the declarante record: the contact
+# person, the declaration's own identifying numbers, and the complementaria /
+# sustitutiva flags. Each was previously written as a `filler`, which emits the
+# design's blanks or ceros and gives the operator NO channel to supply the datum
+# at all; the design expects a real value in every one of them.
+#
+# Shapes follow modelo 270's declarante header, which AEAT lays out at the same
+# positions with the same meanings (108-120, 121, 122, 123-135), and modelo 189
+# for the same header block. `required = false` throughout except the numero
+# identificativo, matching those precedents: AEAT admits blancos or ceros in each
+# when the filer has no value, so an unfilled slot stays a valid record.
+#
+# The SELLO ELECTRONICO at 488-500 is deliberately NOT among them. AEAT reserves
+# it for its own programs ("sera cumplimentado exclusivamente por los programas
+# de la AEAT. En cualquier otro caso, se rellenara a blancos"), so leaving it
+# unwritten is the correct authoring, not a gap.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.persona-contacto-telefono"
+number = "59-67"
+section = ["declarante", "contacto"]
+data_type = "text"
+semantic_role = "m190_persona_contacto_telefono"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 190's declarante record carries exactly one contact telephone; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-persona-contacto-telefono"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.persona-contacto-nombre"
+number = "68-107"
+section = ["declarante", "contacto"]
+data_type = "name"
+semantic_role = "m190_persona_contacto_nombre"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 190's declarante record names exactly one contact person; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-persona-contacto-nombre"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.numero-identificativo"
+number = "108-120"
+section = ["declarante", "identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m190_numero_identificativo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One declaration carries one numero identificativo; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-numero-identificativo"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.complementaria"
+number = "121"
+section = ["declarante", "identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m190_declaracion_complementaria"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The complementaria flag is one byte of the declarante record; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-complementaria"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.sustitutiva"
+number = "122"
+section = ["declarante", "identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m190_declaracion_sustitutiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The sustitutiva flag is one byte of the declarante record; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-sustitutiva"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.numero-identificativo-anterior"
+number = "123-135"
+section = ["declarante", "identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m190_numero_identificativo_anterior"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "A complementaria or sustitutiva declaration names one prior declaration; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-numero-identificativo-anterior"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.correo-electronico"
+number = "176-225"
+section = ["declarante", "contacto"]
+data_type = "text"
+semantic_role = "m190_correo_electronico"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 190's declarante record carries exactly one contact email address; the concept has no sibling casilla in this revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-190-decl-correo-electronico"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

@@ -45,7 +45,7 @@ def _modelo(modelo_id: str, revision_id: str):
 def test_modelo_190_perceptor_round_trip_preserves_typed_values() -> None:
     """Operator-typed perceptor rows survive assembler → resolver intact."""
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
 
     # Two perceptors: one with cash + retención, one with everything.
     typed_cells = (

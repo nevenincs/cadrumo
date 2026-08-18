@@ -1,0 +1,149 @@
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-trabajo-dinerario-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "02"
+target_binding = "modelo-190-111-trabajo-dinerario-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-trabajo-especie-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "05"
+target_binding = "modelo-190-111-trabajo-especie-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-actividades-dinerario-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "08"
+target_binding = "modelo-190-111-actividades-dinerario-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-actividades-especie-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "11"
+target_binding = "modelo-190-111-actividades-especie-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-premios-dinerario-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "14"
+target_binding = "modelo-190-111-premios-dinerario-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-premios-especie-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "17"
+target_binding = "modelo-190-111-premios-especie-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-ganancias-dinerario-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "20"
+target_binding = "modelo-190-111-ganancias-dinerario-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-ganancias-especie-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "23"
+target_binding = "modelo-190-111-ganancias-especie-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-derechos-imagen-importe-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "26"
+target_binding = "modelo-190-111-derechos-imagen-importe-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".relations]]
+id = "modelo-190-rel-111-retenciones-anual"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "111"
+source_revision_selector = { year_from = 2019 }
+source_casilla_id = "28"
+target_binding = "modelo-190-111-retenciones-anual"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]

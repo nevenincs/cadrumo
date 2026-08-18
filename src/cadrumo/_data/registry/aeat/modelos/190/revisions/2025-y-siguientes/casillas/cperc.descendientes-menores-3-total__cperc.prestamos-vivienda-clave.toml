@@ -1,0 +1,269 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas for the design's
+# family-composition count positions (223-254). Every sub-count is its own
+# template slot because the Detalle sheet needs one operator-editable cell per
+# count; the design's own no-content for every count is zeros, and the
+# prestamos-vivienda clave is always recorded for the claves the design names.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-menores-3-total"
+number = "223"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_menores_3_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-menores-3-entero"
+number = "224"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_menores_3_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-resto-total"
+number = "225-226"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_resto_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-resto-entero"
+number = "227-228"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_resto_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-33-65-total"
+number = "229-230"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_33_65_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-33-65-entero"
+number = "231-232"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_33_65_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-movilidad-total"
+number = "233-234"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_movilidad_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-movilidad-entero"
+number = "235-236"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_movilidad_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-65-total"
+number = "237-238"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_65_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.descendientes-discapacidad-65-entero"
+number = "239-240"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_descendientes_discapacidad_65_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-menores-75-total"
+number = "241"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_menores_75_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-menores-75-entero"
+number = "242"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_menores_75_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-75-mas-total"
+number = "243"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_75_mas_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-75-mas-entero"
+number = "244"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_75_mas_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-33-65-total"
+number = "245"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_33_65_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-33-65-entero"
+number = "246"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_33_65_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-movilidad-total"
+number = "247"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_movilidad_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-movilidad-entero"
+number = "248"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_movilidad_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-65-total"
+number = "249"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_65_total"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ascendientes-discapacidad-65-entero"
+number = "250"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_ascendientes_discapacidad_65_entero"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.computo-hijo-1"
+number = "251"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_computo_hijo_1"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.computo-hijo-2"
+number = "252"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_computo_hijo_2"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.computo-hijo-3"
+number = "253"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_computo_hijo_3"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestamos-vivienda-clave"
+number = "254"
+section = ["perceptor", "familia"]
+data_type = "integer"
+semantic_role = "payee_prestamos_vivienda_clave"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

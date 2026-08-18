@@ -1,0 +1,53 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas for the
+# design's four deduction-side money campos (171-222): reductions the payer
+# considered, deductible expenses, compensatory pension and food annuities.
+# Same template-slot contract as the sibling casilla fragments; the design's
+# own no-content for every one of these is zeros.
+
+[[revisions."2024".casillas]]
+id = "perc.reducciones-aplicables"
+number = "171-183"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_reducciones_aplicables"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024".casillas]]
+id = "perc.gastos-deducibles"
+number = "184-196"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_gastos_deducibles"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024".casillas]]
+id = "perc.pension-compensatoria"
+number = "197-209"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_pension_compensatoria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2024".casillas]]
+id = "perc.anualidades-alimentos"
+number = "210-222"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_anualidades_alimentos"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

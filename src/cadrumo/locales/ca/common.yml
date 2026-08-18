@@ -701,22 +701,69 @@ review:
 sheets:
   detalle:
     headers:
+      accrual_year: Exercici de meritació
       acquisition_date: Data d'adquisició
       amount: Import
       amount_donated: Import donat
+      anualidades_alimentos: Anualitats per aliments
+      ascendants_75_plus_total: Ascendents ≥ 75 anys (total)
+      ascendants_75_plus_whole: Ascendents ≥ 75 anys (sencers)
+      ascendants_disabled_33_65_total: Ascendents amb discapacitat 33-65% (total)
+      ascendants_disabled_33_65_whole: Ascendents amb discapacitat 33-65% (sencers)
+      ascendants_disabled_65_plus_total: Ascendents amb discapacitat ≥ 65% (total)
+      ascendants_disabled_65_plus_whole: Ascendents amb discapacitat ≥ 65% (sencers)
+      ascendants_disabled_mobility_total: Ascendents amb discapacitat i mobilitat
+        reduïda (total)
+      ascendants_disabled_mobility_whole: Ascendents amb discapacitat i mobilitat
+        reduïda (sencers)
+      ascendants_under_75_total: Ascendents < 75 anys (total)
+      ascendants_under_75_whole: Ascendents < 75 anys (sencers)
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       clave: Clau
+      complemento_infancia_clave: Complement d'ajuda a la infància
+      contract_relation_clave: Contracte o relació
       counterparty_legal_name: Raó social de la contrapart
       counterparty_tax_id: NIF de la contrapart
       country_code: Codi de país
       currency_code: Codi de divisa
       deduction_percentage: Percentatge de deducció
+      descendants_disabled_33_65_total: Descendents amb discapacitat 33-65% (total)
+      descendants_disabled_33_65_whole: Descendents amb discapacitat 33-65% (sencers)
+      descendants_disabled_65_plus_total: Descendents amb discapacitat ≥ 65% (total)
+      descendants_disabled_65_plus_whole: Descendents amb discapacitat ≥ 65% (sencers)
+      descendants_disabled_mobility_total: Descendents amb discapacitat i mobilitat
+        reduïda (total)
+      descendants_disabled_mobility_whole: Descendents amb discapacitat i mobilitat
+        reduïda (sencers)
+      descendants_rest_total: Descendents restants (total)
+      descendants_rest_whole: Descendents restants (sencers)
+      descendants_under_3_total: Descendents < 3 anys (total)
+      descendants_under_3_whole: Descendents < 3 anys (sencers)
+      disability_clave: Discapacitat
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
+      emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
+      first_child_compute: Còmput del 1r fill
+      foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
+      foral_retention_bizkaia: Retencions i ingressos a compte ingressats a Bizkaia
+      foral_retention_estatal: Retencions i ingressos a compte ingressats a l'Estat
+      foral_retention_gipuzkoa: Retencions i ingressos a compte ingressats a Gipuzkoa
+      foral_retention_navarra: Retencions i ingressos a compte ingressats a Navarra
+      gastos_deducibles: Despeses deduïbles
+      geographic_mobility_clave: Mobilitat geogràfica
+      housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
+      incapacity_cash_perception: Percepció monetària derivada d'incapacitat laboral
+      incapacity_cash_withholding: Retenció sobre prestacions d'incapacitat laboral
+      incapacity_kind_ingreso_a_cuenta: Ingressos a compte per prestacions en espècie
+        d'incapacitat laboral
+      incapacity_kind_repercutido: Ingressos a compte repercutits per incapacitat
+        laboral
+      incapacity_kind_value: Valoració en espècie derivada d'incapacitat laboral
       ingreso_a_cuenta: Ingrés a compte
+      ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
       is_recurrent: Donatiu recurrent
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
@@ -725,19 +772,38 @@ sheets:
       operation_kind_code: Clau d'operació
       party_legal_name: Raó social
       party_tax_id: NIF
+      pension_compensatoria: Pensió compensatòria
+      pension_prestacion_incapacidad: 'Prestació: incapacitat permanent'
+      pension_prestacion_jubilacion: 'Prestació: jubilació'
+      pension_prestacion_no_contributiva: 'Prestació: pensió no contributiva'
+      pension_prestacion_resto: 'Prestació: resta'
+      pension_prestacion_viudedad: 'Prestació: viduïtat'
+      perceptor_birth_year: Any de naixement
       perceptor_legal_name: Cognoms i nom del perceptor
+      perceptor_situacion_familiar: Situació familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
+      province_code: Província
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
+      reducciones_aplicables: Reduccions aplicables
       refund_amount: Import a retornar
+      representative_tax_id: NIF del representant legal
       retencion_practicada: Retenció practicada
+      second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
+      spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
+        convivència
+      startup_fund_rendimientos_clave: Rendiments per la gestió de fons vinculats
+        a l'emprenedoria
       subclave: Subclau
       supplier_tax_id: NIF del proveïdor
+      territorial_deduction_clave: Ceuta o Melilla / La Palma
+      third_child_compute: Còmput del 3r fill
       transfer_pricing_method_code: Mètode de valoració
+      unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
 topic:
   authentication:

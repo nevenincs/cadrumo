@@ -1,0 +1,7 @@
+[[revisions."2024".filing_schedules]]
+id = "modelo-190-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["rd-439-2007:art-108", "orden-eha-3127-2009:art-1"]
+source_refs = ["aeat-modelo-190-procedure", "boe-modelo-190-2025-form"]

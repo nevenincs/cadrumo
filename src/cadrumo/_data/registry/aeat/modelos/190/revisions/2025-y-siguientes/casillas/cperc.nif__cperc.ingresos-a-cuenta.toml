@@ -1,0 +1,104 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas.
+#
+# One row of the repeating perceptor record. Each casilla is the template slot
+# a `row_field_casilla_ids` entry names on the `modelo-190-perceptor` export
+# record, so the repeated fichero-BOE rows and the operator-facing detail table
+# address the same declared box. `number` carries the AEAT record-design
+# position range these slots occupy, transcribed from
+# "B. TIPO DE REGISTRO 2: REGISTRO DE PERCEPTOR" of the bundled diseño.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nif"
+number = "18-26"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nombre"
+number = "36-75"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "payee_name"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.clave"
+number = "78"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_clave_percepcion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The clave de percepcion (A-L) is the one perception-type key on modelo 190's tipo-2 record. Modelo 193 carries the concept but has no casilla yet; 184 and 345 use modelo-scoped roles."
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.subclave"
+number = "79-80"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_subclave_percepcion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The subclave qualifies its clave on the same tipo-2 record and occurs once. Modelo 184 and modelo 345 declare their own modelo-scoped subclave roles."
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.percepcion-dineraria"
+number = "82-94"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "percepcion_integra_dineraria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-practicadas"
+number = "95-107"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.percepcion-especie"
+number = "109-121"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "percepcion_valoracion_especie"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ingresos-a-cuenta"
+number = "122-134"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "ingresos_a_cuenta_efectuados"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

@@ -698,22 +698,67 @@ review:
 sheets:
   detalle:
     headers:
+      accrual_year: Keletkezés éve
       acquisition_date: Szerzés dátuma
       amount: Összeg
       amount_donated: Adományozott összeg
+      anualidades_alimentos: Tartásdíj-járadék
+      ascendants_75_plus_total: Felmenők 75+ (összes)
+      ascendants_75_plus_whole: Felmenők 75+ (egészben)
+      ascendants_disabled_33_65_total: Fogyatékos felmenők 33-65% (összes)
+      ascendants_disabled_33_65_whole: Fogyatékos felmenők 33-65% (egészben)
+      ascendants_disabled_65_plus_total: Fogyatékos felmenők 65%+ (összes)
+      ascendants_disabled_65_plus_whole: Fogyatékos felmenők 65%+ (egészben)
+      ascendants_disabled_mobility_total: Fogyatékos felmenők, csökkent mozgásképesség
+        (összes)
+      ascendants_disabled_mobility_whole: Fogyatékos felmenők, csökkent mozgásképesség
+        (egészben)
+      ascendants_under_75_total: Felmenők 75 alatt (összes)
+      ascendants_under_75_whole: Felmenők 75 alatt (egészben)
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       clave: Kulcs
+      complemento_infancia_clave: Gyermeknevelési kiegészítés
+      contract_relation_clave: Szerződés vagy jogviszony
       counterparty_legal_name: Szerződő fél neve
       counterparty_tax_id: Szerződő fél adóazonosítója
       country_code: Országkód
       currency_code: Pénznemkód
       deduction_percentage: Levonási százalék
+      descendants_disabled_33_65_total: Fogyatékos leszármazottak 33-65% (összes)
+      descendants_disabled_33_65_whole: Fogyatékos leszármazottak 33-65% (egészben)
+      descendants_disabled_65_plus_total: Fogyatékos leszármazottak 65%+ (összes)
+      descendants_disabled_65_plus_whole: Fogyatékos leszármazottak 65%+ (egészben)
+      descendants_disabled_mobility_total: Fogyatékos leszármazottak, csökkent mozgásképesség
+        (összes)
+      descendants_disabled_mobility_whole: Fogyatékos leszármazottak, csökkent mozgásképesség
+        (egészben)
+      descendants_rest_total: Többi leszármazott (összes)
+      descendants_rest_whole: Többi leszármazott (egészben)
+      descendants_under_3_total: Leszármazottak 3 alatt (összes)
+      descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      disability_clave: Fogyatékosság
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
+      emerging_stock_excess_clave: Startup részvényjuttatási többlet
+      first_child_compute: 1. gyermek beszámítása
+      foral_retention_araba: Araba/Álavának befizetett visszatartások és előlegek
+      foral_retention_bizkaia: Bizkaiának befizetett visszatartások és előlegek
+      foral_retention_estatal: Az államnak befizetett visszatartások és előlegek
+      foral_retention_gipuzkoa: Gipuzkoának befizetett visszatartások és előlegek
+      foral_retention_navarra: Navarrának befizetett visszatartások és előlegek
+      gastos_deducibles: Levonható költségek
+      geographic_mobility_clave: Földrajzi mobilitás
+      housing_loan_communication_clave: Lakáshitel-bevallás
+      incapacity_cash_perception: Munkaképtelenségi készpénzes bevétel
+      incapacity_cash_withholding: Munkaképtelenségi ellátás visszatartása
+      incapacity_kind_ingreso_a_cuenta: Munkaképtelenségi természetbeni ellátás előlege
+      incapacity_kind_repercutido: Áthárított munkaképtelenségi előleg
+      incapacity_kind_value: Munkaképtelenségi természetbeni érték
       ingreso_a_cuenta: Természetbeni adójóváírás
+      ingreso_a_cuenta_repercutido: Áthárított előleg
       is_recurrent: Ismétlődő adomány
       member_legal_name: Tag neve
       member_state_code: Tagállam
@@ -722,19 +767,37 @@ sheets:
       operation_kind_code: Művelettípus
       party_legal_name: Fél neve
       party_tax_id: Fél adóazonosítója
+      pension_compensatoria: Kártérítési járadék
+      pension_prestacion_incapacidad: 'Ellátás: maradandó munkaképtelenség'
+      pension_prestacion_jubilacion: 'Ellátás: nyugdíj'
+      pension_prestacion_no_contributiva: 'Ellátás: járulékmentes nyugdíj'
+      pension_prestacion_resto: 'Ellátás: egyéb'
+      pension_prestacion_viudedad: 'Ellátás: özvegyi nyugdíj'
+      perceptor_birth_year: Születési év
       perceptor_legal_name: Kedvezményezett neve
+      perceptor_situacion_familiar: Családi állapot
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      province_code: Tartomány
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
+      reducciones_aplicables: Alkalmazott csökkentések
       refund_amount: Visszatérítési összeg
+      representative_tax_id: Törvényes képviselő adóazonosítója
       retencion_practicada: Alkalmazott visszatartás
+      second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
+        adóazonosítója
+      startup_fund_rendimientos_clave: Alapkezelési jövedelem
       subclave: Alkulcs
       supplier_tax_id: Szállító adóazonosítója
+      territorial_deduction_clave: Ceuta vagy Melilla / La Palma
+      third_child_compute: 3. gyermek beszámítása
       transfer_pricing_method_code: Transzferár-módszer
+      unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés
 topic:
   authentication:

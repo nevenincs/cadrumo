@@ -39,7 +39,7 @@ def _modelo(modelo_id: str, revision_id: str):
 
 
 def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> None:
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor One"),
@@ -73,7 +73,7 @@ def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> N
 def test_assemble_withholding_synthesizes_source_id_per_row() -> None:
     """Source ids are derivable so re-pulled rows reconcile back to the same identity."""
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
@@ -88,7 +88,7 @@ def test_assemble_withholding_synthesizes_source_id_per_row() -> None:
 def test_assemble_withholding_decimal_strings_coerce() -> None:
     """Operators may type values as strings; assembler coerces to Decimal."""
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
@@ -111,7 +111,7 @@ def test_assemble_withholding_unknown_binding_silently_dropped() -> None:
     discarded rather than crashing assembly.
     """
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
@@ -328,7 +328,7 @@ def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> N
 
 
 def test_assemble_returns_empty_for_empty_cells() -> None:
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
 
     assert assemble_withholding_observations((), revision, filing_year=2025) == ()
 
@@ -336,7 +336,7 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
 def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:
     from ....domain.calculations.registry import WithholdingObservation
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
@@ -375,7 +375,7 @@ def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
 
 
 def test_assemble_observations_for_grouping_rejects_unknown_grouping() -> None:
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     with pytest.raises(RegistryValidationError) as excinfo:
         assemble_observations_for_grouping(
             "operator_clave",  # invoice/counterpart grouping; no assembler
@@ -410,7 +410,7 @@ def test_assemble_withholding_missing_nif_raises_not_fabricates() -> None:
     contract has regressed.
     """
 
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         # Deliberately omit perceptor_tax_id — the model's min_length=1
         # constraint must surface, not be masked by a fabricated empty-string default.
@@ -433,7 +433,7 @@ def test_assemble_withholding_refuses_a_row_without_clave() -> None:
     190/193 Diseno de Registros). The source must supply the real clave; a missing
     one is a data error, not a silent default.
     """
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor Sin Clave"),
@@ -463,7 +463,7 @@ def test_assemble_withholding_refuses_a_row_without_clave() -> None:
 
 def test_a_row_stating_no_country_produces_no_country() -> None:
     """The whole row, asserted on the OBSERVATION rather than on the source text."""
-    revision = _modelo("190", "2024-y-siguientes")
+    revision = _modelo("190", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor One"),

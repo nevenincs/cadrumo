@@ -677,22 +677,65 @@ review:
 sheets:
   detalle:
     headers:
+      accrual_year: Accrual year
       acquisition_date: Acquisition date
       amount: Amount
       amount_donated: Amount donated
+      anualidades_alimentos: Food annuities
+      ascendants_75_plus_total: Ascendants 75+ (total)
+      ascendants_75_plus_whole: Ascendants 75+ (whole)
+      ascendants_disabled_33_65_total: Disabled ascendants 33-65% (total)
+      ascendants_disabled_33_65_whole: Disabled ascendants 33-65% (whole)
+      ascendants_disabled_65_plus_total: Disabled ascendants 65%+ (total)
+      ascendants_disabled_65_plus_whole: Disabled ascendants 65%+ (whole)
+      ascendants_disabled_mobility_total: Disabled ascendants, reduced mobility (total)
+      ascendants_disabled_mobility_whole: Disabled ascendants, reduced mobility (whole)
+      ascendants_under_75_total: Ascendants under 75 (total)
+      ascendants_under_75_whole: Ascendants under 75 (whole)
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       clave: Clave
+      complemento_infancia_clave: Child support supplement
+      contract_relation_clave: Contract or relation
       counterparty_legal_name: Counterparty legal name
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
       deduction_percentage: Deduction percentage
+      descendants_disabled_33_65_total: Disabled descendants 33-65% (total)
+      descendants_disabled_33_65_whole: Disabled descendants 33-65% (whole)
+      descendants_disabled_65_plus_total: Disabled descendants 65%+ (total)
+      descendants_disabled_65_plus_whole: Disabled descendants 65%+ (whole)
+      descendants_disabled_mobility_total: Disabled descendants, reduced mobility
+        (total)
+      descendants_disabled_mobility_whole: Disabled descendants, reduced mobility
+        (whole)
+      descendants_rest_total: Remaining descendants (total)
+      descendants_rest_whole: Remaining descendants (whole)
+      descendants_under_3_total: Descendants under 3 (total)
+      descendants_under_3_whole: Descendants under 3 (whole)
+      disability_clave: Disability
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
+      emerging_stock_excess_clave: Emerging-company stock excess
+      first_child_compute: 1st child computation
+      foral_retention_araba: Withholdings and payments on account paid to Araba/Álava
+      foral_retention_bizkaia: Withholdings and payments on account paid to Bizkaia
+      foral_retention_estatal: Withholdings and payments on account paid to the State
+      foral_retention_gipuzkoa: Withholdings and payments on account paid to Gipuzkoa
+      foral_retention_navarra: Withholdings and payments on account paid to Navarre
+      gastos_deducibles: Deductible expenses
+      geographic_mobility_clave: Geographic mobility
+      housing_loan_communication_clave: Home loan communication
+      incapacity_cash_perception: Cash income from work incapacity
+      incapacity_cash_withholding: Withholding on work-incapacity benefits
+      incapacity_kind_ingreso_a_cuenta: Payments on account, in-kind incapacity benefits
+      incapacity_kind_repercutido: Payments on account passed on, incapacity benefits
+      incapacity_kind_value: In-kind value from work incapacity
       ingreso_a_cuenta: In-kind tax credit
+      ingreso_a_cuenta_repercutido: Payments on account passed on
       is_recurrent: Recurrent donation
       member_legal_name: Member legal name
       member_state_code: Member state
@@ -701,19 +744,36 @@ sheets:
       operation_kind_code: Operation kind
       party_legal_name: Party legal name
       party_tax_id: Party tax id
+      pension_compensatoria: Compensatory pension
+      pension_prestacion_incapacidad: 'Benefit: permanent incapacity'
+      pension_prestacion_jubilacion: 'Benefit: retirement'
+      pension_prestacion_no_contributiva: 'Benefit: non-contributory pension'
+      pension_prestacion_resto: 'Benefit: other'
+      pension_prestacion_viudedad: 'Benefit: widowhood'
+      perceptor_birth_year: Birth year
       perceptor_legal_name: Perceptor legal name
+      perceptor_situacion_familiar: Family situation
       perceptor_tax_id: Perceptor tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      province_code: Province
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
       rectified_year: Rectified year
+      reducciones_aplicables: Applicable reductions
       refund_amount: Refund amount
+      representative_tax_id: Legal representative NIF
       retencion_practicada: Withholding applied
+      second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
+      startup_fund_rendimientos_clave: Fund-management income
       subclave: Subclave
       supplier_tax_id: Supplier tax id
+      territorial_deduction_clave: Ceuta or Melilla / La Palma
+      third_child_compute: 3rd child computation
       transfer_pricing_method_code: Transfer pricing method
+      unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
 topic:
   authentication:

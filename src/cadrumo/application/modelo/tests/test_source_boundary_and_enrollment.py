@@ -186,7 +186,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
 def test_s26_assert_no_novel_source_kinds_accepts_deferred_revision() -> None:
     """A revision whose bindings use deferred source kinds still passes the gate."""
     # M190 uses 'withholding' — explicitly deferred.  Gate must not raise.
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -599,9 +599,9 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     """M190 'withholding' bindings are handled by the enrolled withholding resolver."""
     from ...aggregation import collect_unhandled_source_diagnostics
 
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     assert any(str(b.source) == "withholding" for b in revision.bindings), (
-        "M190 2024-y-siguientes must declare withholding bindings for this test to be non-vacuous"
+        "M190 2025-y-siguientes must declare withholding bindings for this test to be non-vacuous"
     )
     handled = frozenset(
         {
