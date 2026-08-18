@@ -109,3 +109,53 @@ source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "boe-mod
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-instructions-2025"
 required_text = ["Casilla 01. Número total de percepciones", "apuntes o registros de percepción"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-provincia"
+source = "withholding"
+selector = { fact = "row_field", row_field = "province_code", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-territorial-deduccion"
+# CEUTA O MELILLA clave: the payer's own retention-rate determination (1 Ceuta/Melilla, 2 La Palma, 0 otherwise). Never derived from the province.
+source = "withholding"
+selector = { fact = "row_field", row_field = "territorial_deduction_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ano-nacimiento"
+# Birth year and family situation are declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; the resolver emits the design's own no-content for every other row.
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_birth_year", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-situacion-familiar"
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_situacion_familiar", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]

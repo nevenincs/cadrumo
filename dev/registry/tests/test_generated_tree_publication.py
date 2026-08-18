@@ -13,17 +13,17 @@ import pytest
 from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
-from .. import _generated_tree_publication
-from .._generated_tree_publication import (
-    GeneratedExportTreePublicationContext,
-    publish_validated_generated_export_tree,
-)
-from .._generated_tree_validation import validate_generated_export_tree
-from .._provenance_manifest import (
+from ..pipeline import _tree_publication
+from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
+from ..pipeline._tree_publication import (
+    GeneratedExportTreePublicationContext,
+    publish_validated_generated_export_tree,
+)
+from ..pipeline._tree_validation import validate_generated_export_tree
 from .test_export_tree import _wire_evidence, _wire_profile, _write_isolated_generated_authority_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -100,25 +100,25 @@ def _stage_interrupted_verified_candidate(
     context: GeneratedExportTreePublicationContext,
     candidate_export_root: Path,
 ) -> Path:
-    backup_export_root = _generated_tree_publication._rollback_sibling(
+    backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
         modelo="200",
         revision_id="2025",
     )
-    journal = _generated_tree_publication._PublicationJournal(
+    journal = _tree_publication._PublicationJournal(
         schema_version=1,
         state="backup_staged",
         modelo="200",
         revision_id="2025",
         candidate_export=str(candidate_export_root),
         backup_export=str(backup_export_root),
-        candidate_manifest_sha256=_generated_tree_publication._sha256(
+        candidate_manifest_sha256=_tree_publication._sha256(
             candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
     )
     os.replace(context.target_export_root, backup_export_root)
-    _generated_tree_publication._write_journal(
-        _generated_tree_publication._journal_path(context),
+    _tree_publication._write_journal(
+        _tree_publication._journal_path(context),
         journal,
     )
     return backup_export_root
@@ -152,7 +152,7 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m200_inspect
     assert not candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
     assert not (revision_root / "export.lock").exists()
-    assert not _generated_tree_publication._journal_path(context).exists()
+    assert not _tree_publication._journal_path(context).exists()
 
 
 def test_publication_creates_missing_export_without_touching_revision_authority(
@@ -367,7 +367,7 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspec
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert not backup_export_root.exists()
-    assert not _generated_tree_publication._journal_path(context).exists()
+    assert not _tree_publication._journal_path(context).exists()
 
 
 @pytest.mark.parametrize("drift", ("profile", "evidence"))
@@ -383,9 +383,9 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
     )
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
     os.replace(candidate_export_root, context.target_export_root)
-    journal_path = _generated_tree_publication._journal_path(context)
-    journal = _generated_tree_publication._load_journal(journal_path)
-    _generated_tree_publication._write_journal(
+    journal_path = _tree_publication._journal_path(context)
+    journal = _tree_publication._load_journal(journal_path)
+    _tree_publication._write_journal(
         journal_path,
         journal.model_copy(update={"state": "candidate_live"}),
     )
@@ -465,7 +465,7 @@ def test_publication_refuses_stale_sibling_provenance_before_cutover(m200_inspec
 
 def test_publication_module_has_no_old_tree_read_merge_or_copy_surface() -> None:
     """Legacy exports cannot return as readers, mergers, copies, or fallback APIs."""
-    module = ast.parse(inspect.getsource(_generated_tree_publication))
+    module = ast.parse(inspect.getsource(_tree_publication))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
 
@@ -477,5 +477,5 @@ def test_publication_module_has_no_old_tree_read_merge_or_copy_surface() -> None
         "resolve_export_layout",
     }.intersection(referenced_names)
     assert not {"copytree", "copy2", "read_text"}.intersection(attribute_names)
-    publish_source = inspect.getsource(_generated_tree_publication.publish_validated_generated_export_tree)
+    publish_source = inspect.getsource(_tree_publication.publish_validated_generated_export_tree)
     assert "_verify_generated_export_package(target_export_root)" not in publish_source

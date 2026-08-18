@@ -28,13 +28,9 @@ from cadrumo.domain.calculations.registry import (
     load_modelo_directory,
 )
 
-from .. import _export_tree
-from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
-from .._generated_tree_validation import (
-    GeneratedExportTreeValidationContext,
-    validate_generated_export_tree,
-)
-from .._provenance_manifest import (
+from ..pipeline import _export_tree
+from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     _write_canonical_manifest_atomically,
@@ -43,8 +39,8 @@ from .._provenance_manifest import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
-from .._render_profile import (
+from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._render_profile import (
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileDesignIdentity,
@@ -52,8 +48,12 @@ from .._render_profile import (
     ReviewedPolicyDecision,
     SingletonNumericRule,
 )
-from .._semantic_map import SemanticMap
-from .._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    validate_generated_export_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

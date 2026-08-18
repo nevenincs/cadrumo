@@ -1,5 +1,5 @@
 schema_version = 1
-fragment_id = "reviewed-numerics"
+fragment_id = "numeric-representation"
 
 [[width_17_rules]]
 rule_kind = "width_17_membership"

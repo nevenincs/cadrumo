@@ -1,5 +1,5 @@
 schema_version = 1
-fragment_id = "singleton-numerics"
+fragment_id = "singletons"
 width_17_rules = []
 
 [design_identity]

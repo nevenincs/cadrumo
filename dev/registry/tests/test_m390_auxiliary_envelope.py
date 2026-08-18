@@ -16,16 +16,16 @@ from cadrumo.domain.calculations.registry import (
     load_catalogue_file,
 )
 
-from .. import _m390_auxiliary_envelope
-from .._m390_auxiliary_envelope import (
+from ..pipeline import _m390_auxiliary_envelope
+from ..pipeline._m390_auxiliary_envelope import (
     M390_AUXILIARY_ENVELOPE_TARGETS,
     M390AuxiliaryEnvelopeGenerationInput,
     M390AuxiliaryEnvelopeNumberedPage,
     render_m390_auxiliary_envelope_bytes,
     validate_m390_auxiliary_envelope,
 )
-from .._provenance_manifest import ExportFragmentTarget
-from .._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline._provenance_manifest import ExportFragmentTarget
+from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

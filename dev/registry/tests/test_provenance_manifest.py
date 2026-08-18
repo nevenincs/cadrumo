@@ -21,8 +21,8 @@ from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
 )
 
-from .. import _provenance_manifest
-from .._provenance_manifest import (
+from ..pipeline import _provenance_manifest
+from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
     EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
@@ -36,20 +36,20 @@ from .._provenance_manifest import (
     loader_semantic_digest,
     semantic_map_digest,
 )
-from .._record_design_ir import (
+from ..pipeline._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
 )
-from .._render_profile import (
+from ..pipeline._render_profile import (
     RENDER_PROFILE_SCHEMA_VERSION,
     RenderProfile,
     RenderProfileDesignIdentity,
     RenderProfileSourceEvidence,
     render_profile_digest,
 )
-from .._semantic_map import SemanticMap
-from .._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -18,8 +18,8 @@ from cadrumo.domain.calculations.registry import (
     resolve_record_design_binary,
 )
 
-from .. import _record_design_ir
-from .._record_design_ir import (
+from ..pipeline import _record_design_ir
+from ..pipeline._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateCompositeRelativeClosing,
     RecordDesignIntermediateRelativeSuffixMarker,

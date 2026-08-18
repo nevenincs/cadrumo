@@ -69,7 +69,7 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.auth._operator_scope",
         "cadrumo.application.auth._sessions",
         "cadrumo.application.bienes_inversion",
-        "cadrumo.application.bucket_maintenance._manifest_digest",
+        "cadrumo.application.bucket_maintenance._deletion_paths",
         "cadrumo.application.bucket_maintenance._service",
         "cadrumo.application.calculations._cross_period_clean_state",
         "cadrumo.application.calculations._iva_compensation_annual_partition",

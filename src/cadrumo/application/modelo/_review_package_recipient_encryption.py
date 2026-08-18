@@ -119,7 +119,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
@@ -131,7 +131,7 @@ from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
-from ...core.identity import BucketId
+from ...core.identity import BucketId, canonical_bucket_id
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package_keypair import ensure_singleton_keypair
@@ -153,8 +153,6 @@ _HKDF_CONTEXT_PREFIX = b"cadrumo.review_package.recipient_encryption.v1"
 #: Byte length of the replay-detection nonce (independent of, and never
 #: reused as, the AEAD nonce embedded inside ``ciphertext``).
 _REPLAY_NONCE_BYTES = 32
-
-_BUCKET_ID: TypeAdapter[str] = TypeAdapter(BucketId)
 
 
 class RecipientEncryptionError(CadrumoError):
@@ -227,18 +225,13 @@ class RecipientEncryptionPublicKey(BaseModel):
     created_at: UtcInstant
 
 
-def _canonical_bucket_id(bucket_id: str) -> str:
-    """Return ``bucket_id`` in the one spelling used for payloads and storage keys."""
-    return _BUCKET_ID.validate_python(bucket_id)
-
-
 def _recipient_encryption_key_object_key(bucket_id: str) -> str:
     """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
     Matches the namespace's declared
     ``object_key_grammar="review-package-recipient-encryption-key:{bucket_id}"``.
     """
-    return f"review-package-recipient-encryption-key:{_canonical_bucket_id(bucket_id)}"
+    return f"review-package-recipient-encryption-key:{canonical_bucket_id(bucket_id)}"
 
 
 def _keypair_from_repository_payload(payload: bytes, *, bucket_id: str) -> RecipientEncryptionKeypair:
@@ -286,14 +279,14 @@ def ensure_recipient_encryption_keypair(
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    canonical_bucket_id = _canonical_bucket_id(bucket_id)
-    object_key = _recipient_encryption_key_object_key(canonical_bucket_id)
+    normalised_bucket_id = canonical_bucket_id(bucket_id)
+    object_key = _recipient_encryption_key_object_key(normalised_bucket_id)
 
     def _generate() -> RecipientEncryptionKeypair:
         private_key = X25519PrivateKey.generate()
         public_key = private_key.public_key()
         return RecipientEncryptionKeypair(
-            bucket_id=canonical_bucket_id,
+            bucket_id=normalised_bucket_id,
             private_key_hex=private_key.private_bytes_raw().hex(),
             public_key_hex=public_key.public_bytes_raw().hex(),
             created_at=generated_at or _utc_now(),
@@ -312,7 +305,7 @@ def ensure_recipient_encryption_keypair(
         generate=_generate,
         bucket_id_of=lambda keypair: keypair.bucket_id,
         created_at_of=lambda keypair: keypair.created_at,
-        expected_bucket_id=canonical_bucket_id,
+        expected_bucket_id=normalised_bucket_id,
         mismatch_error=_mismatch_error,
         write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
     )
@@ -335,8 +328,8 @@ def load_recipient_encryption_keypair(
             for ``bucket_id``. Call :func:`ensure_recipient_encryption_keypair`
             first.
     """
-    canonical_bucket_id = _canonical_bucket_id(bucket_id)
-    object_key = _recipient_encryption_key_object_key(canonical_bucket_id)
+    normalised_bucket_id = canonical_bucket_id(bucket_id)
+    object_key = _recipient_encryption_key_object_key(normalised_bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
         object_key,
@@ -346,9 +339,9 @@ def load_recipient_encryption_keypair(
     if record is None:
         raise RecipientEncryptionKeyNotFoundError(
             translated_message="application.modelo.errors.recipient_encryption_key_not_found",
-            context={"bucket_id": canonical_bucket_id},
+            context={"bucket_id": normalised_bucket_id},
         )
-    return _keypair_from_repository_payload(record.payload, bucket_id=canonical_bucket_id)
+    return _keypair_from_repository_payload(record.payload, bucket_id=normalised_bucket_id)
 
 
 def recipient_encryption_public_key(

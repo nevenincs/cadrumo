@@ -46,6 +46,10 @@ _WithholdingRowField = Literal[
     "perceptor_tax_id",
     "perceptor_legal_name",
     "country_code",
+    "province_code",
+    "territorial_deduction_clave",
+    "perceptor_birth_year",
+    "perceptor_situacion_familiar",
     "clave",
     "subclave",
     "percibido_dinerario",
@@ -105,6 +109,25 @@ class WithholdingObservation(BaseModel):
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
+    province_code: str | None = Field(default=None, pattern=r"^\d{2}$")
+    """Perceptor domicilio province code (01-52, 53 La Palma), or 98 for a Spanish IRPF
+    contributor resident abroad, per the Modelo 190 record design's own list.
+
+    Nullable rather than defaulted: the design's 98 special case makes a default
+    province a fabricated residence. Absence propagates as an ABSENT KEY in the
+    built row, so a binding that needs the province refuses with the shipped
+    not-produced error naming itself."""
+    territorial_deduction_clave: int | None = Field(default=None, ge=0, le=2)
+    """Modelo 190 CEUTA O MELILLA clave: 1 when the payer applied the art. 68.4
+    deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional
+    deduction, 0 otherwise. A retention-rate determination fact the payer's own
+    data carries; never derived from the province code."""
+    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=2100)
+    """Perceptor birth year, only declared by the design for claves A, B (subclaves
+    01, 03, 04, 99) and C."""
+    perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
+    """Perceptor family-situation clave (1-3) per the design's own relation, only
+    declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -367,6 +390,48 @@ def resolve_withholding_binding_row_values(
     return resolved
 
 
+_DATOS_ADICIONALES_CLAVES: frozenset[str] = frozenset({"A", "C"})
+_DATOS_ADICIONALES_B_SUBCLAVES: frozenset[str] = frozenset({"01", "03", "04", "99"})
+
+
+def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
+    """True for the claves the Modelo 190 design's 153-254 block applies to.
+
+    The design names ``A``, ``B -subclaves 01, 03, 04 y 99-``, and ``C`` for the
+    birth-year and family-situation positions specifically.
+    """
+    if str(clave) in _DATOS_ADICIONALES_CLAVES:
+        return True
+    return str(clave) == "B" and subclave in _DATOS_ADICIONALES_B_SUBCLAVES
+
+
+def _require_consistent_identity_facts(
+    bucket: Mapping[str, Decimal | str],
+    observation: WithholdingObservation,
+    *,
+    fields: tuple[str, ...],
+) -> None:
+    """Refuse a cohort whose later observation contradicts an earlier identity fact.
+
+    Amounts accumulate, but a perceptor has ONE province, one birth year and one
+    family situation; two observations disagreeing on one of them is a finding
+    the resolver must surface rather than silently keep the first value.
+    """
+    for field in fields:
+        stored = bucket.get(field)
+        incoming = getattr(observation, field)
+        if stored is None or incoming is None:
+            continue
+        if field in ("perceptor_birth_year", "perceptor_situacion_familiar"):
+            stored = str(stored)
+            incoming = str(incoming)
+        if stored != incoming:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {observation.perceptor_tax_id!r} disagree on "
+                f"{field!r}: {stored!r} vs {incoming!r}",
+            )
+
+
 def _build_withholding_rows(
     grouping: _WithholdingGrouping,
     observations: tuple[WithholdingObservation, ...],
@@ -403,7 +468,32 @@ def _build_withholding_rows(
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
+        if observation.province_code is not None:
+            identity["province_code"] = observation.province_code
+        if observation.territorial_deduction_clave is not None:
+            identity["territorial_deduction_clave"] = observation.territorial_deduction_clave
+        if _declares_datos_adicionales(observation.clave, observation.subclave):
+            # The design only asks for these facts on the listed claves; for any
+            # other row the design's own no-content is the correct value, not an
+            # absence.
+            identity["perceptor_birth_year"] = observation.perceptor_birth_year if observation.perceptor_birth_year is not None else "0000"
+            identity["perceptor_situacion_familiar"] = (
+                observation.perceptor_situacion_familiar if observation.perceptor_situacion_familiar is not None else "0"
+            )
+        else:
+            identity["perceptor_birth_year"] = "0000"
+            identity["perceptor_situacion_familiar"] = "0"
         bucket = accum.setdefault(key, identity)
+        _require_consistent_identity_facts(
+            bucket,
+            observation,
+            fields=(
+                "province_code",
+                "territorial_deduction_clave",
+                "perceptor_birth_year",
+                "perceptor_situacion_familiar",
+            ),
+        )
         prev_dinerario = bucket["percibido_dinerario"]
         prev_especie = bucket["percibido_especie"]
         prev_retencion = bucket["retencion_practicada"]

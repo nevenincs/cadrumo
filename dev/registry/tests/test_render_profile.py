@@ -20,14 +20,14 @@ from cadrumo.domain.calculations.registry import (
     resolve_record_design_binary,
 )
 
-from .. import _export_tree, _render_profile
-from .._record_design_ir import (
+from ..pipeline import _export_tree, _render_profile
+from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from .._render_profile import (
+from ..pipeline._render_profile import (
     OfficialSourceEvidence,
     RenderProfile,
     RenderProfileAnchor,
@@ -47,8 +47,8 @@ from .._render_profile import (
     validate_render_profile,
     validate_render_profile_authority,
 )
-from .._semantic_map import SemanticMap
-from .._semantic_map_join import (
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_join import (
     JoinedRecordDesign,
     JoinedRecordDesignField,
     JoinedRecordDesignRecord,
@@ -282,7 +282,7 @@ def test_singleton_rules_consume_the_public_closed_value_policy_axis() -> None:
     profile = _profile()
 
     assert all(isinstance(rule.value_policy, ExportValuePolicy) for rule in profile.singleton_rules)
-    source = Path("dev/registry/_render_profile.py").read_text(encoding="utf-8")
+    source = Path("dev/registry/pipeline/_render_profile.py").read_text(encoding="utf-8")
     assert "SingletonValuePolicy" not in source
     assert "BeforeValidator(coerce_export_value_policy)" not in source
 
@@ -319,7 +319,7 @@ def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> 
 
 
 def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
-    production_paths = scan_directory(Path(__file__).parents[1], pattern="*.py")
+    production_paths = scan_directory(Path(__file__).parents[1] / "pipeline", pattern="*.py")
     class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
     for path in production_paths:
         tree = ast.parse(path.read_text(encoding="utf-8"))

@@ -87,30 +87,6 @@ class ApoderadoConfigurationIdentityError(CadrumoError):
     """
 
 
-def _canonical_bucket_id(bucket_id: str) -> str:
-    """Return ``bucket_id`` in the one spelling the persisted record carries.
-
-    :class:`~application.auth.ApoderadoConfiguration` types its ``bucket_id``
-    as the canonical :data:`~core.identity.BucketId`, so ``configure`` saves
-    under the *normalised* value while the lookup paths used the caller's raw
-    input. A whitespace-wrapped bucket therefore configured successfully and
-    then read back as unconfigured, and ``clear`` reported nothing to remove
-    while the record was still there. Normalising here makes every entry point
-    address the same key the writer used.
-
-    The rule itself is not restated here: it is
-    :func:`~cadrumo.core.identity.canonical_bucket_id`, which this defers to so
-    this surface cannot answer "which strings name the same bucket" differently
-    from every other consumer. Re-deriving it from the alias locally is how the
-    copies this one belonged to were able to drift apart.
-
-    Raises:
-        pydantic.ValidationError: When ``bucket_id`` is blank after stripping
-            or exceeds the canonical length bound.
-    """
-    return canonical_bucket_id(bucket_id)
-
-
 class ApoderadoConfiguration(BaseModel):
     """Persisted apoderado configuration for one bucket."""
 
@@ -164,7 +140,7 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     ) -> None:
         """Bind the repository to ``bucket_id`` so writes cannot cross buckets."""
         super().__init__(bucket_id=bucket_id, objects=objects, settings=settings)
-        self._bound_bucket_id = None if bucket_id is None else _canonical_bucket_id(bucket_id)
+        self._bound_bucket_id = None if bucket_id is None else canonical_bucket_id(bucket_id)
 
     @override
     @classmethod
@@ -241,7 +217,7 @@ class ApoderadoService:
         self._repository_instances: dict[str, _ApoderadoConfigRepository] = {}
 
     def _repository_for(self, bucket_id: str) -> _ApoderadoConfigRepository:
-        safe_bucket_id = safe_repository_id(_canonical_bucket_id(bucket_id), context="bucket_id")
+        safe_bucket_id = safe_repository_id(canonical_bucket_id(bucket_id), context="bucket_id")
         repository = self._repository_instances.get(safe_bucket_id)
         if repository is None:
             repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
@@ -262,7 +238,7 @@ class ApoderadoService:
         Args:
             bucket_id: The profile bucket's UUIDv4 identifier.
         """
-        normalised_bucket_id = _canonical_bucket_id(bucket_id)
+        normalised_bucket_id = canonical_bucket_id(bucket_id)
         safe_bucket_id = safe_repository_id(normalised_bucket_id, context="bucket_id")
         config = self._repository_for(normalised_bucket_id).load(safe_bucket_id)
         if config is None:
@@ -317,7 +293,7 @@ class ApoderadoService:
 
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""
-        normalised_bucket_id = _canonical_bucket_id(bucket_id)
+        normalised_bucket_id = canonical_bucket_id(bucket_id)
         safe_bucket_id = safe_repository_id(normalised_bucket_id, context="bucket_id")
         return self._repository_for(normalised_bucket_id).delete(safe_bucket_id)
 

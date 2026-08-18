@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from base64 import b64encode
-from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
 from multiprocessing import get_context
 from pathlib import Path
@@ -28,7 +27,6 @@ from ....adapters.persistence.storage.custody import (
 from ....core import read_pointer
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import (
-    ProfileCustodyLabelAuthorityProtocol,
     ProfileNotFoundError,
     ProfileSetupState,
     UserProfileFact,
@@ -241,13 +239,7 @@ def test_public_facade_exposes_no_transaction_service_or_generic_record_replace(
     assert hasattr(ProfileRecordRepository, "apply_fact_changes")
 
 
-def test_lifecycle_delegates_label_mutation_through_the_domain_custody_port(tmp_path: Path) -> None:
-    lifecycle = ProfileCapsuleLifecycle(root=tmp_path)
-
-    assert isinstance(lifecycle._label_authority, ProfileCustodyLabelAuthorityProtocol)
-
-
-def test_label_provenance_is_uuid_bound_revisioned_and_cas_replaced(tmp_path: Path) -> None:
+def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path) -> None:
     envelope, sentinel, data_files, dek = _current_capsule_input()
     session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     lifecycle = ProfileCapsuleLifecycle(root=tmp_path)
@@ -269,34 +261,14 @@ def test_label_provenance_is_uuid_bound_revisioned_and_cas_replaced(tmp_path: Pa
         == (tmp_path / "buckets" / str(_PROFILE_ID) / "data" / "profile-label.v1.json").read_bytes()
     )
 
-    renamed = lifecycle.rename_label(
-        profile_id=_PROFILE_ID,
-        label="Renamed operator",
-        expected_label_revision=initial.label_revision,
-        expected_content_digest=initial.content_digest,
-    )
-    current = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
-    assert renamed.label == "Renamed operator"
-    assert current.label_revision == 2
-    assert current.previous_label_digest == initial.content_digest
-    assert current.content_digest != initial.content_digest
-    with pytest.raises(ProfileCustodyTransactionConflictError, match="compare-and-swap"):
-        lifecycle.rename_label(
-            profile_id=_PROFILE_ID,
-            label="Stale rename",
-            expected_label_revision=initial.label_revision,
-            expected_content_digest=initial.content_digest,
-        )
 
-
-def test_label_provenance_refuses_substitution_and_serializes_real_rename_collisions(tmp_path: Path) -> None:
+def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: Path) -> None:
     other_profile_id = UUID("57c9594e-65de-470b-b768-4a4dd1323597")
-    profiles: list[tuple[UUID, ProfileCapsuleLifecycle, ProfileCustodyCapsuleLabel]] = []
+    label_records: list[tuple[UUID, ProfileCustodyCapsuleLabel]] = []
     for profile_id, label in ((_PROFILE_ID, "First operator"), (other_profile_id, "Second operator")):
         envelope, sentinel, data_files, dek = _current_capsule_input(profile_id=profile_id)
         session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
-        lifecycle = ProfileCapsuleLifecycle(root=tmp_path)
-        lifecycle.create(
+        ProfileCapsuleLifecycle(root=tmp_path).create(
             label=label,
             profile_id=profile_id,
             password_envelope=envelope,
@@ -305,37 +277,15 @@ def test_label_provenance_refuses_substitution_and_serializes_real_rename_collis
             initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(profile_id)),
             record_session=session,
         )
-        profiles.append((profile_id, lifecycle, load_committed_profile_custody_label_record(profile_id, root=tmp_path)))
+        label_records.append((profile_id, load_committed_profile_custody_label_record(profile_id, root=tmp_path)))
 
-    first_id, first_lifecycle, first = profiles[0]
-    second_id, second_lifecycle, second = profiles[1]
+    first_id, _ = label_records[0]
+    second_id, _ = label_records[1]
     first_path = tmp_path / "buckets" / str(first_id) / "data" / "profile-label.v1.json"
     second_path = tmp_path / "buckets" / str(second_id) / "data" / "profile-label.v1.json"
     first_path.write_bytes(second_path.read_bytes())
     with pytest.raises(ProfileCustodyRecordError, match="UUID"):
         load_committed_profile_custody_label_record(first_id, root=tmp_path)
-    first_path.write_bytes(first.canonical_json_bytes())
-
-    def _rename(lifecycle: ProfileCapsuleLifecycle, profile_id: UUID, label_record: ProfileCustodyCapsuleLabel) -> str:
-        try:
-            return lifecycle.rename_label(
-                profile_id=profile_id,
-                label="Contended label",
-                expected_label_revision=label_record.label_revision,
-                expected_content_digest=label_record.content_digest,
-            ).label
-        except ProfileCustodyTransactionConflictError:
-            return "REFUSED_COLLISION"
-
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        outcomes = tuple(
-            executor.map(
-                lambda arguments: _rename(*arguments),
-                ((first_lifecycle, first_id, first), (second_lifecycle, second_id, second)),
-            )
-        )
-    assert outcomes.count("Contended label") == 1
-    assert outcomes.count("REFUSED_COLLISION") == 1
 
 
 def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_path: Path) -> None:

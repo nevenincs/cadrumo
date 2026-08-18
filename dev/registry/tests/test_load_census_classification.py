@@ -1,6 +1,6 @@
 """Load-census gate: every module a sanctioned registry load reaches carries one classification.
 
-Wires :mod:`dev.registry.load_census` into the test surface. The property this
+Wires :mod:`dev.registry.analysis.load_census` into the test surface. The property this
 pins is exhaustiveness BY CONSTRUCTION: the universe is derived from the import
 graph and the package directory, never from the reviewed table, so a module
 added tomorrow appears in the universe the moment it is reachable and fails this
@@ -22,7 +22,8 @@ this file becomes decorative.
 from __future__ import annotations
 
 import pytest
-from dev.registry.load_census import (
+
+from ..analysis.load_census import (
     REGISTRY_PACKAGE,
     build_reference_map,
     build_runtime_graph,
@@ -32,7 +33,7 @@ from dev.registry.load_census import (
     static_load_closure,
     unreferenced_modules,
 )
-from dev.registry.load_census_classification import RULES, classify_universe
+from ..analysis.load_census_classification import RULES, classify_universe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -84,7 +84,6 @@ from ._labels import (
     profile_section_title_key,
 )
 from ._loader import load_user_profile_schema
-from ._protocols import ProfileCustodyLabelAuthorityProtocol
 from ._schema import (
     NUMERIC_PROFILE_FIELD_TYPES,
     ProfileDerivedSelectorDefinition,
@@ -179,7 +178,6 @@ __all__ = [
     "CoverageManifest",
     "ProfileAlreadyExistsError",
     "ProfileBucketMismatchError",
-    "ProfileCustodyLabelAuthorityProtocol",
     "ProfileDerivedSelectorDefinition",
     "ProfileExportError",
     "ProfileFieldDefinition",

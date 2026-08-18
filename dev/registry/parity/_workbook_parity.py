@@ -506,7 +506,7 @@ def run_workbook_with_libreoffice(
         finally:
             workbook.close()
         try:
-            completed = subprocess.run(
+            completed = subprocess.run(  # noqa: S603 - resolved runner executable, fixed argv, no caller input
                 [
                     str(runner),
                     "--headless",
@@ -662,7 +662,7 @@ def _converted_binary_xls_path(
             return
         user_installation = (tmp_path / "lo-profile").resolve().as_uri()
         try:
-            completed = subprocess.run(
+            completed = subprocess.run(  # noqa: S603 - resolved runner executable, fixed argv, no caller input
                 [
                     str(runner),
                     "--headless",

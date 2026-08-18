@@ -38,7 +38,7 @@ from ._contracts import (
     DiskUsageBucketCommand,
     DiskUsageBucketResult,
 )
-from ._manifest_digest import validated_bucket_deletion_paths
+from ._deletion_paths import validated_bucket_deletion_paths
 
 
 class BucketMaintenanceService:

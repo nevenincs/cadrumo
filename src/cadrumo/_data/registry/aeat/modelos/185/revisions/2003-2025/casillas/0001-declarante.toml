@@ -1,0 +1,28 @@
+# Modelo 185 declaration-header casillas for the 2003-2025 span
+# (scheduling/applicability-grade). Only the declaration header (ejercicio,
+# tipo de declaracion) is declared, grounded in orden-hac-96-2003 art 1, which
+# approves the modelo 185 disenos fisicos y logicos. No numbered form casilla
+# is invented -- no authoritative Modelo 185 diseno de registro is bundled for
+# this span.
+
+[[revisions."2003-2025".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions."2003-2025".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]

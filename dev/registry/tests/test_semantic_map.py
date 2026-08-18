@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry import (
     ExportDraftAttribute,
 )
 
-from .._semantic_map import SemanticMap, SemanticMapEntry
+from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

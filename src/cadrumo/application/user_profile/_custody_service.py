@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 from pydantic import ValidationError
 
 from ...core import BucketPointer
-from ...core.hashing import prefixed_digest
 from ...core.paths import effective_storage_root
 from ._custody_hold import ProfileCustodyHoldAuthority
 from ._custody_pointer import ProfileCustodyPointerSnapshot
@@ -210,67 +209,6 @@ class _ProfileCustodyTransactionCapability:
             self._repository.save_journal(verified)
             pointed = self._publish_verified_create(verified, instant)
             return self._finish_create_recovery(pointed, instant)
-
-    def rename_label(
-        self,
-        *,
-        profile_id: UUID,
-        label: str,
-        expected_label_revision: int,
-        expected_content_digest: str,
-    ) -> None:
-        """CAS-publish one UUID-bound label provenance record.
-
-        Label presentation is outside the immutable capsule marker, but its
-        canonical record and durable lineage head are still custody state. The
-        transaction owner therefore keeps the root lock, collision check, and
-        physical replacement together with the head journal.
-        """
-        with profile_custody_transaction_lock(self._root, profile_id):
-            current = self._adapters.load_committed_profile_custody_label_record(
-                profile_id,
-                root=self._root,
-            )
-            heads = self._adapters.ProfileLabelHeadRepository(root=self._root)
-            try:
-                current_head = heads.recover_advance(profile_id=profile_id, current_label=current)
-            except self._adapters.ProfileCustodyRecordError as exc:
-                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
-            if current.label_revision != expected_label_revision or current.content_digest != expected_content_digest:
-                raise ProfileCustodyTransactionConflictError("profile label revision compare-and-swap failed")
-            try:
-                replacement = self._adapters.ProfileCustodyCapsuleLabel.create(
-                    profile_id=profile_id,
-                    label=label,
-                    label_revision=current.label_revision + 1,
-                    previous_label_digest=current.content_digest,
-                )
-            except (ValidationError, ValueError, TypeError) as exc:
-                raise ProfileCustodyTransactionRefusalError("profile capsule label is invalid") from exc
-            self._refuse_duplicate_label_under_root_lock(
-                profile_id=profile_id,
-                label=replacement.label,
-                allow_existing_profile=True,
-            )
-            try:
-                heads.begin_advance(
-                    current_head=current_head,
-                    current_label=current,
-                    replacement_label=replacement,
-                )
-            except self._adapters.ProfileCustodyRecordError as exc:
-                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
-            self._adapters.replace_committed_profile_custody_data_file(
-                profile_id,
-                self._adapters.PROFILE_CUSTODY_LABEL_FILENAME,
-                replacement.canonical_json_bytes(),
-                expected_sha256=prefixed_digest(current.canonical_json_bytes()),
-                root=self._root,
-            )
-            try:
-                heads.recover_advance(profile_id=profile_id, current_label=replacement)
-            except self._adapters.ProfileCustodyRecordError as exc:
-                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
 
     def _refuse_duplicate_label_under_root_lock(
         self,

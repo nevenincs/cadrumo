@@ -462,8 +462,8 @@ DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {
         "visible anywhere. Restoring the verb removes this entry."
     ),
     "config.profile.rename": (
-        "Profile relabelling. The implementation survives as rename_label on the profile custody "
-        "service, with a domain protocol declaring it, and no caller reaches it. Held on the same "
+        "Profile relabelling. The rename_label implementation and its domain protocol were removed "
+        "as verified-dead surfaces with no caller anywhere in the tree. Held on the same "
         "grounds as the deletion verb above: the capability outlived its door, so deleting the "
         "declaration would erase the last visible evidence of that rather than tidy a retirement."
     ),

@@ -702,7 +702,7 @@ test-integration-serial:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('testing')]
 test-os-keychain:
-    uv run --no-sync pytest -q -rsf -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
+    uv run --no-sync pytest -q -rsf -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
 
 # Run the live test suite. Quiet progress; failures shown.
 [group('testing')]

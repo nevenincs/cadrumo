@@ -125,18 +125,14 @@ signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
+
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-codigo-provincia"
 offset = 76
 length = 2
-kind = "filler"
-# Design campo 8, 76-77 CODIGO PROVINCIA: the two-digit province of the
-# perceptor's domicilio (01-52), or 98 for an IRPF contribuyente resident
-# abroad. The withholding observation model carries a country_code but no
-# Spanish province, so no fact resolves this slot. This is a REAL data
-# gap, not an omissible position: it is written to the design's numeric
-# no-content fill so the record stays byte-correct, and the missing datum
-# is recorded here rather than guessed.
+kind = "binding"
+binding = "modelo-190-perceptor-row-provincia"
+# Design campo 8, 76-77 CODIGO PROVINCIA: the two-digit province of the perceptor's domicilio (01-52, 53 La Palma), or 98 for an IRPF contribuyente resident abroad. The resolver refuses when no observation carries the province rather than writing a fabricated residence.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -240,13 +236,20 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-signo-percepcion-especie"
 offset = 108
 length = 1
-kind = "filler"
-# Design campo 12 subdivision 108 SIGNO DE LA PERCEPCION EN ESPECIE, same
-# reintegro-only rule as position 81; a space in every other case.
+kind = "literal"
+literal = " "
+# Design campo 12 subdivision 108 SIGNO DE LA PERCEPCION EN ESPECIE. The
+# design admits an "N" only when the perceptor reintegra percepciones en
+# especie wrongly or excessively paid in earlier ejercicios, and "un espacio"
+# in every other case. WithholdingObservation validates its amounts as
+# non-negative, so no draft Cadrumo can build is a reintegro, and the space is
+# the design's own correct value for every filing -- the same reasoning as the
+# position-81 sign literal. If the non-negative invariant is ever relaxed this
+# literal must become a real signo field.
 data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
@@ -313,12 +316,14 @@ signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
+
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-ceuta-melilla"
 offset = 152
 length = 1
-kind = "filler"
-# Design campo 14, 152 CEUTA O MELILLA: the clave for rentas obtained in Ceuta or Melilla. No profile or withholding fact records it.
+kind = "binding"
+binding = "modelo-190-perceptor-row-territorial-deduccion"
+# Design campo 14, 152 CEUTA O MELILLA: 1 when the payer applied the art. 68.4 deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional deduction, 0 otherwise. The payer's own retention determination, carried by the observation; the resolver refuses on absence rather than writing 0 for a determination nobody recorded.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -326,13 +331,15 @@ justification = "right"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-ano-nacimiento"
 offset = 153
 length = 4
-kind = "filler"
-# Design campo 15, 153-156 ANO DE NACIMIENTO of the perceptor. Cadrumo holds no perceptor birth year.
+kind = "binding"
+binding = "modelo-190-perceptor-row-ano-nacimiento"
+# Design campo 15, 153-156 ANO DE NACIMIENTO, declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; the resolver writes the design's own no-content for every other row and refuses only when an eligible row's observation carries no birth year.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -341,12 +348,14 @@ signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
+
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-190-perc-situacion-familiar"
 offset = 157
 length = 1
-kind = "filler"
-# Design campo 16, 157 SITUACION FAMILIAR (claves 1-3). Cadrumo holds no perceptor family situation.
+kind = "binding"
+binding = "modelo-190-perceptor-row-situacion-familiar"
+# Design campo 16, 157 SITUACION FAMILIAR (claves 1-3), declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; same resolver rule as the birth year.
 data_type = "text"
 required = false
 padding = "left_zero"

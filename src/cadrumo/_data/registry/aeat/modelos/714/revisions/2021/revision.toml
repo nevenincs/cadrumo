@@ -68,3 +68,19 @@ source_refs = [
 reason = "A verification predicate asserts an implication between two figures. Modelo 714 offers none that holds, and the MINIMO EXENTO is why. Its base liquidable (casilla 27) is the base imponible less the exempt minimum of Ley 19/1991 art. 28, so a taxpayer with substantial declared patrimonio and a ZERO base liquidable and zero cuota is the ordinary lawful case, not a defect -- exactly the false-firing shape this campaign refused when choosing modelo 111 antecedent away from its threshold-scaled trabajo block. The pairing that would not false-fire, base liquidable to cuota integra, is tautological instead: casilla 29 is COMPUTED from 27 by the art. 30 scale, so the implication holds by the arithmetic. Every candidate pair is therefore either unlawfully strict or vacuous, and the family has nothing to say on this revision."
 legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[revisions."2021".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. No such document is bundled for modelo 714: its corpus carries the disenos de registro (wire-record descriptions that print no form labels) and no label-printing form specimen. Authoring patterns anyway would mean inventing the labels a real modelo 714 declaracion prints, which the grounding rule forbids. Bundling a filed or AEAT-published modelo 714 specimen is the change that makes this family authorable."
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+    "orden-hfp-207-2022:art-2",
+    "orden-hfp-207-2022:art-4",
+]
+source_refs = [
+    "aeat-modelo-714-procedure",
+    "boe-modelo-714-layout",
+    "aeat-dr-714-2021",
+]

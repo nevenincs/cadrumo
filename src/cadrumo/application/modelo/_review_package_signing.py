@@ -50,7 +50,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
@@ -65,7 +65,7 @@ from ...core.ed25519_signing import (
     sign_digest_hex,
 )
 from ...core.errors import CadrumoError
-from ...core.identity import BucketId, CalculationRevisionId
+from ...core.identity import BucketId, CalculationRevisionId, canonical_bucket_id
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
@@ -77,8 +77,6 @@ if TYPE_CHECKING:
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape (e.g. a future multi-signer / counter-sign extension).
 _SIGNATURE_ENVELOPE_VERSION = 1
-
-_BUCKET_ID: TypeAdapter[str] = TypeAdapter(BucketId)
 
 
 class ReviewPackageSigningError(CadrumoError):
@@ -159,18 +157,13 @@ class SignedReviewPackage(BaseModel):
     signed_at: UtcInstant
 
 
-def _canonical_bucket_id(bucket_id: str) -> str:
-    """Return ``bucket_id`` in the one spelling used for payloads and storage keys."""
-    return _BUCKET_ID.validate_python(bucket_id)
-
-
 def _signing_key_object_key(bucket_id: str) -> str:
     """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
     Matches the namespace's declared
     ``object_key_grammar="review-package-signing-key:{bucket_id}"``.
     """
-    return f"review-package-signing-key:{_canonical_bucket_id(bucket_id)}"
+    return f"review-package-signing-key:{canonical_bucket_id(bucket_id)}"
 
 
 def _keypair_from_repository_payload(payload: bytes, *, bucket_id: str) -> ReviewPackageSigningKeypair:
@@ -220,13 +213,13 @@ def ensure_review_package_signing_keypair(
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    canonical_bucket_id = _canonical_bucket_id(bucket_id)
-    object_key = _signing_key_object_key(canonical_bucket_id)
+    normalised_bucket_id = canonical_bucket_id(bucket_id)
+    object_key = _signing_key_object_key(normalised_bucket_id)
 
     def _generate() -> ReviewPackageSigningKeypair:
         minted = generate_ed25519_keypair_hex()
         return ReviewPackageSigningKeypair(
-            bucket_id=canonical_bucket_id,
+            bucket_id=normalised_bucket_id,
             private_key_hex=minted.private_key_hex,
             public_key_hex=minted.public_key_hex,
             created_at=generated_at or _utc_now(),
@@ -245,7 +238,7 @@ def ensure_review_package_signing_keypair(
         generate=_generate,
         bucket_id_of=lambda keypair: keypair.bucket_id,
         created_at_of=lambda keypair: keypair.created_at,
-        expected_bucket_id=canonical_bucket_id,
+        expected_bucket_id=normalised_bucket_id,
         mismatch_error=_mismatch_error,
         write_provenance="application.modelo.review_package_signing.ensure_keypair",
     )
@@ -268,8 +261,8 @@ def load_review_package_signing_keypair(
             yet for ``bucket_id``. Call
             :func:`ensure_review_package_signing_keypair` first.
     """
-    canonical_bucket_id = _canonical_bucket_id(bucket_id)
-    object_key = _signing_key_object_key(canonical_bucket_id)
+    normalised_bucket_id = canonical_bucket_id(bucket_id)
+    object_key = _signing_key_object_key(normalised_bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
         object_key,
@@ -279,9 +272,9 @@ def load_review_package_signing_keypair(
     if record is None:
         raise ReviewPackageSigningKeyNotFoundError(
             translated_message="application.modelo.errors.review_package_generic",
-            context={"bucket_id": canonical_bucket_id},
+            context={"bucket_id": normalised_bucket_id},
         )
-    return _keypair_from_repository_payload(record.payload, bucket_id=canonical_bucket_id)
+    return _keypair_from_repository_payload(record.payload, bucket_id=normalised_bucket_id)
 
 
 def review_package_signing_public_key(

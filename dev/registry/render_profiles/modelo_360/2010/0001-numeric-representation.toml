@@ -14,7 +14,7 @@
 # then reports.
 
 schema_version = 1
-fragment_id = "unstated-numerics"
+fragment_id = "numeric-representation"
 width_17_rules = []
 
 [design_identity]

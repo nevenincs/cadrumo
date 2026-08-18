@@ -541,7 +541,7 @@ def test_projection_ref_hydration_cannot_spread_beyond_the_loader() -> None:
         "_export_tree.py",
         "_provenance_manifest.py",
     ):
-        module_path = package_root / module_name
+        module_path = package_root / "pipeline" / module_name
         assert "compile_filing_projection_ref" not in module_path.read_text(encoding="utf-8")
 
 

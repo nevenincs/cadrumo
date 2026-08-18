@@ -41,12 +41,8 @@ from cadrumo.core import DirectoryEntryKind, exclusive_file_lock, fsync_parent_d
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
+from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree
-from ._generated_tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    validate_generated_export_tree,
-)
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
@@ -58,6 +54,11 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    validate_generated_export_tree,
+)
 
 __all__ = [
     "GeneratedExportTreePublicationContext",
@@ -202,6 +203,7 @@ def publish_validated_generated_export_tree(
             expected_manifest_sha256=candidate_manifest_sha256,
             expected_manifest=candidate_manifest,
         )
+        _write_export_refs(rendered, revision_root)
         journal = journal.model_copy(update={"state": "committed"})
         _write_journal(journal_path, journal)
         if had_target:
@@ -212,6 +214,18 @@ def publish_validated_generated_export_tree(
         validated=validated,
         export_root=target_export_root,
         provenance_manifest_path=target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    )
+
+
+def _write_export_refs(rendered: RenderedExportTree, revision_root: Path) -> None:
+    """Write the derived casilla back-references the docstring scopes this module to.
+
+    Idempotent and reconciling, so recovery re-runs may call it again over a
+    partially written revision.
+    """
+    write_generated_casilla_export_refs(
+        revision_root,
+        export_refs_by_casilla=export_refs_by_casilla(rendered),
     )
 
 
@@ -420,6 +434,7 @@ def _recover_interrupted_publication(
             expected_manifest_sha256=journal.candidate_manifest_sha256,
             expected_manifest=target_manifest,
         )
+        _write_export_refs(rendered, target_export_root.parent)
         _delete_opaque_rollback_if_present(backup_export_root)
         _delete_journal(journal_path)
         return True
@@ -469,6 +484,7 @@ def _recover_interrupted_publication(
             expected_manifest_sha256=journal.candidate_manifest_sha256,
             expected_manifest=candidate_manifest,
         )
+        _write_export_refs(rendered, target_export_root.parent)
         _delete_journal(journal_path)
         return True
     if target_export_root.exists():

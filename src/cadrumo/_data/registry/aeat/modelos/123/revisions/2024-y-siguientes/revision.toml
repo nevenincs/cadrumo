@@ -50,3 +50,22 @@ source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 reason = "A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 123 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 193 runs in the opposite direction and is that modelo's to declare."
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
+
+[revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "Every casilla id this revision declares either exists identically in the prior revision '2019-2023' or is a NEW id ('09'..'13') introduced by the 2024 form with no prior counterpart, so no from_revision != to_revision transition exists to declare; the family is empty by fact, not by omission. The two id sets were compared mechanically before this declaration was written."
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-99",
+    "orden-eha-3435-2007:anexo-ii",
+    "orden-hac-56-2024:art-1",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-90",
+    "ley-35-2006:art-101",
+]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+    "boe-modelo-123-2024-form-text",
+]

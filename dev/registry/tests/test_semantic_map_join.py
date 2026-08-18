@@ -9,11 +9,11 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry import RegistryValidationError
 
-from .. import _semantic_map_join
-from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
-from .._semantic_map import SemanticMap
-from .._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
-from .._semantic_map_validation import SemanticMapAnomalyException
+from ..pipeline import _semantic_map_join
+from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline._semantic_map_validation import SemanticMapAnomalyException
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

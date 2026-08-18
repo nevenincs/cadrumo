@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry import (
 )
 from dev._paths import REPO_ROOT
 
-from .. import _dp30302_field_matrix
-from .._dp30302_field_matrix import (
+from ..analysis import _dp30302_field_matrix
+from ..analysis._dp30302_field_matrix import (
     DP30302_EPOCH_COORDINATES,
     DP30302_EPOCHS,
     DP30302EpochFieldMatrix,
@@ -31,7 +31,7 @@ from .._dp30302_field_matrix import (
     measure_dp30302_field_matrix,
     resolve_dp30302_module_sub_indices,
 )
-from .._record_design_ir import RecordDesignIntermediateField
+from ..pipeline._record_design_ir import RecordDesignIntermediateField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
