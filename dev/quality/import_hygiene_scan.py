@@ -12,18 +12,19 @@ construction, because such a module defines plenty of its own things. Family 2
 covers the first syntax and Family 2b the second; they are one rule, and they
 live together so a fix to one cannot silently leave the other behind.
 
-It is also the SINGLE AUTHORITY for the one-way ``src/cadrumo`` -> ``dev/``
-boundary, in both the shapes that boundary breaks in: Family 5 detects a
-shipped module IMPORTING ``dev.*``, and Family 6 detects a shipped module
-building a PATH into the ``dev/`` tree at runtime. The two are one rule with
-two syntaxes -- ``dev/`` ships in neither the wheel nor the sdist, so a shipped
-module reaching it by either route is broken for every installed user -- and
-they live together here so a fix to one cannot silently leave the other behind.
-Consumers assert against these functions rather than re-implementing them; the
-boundary gate under ``src/cadrumo/tests`` is one such consumer, and its
-importing ``dev.*`` is not itself a violation, because a test module is
-wheel-excluded and a scanner's own imports have no bearing on the shipped
-surface it measures.
+It is also the SINGLE AUTHORITY for the one-way ``src/`` -> ``dev/`` boundary.
+The boundary is absolute, by operator ruling: no module under ``src/`` --
+shipped or test, ``cadrumo`` or ``cadrumo-harness`` -- may have ANY awareness of
+the ``dev/`` tree. Family 5 detects an IMPORT of ``dev.*`` (static or dynamic),
+Family 6 detects a module building a PATH into the ``dev/`` tree at runtime,
+and Family 10 detects PROSE awareness -- a comment, docstring or multi-line
+string that names the dev tree. The three are one rule with three syntaxes,
+and they live together here so a fix to one cannot silently leave the other
+behind. Consumers assert against these functions rather than re-implementing
+them; the boundary gate under ``dev/quality/tests`` is one such consumer. The
+former shipped-only scope was widened by ruling, never by drift: a
+wheel-excluded test importing ``dev.*`` is no installed-user defect, but the
+ruling targets absolute awareness, not installed-user breakage.
 
 Families 8 and 9 are the two ends of one broken edge, and they live together
 for the same reason. A deletion that lands without its consumer sweep leaves
@@ -44,8 +45,10 @@ import argparse
 import ast
 import fnmatch
 import hashlib
+import io
 import json
 import sys
+import tokenize
 import tomllib
 from collections import Counter, defaultdict
 from collections.abc import Iterable
@@ -723,7 +726,7 @@ _DYNAMIC_IMPORT_CALLABLES: Final[frozenset[str]] = frozenset({"import_module", "
 
 @dataclass
 class DevToolingImportViolation:
-    """A non-test module under ``src/`` that imports the unshipped ``dev/`` tooling."""
+    """A module under ``src/`` that imports the unshipped ``dev/`` tooling."""
 
     importer_mod: str
     importer_path: str
@@ -814,36 +817,22 @@ def find_dev_tooling_import_violations(
     py_files: Iterable[Path],
     *,
     src_root: Path = SRC_ROOT,
-    exclude_globs: tuple[str, ...] | None = None,
 ) -> list[DevToolingImportViolation]:
-    """Return every SHIPPED module under ``src_root`` that imports ``dev.``.
+    """Return every module under ``src_root`` that imports ``dev.``.
 
-    The ``dev/`` tree is development tooling and ships in neither the wheel nor
-    the sdist. A shipped module importing it therefore raises
-    ``ModuleNotFoundError`` for every installed user, while resolving fine in a
-    source checkout -- a defect no test run in the repository can surface.
-
-    Scoped deliberately to SHIPPED modules, the boundary being read from the
-    packaging config rather than restated. An excluded test tree's ``dev.``
-    import cannot reach an installed user: it encodes "this suite requires the
-    repo checkout and the dev dependency group", which is already true and
-    intended. Widening this family to unshipped tests would be an ownership
-    preference, not a correctness gate, and would convert a hard zero into a
-    migration backlog. That is a decision, not an oversight; revisit it by
-    ruling, never by drift.
+    Absolute by operator ruling: no module under ``src/`` -- shipped or test --
+    may import the ``dev/`` tree, which ships in neither the wheel nor the
+    sdist. The former shipped-only scope encoded the installed-user defect only;
+    the ruling widens the boundary to all awareness, so a test that needs dev
+    tooling lives under ``dev/`` itself and is swept here as a violation too.
 
     Args:
         py_files: Module files to scan.
         src_root: Source root importer names are resolved against.
-        exclude_globs: Wheel exclude globs; read from the packaging config when
-            omitted.
     """
-    globs = wheel_exclude_globs() if exclude_globs is None else exclude_globs
     violations: list[DevToolingImportViolation] = []
     for path in py_files:
         mod = module_name_for(path, src_root=src_root)
-        if not is_shipped_module(path, src_root=src_root, exclude_globs=globs):
-            continue
         rel = str(path.relative_to(src_root)).replace("\\", "/")
         for site in walk_module_imports(path, src_root=src_root):
             if targets_dev_tooling(site.target_mod):
@@ -1122,15 +1111,15 @@ def find_dev_path_reach_violations(
     py_files: Iterable[Path],
     *,
     src_root: Path = SRC_ROOT,
-    exclude_globs: tuple[str, ...] | None = None,
 ) -> list[DevPathReachViolation]:
-    r"""Return every SHIPPED module under ``src_root`` that builds a ``dev/`` path.
+    r"""Return every module under ``src_root`` that builds a ``dev/`` path.
 
     This is the metadata loophole an import scan alone cannot see: a module
     reading a dev artifact at runtime does not import ``dev.*`` but is just as
     broken for every installed user, because ``dev/`` ships in neither the
     wheel nor the sdist. Family 5 catches the code dependency; this family
-    catches the data dependency.
+    catches the data dependency. Absolute by operator ruling -- every module
+    under ``src/``, test trees included, is swept.
 
     Four forms are detected, because the boundary breaks in all four and a
     scanner covering only the first is a scanner that cannot see the realistic
@@ -1146,23 +1135,15 @@ def find_dev_path_reach_violations(
     call. Demanding proof of a read would reopen the hole this family exists to
     close: a module constant assigned once and consumed elsewhere (exactly how
     the real baselines in the excluded test tree are written) would then pass
-    while depending on a dev artifact at runtime. A shipped module has no
-    legitimate reason to name the dev tree at all.
-
-    Scoped to SHIPPED modules on the same reasoning as Family 5, and the
-    boundary is read from the packaging config rather than restated.
+    while depending on a dev artifact at runtime. No module under ``src/`` has
+    a legitimate reason to name the dev tree at all.
 
     Args:
         py_files: Module files to scan.
-        src_root: Source root used to resolve shipped status and relative paths.
-        exclude_globs: Wheel exclude globs; read from the packaging config when
-            omitted.
+        src_root: Source root used to resolve relative paths.
     """
-    globs = wheel_exclude_globs() if exclude_globs is None else exclude_globs
     violations: list[DevPathReachViolation] = []
     for path in py_files:
-        if not is_shipped_module(path, src_root=src_root, exclude_globs=globs):
-            continue
         rel = path.relative_to(src_root).as_posix()
         try:
             tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
@@ -1172,6 +1153,130 @@ def find_dev_path_reach_violations(
             DevPathReachViolation(rel, lineno, form, detail) for lineno, form, detail in dev_path_hits(tree)
         )
     return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.form, v.detail))
+
+
+# ---------------------------------------------------------------------------
+# Violation family 10: prose awareness of the dev tree under src/
+# ---------------------------------------------------------------------------
+
+#: Live top-level names of the dev tree, read from disk at scan time so this
+#: family tracks the tree it guards without a maintained list. Only a path or
+#: module reference naming a REAL dev child fires -- ``dev.example.com``,
+#: ``devengada`` and another tree's ``dev`` directory stay silent.
+def _dev_tree_children() -> frozenset[str]:
+    """Return the dev tree's current top-level entries, or empty on read failure."""
+    try:
+        return frozenset(
+            entry.name for entry in (REPO_ROOT / DEV_TOOLING_ROOT).iterdir() if not entry.name.startswith(".")
+        )
+    except OSError:
+        return frozenset()
+
+
+_DEV_TREE_CHILDREN: Final[frozenset[str]] = _dev_tree_children()
+
+
+def prose_token_names_dev_tree(token: str) -> bool:
+    """True if one whitespace-delimited prose token names this repo's dev tree.
+
+    Prose tokens are comment, docstring and multi-line-string words, so the
+    same three discriminations as :func:`names_dev_directory` carry the
+    precision here: the token must START with ``dev`` (an absolute ``/dev/tty``
+    device path and a mid-path ``-sandbox/dev/...`` segment do not), a ``dev``
+    must name a REAL top-level child of the dev tree (``dev.example.com`` and
+    a bare word ``dev`` do not), and the slash form accepts a trailing ``dev/``
+    as a bare folder reference.
+    """
+    stripped = token.strip("()[]{}`'\"<>,:;")
+    if not stripped.startswith(DEV_TOOLING_ROOT):
+        return False
+    segments = stripped.replace("\\", "/").split("/")
+    if len(segments) >= 2:
+        return segments[1] in _DEV_TREE_CHILDREN or segments[1] == ""
+    dotted = stripped.split(".")
+    return len(dotted) >= 2 and dotted[1] in _DEV_TREE_CHILDREN
+
+
+def _comment_lines(source: str) -> list[tuple[int, str]]:
+    """Return every ``(lineno, text)`` COMMENT line in ``source``."""
+    lines: list[tuple[int, str]] = []
+    try:
+        stream = io.StringIO(source).readline
+        for tok in tokenize.generate_tokens(stream):
+            if tok.type == tokenize.COMMENT:
+                lines.append((tok.start[0], tok.string))
+    except (tokenize.TokenError, IndentationError, UnicodeDecodeError):
+        pass
+    return lines
+
+
+def _prose_string_lines(tree: ast.Module) -> list[tuple[int, str]]:
+    """Return ``(lineno, text)`` for every docstring and multi-line string line.
+
+    Docstrings are prose by definition and are swept regardless of length --
+    the former Family 6 skip made a one-line docstring naming the dev tree
+    invisible. A multi-line NON-docstring string is prose too and is swept;
+    single-line non-docstring strings stay Family 6's jurisdiction, so no line
+    is reported by two families.
+    """
+    docstring_ids = _docstring_constant_ids(tree)
+    out: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Constant) and isinstance(node.value, str)):
+            continue
+        is_doc = id(node) in docstring_ids
+        if not is_doc and "\n" not in node.value:
+            continue
+        for offset, line in enumerate(node.value.splitlines()):
+            out.append((node.lineno + offset, line))
+    return out
+
+
+@dataclass
+class DevProseViolation:
+    """A comment, docstring or multi-line string in a src module naming the dev tree."""
+
+    module_path: str
+    lineno: int
+    source_kind: str  # "comment" | "string"
+    detail: str
+
+
+def find_dev_prose_violations(
+    py_files: Iterable[Path],
+    *,
+    src_root: Path = SRC_ROOT,
+) -> list[DevProseViolation]:
+    """Return every prose site under ``src_root`` that names the dev tree.
+
+    The awareness half of the boundary, by operator ruling: even a comment or
+    docstring naming ``dev/`` is forbidden under ``src/``. The precision rules
+    are the same ones the path family documents -- device nodes, near-miss
+    Spanish stems, and other trees' ``dev`` directories stay silent.
+
+    Args:
+        py_files: Module files to scan.
+        src_root: Source root used to resolve relative paths.
+    """
+    violations: list[DevProseViolation] = []
+    for path in py_files:
+        rel = path.relative_to(src_root).as_posix()
+        try:
+            source = path.read_text(encoding=_UTF_8)
+            tree = ast.parse(source, filename=str(path))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            continue
+        for lineno, text in _prose_string_lines(tree):
+            for token in text.split():
+                if prose_token_names_dev_tree(token):
+                    violations.append(DevProseViolation(rel, lineno, "string", text.strip()))
+                    break
+        for lineno, text in _comment_lines(source):
+            for token in text.split():
+                if prose_token_names_dev_tree(token):
+                    violations.append(DevProseViolation(rel, lineno, "comment", text.strip()))
+                    break
+    return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.source_kind))
 
 
 # ---------------------------------------------------------------------------
@@ -2569,6 +2674,9 @@ def tui_migration_manifest_payload(rows: Iterable[TuiMigrationRow]) -> dict[str,
 
 def main() -> int:
     """Scan ``src/cadrumo`` and print the import-hygiene inventory report."""
+    # Prose violations carry arbitrary source text (Spanish prose, en-dashes);
+    # a cp1252 console would crash printing them.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", type=Path, default=None, help="Write full inventory as JSON to this path")
     parser.add_argument(
@@ -2581,6 +2689,14 @@ def main() -> int:
     args = parser.parse_args()
 
     py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
+
+    # The dev-boundary families sweep every module under src/, the harness
+    # distribution included, while the import-hygiene census proper stays
+    # scoped to the cadrumo package whose module names it resolves.
+    harness_root = SRC_ROOT / "cadrumo-harness" / "src"
+    dev_boundary_files = list(py_files)
+    if harness_root.is_dir():
+        dev_boundary_files += scan_directory(harness_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
 
     facades = discover_facades()
     real_facades = {pkg: info for pkg, info in facades.items() if info.has_real_all}
@@ -2595,8 +2711,9 @@ def main() -> int:
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
     fix_classes = classify_fix_strategy(priv_violations, facades)
     underscore_in_all = find_underscore_in_all_violations(facades)
-    dev_tooling_imports = find_dev_tooling_import_violations(py_files)
-    dev_path_reaches = find_dev_path_reach_violations(py_files)
+    dev_tooling_imports = find_dev_tooling_import_violations(dev_boundary_files)
+    dev_path_reaches = find_dev_path_reach_violations(dev_boundary_files)
+    dev_prose_violations = find_dev_prose_violations(dev_boundary_files)
     registry_loader_imports = find_registry_loader_import_violations(all_sites)
     dangling_imports = find_dangling_first_party_imports(all_sites)
     orphaned_modules = find_orphaned_modules(
@@ -2612,6 +2729,7 @@ def main() -> int:
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
+    print(f"Dev-boundary sweep covers {len(dev_boundary_files)} files (cadrumo + harness distribution)")
     print(f"Discovered {len(facades)} __init__.py files; {len(real_facades)} carry a real, non-empty __all__.")
     print()
     print("=== FACADE BOUNDARY SET (packages with real __all__) ===")
@@ -2688,19 +2806,26 @@ def main() -> int:
         print(f"  [{v.package}] {v.name}  ({v.path})")
     print()
 
-    print(f"=== FAMILY 5: shipped modules importing the unshipped dev tooling: {len(dev_tooling_imports)} total ===")
-    print("  (dev/ ships in neither the wheel nor the sdist, so each hit is a ModuleNotFoundError")
-    print("   for every installed user; move what the shipped side needs under src/cadrumo)")
+    print(f"=== FAMILY 5: src modules importing the dev tooling: {len(dev_tooling_imports)} total ===")
+    print("  (absolute boundary: no module under src/ -- shipped or test -- may import dev/")
+    print("   a test needing dev tooling lives under dev/ itself)")
     for v in dev_tooling_imports:
         kind = "dynamic" if v.is_dynamic else "static"
         print(f"  [{kind}] {v.importer_path}:{v.lineno} -> {v.target_mod}")
     print()
 
-    print(f"=== FAMILY 6: shipped modules building a path into the dev tree: {len(dev_path_reaches)} total ===")
+    print(f"=== FAMILY 6: src modules building a path into the dev tree: {len(dev_path_reaches)} total ===")
     print("  (the metadata half of the same boundary: no import statement, but the module still")
-    print("   depends on an artifact absent from the wheel; move it under src/cadrumo/_data/)")
+    print("   names a path into dev/; move the artifact under src/cadrumo/_data/ or the test to dev/)")
     for reach in dev_path_reaches:
         print(f"  [{reach.form}] {reach.module_path}:{reach.lineno} -> {reach.detail!r}")
+    print()
+
+    print(f"=== FAMILY 10: prose naming the dev tree under src/: {len(dev_prose_violations)} total ===")
+    print("  (comments, docstrings and multi-line strings: awareness is forbidden even where")
+    print("   no code path reads the tree; reword to neutral prose)")
+    for v in dev_prose_violations:
+        print(f"  [{v.source_kind}] {v.module_path}:{v.lineno} -> {v.detail!r}")
     print()
 
     print(f"=== FAMILY 7: production imports of a demoted raw-loader symbol: {len(registry_loader_imports)} total ===")
@@ -2772,8 +2897,9 @@ def main() -> int:
     print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
     print(f"  production forwarding wrappers (Family 2b): {len(wrappers_non_test)}")
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
-    print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
-    print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
+    print(f"  src modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
+    print(f"  src modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
+    print(f"  src prose naming the dev tree (Family 10): {len(dev_prose_violations)}")
     print(f"  production imports of a demoted registry raw-loader symbol (Family 7): {len(registry_loader_imports)}")
     print(f"  dangling first-party import targets (Family 8): {len(dangling_imports)}")
     print(f"  orphaned modules (Family 9): {len(orphaned_modules)}")
@@ -2858,6 +2984,15 @@ def main() -> int:
                     "detail": reach.detail,
                 }
                 for reach in dev_path_reaches
+            ],
+            "dev_prose_violations": [
+                {
+                    "module_path": v.module_path,
+                    "lineno": v.lineno,
+                    "source_kind": v.source_kind,
+                    "detail": v.detail,
+                }
+                for v in dev_prose_violations
             ],
             "underscore_in_all_violations": [
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all

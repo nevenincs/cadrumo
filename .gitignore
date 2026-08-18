@@ -479,3 +479,11 @@ cache/
 
 # TUI evaluation harness: sessions, storage root, screenshots (dev/tui)
 dev/tui/.state/
+
+# Rendered generator scratch output never enters the tree.
+dev/registry/scratch*/
+
+# Generated export publication transactions: locks, journals, rollback
+# siblings. Never tracked -- they are live-process state, not content.
+**/.generated-export-transaction-*
+**/.generated-export-backup-*
