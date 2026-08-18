@@ -50,12 +50,60 @@ _WithholdingRowField = Literal[
     "territorial_deduction_clave",
     "perceptor_birth_year",
     "perceptor_situacion_familiar",
+    "representative_tax_id",
+    "spouse_or_unit_titular_tax_id",
+    "disability_clave",
+    "contract_relation_clave",
+    "unit_convivencia_titular_clave",
+    "geographic_mobility_clave",
     "clave",
     "subclave",
     "percibido_dinerario",
     "percibido_especie",
     "retencion_practicada",
     "ingreso_a_cuenta",
+    "ingreso_a_cuenta_repercutido",
+    "accrual_year",
+    "reducciones_aplicables",
+    "gastos_deducibles",
+    "pension_compensatoria",
+    "anualidades_alimentos",
+    "descendants_under_3_total",
+    "descendants_under_3_whole",
+    "descendants_rest_total",
+    "descendants_rest_whole",
+    "descendants_disabled_33_65_total",
+    "descendants_disabled_33_65_whole",
+    "descendants_disabled_mobility_total",
+    "descendants_disabled_mobility_whole",
+    "descendants_disabled_65_plus_total",
+    "descendants_disabled_65_plus_whole",
+    "ascendants_under_75_total",
+    "ascendants_under_75_whole",
+    "ascendants_75_plus_total",
+    "ascendants_75_plus_whole",
+    "ascendants_disabled_33_65_total",
+    "ascendants_disabled_33_65_whole",
+    "ascendants_disabled_mobility_total",
+    "ascendants_disabled_mobility_whole",
+    "ascendants_disabled_65_plus_total",
+    "ascendants_disabled_65_plus_whole",
+    "first_child_compute",
+    "second_child_compute",
+    "third_child_compute",
+    "housing_loan_communication_clave",
+    "incapacity_cash_perception",
+    "incapacity_cash_withholding",
+    "incapacity_kind_value",
+    "incapacity_kind_ingreso_a_cuenta",
+    "incapacity_kind_repercutido",
+    "complemento_infancia_clave",
+    "foral_retention_estatal",
+    "foral_retention_navarra",
+    "foral_retention_araba",
+    "foral_retention_gipuzkoa",
+    "foral_retention_bizkaia",
+    "emerging_stock_excess_clave",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
@@ -106,6 +154,9 @@ class WithholdingObservation(BaseModel):
     clave: RetencionClave
     subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
     percibido_dinerario: Decimal = Decimal("0")
+    """The NON-incapacidad part of the row's dineraria percepciones: the design's
+    campo 11 excludes the incapacidad-laboral prestaciones, which file in their
+    own block (255-281), so the operator records them in the incap facts."""
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
@@ -128,6 +179,138 @@ class WithholdingObservation(BaseModel):
     perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
+    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    """NIF of the perceptor's legal representative, declared by the design only when
+    the perceptor is under 14; every other row writes the design's own spaces."""
+    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
+    unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
+    disability_clave: int | None = Field(default=None, ge=0, le=3)
+    """Perceptor disability degree clave (0 none/<33%, 1 33-65%, 2 33-65% needing
+    third-party help or reduced mobility, 3 >=65%), declared for claves A, B
+    (subclaves 01, 03, 04, 99) and C."""
+    contract_relation_clave: int | None = Field(default=None, ge=1, le=4)
+    """Contract-or-relation type clave (1 general, 2 under-a-year/artists, 3 other
+    special dependent relations, 4 sporadic peonadas), declared for clave A only."""
+    unit_convivencia_titular_clave: int | None = Field(default=None, ge=1, le=2)
+    """Whether the perceptor is the unidad de convivencia's titular (1 yes, 2 no),
+    declared for clave L.29 only."""
+    geographic_mobility_clave: int | None = Field(default=None, ge=0, le=1)
+    """Art. 19.2.f) geographic-mobility deduction flag (1 entitled, 0 not),
+    declared for clave A only."""
+    ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
+    """Ingresos a cuenta efectuados on non-incapacidad especie payments that the
+    payer repercutido to the perceptor (design positions 135-147)."""
+    accrual_year: int | None = Field(default=None, ge=1900, le=2100)
+    """Ejercicio de devengo (design positions 148-151), declared only for atrasos
+    devengados in earlier exercises or reintegros of earlier-exercise amounts;
+    every other row writes the design's own zeros."""
+    reducciones_aplicables: Decimal = Decimal("0")
+    """Art. 18.2/18.3, DT 11/12 and art. 32.1 reductions the payer actually
+    considered (design positions 171-183); the design's own zeros when none."""
+    gastos_deducibles: Decimal = Decimal("0")
+    """Art. 19.2 a)-c) deductible expenses the payer considered to determine the
+    retention rate (design positions 184-196); the design's own zeros when none."""
+    pension_compensatoria: Decimal = Decimal("0")
+    """Annual compensatory pension to the spouse by judicial resolution (design
+    positions 197-209); the design's own zeros when none."""
+    anualidades_alimentos: Decimal = Decimal("0")
+    """Annual food annuities to children by judicial decision (design positions
+    210-222); the design's own zeros when none."""
+    descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
+    """Descendants under 3 (design position 223), counted per art. 58 mínimo por
+    descendientes rules; the design's own zero when none."""
+    descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-223 descendants, those computed por entero (design 224)."""
+    descendants_rest_total: int | None = Field(default=None, ge=0, le=99)
+    """Remaining descendants (design positions 225-226)."""
+    descendants_rest_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the position 225-226 descendants, those computed por entero (227-228)."""
+    descendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled descendants 33-65% (design positions 229-230, art. 60.2)."""
+    descendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 229-230 descendants, those computed por entero (231-232)."""
+    descendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled 33-65% descendants with reduced mobility or third-party help need
+    (design positions 233-234)."""
+    descendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 233-234 descendants, those computed por entero (235-236)."""
+    descendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=99)
+    """Disabled descendants at 65% or more (design positions 237-238)."""
+    descendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=99)
+    """Of the 237-238 descendants, those computed por entero (239-240)."""
+    ascendants_under_75_total: int | None = Field(default=None, ge=0, le=9)
+    """Ascendants under 75 (design position 241, art. 59)."""
+    ascendants_under_75_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-241 ascendants, those computed por entero (242)."""
+    ascendants_75_plus_total: int | None = Field(default=None, ge=0, le=9)
+    """Ascendants at 75 or more (design position 243)."""
+    ascendants_75_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-243 ascendants, those computed por entero (244)."""
+    ascendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled ascendants 33-65% (design position 245)."""
+    ascendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-245 ascendants, those computed por entero (246)."""
+    ascendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled 33-65% ascendants with reduced mobility or third-party help need
+    (design position 247)."""
+    ascendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-247 ascendants, those computed por entero (248)."""
+    ascendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=9)
+    """Disabled ascendants at 65% or more (design position 249)."""
+    ascendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    """Of the position-249 ascendants, those computed por entero (250)."""
+    first_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the first child was computed for the retention rate (design position
+    251): 1 por entero, 2 por mitad."""
+    second_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the second child was computed (design position 252)."""
+    third_child_compute: int | None = Field(default=None, ge=1, le=2)
+    """How the third child was computed (design position 253)."""
+    housing_loan_communication_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the perceptor communicated vivienda-habitual loan amounts at some
+    point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
+    clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
+    incapacity_cash_perception: Decimal = Decimal("0")
+    """Dineraria incapacidad-laboral percepciones paid directly by the payer
+    (design positions 256-268); the design's own zeros when none."""
+    incapacity_cash_withholding: Decimal = Decimal("0")
+    """Retentions on the position-256 percepciones (design positions 269-281);
+    the design's own zeros when none -- a perceptor who suffered no retention
+    carries zeros by the design's own rule."""
+    incapacity_kind_value: Decimal = Decimal("0")
+    """Valoracion of in-kind incapacidad-laboral prestaciones under art. 43
+    (design positions 283-295); the design's own zeros when none."""
+    incapacity_kind_ingreso_a_cuenta: Decimal = Decimal("0")
+    """Ingresos a cuenta efectuados on the position-283 prestaciones (design
+    positions 296-308); the design's own zeros when none."""
+    incapacity_kind_repercutido: Decimal = Decimal("0")
+    """The part of the position-296 ingresos a cuenta repercutido to the
+    perceptor (design positions 309-321); the design's own zeros when none."""
+    complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
+    """Whether any mensualidad of the L.29 prestacion included the IMV complemento
+    de ayuda para la infancia (design position 322): clave 1 included, 2 not --
+    both are recorded facts, never defaults."""
+    foral_retention_estatal: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Hacienda Estatal
+    (design positions 323-335); the design's own zeros when none."""
+    foral_retention_navarra: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Comunidad Foral
+    de Navarra (design positions 336-348); the design's own zeros when none."""
+    foral_retention_araba: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Araba/Alava (design positions 349-361); the design's own zeros when none."""
+    foral_retention_gipuzkoa: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Gipuzkoa (design positions 362-374); the design's own zeros when none."""
+    foral_retention_bizkaia: Decimal = Decimal("0")
+    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
+    de Bizkaia (design positions 375-387); the design's own zeros when none."""
+    emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the row's in-kind percepciones include emerging-company stock over
+    the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
+    of the in-kind retributions -- both recorded facts, declared only for clave A
+    and only when the especie block has content."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -146,7 +329,27 @@ class WithholdingObservation(BaseModel):
             return RetencionClave(value)
         return value
 
-    @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
+    @field_validator(
+        "percibido_dinerario",
+        "percibido_especie",
+        "retencion_practicada",
+        "ingreso_a_cuenta",
+        "ingreso_a_cuenta_repercutido",
+        "reducciones_aplicables",
+        "gastos_deducibles",
+        "pension_compensatoria",
+        "anualidades_alimentos",
+        "incapacity_cash_perception",
+        "incapacity_cash_withholding",
+        "incapacity_kind_value",
+        "incapacity_kind_ingreso_a_cuenta",
+        "incapacity_kind_repercutido",
+        "foral_retention_estatal",
+        "foral_retention_navarra",
+        "foral_retention_araba",
+        "foral_retention_gipuzkoa",
+        "foral_retention_bizkaia",
+    )
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
@@ -300,21 +503,45 @@ def distinct_percepcion_keys(
 
 
 def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum percibido dinerario plus percibido en especie.
+    """Sum percibido dinerario, en especie, and both incapacidad-laboral parts.
 
-    Shared by the bound ``percibido_sum`` fact and the per-clave breakdown so
-    a change to what counts as percibido reaches both.
+    The base amount facts carry the NON-incapacidad part (the design field's own
+    meaning); the incapacidad blocks are separate parts the design files at
+    255-321, so the row's full percibido total is the four magnitudes together.
+    Shared by the bound ``percibido_sum`` fact and the per-clave breakdown so a
+    change to what counts as percibido reaches both.
     """
-    return sum((obs.percibido_dinerario + obs.percibido_especie for obs in observations), Decimal("0"))
+    return sum(
+        (
+            obs.percibido_dinerario
+            + obs.percibido_especie
+            + obs.incapacity_cash_perception
+            + obs.incapacity_kind_value
+            for obs in observations
+        ),
+        Decimal("0"),
+    )
 
 
 def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum retención practicada plus ingreso a cuenta.
+    """Sum retención practicada, ingreso a cuenta, and the incap retentions.
 
-    Shared by the bound ``retencion_sum`` fact and the per-clave breakdown so
-    a change to what counts as retenido reaches both.
+    The base amount facts carry the NON-incapacidad part; the retentions on the
+    incapacidad-laboral percepciones file in their own design block, so the
+    row's full retenido total is the four magnitudes together. Shared by the
+    bound ``retencion_sum`` fact and the per-clave breakdown so a change to what
+    counts as retenido reaches both.
     """
-    return sum((obs.retencion_practicada + obs.ingreso_a_cuenta for obs in observations), Decimal("0"))
+    return sum(
+        (
+            obs.retencion_practicada
+            + obs.ingreso_a_cuenta
+            + obs.incapacity_cash_withholding
+            + obs.incapacity_kind_ingreso_a_cuenta
+            for obs in observations
+        ),
+        Decimal("0"),
+    )
 
 
 def resolve_withholding_binding_values(
@@ -376,7 +603,10 @@ def resolve_withholding_binding_row_values(
         grouping = cohort_key[0]
         _, sample_selector = members[0]
         scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
-        rows = _build_withholding_rows(grouping, scope_filtered)
+        required_fields = frozenset(
+            selector.row_field for _, selector in members if selector.row_field is not None
+        )
+        rows = _build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
         for binding, selector in members:
             assert selector.row_field is not None
             for row_index, row in enumerate(rows, start=1):
@@ -392,6 +622,10 @@ def resolve_withholding_binding_row_values(
 
 _DATOS_ADICIONALES_CLAVES: frozenset[str] = frozenset({"A", "C"})
 _DATOS_ADICIONALES_B_SUBCLAVES: frozenset[str] = frozenset({"01", "03", "04", "99"})
+_REDUCCIONES_F_G_SUBCLAVES: frozenset[str] = frozenset({"01", "02", "03", "04", "05", "06"})
+_REDUCCIONES_G_SUBCLAVES: frozenset[str] = frozenset({"01", "02", "03", "04", "05", "06", "08"})
+_GASTOS_E_SUBCLAVES: frozenset[str] = frozenset({"01", "02"})
+_GASTOS_L_SUBCLAVES: frozenset[str] = frozenset({"05", "10", "27"})
 
 
 def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
@@ -405,36 +639,427 @@ def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
     return str(clave) == "B" and subclave in _DATOS_ADICIONALES_B_SUBCLAVES
 
 
+def _declares_reducciones(clave: object, subclave: object) -> bool:
+    """True for the claves the design's REDUCCIONES APLICABLES campo (171-183) applies to.
+
+    Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E``, ``F
+    (subclaves 01 a 06)``, ``G (subclaves 01 a 06 y 08)``, ``H`` e ``I``.
+    """
+    token = str(clave)
+    if token in {"A", "C", "E", "H", "I"}:
+        return True
+    if token == "B":
+        return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
+    if token == "F":
+        return str(subclave) in _REDUCCIONES_F_G_SUBCLAVES
+    if token == "G":
+        return str(subclave) in _REDUCCIONES_G_SUBCLAVES
+    return False
+
+
+def _declares_gastos(clave: object, subclave: object) -> bool:
+    """True for the claves the design's GASTOS DEDUCIBLES campo (184-196) applies to.
+
+    Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E (subclaves 01
+    y 02)``, and exceptionally ``L.05``, ``L.10`` and ``L.27``.
+    """
+    token = str(clave)
+    if token in {"A", "C"}:
+        return True
+    if token == "B":
+        return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
+    if token == "E":
+        return str(subclave) in _GASTOS_E_SUBCLAVES
+    if token == "L":
+        return str(subclave) in _GASTOS_L_SUBCLAVES
+    return False
+
+
 def _require_consistent_identity_facts(
-    bucket: Mapping[str, Decimal | str],
+    bucket: dict[str, Decimal | str],
     observation: WithholdingObservation,
     *,
     fields: tuple[str, ...],
 ) -> None:
-    """Refuse a cohort whose later observation contradicts an earlier identity fact.
+    """Merge one cohort observation's identity facts and refuse contradictions.
 
     Amounts accumulate, but a perceptor has ONE province, one birth year and one
-    family situation; two observations disagreeing on one of them is a finding
-    the resolver must surface rather than silently keep the first value.
+    family situation: the first observation that carries a fact sets it, a later
+    observation that disagrees is a finding the resolver must surface rather than
+    silently keep the first value, and a later observation that carries nothing
+    leaves the established fact alone.
     """
     for field in fields:
         stored = bucket.get(field)
         incoming = getattr(observation, field)
-        if stored is None or incoming is None:
+        if incoming is None:
             continue
-        if field in ("perceptor_birth_year", "perceptor_situacion_familiar"):
-            stored = str(stored)
-            incoming = str(incoming)
-        if stored != incoming:
+        if stored is None:
+            bucket[field] = incoming
+        elif stored != incoming:
             raise RegistryValidationError(
                 f"withholding rows for perceptor {observation.perceptor_tax_id!r} disagree on "
                 f"{field!r}: {stored!r} vs {incoming!r}",
             )
 
 
+_CLAVE_L29_SUBCLAVE = "29"
+
+#: The design's family-composition count positions (223-253), all declared only
+#: for claves A, B (subclaves 01, 03, 04, 99) and C, all zeros when no content.
+_DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
+    "descendants_under_3_total",
+    "descendants_under_3_whole",
+    "descendants_rest_total",
+    "descendants_rest_whole",
+    "descendants_disabled_33_65_total",
+    "descendants_disabled_33_65_whole",
+    "descendants_disabled_mobility_total",
+    "descendants_disabled_mobility_whole",
+    "descendants_disabled_65_plus_total",
+    "descendants_disabled_65_plus_whole",
+    "ascendants_under_75_total",
+    "ascendants_under_75_whole",
+    "ascendants_75_plus_total",
+    "ascendants_75_plus_whole",
+    "ascendants_disabled_33_65_total",
+    "ascendants_disabled_33_65_whole",
+    "ascendants_disabled_mobility_total",
+    "ascendants_disabled_mobility_whole",
+    "ascendants_disabled_65_plus_total",
+    "ascendants_disabled_65_plus_whole",
+    "first_child_compute",
+    "second_child_compute",
+    "third_child_compute",
+)
+
+
+def _declares_incapacidad_dineraria(clave: object, subclave: object) -> bool:
+    """True for the claves the design's dineraria incapacidad-laboral block
+    (255-281) applies to: ``A`` and ``B.01``."""
+    token = str(clave)
+    return token == "A" or (token == "B" and str(subclave) == "01")
+
+
+def _is_clave_l29(clave: object, subclave: object) -> bool:
+    """True for the clave L.29 the design's unidad-de-convivencia block applies to."""
+    return str(clave) == "L" and str(subclave) == _CLAVE_L29_SUBCLAVE
+
+
+def _finalise_withholding_row(
+    row: Mapping[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+) -> Mapping[str, Decimal | str]:
+    """Apply the design's per-clave completion rules to one accumulated row.
+
+    The accumulation pass merges observations and their optional facts; this pass
+    turns that into the record content the design defines. Every rule that can
+    refuse is gated on ``required_fields`` -- the row fields the RESOLVING
+    revision's bindings declare -- because modelo 193 rows share this observation
+    class and its store, and a refusal for a field 193 never asks for would be
+    cross-modelo noise.
+
+    For each declared field:
+
+    * a fact the design restricts to certain claves REFUSES when it arrives on a
+      row outside those claves, and REFUSES again when the design marks it as
+      always recorded for the row's clave and no observation carries it -- a
+      payer that must have recorded the datum and did not is a filing defect,
+      never a silent blank;
+    * the spouse/titular NIF is declared only when its triggering fact is present
+      (situacion familiar 2, or L.29 with titular clave 2) and refuses then, and
+      never equals the perceptor's own NIF;
+    * every other row carries the design's own no-content: spaces for the
+      NIF/one-digit claves the design does not declare, zeros for the numeric
+      fields whose design says "en cualquier otro caso se rellenará a ceros".
+    """
+    finalised = dict(row)
+    clave = str(row["clave"])
+    subclave = str(row["subclave"])
+    perceptor_tax_id = str(row["perceptor_tax_id"])
+    datos_adicionales = _declares_datos_adicionales(clave, subclave)
+    is_clave_a = clave == "A"
+    is_clave_l29 = _is_clave_l29(clave, subclave)
+
+    birth_year = row.get("perceptor_birth_year")
+    situacion = row.get("perceptor_situacion_familiar")
+    disability = row.get("disability_clave")
+    spouse = row.get("spouse_or_unit_titular_tax_id")
+    contract = row.get("contract_relation_clave")
+    titular = row.get("unit_convivencia_titular_clave")
+    mobility = row.get("geographic_mobility_clave")
+
+    if "perceptor_birth_year" in required_fields:
+        if birth_year is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "perceptor_birth_year, which design campo 15 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and birth_year is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "perceptor_birth_year (design campo 15): no observation carries it",
+            )
+    if "perceptor_situacion_familiar" in required_fields:
+        if situacion is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "perceptor_situacion_familiar, which design campo 16 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and situacion is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "perceptor_situacion_familiar (design campo 16): no observation carries it",
+            )
+    if "disability_clave" in required_fields:
+        if disability is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "disability_clave, which design campo 18 declares only for claves A, "
+                "B (subclaves 01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and disability is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "disability_clave (design campo 18, clave 0 for no disability): no observation carries it",
+            )
+    if "contract_relation_clave" in required_fields:
+        if contract is not None and not is_clave_a:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "contract_relation_clave, which design campo 19 declares only for clave A",
+            )
+        if is_clave_a and contract is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+                "contract_relation_clave (design campo 19): no observation carries it",
+            )
+    if "unit_convivencia_titular_clave" in required_fields:
+        if titular is not None and not is_clave_l29:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "unit_convivencia_titular_clave, which design campo 20 declares only for clave L.29",
+            )
+        if is_clave_l29 and titular is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
+                "unit_convivencia_titular_clave (design campo 20): no observation carries it",
+            )
+    if "geographic_mobility_clave" in required_fields:
+        if mobility is not None and not is_clave_a:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "geographic_mobility_clave, which design campo 21 declares only for clave A",
+            )
+        if is_clave_a and mobility is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+                "geographic_mobility_clave (design campo 21): no observation carries it",
+            )
+    if "spouse_or_unit_titular_tax_id" in required_fields:
+        situacion_declared = "perceptor_situacion_familiar" in required_fields
+        titular_declared = "unit_convivencia_titular_clave" in required_fields
+        spouse_context = (
+            datos_adicionales and situacion_declared and situacion is not None and str(situacion) == "2"
+        ) or (is_clave_l29 and titular_declared and titular is not None and str(titular) == "2")
+        if spouse is not None and not spouse_context and (situacion_declared or titular_declared):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "spouse_or_unit_titular_tax_id, which design campo 17 declares only when "
+                "situacion familiar is 2 or clave L.29 has titular clave 2",
+            )
+        if spouse_context and spouse is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "spouse_or_unit_titular_tax_id (design campo 17): no observation carries it",
+            )
+        if spouse is not None and spouse == perceptor_tax_id:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r}: spouse_or_unit_titular_tax_id "
+                "equals the perceptor's own NIF, which the design campo 17 excludes",
+            )
+
+    if "reducciones_aplicables" in required_fields:
+        if row.get("reducciones_aplicables") not in (None, Decimal("0")) and not _declares_reducciones(clave, subclave):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "reducciones_aplicables, which design campo 22 declares only for claves A, "
+                "B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I",
+            )
+    if "gastos_deducibles" in required_fields:
+        if row.get("gastos_deducibles") not in (None, Decimal("0")) and not _declares_gastos(clave, subclave):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "gastos_deducibles, which design campo 23 declares only for claves A, "
+                "B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27",
+            )
+    if "pension_compensatoria" in required_fields:
+        if row.get("pension_compensatoria") not in (None, Decimal("0")) and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "pension_compensatoria, which design campo 24 declares only for claves A, "
+                "B (01, 03, 04, 99) and C",
+            )
+    if "anualidades_alimentos" in required_fields:
+        if row.get("anualidades_alimentos") not in (None, Decimal("0")) and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "anualidades_alimentos, which design campo 25 declares only for claves A, "
+                "B (01, 03, 04, 99) and C",
+            )
+    for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
+        if count_field not in required_fields:
+            continue
+        value = row.get(count_field)
+        if value is not None and int(value) != 0 and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                f"a nonzero {count_field}, which the design's family-composition campos "
+                "declare only for claves A, B (01, 03, 04, 99) and C",
+            )
+    if "housing_loan_communication_clave" in required_fields:
+        housing = row.get("housing_loan_communication_clave")
+        if housing is not None and not datos_adicionales:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "housing_loan_communication_clave, which design campo 27 declares only for "
+                "claves A, B (01, 03, 04, 99) and C",
+            )
+        if datos_adicionales and housing is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "housing_loan_communication_clave (design campo 27, clave 0 for never "
+                "applied): no observation carries it",
+            )
+        finalised["housing_loan_communication_clave"] = str(housing) if housing is not None else " "
+    for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
+        value = row.get(count_field)
+        finalised[count_field] = str(value) if value is not None else "0"
+
+    # The design's incapacidad-laboral blocks hold the incap PART of each
+    # magnitude, and the base campos explicitly exclude it ("No se incluiran en
+    # este campo..."). The observation therefore carries the SPLIT: the base
+    # amount facts are the non-incapacidad part (the design field's own
+    # meaning), and the incap facts carry the part the design files at 255-321.
+    # The totals helpers (percibido_total / retencion_total) add the two parts
+    # back together, so the resumen-anual magnitudes stay the row's full total.
+    incap_dineraria = _declares_incapacidad_dineraria(clave, subclave)
+    incap_cash = row["incapacity_cash_perception"]
+    incap_kind_value = row["incapacity_kind_value"]
+    incap_kind_ingreso = row["incapacity_kind_ingreso_a_cuenta"]
+    assert isinstance(incap_cash, Decimal)
+    if "incapacity_cash_perception" in required_fields:
+        if incap_cash != 0 and not incap_dineraria:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_cash_perception, which design campo 32 declares only for claves A and B.01",
+            )
+    if "incapacity_kind_value" in required_fields:
+        if incap_kind_value != 0 and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_kind_value, which design campo 33 declares only for clave A",
+            )
+    if "incapacity_kind_ingreso_a_cuenta" in required_fields:
+        if incap_kind_ingreso != 0 and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "incapacity_kind_ingreso_a_cuenta, which design campo 33 declares only for clave A",
+            )
+
+    if "complemento_infancia_clave" in required_fields:
+        complemento = row.get("complemento_infancia_clave")
+        if complemento is not None and not is_clave_l29:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "complemento_infancia_clave, which design campo 34 declares only for clave L.29",
+            )
+        if is_clave_l29 and complemento is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
+                "complemento_infancia_clave (design campo 34): no observation carries it",
+            )
+        finalised["complemento_infancia_clave"] = str(complemento) if complemento is not None else " "
+
+    if "foral_retention_estatal" in required_fields:
+        foral_parts = tuple(
+            row[field] for field in (
+                "foral_retention_estatal",
+                "foral_retention_navarra",
+                "foral_retention_araba",
+                "foral_retention_gipuzkoa",
+                "foral_retention_bizkaia",
+            )
+        )
+        foral_total = sum(foral_parts, Decimal("0"))
+        clave_e_total = row["retencion_practicada"] + row["ingreso_a_cuenta"]
+        if any(part != 0 for part in foral_parts) and clave != "E":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "foral retentions, which design campo 35 declares exclusively for clave E",
+            )
+        if clave == "E" and foral_total == 0 and clave_e_total != 0:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave E require "
+                "foral retentions (design campo 35): the payer must record where the "
+                "retenciones and ingresos a cuenta were ingresados",
+            )
+        if clave == "E" and foral_total != clave_e_total:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave E carry foral "
+                f"retentions summing to {foral_total}, which design campo 35 requires to equal "
+                f"the row's retenciones practicadas plus ingresos a cuenta ({clave_e_total})",
+            )
+
+    if "emerging_stock_excess_clave" in required_fields:
+        stock = row.get("emerging_stock_excess_clave")
+        especie_content = (
+            row["percibido_especie"] != 0
+            or row["ingreso_a_cuenta"] != 0
+            or row["ingreso_a_cuenta_repercutido"] != 0
+        )
+        if stock is not None and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "emerging_stock_excess_clave, which design campo 36 declares only for clave A",
+            )
+        if stock is not None and not especie_content:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "emerging_stock_excess_clave without any in-kind percepcion, which design "
+                "campo 36 declares only when the especie block has content",
+            )
+        if stock is None and clave == "A" and especie_content:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "in-kind percepciones but no emerging_stock_excess_clave, which design "
+                "campo 36 requires then (clave 0 for the rest of the in-kind retributions)",
+            )
+        finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
+
+    finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
+    finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
+    finalised["disability_clave"] = str(disability) if disability is not None else " "
+    finalised["contract_relation_clave"] = str(contract) if is_clave_a else " "
+    finalised["unit_convivencia_titular_clave"] = str(titular) if is_clave_l29 else " "
+    finalised["geographic_mobility_clave"] = str(mobility) if is_clave_a else " "
+    finalised["spouse_or_unit_titular_tax_id"] = spouse if spouse is not None else " " * 9
+
+    representative = row.get("representative_tax_id")
+    finalised["representative_tax_id"] = representative if representative is not None else " " * 9
+    accrual_year = row.get("accrual_year")
+    finalised["accrual_year"] = str(accrual_year) if accrual_year is not None else "0000"
+    return finalised
+
+
 def _build_withholding_rows(
     grouping: _WithholdingGrouping,
     observations: tuple[WithholdingObservation, ...],
+    *,
+    required_fields: frozenset[str] = frozenset(),
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group withholding observations into rows keyed by perceptor and optionally clave."""
     accum: dict[tuple[str | None, str, str, str], dict[str, Decimal | str]] = {}
@@ -465,6 +1090,21 @@ def _build_withholding_rows(
             "percibido_especie": Decimal("0"),
             "retencion_practicada": Decimal("0"),
             "ingreso_a_cuenta": Decimal("0"),
+            "ingreso_a_cuenta_repercutido": Decimal("0"),
+            "reducciones_aplicables": Decimal("0"),
+            "gastos_deducibles": Decimal("0"),
+            "pension_compensatoria": Decimal("0"),
+            "anualidades_alimentos": Decimal("0"),
+            "incapacity_cash_perception": Decimal("0"),
+            "incapacity_cash_withholding": Decimal("0"),
+            "incapacity_kind_value": Decimal("0"),
+            "incapacity_kind_ingreso_a_cuenta": Decimal("0"),
+            "incapacity_kind_repercutido": Decimal("0"),
+            "foral_retention_estatal": Decimal("0"),
+            "foral_retention_navarra": Decimal("0"),
+            "foral_retention_araba": Decimal("0"),
+            "foral_retention_gipuzkoa": Decimal("0"),
+            "foral_retention_bizkaia": Decimal("0"),
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
@@ -472,17 +1112,6 @@ def _build_withholding_rows(
             identity["province_code"] = observation.province_code
         if observation.territorial_deduction_clave is not None:
             identity["territorial_deduction_clave"] = observation.territorial_deduction_clave
-        if _declares_datos_adicionales(observation.clave, observation.subclave):
-            # The design only asks for these facts on the listed claves; for any
-            # other row the design's own no-content is the correct value, not an
-            # absence.
-            identity["perceptor_birth_year"] = observation.perceptor_birth_year if observation.perceptor_birth_year is not None else "0000"
-            identity["perceptor_situacion_familiar"] = (
-                observation.perceptor_situacion_familiar if observation.perceptor_situacion_familiar is not None else "0"
-            )
-        else:
-            identity["perceptor_birth_year"] = "0000"
-            identity["perceptor_situacion_familiar"] = "0"
         bucket = accum.setdefault(key, identity)
         _require_consistent_identity_facts(
             bucket,
@@ -492,21 +1121,65 @@ def _build_withholding_rows(
                 "territorial_deduction_clave",
                 "perceptor_birth_year",
                 "perceptor_situacion_familiar",
+                "representative_tax_id",
+                "spouse_or_unit_titular_tax_id",
+                "disability_clave",
+                "contract_relation_clave",
+                "unit_convivencia_titular_clave",
+                "geographic_mobility_clave",
+                "accrual_year",
+                "housing_loan_communication_clave",
+                "complemento_infancia_clave",
+                "emerging_stock_excess_clave",
+                *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )
         prev_dinerario = bucket["percibido_dinerario"]
         prev_especie = bucket["percibido_especie"]
         prev_retencion = bucket["retencion_practicada"]
         prev_ingreso = bucket["ingreso_a_cuenta"]
+        prev_repercutido = bucket["ingreso_a_cuenta_repercutido"]
+        prev_reducciones = bucket["reducciones_aplicables"]
+        prev_gastos = bucket["gastos_deducibles"]
+        prev_pension = bucket["pension_compensatoria"]
+        prev_anualidades = bucket["anualidades_alimentos"]
         assert isinstance(prev_dinerario, Decimal)
         assert isinstance(prev_especie, Decimal)
         assert isinstance(prev_retencion, Decimal)
         assert isinstance(prev_ingreso, Decimal)
+        assert isinstance(prev_repercutido, Decimal)
+        assert isinstance(prev_reducciones, Decimal)
+        assert isinstance(prev_gastos, Decimal)
+        assert isinstance(prev_pension, Decimal)
+        assert isinstance(prev_anualidades, Decimal)
         bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
         bucket["percibido_especie"] = prev_especie + observation.percibido_especie
         bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
         bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
-    return tuple(accum[key] for key in sorted(accum.keys()))
+        bucket["ingreso_a_cuenta_repercutido"] = prev_repercutido + observation.ingreso_a_cuenta_repercutido
+        bucket["reducciones_aplicables"] = prev_reducciones + observation.reducciones_aplicables
+        bucket["gastos_deducibles"] = prev_gastos + observation.gastos_deducibles
+        bucket["pension_compensatoria"] = prev_pension + observation.pension_compensatoria
+        bucket["anualidades_alimentos"] = prev_anualidades + observation.anualidades_alimentos
+        for amount_field in (
+            "incapacity_cash_perception",
+            "incapacity_cash_withholding",
+            "incapacity_kind_value",
+            "incapacity_kind_ingreso_a_cuenta",
+            "incapacity_kind_repercutido",
+            "foral_retention_estatal",
+            "foral_retention_navarra",
+            "foral_retention_araba",
+            "foral_retention_gipuzkoa",
+            "foral_retention_bizkaia",
+        ):
+            previous = bucket[amount_field]
+            assert isinstance(previous, Decimal)
+            bucket[amount_field] = previous + getattr(observation, amount_field)
+    return tuple(
+        _finalise_withholding_row(accum[key], required_fields=required_fields)
+        for key in sorted(accum.keys())
+    )
 
 
 class WithholdingClaveBreakdown(BaseModel):
@@ -643,14 +1316,8 @@ def compute_withholding_totals_parity(
         collapse into ``is_consistent=True``.
     """
     rows = tuple(observations)
-    percepciones_row_total = sum(
-        (row.percibido_dinerario + row.percibido_especie for row in rows),
-        Decimal("0"),
-    )
-    retenciones_row_total = sum(
-        (row.retencion_practicada + row.ingreso_a_cuenta for row in rows),
-        Decimal("0"),
-    )
+    percepciones_row_total = percibido_total(rows)
+    retenciones_row_total = retencion_total(rows)
     percepciones_delta = percepciones_row_total - percepciones_summary_total
     retenciones_delta = retenciones_row_total - retenciones_summary_total
     is_consistent = abs(percepciones_delta) <= tolerance and abs(retenciones_delta) <= tolerance

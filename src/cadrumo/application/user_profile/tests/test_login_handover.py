@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import time
 from contextvars import Token
 from datetime import UTC, datetime, timedelta
@@ -1093,10 +1094,14 @@ def test_keyring_acceleration_failure_leaves_b_process_scoped_after_handover(tmp
                 child.join(timeout=30)
 
 
-def test_crash_after_b_handover_recovers_only_durable_b_pointer(tmp_path: Path) -> None:
+def test_crash_after_b_handover_recovers_only_durable_b_pointer(
+    tmp_path: Path,
+    _registered_handover_profiles: tuple[Path, str, str],
+) -> None:
     """A post-swap process crash leaves B as the only recoverable selected profile."""
+    template_root, profile_a, profile_b = _registered_handover_profiles
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_a, profile_b = _register_two_profiles(storage_root)
+        shutil.copytree(template_root, storage_root)
         context = get_context("spawn")
         crashing_child = context.Process(
             target=_crash_after_b_handover_child,
@@ -1139,6 +1144,35 @@ def test_crash_after_b_handover_recovers_only_durable_b_pointer(tmp_path: Path) 
 #: Phases at which the handover was already complete when the process died,
 #: so the recovery login has nothing to replay.
 _TERMINAL_CRASH_PHASES = frozenset({_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED})
+
+
+@pytest.fixture(scope="module")
+def _registered_handover_profiles(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, str, str]:
+    """Register the two handover profiles once; each caller copies the tree.
+
+    The crash-recovery matrix is the same A-to-B handover crashed at five
+    durable phases, and every run needs a fresh storage tree because the
+    handover mutates it. Registration is the expensive half -- every wrap of
+    a DEK runs a real Argon2id derivation through a supervised worker in its
+    own interpreter -- so register once through the production credential
+    door here and let each caller copy the completed root into its own
+    ``tmp_path``. The registration cost is paid once for the module instead
+    of once per crash phase.
+
+    Children are unaffected by the move: every spawned child rebuilds its
+    settings from the storage root it is handed, and the secret substrate is
+    a sibling of the root, never inside it, so the copied tree is complete
+    and self-consistent for any child that receives it.
+    """
+    template_root = tmp_path_factory.mktemp("handover-template")
+    with isolated_profile_storage_root(tmp_path=template_root) as storage_root:
+        profile_a, profile_b = _register_two_profiles(storage_root)
+        pointer = read_pointer(storage_root)
+        assert pointer is not None and pointer.bucket_id == profile_b, (
+            "the handover template must materialise the durable pointer; "
+            "registration through the production door did not complete"
+        )
+        return storage_root, profile_a, profile_b
 
 
 def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) -> None:
@@ -1185,6 +1219,7 @@ def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) ->
 def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     tmp_path: Path,
     phase: _HandoverPhase,
+    _registered_handover_profiles: tuple[Path, str, str],
 ) -> None:
     """A real process death at every published phase has one B recovery result.
 
@@ -1195,8 +1230,9 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     only that B comes back would leave the retired profile's DEK recoverable
     with no passphrase at four of the five phases.
     """
+    template_root, profile_a, profile_b = _registered_handover_profiles
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_a, profile_b = _register_two_profiles(storage_root)
+        shutil.copytree(template_root, storage_root)
         context = get_context("spawn")
         crashing_child = context.Process(
             target=_crash_at_handover_phase_child,

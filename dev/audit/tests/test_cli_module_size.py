@@ -1,10 +1,10 @@
 """Static size guards for CLI modules and command functions.
 
 See Also:
-    :func:`~tests._inventory.package_python_files`
+    :func:`~cadrumo.tests._inventory.package_python_files`
         Shared source inventory used to enumerate production CLI modules
         without bespoke filesystem walking.
-    :mod:`~tests.test_codebase_size_budgets`
+    :mod:`~dev.audit.tests.test_codebase_size_budgets`
         Codebase-wide sibling ratchet. Both gates now read the SAME generated
         limit table, the committed size-budget baseline, so this CLI-scoped
         view cannot drift away from it.
@@ -19,19 +19,18 @@ projection replaces.
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ....tests import (
+from cadrumo.tests import (
     CALLABLE_POLICY,
     MODULE_POLICY,
     REPO_ROOT,
     ast_for_path,
-    load_size_budget_baseline,
     package_python_files,
 )
+from dev.audit.size_budget import load_size_budget_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -96,7 +95,7 @@ def test_production_cli_modules_do_not_grow_into_new_monoliths() -> None:
     assert offenders == [], "CLI module size budget exceeded:\n  " + "\n  ".join(offenders)
 
 
-def test_cli_command_functions_do_not_grow_past_complexity_budget(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_cli_command_functions_do_not_grow_past_complexity_budget() -> None:
     """Command and command-registrar bodies have bounded line budgets."""
     modules = _production_cli_modules()
     assert modules, "the CLI module walk found no modules; the scan is broken, not the tree clean"
@@ -106,7 +105,7 @@ def test_cli_command_functions_do_not_grow_past_complexity_budget(source_tree_as
     inspected = 0
     for path in modules:
         relative = path.relative_to(_CLI_ROOT).as_posix()
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         if tree is None:
             raise AssertionError(f"unable to parse {relative}")
         for node in ast.walk(tree):

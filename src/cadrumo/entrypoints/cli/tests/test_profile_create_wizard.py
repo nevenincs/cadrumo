@@ -1,34 +1,23 @@
 """Terminal-boundary coverage for ``aeat config profile create``.
 
-``config profile create`` is the operator's first contact with Cadrumo. A
-capable terminal is diverted to the profile manager before this command
-runs; a host without a usable console (this test process included) reaches
-the command and is refused, rather than being half-prompted. This module
-covers that CLI boundary: the machine-caller contract of a refused run, and
+``config profile create`` is the operator's first contact with Cadrumo.
+The scripted arm (``create NAME --quiet``) is the live creation door; its
+real-behaviour coverage lives in the sibling
+``_config/tests/test_scripted_profile_creation`` module, including the
+refusal when no passphrase channel is available and the JSON-envelope
+shape of a successful run. This module keeps the runtime-dispatch
+boundary of a naked ``create`` -- it reaches its own refusal without a
+missing-argument error and without being pre-empted by the storage
+runtime's no-active-session refusal -- plus the verb-path preference and
 the pinned question inventory the flags are derived from.
 
-The refusal is now unconditional. Credential registration is the only
-creation door, so every ``create`` invocation is refused whether or not a
-console exists and whether or not flags were supplied. What survives here is
-the boundary contract of a refused run -- no traceback, no half-prompt, a
-parseable stream under ``--format json`` -- which holds under either cause.
-Two tests were retired because they asserted that a scripted create
-SUCCEEDS:
-
-- create_does_not_require_an_existing_active_session: its subject was a
-  second scripted create in an existing root. No successor today; two
-  in-process registrations in one process are blocked by a separate open
-  handover defect, so re-founding it would need a construction production
-  cannot produce.
-- bare_create_bypasses_a_locked_existing_profile: its subject -- that a bare
-  create is not pre-empted by the storage runtime's no-active-session
-  refusal -- survives, and is asserted below against a profile seeded
-  through the registration door and then locked.
+Two interactive-run tests were retired with the wizard: their premise --
+that a console-less ``create`` is refused -- died when the scripted arm
+landed, and their refusal and JSON-parseability shapes are asserted by
+the scripted-creation module.
 """
 
 from __future__ import annotations
-
-import json
 
 import pytest
 
@@ -40,25 +29,6 @@ from ....tests.user_profile import register_cli_profile
 from .. import _prefer_complete_verb_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_PROFILE_NAME = "Primer Contacto"
-
-_CREATE_ARGS = [
-    "config", "profile", "create", _PROFILE_NAME,
-]  # fmt: skip
-
-
-def test_interactive_create_without_a_console_refuses_instructively() -> None:
-    """A host with no usable console is refused, never half-prompted.
-
-    The capability probe classifies this test process as non-interactive;
-    the refusal must be the translated unsupported-console error, not a
-    traceback and not a partially-created profile.
-    """
-    result = invoke_cached_cli(_CREATE_ARGS)
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-
 
 def test_create_without_a_name_reaches_runtime_dispatch() -> None:
     """The registration TUI owns name collection for a naked create."""
@@ -109,25 +79,6 @@ def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
         )
         == "config profile create"
     )
-
-
-def test_interactive_create_under_json_keeps_stdout_parseable() -> None:
-    """Machine callers get a parseable stream even when the run is refused.
-
-    Under ``--format json`` stdout must never carry prompt noise or prose:
-    it is either empty or a JSON envelope, and the refusal document rides
-    stderr where the error contract puts it.
-    """
-    result = invoke_cached_cli(["--format", "json", *_CREATE_ARGS])
-    assert result.exit_code != 0
-    stdout = result.stdout.strip()
-    if stdout:
-        json.loads(stdout.splitlines()[0])
-    stderr = result.stderr if result.stderr_bytes is not None else ""
-    documents = [line for line in stderr.splitlines() if line.strip().startswith("{")]
-    assert documents, f"no JSON error document on stderr: {stderr[:300]!r}"
-    parsed = json.loads(documents[0])
-    assert "error" in parsed
 
 
 # The pinned profile-create prompted-question inventory (see the question-count

@@ -293,10 +293,29 @@ def _optional_text_kwarg(
     raw = fields.get(key)
     if raw is None:
         return {}
-    text = _coerce_text(raw)
+    # Stripped: the resolver's no-content for space-filled design slots is a
+    # run of spaces, which must read back as absent rather than as a value.
+    text = _coerce_text(raw).strip()
     if not text:
         return {}
     return {key: text}
+
+
+def _optional_int_kwarg(fields: Mapping[str, Decimal | str], key: str) -> dict[str, int]:
+    """Pass an integer-clave fact only when the row supplies a non-empty value.
+
+    The integer counterpart of :func:`_optional_text_kwarg`: cells arrive as
+    ``Decimal`` or ``str``, and the target field is a plain ``int`` clave, so the
+    value is routed through its decimal text so a fractional cell
+    (``"1.5"``) refuses instead of truncating.
+    """
+    raw = fields.get(key)
+    if raw is None:
+        return {}
+    text = format(raw, "f") if isinstance(raw, Decimal) else str(raw).strip()
+    if not text:
+        return {}
+    return {key: int(text)}
 
 
 class _OperationKindCodeKwarg(TypedDict, total=False):
@@ -465,9 +484,89 @@ def assemble_withholding_observations(
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
                     retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
                     ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
+                    ingreso_a_cuenta_repercutido=coerce_decimal(
+                        fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
+                    ),
+                    reducciones_aplicables=coerce_decimal(
+                        fields.get("reducciones_aplicables"), default=Decimal("0")
+                    ),
+                    gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
+                    pension_compensatoria=coerce_decimal(
+                        fields.get("pension_compensatoria"), default=Decimal("0")
+                    ),
+                    anualidades_alimentos=coerce_decimal(
+                        fields.get("anualidades_alimentos"), default=Decimal("0")
+                    ),
+                    incapacity_cash_perception=coerce_decimal(
+                        fields.get("incapacity_cash_perception"), default=Decimal("0")
+                    ),
+                    incapacity_cash_withholding=coerce_decimal(
+                        fields.get("incapacity_cash_withholding"), default=Decimal("0")
+                    ),
+                    incapacity_kind_value=coerce_decimal(
+                        fields.get("incapacity_kind_value"), default=Decimal("0")
+                    ),
+                    incapacity_kind_ingreso_a_cuenta=coerce_decimal(
+                        fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
+                    ),
+                    incapacity_kind_repercutido=coerce_decimal(
+                        fields.get("incapacity_kind_repercutido"), default=Decimal("0")
+                    ),
+                    foral_retention_estatal=coerce_decimal(
+                        fields.get("foral_retention_estatal"), default=Decimal("0")
+                    ),
+                    foral_retention_navarra=coerce_decimal(
+                        fields.get("foral_retention_navarra"), default=Decimal("0")
+                    ),
+                    foral_retention_araba=coerce_decimal(
+                        fields.get("foral_retention_araba"), default=Decimal("0")
+                    ),
+                    foral_retention_gipuzkoa=coerce_decimal(
+                        fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
+                    ),
+                    foral_retention_bizkaia=coerce_decimal(
+                        fields.get("foral_retention_bizkaia"), default=Decimal("0")
+                    ),
+                    # The design's optional identity facts: forwarded verbatim
+                    # when the row carries them, left to the observation model's
+                    # None defaults otherwise -- the resolver applies the design's
+                    # per-clave completion rules at resolve time.
+                    **_optional_text_kwarg(fields, "representative_tax_id"),
+                    **_optional_text_kwarg(fields, "spouse_or_unit_titular_tax_id"),
+                    **_optional_int_kwarg(fields, "disability_clave"),
+                    **_optional_int_kwarg(fields, "contract_relation_clave"),
+                    **_optional_int_kwarg(fields, "unit_convivencia_titular_clave"),
+                    **_optional_int_kwarg(fields, "geographic_mobility_clave"),
+                    **_optional_int_kwarg(fields, "accrual_year"),
+                    **_optional_int_kwarg(fields, "descendants_under_3_total"),
+                    **_optional_int_kwarg(fields, "descendants_under_3_whole"),
+                    **_optional_int_kwarg(fields, "descendants_rest_total"),
+                    **_optional_int_kwarg(fields, "descendants_rest_whole"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_33_65_total"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_33_65_whole"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_mobility_total"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_mobility_whole"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_65_plus_total"),
+                    **_optional_int_kwarg(fields, "descendants_disabled_65_plus_whole"),
+                    **_optional_int_kwarg(fields, "ascendants_under_75_total"),
+                    **_optional_int_kwarg(fields, "ascendants_under_75_whole"),
+                    **_optional_int_kwarg(fields, "ascendants_75_plus_total"),
+                    **_optional_int_kwarg(fields, "ascendants_75_plus_whole"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_33_65_total"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_33_65_whole"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_mobility_total"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_mobility_whole"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_65_plus_total"),
+                    **_optional_int_kwarg(fields, "ascendants_disabled_65_plus_whole"),
+                    **_optional_int_kwarg(fields, "first_child_compute"),
+                    **_optional_int_kwarg(fields, "second_child_compute"),
+                    **_optional_int_kwarg(fields, "third_child_compute"),
+                    **_optional_int_kwarg(fields, "housing_loan_communication_clave"),
+                    **_optional_int_kwarg(fields, "complemento_infancia_clave"),
+                    **_optional_int_kwarg(fields, "emerging_stock_excess_clave"),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
