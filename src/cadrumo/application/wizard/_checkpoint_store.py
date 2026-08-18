@@ -200,9 +200,13 @@ class ProfileFactsCheckpointStore:
         persists upsert onto the live record. Both routes write through the
         single profile-lifecycle writer into encrypted storage.
         """
-        from ..user_profile import ProfileRecordRepository, ProfileRegistrationError
+        from ..user_profile import (
+            ProfileFactWriteDoor,
+            ProfileRecordRepository,
+            ProfileRegistrationError,
+            apply_profile_fact_changes,
+        )
         from ..workflow import read_profile_bucket_by_id
-        from ._persistence import WizardFactWriteDoor, apply_wizard_fact_changes
 
         facts = checkpoint_facts_from_answers(self._flow, answers)
         pointer = read_profile_bucket_by_id(self._profile_id)
@@ -214,10 +218,10 @@ class ProfileFactsCheckpointStore:
             return
         record = ProfileRecordRepository.for_current_session(self._profile_id).load(self._profile_id)
         clearing = descendant_clearing_facts(record, answers)
-        apply_wizard_fact_changes(
+        apply_profile_fact_changes(
             profile_id=self._profile_id,
             changes=(*facts, *clearing),
-            door=WizardFactWriteDoor.CHECKPOINT,
+            door=ProfileFactWriteDoor.CHECKPOINT,
         )
 
     def load(self, flow_id: str) -> Mapping[str, str] | None:

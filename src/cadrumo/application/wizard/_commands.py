@@ -987,10 +987,13 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import ProfileRecordRepository, record_to_path_values
+    from ..user_profile import (
+        ProfileFactWriteDoor,
+        ProfileRecordRepository,
+        apply_profile_fact_changes,
+        record_to_path_values,
+    )
     from ._persistence import (
-        WizardFactWriteDoor,
-        apply_wizard_fact_changes,
         profile_values_from_patch,
         project_answers,
     )
@@ -1009,10 +1012,10 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
                 "missing_flags": _format_missing_flags(missing_baseline),
             },
         )
-    apply_wizard_fact_changes(
+    apply_profile_fact_changes(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
-        door=WizardFactWriteDoor.PATCH,
+        door=ProfileFactWriteDoor.PATCH,
     )
     return merged_values
 
@@ -1044,10 +1047,14 @@ def _run_full_flow(
     authenticated profile.
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import ProfileRecordRepository, ProfileRegistrationError, record_to_path_values
+    from ..user_profile import (
+        ProfileFactWriteDoor,
+        ProfileRecordRepository,
+        ProfileRegistrationError,
+        apply_profile_fact_changes,
+        record_to_path_values,
+    )
     from ._persistence import (
-        WizardFactWriteDoor,
-        apply_wizard_fact_changes,
         project_answers,
         serialise_answers,
     )
@@ -1130,10 +1137,10 @@ def _run_full_flow(
     from ...domain.deadlines import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
-    apply_wizard_fact_changes(
+    apply_profile_fact_changes(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
-        door=WizardFactWriteDoor.ANSWERS,
+        door=ProfileFactWriteDoor.ANSWERS,
     )
     return values
 

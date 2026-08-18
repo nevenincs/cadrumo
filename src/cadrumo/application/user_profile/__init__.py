@@ -219,6 +219,7 @@ if TYPE_CHECKING:
         ProfileCustodyTransactionRefusalError,
         ProfileCustodyTransactionState,
     )
+    from ._fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ._filing_baseline import missing_filing_baseline_flags
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
@@ -449,6 +450,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodyTransactionState": "._custody_transactions",
     "ProfileFieldChoice": "._overview",
     "ProfileFieldView": "._overview",
+    "ProfileFactWriteDoor": "._fact_write",
     "ProfileImportResult": "._commands",
     "ProfileLifecycleResult": "._commands",
     "ProfileLoginOutcome": "._login_session",
@@ -489,6 +491,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "active_profile_pointer_transaction": "._profile_pointer_transaction",
     "apply_censal_read": "._censo_sync",
     "apply_cotejo": "._cotejo_apply",
+    "apply_profile_fact_changes": "._fact_write",
     "assess_passphrase": "._registration",
     "bound_profile_record_session": "._profile_record_repository",
     "build_profile_overview": "._overview",
@@ -657,6 +660,7 @@ __all__ = [
     "ProfileCustodyTransactionRefusalError",
     "ProfileCustodyTransactionRepository",
     "ProfileCustodyTransactionState",
+    "ProfileFactWriteDoor",
     "ProfileFieldChoice",
     "ProfileFieldView",
     "ProfileId",
@@ -699,6 +703,7 @@ __all__ = [
     "active_profile_pointer_transaction",
     "apply_censal_read",
     "apply_cotejo",
+    "apply_profile_fact_changes",
     "assess_passphrase",
     "bind_resumed_profile_session",
     "bound_profile_record_session",

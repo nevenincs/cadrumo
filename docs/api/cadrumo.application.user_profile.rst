@@ -36,6 +36,7 @@ Submodules
    cadrumo.application.user_profile._custody_repository
    cadrumo.application.user_profile._custody_service
    cadrumo.application.user_profile._custody_transactions
+   cadrumo.application.user_profile._fact_write
    cadrumo.application.user_profile._filing_baseline
    cadrumo.application.user_profile._keys_validation
    cadrumo.application.user_profile._language_resolver

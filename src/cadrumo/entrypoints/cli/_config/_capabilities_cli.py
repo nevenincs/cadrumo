@@ -68,7 +68,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
         state: _Toggle = typer.Argument(..., help=tr("cli.config.profile.capabilities.state_help")),
     ) -> None:
         """Opt the active profile in or out of one service capability."""
-        from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
+        from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
         from ....domain.user_profile import UserProfileFact
 
         profile_id = resolve_active_bucket_id()
@@ -79,10 +79,10 @@ def _register_set(capabilities_app: typer.Typer) -> None:
                 ),
             )
         enabled = state is _Toggle.ON
-        apply_wizard_fact_changes(
+        apply_profile_fact_changes(
             profile_id=profile_id,
             changes=(UserProfileFact(path=capability.schema_path, value=enabled),),
-            door=WizardFactWriteDoor.CLI_CAPABILITY,
+            door=ProfileFactWriteDoor.CLI_CAPACIDAD,
         )
         result = CapabilitySetResult.model_validate(
             {"profile_id": profile_id, "capability": capability, "enabled": enabled},

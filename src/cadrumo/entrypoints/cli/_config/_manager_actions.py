@@ -938,7 +938,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
         CLI surfaces.
     """
     from ....application.auth import configure_operator_auth, select_operator_certificate_source
-    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
+    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
@@ -947,10 +947,10 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     if declared_tax_id:
         facts.append(UserProfileFact(path=_IDENTITY_TAX_ID_PATH, value=declared_tax_id))
     committed = tuple(facts)
-    apply_wizard_fact_changes(
+    apply_profile_fact_changes(
         profile_id=require_active_bucket_id(),
         changes=committed,
-        door=WizardFactWriteDoor.MANAGER_AUTH,
+        door=ProfileFactWriteDoor.MANAGER_AUTH,
     )
 
     chosen_certificate = collected.get(_CERTIFICATE_KEY, "").strip()
@@ -1086,10 +1086,11 @@ def _run_add_row() -> ManagerActionOutcome:
     """
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.user_profile import (
+        ProfileFactWriteDoor,
+        apply_profile_fact_changes,
         next_section_row_index,
         section_row_facts,
     )
-    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
     from ._manager_frontend import build_active_profile_overview, present_form
@@ -1124,10 +1125,10 @@ def _run_add_row() -> ManagerActionOutcome:
         )
 
     try:
-        apply_wizard_fact_changes(
+        apply_profile_fact_changes(
             profile_id=require_active_bucket_id(),
             changes=facts,
-            door=WizardFactWriteDoor.MANAGER_ROW,
+            door=ProfileFactWriteDoor.MANAGER_ROW,
         )
     except ProfileSchemaValidationError:
         return ManagerActionOutcome(

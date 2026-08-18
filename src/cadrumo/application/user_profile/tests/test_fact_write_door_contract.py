@@ -2,10 +2,10 @@
 
 Every surface that writes profile facts publishes through one shared writer
 and names itself with a closed
-:class:`~cadrumo.application.wizard.WizardFactWriteDoor` member.  The lifecycle
-event that write emits is the same for all of them, so the door key in the
-event payload is the ONLY axis a history query has for telling the wizard, the
-manager screens and the ``config profile`` verbs apart.
+:class:`~cadrumo.application.user_profile.ProfileFactWriteDoor` member.  The
+lifecycle event that write emits is the same for all of them, so the door key
+in the event payload is the ONLY axis a history query has for telling the
+wizard, the manager screens and the ``config profile`` verbs apart.
 
 The two assertions below are deliberately structural rather than textual.  A
 text needle naming a symbol is satisfied by any occurrence of that symbol,
@@ -24,12 +24,12 @@ from pathlib import Path
 import pytest
 
 from ....core import scan_directory
-from .._persistence import WizardFactWriteDoor
+from .._fact_write import ProfileFactWriteDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_WRITER = "apply_wizard_fact_changes"
+_WRITER = "apply_profile_fact_changes"
 _AEAT_ROOT = Path(__file__).resolve().parents[3]
 
 _PRODUCTION_ROOTS: tuple[Path, ...] = (
@@ -94,7 +94,7 @@ def _declared_door(call: ast.Call) -> str | None:
         if (
             isinstance(value, ast.Attribute)
             and isinstance(value.value, ast.Name)
-            and value.value.id == WizardFactWriteDoor.__name__
+            and value.value.id == ProfileFactWriteDoor.__name__
         ):
             return value.attr
         return None
@@ -123,7 +123,7 @@ def test_every_profile_fact_write_names_a_closed_door() -> None:
         if _declared_door(call) is None
     ]
     assert untyped == [], (
-        f"these {_WRITER} calls do not pass door=WizardFactWriteDoor.<MEMBER>: {untyped}. "
+        f"these {_WRITER} calls do not pass door=ProfileFactWriteDoor.<MEMBER>: {untyped}. "
         "The surface identity travels in the event payload; the event type is the data "
         "change and is not the caller's to choose."
     )
@@ -142,7 +142,7 @@ def test_door_sites_live_only_in_enrolled_modules() -> None:
 def test_every_declared_door_is_reached_by_a_production_site() -> None:
     """A member nobody passes is a surface identity that never reaches history."""
     reached = {door for _path, call in _door_calls() if (door := _declared_door(call)) is not None}
-    declared = {member.name for member in WizardFactWriteDoor}
+    declared = {member.name for member in ProfileFactWriteDoor}
     assert declared - reached == set(), (
         f"these door members reach no production site: {sorted(declared - reached)}. Either the "
         "surface regressed to an untyped event stamp, or the member is dead and should go."

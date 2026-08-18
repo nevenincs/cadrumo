@@ -186,7 +186,7 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     the previous view: the edit door may normalise or refuse a value, and
     the operator must see what was actually stored.
     """
-    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
+    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
@@ -197,10 +197,10 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     # freely thereafter. The two surfaces have to agree on what spaces mean, and
     # this is the boundary that decides it.
     fact = UserProfileFact(path=path, value=value.strip() or None)
-    apply_wizard_fact_changes(
+    apply_profile_fact_changes(
         profile_id=require_active_bucket_id(),
         changes=(fact,),
-        door=WizardFactWriteDoor.MANAGER_FIELD,
+        door=ProfileFactWriteDoor.MANAGER_FIELD,
     )
     return build_active_profile_overview(label=label)
 
@@ -345,10 +345,11 @@ def _active_profile_manager_storage(
     """
     from ....application.user_profile import (
         CommittedProfileRepository,
+        ProfileFactWriteDoor,
         ProfileRecordRepository,
+        apply_profile_fact_changes,
         build_profile_overview,
     )
-    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact, load_user_profile_schema
 
@@ -365,10 +366,10 @@ def _active_profile_manager_storage(
 
     def _persist(path: str, value: str) -> ProfileOverview:
         fact = UserProfileFact(path=path, value=value.strip() or None)
-        applied = apply_wizard_fact_changes(
+        applied = apply_profile_fact_changes(
             profile_id=profile_id,
             changes=(fact,),
-            door=WizardFactWriteDoor.MANAGER_FIELD,
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
         )
         return _page(applied)
 
