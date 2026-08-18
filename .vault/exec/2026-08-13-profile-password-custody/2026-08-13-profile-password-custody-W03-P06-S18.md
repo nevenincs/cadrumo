@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:1eedc62ef7115390e4b98bad81e670666ae1e102dc7c76c5ec4a54ea24eacb74'
+body_hash: 'sha256:f9d9baec6d2d290f5341c957af84a73c1a26bf377fb02026b745a49cb8e839c3'
 step_id: 'S18'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -143,6 +143,8 @@ decrypted byte or a profile record outside the encrypted store — the deletion
 verb reads a sessionless assessment and destroys in place, and no temporary
 file, scratch directory or log receives anything. Every test drives a
 temporary storage root; no destructive action touched a default store.
+
+2026-08-18 fresh-context re-review (HEAD c382f9f171): all five axes PASS, no revision required — the row closes clean. Secret handling: `--secrets-fd` bounded to 8192 bytes, closed on every refusal path, duplicate-key rejection at any depth, strict SecretStr models, zero `--passphrase` argv anywhere, channel precedence prefers the staged callback over the env channel, interactive prompts refuse on echo-indeterminacy. Typed outcomes: every reviewed verb's OutputSchema is a typed model with enum IDs and nested fingerprints — no dict bags, no key material in payloads. Bootstrap exemptions: closed enum with per-entry criterion and checkable citations; export/import/SAR not exempt; the S113 recency principle is data (`LOGIN_GATED_VERB_PATHS`) and both gates green (68 passed). Local-only: login/logout/rotate/restore/delete are all custody/pointer/file operations with no remote-write reach. TUI login: masked input asserted by test, zero env reads, typed secret zeroised in a finally. Two LOW notes stand: the login closure holds a plain str for the call duration, and `Input.value` itself cannot be unmade — both process-lifetime bounded and documented in-code.
 
 ## Notes
 
