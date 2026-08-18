@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-18'
-body_hash: 'sha256:fa8ed0e0eb4514fcc9b4e4e3dd67499d417dae2e187d0b8967c3a2c7c5c23a41'
+body_hash: 'sha256:24bac66cb8c61cc54453bdad3635f3d2ad63dbf7e6476ac28dfd1dea289e1813'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -104,8 +104,8 @@ Author the five revisions covering the five design epochs the current open-ended
 
 Replace the bounded historical revision with the in-window revision and the refusal edge below it.
 
-- [ ] `W02.P05.S22` - Author the Modelo 303 revision covering the earliest in-window filing year the reachable-window computation named, with valid_from at that year and no earlier sibling, so the resolver's existing no-revision-covers-this-triple refusal fires for every year below it; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
-- [ ] `W02.P05.S23` - Retire the spanning bounded historical Modelo 303 revision directory outright, so the registry stops claiming the pre-window filing years it cannot correctly serve; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/`.
+- [x] `W02.P05.S22` - Author the Modelo 303 revision covering the earliest in-window filing year the reachable-window computation named, with valid_from at that year and no earlier sibling, so the resolver's existing no-revision-covers-this-triple refusal fires for every year below it; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
+- [x] `W02.P05.S23` - Retire the spanning bounded historical Modelo 303 revision directory outright, so the registry stops claiming the pre-window filing years it cannot correctly serve; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/`.
 
 ### Phase `W02.P06` - Land Modelo 303 atomically and prove the bytes
 
