@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-18'
-body_hash: 'sha256:55aebdc27d0b41633666b34c683a6627bc6b632f51b55671cc08b9c6e753f872'
+body_hash: 'sha256:fa8ed0e0eb4514fcc9b4e4e3dd67499d417dae2e187d0b8967c3a2c7c5c23a41'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -96,7 +96,7 @@ Replace Modelo 303's two spanning revisions with the full in-window revision set
 
 Author the five revisions covering the five design epochs the current open-ended revision spans, including the period-token partition for 2024. Each revision carries a distinct export layout: the 2023 and early-2024 designs are not layout-identical, since four Regimen Simplificado employee-count slots are real in 2023 and reserved from early 2024, so no pair may share a copied fragment tree.
 
-- [ ] `W02.P04.S20` - Confine the transitional rate rungs pinned to 2024 to the two 2024-covering revisions only, rather than copying them into every post-split revision, per the sub-year record's explicit ruling that the copy is the obvious and wrong resolution; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
+- [x] `W02.P04.S20` - Confine the transitional rate rungs pinned to 2024 to the two 2024-covering revisions only, rather than copying them into every post-split revision, per the sub-year record's explicit ruling that the copy is the obvious and wrong resolution; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [x] `W02.P04.S64` - Re-derive each Modelo 303 revision's total-formula operand lists from its own bundled design rather than copying the newest expression backwards, since casilla 27 gains operands 167 and 170 and casilla 69 gains operand 108 at the mid-2024 boundary while casilla 71 gains a subtracted operand 112 at the 2025 to 2026 boundary, so a copied expression sums boxes the earlier design has no room for; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [x] `W02.P04.S67` - Decide and apply the naming of the two modulos-engine formula ids that embed a bare year, modelo-303-2023-modulos-iva-cuota-devengada and its cuota-derivada sibling, since under one open-ended revision 2023 was merely the opening year while after the split the id reads as scoped to filing year 2023 despite being inherited by every successor epoch, and either carry it unchanged with the mismatch recorded or re-derive it across every referencing fragment in the same commit; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 
@@ -151,7 +151,7 @@ Reclassify the 32 reserved slots to filler across both mapping epochs and sweep 
 - [x] `W04a.P12.S83` - Reclassify the 32 Administracion-reserved name slots from bindings to filler in both Modelo 232 mapping epochs, and delete the reservado casilla and binding fragments, the construct rows and the completeness-manifest rows from both revisions in one change, so no generated filing can carry taxpayer names in bytes AEAT reserves for itself; `dev/registry/mappings/modelo_232/; src/cadrumo/_data/registry/aeat/modelos/232/revisions/`.
 - [x] `W04a.P12.S84` - Author the modelo-neutral auxiliary envelope emission contract for DR23200: generalise the m390 prospective module off its pinned targets, wire the contract into render_complete_export_tree and the coverage validator, and honor it in the runtime fichero builder, with proofs that Modelo 390 still classifies and emits unchanged and that a non-header sheet still refuses; `dev/registry/_m390_auxiliary_envelope.py; dev/registry/_export_tree.py; src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py; src/cadrumo/application/filing/`.
 - [x] `W04a.P12.S85` - Regenerate and publish both Modelo 232 export trees through the owning publication verb, re-run check mode, and upgrade the _CHECK_MODE_PENDING pins to the next real wall or remove them - never a softened pin; `src/cadrumo/_data/registry/aeat/modelos/232/revisions/; dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W04a.P12.S86` - Land the finished Modelo 184 export unit - mappings, render profile, casillas, generated tree, provenance and test enrollment - as its own commit; `dev/registry/mappings/modelo_184/; dev/registry/render_profiles/modelo_184/; src/cadrumo/_data/registry/aeat/modelos/184/`.
+- [x] `W04a.P12.S86` - Land the finished Modelo 184 export unit - mappings, render profile, casillas, generated tree, provenance and test enrollment - as its own commit; `dev/registry/mappings/modelo_184/; dev/registry/render_profiles/modelo_184/; src/cadrumo/_data/registry/aeat/modelos/184/`.
 
 ## Wave `W05` - Consumer sweep and campaign close
 
