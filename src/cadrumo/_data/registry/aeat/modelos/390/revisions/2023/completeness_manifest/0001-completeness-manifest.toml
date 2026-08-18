@@ -169,20 +169,12 @@ casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
 number = "600"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota"
-number = "694"
-
-[[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
 number = "666"
 
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
 number = "36"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
-number = "692"
 
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.resultado-regimen-general"
@@ -217,14 +209,6 @@ casilla_id = "iva.anual.repercutido.tipo-10.cuota"
 number = "04"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.tipo-7-5.base"
-number = "669"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.tipo-7-5.cuota"
-number = "670"
-
-[[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.tipo-5.base"
 number = "702"
 
@@ -239,14 +223,6 @@ number = "01"
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.tipo-4.cuota"
 number = "02"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.tipo-2.base"
-number = "667"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.repercutido.tipo-2.cuota"
-number = "668"
 
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.tipo-0.base"
@@ -273,14 +249,6 @@ casilla_id = "iva.anual.aic.bienes.tipo-0.cuota"
 number = "717"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.bienes.tipo-2.base"
-number = "683"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.bienes.tipo-2.cuota"
-number = "684"
-
-[[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.bienes.tipo-4.base"
 number = "21"
 
@@ -295,14 +263,6 @@ number = "718"
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.bienes.tipo-5.cuota"
 number = "719"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.bienes.tipo-7-5.base"
-number = "685"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota"
-number = "686"
 
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.bienes.tipo-10.base"
@@ -329,14 +289,6 @@ casilla_id = "iva.anual.aic.servicios.tipo-0.cuota"
 number = "721"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.servicios.tipo-2.base"
-number = "687"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.servicios.tipo-2.cuota"
-number = "688"
-
-[[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.servicios.tipo-4.base"
 number = "545"
 
@@ -351,14 +303,6 @@ number = "722"
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.servicios.tipo-5.cuota"
 number = "723"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.servicios.tipo-7-5.base"
-number = "689"
-
-[[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota"
-number = "690"
 
 [[revisions."2023".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.servicios.tipo-10.base"
