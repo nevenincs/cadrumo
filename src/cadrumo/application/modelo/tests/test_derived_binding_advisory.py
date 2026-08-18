@@ -32,6 +32,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
@@ -51,7 +52,7 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,

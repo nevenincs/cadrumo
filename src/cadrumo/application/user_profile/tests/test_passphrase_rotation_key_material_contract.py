@@ -144,6 +144,6 @@ def _register(tmp_path: Path, handed: list[str]):
 
 def _unlock_dek(material) -> bytes:
     """Return the profile's DEK through the real password door."""
-    from ...profile_custody import unlock_profile_custody_password
+    from cadrumo.application.user_profile import unlock_profile_custody_password
 
     return unlock_profile_custody_password(material, password=_PASSPHRASE).dek

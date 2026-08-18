@@ -11,8 +11,8 @@ from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
-from .._values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,7 +32,7 @@ _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
 
 def _profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_INSTANT,

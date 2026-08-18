@@ -104,10 +104,39 @@ _WithholdingRowField = Literal[
     "foral_retention_gipuzkoa",
     "foral_retention_bizkaia",
     "emerging_stock_excess_clave",
+    "startup_fund_rendimientos_clave",
+    "pension_prestacion_jubilacion",
+    "pension_prestacion_viudedad",
+    "pension_prestacion_incapacidad",
+    "pension_prestacion_no_contributiva",
+    "pension_prestacion_resto",
+    "perceptor_mediador_flag",
+    "clave_codigo",
+    "codigo_emisor",
+    "naturaleza",
+    "pago",
+    "tipo_codigo",
+    "codigo_cuenta",
+    "pendiente_flag",
+    "tipo_percepcion",
+    "reducciones",
+    "base_retenciones",
+    "porcentaje_retencion",
+    "penalizaciones",
+    "isin_code",
+    "naturaleza_declarante",
+    "fecha_inicio_prestamo",
+    "fecha_vencimiento_prestamo",
+    "compensaciones",
+    "garantias",
+    "nif_pagador_anterior",
+    "fecha_devengo",
+    "clave_mercado",
+    "numero_orden",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
-    {"row_field", "perceptor_count", "percepcion_count", "percibido_sum", "retencion_sum"},
+    {"row_field", "perceptor_count", "percepcion_count", "percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"},
 )
 _WithholdingFact = Literal[
     "row_field",
@@ -115,6 +144,7 @@ _WithholdingFact = Literal[
     "percepcion_count",
     "percibido_sum",
     "retencion_sum",
+    "retenciones_ingresadas_sum",
 ]
 _CLAVE_TOKEN_SEQUENCE_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
     list[object] | tuple[object, ...], config=ConfigDict(strict=True)
@@ -311,6 +341,100 @@ class WithholdingObservation(BaseModel):
     the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
     of the in-kind retributions -- both recorded facts, declared only for clave A
     and only when the especie block has content."""
+    startup_fund_rendimientos_clave: int | None = Field(default=None, ge=0, le=1)
+    """Whether the row's payments include D.A. 53a fund-management rendimientos
+    del trabajo (2025-edition design position 389): clave 1 yes, 0 the rest. The
+    cumplimentacion trigger is the payer's own composition judgment, so the clave
+    is recorded-when-applicable: spaces when absent, refused outside clave A."""
+    pension_prestacion_jubilacion: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include jubilacion (2025-edition
+    design position 390): each type's 0/1 flag is always recorded for B.01."""
+    pension_prestacion_viudedad: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include viudedad (position 391)."""
+    pension_prestacion_incapacidad: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include incapacidad permanente total o
+    parcial (position 392)."""
+    pension_prestacion_no_contributiva: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include pensiones no contributivas por
+    invalidez o jubilacion (position 393)."""
+    pension_prestacion_resto: int | None = Field(default=None, ge=0, le=1)
+    """Whether the clave B.01 prestaciones include the remaining non-exempt
+    art. 17.2.a).1a prestaciones (position 394)."""
+    perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
+    """Modelo 193 'X' flag (position 76) marking a perceptor that is itself a
+    mediator entity paying by proxy, declared only for claves A, B and D."""
+    clave_codigo: int | None = Field(default=None, ge=1, le=4)
+    """Modelo 193 clave codigo (position 79) identifying what the codigo emisor
+    and ISIN fields carry, always recorded for claves A, B and D (clave 4 is
+    the general case)."""
+    codigo_emisor: str | None = Field(default=None, max_length=12)
+    """Modelo 193 codigo emisor (positions 80-91), declared only for claves A,
+    B and D: the issuer's NIF for clave codigo 1/4, empty for 2, ZXX country
+    code for 3."""
+    naturaleza: str | None = Field(default=None, pattern=r"^\d{2}$")
+    """Modelo 193 naturaleza (positions 93-94): the two-digit subclave of the
+    clave de percepcion, always recorded."""
+    pago: int | None = Field(default=None, ge=1, le=5)
+    """Modelo 193 pago (position 95): who paid, always recorded for claves A,
+    B and D (1 emisor, 2/3/4 mediador, 5 other mediation)."""
+    tipo_codigo: str | None = Field(default=None, pattern=r"^[COP]$")
+    """Modelo 193 tipo codigo (position 96): what the codigo cuenta field
+    holds, always recorded for claves A, B and D."""
+    codigo_cuenta: str | None = Field(default=None, max_length=20)
+    """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
+    97-116), recorded only when a financial entity manages the valores."""
+    pendiente_flag: str | None = Field(default=None, max_length=1)
+    """Modelo 193 'X' flag (position 117) marking percepciones devengadas but
+    not yet paid because the holder did not claim them."""
+    tipo_percepcion: int | None = Field(default=None, ge=1, le=2)
+    """Modelo 193 tipo de percepcion (position 122): 1 dinerarias, 2 en
+    especie, always recorded."""
+    reducciones: Decimal = Decimal("0")
+    """Modelo 193 art. 26.2 reductions (positions 139-151) applied when the
+    perceptor is an IRPF contribuyente; the design's own zeros when none."""
+    base_retenciones: Decimal = Decimal("0")
+    """Modelo 193 base de retenciones e ingresos a cuenta (positions 152-164);
+    the design's own zeros when no content."""
+    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
+    165-168), generally 19 with the design's clave-naturaleza specific rates;
+    the last percentage applied when several were used."""
+    penalizaciones: Decimal = Decimal("0")
+    """Modelo 193 penalizaciones (positions 182-192), declared only for claves
+    B and D; the design's own zeros when none."""
+    isin_code: str | None = Field(default=None, max_length=12)
+    """Modelo 193 codigo ISIN (positions 193-204, 2025 edition), recorded when
+    clave codigo is 2 or 4."""
+    naturaleza_declarante: str | None = Field(default=None, max_length=1)
+    """Modelo 193 perceptor-record naturaleza del declarante (position 208):
+    'S' when the declarante is outside the design's categories, blank
+    otherwise -- recorded-when-applicable."""
+    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    """Modelo 193 fecha de inicio del prestamo (positions 209-216, AAAAMMDD),
+    declared only when tipo codigo is 'P'."""
+    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    """Modelo 193 fecha de vencimiento del prestamo (positions 217-224,
+    AAAAMMDD), declared only when tipo codigo is 'P'."""
+    compensaciones: Decimal = Decimal("0")
+    """Modelo 193 compensaciones (positions 225-236), declared only for
+    prestamo de valores rows; the design's own zeros when none."""
+    garantias: Decimal = Decimal("0")
+    """Modelo 193 garantias (positions 237-248), declared only for prestamo de
+    valores rows; the design's own zeros when none."""
+    nif_pagador_anterior: str | None = Field(default=None, min_length=9, max_length=9)
+    """Modelo 193 NIF of the immediately previous payer in the payment chain
+    (positions 322-330), obligatory when pago is 2-5 except where the previous
+    payer is foreign without a Spanish NIF -- recorded-when-applicable."""
+    fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    """Modelo 193 fecha de devengo (positions 331-338, DDMMAAAA), declared only
+    for clave A."""
+    clave_mercado: str | None = Field(default=None, pattern=r"^[A-D]$")
+    """Modelo 193 clave de mercado (position 339), always recorded for claves
+    A, B and D."""
+    numero_orden: int | None = Field(default=None, ge=1, le=9999999)
+    """Modelo 193 numero de orden (positions 315-321): the sequential record
+    number the design assigns each perceptor record. Derived by the resolver
+    from the row order; a supplied value must not disagree."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -349,6 +473,11 @@ class WithholdingObservation(BaseModel):
         "foral_retention_araba",
         "foral_retention_gipuzkoa",
         "foral_retention_bizkaia",
+        "reducciones",
+        "base_retenciones",
+        "penalizaciones",
+        "compensaciones",
+        "garantias",
     )
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
@@ -435,7 +564,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
         raise RegistryValidationError(
             f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'count_distinct'",
         )
-    if selector.fact in {"percibido_sum", "retencion_sum"} and op != BindingAggregationOp.SUM:
+    if selector.fact in {"percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"} and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "row_field":
         if op != BindingAggregationOp.ROWS:
@@ -523,6 +652,22 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     )
 
 
+def _retenciones_ingresadas_total(observations: Iterable[WithholdingObservation]) -> Decimal:
+    """Sum the 169-181 retentions for the rows design position 175 folds in.
+
+    The declarante's RETENCIONES E INGRESOS A CUENTA INGRESADOS field is the
+    design's own declared sum: the retenciones e ingresos a cuenta of every
+    perceptor row whose clave de percepcion is C, plus the A/B/D rows whose
+    pago is 1 (emisor) or 3 (mediador de valor extranjero).
+    """
+    total = Decimal("0")
+    for observation in observations:
+        clave_token = str(observation.clave)
+        if clave_token == "C" or (clave_token in {"A", "B", "D"} and observation.pago in (1, 3)):
+            total += observation.retencion_practicada + observation.ingreso_a_cuenta
+    return total
+
+
 def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     """Sum retención practicada, ingreso a cuenta, and the incap retentions.
 
@@ -570,6 +715,8 @@ def resolve_withholding_binding_values(
             resolved[binding.id] = percibido_total(scope_filtered)
         elif selector.fact == "retencion_sum":
             resolved[binding.id] = retencion_total(scope_filtered)
+        elif selector.fact == "retenciones_ingresadas_sum":
+            resolved[binding.id] = _retenciones_ingresadas_total(scope_filtered)
         else:  # pragma: no cover - guarded by validator
             raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
     return resolved
@@ -705,6 +852,16 @@ def _require_consistent_identity_facts(
 
 _CLAVE_L29_SUBCLAVE = "29"
 
+#: The 2025 edition's five per-type prestacion flags (positions 390-394), each
+#: always recorded for clave B.01.
+_PENSION_PRESACION_TYPE_FIELDS: tuple[str, ...] = (
+    "pension_prestacion_jubilacion",
+    "pension_prestacion_viudedad",
+    "pension_prestacion_incapacidad",
+    "pension_prestacion_no_contributiva",
+    "pension_prestacion_resto",
+)
+
 #: The design's family-composition count positions (223-253), all declared only
 #: for claves A, B (subclaves 01, 03, 04, 99) and C, all zeros when no content.
 _DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
@@ -750,6 +907,7 @@ def _finalise_withholding_row(
     row: Mapping[str, Decimal | str],
     *,
     required_fields: frozenset[str],
+    row_number: int,
 ) -> Mapping[str, Decimal | str]:
     """Apply the design's per-clave completion rules to one accumulated row.
 
@@ -1040,6 +1198,278 @@ def _finalise_withholding_row(
             )
         finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
 
+    if "startup_fund_rendimientos_clave" in required_fields:
+        startup = row.get("startup_fund_rendimientos_clave")
+        if startup is not None and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "startup_fund_rendimientos_clave, which design campo 37 declares only for clave A",
+            )
+        finalised["startup_fund_rendimientos_clave"] = str(startup) if startup is not None else " "
+    # ---- Modelo 193 perceptor-record completion ----
+    # The design's claves A/B/D block, and the naturaleza-del-declarante 'S'
+    # cascade that overrides it: under 'S' the A/B/D identification block
+    # writes the design's own no-content and a present fact contradicts it.
+    clave_abd = clave in {"A", "B", "D"}
+    naturaleza_s = row.get("naturaleza_declarante") == "S"
+    if "naturaleza" in required_fields:
+        naturaleza193 = row.get("naturaleza")
+        if naturaleza193 is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "naturaleza (design position 93): the per-clave subclave is always recorded",
+            )
+        finalised["naturaleza"] = str(naturaleza193)
+    if "tipo_percepcion" in required_fields:
+        tipo_percepcion = row.get("tipo_percepcion")
+        if tipo_percepcion is None:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "tipo_percepcion (design position 122): 1 dinerarias / 2 en especie is always recorded",
+            )
+        finalised["tipo_percepcion"] = str(tipo_percepcion)
+    if "perceptor_mediador_flag" in required_fields:
+        mediador = row.get("perceptor_mediador_flag")
+        if mediador is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "perceptor_mediador_flag, which design position 76 declares only for claves A, B and D",
+            )
+        finalised["perceptor_mediador_flag"] = (
+            " " if naturaleza_s else mediador if mediador is not None else " "
+        )
+    if "clave_codigo" in required_fields:
+        clave_codigo = row.get("clave_codigo")
+        if clave_codigo is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "clave_codigo, which design position 79 declares only for claves A, B and D",
+            )
+        if clave_codigo is None and clave_abd and not naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "clave_codigo (design position 79, clave 4 the general case): no observation carries it",
+            )
+        finalised["clave_codigo"] = (
+            "0" if naturaleza_s else str(clave_codigo) if clave_codigo is not None else "0"
+        )
+    if "codigo_emisor" in required_fields:
+        emisor = row.get("codigo_emisor")
+        if emisor is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "codigo_emisor, which design positions 80-91 declare only for claves A, B and D",
+            )
+        if emisor is not None and row.get("clave_codigo") == 2:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "codigo_emisor with clave_codigo 2, which design positions 80-91 declare empty then",
+            )
+        if (
+            emisor is None
+            and clave_abd
+            and not naturaleza_s
+            and row.get("clave_codigo") in (1, 3, 4)
+        ):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "codigo_emisor (design positions 80-91, the issuer's NIF for clave codigo 1/4, "
+                "ZXX country code for 3): no observation carries it",
+            )
+        finalised["codigo_emisor"] = (
+            " " * 12 if naturaleza_s else emisor if emisor is not None else " " * 12
+        )
+    if "pago" in required_fields:
+        pago193 = row.get("pago")
+        if pago193 is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "pago, which design position 95 declares only for claves A, B and D",
+            )
+        if pago193 is None and clave_abd and not naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "pago (design position 95): no observation carries it",
+            )
+        finalised["pago"] = "0" if naturaleza_s else str(pago193) if pago193 is not None else "0"
+    if "tipo_codigo" in required_fields:
+        tipo_codigo = row.get("tipo_codigo")
+        if tipo_codigo is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "tipo_codigo, which design position 96 declares only for claves A, B and D",
+            )
+        if tipo_codigo is None and clave_abd and not naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "tipo_codigo (design position 96): no observation carries it",
+            )
+        finalised["tipo_codigo"] = " " if naturaleza_s else tipo_codigo if tipo_codigo is not None else " "
+    if "codigo_cuenta" in required_fields:
+        cuenta = row.get("codigo_cuenta")
+        if cuenta is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "codigo_cuenta, which design positions 97-116 declare only for claves A, B and D",
+            )
+        finalised["codigo_cuenta"] = (
+            " " * 20 if naturaleza_s else cuenta if cuenta is not None else " " * 20
+        )
+    if "pendiente_flag" in required_fields:
+        pendiente = row.get("pendiente_flag")
+        if pendiente is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "pendiente_flag, which design position 117 declares only for claves A, B and D",
+            )
+        finalised["pendiente_flag"] = pendiente if pendiente is not None else " "
+    if "penalizaciones" in required_fields:
+        penal = row["penalizaciones"]
+        if penal != 0 and clave not in {"B", "D"}:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "penalizaciones, which design positions 182-192 declare only for claves B and D",
+            )
+        if penal != 0 and naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "penalizaciones while naturaleza del declarante is 'S', which the design's "
+                "cascade declares a ceros",
+            )
+    if "isin_code" in required_fields:
+        isin = row.get("isin_code")
+        if isin is not None and row.get("clave_codigo") not in (2, 4):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "isin_code while clave_codigo is not 2 or 4, which design positions 193-204 "
+                "declare as the ISIN's own scope",
+            )
+        if (
+            isin is None
+            and clave_abd
+            and not naturaleza_s
+            and row.get("clave_codigo") in (2, 4)
+            and clave == "A"
+            and row.get("clave_mercado") == "A"
+        ):
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+                "isin_code (design positions 193-204: obligatory when clave mercado is A): "
+                "no observation carries it",
+            )
+        finalised["isin_code"] = " " * 12 if naturaleza_s else isin if isin is not None else " " * 12
+    if "naturaleza_declarante" in required_fields:
+        naturaleza_d = row.get("naturaleza_declarante")
+        finalised["naturaleza_declarante"] = naturaleza_d if naturaleza_d is not None else " "
+    if "fecha_inicio_prestamo" in required_fields:
+        fecha_inicio = row.get("fecha_inicio_prestamo")
+        if fecha_inicio is not None and row.get("tipo_codigo") != "P":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "fecha_inicio_prestamo while tipo_codigo is not 'P', which design positions "
+                "209-216 declare exclusively for prestamo de valores",
+            )
+        finalised["fecha_inicio_prestamo"] = (
+            "0" * 8 if naturaleza_s else fecha_inicio if fecha_inicio is not None else "0" * 8
+        )
+    if "fecha_vencimiento_prestamo" in required_fields:
+        fecha_vencimiento = row.get("fecha_vencimiento_prestamo")
+        if fecha_vencimiento is not None and row.get("tipo_codigo") != "P":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "fecha_vencimiento_prestamo while tipo_codigo is not 'P', which design positions "
+                "217-224 declare exclusively for prestamo de valores",
+            )
+        finalised["fecha_vencimiento_prestamo"] = (
+            "0" * 8 if naturaleza_s else fecha_vencimiento if fecha_vencimiento is not None else "0" * 8
+        )
+    if "compensaciones" in required_fields:
+        compensa = row["compensaciones"]
+        if compensa != 0 and row.get("tipo_codigo") != "P":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "compensaciones while tipo_codigo is not 'P', which design positions 225-236 "
+                "declare exclusively for prestamo de valores",
+            )
+        if compensa != 0 and naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "compensaciones while naturaleza del declarante is 'S', which the design's "
+                "cascade declares a ceros",
+            )
+    if "garantias" in required_fields:
+        garant = row["garantias"]
+        if garant != 0 and row.get("tipo_codigo") != "P":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "garantias while tipo_codigo is not 'P', which design positions 237-248 "
+                "declare exclusively for prestamo de valores",
+            )
+        if garant != 0 and naturaleza_s:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "garantias while naturaleza del declarante is 'S', which the design's "
+                "cascade declares a ceros",
+            )
+    if "nif_pagador_anterior" in required_fields:
+        pagador_anterior = row.get("nif_pagador_anterior")
+        if pagador_anterior is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "nif_pagador_anterior, which design positions 322-330 declare only for claves A, B and D",
+            )
+        finalised["nif_pagador_anterior"] = (
+            pagador_anterior if pagador_anterior is not None else " " * 9
+        )
+    if "fecha_devengo" in required_fields:
+        devengo193 = row.get("fecha_devengo")
+        if devengo193 is not None and clave != "A":
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "fecha_devengo, which design positions 331-338 declare only for clave A",
+            )
+        finalised["fecha_devengo"] = devengo193 if devengo193 is not None else "0" * 8
+    if "clave_mercado" in required_fields:
+        mercado = row.get("clave_mercado")
+        if mercado is not None and not clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                "clave_mercado, which design position 339 declares only for claves A, B and D",
+            )
+        if mercado is None and clave_abd:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+                "clave_mercado (design position 339): no observation carries it",
+            )
+        finalised["clave_mercado"] = mercado if mercado is not None else " "
+    if "numero_orden" in required_fields:
+        supplied_order = row.get("numero_orden")
+        if supplied_order is not None and int(supplied_order) != row_number:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} carry numero_orden "
+                f"{supplied_order!r}, which disagrees with the design's sequential record "
+                f"number {row_number}",
+            )
+        finalised["numero_orden"] = str(row_number)
+
+    is_clave_b01 = clave == "B" and subclave == "01"
+    for pension_field in _PENSION_PRESACION_TYPE_FIELDS:
+        if pension_field not in required_fields:
+            continue
+        value = row.get(pension_field)
+        if value is not None and not is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                f"{pension_field}, which design campo 38 declares only for clave B.01",
+            )
+        if value is None and is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave B.01 require "
+                f"{pension_field} (design campo 38): each prestacion type's 0/1 flag is always "
+                "recorded, and the 0 for a type not paid is a recorded fact",
+            )
+        finalised[pension_field] = str(value) if value is not None else " "
+
     finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
     finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
     finalised["disability_clave"] = str(disability) if disability is not None else " "
@@ -1105,6 +1535,12 @@ def _build_withholding_rows(
             "foral_retention_araba": Decimal("0"),
             "foral_retention_gipuzkoa": Decimal("0"),
             "foral_retention_bizkaia": Decimal("0"),
+            "reducciones": Decimal("0"),
+            "base_retenciones": Decimal("0"),
+            "porcentaje_retencion": Decimal("0"),
+            "penalizaciones": Decimal("0"),
+            "compensaciones": Decimal("0"),
+            "garantias": Decimal("0"),
         }
         if observation.country_code is not None:
             identity["country_code"] = observation.country_code
@@ -1131,6 +1567,25 @@ def _build_withholding_rows(
                 "housing_loan_communication_clave",
                 "complemento_infancia_clave",
                 "emerging_stock_excess_clave",
+                "startup_fund_rendimientos_clave",
+                "perceptor_mediador_flag",
+                "clave_codigo",
+                "codigo_emisor",
+                "naturaleza",
+                "pago",
+                "tipo_codigo",
+                "codigo_cuenta",
+                "pendiente_flag",
+                "tipo_percepcion",
+                "isin_code",
+                "naturaleza_declarante",
+                "fecha_inicio_prestamo",
+                "fecha_vencimiento_prestamo",
+                "nif_pagador_anterior",
+                "fecha_devengo",
+                "clave_mercado",
+                "numero_orden",
+                *_PENSION_PRESACION_TYPE_FIELDS,
                 *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )
@@ -1172,13 +1627,19 @@ def _build_withholding_rows(
             "foral_retention_araba",
             "foral_retention_gipuzkoa",
             "foral_retention_bizkaia",
+            "reducciones",
+            "base_retenciones",
+            "porcentaje_retencion",
+            "penalizaciones",
+            "compensaciones",
+            "garantias",
         ):
             previous = bucket[amount_field]
             assert isinstance(previous, Decimal)
             bucket[amount_field] = previous + getattr(observation, amount_field)
     return tuple(
-        _finalise_withholding_row(accum[key], required_fields=required_fields)
-        for key in sorted(accum.keys())
+        _finalise_withholding_row(accum[key], required_fields=required_fields, row_number=index)
+        for index, key in enumerate(sorted(accum.keys()), start=1)
     )
 
 

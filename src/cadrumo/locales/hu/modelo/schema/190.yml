@@ -5,7 +5,69 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Kiegészítő bevallás
+            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
+              help: null
+              label: A kapcsolattartó e-mail címe
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Az előző bevallás azonosító száma
+            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
+              help: null
+              label: A kifizetések teljes összege
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: null
+              label: A kapcsolattartó vezeték- és utóneve
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: null
+              label: A kapcsolattartó telefonszáma
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: A visszatartások és előlegfizetések teljes összege
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: null
+              label: Helyettesítő bevallás
+            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
+              help: null
+              label: A kifizetések teljes száma
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Jövedelemkód
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
+            x-e1in4opedpkmc:
+              help: null
+              label: A juttatásban részesülő adóazonosítója (NIF)
+            x-e1in4opedpnmqojick:
+              help: null
+              label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Nem keresőképtelenségből származó bruttó pénzbeli juttatás
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Nem keresőképtelenségből származó természetbeni juttatás értéke
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: A pénzbeli juttatásokra alkalmazott adólevonások
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Jövedelem-alkód
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
+          field:
+            label: null
+        2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: null

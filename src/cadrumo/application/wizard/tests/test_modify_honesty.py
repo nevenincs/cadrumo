@@ -206,8 +206,8 @@ def test_edit_envelope_carries_descendants_via_door_notice(
     """An interactive modify run points the operator at the descendiente door.
 
     The group is withheld from modify mode, so the surface can never be
-    silently absent: the final envelope carries an info notice naming the
-    dedicated descendant-management command as its suggestion.
+    silently absent: the final envelope carries an info notice whose typed
+    action projection names the dedicated descendant-management command.
     """
     _emit_wizard_success("edit", "probe-profile", modify_descendants_via_door=True)
 
@@ -216,7 +216,8 @@ def test_edit_envelope_carries_descendants_via_door_notice(
     assert _MODIFY_DESCENDANTS_DOOR_CODE in codes
     notice = codes[_MODIFY_DESCENDANTS_DOOR_CODE]
     assert notice["severity"] == NoticeSeverity.INFO.value
-    assert notice["suggestion"] == "aeat config profile descendiente"
+    assert notice["action"]["action"]["action_id"] == "operator.profile.descendiente"
+    assert notice["action"]["action"]["target_command_key"] == "config.profile.descendiente"
 
 
 def test_create_envelope_omits_descendants_via_door_notice(

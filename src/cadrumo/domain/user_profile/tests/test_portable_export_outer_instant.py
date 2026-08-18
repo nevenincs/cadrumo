@@ -19,6 +19,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
+from ....domain.user_profile import ProfileSetupState
 from .._portable_export import UserProfilePortableExport
 from .._values import UserProfileFact, UserProfileRecord
 
@@ -35,7 +36,7 @@ _OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours
 
 
 def _profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )

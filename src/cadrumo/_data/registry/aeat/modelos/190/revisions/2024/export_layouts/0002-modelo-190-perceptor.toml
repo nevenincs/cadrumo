@@ -1,0 +1,1201 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-190-fichero-boe"
+
+[[revisions."2024".export_layouts.records]]
+id = "modelo-190-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+
+[revisions."2024".export_layouts.records.row_field_casilla_ids]
+perceptor_tax_id = "perc.nif"
+perceptor_legal_name = "perc.nombre"
+clave = "perc.clave"
+subclave = "perc.subclave"
+percibido_dinerario = "perc.percepcion-dineraria"
+percibido_especie = "perc.percepcion-especie"
+retencion_practicada = "perc.retenciones-practicadas"
+ingreso_a_cuenta = "perc.ingresos-a-cuenta"
+province_code = "perc.provincia"
+territorial_deduction_clave = "perc.ceuta-melilla"
+perceptor_birth_year = "perc.ano-nacimiento"
+perceptor_situacion_familiar = "perc.situacion-familiar"
+representative_tax_id = "perc.nif-representante-legal"
+ingreso_a_cuenta_repercutido = "perc.ingresos-a-cuenta-repercutidos"
+accrual_year = "perc.ejercicio-devengo"
+spouse_or_unit_titular_tax_id = "perc.nif-conyuge-titular-unidad"
+disability_clave = "perc.discapacidad"
+contract_relation_clave = "perc.contrato-relacion"
+unit_convivencia_titular_clave = "perc.titular-unidad-convivencia"
+geographic_mobility_clave = "perc.movilidad-geografica"
+descendants_under_3_total = "perc.descendientes-menores-3-total"
+descendants_under_3_whole = "perc.descendientes-menores-3-entero"
+descendants_rest_total = "perc.descendientes-resto-total"
+descendants_rest_whole = "perc.descendientes-resto-entero"
+descendants_disabled_33_65_total = "perc.descendientes-discapacidad-33-65-total"
+descendants_disabled_33_65_whole = "perc.descendientes-discapacidad-33-65-entero"
+descendants_disabled_mobility_total = "perc.descendientes-discapacidad-movilidad-total"
+descendants_disabled_mobility_whole = "perc.descendientes-discapacidad-movilidad-entero"
+descendants_disabled_65_plus_total = "perc.descendientes-discapacidad-65-total"
+descendants_disabled_65_plus_whole = "perc.descendientes-discapacidad-65-entero"
+ascendants_under_75_total = "perc.ascendientes-menores-75-total"
+ascendants_under_75_whole = "perc.ascendientes-menores-75-entero"
+ascendants_75_plus_total = "perc.ascendientes-75-mas-total"
+ascendants_75_plus_whole = "perc.ascendientes-75-mas-entero"
+ascendants_disabled_33_65_total = "perc.ascendientes-discapacidad-33-65-total"
+ascendants_disabled_33_65_whole = "perc.ascendientes-discapacidad-33-65-entero"
+ascendants_disabled_mobility_total = "perc.ascendientes-discapacidad-movilidad-total"
+ascendants_disabled_mobility_whole = "perc.ascendientes-discapacidad-movilidad-entero"
+ascendants_disabled_65_plus_total = "perc.ascendientes-discapacidad-65-total"
+ascendants_disabled_65_plus_whole = "perc.ascendientes-discapacidad-65-entero"
+first_child_compute = "perc.computo-hijo-1"
+second_child_compute = "perc.computo-hijo-2"
+third_child_compute = "perc.computo-hijo-3"
+housing_loan_communication_clave = "perc.prestamos-vivienda-clave"
+reducciones_aplicables = "perc.reducciones-aplicables"
+gastos_deducibles = "perc.gastos-deducibles"
+pension_compensatoria = "perc.pension-compensatoria"
+anualidades_alimentos = "perc.anualidades-alimentos"
+incapacity_cash_perception = "perc.incapacidad-dineraria-percepcion"
+incapacity_cash_withholding = "perc.incapacidad-dineraria-retenciones"
+incapacity_kind_value = "perc.incapacidad-especie-valoracion"
+incapacity_kind_ingreso_a_cuenta = "perc.incapacidad-especie-ingresos-a-cuenta"
+incapacity_kind_repercutido = "perc.incapacidad-especie-repercutidos"
+complemento_infancia_clave = "perc.complemento-ayuda-infancia"
+foral_retention_estatal = "perc.retenciones-forales-estatal"
+foral_retention_navarra = "perc.retenciones-forales-navarra"
+foral_retention_araba = "perc.retenciones-forales-araba"
+foral_retention_gipuzkoa = "perc.retenciones-forales-gipuzkoa"
+foral_retention_bizkaia = "perc.retenciones-forales-bizkaia"
+emerging_stock_excess_clave = "perc.excesos-acciones-emergentes"
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "190"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-declarante-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+# Design campo 4: "Consignar lo contenido en estas mismas posiciones del registro de tipo 1."
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-nif"
+offset = 18
+length = 9
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif"
+# A NIF exactly fills its 9-byte slot; left_zero would strip a genuine leading zero on parse.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-nif-representante-legal"
+offset = 27
+length = 9
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-representante"
+# Design campo 6, 27-35: declared only when the perceptor is under 14. The
+# resolver emits the exact 9-byte content -- the representative's NIF when an
+# observation carries it, the design's own spaces ("en cualquier otro caso se
+# rellenara a espacios") otherwise.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-nombre"
+offset = 36
+length = 40
+kind = "binding"
+binding = "modelo-190-perceptor-row-name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-codigo-provincia"
+offset = 76
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-provincia"
+# Design campo 8, 76-77 CODIGO PROVINCIA: the two-digit province of the perceptor's domicilio (01-52, 53 La Palma), or 98 for an IRPF contribuyente resident abroad. The resolver refuses when no observation carries the province rather than writing a fabricated residence.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-clave"
+offset = 78
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-clave"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-subclave"
+offset = 79
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-subclave"
+# Design campo 10 is Numerico, but the subclave is a two-digit token from
+# a closed per-clave table (01, 03, 04, 99...), not a zero-fillable
+# quantity: left_zero never pads a present value and its parse side would
+# strip the genuine leading zero of "01".
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-signo-percepcion-dineraria"
+offset = 81
+length = 1
+kind = "literal"
+literal = " "
+# Design campo 11 subdivision 81 SIGNO DE LA PERCEPCION INTEGRA. AEAT
+# admits exactly two values: an "N" when the percepcion is a reintegro of
+# amounts wrongly paid in an earlier ejercicio, and otherwise "el contenido
+# de este campo sera un espacio".
+#
+# A LITERAL rather than a filler, because the space is a value this
+# application can assert, not an absence. WithholdingObservation validates
+# its amounts as non-negative, so no draft Cadrumo can build is a
+# reintegro, and the space is therefore the design's own correct value for
+# every filing -- the same reasoning as the "T" tipo de soporte literal on
+# the declarante record. If that non-negative invariant is ever relaxed,
+# this literal must become a real signo field: it is the one assumption
+# holding it up.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-percepcion-dineraria"
+offset = 82
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-dinerario"
+# The base campo is the NON-incapacidad part: design campo 32 excludes incapacidad-laboral percepciones, which file at 256-268.
+# Design campo 11 subdivision 82-94 PERCEPCION INTEGRA (Dineraria),
+# "sin signo y sin coma decimal", 11 enteros + 2 decimales.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-practicadas"
+offset = 95
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retencion-practicada"
+# The base campo is the NON-incapacidad part: design campo 32 excludes the retentions on incapacidad-laboral percepciones, which file at 269-281.
+# Design campo 11 subdivision 95-107 RETENCIONES PRACTICADAS, subdivided
+# again into 95-105 parte entera and 106-107 parte decimal.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-signo-percepcion-especie"
+offset = 108
+length = 1
+kind = "literal"
+literal = " "
+# Design campo 12 subdivision 108 SIGNO DE LA PERCEPCION EN ESPECIE. The
+# design admits an "N" only when the perceptor reintegra percepciones en
+# especie wrongly or excessively paid in earlier ejercicios, and "un espacio"
+# in every other case. WithholdingObservation validates its amounts as
+# non-negative, so no draft Cadrumo can build is a reintegro, and the space is
+# the design's own correct value for every filing -- the same reasoning as the
+# position-81 sign literal. If the non-negative invariant is ever relaxed this
+# literal must become a real signo field.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-percepcion-especie"
+offset = 109
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-especie"
+# The base campo is the NON-incapacidad part: design campo 33 excludes in-kind incapacidad-laboral prestaciones, which file at 283-295.
+# Design campo 12 subdivision 109-121 VALORACION de la percepcion en especie.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ingresos-a-cuenta"
+offset = 122
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-ingreso-a-cuenta"
+# The base campo is the NON-incapacidad part: design campo 33 excludes the ingresos a cuenta on in-kind incapacidad-laboral prestaciones, which file at 296-308.
+# Design campo 12 subdivision 122-134 INGRESOS A CUENTA EFECTUADOS.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ingresos-a-cuenta-repercutidos"
+offset = 135
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido"
+# The base campo is the NON-incapacidad part: design campo 33 excludes the repercutidos on in-kind incapacidad-laboral prestaciones, which file at 309-321.
+# Design campo 12 subdivision 135-147 INGRESOS A CUENTA REPERCUTIDOS: the part
+# of the ingreso a cuenta the payer passed on to the perceptor, carried by the
+# observation; ceros is the design's own no-content when no amount was
+# repercutido.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ejercicio-devengo"
+offset = 148
+length = 4
+kind = "binding"
+binding = "modelo-190-perceptor-row-ejercicio-devengo"
+# Design campo 13, 148-151 EJERCICIO DEVENGO: declared only for atrasos whose
+# devengo belongs to an earlier ejercicio or reintegros of earlier-exercise
+# amounts; the resolver writes the design's own zeros ("0000") for every other
+# row.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ceuta-melilla"
+offset = 152
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-territorial-deduccion"
+# Design campo 14, 152 CEUTA O MELILLA: 1 when the payer applied the art. 68.4 deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional deduction, 0 otherwise. The payer's own retention determination, carried by the observation; the resolver refuses on absence rather than writing 0 for a determination nobody recorded.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ano-nacimiento"
+offset = 153
+length = 4
+kind = "binding"
+binding = "modelo-190-perceptor-row-ano-nacimiento"
+# Design campo 15, 153-156 ANO DE NACIMIENTO, declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; the resolver writes the design's own no-content for every other row and refuses only when an eligible row's observation carries no birth year.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-situacion-familiar"
+offset = 157
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-situacion-familiar"
+# Design campo 16, 157 SITUACION FAMILIAR (claves 1-3), declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; same resolver rule as the birth year.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-nif-conyuge"
+offset = 158
+length = 9
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-conyuge-titular"
+# Design campo 17, 158-166 NIF DEL CONYUGE / NIF DEL TITULAR DE LA UNIDAD DE
+# CONVIVENCIA: the spouse's NIF when situacion familiar is 2 (claves A/B/C), the
+# titular's NIF for clave L.29 with titular clave 2; the resolver refuses a value
+# equal to the perceptor's own NIF and writes spaces elsewhere.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-discapacidad"
+offset = 167
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-discapacidad"
+# Design campo 18, 167 DISCAPACIDAD (claves 0-3), always recorded for claves
+# A, B (01, 03, 04, 99) and C -- clave 0 is the recorded "no disability" fact;
+# the resolver refuses an eligible row whose observation carries no clave and
+# writes spaces for claves the design does not declare.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-contrato-relacion"
+offset = 168
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-contrato-relacion"
+# Design campo 19, 168 CONTRATO O RELACION (claves 1-4), always recorded for
+# clave A; different contract types on one perceptor split into separate
+# records per the design. The resolver refuses a clave-A row whose observation
+# carries no clave and writes spaces for other claves.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-titular-unidad-convivencia"
+offset = 169
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-titular-unidad"
+# Design campo 20, 169 TITULAR UNIDAD DE CONVIVENCIA (claves 1-2), always
+# recorded for clave L.29; clave 2 obligates the campo 17 NIF. The resolver
+# refuses an L.29 row whose observation carries no clave and writes spaces
+# elsewhere.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-movilidad-geografica"
+offset = 170
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-movilidad-geografica"
+# Design campo 21, 170 MOVILIDAD GEOGRAFICA (claves 0-1, art. 19.2.f)), always
+# recorded for clave A -- clave 0 is the recorded "not entitled" fact; the
+# resolver refuses a clave-A row whose observation carries no clave and writes
+# spaces elsewhere.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-reducciones-aplicables"
+offset = 171
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-reducciones"
+# Design campo 22, 171-183 REDUCCIONES APLICABLES (art. 18.2/18.3, DT 11/12,
+# art. 32.1): the reductions the payer actually considered; the design's own
+# zeros when none. Declared for claves A, B (01, 03, 04, 99), C, E, F (01-06),
+# G (01-06, 08), H and I.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-gastos-deducibles"
+offset = 184
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-gastos-deducibles"
+# Design campo 23, 184-196 GASTOS DEDUCIBLES (art. 19.2 a)-c)): the expenses
+# the payer considered to determine the retention rate; the design's own zeros
+# when none. Declared for claves A, B (01, 03, 04, 99), C, E (01, 02) and
+# exceptionally L.05, L.10, L.27.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-pensiones-compensatorias"
+offset = 197
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-pension-compensatoria"
+# Design campo 24, 197-209 PENSIONES COMPENSATORIAS: the annual compensatory
+# pension to the spouse by judicial resolution; the design's own zeros when
+# none. Declared for claves A, B (01, 03, 04, 99) and C.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-anualidades-alimentos"
+offset = 210
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-anualidades-alimentos"
+# Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS: the annual food annuities
+# to children by judicial decision; the design's own zeros when none. Declared
+# for claves A, B (01, 03, 04, 99) and C.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-menores-3-total"
+offset = 223
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-total"
+# Design campo 26, 223: descendants under 3 total (art. 58 minimo por descendientes); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-menores-3-entero"
+offset = 224
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-entero"
+# Design campo 26, 224: of the position-223 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-resto-total"
+offset = 225
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-total"
+# Design campo 26, 225-226: remaining descendants total; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-resto-entero"
+offset = 227
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-entero"
+# Design campo 26, 227-228: of the position 225-226 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-33-65-total"
+offset = 229
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-total"
+# Design campo 27, 229-230: disabled descendants 33-65% total (art. 60.2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-33-65-entero"
+offset = 231
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-entero"
+# Design campo 27, 231-232: of the 229-230 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-movilidad-total"
+offset = 233
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-total"
+# Design campo 27, 233-234: disabled 33-65% descendants with reduced mobility or third-party help need; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-movilidad-entero"
+offset = 235
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-entero"
+# Design campo 27, 235-236: of the 233-234 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-65-total"
+offset = 237
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-total"
+# Design campo 27, 237-238: disabled descendants at 65% or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-descendientes-disc-65-entero"
+offset = 239
+length = 2
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-entero"
+# Design campo 27, 239-240: of the 237-238 descendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-menores-75-total"
+offset = 241
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-total"
+# Design campo 28, 241: ascendants under 75 total (art. 59); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-menores-75-entero"
+offset = 242
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-entero"
+# Design campo 28, 242: of the position-241 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-75-mas-total"
+offset = 243
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-total"
+# Design campo 28, 243: ascendants at 75 or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-75-mas-entero"
+offset = 244
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-entero"
+# Design campo 28, 244: of the position-243 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-33-65-total"
+offset = 245
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-total"
+# Design campo 29, 245: disabled ascendants 33-65% total; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-33-65-entero"
+offset = 246
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-entero"
+# Design campo 29, 246: of the position-245 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-movilidad-total"
+offset = 247
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-total"
+# Design campo 29, 247: disabled 33-65% ascendants with reduced mobility or third-party help need; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-movilidad-entero"
+offset = 248
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero"
+# Design campo 29, 248: of the position-247 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-65-total"
+offset = 249
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-total"
+# Design campo 29, 249: disabled ascendants at 65% or more; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-ascendientes-disc-65-entero"
+offset = 250
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-entero"
+# Design campo 29, 250: of the position-249 ascendants, those computed por entero; zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-1"
+offset = 251
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-1"
+# Design campo 30, 251: first child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-2"
+offset = 252
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-2"
+# Design campo 30, 252: second child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-computo-hijo-3"
+offset = 253
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-3"
+# Design campo 30, 253: third child computed por entero (1) or por mitad (2); zero when none.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-comunicacion-prestamos-vivienda"
+offset = 254
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestamos-vivienda"
+# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B (01, 03, 04, 99) and C -- both claves are recorded facts, never defaults.
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-signo-incapacidad-dineraria"
+offset = 255
+length = 1
+kind = "literal"
+literal = " "
+# Design campo 32 subdivision 255 SIGNO DE LA PERCEPCION INTEGRA DERIVADA DE INCAPACIDAD LABORAL: an "N" only for reintegros; WithholdingObservation validates its amounts as non-negative, so no draft Cadrumo can build is a reintegro and the space is the design's own correct value for every filing -- the same reasoning as the position-81 sign literal. If the non-negative invariant is ever relaxed this literal must become a real signo field.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-dineraria-percepcion"
+offset = 256
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-percepcion"
+# Design campo 32 subdivision 256-268 PERCEPCION INTEGRA (Dineraria) DERIVADA DE INCAPACIDAD LABORAL, declared only for claves A and B.01; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-dineraria-retenciones"
+offset = 269
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-retenciones"
+# Design campo 32 subdivision 269-281 RETENCIONES PRACTICADAS SOBRE PRESTACIONES DERIVADAS DE INCAPACIDAD LABORAL; zeros when none, including for a perceptor who suffered no retention, per the design's own rule.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-signo-incapacidad-especie"
+offset = 282
+length = 1
+kind = "literal"
+literal = " "
+# Design campo 33 subdivision 282 SIGNO DE LA PERCEPCION EN ESPECIE DERIVADA DE INCAPACIDAD LABORAL: an "N" only for reintegros; the space is the design's own correct value for every filing the non-negative amount invariant permits -- the same reasoning as the position-81 sign literal.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-especie-valoracion"
+offset = 283
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-valoracion"
+# Design campo 33 subdivision 283-295 VALORACION DE LA PERCEPCION EN ESPECIE DERIVADA DE INCAPACIDAD LABORAL, declared only for clave A; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-especie-ingresos-a-cuenta"
+offset = 296
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta"
+# Design campo 33 subdivision 296-308 INGRESOS A CUENTA EFECTUADOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-especie-repercutidos"
+offset = 309
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-repercutidos"
+# Design campo 33 subdivision 309-321 INGRESOS A CUENTA REPERCUTIDOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-complemento-ayuda-infancia"
+offset = 322
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-complemento-ayuda-infancia"
+# Design campo 34, 322 COMPLEMENTO AYUDA PARA LA INFANCIA: whether any mensualidad of the L.29 prestacion included the Ley 19/2021 IMV complemento; clave 1 included, 2 not, always recorded for clave L.29 -- both claves are recorded facts, never defaults.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-forales-estatal"
+offset = 323
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-estatal"
+# Design campo 35 subdivision 323-335 HACIENDA ESTATAL: the clave-E retentions and ingresos a cuenta ingresados to the Hacienda Publica Estatal; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-forales-navarra"
+offset = 336
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-navarra"
+# Design campo 35 subdivision 336-348 COMUNIDAD FORAL DE NAVARRA: the clave-E retentions and ingresos a cuenta ingresados to Navarra; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-forales-araba"
+offset = 349
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-araba"
+# Design campo 35 subdivision 349-361 DIPUTACION FORAL DE ARABA/ALAVA: the clave-E retentions and ingresos a cuenta ingresados to Araba/Alava; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-forales-gipuzkoa"
+offset = 362
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-gipuzkoa"
+# Design campo 35 subdivision 362-374 DIPUTACION FORAL DE GIPUZKOA: the clave-E retentions and ingresos a cuenta ingresados to Gipuzkoa; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-retenciones-forales-bizkaia"
+offset = 375
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-bizkaia"
+# Design campo 35 subdivision 375-387 DIPUTACION FORAL DE BIZKAIA: the clave-E retentions and ingresos a cuenta ingresados to Bizkaia; the design's own zeros when none.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-excesos-acciones-emergentes"
+offset = 388
+length = 1
+kind = "binding"
+binding = "modelo-190-perceptor-row-excesos-acciones-emergentes"
+# Design campo 36, 388 EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES: clave 1
+# when the in-kind percepciones include emerging-company stock over the
+# art. 42.3.f) exempt amount, 0 for the rest of the in-kind retributions.
+# Declared only for clave A and only when the especie block has content: the
+# resolver refuses a row with in-kind percepciones but no recorded clave, and
+# a clave without in-kind percepciones, and writes spaces when the field is
+# not to be completed.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-190-perc-blancos-389"
+offset = 389
+length = 112
+kind = "filler"
+# Design campo 39 of the 2024 edition, 389-500: BLANCOS.
+# 
+# THE TWO EDITIONS DISAGREE HERE AND ONLY ONE CAN BE WRITTEN. The 2025
+# edition carves two data fields out of this run -- 389 RENDIMIENTOS DEL
+# TRABAJO OBTENIDOS POR LA GESTION DE FONDOS VINCULADOS AL EMPRENDIMIENTO
+# (clave A only) and 390-394 TIPO/S DE PRESTACION/ES DE LA CLAVE B.01
+# (five one-byte "1"/"0" flags, clave B.01 only) -- leaving 395-500 as the
+# blancos remainder. Both are Numerico, so writing them as unpopulated
+# numeric slots emits CEROS, and a 2024 filing would then carry ceros
+# across 389-394 where the 2024 edition declares blancos.
+# 
+# Wrong bytes beat a visible gap only in the wrong direction: ceros over
+# blancos ships silently behind a valid digest, while an unwritten
+# position is reported by the coverage gate every time the registry
+# loads. So this writes the run the 2024 edition declares and leaves the
+# two 2025-only fields UNWRITTEN. They cost 2 positions of reported
+# coverage on the 2025 sheet, and that refusal is the honest signal that
+# one revision is spanning two incompatible record designs. Neither field
+# can be expressed until revision '2024-y-siguientes' is split per
+# edition; Cadrumo holds no fact for either one in any case.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024"]
+

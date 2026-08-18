@@ -89,8 +89,6 @@ from ._models import (
     WizardVisibility,
 )
 from ._persistence import (
-    WizardFactWriteDoor,
-    apply_wizard_fact_changes,
     descendant_answers_from_record,
     descendant_facts_from_answers,
     project_answers,
@@ -129,7 +127,6 @@ __all__ = [
     "WizardChoice",
     "WizardCondition",
     "WizardEditUnsupportedConsoleError",
-    "WizardFactWriteDoor",
     "WizardFlow",
     "WizardQuestion",
     "WizardSection",
@@ -138,7 +135,6 @@ __all__ = [
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
     "WizardVisibility",
-    "apply_wizard_fact_changes",
     "attach_descendant_group",
     "attach_setup_legal_validators",
     "build_descendant_door",

@@ -42,8 +42,8 @@ from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
 from ..evidence import try_record_legal_hold_snapshot
 from ..filing import try_record_filing_retention_snapshot
-from ..profile_custody import create_profile_custody_registration_material
 from ._capsule_record import ProfileRecordSession
+from ._custody_ports import create_profile_custody_registration_material
 from ._custody_service import ProfileCustodyDisplacedSessionRetirementError
 from ._custody_transactions import ProfileCustodyTransactionConflictError
 from ._lifecycle import ProfileCapsuleLifecycle

@@ -75,7 +75,7 @@ from ....domain.calculations.registry import (
     WithholdingObservation,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -142,7 +142,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile() -> None:
     """Persist a filing-ready withholding-operator profile for annual summaries."""
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

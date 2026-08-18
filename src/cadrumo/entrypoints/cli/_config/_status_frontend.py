@@ -267,11 +267,20 @@ def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
     surface and the machine contract cannot silently diverge on when this
     advisory fires or what it suggests.
     """
+    from pydantic import ValidationError
+
     from ....application.user_profile import projection_for_taxpayer
     from ....domain.calculations.registry import derive_tax_route
     from .._overview_evidence import overview_no_aeat_history_notice
 
-    return overview_no_aeat_history_notice(tax_route=derive_tax_route(projection_for_taxpayer(record)))
+    try:
+        tax_route = derive_tax_route(projection_for_taxpayer(record))
+    except ValidationError:
+        # A half-entered non-resident record (residency declared, country not)
+        # cannot be classified for a tax route; the overview degrades to the
+        # generic advisory instead of crashing the whole status page.
+        tax_route = None
+    return overview_no_aeat_history_notice(tax_route=tax_route)
 
 
 def _build_fact_rows(

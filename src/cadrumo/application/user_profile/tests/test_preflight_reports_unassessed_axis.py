@@ -26,6 +26,7 @@ from ....domain.user_profile import (
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
+    ProfileSetupState,
     ProfileSnapshotPolicy,
     UserProfileFact,
     UserProfileRecord,
@@ -40,7 +41,7 @@ _PERIOD = Period.from_year_and_code(2024, "1T")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
 
 
 def _schema_with_selector(selector: str) -> ProfileSchemaDefinition:

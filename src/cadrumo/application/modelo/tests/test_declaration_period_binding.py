@@ -28,7 +28,7 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -61,7 +61,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     """Seed the bucket profile with the taxpayer NIF so the IVA wallet
     reconciliation gate added to ``calculate_modelo_revision`` resolves
     the work-unit taxpayer identity."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),

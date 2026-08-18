@@ -138,12 +138,12 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     clears = tuple(UserProfileFact(path=path, value=None) for path in stale_paths if path not in new_pairs)
     upserts = tuple(UserProfileFact(path=path, value=value) for path, value in new_pairs.items())
 
-    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
+    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
 
-    apply_wizard_fact_changes(
+    apply_profile_fact_changes(
         profile_id=bucket_id,
         changes=(*clears, *upserts),
-        door=WizardFactWriteDoor.CLI_DESCENDIENTE,
+        door=ProfileFactWriteDoor.CLI_DESCENDIENTE,
     )
 
 

@@ -1,0 +1,57 @@
+[[revisions."2024".constructs]]
+id = "modelo-190-annual-summary"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "aeat-modelo-190-procedure", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
+casilla_ids = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
+formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
+bindings = [
+    "modelo-190-percepciones-anual",
+    "modelo-190-111-trabajo-dinerario-importe-anual",
+    "modelo-190-111-trabajo-especie-importe-anual",
+    "modelo-190-111-actividades-dinerario-importe-anual",
+    "modelo-190-111-actividades-especie-importe-anual",
+    "modelo-190-111-premios-dinerario-importe-anual",
+    "modelo-190-111-premios-especie-importe-anual",
+    "modelo-190-111-ganancias-dinerario-importe-anual",
+    "modelo-190-111-ganancias-especie-importe-anual",
+    "modelo-190-111-derechos-imagen-importe-anual",
+    "modelo-190-111-retenciones-anual",
+    "modelo-190-perceptor-row-nif",
+    "modelo-190-perceptor-row-name",
+    "modelo-190-perceptor-row-clave",
+    "modelo-190-perceptor-row-subclave",
+    "modelo-190-perceptor-row-percibido-dinerario",
+    "modelo-190-perceptor-row-percibido-especie",
+    "modelo-190-perceptor-row-retencion-practicada",
+    "modelo-190-perceptor-row-ingreso-a-cuenta",
+]
+relations = [
+    "modelo-190-rel-111-trabajo-dinerario-importe-anual",
+    "modelo-190-rel-111-trabajo-especie-importe-anual",
+    "modelo-190-rel-111-actividades-dinerario-importe-anual",
+    "modelo-190-rel-111-actividades-especie-importe-anual",
+    "modelo-190-rel-111-premios-dinerario-importe-anual",
+    "modelo-190-rel-111-premios-especie-importe-anual",
+    "modelo-190-rel-111-ganancias-dinerario-importe-anual",
+    "modelo-190-rel-111-ganancias-especie-importe-anual",
+    "modelo-190-rel-111-derechos-imagen-importe-anual",
+    "modelo-190-rel-111-retenciones-anual",
+]
+extraction_profiles = ["modelo-190-declaracion-pdf"]
+live_cross_references = ["modelo-190-filed-declarations-read"]
+workbook_parity_refs = ["modelo-190-dr-pdf-2025"]
+verification_expectations = ["modelo-190-annual-summary-verification"]
+application_links = [
+    "modelo-190-portal",
+    "modelo-190-calculation",
+    "modelo-190-filing",
+    "modelo-190-extractor",
+    "modelo-190-review",
+    "modelo-190-approval",
+    "modelo-190-reconciliation",
+    "modelo-190-workflow",
+    "modelo-190-deadline",
+]
+deadline_windows = ["modelo-190-2024-0a", "modelo-190-2025-0a"]
+filing_schedules = ["modelo-190-anual"]
+dependency_classifications = ["modelo-190-dep-111"]

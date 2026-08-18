@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.user_profile import projection_for_taxpayer
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._common import _declared_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -30,7 +30,7 @@ _PROFILE_ID = "3f2a9c14-8b7d-4e21-9f60-5c1a7d3e8b42"
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
     )

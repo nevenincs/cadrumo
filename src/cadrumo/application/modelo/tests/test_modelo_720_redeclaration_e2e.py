@@ -63,7 +63,7 @@ from ....domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -116,7 +116,7 @@ def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),

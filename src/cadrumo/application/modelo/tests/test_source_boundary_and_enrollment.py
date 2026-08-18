@@ -38,7 +38,7 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.modelos import Modelo184MemberRow
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
@@ -108,7 +108,7 @@ _ATTRIBUTION_PROFILE_FACTS = (
 
 def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
@@ -119,7 +119,7 @@ def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
 
 def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
@@ -186,7 +186,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
 def test_s26_assert_no_novel_source_kinds_accepts_deferred_revision() -> None:
     """A revision whose bindings use deferred source kinds still passes the gate."""
     # M190 uses 'withholding' — explicitly deferred.  Gate must not raise.
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -289,7 +289,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=profile_facts,
                 created_at=_T0,
@@ -300,7 +300,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
         seed_test_profile_record(
-            UserProfileRecord(
+            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=incomplete_facts,
                 created_at=_T0,
@@ -599,9 +599,9 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     """M190 'withholding' bindings are handled by the enrolled withholding resolver."""
     from ...aggregation import collect_unhandled_source_diagnostics
 
-    revision = _revision("190", "2024-y-siguientes")
+    revision = _revision("190", "2025-y-siguientes")
     assert any(str(b.source) == "withholding" for b in revision.bindings), (
-        "M190 2024-y-siguientes must declare withholding bindings for this test to be non-vacuous"
+        "M190 2025-y-siguientes must declare withholding bindings for this test to be non-vacuous"
     )
     handled = frozenset(
         {

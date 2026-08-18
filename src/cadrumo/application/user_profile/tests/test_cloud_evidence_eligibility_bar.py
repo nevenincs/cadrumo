@@ -44,7 +44,7 @@ import pytest
 
 from ....core import ServiceCapability, scan_directory
 from ....core.config import Settings, load_settings
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
 from .. import CapabilitySource, resolve_capability
 
@@ -57,7 +57,7 @@ _PRODUCTION_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="19191919-1919-4191-8191-191919191919",
         facts=facts,
         created_at=_NOW,

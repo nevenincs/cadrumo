@@ -1,0 +1,20 @@
+# Under-declaration advisory (no-silent-under-declaration). 'decl.total-perceptores'
+# is the COUNT of perceptor records (bound from this application's own withholding
+# store), while 'decl.base-total' is the MONEY total computed by this revision's
+# formula as a copy of the annual modelo 123 base relation. The count and the money
+# reach the resumen by different routes, so a positive count against a zero base is
+# a real disagreement rather than an arithmetic identity.
+#
+# That disagreement is what an annual resumen exists to expose: modelo 193 is the
+# resumen anual of the modelo 123 retenciones sobre capital mobiliario, so a
+# resumen naming perceptores while totalling no base means either the quarterly
+# chain or the perceptor records are incomplete, and the operator should see that
+# before filing.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor with no perceptores never fires it.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-193-base-anual-cuando-perceptores-declarados"
+expression = 'implies_nonzero(["decl.total-perceptores", "decl.base-total"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "ley-35-2006:art-101", "ley-58-2003:art-93"]

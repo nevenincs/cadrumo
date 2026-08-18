@@ -14,9 +14,49 @@ casilla_id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 
 [[revisions."2004-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "iva.cuota-no-periodica-total"
-number = "iva.cuota-no-periodica-total"
-
-[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.soportado.recargo-equivalencia"
 number = "iva.soportado.recargo-equivalencia"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-03"
+number = "675-691"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-27"
+number = "714-730"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-06"
+number = "753-769"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-09"
+number = "792-808"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-12"
+number = "831-847"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-15"
+number = "870-886"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-18"
+number = "909-925"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-21"
+number = "948-964"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.cuota-devengada-22"
+number = "965-981"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.a-deducir-23"
+number = "982-998"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.resultado-24"
+number = "999-1015"

@@ -9,6 +9,7 @@ from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
+from ....domain.user_profile import ProfileSetupState
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _NIF = "12345678Z"
@@ -66,7 +67,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=created_at,

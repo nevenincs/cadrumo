@@ -64,7 +64,7 @@ from ._auth_fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "auth-session"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000a0a0"
 
 _SENSITIVE_STORAGE_BASENAME = "12345678Z-private-storage.json"
 

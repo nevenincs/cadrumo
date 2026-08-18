@@ -38,6 +38,7 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
@@ -93,7 +94,7 @@ def _full_m100_profile() -> UserProfileRecord:
     Dates arrive as Python ``date`` objects; booleans as ``bool``;
     strings as ``str``; Decimals as ``Decimal``.
     """
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             # 0006 renta-2025-profile-tax-id
@@ -251,7 +252,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
 def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date() -> None:
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -290,7 +291,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     assert dictionary_field == "ECIVIL"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -317,7 +318,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
 def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

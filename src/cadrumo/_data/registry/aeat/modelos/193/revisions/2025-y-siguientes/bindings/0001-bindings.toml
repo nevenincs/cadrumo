@@ -1,0 +1,37 @@
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-193-123-perceptores-anual"
+# RET-1: distinct perceptor-NIF count from the dedicated per-perceptor retención
+# store (aggregate_retenciones_193.total_perceptors), not the sum of quarterly
+# Modelo 123 counts (which double-counts a perceptor paid in more than one quarter).
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "decl.total-perceptores", fact = "perceptor_count_distinct" }
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "sujetos obligados a retener o a efectuar ingreso a cuenta"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-193-123-base-anual"
+source = "relation_prefill"
+selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["06"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "rentas sujetas a retención o ingreso a cuenta"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-193-123-retenciones-anual"
+source = "relation_prefill"
+selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["09"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "se comunican las retenciones practicadas"]

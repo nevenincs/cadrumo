@@ -73,7 +73,7 @@ from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-)
+from ....domain.user_profile import ProfileSetupState
 
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 _BUCKET = _PROFILE_ID
@@ -81,7 +81,7 @@ _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 tmp = Path(sys.argv[1])
 
 with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

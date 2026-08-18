@@ -24,6 +24,7 @@ source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".casillas]]
 id = "iva.cuota-no-periodica-total"
+internal_only = true
 number = "iva.cuota-no-periodica-total"
 section = ["iva", "no_periodica", "totales"]
 data_type = "money"

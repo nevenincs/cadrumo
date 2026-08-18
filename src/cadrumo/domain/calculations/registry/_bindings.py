@@ -83,6 +83,13 @@ from ._detail_record_bindings import (
 from ._detail_record_bindings import (
     build_related_party_rows as _build_related_party_rows,
 )
+from ._gasto193_bindings import (
+    Gasto193Observation,
+    _Gasto193Selector,
+    resolve_gasto193_binding_row_values,
+    resolve_gasto193_binding_values,
+    validate_gasto193_binding_selector_shape,
+)
 from ._donativo_bindings import (
     DonativoDonorObservation,
     resolve_donativo_binding_row_values,
@@ -266,6 +273,8 @@ __all__ = [
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
     "resolve_donativo_binding_row_values",
+    "resolve_gasto193_binding_row_values",
+    "resolve_gasto193_binding_values",
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
@@ -1382,6 +1391,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.ATRIBUCION_MEMBER: _AtributionSelector,
     BindingSourceKind.REFUND_OPERATION: _RefundSelector,
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
+    BindingSourceKind.GASTO193_CONTRIBUTOR: _Gasto193Selector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
@@ -1482,6 +1492,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.ATRIBUCION_MEMBER: validate_atribucion_binding,
     BindingSourceKind.REFUND_OPERATION: validate_refund_binding,
     BindingSourceKind.DONATIVO_DONOR: validate_donativo_binding,
+    BindingSourceKind.GASTO193_CONTRIBUTOR: validate_gasto193_binding_selector_shape,
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
     BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),

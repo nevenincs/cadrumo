@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from ..application.user_profile import conditional_profile_missing_required
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
@@ -94,7 +95,7 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
 
 def register_minimal_profile(
     *,
-    profile_id: str,
+    profile_id: str | UUID,
     display_name: str | None = None,
     overrides: Mapping[str, str] | None = None,
     record_empty_legal_hold: bool = False,
@@ -148,7 +149,12 @@ def register_minimal_profile(
 
     from ..application.evidence import LegalHoldCaseAuthority
     from ..application.filing import try_record_filing_retention_snapshot
+    from ..core.identity import canonical_profile_bucket_id
 
+    # Normalise at the door: the record below constrains its identifier to the
+    # canonical UUIDv4 string, so a readable identifier must fail here with one
+    # instructive refusal rather than deep inside record construction.
+    profile_id = canonical_profile_bucket_id(profile_id)
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
     merged["identity.tax_id"] = _distinct_valid_nif(profile_id)
     if overrides:

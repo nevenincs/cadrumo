@@ -1,0 +1,67 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.rendimientos-fondos-emprendimiento"
+number = "389"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_startup_fund_rendimientos_clave"
+# Clave 0/1, recorded only for clave A rows whose payments include D.A. 53a
+# rendimientos; both claves are recorded facts, never defaults.
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-jubilacion"
+number = "390"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_jubilacion"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-viudedad"
+number = "391"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_viudedad"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-incapacidad"
+number = "392"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_incapacidad"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-no-contributiva"
+number = "393"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_no_contributiva"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-resto"
+number = "394"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_resto"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]

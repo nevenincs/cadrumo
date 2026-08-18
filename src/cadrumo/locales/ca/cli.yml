@@ -682,6 +682,7 @@ cli:
           evidencia_factura_compra: evidència de factura de compra
           factura_emitida: factura emesa
           factura_recibida: factura rebuda
+          gasto193_contribuyente: contribuent de la relació de despeses
           miembro_atribucion: membre d'atribució de rendes
           operacion_reembolso: operació de reemborsament
           operacion_vinculada: operació vinculada

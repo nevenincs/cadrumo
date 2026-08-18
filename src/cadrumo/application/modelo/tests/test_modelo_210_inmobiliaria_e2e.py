@@ -71,7 +71,7 @@ from ....core import (
 from ....core.resources import resources
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind, VerificationReport
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
@@ -123,7 +123,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
     (not this stored bucket profile) is what the representante-fiscal and
     inmobiliaria advisory predicates actually evaluate against.
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

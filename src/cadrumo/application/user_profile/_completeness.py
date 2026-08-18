@@ -21,6 +21,7 @@ COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"
 REPRESENTANTE_FISCAL_NIF_PATH = "taxpayer_type.representante_fiscal_nif"
 REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
 ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
+LEGAL_ENTITY_FORM_PATH = "taxpayer_type.legal_entity_form"
 IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
@@ -61,6 +62,12 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
         required.append(CLAVE_MOVIL_ROUTE_PATH)
 
     required.extend(modelo_iva_profile_required_paths(values))
+
+    if _token(values.get(ENTITY_TYPE_PATH)).lower() == EntityType.LEGAL_ENTITY.value:
+        # A legal entity without a declared form has no selector for its
+        # corporate tax rate schedule; the schema's `required` axis is
+        # unconditional so the conditional requirement lives here.
+        required.append(LEGAL_ENTITY_FORM_PATH)
 
     if _token(values.get(FISCAL_RESIDENCY_PATH)).lower() != FiscalResidency.NON_RESIDENT_IRNR.value:
         return tuple(required)

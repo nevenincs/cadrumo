@@ -15,7 +15,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import M303RegimeComposition
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -40,7 +40,7 @@ def _store_current_profile(
     composition: M303RegimeComposition,
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

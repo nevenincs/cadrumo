@@ -138,7 +138,7 @@ from ....domain.calculations.registry import (
     ValidatedRegistryAuthority,
 )
 from ....domain.calculations.registry.tests import oracle_declared_figures
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
@@ -220,7 +220,7 @@ def _seed_sociedad_profile() -> None:
     general bracket (INCN > 10.000.000). ``tributacion_estado_porcentaje`` is
     100 (comun regimen, no forales mentioned in the scenario).
     """
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="A12345674"),

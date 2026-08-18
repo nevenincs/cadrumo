@@ -63,7 +63,7 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -161,7 +161,7 @@ def _pull_the_m130_history() -> tuple[str, ...]:
 
 def _seed_taxpayer_profile(*, bucket_id: str) -> None:
     """Seed the declared profile facts the annual M100 revision's profile bindings need."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_SYNTHETIC_TAX_ID),

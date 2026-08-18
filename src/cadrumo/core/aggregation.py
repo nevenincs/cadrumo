@@ -216,6 +216,7 @@ class RowSetGroupingKind(StrEnum):
     ATRIBUCION = "atribucion"
     REFUND = "refund"
     DONATIVO = "donativo"
+    GASTO193 = "gasto193"
 
 
 class BindingSourceKind(StrEnum):
@@ -357,6 +358,10 @@ class BindingSourceKind(StrEnum):
     # REFUND_OPERATION); the latter two remain registered in DEFERRED_SOURCE_KINDS
     # (application/aggregation/_source_mesh.py).
     DONATIVO_DONOR = "donativo_donor"
+    # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
+    # plus the annual gastos de administracion y deposito amount), the same
+    # deferred Sheets-pull-only shape as the donativo family.
+    GASTO193_CONTRIBUTOR = "gasto193_contributor"
 
 
 ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
@@ -367,6 +372,7 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
         BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
         BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
         BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
+        BindingSourceKind.GASTO193_CONTRIBUTOR: RowSetGroupingKind.GASTO193,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.

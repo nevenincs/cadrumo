@@ -1,0 +1,129 @@
+[[revisions."2025-y-siguientes".export_layouts]]
+id = "modelo-193-fichero-boe"
+[[revisions."2025-y-siguientes".export_layouts.records]]
+id = "modelo-193-gastos"
+record_type = "gastos"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+required = false
+repeat = "binding_rows"
+binding_record = "gastos"
+
+[revisions."2025-y-siguientes".export_layouts.records.row_field_casilla_ids]
+contributor_tax_id = "gasto.nif"
+contributor_legal_name = "gasto.nombre"
+representative_tax_id = "gasto.nif-representante"
+importe_gastos = "gasto.importe"
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "193"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-declarante-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-nif"
+offset = 18
+length = 9
+kind = "binding"
+binding = "modelo-193-gasto-row-nif"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-nif-representante"
+offset = 27
+length = 9
+kind = "binding"
+binding = "modelo-193-gasto-row-nif-representante"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-nombre"
+offset = 36
+length = 40
+kind = "binding"
+binding = "modelo-193-gasto-row-nombre"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-gasto-importe"
+offset = 195
+length = 13
+kind = "binding"
+binding = "modelo-193-gasto-row-importe"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]

@@ -46,6 +46,7 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     UserProfileSnapshot,
@@ -93,7 +94,7 @@ def _populated_snapshot() -> UserProfileSnapshot:
     boundary that dropped a fact's window or re-defaulted its provenance
     cannot survive the equality assertion.
     """
-    record = UserProfileRecord(profile_id=_PROFILE_ID, facts=populated_facts())
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=populated_facts())
     return UserProfileSnapshot.from_profile(
         record,
         snapshot_id=new_profile_snapshot_id(_PROFILE_ID, created_at=_SNAPSHOT_CREATED_AT),

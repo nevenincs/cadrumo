@@ -24,11 +24,12 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile import profile_close_bucket_session, profile_current_bucket_session
+
 from ....adapters.persistence.storage.custody import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
 )
-from ....application.profile_custody import profile_close_bucket_session, profile_current_bucket_session
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority

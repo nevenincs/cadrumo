@@ -29,12 +29,13 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
-from ....application.profile_custody import (
+from cadrumo.application.user_profile import (
     profile_current_bucket_session,
     profile_record_login_failure,
     profile_session_path,
 )
+
+from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
 from ....core import ProfileSessionRefusalReason, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -50,7 +51,7 @@ _LABEL = "Logout operator"
 
 def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
-    from ....application.profile_custody import profile_close_bucket_session
+    from cadrumo.application.user_profile import profile_close_bucket_session
 
     close_active_profile_record_session()
     profile_close_bucket_session()

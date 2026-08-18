@@ -33,7 +33,7 @@ import pytest
 from ....core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR
 from ....core.resources import resources
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_binding import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -53,7 +53,7 @@ _FIRST_UNCEILINGED_YEAR = 2023
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     """A profile with one clearly-eligible descendant declaring a full year of months."""
     child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list((child,))),
         created_at=_T0,

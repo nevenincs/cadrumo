@@ -43,7 +43,6 @@ from ...core.locks_errors import LockAcquisitionError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
-from ..profile_custody import default_profile_bucket_event_history_repository
 from ._bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportReconcileFailure,
@@ -63,6 +62,7 @@ from ._bundle_export_operation import (
     is_canonical_profile_export_staged_path,
     profile_export_staged_path,
 )
+from ._custody_ports import default_profile_bucket_event_history_repository
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfilePortableExport

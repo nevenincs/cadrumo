@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....core import BucketPointer, write_pointer
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 PROFILE_ID = "31313131-3131-4313-8313-313131313131"
 PROFILE_LABEL = "Operator"
@@ -87,7 +87,7 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            initial_record=UserProfileRecord(profile_id=PROFILE_ID, facts=READY_FACTS),
+            initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=PROFILE_ID, facts=READY_FACTS),
             record_session=session,
         )
     finally:

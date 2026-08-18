@@ -35,7 +35,7 @@ from ....domain.calculations.registry import (
     RelationId,
 )
 from ....domain.modelos import CalculationRevision
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -76,7 +76,7 @@ _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 def _seed_taxpayer_unit_profile() -> None:
     """Seed a single-taxpayer profile so the profile-sourced bindings resolve."""
-    record = UserProfileRecord(
+    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

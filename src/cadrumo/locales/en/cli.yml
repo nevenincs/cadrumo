@@ -638,6 +638,7 @@ cli:
           evidencia_factura_compra: purchase-invoice evidence
           factura_emitida: issued invoice
           factura_recibida: received invoice
+          gasto193_contribuyente: gastos-relationship contributor
           miembro_atribucion: income-attribution member
           operacion_reembolso: refund operation
           operacion_vinculada: related-party operation

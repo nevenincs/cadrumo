@@ -6,13 +6,13 @@ import os
 import secrets
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from importlib import import_module
 from pathlib import Path
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from ...adapters.persistence.storage import custody
 from ...core import BucketPointer
 from ...core.paths import effective_storage_root
 from ._custody_hold import ProfileCustodyHoldAuthority
@@ -44,11 +44,6 @@ from ._login_session import (
     remove_profile_session_acceleration_for_custody_delete,
     revoke_live_profile_secret_for_custody_delete,
 )
-
-
-def _default_custody_adapters() -> Any:
-    """Resolve the public custody adapter facade at the composition boundary."""
-    return import_module("cadrumo.adapters.persistence.storage.custody")
 
 
 class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionConflictError):
@@ -84,7 +79,7 @@ class _ProfileCustodyTransactionCapability:
 
     def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
         self._root = effective_storage_root(root)
-        self._adapters: Any = adapters if adapters is not None else _default_custody_adapters()
+        self._adapters: Any = adapters if adapters is not None else custody
         self._repository = ProfileCustodyTransactionRepository(root=self._root)
         self._holds = ProfileCustodyHoldAuthority(root=self._root)
 

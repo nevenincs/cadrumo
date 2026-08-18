@@ -167,15 +167,20 @@ def test_resolved_leaf_exposes_hyphenated_click_identity_without_replacing_schem
 
 def test_required_inputs_keep_the_live_argument_and_option_metadata() -> None:
     schemas = build_verb_input_schemas(("config.bucket.history", "ledger.add"))
-    history = {parameter.name: parameter for parameter in schemas["config.bucket.history"].required_inputs}
+    # The bucket-history subject was deliberately widened to optional (the
+    # verb falls back to the active profile), so it is read from the live
+    # parameter metadata rather than the required-input set.
+    history = {parameter.name: parameter for parameter in schemas["config.bucket.history"].parameters}
     add = {parameter.name: parameter for parameter in schemas["ledger.add"].required_inputs}
 
     assert history["profile"].kind is VerbParamKind.ARGUMENT
     assert history["profile"].cli_flag == ""
+    assert history["profile"].required is False
+    assert schemas["config.bucket.history"].required_inputs == ()
     assert add["booked_date"].kind is VerbParamKind.OPTION
     assert add["booked_date"].cli_flag == "--date"
     assert add["direction"].choices == ("INCOMING", "OUTGOING", "INTERNAL_TRANSFER")
-    assert all(parameter.required for parameter in (*history.values(), *add.values()))
+    assert all(parameter.required for parameter in add.values())
 
 
 def test_group_callback_is_classified_without_losing_its_live_inputs() -> None:

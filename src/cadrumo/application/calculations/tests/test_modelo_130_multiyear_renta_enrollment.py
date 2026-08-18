@@ -55,7 +55,7 @@ from ....domain.calculations.registry import (
     BindingId,
 )
 from ....domain.modelos import CalculationRevision
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -134,7 +134,7 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

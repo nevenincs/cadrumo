@@ -209,8 +209,14 @@ _DECLARED_FILL: Final = re.compile(
 #: cells as often as it keeps it in one: Modelo 714's ``714-02`` writes
 #: ``Constante "<T"`` in a single ``Contenido`` cell, while Modelo 111 and
 #: Modelo 714's own ``714-00`` envelope put ``Constante.`` in ``Descripción``
-#: and ``"<T"`` in ``Contenido``.
-_CONSTANT_DECLARATION: Final = re.compile(r"[Cc]onstante")
+#: and ``"<T"`` in ``Contenido``. Modelo 360's design declares its identifier
+#: constants without the word at all ("Inicio del identificador de modelo y
+#: página obligatorio <T360010>"), so the identifier-block vocabulary is
+#: accepted alongside -- those phrases name the fixed record-delimiter cells
+#: and nothing else in any bundled design.
+_CONSTANT_DECLARATION: Final = re.compile(
+    r"[Cc]onstante|identificador de modelo y página|fin de registro",
+)
 
 #: The quoted value itself (``"714"``, ``'1'``, ``«720»``). ONLY the quoted
 #: spelling is read: an unquoted "Constante 2021" or "Constante. Blanco" does
@@ -219,6 +225,17 @@ _CONSTANT_DECLARATION: Final = re.compile(r"[Cc]onstante")
 _QUOTED_VALUE: Final = re.compile(
     "[\"'«“‘]([^\"'»«”’‘“]{1,40})[\"'»”’]",
 )
+
+#: The identifier-block constant, read for cells whose row carries the
+#: identifier vocabulary (``<T360010>``, ``</T360020>``): the angle-bracket
+#: spelling AEAT prints without the word "Constante". Bounded to the ``<T``
+#: marker so a stray quoted word in the same cell's nota text cannot become
+#: a wrong anchor.
+_IDENTIFIER_VALUE: Final = re.compile(r"</?T\d{1,10}>")
+
+#: The identifier-block row vocabulary: the phrases AEAT uses for the fixed
+#: record-delimiter cells, which is where ``<T`` identifiers appear.
+_IDENTIFIER_VOCABULARY: Final = re.compile(r"identificador de modelo y página|fin de registro")
 
 #: How many missing positions one sheet enumerates before the message says how
 #: many more there are. The bundled design is the exhaustive worklist; this
@@ -522,6 +539,19 @@ def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
     constants: dict[tuple[int, int], str] = {}
     for field in sheet.fields:
         cells = (field.content, field.description)
+        # Identifier-block rows (``<T360010>``-style) are read ONLY through the
+        # identifier pattern: the same row's CONTENT cell can carry pages of
+        # nota prose whose first quoted word would otherwise become a wrong
+        # anchor (Modelo 360's fin-de-registro cells showed exactly that).
+        if any(text and _IDENTIFIER_VOCABULARY.search(text) for text in cells):
+            for text in cells:
+                if not text:
+                    continue
+                identifier = _IDENTIFIER_VALUE.search(text)
+                if identifier is not None:
+                    constants[(field.offset, field.length)] = identifier.group(0).strip()
+                    break
+            continue
         if not any(text and _CONSTANT_DECLARATION.search(text) for text in cells):
             continue
         for text in cells:

@@ -36,13 +36,14 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage import DecryptionError
-from ....domain.user_profile import UserProfileRecord
-from ....tests.subprocess_cli import run_subprocess_cli_harness
-from ...profile_custody import (
+from cadrumo.application.user_profile import (
     profile_custody_secure_object_key_digest,
     profile_custody_secure_object_repository,
 )
+
+from ....adapters.persistence.storage import DecryptionError
+from ....domain.user_profile import UserProfileRecord
+from ....tests.subprocess_cli import run_subprocess_cli_harness
 from .._capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,

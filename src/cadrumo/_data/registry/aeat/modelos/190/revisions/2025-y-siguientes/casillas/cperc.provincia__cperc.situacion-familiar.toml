@@ -1,0 +1,59 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas for the
+# remaining obligatorio positions of the bundled diseño: domicilio provincia,
+# the Ceuta/Melilla-La Palma retention determination, birth year and family
+# situation. Same template-slot contract as
+# cperc.nif__cperc.ingresos-a-cuenta.toml: each casilla is the slot a
+# `row_field_casilla_ids` entry names on the `modelo-190-perceptor` export
+# record, and `number` carries the AEAT record-design position range.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.provincia"
+number = "76-77"
+section = ["perceptor", "identificacion"]
+data_type = "province_code"
+semantic_role = "payee_province"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ceuta-melilla"
+number = "152"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_ceuta_melilla_clave"
+# The payer's retention-rate determination, never derived from the province:
+# 1 applies the art. 68.4 Ceuta/Melilla deduction, 2 the La Palma exceptional
+# treatment, 0 otherwise. La Palma treatment for 2024/2025 rests on the
+# additional provision 57 extension carried by the two RDL entries.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ano-nacimiento"
+number = "153-156"
+section = ["perceptor", "identificacion"]
+data_type = "year"
+semantic_role = "payee_birth_year"
+# Declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C;
+# the resolver writes the design's own no-content for every other row.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.situacion-familiar"
+number = "157"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+semantic_role = "payee_family_situation"
+# Design claves 1-3, declared only for the same claves as the birth year;
+# same resolver rule writes the design's own no-content elsewhere.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

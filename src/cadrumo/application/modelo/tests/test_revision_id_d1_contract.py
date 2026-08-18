@@ -39,7 +39,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitRevisionDivergenceError
@@ -443,7 +443,7 @@ def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCata
 
 def _seed_m303_ready_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_M303_READY_PROFILE_FACTS,
             created_at=_T0,

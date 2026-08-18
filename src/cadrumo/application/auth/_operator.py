@@ -622,7 +622,8 @@ def build_live_auth_preflight_report(
         :func:`test_operator_auth`
             Shared provider-readiness probe that supplies the preflight base.
     """
-    from ..profile_custody import profile_current_bucket_session
+    from cadrumo.application.user_profile import profile_current_bucket_session
+
     from ._operator_results import AuthOperationRequiresCustodySessionError
 
     try:

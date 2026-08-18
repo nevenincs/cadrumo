@@ -1,0 +1,23 @@
+[[revisions."2025-y-siguientes".formulas]]
+id = "modelo-193-base-total"
+target_casilla_id = "decl.base-total"
+expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-base-anual" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "rentas sujetas a retención o ingreso a cuenta"]
+
+[[revisions."2025-y-siguientes".formulas]]
+id = "modelo-193-retenciones-total"
+target_casilla_id = "decl.retenciones-total"
+expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-retenciones-anual" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "se comunican las retenciones practicadas"]

@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
@@ -33,7 +33,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,

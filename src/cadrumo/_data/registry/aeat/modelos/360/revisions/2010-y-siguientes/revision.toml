@@ -44,3 +44,24 @@ source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 reason = "Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A dependency classification declares a source modelo this one depends on in an earlier or enclosing period. A non-established claimant files no Spanish periodic IVA self-assessment -- that is precisely why the refund is claimed through this procedure rather than deducted on a Modelo 303 -- so there is no source modelo in this taxpayer's own filing chain for the clean-state gate to reason about."
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+
+
+[revisions."2010-y-siguientes".family_dispositions.extraction_profiles]
+reason = "The application's surface for modelo 360 is the operator-entered AD-HOC refund request, not a periodic declaracion PDF replay, and no inbound parser for a 360 artefact exists to name. Empty by the application's surface rather than omitted."
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+
+[revisions."2010-y-siguientes".family_dispositions.formulas]
+reason = "Modelo 360 computes nothing: every casilla is an operator-entered per-request value, and no casilla declares a formula or a computed input kind. The formula family is empty by the modelo's calculation shape rather than omitted."
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+
+[revisions."2010-y-siguientes".family_dispositions.verification_expectations]
+reason = "A verification expectation reconciles a FILED return against this application's engine. Modelo 360's AD-HOC refund requests carry only the operator's own entered values with no engine-computed figures to reconcile, and the application holds no reconciliation surface for the refund justificante. The family is empty until such a surface is authored, not by omission."
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+
+[revisions."2010-y-siguientes".family_dispositions.verification_predicates]
+reason = "A verification predicate guards a CALCULATED result. Modelo 360 calculates nothing: zero formulas, no computed casilla, and every figure is the operator's recorded value. The under-declaration risk these guard does not arise from an engine computation."
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]

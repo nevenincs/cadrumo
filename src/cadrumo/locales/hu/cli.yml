@@ -689,6 +689,7 @@ cli:
           evidencia_factura_compra: beszerzési számla bizonylata
           factura_emitida: kimenő számla
           factura_recibida: bejövő számla
+          gasto193_contribuyente: költség-kimutatás adóalanya
           miembro_atribucion: jövedelemtulajdonítás tagja
           operacion_reembolso: visszatérítési művelet
           operacion_vinculada: kapcsolt ügylet

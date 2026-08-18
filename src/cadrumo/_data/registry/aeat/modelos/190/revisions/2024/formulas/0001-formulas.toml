@@ -1,0 +1,34 @@
+[[revisions."2024".formulas]]
+id = "modelo-190-percepciones-total"
+target_casilla_id = "decl.percepciones-total"
+expression.op = "add"
+expression.args = [
+    { relation = "modelo-190-rel-111-trabajo-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-trabajo-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-actividades-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-actividades-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-premios-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-premios-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-ganancias-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-ganancias-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-derechos-imagen-importe-anual" },
+]
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-190-instructions-2025"
+required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra", "Valoración"]
+
+[[revisions."2024".formulas]]
+id = "modelo-190-retenciones-total"
+target_casilla_id = "decl.retenciones-total"
+expression = { op = "copy", args = [{ relation = "modelo-190-rel-111-retenciones-anual" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-190-instructions-2025"
+required_text = ["Casilla 03. Total retenciones e ingresos a cuenta", "Retenciones practicadas", "Ingresos a cuenta efectuados"]

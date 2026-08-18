@@ -11,7 +11,7 @@ from ....core import Period
 from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfile
 from ....domain.iva import M303RegimenSimplificadoScope
 from ....domain.modelos import WorkUnit, derive_work_unit_id
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import ModeloProfileReadinessError
@@ -61,7 +61,7 @@ def _store_profile(*, composition: M303RegimeComposition | None) -> None:
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         )
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=facts,
             created_at=_CLOCK,

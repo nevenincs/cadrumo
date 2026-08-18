@@ -1,7 +1,7 @@
 [[revisions."2004-y-siguientes".constructs]]
 id = "modelo-309-iva-no-periodica"
 legal_refs = [
-    "orden-hac-3625-2003:apartado-1",
+    "orden-hac-3625-2003:apartado-1", "ley-37-1992:art-161",
     "orden-hac-3625-2003:apartado-3",
     "ley-37-1992:art-84",
     "ley-37-1992:art-92",

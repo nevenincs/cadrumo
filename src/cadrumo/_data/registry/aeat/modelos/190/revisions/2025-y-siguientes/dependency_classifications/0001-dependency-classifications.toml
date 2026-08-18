@@ -1,0 +1,26 @@
+[[revisions."2025-y-siguientes".dependency_classifications]]
+id = "modelo-190-dep-111"
+source_modelo = "111"
+treatment = "direct_annual_settlement"
+target_constructs = ["modelo-190-annual-summary"]
+relation_refs = [
+    "modelo-190-rel-111-trabajo-dinerario-importe-anual",
+    "modelo-190-rel-111-trabajo-especie-importe-anual",
+    "modelo-190-rel-111-actividades-dinerario-importe-anual",
+    "modelo-190-rel-111-actividades-especie-importe-anual",
+    "modelo-190-rel-111-premios-dinerario-importe-anual",
+    "modelo-190-rel-111-premios-especie-importe-anual",
+    "modelo-190-rel-111-ganancias-dinerario-importe-anual",
+    "modelo-190-rel-111-ganancias-especie-importe-anual",
+    "modelo-190-rel-111-derechos-imagen-importe-anual",
+    "modelo-190-rel-111-retenciones-anual",
+]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
+
+# Calculation-completeness manifest for revision 2024: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

@@ -25,7 +25,7 @@ from ....domain.modelos import (
     WorkUnit,
     derive_work_unit_id,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -66,7 +66,7 @@ def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YE
 
 
 def _profile(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
         created_at=_CLOCK,

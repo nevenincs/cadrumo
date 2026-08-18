@@ -42,16 +42,16 @@ from dataclasses import dataclass
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
-from ..profile_custody import (
+from ._capsule_record import ProfileRecordSession
+from ._custody_ports import (
     ProfileRecoveryArtifactWarning,
     create_profile_recovery_enrollment_material,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
 )
-from ..profile_custody import (
+from ._custody_ports import (
     export_profile_recovery_artifact as _export_recovery_artifact,
 )
-from ._capsule_record import ProfileRecordSession
 from ._lifecycle import ProfileCapsuleLifecycle
 
 if TYPE_CHECKING:

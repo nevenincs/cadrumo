@@ -40,7 +40,7 @@ from ....domain.modelos import (
     upsert_filing_record,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -73,7 +73,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=str(_workflow_profile().tax_id)),

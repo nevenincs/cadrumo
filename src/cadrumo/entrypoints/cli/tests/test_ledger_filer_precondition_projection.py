@@ -24,7 +24,7 @@ from ....application.ledger import (
     resolve_filer_territorial_scope,
 )
 from ....core import NoRecoveryOutcome
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._common import cli_policy_refusal_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
     """The shared boundary sees the original condition, facts, and outcome."""
-    profile = UserProfileRecord(
+    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
     )

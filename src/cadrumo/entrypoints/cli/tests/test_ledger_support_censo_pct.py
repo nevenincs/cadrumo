@@ -15,7 +15,7 @@ import pytest
 
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.categories import SpendingCategory
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile
 from .._ledger_support import _resolve_business_pct_with_censo
@@ -30,7 +30,7 @@ runtime = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name=
 
 def _declare_vivienda_office() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),

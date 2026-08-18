@@ -68,7 +68,7 @@ from ._nif_iva import (
     nif_iva_prefix_for_country,
     normalise_nif_iva,
 )
-from ._profile import ProfileId
+from ._profile import ProfileId, canonical_profile_bucket_id
 from ._profile_label import ProfileLabel
 from ._tax_id import (
     SPANISH_TAX_ID_WIDTH,
@@ -218,6 +218,7 @@ __all__ = [
     "VerificationReportId",
     "WorkUnitId",
     "canonical_bucket_id",
+    "canonical_profile_bucket_id",
     "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",

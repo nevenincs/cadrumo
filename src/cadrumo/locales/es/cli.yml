@@ -694,6 +694,7 @@ cli:
           evidencia_factura_compra: evidencia de factura de compra
           factura_emitida: factura emitida
           factura_recibida: factura recibida
+          gasto193_contribuyente: contribuyente de la relación de gastos
           miembro_atribucion: miembro de atribución de rentas
           operacion_reembolso: operación de reembolso
           operacion_vinculada: operación vinculada

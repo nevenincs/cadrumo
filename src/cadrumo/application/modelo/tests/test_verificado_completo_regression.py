@@ -50,7 +50,7 @@ from ....domain.modelos import (
     VerificationCompletenessStatus,
     WorkUnit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
@@ -117,7 +117,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),

@@ -265,6 +265,12 @@ _M190_DECLARED_FIELDS = frozenset(
         "foral_retention_araba",
         "foral_retention_gipuzkoa",
         "foral_retention_bizkaia",
+        "startup_fund_rendimientos_clave",
+        "pension_prestacion_jubilacion",
+        "pension_prestacion_viudedad",
+        "pension_prestacion_incapacidad",
+        "pension_prestacion_no_contributiva",
+        "pension_prestacion_resto",
     }
 )
 
@@ -639,6 +645,11 @@ def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None
             perceptor_situacion_familiar=1,
             disability_clave=0,
             housing_loan_communication_clave=0,
+            pension_prestacion_jubilacion=0,
+            pension_prestacion_viudedad=0,
+            pension_prestacion_incapacidad=1,
+            pension_prestacion_no_contributiva=0,
+            pension_prestacion_resto=0,
             incapacity_cash_perception=Decimal("900"),
         )
     )[0]
@@ -654,6 +665,11 @@ def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None
                 perceptor_situacion_familiar=1,
                 disability_clave=0,
                 housing_loan_communication_clave=0,
+                pension_prestacion_jubilacion=0,
+                pension_prestacion_viudedad=0,
+                pension_prestacion_incapacidad=0,
+                pension_prestacion_no_contributiva=0,
+                pension_prestacion_resto=0,
                 incapacity_kind_value=Decimal("1"),
             )
         )
@@ -750,6 +766,150 @@ def test_build_withholding_rows_emerging_stock_clave_follows_especie_content() -
     with pytest.raises(RegistryValidationError, match="declares only for clave A"):
         _build(_observation(clave=RetencionClave.G, emerging_stock_excess_clave=1))
     assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["emerging_stock_excess_clave"] == " "
+
+
+def test_build_withholding_rows_2025_b01_prestacion_flags_are_mandatory() -> None:
+    """Each of the five 2025-edition prestacion flags is an always-recorded 0/1
+    fact on clave B.01 rows; elsewhere the field carries spaces."""
+    b01 = {
+        "clave": RetencionClave.B,
+        "subclave": "01",
+        "perceptor_birth_year": 1955,
+        "perceptor_situacion_familiar": 1,
+        "disability_clave": 0,
+        "housing_loan_communication_clave": 0,
+    }
+    with pytest.raises(RegistryValidationError, match="pension_prestacion_jubilacion"):
+        _build(_observation(**b01))
+    row = _build(
+        _observation(
+            **b01,
+            pension_prestacion_jubilacion=1,
+            pension_prestacion_viudedad=0,
+            pension_prestacion_incapacidad=0,
+            pension_prestacion_no_contributiva=0,
+            pension_prestacion_resto=0,
+        )
+    )[0]
+    assert row["pension_prestacion_jubilacion"] == "1"
+    assert row["pension_prestacion_viudedad"] == "0"
+    with pytest.raises(RegistryValidationError, match="pension_prestacion_jubilacion"):
+        _build(_observation(**_COMPLETE_CLAVE_A, pension_prestacion_jubilacion=1))
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["pension_prestacion_jubilacion"] == " "
+
+
+def test_build_withholding_rows_2025_startup_fund_clave_is_recorded_when_applicable() -> None:
+    """The 2025-edition startup-fund rendimientos clave is recorded-when-applicable:
+    spaces when the payer did not record it, refused outside clave A."""
+    row = _build(_observation(**_COMPLETE_CLAVE_A, startup_fund_rendimientos_clave=1))[0]
+    assert row["startup_fund_rendimientos_clave"] == "1"
+    assert _build(_observation(**_COMPLETE_CLAVE_A))[0]["startup_fund_rendimientos_clave"] == " "
+    with pytest.raises(RegistryValidationError, match="startup_fund_rendimientos_clave"):
+        _build(_observation(clave=RetencionClave.G, startup_fund_rendimientos_clave=0))
+
+
+_M193_DECLARED_FIELDS = frozenset(
+    {
+        "perceptor_tax_id",
+        "perceptor_legal_name",
+        "clave",
+        "percibido_dinerario",
+        "retencion_practicada",
+        "perceptor_mediador_flag",
+        "clave_codigo",
+        "codigo_emisor",
+        "naturaleza",
+        "pago",
+        "tipo_codigo",
+        "codigo_cuenta",
+        "pendiente_flag",
+        "tipo_percepcion",
+        "reducciones",
+        "base_retenciones",
+        "porcentaje_retencion",
+        "penalizaciones",
+        "isin_code",
+        "naturaleza_declarante",
+        "fecha_inicio_prestamo",
+        "fecha_vencimiento_prestamo",
+        "compensaciones",
+        "garantias",
+        "nif_pagador_anterior",
+        "fecha_devengo",
+        "clave_mercado",
+        "numero_orden",
+    }
+)
+
+#: The always-recorded 193 perceptor facts for a clave A row (the 193 clave
+#: vocabulary replaces the 190 one: A-D capital-mobiliario claves).
+_COMPLETE_CLAVE_A_193 = {
+    "naturaleza": "02",
+    "tipo_percepcion": 1,
+    "clave_codigo": 4,
+    "codigo_emisor": "A28015865",
+    "pago": 1,
+    "tipo_codigo": "C",
+    "clave_mercado": "D",
+}
+
+
+def _build193(*observations: WithholdingObservation) -> tuple[dict[str, object], ...]:
+    return tuple(
+        dict(row)
+        for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=_M193_DECLARED_FIELDS)
+    )
+
+
+def test_build_withholding_rows_193_requires_the_always_recorded_facts() -> None:
+    """The 193 design records naturaleza, tipo de percepcion and the A/B/D
+    identification block on every eligible row; a missing fact refuses."""
+    for missing in ("naturaleza", "tipo_percepcion", "clave_codigo", "codigo_emisor", "pago", "tipo_codigo", "clave_mercado"):
+        with pytest.raises(RegistryValidationError, match=missing):
+            _build193(
+                _observation(
+                    **{key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != missing}
+                )
+            )
+    row = _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]
+    assert row["naturaleza"] == "02"
+    assert row["tipo_percepcion"] == "1"
+    assert row["clave_codigo"] == "4"
+    assert row["codigo_emisor"] == "A28015865"
+    assert row["pago"] == "1"
+    assert row["tipo_codigo"] == "C"
+    assert row["clave_mercado"] == "D"
+    assert row["numero_orden"] == "1"
+
+
+def test_build_withholding_rows_193_out_of_context_facts_refuse() -> None:
+    """The 193 A/B/D identification facts refuse outside their claves, and the
+    prestamo-de-valores block refuses without tipo codigo P."""
+    with pytest.raises(RegistryValidationError, match="clave_codigo"):
+        _build193(_observation(clave=RetencionClave.C, naturaleza="01", tipo_percepcion=1, clave_codigo=4))
+    with pytest.raises(RegistryValidationError, match="clave_mercado"):
+        _build193(_observation(clave=RetencionClave.C, naturaleza="01", tipo_percepcion=1, clave_mercado="D"))
+    with pytest.raises(RegistryValidationError, match="fecha_inicio_prestamo"):
+        _build193(_observation(**_COMPLETE_CLAVE_A_193, fecha_inicio_prestamo="20240101"))
+    with pytest.raises(RegistryValidationError, match="compensaciones"):
+        _build193(_observation(**_COMPLETE_CLAVE_A_193, compensaciones=Decimal("1")))
+    prestamo = {key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != "tipo_codigo"}
+    row = _build193(_observation(**prestamo, tipo_codigo="P", fecha_inicio_prestamo="20240101", fecha_vencimiento_prestamo="20250101"))[0]
+    assert row["fecha_inicio_prestamo"] == "20240101"
+    assert _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]["fecha_inicio_prestamo"] == "0" * 8
+
+
+def test_build_withholding_rows_193_naturaleza_s_cascade_overrides() -> None:
+    """Naturaleza del declarante 'S' zeroes the identification block per the
+    design's cascade; a present fact the cascade forbids refuses."""
+    row = _build193(_observation(**_COMPLETE_CLAVE_A_193, naturaleza_declarante="S"))[0]
+    assert row["clave_codigo"] == "0"
+    assert row["codigo_emisor"] == " " * 12
+    assert row["pago"] == "0"
+    assert row["tipo_codigo"] == " "
+    assert row["naturaleza_declarante"] == "S"
+    with pytest.raises(RegistryValidationError, match="cascade declares a ceros"):
+        _build193(_observation(clave=RetencionClave.B, naturaleza="01", tipo_percepcion=1, naturaleza_declarante="S", penalizaciones=Decimal("5")))
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

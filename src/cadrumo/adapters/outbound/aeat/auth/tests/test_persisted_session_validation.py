@@ -40,7 +40,7 @@ async def test_resume_rejects_invalid_encrypted_session_before_browser_resolutio
     expected_reason: str,
 ) -> None:
     """Every local refusal runs before any browser session is required."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=f"resume-{case}"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f6b0000-0000-4000-8000-00000000aaa0"):
         bundle_path = _build_bundle(tmp_path)
         settings = Settings(
             cadrumo_certificate_path=bundle_path,

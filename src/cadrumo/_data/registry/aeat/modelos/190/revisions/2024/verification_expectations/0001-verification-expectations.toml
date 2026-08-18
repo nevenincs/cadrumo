@@ -1,0 +1,9 @@
+[[revisions."2024".verification_expectations]]
+id = "modelo-190-annual-summary-verification"
+computed_casilla_ids = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1.0"
+discrepancy_causes = ["correctness_divergence"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]

@@ -1,0 +1,13 @@
+
+[[revisions."2024".casillas]]
+id = "perc.excesos-acciones-emergentes"
+number = "388"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_emerging_stock_excess_clave"
+# Clave 0/1, recorded only for clave A rows whose especie block has content;
+# both claves are recorded facts, never defaults.
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

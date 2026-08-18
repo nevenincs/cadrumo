@@ -12,6 +12,7 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
+from .....core.identity import canonical_profile_bucket_id
 from ..crypto import EncryptedBlob, decrypt_record
 from ._errors import ProfileCustodyRecordError
 from ._kdf_codec import (
@@ -44,7 +45,7 @@ def profile_custody_sentinel_aad_for(*, profile_id: UUID, dek_epoch: str) -> byt
             "data_format_version": _PROFILE_CUSTODY_DATA_FORMAT_VERSION,
             "dek_epoch": dek_epoch,
             "product": "cadrumo",
-            "profile_id": str(profile_id),
+            "profile_id": canonical_profile_bucket_id(profile_id),
             "purpose": _PROFILE_CUSTODY_SENTINEL_PURPOSE,
             "schema_version": 1,
         },
@@ -63,7 +64,7 @@ def profile_custody_sentinel_plaintext(
             "data_format_version": data_format_version,
             "dek_epoch": dek_epoch,
             "product": "cadrumo",
-            "profile_id": str(profile_id),
+            "profile_id": canonical_profile_bucket_id(profile_id),
             "proof": _PROFILE_CUSTODY_SENTINEL_PROOF,
             "purpose": _PROFILE_CUSTODY_SENTINEL_PURPOSE,
             "schema_version": 1,

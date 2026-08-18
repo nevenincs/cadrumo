@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.modelos import ModeloError
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -42,7 +42,7 @@ _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -67,7 +67,7 @@ def _seed_ready_profile() -> None:
 
 def _seed_sociedad_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B12345674"),

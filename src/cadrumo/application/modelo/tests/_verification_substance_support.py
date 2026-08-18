@@ -11,7 +11,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 
 _Repos = tuple[
@@ -81,7 +81,7 @@ def _seed_ready_profile(
         for fact in _READY_PROFILE_FACTS
     )
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=facts,
             created_at=_T0,

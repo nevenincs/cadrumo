@@ -72,7 +72,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -177,7 +177,7 @@ _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 def _seed_taxpayer_profile() -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
     seed_test_profile_record(
-        UserProfileRecord(
+        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

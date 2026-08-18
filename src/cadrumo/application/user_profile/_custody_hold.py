@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from importlib import import_module
 from pathlib import Path
 from typing import Any, Final, Literal
 from uuid import UUID
 
+from ...adapters.persistence.storage import custody
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
@@ -35,11 +35,6 @@ the name is declared once and read in both places rather than typed in each.
 """
 
 
-def _default_custody_adapters() -> Any:
-    """Resolve the public custody adapter facade at the composition boundary."""
-    return import_module("cadrumo.adapters.persistence.storage.custody")
-
-
 def _write_canonical_file(path: Path, payload: bytes, adapters: Any) -> None:
     try:
         adapters.write_profile_custody_local_record(path, payload, publish_once=False)
@@ -63,7 +58,7 @@ class _ProfileCustodyHoldEvidenceOwner:
         )
 
     def refresh(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldEvidence:
-        adapters = _default_custody_adapters()
+        adapters = custody
         projection = self._owner_projection(profile_id, now=now)
         evidence = evidence_from_owner_projection(projection)
         try:

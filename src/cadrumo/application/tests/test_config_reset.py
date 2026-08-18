@@ -226,7 +226,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
-    from ..profile_custody import profile_session_path
+    from cadrumo.application.user_profile import profile_session_path
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)

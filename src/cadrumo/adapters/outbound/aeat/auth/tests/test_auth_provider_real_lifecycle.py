@@ -140,7 +140,7 @@ async def test_public_verify_rejects_copied_and_wrong_provider_sessions(
     kind: AuthProviderKind,
 ) -> None:
     """Every provider binds verification to its exact retained session object."""
-    bucket_id = f"identity-{kind.value}"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a070"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             provider, active = await _active_provider(
@@ -165,7 +165,7 @@ async def test_public_close_waits_for_real_inflight_verification(
     kind: AuthProviderKind,
 ) -> None:
     """Provider close cannot tear down a real context under active navigation."""
-    bucket_id = f"close-race-{kind.value}"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a080"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             provider, active = await _active_provider(
@@ -204,7 +204,7 @@ async def test_public_close_waits_for_real_inflight_verification(
 async def test_retryable_cleanup_error_closes_a_real_provider_owner(tmp_path: Path) -> None:
     """The central retry surface retains and closes a real provider graph."""
     kind = AuthProviderKind.CERTIFICATE
-    bucket_id = "cleanup-retry-certificate"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a010"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             provider, _active = await _active_provider(
@@ -227,7 +227,7 @@ async def test_retryable_cleanup_error_closes_a_real_provider_owner(tmp_path: Pa
 @pytest.mark.asyncio
 async def test_clave_movil_public_authenticate_refuses_real_pending_petition_page(tmp_path: Path) -> None:
     """Fresh Cl@ve Movil fails fast on AEAT's pending-request response."""
-    bucket_id = "clave-movil-real-pending"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a020"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-movil-pending")
@@ -254,7 +254,7 @@ async def test_clave_movil_public_authenticate_refuses_real_pending_petition_pag
 @pytest.mark.asyncio
 async def test_clave_movil_public_verify_drives_real_own_name_representation_gate(tmp_path: Path) -> None:
     """An explicit target uses the selector and only own-name representation."""
-    bucket_id = "clave-movil-real-representation"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a030"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             provider, active = await _active_provider(
@@ -283,7 +283,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
     tmp_path: Path,
 ) -> None:
     """A real browser transition after Cl@ve is the phone-state authority."""
-    bucket_id = "clave-movil-real-representation-diagnostic"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a040"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-movil-representation-missing")
@@ -323,7 +323,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
 @pytest.mark.asyncio
 async def test_clave_permanente_public_fresh_authenticate_persists_real_browser_state(tmp_path: Path) -> None:
     """Fresh Permanente login drives real form controls and encrypted persistence."""
-    bucket_id = "clave-permanente-real-fresh"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a050"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-permanente-success")
@@ -354,7 +354,7 @@ async def test_clave_permanente_public_fresh_authenticate_persists_real_browser_
 @pytest.mark.asyncio
 async def test_clave_permanente_public_authenticate_classifies_real_invalid_credentials_page(tmp_path: Path) -> None:
     """Rendered IdP refusal maps to the closed production failure taxonomy."""
-    bucket_id = "clave-permanente-real-invalid"
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a060"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-permanente-invalid")
