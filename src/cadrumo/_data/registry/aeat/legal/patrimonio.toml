@@ -107,11 +107,71 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_714/files/modelo-714-procedure.html"
-sha256 = "cad66e09fbebbc885caa2294c1226623746918e18b6585df940b8ca85b3bf132"
-bytes = 943
-retrieved_at = 2026-05-27
+sha256 = "634c3058a04000a7b6f34529672bb94fa0cc65afec16273b03c58f517c7513c7"
+bytes = 11688
+retrieved_at = 2026-08-18
 applies_from = 2021-01-01
-source_url = "https://sede.agenciatributaria.gob.es/Sede/patrimonio.html"
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G611.shtml"
+review_status = "reviewed"
+
+[sources."aeat-manual-patrimonio-2021"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/manual-patrimonio-2021.html"
+sha256 = "ac2ae837b409cbab6adcbdba85d2cfddfce6342d9d9f83c6d73542bbeba2abbb"
+bytes = 86623
+retrieved_at = 2026-08-18
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/21Manual/714.shtml"
+review_status = "reviewed"
+
+[sources."aeat-manual-patrimonio-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/manual-patrimonio-2022.html"
+sha256 = "5d7c45ffff018ea6d5e9c85a6a64adb25286ef9a1c08b083f1d62b7289c10f83"
+bytes = 86177
+retrieved_at = 2026-08-18
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/22Manual/714.shtml"
+review_status = "reviewed"
+
+[sources."aeat-manual-patrimonio-2023"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/manual-patrimonio-2023.html"
+sha256 = "165eee503e59ecdbbe8c944586a04ca583e86d35a8d4bc714c8596c2b490368e"
+bytes = 86537
+retrieved_at = 2026-08-18
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/23Manual/714.shtml"
+review_status = "reviewed"
+
+[sources."aeat-manual-patrimonio-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/manual-patrimonio-2024.html"
+sha256 = "4976edaac65fe21ab63f384eeb7eae2e7f3f8844751a7cee8e36996a6d52fb3a"
+bytes = 87110
+retrieved_at = 2026-08-18
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/24Manual/714.shtml"
+review_status = "reviewed"
+
+[sources."aeat-manual-patrimonio-2025"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/manual-patrimonio-2025.html"
+sha256 = "cb6f1190e5a4f25ecfeac2d6d23f7b76f5b687445456035e495bfc9e5805e839"
+bytes = 88532
+retrieved_at = 2026-08-18
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/25Manual/714.shtml"
 review_status = "reviewed"
 
 [sources."boe-modelo-714-layout"]
