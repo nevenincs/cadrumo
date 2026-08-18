@@ -9,8 +9,6 @@ leaking raw storage details.
 See Also:
     :mod:`~adapters.persistence.storage.bucket._errors`
         Error hierarchy and payload constructors under test.
-    :mod:`~adapters.persistence.storage.bucket._manifest_io`
-        Manifest read/write boundary that raises bucket validation failures.
     :mod:`~adapters.persistence.storage.bucket._lockfile`
         PID-stamped lock primitive that raises busy / locked bucket failures.
 

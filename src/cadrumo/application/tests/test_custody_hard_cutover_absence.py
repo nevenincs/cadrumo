@@ -30,13 +30,12 @@ the composition boundary the assertion is actually about: it is where a caller
 *chooses* which custody lifecycle answers for a taxpayer's data.
 
 That choice is made in one other place this root does not cover, and the
-exclusion is a real cost rather than a clean line.  Reaches live today in the
-outbound AEAT observation store and Clave Movil client, in the outbound Google
-OAuth flow, and in the command-line profile-readiness check -- the last of which
-composes custody exactly as an application module does.  All four are covered by
-the same replacement work; none is exonerated by sitting outside this root, and
-a future revision that moves the composition boundary should widen the root
-rather than let them stay unnamed.
+exclusion is a real cost rather than a clean line.  The one live reach outside
+this root today is the outbound Google OAuth flow's tax-id helper; the
+observation store, Clave Movil client and command-line readiness check reaches
+this narrative once named have all moved onto the capsule/session surface.  A
+future revision that moves the composition boundary should widen the root
+rather than let any new reach stay unnamed.
 
 Two nets catching disjoint sets
 ------------------------------
