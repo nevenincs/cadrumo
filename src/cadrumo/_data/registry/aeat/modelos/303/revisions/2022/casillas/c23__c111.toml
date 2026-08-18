@@ -675,18 +675,6 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2022.casillas]]
-id = "109"
-number = "109"
-section = ["iva", "resultado"]
-data_type = "money"
-semantic_role = "dr303_109"
-continuidad_id = "dr303-109"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
-
-[[revisions.2022.casillas]]
 id = "71"
 number = "71"
 section = ["iva", "resultado"]
@@ -697,26 +685,3 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2022.casillas]]
-id = "108"
-number = "108"
-section = ["iva", "resultado"]
-data_type = "money"
-semantic_role = "dr303_108"
-continuidad_id = "dr303-108"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
-
-[[revisions.2022.casillas]]
-id = "111"
-number = "111"
-section = ["iva", "resultado"]
-data_type = "money"
-semantic_role = "dr303_111"
-continuidad_id = "dr303-111"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
