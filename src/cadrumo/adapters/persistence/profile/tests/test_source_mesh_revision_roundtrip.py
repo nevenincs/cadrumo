@@ -98,7 +98,7 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2009-2022",
+        revision_id="2022",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,

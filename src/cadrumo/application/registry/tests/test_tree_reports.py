@@ -71,7 +71,7 @@ def _workbook_parity_report(**updates: object) -> RegistryWorkbookParityDetailRe
 def _revision_detail_report(**updates: object) -> RegistryRevisionDetailReport:
     base: _RevisionDetailPayload = {
         "modelo": "303",
-        "revision": "2009-2022",
+        "revision": "2022",
         "legal_refs": ("ley-37-1992:art-99",),
         "source_refs": ("aeat-dr-303-2025",),
         "export_layout_ids": ("modelo-303-2025",),

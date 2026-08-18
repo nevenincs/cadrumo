@@ -500,7 +500,7 @@ def test_modelo_readiness_without_period_uses_annual_period() -> None:
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id="2009-2022",
+                revision_id="2022",
                 filing_year=2026,
             ),
         ),

@@ -69,7 +69,7 @@ OPERATOR_TEXT = [
     "2026-03-10",
     "casilla-303",
     "part-002",
-    "2009-2022",
+    "2022",
     "W09-P17-S257",
     "no-such-thing",
     "modelo303",

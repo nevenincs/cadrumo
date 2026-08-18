@@ -477,7 +477,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     )
 
     m303 = resources().modelos.get("303")
-    revision = m303.revisions["2009-2022"]
+    revision = m303.revisions["2022"]
 
     # Each ledger_iva_aggregation binding declares its flow direction in
     # the selector. Collect the flow directions of all bindings whose

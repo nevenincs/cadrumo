@@ -1,8 +1,0 @@
-[[revisions.2009-2022.dependency_classifications]]
-id = "modelo-303-dep-self-prior-quarter"
-source_modelo = "303"
-treatment = "factual_evidence"
-target_constructs = ["modelo-303-iva-autoliquidacion"]
-relation_refs = ["modelo-303-rel-self-compensacion-anteriores"]
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

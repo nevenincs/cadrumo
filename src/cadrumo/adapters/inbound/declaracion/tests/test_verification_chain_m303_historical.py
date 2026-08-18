@@ -30,7 +30,7 @@ def test_verification_chain_m303_historical_printed_resultado_regimen_general_ar
     """The historical declaración's printed arithmetic holds: box 46 == box 27 - box 45.
 
     GROUNDED authority: Orden EHA/3786/2008 art. 1 - box 46 = box 27 - box 45.
-    The 2009-2022 revision covers ejercicios 2009-2022 and uses the same
+    The 2022 revision covers ejercicios 2022 and uses the same
     formula. Its printed-box extraction profile targets 4 casillas: 27, 29, 45,
     and iva.resultado-regimen-general.
 

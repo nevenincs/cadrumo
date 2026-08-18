@@ -468,7 +468,7 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id"),
     (
-        (2020, "4T", "2009-2022"),
+        (2020, "4T", "2022"),
         (2024, "2T", "2024-hasta-08-y-2t"),
         (2024, "4T", "2024-desde-09-y-3t"),
         (2026, "4T", "2026-y-siguientes"),

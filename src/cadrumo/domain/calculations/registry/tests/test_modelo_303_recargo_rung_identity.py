@@ -21,7 +21,7 @@ left operator-input awaiting the tabaco population, which is unmodelled in the
 same way Modelo 390's [41]/[42] rung is.
 
 SCOPE, DELIBERATE. Only the late-2024 epoch revision is asserted here. The
-2009-2022 revision carries the same wrong binding AND excludes casilla
+2022 revision carries the same wrong binding AND excludes casilla
 158 from its own total, which is a different and graver defect -- but that
 revision declares casillas 158 and 170 at all, and the bundled 2022 design (the
 last year it serves) has only three recargo rungs, [16]/[19]/[22], with neither

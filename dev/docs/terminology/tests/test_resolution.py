@@ -55,7 +55,7 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     from .._resolution import GroundingSurface, ResolvedTarget
 
     path = (
-        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-2022"
+        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022"
         "/casillas/civa.repercutido.general__c22.toml"
     )
     # The first declaration occupies lines 1–13; stopping before the next

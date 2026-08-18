@@ -61,7 +61,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
     registry revision, both 2009 and 2023.
     """
     for revision_id in (
-        "2009-2022",
+        "2022",
         "2023",
         "2024-hasta-08-y-2t",
         "2024-desde-09-y-3t",
@@ -87,7 +87,7 @@ def test_box_60_carries_substantive_export_grounding() -> None:
     and 2023.
     """
     for revision_id in (
-        "2009-2022",
+        "2022",
         "2023",
         "2024-hasta-08-y-2t",
         "2024-desde-09-y-3t",
@@ -108,7 +108,7 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
     }
     for revision_id in (
-        "2009-2022",
+        "2022",
         "2023",
         "2024-hasta-08-y-2t",
         "2024-desde-09-y-3t",
@@ -177,22 +177,22 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
 
 
 def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None:
-    """#15 regression: the 2009-2022 revision (filing years 2009-2022)
+    """#15 regression: the 2022 revision (filing years 2022)
     now aggregates the domestic base imponible from the ledger.
 
     The 2009 revision (inline-declared) carried the cuota ledger bindings (and the
     compensación carry + verification) but lacked the domestic-base bindings that
     the post-2022 revision family has, so casillas 01/04/07/28 were
-    ``input_kind = "manual"`` and a ledger-driven 2009-2022 M303 left the base at 0
+    ``input_kind = "manual"`` and a ledger-driven 2022 M303 left the base at 0
     while the cuota resolved — a "cuota without base" under-declaration. This fixes
     that by back-filling the four base bindings (``fact = "base_amount_sum"``,
     selectors mirroring the 2023 revision). filing_year=2022 resolves to the
-    2009-2022 revision; this test fails loudly if the base regresses to the
+    2022 revision; this test fails loudly if the base regresses to the
     unbound manual state (0). Expected values are the seeded observation base sums
     (ground truth from inputs, not a re-run of the registry formula).
     """
     snapshot = _m303_2022_2t_snapshot()
-    assert snapshot.revision.id == "2009-2022"  # filing_year 2022 resolves to the older revision
+    assert snapshot.revision.id == "2022"  # filing_year 2022 resolves to the older revision
     observations = (
         _observation(
             applied_rate=Decimal("0.21"),
@@ -292,19 +292,19 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
 
 
 def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_ledger() -> None:
-    """#41 regression: the 2009-2022 revision also aggregates recargo de
+    """#41 regression: the 2022 revision also aggregates recargo de
     equivalencia (casillas 21/24/158) and the intra-community / export base
     (casillas 59/60) from the ledger — the rest of the 2009 coverage tail behind #15.
 
     These casillas existed but were input_kind="manual" with no binding, so a
-    ledger-driven 2009-2022 M303 reported zero recargo (even when a supplier charged
+    ledger-driven 2022 M303 reported zero recargo (even when a supplier charged
     it) and zero intra-community / export base. The recargo cuotas now aggregate by
     tier via recargo_amount_sum (LIVA art. 161); 59/60 via base_amount_sum — mirroring
     the 2023 revision. filing_year=2022 resolves to the 2009 revision; expected values
     derive from the seeded amounts, not a formula re-run.
     """
     revision = _m303_2022_2t_snapshot().revision
-    assert revision.id == "2009-2022"
+    assert revision.id == "2022"
     rec_general = _observation(
         applied_rate=Decimal("0.21"),
         category=IvaCategory.DOMESTIC_GENERAL,
@@ -375,12 +375,12 @@ def _calculate_303_2009_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    """Calculate helper scoped to the 2009-2022 revision's own binding set.
+    """Calculate helper scoped to the 2022 revision's own binding set.
 
     Unlike :func:`_calculate_303_from_observations` (which seeds the
     post-2022-only ``modelo-303-autoconsumo-promotor-base`` /
     ``modelo-303-profile-state-attribution-ratio`` bindings), the
-    2009-2022 revision declares only
+    2022 revision declares only
     ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
     """
     snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
@@ -398,15 +398,15 @@ def _calculate_303_2009_from_observations(
 
 
 def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_changes_total() -> None:
-    """The 2009-2022 casilla-27 total now includes recargo de equivalencia.
+    """The 2022 casilla-27 total now includes recargo de equivalencia.
 
     Backport of the post-2022 casilla-27 grounding (see the comment on
     ``modelo-303-iva-cuota-devengada-total`` in this revision's
-    formulas/0001-formulas.toml): the 2009-2022 revision (filing years
-    2009-2022) summed only the five non-recargo devengado components, silently
+    formulas/0001-formulas.toml): the 2022 revision (filing years
+    2022) summed only the five non-recargo devengado components, silently
     excluding the recargo cuota tiers (casillas 18/21/24, LIVA art. 161) a
     ledger-driven filer's supplier may have charged. filing_year=2022 resolves
-    to the 2009-2022 revision. This test grades the formula's own
+    to the 2022 revision. This test grades the formula's own
     target casilla ``iva.cuota-devengada-total`` (the semantic casilla "27"
     projects onto in the export layout); the 2009 revision's literal-number
     casilla 27 remains a separate ``input_kind = manual`` casilla with no

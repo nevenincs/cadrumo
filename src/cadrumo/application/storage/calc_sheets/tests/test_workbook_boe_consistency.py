@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # fichero-BOE layout both build. Spanned across multiple filing years (and across
 # revision boundaries) so the cross-transport invariant is locked for every year a
 # revision covers, not just one. Modelo 303 in particular crosses the
-# 2009-2022 -> explicit post-2022 epoch boundaries, and 2023-2026 all
+# 2022 -> explicit post-2022 epoch boundaries, and 2023-2026 all
 # resolve their law-determined revision whose internal-only módulos casillas the
 # workbook must omit for every one of those years.
 _COVERED = [

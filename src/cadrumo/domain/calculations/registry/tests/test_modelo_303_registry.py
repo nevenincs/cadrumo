@@ -74,7 +74,7 @@ _M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
     "2026-y-siguientes",
 )
 _M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
-    "2009-2022": "aeat-dr-303-2025",
+    "2022": "aeat-dr-303-2025",
     "2023": "aeat-dr-303-2023",
     "2024-hasta-08-y-2t": "aeat-dr-303-2024-early",
     "2024-desde-09-y-3t": "aeat-dr-303-2024-late",
@@ -89,7 +89,7 @@ _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
     "2026-y-siguientes": "boe-orden-hac-1425-2025-iva-authority",
 }
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
-    "2009-2022": frozenset(
+    "2022": frozenset(
         {
             "ley-37-1992:art-88",
             "ley-37-1992:art-90",
@@ -158,7 +158,7 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
 def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     modelo, _ = _load_modelo_303()
 
-    rev_old = modelo.revisions["2009-2022"]
+    rev_old = modelo.revisions["2022"]
     assert rev_old.valid_from == date(2009, 1, 1)
     assert rev_old.period_selector.year_from == 2009
     assert rev_old.period_selector.year_to == 2022
@@ -245,7 +245,7 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             filing_year=2021,
             period=period,
         )
-        assert snapshot.revision.id == "2009-2022"
+        assert snapshot.revision.id == "2022"
 
 
 def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> None:
@@ -380,7 +380,7 @@ def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-303-static-documentation"]
@@ -411,7 +411,7 @@ def test_modelo_303_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
 
     assert "modelo-303-filing" in construct.application_links
@@ -426,7 +426,7 @@ def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings(
     three IVA flow directions so the runtime can resolve cuota
     devengada / cuota deducible / INVERSION_SUJETO_PASIVO cross-modelo."""
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
 
     iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-303-iva-repercutido-general-cuota" in iva_bindings
@@ -453,7 +453,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     )
 
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
 
     observations = [
         IvaLedgerObservation(
@@ -540,7 +540,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         # Casilla 122 is deliberately ABSENT here. This test resolves against
-        # 2009-2022, while the supplier-side inversión binding belongs
+        # 2022, while the supplier-side inversión binding belongs
         # to the later explicit record-design revisions. Listing it here would
         # assert a resolution this revision cannot produce.
         # No third-country import rows in this observation set, so the import
@@ -570,7 +570,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     """The Modelo 303 construct must list each ledger_iva_aggregation
     binding so downstream consumers see a complete construct envelope."""
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
     assert "modelo-303-iva-repercutido-general-cuota" in construct.bindings
     assert "modelo-303-iva-repercutido-reducido-cuota" in construct.bindings
@@ -579,7 +579,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
 
 
-@pytest.mark.parametrize("revision_id", ["2009-2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_casilla_43_stays_manual(
     revision_id: str,
 ) -> None:
@@ -603,7 +603,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_ca
     assert casilla_43.binding is None
 
 
-@pytest.mark.parametrize("revision_id", ["2009-2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44_stays_manual(
     revision_id: str,
 ) -> None:
@@ -634,7 +634,7 @@ def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
 
-@pytest.mark.parametrize("revision_id", ["2009-2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -645,7 +645,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
-@pytest.mark.parametrize("revision_id", ["2009-2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -674,7 +674,7 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
 
 def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     relation = next(item for item in revision.relations if item.id == "modelo-303-rel-self-compensacion-anteriores")
 
@@ -698,7 +698,7 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
     )
 
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     observations = (
         registry_grounded_modelo_observation(
             modelo="303",
@@ -747,7 +747,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
     )
 
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     observations = (
         registry_grounded_modelo_observation(
             modelo="303",
@@ -1128,7 +1128,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-2022"]
+    revision = modelo.revisions["2022"]
     parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr-2025")
 
     assert parity.workbook_source == "aeat-dr-303-2025"

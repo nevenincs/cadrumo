@@ -38,7 +38,7 @@ _VALID_LEGAL_REF: LegalRefId = "ley-37-1992:art-99"
 def _metadata() -> SheetExportMetadata:
     return SheetExportMetadata(
         modelo_id="303",
-        revision_id="2009-2022",
+        revision_id="2022",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         engine_version="test",

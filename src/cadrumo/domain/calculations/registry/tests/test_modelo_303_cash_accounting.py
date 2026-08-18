@@ -21,7 +21,7 @@ _CASH_BINDINGS = {
 @pytest.mark.parametrize(
     "revision_id",
     [
-        "2009-2022",
+        "2022",
         "2023",
         "2024-hasta-08-y-2t",
         "2024-desde-09-y-3t",

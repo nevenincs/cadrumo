@@ -48,7 +48,7 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
-    assert filing.registry_snapshot_ref.revision_id == "2009-2022"
+    assert filing.registry_snapshot_ref.revision_id == "2022"
     assert filing.registry_snapshot_ref.modelo_year == year
 
     values = {value.casilla_id: value.printed_value for value in filing.values}

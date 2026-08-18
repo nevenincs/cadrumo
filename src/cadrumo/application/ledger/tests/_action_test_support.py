@@ -317,7 +317,7 @@ def _persist_verified_revision_citing_transaction(
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="2009-2022",
+        revision_id="2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-action-support")
     revision_id = derive_calculation_revision_id(
@@ -334,7 +334,7 @@ def _persist_verified_revision_citing_transaction(
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="2009-2022",
+        revision_id="2022",
         name="303-2026-1T",
         created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),

@@ -11,7 +11,7 @@ from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M303_WALLET_REVISIONS = (
-    "2009-2022",
+    "2022",
     "2023",
     "2024-hasta-08-y-2t",
     "2024-desde-09-y-3t",
@@ -60,7 +60,7 @@ def test_iva_wallet_exception_requires_the_exact_relation_coordinate() -> None:
     )
     assert not is_iva_wallet_owned_relation_target(
         modelo_id="303",
-        revision_id="2009-2022",
+        revision_id="2022",
         relation_id="reused-binding-under-another-relation",
         target_binding=binding_id,
     )

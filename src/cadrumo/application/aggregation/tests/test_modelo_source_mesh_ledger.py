@@ -319,7 +319,7 @@ def _exempt_intracommunity_invoice(
 
 
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_objects: SecureObjectRepository) -> None:
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -365,7 +365,7 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_obje
 def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     prorrata_repo = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     outgoing = _iva_transaction(
@@ -666,7 +666,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     consume it (each resolves the 42.00 self-assessed cuota), so the pair nets
     to zero in the M303 resultado and the advisory no longer fires.
     """
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -744,7 +744,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
     cuota-less by law. This guards against the false-positive that surfaced an
     unactionable "modelling gap" for a category that simply has no cuota.
     """
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -795,7 +795,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     binding selects produce the diagnostic. A domestic sale matched by the
     repercutido-general binding must leave ``diagnostics`` empty.
     """
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -826,7 +826,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -870,7 +870,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
 def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -906,7 +906,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    revision = _revision("303", "2009-2022")
+    revision = _revision("303", "2022")
     tx_repo = TransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
