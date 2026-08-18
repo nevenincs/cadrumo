@@ -1,0 +1,400 @@
+[[revisions.2022.casillas]]
+id = "79"
+number = "79"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_79"
+continuidad_id = "m303-exonerado-390-79"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "80"
+number = "80"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_80"
+continuidad_id = "m303-exonerado-390-80"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "81"
+number = "81"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_81"
+continuidad_id = "m303-exonerado-390-81"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "83"
+number = "83"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_83"
+continuidad_id = "m303-exonerado-390-83"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "84"
+number = "84"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_84"
+continuidad_id = "m303-exonerado-390-84"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "86"
+number = "86"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_86"
+continuidad_id = "m303-exonerado-390-86"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "88"
+number = "88"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_88"
+continuidad_id = "m303-exonerado-390-88"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "89"
+number = "89"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "ratio"
+semantic_role = "m303_exonerado_390_89"
+continuidad_id = "m303-exonerado-390-89"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "90"
+number = "90"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "ratio"
+semantic_role = "m303_exonerado_390_90"
+continuidad_id = "m303-exonerado-390-90"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "91"
+number = "91"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "ratio"
+semantic_role = "m303_exonerado_390_91"
+continuidad_id = "m303-exonerado-390-91"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "92"
+number = "92"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "ratio"
+semantic_role = "m303_exonerado_390_92"
+continuidad_id = "m303-exonerado-390-92"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "93"
+number = "93"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_93"
+continuidad_id = "m303-exonerado-390-93"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "94"
+number = "94"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_94"
+continuidad_id = "m303-exonerado-390-94"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "95"
+number = "95"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_95"
+continuidad_id = "m303-exonerado-390-95"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "96"
+number = "96"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_96"
+continuidad_id = "m303-exonerado-390-96"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "97"
+number = "97"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_97"
+continuidad_id = "m303-exonerado-390-97"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "98"
+number = "98"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_98"
+continuidad_id = "m303-exonerado-390-98"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "99"
+number = "99"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_99"
+continuidad_id = "m303-exonerado-390-99"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "107"
+number = "107"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "ratio"
+semantic_role = "m303_exonerado_390_107"
+continuidad_id = "m303-exonerado-390-107"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "125"
+number = "125"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_125"
+continuidad_id = "m303-exonerado-390-125"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "126"
+number = "126"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_126"
+continuidad_id = "m303-exonerado-390-126"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "127"
+number = "127"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_127"
+continuidad_id = "m303-exonerado-390-127"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+
+[[revisions.2022.casillas]]
+id = "128"
+number = "128"
+section = ["iva", "exonerado_390", "resumen_anual"]
+data_type = "money"
+semantic_role = "m303_exonerado_390_128"
+continuidad_id = "m303-exonerado-390-128"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]

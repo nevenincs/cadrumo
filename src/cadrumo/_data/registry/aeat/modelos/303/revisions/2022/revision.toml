@@ -24,3 +24,8 @@ source_refs = [
     "boe-orden-hfp-1335-2021-iva-authority",
     "boe-modelo-303-2008-form",
 ]
+
+[revisions."2022".family_dispositions.applicability]
+reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad. Revision '2022' declares both: orden_aplicabilidad cites orden-eha-3786-2008:art-1, and the revision carries its own filing_schedules fragment, so the applicability family holds no separate member for this modelo."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]

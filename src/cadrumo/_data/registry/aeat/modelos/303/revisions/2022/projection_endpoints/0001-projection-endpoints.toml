@@ -1,0 +1,551 @@
+# Revision-owned Modelo 303 projection endpoint authority.
+# Each identity is explicitly grounded in this revision's official record design.
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "cnae"
+casilla_id = "500"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "operaciones_total"
+casilla_id = "501"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "operaciones_con_derecho"
+casilla_id = "502"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "tipo"
+casilla_id = "503"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "porcentaje"
+casilla_id = "504"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 2
+field = "cnae"
+casilla_id = "505"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 2
+field = "operaciones_total"
+casilla_id = "506"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 2
+field = "operaciones_con_derecho"
+casilla_id = "507"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 2
+field = "tipo"
+casilla_id = "508"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 2
+field = "porcentaje"
+casilla_id = "509"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 3
+field = "cnae"
+casilla_id = "510"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 3
+field = "operaciones_total"
+casilla_id = "511"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 3
+field = "operaciones_con_derecho"
+casilla_id = "512"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 3
+field = "tipo"
+casilla_id = "513"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 3
+field = "porcentaje"
+casilla_id = "514"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 4
+field = "cnae"
+casilla_id = "515"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 4
+field = "operaciones_total"
+casilla_id = "516"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 4
+field = "operaciones_con_derecho"
+casilla_id = "517"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 4
+field = "tipo"
+casilla_id = "518"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 4
+field = "porcentaje"
+casilla_id = "519"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 5
+field = "cnae"
+casilla_id = "520"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 5
+field = "operaciones_total"
+casilla_id = "521"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 5
+field = "operaciones_con_derecho"
+casilla_id = "522"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 5
+field = "tipo"
+casilla_id = "523"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 5
+field = "porcentaje"
+casilla_id = "524"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_current_base"
+casilla_id = "700"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_current_cuota"
+casilla_id = "701"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_investment_base"
+casilla_id = "702"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_investment_cuota"
+casilla_id = "703"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "import_current_base"
+casilla_id = "704"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "import_current_cuota"
+casilla_id = "705"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "import_investment_base"
+casilla_id = "706"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "import_investment_cuota"
+casilla_id = "707"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_current_base"
+casilla_id = "708"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_current_cuota"
+casilla_id = "709"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_investment_base"
+casilla_id = "710"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_investment_cuota"
+casilla_id = "711"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "reagp_base"
+casilla_id = "712"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "reagp_cuota"
+casilla_id = "713"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "rectification_base"
+casilla_id = "714"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "rectification_cuota"
+casilla_id = "715"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "investment_regularisation"
+casilla_id = "716"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "total"
+casilla_id = "717"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_current_base"
+casilla_id = "718"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_current_cuota"
+casilla_id = "719"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_investment_base"
+casilla_id = "720"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_investment_cuota"
+casilla_id = "721"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "import_current_base"
+casilla_id = "722"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "import_current_cuota"
+casilla_id = "723"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "import_investment_base"
+casilla_id = "724"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "import_investment_cuota"
+casilla_id = "725"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_current_base"
+casilla_id = "726"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_current_cuota"
+casilla_id = "727"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_investment_base"
+casilla_id = "728"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_investment_cuota"
+casilla_id = "729"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "reagp_base"
+casilla_id = "730"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "reagp_cuota"
+casilla_id = "731"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "rectification_base"
+casilla_id = "732"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "rectification_cuota"
+casilla_id = "733"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "investment_regularisation"
+casilla_id = "734"
+
+[[revisions."2022".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]
+[revisions."2022".projection_endpoints.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "total"
+casilla_id = "735"
