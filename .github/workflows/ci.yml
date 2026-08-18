@@ -179,8 +179,8 @@ jobs:
         # Fails the workflow if any cross-reference declares an
         # oracle_id that doesn't match the registered oracle's
         # surface_kind. To fix locally, run:
-        #   uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
-        run: uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
+        #   uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
+        run: uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
       - name: Tooling and workflow conformance gates
         # The dev-tree unit AND integration gates (workflow structural pins,
@@ -193,7 +193,7 @@ jobs:
         # justfile declared eleven more, the two sets overlapped by nothing, and
         # no single place answered "what runs under dev/". Inlining paths back
         # into this step puts the answer in two places again and is what
-        # `src/cadrumo/tests/test_lane_reachability.py` exists to catch.
+        # `dev/tests/test_lane_reachability.py` exists to catch.
         # Routing through the recipe also makes the lane reproducible locally,
         # which it was not while it lived here.
         run: just test-dev-ci

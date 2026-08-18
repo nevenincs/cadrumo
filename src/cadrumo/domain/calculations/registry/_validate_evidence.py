@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 # (see the member's declaration in ``core._storage_taxonomy``).
 _CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_CACHE_FILE).subpath).name
 
-# Shipped sidecar constants (see dev/corpus/extract_manual_corpus_text.py).
+# Shipped sidecar constants (written by the corpus extraction tooling).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
 # where the path is source.corpus_path with the leading "corpus/" prefix stripped.
 # The payload shape itself is the shared ManualCorpusTextSidecar contract in core.
@@ -91,7 +91,7 @@ def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
 
     Locates the content-keyed sidecar committed under
     ``_data/manual_corpus_text/`` that was built by
-    ``dev/corpus/extract_manual_corpus_text.py``, then hands the payload to
+    the corpus extraction tooling, then hands the payload to
     :func:`_validated_sidecar_text`, which owns the whole admission decision
     against the shared :class:`ManualCorpusTextSidecar` contract the extractor
     writes through.
@@ -397,7 +397,7 @@ class EvidenceValidator:
             # Try the shipped content-keyed sidecar first; verify sha256 before
             # using it so a modified source PDF never serves stale text.  The
             # sidecar is generated once at build time by
-            # dev/corpus/extract_manual_corpus_text.py and shipped with the
+            # the corpus extraction tooling and shipped with the
             # cadrumo wheel — end-user machines should never reach the fallback.
             sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
             if sidecar_text is not None:

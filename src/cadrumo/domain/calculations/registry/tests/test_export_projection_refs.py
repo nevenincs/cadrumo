@@ -425,7 +425,7 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
 def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> None:
     root = Path(__file__).resolve().parents[6]
     caller_paths: set[Path] = set()
-    for source_root in (root / "src" / "cadrumo", root / "dev" / "registry"):
+    for source_root in (root / "src" / "cadrumo", root / "scaffold" / "registry"):
         for module_path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("tests",)):
             tree = ast.parse(module_path.read_text(encoding="utf-8"))
             if any(
@@ -440,5 +440,5 @@ def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> 
 
     assert caller_paths == {
         Path("src/cadrumo/domain/calculations/registry/_loader.py"),
-        Path("dev/registry/_semantic_map_loader.py"),
+        Path("scaffold/registry/_semantic_map_loader.py"),
     }

@@ -1,6 +1,6 @@
 """Real-behavior tests for the shipped Handbook reader's structural refusals.
 
-The dev-only authoring compiler (``dev.docs.terminology_handbook``) validates
+The unshipped authoring compiler validates
 every concept fragment against a strict, frozen, ``extra="forbid"`` schema
 before it can ever be curated. This lean, shipped product reader walks the
 same TOML by hand for a small locale/search projection and historically

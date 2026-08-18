@@ -308,7 +308,7 @@ def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
         str(step.get("run", "")) for step in _document(_FULL)["jobs"]["cadrumo-full-conformance"]["steps"]
     )
     assert "vaultspec-core vault check all" in commands
-    assert "src/cadrumo/tests/test_roundtrip_coverage.py" in commands
+    assert "dev/tests/test_roundtrip_coverage.py" in commands
     assert "src/cadrumo/application/ledger/tests" in commands
     assert "src/cadrumo/adapters/persistence/storage" in commands
     assert "src/cadrumo/adapters/persistence/profile" in commands

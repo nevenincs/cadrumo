@@ -83,20 +83,16 @@ from ._size_budget import (
     MIN_SCANNED_CALLABLES,
     MIN_SCANNED_MODULES,
     MODULE_POLICY,
-    SIZE_BUDGET_BASELINE_PATH,
     BudgetPolicy,
     EmptyScanError,
-    SizeBudgetBaseline,
     assert_real_corpus,
     build_limits,
     callable_key,
     evaluate_budget,
-    load_size_budget_baseline,
     measure_callable_lines,
     measure_module_lines,
     scan_callable_lines,
     scan_module_lines,
-    write_size_budget_baseline,
 )
 from ._storage_path_grammar import (
     assert_grammar_vocabulary_is_declared,
@@ -118,11 +114,9 @@ __all__ = [
     "MIN_SCANNED_MODULES",
     "MODULE_POLICY",
     "REPO_ROOT",
-    "SIZE_BUDGET_BASELINE_PATH",
     "SRC_CADRUMO",
     "BudgetPolicy",
     "EmptyScanError",
-    "SizeBudgetBaseline",
     "aeat_relative",
     "apply_collection_storage_root",
     "assert_grammar_vocabulary_is_declared",
@@ -137,7 +131,6 @@ __all__ = [
     "general_m303_filing_evidence",
     "leaf_name",
     "literal_directory_runs",
-    "load_size_budget_baseline",
     "measure_callable_lines",
     "measure_module_lines",
     "module_name",
@@ -159,8 +152,7 @@ __all__ = [
     "scan_callable_lines",
     "scan_module_lines",
     "temporary_env",
-    "write_size_budget_baseline",
-]
+    ]
 
 
 #: Re-exported name -> owning submodule (relative, resolved through

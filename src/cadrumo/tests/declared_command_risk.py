@@ -6,7 +6,7 @@ this package's documented convention (see ``cadrumo/tests/__init__.py``) of
 submodule-direct reach rather than promotion to the package facade.
 
 Consolidated from three independently-authored copies: two under
-``cadrumo_harness/mcp/tests/`` and one under ``dev/agent_eval/tests/``. Only the
+``cadrumo_harness/mcp/tests/`` and one under the agent-evaluation test tree. Only the
 first two shared a common owner narrower than this package -- the third
 consumer is outside ``cadrumo_harness/mcp`` entirely, so ``cadrumo_harness/mcp/tests/``
 was never a valid narrowest-common-owner home for all three, only an accident

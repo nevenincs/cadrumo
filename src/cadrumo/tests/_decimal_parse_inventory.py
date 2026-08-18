@@ -138,7 +138,7 @@ its kind: no pattern to copy, no established way to pin checker-version drift (t
 revealed-type text is the checker's output format, not a contract), a checker run
 added to every invocation, and its own anti-tautology proof and exemption
 discipline to build from scratch. The nearest analogue,
-``dev/docs/sequence_build_gate.py``, invokes an external engine from a gate — but
+the docs sequence-build gate, invokes an external engine from a gate — but
 its own engine, not a checker's output, so it is precedent for the *shape* and not
 for the *dependency*. Permanent cost against a contingent benefit; build it when
 there is something to catch.

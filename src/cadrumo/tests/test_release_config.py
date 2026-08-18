@@ -413,8 +413,8 @@ def test_releasing_doc_documents_rc_soak_and_rollback() -> None:
     """RELEASING.md documents the RC-soak procedure and the rollback procedure.
 
     Prevents the RC-soak / rollback narrative from silently drifting out of
-    sync with the machine-validated checklist and the `dev/release/readiness`
-    gate and `just release-rollback` recipe that implement it.
+    sync with the machine-validated checklist and the release-readiness gate
+    and `just release-rollback` recipe that implement it.
     """
     text = RELEASING_PATH.read_text(encoding="utf-8")
     assert "release-candidate soak" in text

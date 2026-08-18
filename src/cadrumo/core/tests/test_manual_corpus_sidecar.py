@@ -1,6 +1,6 @@
 """Contract tests for the shared manual-PDF corpus-text sidecar schema.
 
-The sidecar is written by ``dev/corpus/extract_manual_corpus_text.py`` and read
+The sidecar is written by the corpus extraction tooling and read
 by the registry evidence validator. These tests pin the one contract both sides
 consume: every committed sidecar satisfies it, and every field the writer
 guarantees is actually required rather than optional.

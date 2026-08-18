@@ -166,7 +166,7 @@ class TestRuntimeProfile:
 
 
 def dev_test_database_password(settings: Settings | None = None) -> str:
-    """Return the shared dev/test password for database-backed storage tests."""
+    """Return the shared test password for database-backed storage tests."""
 
     source = settings or load_settings()
     return source.cadrumo_dev_test_database_password.get_secret_value()

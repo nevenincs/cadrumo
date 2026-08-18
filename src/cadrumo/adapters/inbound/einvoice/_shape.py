@@ -166,7 +166,7 @@ def iter_pdf_embedded_files(pdf_bytes: bytes) -> tuple[tuple[str, bytes], ...]:
     """Return ``(filename, payload)`` for every embedded file in a PDF.
 
     The read half of the embedded-file walk the sanitiser already performs.
-    The fixture-preparation sanitiser (``dev.sanitizer``) strips these; this
+    The fixture-preparation sanitiser strips these; this
     reads them without mutating anything, so a ZUGFeRD payload is visible to
     a parser.
 

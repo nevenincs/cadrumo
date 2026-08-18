@@ -316,6 +316,7 @@ if TYPE_CHECKING:
         accepted_filing_period_patterns,
         accepted_period_codes,
         accepted_period_patterns,
+        hydrate_scenario_filing_period,
         is_administrative_period_token,
         registry_period_kind,
     )
@@ -688,6 +689,7 @@ __all__: list[str] = [
     "Period",
     "PeriodError",
     "PeriodKind",
+    "hydrate_scenario_filing_period",
     "PersistedFormatClass",
     "PostFilingEventKind",
     "PreconditionActionIdentity",
@@ -1141,6 +1143,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "fts_or_group": "._fts_query",
     "hardware_tier_for_free_bytes": "._hardware",
     "hydrate_filing_projection_ref": "._filing_projection_ref",
+    "hydrate_scenario_filing_period": "._period",
     "iban_mod_97": "._iban",
     "is_administrative_period_token": "._period",
     "is_aeat_csv": "._aeat_csv",

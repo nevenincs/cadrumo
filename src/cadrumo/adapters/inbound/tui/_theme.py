@@ -9,7 +9,7 @@ width, and the light and dark appearances cannot drift apart.
 
 The palette is not new. It is the shipped Cadrumo brand, lifted from the
 marketing frontend's custom properties (``frontend/src/styles.css``) and
-the README CLI demo renderer (``dev/readme/render_cli_demo.py``): warm
+the README CLI demo renderer: warm
 paper, near-black ink, a rust primary, a muted sage success, an amber
 warning. Reusing it keeps the terminal surface recognisably the same
 product as the website and the documentation screenshots, and replaces

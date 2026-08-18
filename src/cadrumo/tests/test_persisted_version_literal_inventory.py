@@ -41,7 +41,7 @@ an exemption stops naming a real site, so a fixed site's entry cannot rot into a
 rubber stamp.
 
 See Also:
-    :mod:`~tests.test_utf8_enrollment_inventory`
+    the UTF-8 enrollment inventory ratchet
         The same shape for bare encoding literals.
     :mod:`~tests.test_override_seam_singularity`
         The same anti-vacuity discipline: detectors are pure functions so a

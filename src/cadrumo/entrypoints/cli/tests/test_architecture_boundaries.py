@@ -8,7 +8,7 @@ the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
 ``_modelo_maritime_cli.py`` -> ``domain.renta._errors``) are superseded by the
 project-wide ratcheting import-hygiene gate,
 ``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
-``dev/quality/import_hygiene_scan.py`` and ``dev/quality/import_hygiene_baseline.json``).
+the import-hygiene scanner and its checked-in baseline).
 Both former allowlist entries are
 empty in practice at supersession time: neither modelo CLI module still
 imports its domain package's private submodule (both now import the public

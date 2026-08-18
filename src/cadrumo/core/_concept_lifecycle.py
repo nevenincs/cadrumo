@@ -14,7 +14,7 @@ taxpayer- and operator-facing vocabulary and keeps internal machinery concepts
 The set is declared as a :class:`enum.StrEnum` in ``core`` per the
 core-authority discipline (closed axes live in ``core/``, hydrated at
 boundaries, asserted as members in tests). ``core`` is the only home both
-sides can reach: the ``dev.docs.terminology_handbook`` authoring tooling that
+sides can reach: the terminology-handbook authoring tooling that
 compiles the fragments is not shipped in the wheel, so a declaration living
 beside that schema is unimportable from ``cadrumo``. This mirrors the
 already-shared four-language axis
