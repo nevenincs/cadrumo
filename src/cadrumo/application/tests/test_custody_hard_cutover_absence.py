@@ -50,7 +50,8 @@ The MODULE net reports any import resolving into
 primary because a name list can only ever assert "not these particular names",
 which is a far weaker claim than "no route into the shared-master package
 remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
-The forwarding layer in ``profile_custody`` is the worked example: it forwards
+The application-owned custody module (``user_profile/_custody_ports.py``, the
+successor of the dissolved forwarding port) is the worked example: it forwards
 ``current_active_bucket_session``, ``BucketSession.open``,
 ``session_serves_bucket``, ``bind_active_bucket_session`` and
 ``evaluate_login_throttle``, none of which a provider-family name list
@@ -214,15 +215,16 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),
-    "profile_custody/__init__.py": _OpenViolation(
+    "user_profile/_custody_ports.py": _OpenViolation(
         reason=(
-            "The delegate wrappers forward the surviving master-key substrate: "
-            "bucket session open, resume, activation and binding, the "
-            "session-serves-bucket predicate, the unsecured-bucket refusal and "
-            "the login throttle.  That substrate follows the per-profile capsule "
-            "as it takes over composition.  The provider family and the dynamic "
-            "string reach are both gone; what remains is one static import of "
-            "the master-key module."
+            "The forwarding port package was dissolved into this single "
+            "application-owned module; its session forwards still reach the "
+            "surviving master-key substrate (bucket session open, resume, "
+            "activation and binding, the session-serves-bucket predicate, the "
+            "unsecured-bucket refusal and the login throttle).  That substrate "
+            "follows the per-profile capsule as it takes over composition.  The "
+            "provider family and the dynamic string reach are both gone; what "
+            "remains is one static import of the master-key module."
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),

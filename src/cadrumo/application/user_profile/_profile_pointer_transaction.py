@@ -20,10 +20,10 @@ import threading
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
-from importlib import import_module
 from pathlib import Path
 from typing import cast
 
+from ...adapters.persistence.storage import custody
 from ...core import (
     BucketPointer,
     capture_pointer,
@@ -150,9 +150,8 @@ def _canonical_root(root: Path | None) -> Path:
 
 
 def _default_root_lock_port() -> ProfileCustodyRootLockPort:
-    """Resolve the concrete storage lock through the application port."""
-    custody = import_module("cadrumo.adapters.persistence.storage.custody")
-    provider = getattr(custody, "profile_custody_root_lock", None)
+    """Resolve the concrete storage lock through the storage facade."""
+    provider = custody.profile_custody_root_lock
     if not callable(provider):
         raise TypeError("profile custody root-lock provider is unavailable")
     return cast(ProfileCustodyRootLockPort, provider)

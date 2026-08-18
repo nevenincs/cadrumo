@@ -12,9 +12,10 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile import profile_custody_recovery_envelope_path
+
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...profile_custody import profile_custody_recovery_envelope_path
 from .. import (
     ProfileCapsuleSourceError,
     read_profile_capsule_source,

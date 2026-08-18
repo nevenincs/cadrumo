@@ -38,7 +38,8 @@ from ...core.identity import ProfileId
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...domain.buckets import BucketEventType
-from ..profile_custody import (
+from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
+from ._custody_ports import (
     create_profile_custody_registration_material,
     load_profile_custody_password_material,
     profile_custody_recovery_envelope_path,
@@ -46,7 +47,6 @@ from ..profile_custody import (
     replace_profile_custody_envelope,
     unlock_profile_custody_password,
 )
-from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from ._custody_repository import profile_custody_transaction_lock
 from ._registration import PASSPHRASE_MINIMUM_LENGTH, assess_passphrase
 

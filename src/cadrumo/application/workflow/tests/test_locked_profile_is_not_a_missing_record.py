@@ -32,7 +32,7 @@ import pytest
 from ....core import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
-from ...profile_custody import (
+from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
     profile_bucket_session_open_resumed,
     profile_close_bucket_session,

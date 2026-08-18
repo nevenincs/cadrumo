@@ -23,6 +23,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.user_profile import create_profile_custody_registration_material
+
 from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
@@ -33,7 +35,6 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from ...profile_custody import create_profile_custody_registration_material
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._recovery_custody import (

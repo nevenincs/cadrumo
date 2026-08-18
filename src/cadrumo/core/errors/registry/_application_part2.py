@@ -559,7 +559,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.profile_custody.ProfileRecordCryptoError",
+        "cadrumo.application.user_profile._custody_ports.ProfileRecordCryptoError",
         ErrorCode(
             code="INTEGRITY_PROFILE_RECORD_CRYPTO",
             category=ErrorCategory.INTEGRITY,

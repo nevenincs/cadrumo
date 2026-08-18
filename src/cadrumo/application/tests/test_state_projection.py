@@ -29,6 +29,12 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.user_profile import (
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+)
+
 from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
@@ -43,11 +49,6 @@ from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
-from ..profile_custody import (
-    profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
-    profile_close_bucket_session,
-)
 from ..state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,

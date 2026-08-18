@@ -56,13 +56,13 @@ from ...core.errors import CadrumoError
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
-from ..profile_custody import (
+from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
+from ._custody_ports import (
     load_profile_custody_password_material,
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
     parse_profile_custody_sentinel,
 )
-from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 
 if TYPE_CHECKING:
     from pathlib import Path

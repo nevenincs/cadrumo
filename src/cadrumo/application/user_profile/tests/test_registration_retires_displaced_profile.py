@@ -30,9 +30,10 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile import profile_session_path
+
 from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...profile_custody import profile_session_path
 from .._registration import ProfileRegistrationError, register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,

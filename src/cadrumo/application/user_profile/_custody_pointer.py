@@ -4,20 +4,14 @@ from __future__ import annotations
 
 import base64
 import os
-from importlib import import_module
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, model_validator
 
+from ...adapters.persistence.storage import custody
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.hashing import prefixed_digest as _digest
 from ...core.paths import effective_storage_root
-
-
-def _default_custody_adapters() -> Any:
-    """Resolve the public custody adapter facade at the composition boundary."""
-    return import_module("cadrumo.adapters.persistence.storage.custody")
 
 
 def _corrupt(message: str) -> Exception:
@@ -51,7 +45,7 @@ class ProfileCustodyPointerSnapshot(BaseModel):
     @classmethod
     def capture(cls, root: Path) -> ProfileCustodyPointerSnapshot:
         storage_root = effective_storage_root(root)
-        adapters = _default_custody_adapters()
+        adapters = custody
         with adapters.profile_custody_root_lock(storage_root):
             target = storage_root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
             if not os.path.lexists(target):

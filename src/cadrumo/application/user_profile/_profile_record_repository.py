@@ -19,16 +19,16 @@ from uuid import UUID
 from ...core.paths import effective_storage_root
 from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_custody import (
-    profile_current_bucket_session,
-    profile_custody_record_session_material,
-    profile_session_serves_bucket,
-)
 from ._capsule_record import (
     ProfileRecordCommandEvent,
     ProfileRecordConflictError,
     ProfileRecordSession,
     ProfileRecordStore,
+)
+from ._custody_ports import (
+    profile_current_bucket_session,
+    profile_custody_record_session_material,
+    profile_session_serves_bucket,
 )
 
 _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(

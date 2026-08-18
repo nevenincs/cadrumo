@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from importlib import import_module
 from pathlib import Path
 from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import ValidationError
 
+from ...adapters.persistence.storage import custody
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ._custody_pointer import ProfileCustodyPointerSnapshot
@@ -26,17 +26,12 @@ from ._custody_transactions import (
 )
 
 
-def _default_custody_adapters() -> Any:
-    """Resolve the public custody adapter facade at the composition boundary."""
-    return import_module("cadrumo.adapters.persistence.storage.custody")
-
-
 class ProfileCustodyTransactionRepository:
     """Persist strict current-format transaction journals and owner receipts."""
 
     def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
         self._storage_root = effective_storage_root(root)
-        self._adapters: Any = adapters if adapters is not None else _default_custody_adapters()
+        self._adapters: Any = adapters if adapters is not None else custody
         self._journal_root = (
             self._storage_root / storage_location(StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL).relative_path()
         )
@@ -176,7 +171,7 @@ class ProfileCustodyTransactionRepository:
 @contextmanager
 def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[None]:
     """Acquire root then profile lock, the only accepted custody lock order."""
-    adapters = _default_custody_adapters()
+    adapters = custody
     storage_root = effective_storage_root(root)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     with adapters.profile_custody_root_lock(storage_root):
@@ -196,7 +191,7 @@ def compare_and_swap_profile_pointer(
     replacement: bytes | None,
 ) -> None:
     """Replace or clear the pointer only while its exact captured bytes still match."""
-    adapters = _default_custody_adapters()
+    adapters = custody
     storage_root = effective_storage_root(root)
     with adapters.profile_custody_root_lock(storage_root):
         current = ProfileCustodyPointerSnapshot.capture(storage_root)

@@ -13,6 +13,12 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.application.user_profile import (
+    committed_profile_custody_inventory,
+    default_profile_bucket_storage,
+    default_profile_secure_object_inventory,
+)
+
 from ...core import StorageCategory, require_active_bucket_id, storage_location
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.paths import directory_byte_total
@@ -22,11 +28,6 @@ from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from ..filing import FilingRetentionAuthority
-from ..profile_custody import (
-    committed_profile_custody_inventory,
-    default_profile_bucket_storage,
-    default_profile_secure_object_inventory,
-)
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     AssessBucketDeletionCommand,

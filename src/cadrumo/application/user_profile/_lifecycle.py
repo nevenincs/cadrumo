@@ -11,7 +11,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from ...core import BucketPointer
 from ...domain.user_profile import UserProfileRecord
-from ..profile_custody import verify_profile_custody_dek_against_sentinel
 from ._aggregate import CommittedProfileView, ProfileRestoreAuthority
 from ._capsule_record import (
     ProfileRecordCommandEvent,
@@ -25,6 +24,7 @@ from ._custody_ports import (
     ProfileCustodyEnvelopePort,
     ProfileCustodyRecoveryEnvelopePort,
     ProfileCustodySentinelPort,
+    verify_profile_custody_dek_against_sentinel,
 )
 from ._custody_repository import profile_custody_transaction_lock
 from ._custody_service import _ProfileCustodyTransactionCapability

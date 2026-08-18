@@ -13,6 +13,12 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile import (
+    profile_custody_recovery_envelope_path,
+    profile_is_password_authentication_failure,
+    unlock_profile_custody_password,
+)
+
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
@@ -20,11 +26,6 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....domain.buckets import BucketEventType
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...profile_custody import (
-    profile_custody_recovery_envelope_path,
-    profile_is_password_authentication_failure,
-    unlock_profile_custody_password,
-)
 from .. import (
     ProfilePassphraseRotationError,
     ProfileRecordRepository,

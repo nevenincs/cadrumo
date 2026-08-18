@@ -33,12 +33,12 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
-from ..profile_custody import (
+from ._aggregate import ProfileRestoreAuthority
+from ._custody_ports import (
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
     parse_profile_custody_sentinel,
 )
-from ._aggregate import ProfileRestoreAuthority
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
 if TYPE_CHECKING:

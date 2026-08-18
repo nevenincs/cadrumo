@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ....application.profile_custody import (
+from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
     profile_bucket_session_open_resumed,
     profile_close_bucket_session,
