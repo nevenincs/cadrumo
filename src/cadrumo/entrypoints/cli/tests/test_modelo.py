@@ -159,7 +159,7 @@ def test_work_create_rejects_invalid_period_at_create_time(_active_cli_profile: 
                 "--period",
                 period,
                 "--revision",
-                "2009-2022",
+                "2022",
             ],
         )
         output_lower = result.output.lower()
@@ -195,7 +195,7 @@ def test_work_create_rejects_unknown_modelo(_active_cli_profile: None) -> None:
             "--period",
             "1T",
             "--revision",
-            "2009-2022",
+            "2022",
         ],
     )
 
@@ -228,7 +228,7 @@ def test_work_create_rejects_out_of_range_year(_active_cli_profile: None) -> Non
                 "--period",
                 "Q1",
                 "--revision",
-                "2009-2022",
+                "2022",
             ],
         )
         if result.exit_code == 0:

@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: own growth.
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("303", "2009-2022"),  # row #117
+        ("303", "2022"),  # row #117
     },
 )
 #: `("390", "2010-y-siguientes")` (rows #110, #115, #118) removed: the revision-span

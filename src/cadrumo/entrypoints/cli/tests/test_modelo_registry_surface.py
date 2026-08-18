@@ -166,7 +166,7 @@ def test_registry_discovery_accepts_explicit_year_period_scope() -> None:
         (
             "describe",
             ["app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
-            ("303", "2009-2022"),
+            ("303", "2022"),
         ),
         (
             "casillas",
@@ -285,7 +285,7 @@ def test_describe_surfaces_revision_ids_for_work_create() -> None:
     # The label text varies by locale configuration; the revision id value is stable.
     assert "revision" in result.output.lower()
     # 303's filing-grade revision is the value `work create` requires.
-    assert "2009-2022" in result.output
+    assert "2022" in result.output
 
 
 def test_describe_revision_ids_present_in_json_payload() -> None:

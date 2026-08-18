@@ -675,7 +675,7 @@ class TestTypoTwinWarning:
             ("100", "2025", "2154", "irpf_deduccion_murcia_vehiculo_matricula"),
             ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
             ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
-            # M303 compensacion-pendiente roles appear in both 2009-2022 and
+            # M303 compensacion-pendiente roles appear in both 2022 and
             # post-2022 Modelo 303 revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
             ("369", "esquema-union", "iva.union.de.services-cuota", "iva_oss_union_servicios_destino_de_cuota"),

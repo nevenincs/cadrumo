@@ -136,7 +136,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
     from ....domain.transactions import TransactionCatalogue
 
-    revision = resources().modelos.get("303").revisions["2009-2022"]
+    revision = resources().modelos.get("303").revisions["2022"]
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(_txns()))
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -200,7 +200,7 @@ def test_each_art106_regla_isolated(
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from ....domain.transactions import TransactionCatalogue
 
-    revision = resources().modelos.get("303").revisions["2009-2022"]
+    revision = resources().modelos.get("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime.ESPECIAL)

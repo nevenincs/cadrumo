@@ -540,7 +540,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
     modelo_303 = resources().modelos.get("303")
-    revision = modelo_303.revisions["2009-2022"]
+    revision = modelo_303.revisions["2022"]
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
 

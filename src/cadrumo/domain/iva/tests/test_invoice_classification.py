@@ -385,7 +385,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from ...invoices import invoice_line_to_iva_observation
 
     m303 = resources().modelos.get("303")
-    revision = m303.revisions["2009-2022"]
+    revision = m303.revisions["2022"]
 
     # Two issued + one received line, all standard-case domestic
     observations = (

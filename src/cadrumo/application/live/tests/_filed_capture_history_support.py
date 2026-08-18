@@ -516,7 +516,7 @@ def _prior_303_observation(
         ),
         headers=headers,
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_id=f"303:2009-2022:{year}:{period}",
+        registry_snapshot_id=f"303:2022:{year}:{period}",
     )
 
 

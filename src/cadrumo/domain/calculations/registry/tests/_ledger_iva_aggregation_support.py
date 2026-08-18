@@ -108,7 +108,7 @@ _M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 @lru_cache(maxsize=1)
 def _modelo_303_revision() -> ModeloRevision:
     modelo = resources().modelos.get("303")
-    return modelo.revisions["2009-2022"]
+    return modelo.revisions["2022"]
 
 
 def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:

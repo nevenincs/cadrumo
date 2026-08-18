@@ -98,7 +98,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2009-2022",
+        revision_id="2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(
         Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip"

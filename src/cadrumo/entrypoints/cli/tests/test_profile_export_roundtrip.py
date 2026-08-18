@@ -190,7 +190,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2009-2022",
+            revision_id="2022",
             repository=wu_repo,
             clock=_T0,
         )

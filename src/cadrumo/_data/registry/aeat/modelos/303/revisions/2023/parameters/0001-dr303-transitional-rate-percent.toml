@@ -5,7 +5,7 @@
 # super-reducido rung, and every dated window beyond 2024 belong to the two
 # 2024-covering revisions and to no other.
 #
-# GROUNDING: n:art-72 (RD-ley 20/2022 art. 72) opens the 5 % window
+# GROUNDING: real-decreto-ley-20-2022:art-72 (RD-ley 20/2022 art. 72) opens the 5 % window
 # effective 1 January 2023, which is the one rate this revision's filing
 # periods can carry.
 
@@ -13,7 +13,7 @@
 id = "m303-dr303-154-transitional-rate-percent"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "n:art-72"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "real-decreto-ley-20-2022:art-72"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
 
 [[revisions.2023.parameters.values]]

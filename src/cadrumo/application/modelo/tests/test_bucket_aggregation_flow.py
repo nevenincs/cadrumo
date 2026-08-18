@@ -170,7 +170,7 @@ def _seed_303_work_unit(
         filing_year=2026,
         period=typed_period,
         # The law-determined M303 revision for filing_year 2026 is
-        # ``2026-y-siguientes`` (``2009-2022`` covers only 2009-2022).
+        # ``2026-y-siguientes`` (``2022`` covers only 2022).
         # The calc-time assertion (snapshot.revision.id ==
         # work_unit.revision_id) refuses the stale pin.
         revision_id="2026-y-siguientes",

@@ -223,7 +223,7 @@ def test_feeds_addressed_casilla_is_wired_into_compiled_authority(
     assert len(users) == 17
     assert {modelo_id for modelo_id, _revision_id, _casilla_id in users} == {"303"}
     assert {revision_id for _modelo_id, revision_id, _casilla_id in users} == {
-        "2009-2022",
+        "2022",
         "2023",
         "2024-desde-09-y-3t",
         "2024-hasta-08-y-2t",

@@ -145,7 +145,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         modelo="303",
         filing_year=2025,
         period=period,
-        revision_id="2009-2022",
+        revision_id="2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-filing-evidence")
     revision_id = derive_calculation_revision_id(

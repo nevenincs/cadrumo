@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
 _MODELOS = [
     ("179", "2021-y-siguientes", "orden-hac-612-2021:art-1", "orden-hac-612-2021:art-4", "BOE-A-2021-10163", True),
-    ("181", "2009-2022", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
+    ("181", "2022", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
     ("270", "2013-y-siguientes", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
     ("234", "2021-y-siguientes", "orden-hac-342-2021:art-1", "orden-hac-342-2021:art-4", "BOE-A-2021-5780", False),
     ("238", "2024-y-siguientes", "orden-hac-72-2024:art-1", "orden-hac-72-2024:art-9", "BOE-A-2024-2092", False),
