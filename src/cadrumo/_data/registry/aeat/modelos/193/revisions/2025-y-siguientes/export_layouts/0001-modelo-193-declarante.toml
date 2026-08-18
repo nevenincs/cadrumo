@@ -1,0 +1,263 @@
+[[revisions."2025-y-siguientes".export_layouts]]
+id = "modelo-193-fichero-boe"
+[[revisions."2025-y-siguientes".export_layouts.records]]
+id = "modelo-193-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+required = true
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "193"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-apellidos-razon-social"
+offset = 18
+length = 40
+kind = "header"
+producer_key = "taxpayer.full_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+literal = "T"
+# Design claves C (soporte) and T (telematica): the application builds the fichero for the operator's telematic presentation, the same reasoning as the modelo 190 'T' literal.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-persona-contacto-telefono"
+offset = 59
+length = 9
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-persona-contacto-nombre"
+offset = 68
+length = 40
+kind = "casilla"
+casilla_id = "decl.persona-contacto-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-num-identificativo"
+offset = 108
+length = 13
+kind = "casilla"
+casilla_id = "decl.num-identificativo"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-complementaria"
+offset = 121
+length = 1
+kind = "casilla"
+casilla_id = "decl.complementaria"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-sustitutiva"
+offset = 122
+length = 1
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-num-identificativo-anterior"
+offset = 123
+length = 13
+kind = "casilla"
+casilla_id = "decl.num-identificativo-anterior"
+# Design: the prior declaration's identifying number for a C/S declaration, ceros in every other case.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-total-perceptores"
+offset = 136
+length = 9
+kind = "casilla"
+casilla_id = "decl.total-perceptores"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-base-total"
+offset = 145
+length = 15
+kind = "casilla"
+casilla_id = "decl.base-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-retenciones-total"
+offset = 160
+length = 15
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-retenciones-ingresadas"
+offset = 175
+length = 15
+kind = "casilla"
+casilla_id = "decl.retenciones-ingresadas"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-gastos-total"
+offset = 220
+length = 15
+kind = "casilla"
+casilla_id = "decl.gastos-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".export_layouts.records.fields]]
+id = "modelo-193-decl-naturaleza-declarante"
+offset = 235
+length = 1
+kind = "casilla"
+casilla_id = "decl.naturaleza-declarante"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]

@@ -722,9 +722,17 @@ sheets:
       asset_identifier: Identificació del bé
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
+      base_retenciones: Base de retencions i ingressos a compte
       clave: Clau
+      clave_codigo: Clau codi
+      clave_mercado: Clau de mercat
+      codigo_cuenta: Codi compte valors / n.º operació préstec
+      codigo_emisor: Codi emissor
+      compensaciones: Compensacions
       complemento_infancia_clave: Complement d'ajuda a la infància
       contract_relation_clave: Contracte o relació
+      contributor_legal_name: Cognoms i nom del contribuent
+      contributor_tax_id: NIF del contribuent
       counterparty_legal_name: Raó social de la contrapart
       counterparty_tax_id: NIF de la contrapart
       country_code: Codi de país
@@ -746,15 +754,20 @@ sheets:
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
+      fecha_devengo: Data de meritació
+      fecha_inicio_prestamo: Data d'inici del préstec
+      fecha_vencimiento_prestamo: Data de venciment del préstec
       first_child_compute: Còmput del 1r fill
       foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
       foral_retention_bizkaia: Retencions i ingressos a compte ingressats a Bizkaia
       foral_retention_estatal: Retencions i ingressos a compte ingressats a l'Estat
       foral_retention_gipuzkoa: Retencions i ingressos a compte ingressats a Gipuzkoa
       foral_retention_navarra: Retencions i ingressos a compte ingressats a Navarra
+      garantias: Garanties
       gastos_deducibles: Despeses deduïbles
       geographic_mobility_clave: Mobilitat geogràfica
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
+      importe_gastos: Import de despeses
       incapacity_cash_perception: Percepció monetària derivada d'incapacitat laboral
       incapacity_cash_withholding: Retenció sobre prestacions d'incapacitat laboral
       incapacity_kind_ingreso_a_cuenta: Ingressos a compte per prestacions en espècie
@@ -765,13 +778,21 @@ sheets:
       ingreso_a_cuenta: Ingrés a compte
       ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
       is_recurrent: Donatiu recurrent
+      isin_code: Codi ISIN
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
+      naturaleza: Naturalesa
+      naturaleza_declarante: Naturalesa del declarant
+      nif_pagador_anterior: NIF del pagador anterior
+      numero_orden: Número d'ordre
       operation_date: Data de l'operació
       operation_kind_code: Clau d'operació
+      pago: Pagament
       party_legal_name: Raó social
       party_tax_id: NIF
+      penalizaciones: Penalitzacions
+      pendiente_flag: Pendent
       pension_compensatoria: Pensió compensatòria
       pension_prestacion_incapacidad: 'Prestació: incapacitat permanent'
       pension_prestacion_jubilacion: 'Prestació: jubilació'
@@ -780,14 +801,17 @@ sheets:
       pension_prestacion_viudedad: 'Prestació: viduïtat'
       perceptor_birth_year: Any de naixement
       perceptor_legal_name: Cognoms i nom del perceptor
+      perceptor_mediador_flag: Perceptor mediador
       perceptor_situacion_familiar: Situació familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
+      porcentaje_retencion: '% Retenció'
       province_code: Província
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
+      reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
       refund_amount: Import a retornar
       representative_tax_id: NIF del representant legal
@@ -802,6 +826,8 @@ sheets:
       supplier_tax_id: NIF del proveïdor
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Còmput del 3r fill
+      tipo_codigo: Tipus codi
+      tipo_percepcion: Tipus de percepció
       transfer_pricing_method_code: Mètode de valoració
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració

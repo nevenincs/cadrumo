@@ -1,0 +1,8 @@
+[[revisions."2024".applicability]]
+id = "m193-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_capital_income_with_retencion"
+applicable_reason = "Modelo 193 (resumen anual de retenciones sobre capital mobiliario): el contribuyente satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual de las retenciones declaradas."
+not_applicable_reason = "Modelo 193 no aplica: el resumen anual solo corresponde a quien satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]

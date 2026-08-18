@@ -1,0 +1,132 @@
+# Modelo 193 Tipo 1 (registro de declarante) resumen casillas: the
+# declaration identity block and the row-derived totals.
+
+[[revisions."2024".casillas]]
+id = "decl.persona-contacto-telefono"
+number = "59-67"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declarante_contacto_telefono"
+export_refs = ["modelo-193-decl-persona-contacto-telefono"]
+# Design positions 59-67: the contact person's nine-digit telephone.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.persona-contacto-nombre"
+number = "68-107"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "name"
+semantic_role = "declarante_contacto_nombre"
+export_refs = ["modelo-193-decl-persona-contacto-nombre"]
+# Design positions 68-107: the contact person's apellidos y nombre.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.num-identificativo"
+number = "108-120"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declaracion_numero_identificativo"
+export_refs = ["modelo-193-decl-num-identificativo"]
+# Design positions 108-120: the declaration's identifying number, a sequence whose first three digits are 193.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.complementaria"
+number = "121"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declaracion_complementaria"
+export_refs = ["modelo-193-decl-complementaria"]
+# Design position 121: 'C' for a complementary declaration including omitted percepciones.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.sustitutiva"
+number = "122"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declaracion_sustitutiva"
+export_refs = ["modelo-193-decl-sustitutiva"]
+# Design position 122: 'S' for a substitute declaration annulling one prior declaration.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.num-identificativo-anterior"
+number = "123-135"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declaracion_anterior_numero"
+export_refs = ["modelo-193-decl-num-identificativo-anterior"]
+# Design positions 123-135: the prior declaration's identifying number for a C/S declaration; the design's own ceros in every other case.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.retenciones-ingresadas"
+number = "175-189"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "retenciones_ingresadas_total"
+export_refs = ["modelo-193-decl-retenciones-ingresadas"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"] }
+# Design positions 175-189: the sum of the perceptor-record retenciones e ingresos a cuenta for rows whose clave de percepcion is C, plus the A/B/D rows whose pago is 1 or 3, per the design's own declaration.
+required = true
+input_kind = "bound"
+binding = "modelo-193-retenciones-ingresadas"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.gastos-total"
+number = "220-234"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "gastos_total_declarante"
+export_refs = ["modelo-193-decl-gastos-total"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"] }
+# Design positions 220-234: the sum of the gastos-relationship rows' importe de gastos.
+required = true
+input_kind = "bound"
+binding = "modelo-193-gastos-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".casillas]]
+id = "decl.naturaleza-declarante"
+number = "235"
+segmento = "declarante"
+section = ["declarante", "resumen"]
+data_type = "text"
+semantic_role = "declarante_naturaleza"
+export_refs = ["modelo-193-decl-naturaleza-declarante"]
+# Design position 235: 'S' when the declarante is outside the design's four categories; blank otherwise.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]

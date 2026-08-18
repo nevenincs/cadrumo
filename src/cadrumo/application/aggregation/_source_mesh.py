@@ -278,6 +278,7 @@ DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.RELATED_PARTY_OPERATION,
         BindingSourceKind.REFUND_OPERATION,
         BindingSourceKind.DONATIVO_DONOR,
+        BindingSourceKind.GASTO193_CONTRIBUTOR,
     },
 )
 

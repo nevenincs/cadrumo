@@ -16,7 +16,7 @@ AEAT audit would actually reconstruct the resumen from) sums to a different
 figure, and today's engine would silently accept both without complaint
 (``no-silent-under-declaration``).
 
-This module drives the REAL registry-loaded Modelo 193 ``2024-y-siguientes``
+This module drives the REAL registry-loaded Modelo 193 ``2025-y-siguientes``
 snapshot and the REAL engine (``calculate_registry_snapshot``, no mocks) to
 prove :func:`~application.aggregation.compute_retenciones_totals_parity`
 against genuine engine output: a consistent per-perceptor store (rows sum to

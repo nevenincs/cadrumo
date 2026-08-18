@@ -731,9 +731,17 @@ sheets:
       asset_identifier: Identificación del bien
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
+      base_retenciones: Base de retenciones e ingresos a cuenta
       clave: Clave
+      clave_codigo: Clave código
+      clave_mercado: Clave de mercado
+      codigo_cuenta: Código cuenta valores / n.º operación préstamo
+      codigo_emisor: Código emisor
+      compensaciones: Compensaciones
       complemento_infancia_clave: Complemento de ayuda a la infancia
       contract_relation_clave: Contrato o relación
+      contributor_legal_name: Apellidos y nombre del contribuyente
+      contributor_tax_id: NIF del contribuyente
       counterparty_legal_name: Razón social de la contraparte
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
@@ -755,15 +763,20 @@ sheets:
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
+      fecha_devengo: Fecha de devengo
+      fecha_inicio_prestamo: Fecha de inicio del préstamo
+      fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
       first_child_compute: Cómputo del 1.er hijo
       foral_retention_araba: Retenciones e ingresos a cuenta ingresados a Araba/Álava
       foral_retention_bizkaia: Retenciones e ingresos a cuenta ingresados a Bizkaia
       foral_retention_estatal: Retenciones e ingresos a cuenta ingresados al Estado
       foral_retention_gipuzkoa: Retenciones e ingresos a cuenta ingresados a Gipuzkoa
       foral_retention_navarra: Retenciones e ingresos a cuenta ingresados a Navarra
+      garantias: Garantías
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
+      importe_gastos: Importe de gastos
       incapacity_cash_perception: Percepción dineraria derivada de incapacidad laboral
       incapacity_cash_withholding: Retención sobre prestaciones de incapacidad laboral
       incapacity_kind_ingreso_a_cuenta: Ingresos a cuenta por prestaciones en especie
@@ -774,13 +787,21 @@ sheets:
       ingreso_a_cuenta: Ingreso a cuenta
       ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
       is_recurrent: Donativo recurrente
+      isin_code: Código ISIN
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
+      naturaleza: Naturaleza
+      naturaleza_declarante: Naturaleza del declarante
+      nif_pagador_anterior: NIF del pagador anterior
+      numero_orden: Número de orden
       operation_date: Fecha de la operación
       operation_kind_code: Clave de operación
+      pago: Pago
       party_legal_name: Razón social
       party_tax_id: NIF
+      penalizaciones: Penalizaciones
+      pendiente_flag: Pendiente
       pension_compensatoria: Pensión compensatoria
       pension_prestacion_incapacidad: 'Prestación: incapacidad permanente'
       pension_prestacion_jubilacion: 'Prestación: jubilación'
@@ -789,14 +810,17 @@ sheets:
       pension_prestacion_viudedad: 'Prestación: viudedad'
       perceptor_birth_year: Año de nacimiento
       perceptor_legal_name: Apellidos y nombre del perceptor
+      perceptor_mediador_flag: Perceptor mediador
       perceptor_situacion_familiar: Situación familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
+      porcentaje_retencion: '% Retención'
       province_code: Provincia
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
+      reducciones: Reducciones
       reducciones_aplicables: Reducciones aplicables
       refund_amount: Importe a devolver
       representative_tax_id: NIF del representante legal
@@ -811,6 +835,8 @@ sheets:
       supplier_tax_id: NIF del proveedor
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Cómputo del 3.er hijo
+      tipo_codigo: Tipo código
+      tipo_percepcion: Tipo de percepción
       transfer_pricing_method_code: Método de valoración
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración

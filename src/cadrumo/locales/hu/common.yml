@@ -719,9 +719,17 @@ sheets:
       asset_identifier: Eszközazonosító
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
+      base_retenciones: Visszatartás alapja
       clave: Kulcs
+      clave_codigo: Kódkulcs
+      clave_mercado: Piackulcs
+      codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
+      codigo_emisor: Kibocsátó kódja
+      compensaciones: Kompenzációk
       complemento_infancia_clave: Gyermeknevelési kiegészítés
       contract_relation_clave: Szerződés vagy jogviszony
+      contributor_legal_name: Az adóalany neve
+      contributor_tax_id: Az adóalany adóazonosítója
       counterparty_legal_name: Szerződő fél neve
       counterparty_tax_id: Szerződő fél adóazonosítója
       country_code: Országkód
@@ -743,15 +751,20 @@ sheets:
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
+      fecha_devengo: Keletkezés dátuma
+      fecha_inicio_prestamo: Kölcsön kezdő dátuma
+      fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       first_child_compute: 1. gyermek beszámítása
       foral_retention_araba: Araba/Álavának befizetett visszatartások és előlegek
       foral_retention_bizkaia: Bizkaiának befizetett visszatartások és előlegek
       foral_retention_estatal: Az államnak befizetett visszatartások és előlegek
       foral_retention_gipuzkoa: Gipuzkoának befizetett visszatartások és előlegek
       foral_retention_navarra: Navarrának befizetett visszatartások és előlegek
+      garantias: Garancia
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
       housing_loan_communication_clave: Lakáshitel-bevallás
+      importe_gastos: Költség összege
       incapacity_cash_perception: Munkaképtelenségi készpénzes bevétel
       incapacity_cash_withholding: Munkaképtelenségi ellátás visszatartása
       incapacity_kind_ingreso_a_cuenta: Munkaképtelenségi természetbeni ellátás előlege
@@ -760,13 +773,21 @@ sheets:
       ingreso_a_cuenta: Természetbeni adójóváírás
       ingreso_a_cuenta_repercutido: Áthárított előleg
       is_recurrent: Ismétlődő adomány
+      isin_code: ISIN kód
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
+      naturaleza: Jelleg
+      naturaleza_declarante: A bevalló jellege
+      nif_pagador_anterior: Előző kifizető adóazonosítója
+      numero_orden: Sorszám
       operation_date: Művelet dátuma
       operation_kind_code: Művelettípus
+      pago: Kifizetés
       party_legal_name: Fél neve
       party_tax_id: Fél adóazonosítója
+      penalizaciones: Kötbérek
+      pendiente_flag: Függőben
       pension_compensatoria: Kártérítési járadék
       pension_prestacion_incapacidad: 'Ellátás: maradandó munkaképtelenség'
       pension_prestacion_jubilacion: 'Ellátás: nyugdíj'
@@ -775,14 +796,17 @@ sheets:
       pension_prestacion_viudedad: 'Ellátás: özvegyi nyugdíj'
       perceptor_birth_year: Születési év
       perceptor_legal_name: Kedvezményezett neve
+      perceptor_mediador_flag: Közvetítő kedvezményezett
       perceptor_situacion_familiar: Családi állapot
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      porcentaje_retencion: Visszatartás %
       province_code: Tartomány
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
+      reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
       refund_amount: Visszatérítési összeg
       representative_tax_id: Törvényes képviselő adóazonosítója
@@ -796,6 +820,8 @@ sheets:
       supplier_tax_id: Szállító adóazonosítója
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma
       third_child_compute: 3. gyermek beszámítása
+      tipo_codigo: Kódtípus
+      tipo_percepcion: Juttatás típusa
       transfer_pricing_method_code: Transzferár-módszer
       unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés

@@ -808,6 +808,110 @@ def test_build_withholding_rows_2025_startup_fund_clave_is_recorded_when_applica
         _build(_observation(clave=RetencionClave.G, startup_fund_rendimientos_clave=0))
 
 
+_M193_DECLARED_FIELDS = frozenset(
+    {
+        "perceptor_tax_id",
+        "perceptor_legal_name",
+        "clave",
+        "percibido_dinerario",
+        "retencion_practicada",
+        "perceptor_mediador_flag",
+        "clave_codigo",
+        "codigo_emisor",
+        "naturaleza",
+        "pago",
+        "tipo_codigo",
+        "codigo_cuenta",
+        "pendiente_flag",
+        "tipo_percepcion",
+        "reducciones",
+        "base_retenciones",
+        "porcentaje_retencion",
+        "penalizaciones",
+        "isin_code",
+        "naturaleza_declarante",
+        "fecha_inicio_prestamo",
+        "fecha_vencimiento_prestamo",
+        "compensaciones",
+        "garantias",
+        "nif_pagador_anterior",
+        "fecha_devengo",
+        "clave_mercado",
+        "numero_orden",
+    }
+)
+
+#: The always-recorded 193 perceptor facts for a clave A row (the 193 clave
+#: vocabulary replaces the 190 one: A-D capital-mobiliario claves).
+_COMPLETE_CLAVE_A_193 = {
+    "naturaleza": "02",
+    "tipo_percepcion": 1,
+    "clave_codigo": 4,
+    "codigo_emisor": "A28015865",
+    "pago": 1,
+    "tipo_codigo": "C",
+    "clave_mercado": "D",
+}
+
+
+def _build193(*observations: WithholdingObservation) -> tuple[dict[str, object], ...]:
+    return tuple(
+        dict(row)
+        for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=_M193_DECLARED_FIELDS)
+    )
+
+
+def test_build_withholding_rows_193_requires_the_always_recorded_facts() -> None:
+    """The 193 design records naturaleza, tipo de percepcion and the A/B/D
+    identification block on every eligible row; a missing fact refuses."""
+    for missing in ("naturaleza", "tipo_percepcion", "clave_codigo", "codigo_emisor", "pago", "tipo_codigo", "clave_mercado"):
+        with pytest.raises(RegistryValidationError, match=missing):
+            _build193(
+                _observation(
+                    **{key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != missing}
+                )
+            )
+    row = _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]
+    assert row["naturaleza"] == "02"
+    assert row["tipo_percepcion"] == "1"
+    assert row["clave_codigo"] == "4"
+    assert row["codigo_emisor"] == "A28015865"
+    assert row["pago"] == "1"
+    assert row["tipo_codigo"] == "C"
+    assert row["clave_mercado"] == "D"
+    assert row["numero_orden"] == "1"
+
+
+def test_build_withholding_rows_193_out_of_context_facts_refuse() -> None:
+    """The 193 A/B/D identification facts refuse outside their claves, and the
+    prestamo-de-valores block refuses without tipo codigo P."""
+    with pytest.raises(RegistryValidationError, match="clave_codigo"):
+        _build193(_observation(clave=RetencionClave.C, naturaleza="01", tipo_percepcion=1, clave_codigo=4))
+    with pytest.raises(RegistryValidationError, match="clave_mercado"):
+        _build193(_observation(clave=RetencionClave.C, naturaleza="01", tipo_percepcion=1, clave_mercado="D"))
+    with pytest.raises(RegistryValidationError, match="fecha_inicio_prestamo"):
+        _build193(_observation(**_COMPLETE_CLAVE_A_193, fecha_inicio_prestamo="20240101"))
+    with pytest.raises(RegistryValidationError, match="compensaciones"):
+        _build193(_observation(**_COMPLETE_CLAVE_A_193, compensaciones=Decimal("1")))
+    prestamo = {key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != "tipo_codigo"}
+    row = _build193(_observation(**prestamo, tipo_codigo="P", fecha_inicio_prestamo="20240101", fecha_vencimiento_prestamo="20250101"))[0]
+    assert row["fecha_inicio_prestamo"] == "20240101"
+    assert _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]["fecha_inicio_prestamo"] == "0" * 8
+
+
+def test_build_withholding_rows_193_naturaleza_s_cascade_overrides() -> None:
+    """Naturaleza del declarante 'S' zeroes the identification block per the
+    design's cascade; a present fact the cascade forbids refuses."""
+    row = _build193(_observation(**_COMPLETE_CLAVE_A_193, naturaleza_declarante="S"))[0]
+    assert row["clave_codigo"] == "0"
+    assert row["codigo_emisor"] == " " * 12
+    assert row["pago"] == "0"
+    assert row["tipo_codigo"] == " "
+    assert row["naturaleza_declarante"] == "S"
+    with pytest.raises(RegistryValidationError, match="cascade declares a ceros"):
+        _build193(_observation(clave=RetencionClave.B, naturaleza="01", tipo_percepcion=1, naturaleza_declarante="S", penalizaciones=Decimal("5")))
+
+
 def test_withholding_observation_design_claves_are_bounded() -> None:
     with pytest.raises(ValidationError):
         _observation(disability_clave=4)

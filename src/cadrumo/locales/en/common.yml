@@ -696,9 +696,17 @@ sheets:
       asset_identifier: Asset identifier
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
+      base_retenciones: Withholding base
       clave: Clave
+      clave_codigo: Code key
+      clave_mercado: Market key
+      codigo_cuenta: Securities account / loan operation no.
+      codigo_emisor: Issuer code
+      compensaciones: Compensations
       complemento_infancia_clave: Child support supplement
       contract_relation_clave: Contract or relation
+      contributor_legal_name: Contributor's surnames and name
+      contributor_tax_id: Contributor NIF
       counterparty_legal_name: Counterparty legal name
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
@@ -720,15 +728,20 @@ sheets:
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
       emerging_stock_excess_clave: Emerging-company stock excess
+      fecha_devengo: Accrual date
+      fecha_inicio_prestamo: Loan start date
+      fecha_vencimiento_prestamo: Loan maturity date
       first_child_compute: 1st child computation
       foral_retention_araba: Withholdings and payments on account paid to Araba/Álava
       foral_retention_bizkaia: Withholdings and payments on account paid to Bizkaia
       foral_retention_estatal: Withholdings and payments on account paid to the State
       foral_retention_gipuzkoa: Withholdings and payments on account paid to Gipuzkoa
       foral_retention_navarra: Withholdings and payments on account paid to Navarre
+      garantias: Guarantees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
       housing_loan_communication_clave: Home loan communication
+      importe_gastos: Expense amount
       incapacity_cash_perception: Cash income from work incapacity
       incapacity_cash_withholding: Withholding on work-incapacity benefits
       incapacity_kind_ingreso_a_cuenta: Payments on account, in-kind incapacity benefits
@@ -737,13 +750,21 @@ sheets:
       ingreso_a_cuenta: In-kind tax credit
       ingreso_a_cuenta_repercutido: Payments on account passed on
       is_recurrent: Recurrent donation
+      isin_code: ISIN code
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
+      naturaleza: Nature
+      naturaleza_declarante: Declarant's nature
+      nif_pagador_anterior: Previous payer NIF
+      numero_orden: Order number
       operation_date: Operation date
       operation_kind_code: Operation kind
+      pago: Payment
       party_legal_name: Party legal name
       party_tax_id: Party tax id
+      penalizaciones: Penalties
+      pendiente_flag: Pending
       pension_compensatoria: Compensatory pension
       pension_prestacion_incapacidad: 'Benefit: permanent incapacity'
       pension_prestacion_jubilacion: 'Benefit: retirement'
@@ -752,14 +773,17 @@ sheets:
       pension_prestacion_viudedad: 'Benefit: widowhood'
       perceptor_birth_year: Birth year
       perceptor_legal_name: Perceptor legal name
+      perceptor_mediador_flag: Mediator perceptor
       perceptor_situacion_familiar: Family situation
       perceptor_tax_id: Perceptor tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      porcentaje_retencion: Withholding %
       province_code: Province
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
       rectified_year: Rectified year
+      reducciones: Reductions
       reducciones_aplicables: Applicable reductions
       refund_amount: Refund amount
       representative_tax_id: Legal representative NIF
@@ -772,6 +796,8 @@ sheets:
       supplier_tax_id: Supplier tax id
       territorial_deduction_clave: Ceuta or Melilla / La Palma
       third_child_compute: 3rd child computation
+      tipo_codigo: Code type
+      tipo_percepcion: Perception type
       transfer_pricing_method_code: Transfer pricing method
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation

@@ -1,0 +1,79 @@
+[[revisions."2024".application_links]]
+id = "modelo-193-portal"
+surface = "portal"
+consumer = "cadrumo.domain.portals.Portal.PORTAL_M193_RESUMEN_CAPITAL"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.outbound.aeat.sede.registry_observation_from_filed_declaration"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-review"
+surface = "review"
+consumer = "cadrumo.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-193-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]

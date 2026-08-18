@@ -58,6 +58,7 @@ from ...domain.calculations.registry import (
     AtributionMemberObservation,
     BindingAggregationOp,
     DonativoDonorObservation,
+    Gasto193Observation,
     Modelo720RowObservation,
     ModeloRevision,
     RefundOperationObservation,
@@ -73,6 +74,7 @@ __all__ = [
     "assemble_atribucion_observations",
     "assemble_donativo_observations",
     "assemble_foreign_asset_observations",
+    "assemble_gasto193_observations",
     "assemble_observations_for_grouping",
     "assemble_refund_observations",
     "assemble_related_party_observations",
@@ -92,6 +94,7 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
     "per_refund_operation": RowSetGroupingKind.REFUND,
     "per_donativo_donor": RowSetGroupingKind.DONATIVO,
+    "per_gasto193_contribuyente": RowSetGroupingKind.GASTO193,
 }
 
 
@@ -107,6 +110,7 @@ AssembledObservations = (
     | tuple[str, tuple[AtributionMemberObservation, ...]]
     | tuple[str, tuple[RefundOperationObservation, ...]]
     | tuple[str, tuple[DonativoDonorObservation, ...]]
+    | tuple[str, tuple[Gasto193Observation, ...]]
 )
 
 
@@ -167,6 +171,8 @@ def assemble_observations_for_grouping(
         return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.DONATIVO:
         return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.GASTO193:
+        return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
     # Unreachable: dispatch table is exhaustive.
     raise RegistryValidationError(
         translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
@@ -802,6 +808,57 @@ def assemble_refund_observations(
                 ),
             )
         except ValidationError as exc:
+            raise _row_assembly_refusal(row_index, exc) from exc
+    return tuple(observations)
+
+
+def assemble_gasto193_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[Gasto193Observation, ...]:
+    """Reassemble Modelo 193 gastos-relationship rows from row-set cells.
+
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The
+            :class:`~domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default dates.
+
+    Synthesised fields (not carried by the Detalle tab):
+      * ``source_id`` -- derived from the row index for traceability.
+      * ``transaction_date`` -- defaults to the filing-year end since
+        modelo 193 is an annual summary.
+    """
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[Gasto193Observation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                Gasto193Observation(
+                    source_id=f"detalle:per_gasto193_contribuyente:row-{row_index}",
+                    contributor_tax_id=_coerce_text(fields.get("contributor_tax_id")),
+                    contributor_legal_name=_coerce_text(fields.get("contributor_legal_name")),
+                    # The representative NIF is declared by the design only for
+                    # minor contribuyentes; spaces read back as absent.
+                    **_optional_text_kwarg(fields, "representative_tax_id"),
+                    transaction_date=default_date,
+                    importe_gastos=coerce_decimal(fields.get("importe_gastos"), default=Decimal("0")),
+                ),
+            )
+        except (ValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 

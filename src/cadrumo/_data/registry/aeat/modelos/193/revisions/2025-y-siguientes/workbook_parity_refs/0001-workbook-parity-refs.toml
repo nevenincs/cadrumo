@@ -1,0 +1,9 @@
+[[revisions."2025-y-siguientes".workbook_parity_refs]]
+id = "modelo-193-dr-pdf-2025"
+workbook_source = "aeat-dr-193-2025"
+fixture_id = "modelo-193-2025-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025"]

@@ -1,0 +1,495 @@
+# Modelo 193 Tipo 2 (registro de perceptor) detail-row casillas: one
+# template slot per row field, mirroring the modelo 190 contract.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nif"
+number = "18-26"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "nif"
+semantic_role = "payee_nif"
+# The perceptor's NIF, right-justified with the control character last.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nif-representante"
+number = "27-35"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+# The minor perceptor's legal representative NIF; the design's own spaces elsewhere.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nombre"
+number = "36-75"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "name"
+semantic_role = "payee_name"
+# Apellidos y nombre o razon social del perceptor.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.mediador"
+number = "76"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_mediador_flag"
+# Design position 76: 'X' when the perceptor is itself a mediator entity paying by proxy (claves A/B/D).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.provincia"
+number = "77-78"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "province_code"
+semantic_role = "payee_province"
+# Design positions 77-78: the perceptor's domicilio province code.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.clave-codigo"
+number = "79"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "integer"
+semantic_role = "payee_clave_codigo"
+# Design position 79: what the codigo emisor/ISIN carry; clave 4 the general case.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.codigo-emisor"
+number = "80-91"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_codigo_emisor"
+# Design positions 80-91: the issuer's NIF (clave codigo 1/4), empty (2), ZXX country code (3).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.clave"
+number = "92"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_clave_percepcion"
+# The clave de percepcion A-D of the capital-mobiliario rendimiento.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.naturaleza"
+number = "93-94"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_naturaleza_percepcion"
+# Design positions 93-94: the two-digit naturaleza subclave of the clave de percepcion.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.pago"
+number = "95"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "integer"
+semantic_role = "payee_pago"
+# Design position 95: who paid (1 emisor, 2/3/4 mediador, 5 other mediation).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.tipo-codigo"
+number = "96"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_tipo_codigo"
+# Design position 96: what the codigo cuenta field holds (C/O/P).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.codigo-cuenta"
+number = "97-116"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_codigo_cuenta"
+# Design positions 97-116: the codigo cuenta valores or numero de operacion del prestamo.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.pendiente"
+number = "117"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_pendiente_flag"
+# Design position 117: 'X' for percepciones devengadas but not yet paid.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ejercicio-devengo"
+number = "118-121"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "year"
+semantic_role = "devengo_year"
+# Design positions 118-121: the devengo exercise for prior-year payments claimed this year.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.tipo-percepcion"
+number = "122"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "integer"
+semantic_role = "payee_tipo_percepcion"
+# Design position 122: 1 dinerarias, 2 en especie.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.percepciones"
+number = "123-135"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_percepciones_193"
+# Design positions 123-135: the contraprestacion integra exigible o satisfecha.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.reducciones"
+number = "139-151"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_reducciones_193"
+# Design positions 139-151: the art. 26.2 reductions applied for IRPF contribuyente perceptores.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.base"
+number = "152-164"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_base_retenciones_193"
+# Design positions 152-164: the base de la retencion o ingreso a cuenta.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.porcentaje"
+number = "165-168"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "ratio"
+semantic_role = "payee_porcentaje_retencion"
+# Design positions 165-168: the retention percentage applied (generally 19, with the design's per-clave rates).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones"
+number = "169-181"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_193"
+# Design positions 169-181: the retenciones e ingresos a cuenta amount.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.penalizaciones"
+number = "182-192"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_penalizaciones"
+# Design positions 182-192: the negative capital-mobiliario rendimientos from commercial-promotion breaches (claves B/D).
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.isin"
+number = "193-204"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_isin"
+# Design positions 193-204 (2025 edition): the codigo ISIN, recorded when clave codigo is 2 or 4.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.naturaleza-declarante"
+number = "208"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_naturaleza_declarante"
+# Design position 208: 'S' when the declarante is outside the design's categories; its cascade then zeroes the identification block.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.fecha-inicio-prestamo"
+number = "209-216"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "date"
+semantic_role = "payee_fecha_inicio_prestamo"
+# Design positions 209-216 (AAAAMMDD), only for prestamo de valores (tipo codigo P).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.fecha-vencimiento-prestamo"
+number = "217-224"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "date"
+semantic_role = "payee_fecha_vencimiento_prestamo"
+# Design positions 217-224 (AAAAMMDD), only for prestamo de valores.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.compensaciones"
+number = "225-236"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_compensaciones"
+# Design positions 225-236, only for prestamo de valores.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.garantias"
+number = "237-248"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_garantias"
+# Design positions 237-248, only for prestamo de valores.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-forales-estatal"
+number = "249-261"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_forales_estatal"
+# Design positions 249-261: HACIENDA ESTATAL foral split.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-forales-navarra"
+number = "262-274"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_forales_navarra"
+# Design positions 262-274: COMUNIDAD FORAL DE NAVARRA.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-forales-araba"
+number = "275-287"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_forales_araba"
+# Design positions 275-287: DIPUTACION FORAL DE ARABA/ALAVA.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-forales-gipuzkoa"
+number = "288-300"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_forales_gipuzkoa"
+# Design positions 288-300: DIPUTACION FORAL DE GIPUZKOA.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.retenciones-forales-bizkaia"
+number = "301-313"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "payee_retenciones_forales_bizkaia"
+# Design positions 301-313: DIPUTACION FORAL DE BIZKAIA.
+required = true
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.ceuta-melilla"
+number = "314"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_ceuta_melilla_clave"
+# Design position 314: 1 Ceuta/Melilla, 2 La Palma, 0 otherwise -- the payer's retention-rate determination.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.numero-orden"
+number = "315-321"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "integer"
+semantic_role = "payee_numero_orden_193"
+# Design positions 315-321: the sequential perceptor record number, derived from the row order.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.nif-pagador-anterior"
+number = "322-330"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "nif"
+semantic_role = "payee_nif_pagador_anterior"
+# Design positions 322-330: the previous payer's NIF in the payment chain.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.fecha-devengo"
+number = "331-338"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "date"
+semantic_role = "payee_fecha_devengo"
+# Design positions 331-338 (DDMMAAAA), only for clave A.
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.clave-mercado"
+number = "339"
+segmento = "perceptor"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_clave_mercado"
+# Design position 339: the market the valores trade on (A-D).
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]

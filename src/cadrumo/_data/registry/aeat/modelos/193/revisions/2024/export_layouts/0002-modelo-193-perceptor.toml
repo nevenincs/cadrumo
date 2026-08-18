@@ -1,0 +1,609 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-193-fichero-boe"
+[[revisions."2024".export_layouts.records]]
+id = "modelo-193-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+
+[revisions."2024".export_layouts.records.row_field_casilla_ids]
+perceptor_tax_id = "perc.nif"
+perceptor_legal_name = "perc.nombre"
+representative_tax_id = "perc.nif-representante"
+perceptor_mediador_flag = "perc.mediador"
+province_code = "perc.provincia"
+clave_codigo = "perc.clave-codigo"
+codigo_emisor = "perc.codigo-emisor"
+clave = "perc.clave"
+naturaleza = "perc.naturaleza"
+pago = "perc.pago"
+tipo_codigo = "perc.tipo-codigo"
+codigo_cuenta = "perc.codigo-cuenta"
+pendiente_flag = "perc.pendiente"
+accrual_year = "perc.ejercicio-devengo"
+tipo_percepcion = "perc.tipo-percepcion"
+percibido_dinerario = "perc.percepciones"
+reducciones = "perc.reducciones"
+base_retenciones = "perc.base"
+porcentaje_retencion = "perc.porcentaje"
+retencion_practicada = "perc.retenciones"
+penalizaciones = "perc.penalizaciones"
+naturaleza_declarante = "perc.naturaleza-declarante"
+fecha_inicio_prestamo = "perc.fecha-inicio-prestamo"
+fecha_vencimiento_prestamo = "perc.fecha-vencimiento-prestamo"
+compensaciones = "perc.compensaciones"
+garantias = "perc.garantias"
+foral_retention_estatal = "perc.retenciones-forales-estatal"
+foral_retention_navarra = "perc.retenciones-forales-navarra"
+foral_retention_araba = "perc.retenciones-forales-araba"
+foral_retention_gipuzkoa = "perc.retenciones-forales-gipuzkoa"
+foral_retention_bizkaia = "perc.retenciones-forales-bizkaia"
+territorial_deduction_clave = "perc.ceuta-melilla"
+numero_orden = "perc.numero-orden"
+nif_pagador_anterior = "perc.nif-pagador-anterior"
+fecha_devengo = "perc.fecha-devengo"
+clave_mercado = "perc.clave-mercado"
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "193"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-declarante-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-nif"
+offset = 18
+length = 9
+kind = "binding"
+binding = "modelo-193-perceptor-row-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-nif-representante"
+offset = 27
+length = 9
+kind = "binding"
+binding = "modelo-193-perceptor-row-nif-representante"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-nombre"
+offset = 36
+length = 40
+kind = "binding"
+binding = "modelo-193-perceptor-row-name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-mediador"
+offset = 76
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-mediador"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-provincia"
+offset = 77
+length = 2
+kind = "binding"
+binding = "modelo-193-perceptor-row-provincia"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-clave-codigo"
+offset = 79
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-clave-codigo"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-codigo-emisor"
+offset = 80
+length = 12
+kind = "binding"
+binding = "modelo-193-perceptor-row-codigo-emisor"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-clave"
+offset = 92
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-clave"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-naturaleza"
+offset = 93
+length = 2
+kind = "binding"
+binding = "modelo-193-perceptor-row-naturaleza"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-pago"
+offset = 95
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-pago"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-tipo-codigo"
+offset = 96
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-tipo-codigo"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-codigo-cuenta"
+offset = 97
+length = 20
+kind = "binding"
+binding = "modelo-193-perceptor-row-codigo-cuenta"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-pendiente"
+offset = 117
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-pendiente"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-ejercicio-devengo"
+offset = 118
+length = 4
+kind = "binding"
+binding = "modelo-193-perceptor-row-ejercicio-devengo"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-tipo-percepcion"
+offset = 122
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-tipo-percepcion"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-percepciones"
+offset = 123
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-percibido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-reducciones"
+offset = 139
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-reducciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-base"
+offset = 152
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-porcentaje"
+offset = 165
+length = 4
+kind = "binding"
+binding = "modelo-193-perceptor-row-porcentaje"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-retenciones"
+offset = 169
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-retencion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-penalizaciones"
+offset = 182
+length = 11
+kind = "binding"
+binding = "modelo-193-perceptor-row-penalizaciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-naturaleza-declarante"
+offset = 208
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-naturaleza-declarante"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-fecha-inicio"
+offset = 209
+length = 8
+kind = "binding"
+binding = "modelo-193-perceptor-row-fecha-inicio"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-fecha-vencimiento"
+offset = 217
+length = 8
+kind = "binding"
+binding = "modelo-193-perceptor-row-fecha-vencimiento"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-compensaciones"
+offset = 225
+length = 12
+kind = "binding"
+binding = "modelo-193-perceptor-row-compensaciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-garantias"
+offset = 237
+length = 12
+kind = "binding"
+binding = "modelo-193-perceptor-row-garantias"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-foral-estatal"
+offset = 249
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-foral-estatal"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-foral-navarra"
+offset = 262
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-foral-navarra"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-foral-araba"
+offset = 275
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-foral-araba"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-foral-gipuzkoa"
+offset = 288
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-foral-gipuzkoa"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-foral-bizkaia"
+offset = 301
+length = 13
+kind = "binding"
+binding = "modelo-193-perceptor-row-foral-bizkaia"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-ceuta"
+offset = 314
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-ceuta"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-numero-orden"
+offset = 315
+length = 7
+kind = "binding"
+binding = "modelo-193-perceptor-row-numero-orden"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-nif-pagador-anterior"
+offset = 322
+length = 9
+kind = "binding"
+binding = "modelo-193-perceptor-row-nif-pagador-anterior"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-fecha-devengo"
+offset = 331
+length = 8
+kind = "binding"
+binding = "modelo-193-perceptor-row-fecha-devengo"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-193-perc-clave-mercado"
+offset = 339
+length = 1
+kind = "binding"
+binding = "modelo-193-perceptor-row-clave-mercado"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
