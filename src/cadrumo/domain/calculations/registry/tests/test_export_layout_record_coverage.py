@@ -42,7 +42,16 @@ from .._record_design_schema import (
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
-from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
+from .._schema import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportLayoutDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    SourceReference,
+)
 from .._validate_export_layout_coverage import (
     _administration_reserved,
     _belongs_to_layout,
@@ -1033,3 +1042,46 @@ class TestAeatProgramSealedPositions:
         )
 
         assert _omissible_reason(datum) is None
+
+def test_auxiliary_header_declaration_covers_the_header_and_its_absence_still_refuses(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The DR23200 header is covered exactly when its declaration is present.
+
+    Implication, both sides live: the declared prefix extent covers every
+    required header position, and the same sheets without the declaration
+    report the header as unemitted -- the message that was the authoring
+    worklist for both Modelo 232 revisions. The declaration is derived from
+    the sheet's own parser-owned header, never from a hand-authored constant.
+    """
+    modelos, catalogues = registry_tree
+    modelo = next(candidate for candidate in modelos if candidate.id == "232")
+    for revision_id, revision in modelo.revisions.items():
+        layout = _fixed_width_layouts(revision)[0]
+        sheets = _design_sheets(layout, catalogues)
+        header_sheets = [sheet for sheet in sheets if sheet.auxiliary_envelope_header is not None]
+        assert len(header_sheets) == 1, f"{revision_id}: expected exactly one auxiliary header sheet"
+        header = header_sheets[0].auxiliary_envelope_header
+        source_ref = next(
+            source_ref for source_ref in layout.source_refs if source_ref.startswith("aeat-dr-232")
+        )
+        roles = tuple(
+            role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+        )
+        declaration = AuxiliaryEnvelopeHeaderDefinition(
+            source_ref=source_ref,
+            source_sha256=catalogues.sources[source_ref].sha256,
+            record_identity=header.record_identity,
+            prefix_fields=tuple(
+                FilingEnvelopePrefixFieldDeclaration(role=role, length=item.field.length)
+                for role, item in zip(roles, header.fields, strict=True)
+            ),
+            prefix_extent=header.emitted_extent,
+            product_identity_requirement="aeat-product-software-identity-v1",
+        )
+        _required, missing, lines = _missing_report(sheets, layout.records, auxiliary_header=declaration)
+        assert missing == 0, f"{revision_id}: declared header still leaves required positions: {lines}"
+        _required, missing, lines = _missing_report(sheets, layout.records, auxiliary_header=None)
+        header_lines = [line for line in lines if f"auxiliary envelope header {header.record_identity!r}" in line]
+        assert len(header_lines) == 1, f"{revision_id}: expected one header refusal, got {lines}"
+        assert missing > 0

@@ -86,6 +86,7 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("202", "2025-y-siguientes", "aeat-dr-202-2025", "2025", 2025, "1P"),
     _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
     _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
+    _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
 )
 
 
@@ -208,8 +209,12 @@ def _authorities(tree: _GeneratedTree):
 #: gate to be upgraded rather than left permanently soft.
 _CHECK_MODE_PENDING: dict[str, str] = {
     "m210-2025": "pending_review",
-    "m232-2018-y-siguientes": "registry validation failed",
-    "m232-2016-2017": "registry validation failed",
+    # Both 232 revisions validate on every family now -- the reserved-byte
+    # defect is fixed and the DR23200 auxiliary header is emitted through the
+    # typed prefix contract -- so what check mode still refuses is the
+    # unreviewed revision itself, the same wall m210 sits behind.
+    "m232-2018-y-siguientes": "pending_review",
+    "m232-2016-2017": "pending_review",
     # 353 and 322 both validate on every revision now, including 322's 2008-2025
     # export layout, which was the last authoring gap either of them had. What
     # check mode still refuses is `review_status = "pending_review"` on the
@@ -286,6 +291,21 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)
+    published_modelo_root: Path | None = None
+    revisions_root = bundled_path("registry", "aeat", "modelos", tree.modelo, "revisions")
+    if len(tuple(revisions_root.iterdir())) > 1:
+        # The published layout load must see exactly the target revision, and
+        # a multi-revision modelo publishes several, so the test stages the
+        # published copy with siblings pruned -- check mode copies nothing.
+        published_modelo_root = candidate_root / "published-registry" / "aeat" / "modelos" / tree.modelo
+        shutil.copytree(
+            bundled_path("registry", "aeat", "modelos", tree.modelo),
+            published_modelo_root,
+            dirs_exist_ok=True,
+        )
+        for sibling in (published_modelo_root / "revisions").iterdir():
+            if sibling.name != tree.revision:
+                shutil.rmtree(sibling)
     context = GeneratedExportTreeCheckContext(
         validation=GeneratedExportTreeValidationContext(
             registry_root=registry_root,
@@ -302,6 +322,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),
         target_export_root=tree.committed,
+        published_modelo_root=published_modelo_root,
     )
     expected = _CHECK_MODE_PENDING.get(str(tree))
     try:

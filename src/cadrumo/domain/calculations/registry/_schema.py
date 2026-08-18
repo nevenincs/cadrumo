@@ -152,6 +152,7 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 
 __all__ = [
     "ApplicationLinkDefinition",
+    "AuxiliaryEnvelopeHeaderDefinition",
     "BboxAnchorSpec",
     "BindingSelector",
     "BracketEntry",
@@ -259,6 +260,7 @@ from ._schema_base import (
     schema_family_fields,
 )
 from ._schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
     ExportComputedKey,
     ExportDraftAttribute,
     ExportFieldDataType,

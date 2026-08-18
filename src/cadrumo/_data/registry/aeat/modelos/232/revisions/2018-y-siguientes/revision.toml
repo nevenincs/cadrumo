@@ -21,6 +21,7 @@ source_refs = [
 ]
 
 
+
 [revisions."2018-y-siguientes".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [

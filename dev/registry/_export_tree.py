@@ -58,7 +58,10 @@ from ._render_profile import (
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
-from ._variable_envelope import compile_filing_envelope_definition
+from ._variable_envelope import (
+    compile_auxiliary_envelope_header_definition,
+    compile_filing_envelope_definition,
+)
 
 __all__ = [
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
@@ -325,6 +328,11 @@ def render_complete_export_tree(
         if joined.variable_envelope_contract is not None
         else None
     )
+    auxiliary_envelope_header = (
+        compile_auxiliary_envelope_header_definition(joined.auxiliary_envelope_headers, joined.source)
+        if joined.auxiliary_envelope_headers
+        else None
+    )
     layout = ExportLayoutDefinition.model_validate(
         {
             "id": transport_profile.layout_id,
@@ -338,6 +346,7 @@ def render_complete_export_tree(
             "legal_refs": _sorted_refs(legal for field in derivations for legal in field.field.legal_refs),
             "records": records,
             "filing_envelope": filing_envelope,
+            "auxiliary_envelope_header": auxiliary_envelope_header,
         },
     )
     _require_semantic_map_attestation(joined, semantic_map)

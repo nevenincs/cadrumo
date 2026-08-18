@@ -58,6 +58,15 @@ class GeneratedExportTreeCheckContext:
     temporary_root: Path
     target_registry_root: Path
     target_export_root: Path
+    published_modelo_root: Path | None = None
+    """Caller-staged published modelo with sibling revisions pruned.
+
+    Optional. Absent, the published layout load derives the modelo root from
+    the published export path inside ``target_registry_root``, which requires
+    the published modelo to hold exactly the target revision. A multi-revision
+    modelo therefore stages this copy -- check mode itself copies and removes
+    nothing.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,10 +113,25 @@ def check_generated_export_tree(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
+    if context.published_modelo_root is None:
+        published_modelo_root = _published_modelo_root_from_export_root(
+            published_export_root,
+            target=context.validation.target,
+            target_registry_root=context.target_registry_root,
+        )
+    else:
+        # A multi-revision modelo publishes several revisions, so its published
+        # layout load must see exactly the target. The CALLER stages the
+        # published modelo with siblings pruned into its own temporary root;
+        # check mode itself copies and removes nothing.
+        published_modelo_root = _require_descendant_directory(
+            context.published_modelo_root,
+            root=context.temporary_root,
+            subject="generated check staged published modelo root",
+        )
     published_layout = _load_exact_published_layout(
-        published_export_root,
+        published_modelo_root,
         target=context.validation.target,
-        target_registry_root=context.target_registry_root,
     )
     published_manifest = verify_export_fragment_provenance_manifest(
         export_root=published_export_root,
@@ -132,7 +156,7 @@ def check_generated_export_tree(
     )
 
 
-def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path, Path]:
+def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path, Path, Path]:
     temporary_root = _require_narrow_root(context.temporary_root, subject="generated check temporary root")
     candidate_registry_root = _require_descendant_directory(
         context.validation.registry_root,
@@ -185,26 +209,36 @@ def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path
     return candidate_export_root, published_export_root
 
 
-def _load_exact_published_layout(
+def _published_modelo_root_from_export_root(
     published_export_root: Path,
     *,
     target: ExportFragmentTarget,
     target_registry_root: Path,
-) -> ExportLayoutDefinition:
-    """Load exactly one target layout without using a direct-revision surface."""
+) -> Path:
+    """Derive and identity-check the published modelo root for the target."""
     modelo_id = str(target.modelo)
-    revision_id = str(target.revision_id)
     modelo_root = published_export_root.parent.parent.parent
     expected_modelo_root = target_registry_root.resolve() / "modelos" / modelo_id
     if modelo_root != expected_modelo_root:
         raise RegistryValidationError(
             f"generated check published modelo root must be {expected_modelo_root}, got {modelo_root}",
         )
+    return modelo_root
+
+
+def _load_exact_published_layout(
+    published_modelo_root: Path,
+    *,
+    target: ExportFragmentTarget,
+) -> ExportLayoutDefinition:
+    """Load exactly one target layout from a published single-revision staging."""
+    modelo_id = str(target.modelo)
+    revision_id = str(target.revision_id)
     try:
-        definition = load_modelo_directory(modelo_root)
+        definition = load_modelo_directory(published_modelo_root)
     except RegistryError as exc:
         raise RegistryValidationError(
-            f"generated check published export cannot load through the directory authority: {modelo_root}",
+            f"generated check published export cannot load through the directory authority: {published_modelo_root}",
         ) from exc
     if str(definition.id) != modelo_id:
         raise RegistryValidationError(

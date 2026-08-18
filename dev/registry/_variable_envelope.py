@@ -26,18 +26,21 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import content_hash_hex
 from cadrumo.domain.calculations.registry import (
+    AuxiliaryEnvelopeHeaderDefinition,
     ExportLayoutId,
     FilingEnvelopeCloserDerivation,
     FilingEnvelopeDefinition,
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
     FilingEnvelopeTotalDerivation,
+    RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordId,
     RegistryValidationError,
     RevisionId,
 )
 
 from ._record_design_ir import (
+    RecordDesignIntermediateAuxiliaryEnvelopeHeader,
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateSource,
@@ -46,10 +49,69 @@ from ._record_design_ir import (
 from ._semantic_map import SemanticMapAnchor, VariableEnvelopeSemantic
 
 __all__ = [
+    "AUXILIARY_TO_PREFIX_ROLE",
     "FilingEnvelopeProvenance",
+    "compile_auxiliary_envelope_header_definition",
     "compile_filing_envelope_definition",
     "validate_variable_envelope",
 ]
+
+
+#: The one vocabulary shift between the parser's auxiliary-header role names
+#: and the shared prefix grammar the filing renderer resolves. The mapping is
+#: total and order-preserving.
+AUXILIARY_TO_PREFIX_ROLE: Final[dict[RecordDesignAuxiliaryEnvelopeHeaderRole, FilingEnvelopePrefixRole]] = {
+    RecordDesignAuxiliaryEnvelopeHeaderRole.OPENING_TAG: FilingEnvelopePrefixRole.OPENING_TAG,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.MODELO: FilingEnvelopePrefixRole.MODELO,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.DISCRIMINANT: FilingEnvelopePrefixRole.DISCRIMINANT,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.FILING_YEAR: FilingEnvelopePrefixRole.FILING_YEAR,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.ANNUAL_PERIOD: FilingEnvelopePrefixRole.PERIOD,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.RECORD_TYPE: FilingEnvelopePrefixRole.RECORD_TYPE,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.AUXILIARY_OPENING_TAG: FilingEnvelopePrefixRole.AUX_OPENING_TAG,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.PRE_PROGRAM_RESERVED: FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.PROGRAM_IDENTIFIER: FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER,
+    RecordDesignAuxiliaryEnvelopeHeaderRole.BETWEEN_IDENTITIES_RESERVED: (
+        FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER
+    ),
+    RecordDesignAuxiliaryEnvelopeHeaderRole.SOFTWARE_DEVELOPER_TAX_ID: (
+        FilingEnvelopePrefixRole.DEVELOPER_TAX_ID
+    ),
+    RecordDesignAuxiliaryEnvelopeHeaderRole.POST_DEVELOPER_RESERVED: (
+        FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER
+    ),
+    RecordDesignAuxiliaryEnvelopeHeaderRole.AUXILIARY_CLOSING_TAG: FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
+}
+
+
+def compile_auxiliary_envelope_header_definition(
+    headers: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...],
+    source: RecordDesignIntermediateSource,
+) -> AuxiliaryEnvelopeHeaderDefinition:
+    """Compile the parser-proved auxiliary header into a static layout declaration.
+
+    The total-less 328-byte page-zero header a design prints ahead of its fixed
+    records. It shares the filing envelope's prefix grammar and carries no
+    variable body, closer or total: the layout's records are the payload. The
+    declaration is compiled entirely from parser-owned intermediate facts, so
+    there is no authored map section.
+    """
+    if len(headers) != 1:
+        raise RegistryValidationError(
+            f"auxiliary envelope header generation requires exactly one parser-owned header, got {len(headers)}",
+        )
+    header = headers[0]
+    prefix_fields = tuple(
+        FilingEnvelopePrefixFieldDeclaration(role=AUXILIARY_TO_PREFIX_ROLE[item.role], length=item.parser_field.length)
+        for item in header.fields
+    )
+    return AuxiliaryEnvelopeHeaderDefinition(
+        source_ref=source.source_ref,
+        source_sha256=source.source_sha256,
+        record_identity=header.record_identity,
+        prefix_fields=prefix_fields,
+        prefix_extent=header.emitted_extent,
+        product_identity_requirement="aeat-product-software-identity-v1",
+    )
 
 
 #: The relative closing identifier every standard design prints, as its own

@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
-modified: '2026-08-14'
-body_hash: 'sha256:cc9dafb5ff8856757fad6f6006aff740a830c558785db193ebdb8fe4abdf7750'
+modified: '2026-08-18'
+body_hash: 'sha256:55aebdc27d0b41633666b34c683a6627bc6b632f51b55671cc08b9c6e753f872'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -111,6 +111,7 @@ Replace the bounded historical revision with the in-window revision and the refu
 
 Commit the whole Modelo 303 revision set in one explicit-pathspec commit and prove every boundary by emitted bytes rather than by structure.
 
+
 ## Wave `W03` - Modelo 390 - the widest span and a proved live mis-write
 
 Replace Modelo 390's single revision with the full in-window revision set. Taken second because it carries the most named boundaries and an independently proved live export mis-write at filing year 2023, where export_draft produced 7698 bytes with the total cuota written at byte 1628 past the 2023 record's declared end at 1526. Includes the 2024/2025 boundary that no box-offset or page-length signal sees, only slot occupancy. Lands as one atomic commit. Depends on Wave W01.
@@ -128,6 +129,7 @@ Author one revision per in-window design epoch and the refusal edge below the ea
 
 Commit the whole Modelo 390 revision set in one explicit-pathspec commit and prove every boundary by emitted bytes.
 
+
 ## Wave `W04` - Modelo 200 - the finding that overtook the record's no-action ruling
 
 Split Modelo 200's single revision at its 2024/2025 boundary. The first accepted record rules no implementation action here on the ground that the span is offset-identical, and the re-run gate overtakes that ruling with a RECORD SET CHANGED signal of 75 records against 77, which is not an offset shift. Taken last as the newest and narrowest finding. Lands as one atomic commit. Depends on Wave W01.
@@ -137,6 +139,19 @@ Split Modelo 200's single revision at its 2024/2025 boundary. The first accepted
 Author the two Modelo 200 revisions, land them atomically, and prove the record-set change by emitted bytes.
 
 - [x] `W04.P09.S44` - Do not retire the Modelo 200 revision directory: the ruling rests solely on re-keying cost, since no narrowing survives at HEAD - period_selector = { year_from = 2024, periods = ["0A"] } correctly covers ejercicio 2024 onward, grounded in Orden HAC/657/2025 (BOE-A-2025-12818) Article 1, and the name 2024-y-siguientes correctly describes that coverage, so no naming debt exists today. Retiring it would still require re-keying 1045 files carrying 3444 occurrences of the revision id within the Modelo 200 registry tree, plus 1205 files carrying 3956 occurrences across src/ and dev/ combined, plus 20 or more external test modules referencing it, several in other executors' lanes. W04.P09.S76 carries the conditional re-key should a future narrowing land; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/`.
+
+## Wave `W04a` - Modelo 232 export unit and the Modelo 184 tree landing
+
+Close the enrolled generated-export-tree set's last authorable refusals. Modelo 232's coverage refusal has two audited root causes: 32 Administracion-reserved name slots modelled as bindings and casillas and emitted as data (a filing-correctness defect), and the unemitted DR23200 auxiliary envelope header, for which no emission contract exists in the generator or runtime. The two fixes land as one atomic unit because regenerated trees must pass candidate validation before publication and the header gap blocks validation even after the reserved-byte fix. The finished Modelo 184 export unit lands in the same wave.
+
+### Phase `W04a.P12` - Fix the reserved-byte defect and emit the DR23200 header
+
+Reclassify the 32 reserved slots to filler across both mapping epochs and sweep the reservado casilla, binding, construct and manifest rows out of both revisions; author the modelo-neutral auxiliary envelope emission contract with proofs that M390 still classifies and emits unchanged; regenerate, publish and re-pin both trees; land the finished Modelo 184 unit.
+
+- [x] `W04a.P12.S83` - Reclassify the 32 Administracion-reserved name slots from bindings to filler in both Modelo 232 mapping epochs, and delete the reservado casilla and binding fragments, the construct rows and the completeness-manifest rows from both revisions in one change, so no generated filing can carry taxpayer names in bytes AEAT reserves for itself; `dev/registry/mappings/modelo_232/; src/cadrumo/_data/registry/aeat/modelos/232/revisions/`.
+- [x] `W04a.P12.S84` - Author the modelo-neutral auxiliary envelope emission contract for DR23200: generalise the m390 prospective module off its pinned targets, wire the contract into render_complete_export_tree and the coverage validator, and honor it in the runtime fichero builder, with proofs that Modelo 390 still classifies and emits unchanged and that a non-header sheet still refuses; `dev/registry/_m390_auxiliary_envelope.py; dev/registry/_export_tree.py; src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py; src/cadrumo/application/filing/`.
+- [x] `W04a.P12.S85` - Regenerate and publish both Modelo 232 export trees through the owning publication verb, re-run check mode, and upgrade the _CHECK_MODE_PENDING pins to the next real wall or remove them - never a softened pin; `src/cadrumo/_data/registry/aeat/modelos/232/revisions/; dev/registry/tests/test_generated_export_trees.py`.
+- [ ] `W04a.P12.S86` - Land the finished Modelo 184 export unit - mappings, render profile, casillas, generated tree, provenance and test enrollment - as its own commit; `dev/registry/mappings/modelo_184/; dev/registry/render_profiles/modelo_184/; src/cadrumo/_data/registry/aeat/modelos/184/`.
 
 ## Wave `W05` - Consumer sweep and campaign close
 

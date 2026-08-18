@@ -220,6 +220,7 @@ from ._export import (
     assert_export_artifact_matches_receipt,
     export_draft,
     export_layout_renderability_reason,
+    render_envelope_prefix_field,
     render_filing_envelope,
     verify_export,
 )
@@ -1264,6 +1265,7 @@ __all__ = [
     "modelo_record_repository_for_application",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
+    "render_envelope_prefix_field",
     "render_filing_envelope",
     "required_applicable_casilla_ids",
     "resolve_m303_filing_facts",

@@ -134,6 +134,7 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "legal_refs",
         "records",
         "filing_envelope",
+        "auxiliary_envelope_header",
         "dictionary_path_overrides",
         "aux_idioma",
         "aux_version",
@@ -404,7 +405,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
         for item in _as_object_list(payload["dictionary_path_overrides"], subject="loader dictionary overrides")
     ]
     overrides.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary override field_id"))
-    return {
+    projected: dict[str, object] = {
         "loader_semantic_schema_version": _LOADER_SEMANTIC_SCHEMA_VERSION,
         "id": payload["id"],
         "format": payload["format"],
@@ -417,6 +418,11 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
         "aux_idioma": payload["aux_idioma"],
         "aux_version": payload["aux_version"],
     }
+    # Projected only when declared, so a layout without the member attests
+    # byte-identical semantics to the projection that preceded it.
+    if payload["auxiliary_envelope_header"] is not None:
+        projected["auxiliary_envelope_header"] = payload["auxiliary_envelope_header"]
+    return projected
 
 
 def loader_semantic_digest(loaded_layout: ExportLayoutDefinition) -> str:

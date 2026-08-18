@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
+from .. import ExportEncoding, ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
 from .._errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
@@ -275,3 +275,75 @@ def test_parse_fixed_width_decimal_invalid_raw_includes_field_id_in_error() -> N
     field = _decimal_field("casilla.0501")
     with pytest.raises(RegistryValidationError, match=r"casilla\.0501"):
         parse_fixed_width_export_field(field, "invalid")
+
+def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() -> None:
+    """A declared page-zero header opens the payload ahead of the records.
+
+    The parser holds no filing-instance facts (year, period, product identity),
+    so the skip is exact extent rather than content re-derivation: the records
+    that follow must still match their own literals, and a payload shorter than
+    the declared prefix cannot satisfy them.
+    """
+    from .._schema import (
+        AuxiliaryEnvelopeHeaderDefinition,
+        ExportLayoutDefinition,
+        ExportRecordDefinition,
+        FilingEnvelopePrefixFieldDeclaration,
+        FilingEnvelopePrefixRole,
+    )
+    from .._export_parse import parse_export_payload
+
+    roles = tuple(
+        role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+    )
+    declaration = AuxiliaryEnvelopeHeaderDefinition(
+        source_ref="aeat-dr-232-2018",
+        source_sha256="a" * 64,
+        record_identity="DR23200",
+        prefix_fields=tuple(
+            FilingEnvelopePrefixFieldDeclaration(role=role, length=1) for role in roles
+        ),
+        prefix_extent=13,
+        product_identity_requirement="aeat-product-software-identity-v1",
+    )
+    record = ExportRecordDefinition.model_validate(
+        {
+            "id": "record-m232-test",
+            "record_type": "test",
+            "order": 0,
+            "encoding": ExportEncoding.LATIN_1,
+            "line_ending": "crlf",
+            "fields": (
+                {
+                    "id": "m232-test.f001",
+                    "offset": 1,
+                    "length": 1,
+                    "kind": "literal",
+                    "literal": "T",
+                    "data_type": "text",
+                    "required": False,
+                    "padding": "right_space",
+                    "justification": "left",
+                    "signed": False,
+                    "legal_refs": ("ley-27-2014:art-18",),
+                    "source_refs": ("aeat-dr-232-2018",),
+                },
+            ),
+        },
+    )
+    layout = ExportLayoutDefinition.model_validate(
+        {
+            "id": "generated-modelo-232-test-fichero",
+            "format": "fixed_width",
+            "source_refs": ("aeat-dr-232-2018",),
+            "legal_refs": ("ley-27-2014:art-18",),
+            "records": (record,),
+            "auxiliary_envelope_header": declaration,
+        },
+    )
+    payload = b"H" * 13 + b"T" + b"\r\n"
+
+    parsed = parse_export_payload(layout, payload)
+    assert parsed.casillas == ()
+    assert len(parsed.fields) == 1
+    assert parsed.fields[0].field_id == "m232-test.f001"

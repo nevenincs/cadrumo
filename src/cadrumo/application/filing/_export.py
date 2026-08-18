@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -71,6 +71,7 @@ from ...domain.calculations.registry import (
     CasillaFieldKind,
     ExportLayoutDefinition,
     FilingEnvelopeDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
     RecordId,
     RegistrySnapshot,
@@ -592,31 +593,33 @@ def _validate_export_options(
     *,
     modelo: Modelo,
     renders_filing_envelope: bool,
+    renders_auxiliary_header: bool,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection | None,
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> PriorDomiciliationElection:
     """Admit exactly the options the SELECTED LAYOUT's composition needs.
 
-    Keyed on whether the layout declares a filing envelope rather than on the
-    modelo id: the product/software identity is required by the envelope prefix
-    itself, so every modelo whose layout carries one needs it and no modelo
-    without one may pass it. The prior-domiciliation election is different -- it
-    is one modelo's record applicability, so it stays a registered per-modelo
-    policy rather than a property of the envelope.
+    Keyed on whether the layout declares an envelope prefix -- a filing
+    envelope or a total-less auxiliary header -- rather than on the modelo id:
+    the product/software identity is required by the prefix itself, so every
+    modelo whose layout carries one needs it and no modelo without one may pass
+    it. The prior-domiciliation election is different -- it is one modelo's
+    record applicability, so it stays a registered per-modelo policy rather than
+    a property of the envelope.
     """
-    if not renders_filing_envelope:
+    if not renders_filing_envelope and not renders_auxiliary_header:
         if product_software_identity is not None:
             raise FilingExportValidationError(
-                "product/software identity is only admitted for a layout that renders a filing envelope",
+                "product/software identity is only admitted for a layout that renders an envelope prefix",
             )
         return prior_domiciliation_election or PriorDomiciliationElection.KEEP
     if product_software_identity is None:
         raise FilingExportValidationError(
-            "a filing-envelope export requires explicit product/software identity authority",
+            "an envelope-prefix export requires explicit product/software identity authority",
         )
     if dictionary_values is not None:
-        raise FilingExportValidationError("a filing-envelope export does not admit XML dictionary values")
+        raise FilingExportValidationError("an envelope-prefix export does not admit XML dictionary values")
     if filing_envelope_modelo_policy(modelo).requires_prior_domiciliation_election and (
         prior_domiciliation_election is None
     ):
@@ -642,9 +645,11 @@ def _prepare_export_draft(
     _require_approved_export_draft(draft)
     layout = _select_export_layout(draft, subview=subview, registry_snapshot=registry_snapshot)
     renders_filing_envelope = layout.filing_envelope is not None
+    renders_auxiliary_header = layout.auxiliary_envelope_header is not None
     resolved_prior_domiciliation_election = _validate_export_options(
         modelo=Modelo(draft.modelo),
         renders_filing_envelope=renders_filing_envelope,
+        renders_auxiliary_header=renders_auxiliary_header,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         product_software_identity=product_software_identity,
@@ -691,6 +696,7 @@ def _render_prepared_export(
         producer_snapshot=producer_snapshot,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prepared.prior_domiciliation_election,
+        product_software_identity=product_software_identity,
         schema_provider=prepared.provider,
         registry_snapshot=prepared.registry_snapshot,
     )
@@ -1200,6 +1206,7 @@ def _render_export_layout(
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,
     registry_snapshot: RegistrySnapshot,
 ) -> bytes:
@@ -1218,6 +1225,7 @@ def _render_export_layout(
         headers=headers,
         producer_snapshot=producer_snapshot,
         prior_domiciliation_election=prior_domiciliation_election,
+        product_software_identity=product_software_identity,
     )
 
 
@@ -1229,6 +1237,7 @@ def _render_layout(
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
     prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
     if (
         draft.modelo == Modelo.M303.value
@@ -1237,17 +1246,29 @@ def _render_layout(
         raise FilingExportValidationError(
             "M303 prior-domiciliation election must match the immutable producer snapshot election",
         )
-    return b"".join(
-        occurrence.payload
-        for occurrence in _render_layout_occurrences(
-            layout,
-            registry_snapshot=registry_snapshot,
-            draft=draft,
-            headers=headers,
-            producer_snapshot=producer_snapshot,
-            prior_domiciliation_election=prior_domiciliation_election,
-        )
+    occurrences = _render_layout_occurrences(
+        layout,
+        registry_snapshot=registry_snapshot,
+        draft=draft,
+        headers=headers,
+        producer_snapshot=producer_snapshot,
+        prior_domiciliation_election=prior_domiciliation_election,
     )
+    auxiliary_header = layout.auxiliary_envelope_header
+    if auxiliary_header is None:
+        return b"".join(occurrence.payload for occurrence in occurrences)
+    if product_software_identity is None:
+        raise FilingExportValidationError(
+            "an auxiliary-envelope-header export requires explicit product/software identity authority",
+        )
+    prefix = _render_declared_prefix(
+        auxiliary_header.prefix_fields,
+        prefix_extent=auxiliary_header.prefix_extent,
+        modelo=Modelo(draft.modelo),
+        period=draft.period,
+        product_software_identity=product_software_identity,
+    )
+    return prefix + b"".join(occurrence.payload for occurrence in occurrences)
 
 
 def _render_layout_occurrences(
@@ -1316,8 +1337,9 @@ def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelo
         for item in rendered_occurrences
     )
     _require_envelope_required_occurrences(request.layout, occurrences)
-    prefix = _render_envelope_prefix(
-        envelope,
+    prefix = _render_declared_prefix(
+        envelope.prefix_fields,
+        prefix_extent=envelope.prefix_extent,
         modelo=request.modelo,
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
@@ -1376,27 +1398,32 @@ def _require_envelope_occurrence_order(
         last_family = family
 
 
-def _render_envelope_prefix(
-    envelope: FilingEnvelopeDefinition,
+def _render_declared_prefix(
+    prefix_fields: Sequence[FilingEnvelopePrefixFieldDeclaration],
     *,
+    prefix_extent: int,
     modelo: Modelo,
     period: Period,
     product_software_identity: AeatProductSoftwareIdentity,
 ) -> bytes:
-    """Derive the source-declared envelope prefix from filing-instance authority."""
+    """Derive a source-declared envelope prefix from filing-instance authority.
+
+    The ONE renderer for both prefix shapes: the variable envelope's prefix and
+    the total-less auxiliary header's, which share the same declared grammar.
+    """
     prefix = b"".join(
-        _render_envelope_prefix_field(
+        render_envelope_prefix_field(
             field.role,
             length=field.length,
             modelo=modelo,
             period=period,
             product_software_identity=product_software_identity,
         )
-        for field in envelope.prefix_fields
+        for field in prefix_fields
     )
-    if len(prefix) != envelope.prefix_extent:
+    if len(prefix) != prefix_extent:
         raise FilingExportValidationError(
-            f"filing-envelope prefix must render to its declared {envelope.prefix_extent}-byte extent",
+            f"envelope prefix must render to its declared {prefix_extent}-byte extent",
         )
     return prefix
 
@@ -1446,7 +1473,7 @@ def _envelope_prefix_role_value(
             )
 
 
-def _render_envelope_prefix_field(
+def render_envelope_prefix_field(
     role: FilingEnvelopePrefixRole,
     *,
     length: int,

@@ -15,12 +15,15 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import AeatProductSoftwareIdentity, Period, StandardPeriodCode, sha256_hex
+from cadrumo.application.filing import render_envelope_prefix_field
+from cadrumo.core import AeatProductSoftwareIdentity, Modelo, Period, StandardPeriodCode, sha256_hex
 from cadrumo.domain.calculations.registry import (
+    RecordDesignAuxiliaryEnvelopeHeaderRole,
     RegistryValidationError,
     SourceReference,
     resolve_record_design_binary,
 )
+from cadrumo.domain.filing import FilingExportValidationError
 
 from ._provenance_manifest import ExportFragmentTarget
 from ._record_design_ir import (
@@ -29,6 +32,7 @@ from ._record_design_ir import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,
 )
+from ._variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 
 __all__ = [
     "M390_AUXILIARY_ENVELOPE_TARGETS",
@@ -322,27 +326,25 @@ def _render_header_field(
     product_software_identity: AeatProductSoftwareIdentity,
     filing_period: Period,
 ) -> bytes:
-    values = {
-        "opening_tag": "<T",
-        "modelo": "390",
-        "discriminant": "0",
-        "filing_year": f"{filing_period.filing_year:04d}",
-        "annual_period": "0A",
-        "record_type": "0000>",
-        "auxiliary_opening_tag": "<AUX>",
-        "pre_program_reserved": " " * parser_field.length,
-        "program_identifier": product_software_identity.program_identifier,
-        "between_identities_reserved": " " * parser_field.length,
-        "software_developer_tax_id": product_software_identity.developer_tax_id,
-        "post_developer_reserved": " " * parser_field.length,
-        "auxiliary_closing_tag": "</AUX>",
-    }
+    """Render one header role through the canonical prefix renderer.
+
+    The auxiliary header and the filing-envelope prefix share one grammar, so
+    the bytes come from the application filing renderer rather than a second
+    literal table: the role names here are the parser's vocabulary and map
+    onto the shared prefix roles.
+    """
     try:
-        payload = values[role].encode("ascii")
-    except (KeyError, UnicodeEncodeError) as exc:
-        raise RegistryValidationError(f"Modelo 390 auxiliary header role {role!r} is not renderable as ASCII") from exc
-    if len(payload) != parser_field.length:
-        raise RegistryValidationError(
-            f"Modelo 390 auxiliary header {role} renders to {len(payload)} bytes, expected {parser_field.length}",
+        prefix_role = AUXILIARY_TO_PREFIX_ROLE[RecordDesignAuxiliaryEnvelopeHeaderRole(role)]
+    except ValueError as exc:
+        raise RegistryValidationError(f"auxiliary header role {role!r} is not a recognised source role") from exc
+    try:
+        payload = render_envelope_prefix_field(
+            prefix_role,
+            length=parser_field.length,
+            modelo=Modelo.M390,
+            period=filing_period,
+            product_software_identity=product_software_identity,
         )
+    except FilingExportValidationError as exc:
+        raise RegistryValidationError(f"auxiliary header role {role!r} is not renderable: {exc}") from exc
     return payload
