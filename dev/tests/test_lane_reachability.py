@@ -51,6 +51,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev._paths import REPO_ROOT
 from dev.ci.lane_reachability import (
     Lane,
     analyse_reachability,
@@ -66,7 +67,7 @@ from dev.ci.lane_reachability import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_ROOT: Path = Path(__file__).resolve().parents[3]
+_ROOT: Path = REPO_ROOT
 
 #: The markers whose tests CI genuinely cannot run, each because a PRECONDITION
 #: is absent from a headless runner rather than because nobody wired a lane.

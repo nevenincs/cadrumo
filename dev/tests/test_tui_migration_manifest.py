@@ -19,7 +19,7 @@ from dev.quality.import_hygiene_scan import (
     generate_tui_migration_manifest,
 )
 
-from ..core import scan_directory
+from cadrumo.core import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -33,9 +33,9 @@ from dev.packaging._smoke_common import (
     venv_python_path,
 )
 
-from ....application.provisioning import ProvisioningPreconditionCondition
-from ....core import NoRecoveryOutcome
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.application.provisioning import ProvisioningPreconditionCondition
+from cadrumo.core import NoRecoveryOutcome
+from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 

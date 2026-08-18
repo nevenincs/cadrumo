@@ -8,12 +8,9 @@ import tomllib
 from pathlib import Path
 
 import pytest
-
-from ....core import scan_directory
-from ....core.i18n import extract_placeholders, lookup_translation_entry
-from ....entrypoints.cli import build_verb_input_schemas, command_schema_refs
-from ...operator_actions import OPERATOR_ACTION_CATALOGUE
-from ...operator_surface import (
+from cadrumo.application.modelo import MODELO_PRECONDITION_PROFILES
+from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE
+from cadrumo.application.operator_surface import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
     OperatorSurfaceReconciliation,
@@ -21,11 +18,14 @@ from ...operator_surface import (
     ResultSchemaInventoryRow,
     resolve_manifest_action_profiles,
 )
-from .._preconditions import MODELO_PRECONDITION_PROFILES
+from cadrumo.core import scan_directory
+from cadrumo.core.i18n import extract_placeholders, lookup_translation_entry
+from cadrumo.entrypoints.cli import build_verb_input_schemas, command_schema_refs
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ROOT = Path(__file__).parents[5]
+_ROOT = REPO_ROOT
 _MODELO_PATH_PREFIX = "src/cadrumo/application/modelo/"
 _REQUIRED_PRODUCTION_FINDING_MODULES = {
     "src/cadrumo/application/calculations/_foreign_asset_redeclaration.py",

@@ -23,7 +23,7 @@ from typing import cast
 import pytest
 from dev.locales import LocaleManager, scan_registry_keys
 
-from ..i18n import tr
+from cadrumo.core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

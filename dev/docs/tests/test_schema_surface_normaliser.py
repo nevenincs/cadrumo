@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import PRODUCT_IDENTITY
-from ..schema_surface import (
+from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.entrypoints.schema_surface import (
     APP_NAMESPACE_FLATTEN,
     APP_NAMESPACE_PASSTHROUGH,
     SCHEMA_KEY_BY_CLI_PATH,
