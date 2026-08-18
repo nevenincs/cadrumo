@@ -10,22 +10,18 @@ from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.calculations.registry import ProfileKeyGrounding
 from ....domain.user_profile import (
+    ProfilePreflightRequirement,
     ProfileSchemaDefinition,
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     profile_field_label,
 )
 from .. import (
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    ProfilePreflightRequirement,
-)
     ProfilePreflightService,
     ProfileValidationService,
     build_profile_preflight_requirement,
-
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
