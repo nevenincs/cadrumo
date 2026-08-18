@@ -69,7 +69,7 @@ _SEDE_PATHS = _EXTERNAL.aeat.sede_paths
 _DOMAINS = _EXTERNAL.aeat.domains
 _TARGET_PATH = _SEDE_PATHS.expedientes_resumen
 _IDENTITY = "12345678Z"
-_BUCKET_ID = "clave-provider-shared-contract"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000d0d0"
 _AUTHENTICATED_AT = datetime(2026, 7, 26, 9, 0, 0, tzinfo=UTC)
 
 

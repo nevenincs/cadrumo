@@ -41,7 +41,7 @@ from .._clave_movil_support import DIAGNOSTIC_NAMESPACE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "clave-diagnostics-namespace-binding"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000c0c0"
 
 
 def test_clave_movil_support_namespace_alias_resolves_to_registry_def() -> None:

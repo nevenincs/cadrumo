@@ -32,7 +32,7 @@ from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "certificate-real-boundary"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000b0b0"
 
 
 def _certificate_session() -> AeatSession:

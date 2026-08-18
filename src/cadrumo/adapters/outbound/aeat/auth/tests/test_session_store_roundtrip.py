@@ -33,7 +33,7 @@ from .....persistence.storage.runtime_repository import secure_object_repository
 from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-_BUCKET_ID = "session-roundtrip"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000f0f0"
 _NON_JSON_CAPTURED_AT = datetime(2026, 5, 28, 13, 55, 0, tzinfo=UTC)
 
 

@@ -35,7 +35,7 @@ from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "clave-session-persistence-boundary"
+_BUCKET_ID = "1f6b0000-0000-4000-8000-00000000e0e0"
 _STEM = "clave-movil-storage"
 _IDENTITY = "12345678Z"
 _AUTHENTICATED_AT = datetime(2026, 7, 26, 9, 0, 0, tzinfo=UTC)
