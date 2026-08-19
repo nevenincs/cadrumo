@@ -20,7 +20,7 @@ source_refs = [
     "enrolled-modelo-038-layout",
 ]
 review_status = "agent_reviewed"
-reviewed_by = "agent: applicability-grade review; 12/12 deadline windows verified against the calendar and orden HAC/66/2002 art 6"
+reviewed_by = "agent: applicability-grade review; 12/12 deadline windows verified against the calendar and orden HAC/66/2002 art 6; full-Diseno coverage NOT claimed - a diseno IS bundled but derives 0 numbered casillas, so the axis is unmeasured, not clean"
 reviewed_at = 2026-08-19
 
 [revisions."2002-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
