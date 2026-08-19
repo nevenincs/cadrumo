@@ -6,8 +6,9 @@ tags:
 date: '2026-08-19'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:24fc00610269085435a672619ff4de53753f769a37e0a84c0a0decfcbca2453b'
+body_hash: 'sha256:5f76e4109d7a6d9d8063e6e9cf97c30a7764fe9fc317f2a50906e81d661e6fd9'
 related:
+  - '[[2026-08-19-registry-export-layout-coverage-adr]]'
   - '[[2026-08-19-registry-export-layout-coverage-research]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#registry-export-layout-coverage`.
 
 ## Documents
+
+### adr
+
+- `2026-08-19-registry-export-layout-coverage-adr` - `registry-export-layout-coverage` adr: `Modelos with no AEAT positional design cannot claim the filing rung` | (**status:** `proposed`)
 
 ### research
 

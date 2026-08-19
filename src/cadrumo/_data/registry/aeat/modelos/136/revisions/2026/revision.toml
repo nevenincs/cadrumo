@@ -1,5 +1,5 @@
 [revisions."2026"]
-authority_grade = "filing"
+authority_grade = "applicability"
 valid_from = 2026-01-01
 period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = [
@@ -54,3 +54,39 @@ source_refs = [
     "boe-modelo-136-current-form-text",
     "boe-modelo-136-current-form",
 ]
+
+[revisions."2026".family_dispositions.relations]
+reason = "A relation folds a value from ANOTHER modelo's revision into this one's calculation, and this revision folds in nothing. Measured on it: all THREE formulas are closed over its own casillas -- base imponible is subtract(02, 03), the cuota is percent(04, irpf.lottery_prize_special_levy_rate), and the resultado is subtract(05, 06) -- and every relation slot on all three expression trees is empty. Casilla 06, resultados anteriores del mismo premio, is a within-modelo reference to earlier autoliquidaciones of this same premio, which is a formula over its own casillas and not a cross-modelo fold-in. The retencion the payer practised on the premio is declared by the PAYER on its own modelo, which this registry does not carry, so there is no sibling revision here for a relation to name."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+
+[revisions."2026".family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-136 member. It carries none. The union is not single-modelo -- it holds m303_ and m200_ members -- so this is stated as a scoping rule rather than as a member count or a prefix, both of which go stale the moment another modelo is added. This revision also declares one premio per autoliquidacion rather than a repeated row set, so there is no repeated endpoint for the family to admit."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2026".family_dispositions.verification_predicates]
+reason = "A verification predicate guards a calculated result, and this revision does calculate one -- but both predicates its shape admits are unusable, for opposite reasons. implies_nonzero(04 base -> 05 cuota) is TAUTOLOGICAL: casilla 05 is percent(04, irpf.lottery_prize_special_levy_rate), so a positive base cannot produce a zero cuota and the engine could not violate the implication. implies_nonzero(01 premio -> 05 cuota) FALSE-FIRES on the lawful population: LIRPF DA 33 exempts the premio up to a threshold, the exempt amount is entered in casilla 03, and the base is subtract(02, 03), so a small premio legitimately yields a zero base and a zero cuota. Firing there would alert on precisely the filers the exemption is written for. The family is unavailable to this modelo rather than unwritten; the safeguard it exists to provide is already carried by the exempt-amount casilla being a declared input rather than an inferred one."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2026".family_dispositions.live_cross_references]
+reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for modelo 136: no adapter under adapters/outbound/aeat references it -- the only textual hits are byte-offset tuples in a sede test, not modelo references -- and the application never performs live AEAT submission in any case, per the standing prohibition on live filing. There is consequently no host to allow, no method to bound and no guard policy to name. Sibling modelo 210 disposes the family on exactly this ground. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited rather than inherited."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2026".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Nothing is bundled for modelo 136 that prints form labels: AEAT publishes no diseno de registro for it at all, and its corpus carries no form specimen. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2026".family_dispositions.bindings]
+reason = "A binding serves two shapes and neither is available here. As a CASILLA resolver it reads a value from a declared source: no casilla of this revision does, its twenty-four being twenty-one manual and three computed, and no formula expression tree names one. As a LAYOUT descriptor it names a record field -- the shape modelo 720 uses for all fifty-two of its bindings, none of which any casilla references -- and AEAT publishes no diseno de registro for modelo 136 at all, so there is no record field to name. That second shape is not mandatory in any case: 24 of the 78 revisions carrying an export layout declare no bindings at all, so an absent bindings family is a normal end state rather than an unfinished one. If this revision's layout ever lands and materialises repeating rows through binding_rows, the family becomes applicable and this disposition must be revisited rather than inherited."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2026".family_dispositions.export_layouts]
+reason = "AEAT publishes no positional record design for modelo 136, so there is nothing a fixed-width writer could be authored FROM. Measured on the source catalogue rather than asserted: no source cited by this modelo or any of its revisions carries kind = 'record_design'. Its layout authority is 'boe-modelo-136-current-form', kind = 'manual_pdf' -- the printable BOE form, which states the boxes a filer completes and not the byte positions of a fichero. This is not an acquisition gap of the kind a missing epoch would be: the modelo has no sibling revision whose design is bundled, so no design exists that has merely gone unfetched. The gravamen especial is presented through AEAT's own electronic form. The runtime filing check is unaffected and still refuses a filing-grade snapshot from a revision with no layout, so disposing this family records why the layout cannot exist without granting a capability."
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-current-form"]
