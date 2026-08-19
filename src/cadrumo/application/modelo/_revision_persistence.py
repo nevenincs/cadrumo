@@ -320,7 +320,10 @@ def persist_calculation_revision(
         if m303_regimen_simplificado_annual_summary_handoff is not None
         else None
     )
-    revisions = calculation_repository.load()
+    # Revisioned: this catalogue is composed into a co-commit, so it cannot
+    # use a self-committing mutation, and an unguarded read would write the
+    # whole singleton row back over a revision another calculate run added.
+    revisions, revisions_revision_id = calculation_repository.load_revisioned()
     existing = revisions.get(revision_id)
     if existing is not None:
         if (
@@ -414,6 +417,7 @@ def persist_calculation_revision(
             work_unit_repository.to_secure_object_write(advanced_work_units),
             modelo_bucket_event_write(bucket_event_repository, (created_event,)),
         ),
+        expected_revision_id=revisions_revision_id,
     )
     return revision
 
@@ -815,7 +819,10 @@ def persist_filed_revision(
         now=now,
     )
 
-    revisions = calculation_repository.load()
+    # Revisioned: this catalogue is composed into a co-commit, so it cannot
+    # use a self-committing mutation, and an unguarded read would write the
+    # whole singleton row back over a revision another calculate run added.
+    revisions, revisions_revision_id = calculation_repository.load_revisioned()
     updated_filing_catalogue = filing_catalogue
     if prior_current is not None:
         updated_filing_catalogue, revisions = _supersede_prior_current_filing(
@@ -893,7 +900,10 @@ def persist_filed_revision(
         ),
     )
 
-    extra_writes = (calculation_repository.to_secure_object_write(revisions), *participation_writes)
+    extra_writes = (
+        calculation_repository.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
+        *participation_writes,
+    )
     if prorrata_write is not None:
         extra_writes = (*extra_writes, prorrata_write)
     extra_writes = (
