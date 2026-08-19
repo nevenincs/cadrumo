@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:71bf65f384e9d11ac63afe336c5c3553ee216e634b3c4021d5d8a6d8921531c6'
+body_hash: 'sha256:65ef24546e75092d1e9aeb2a4f218125bc47f2bd0ca7d4973f1f5171bbd7bc7e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -698,6 +698,64 @@ What remains genuinely unexercised, and should not be read as cleared: no test
 drives two live processes through a full concurrent `login` against one profile
 at the CLI level. The primitives beneath it are now covered on both sides; the
 composition of them is not.
+
+### The secret-store backend setting offered three modes that no longer existed
+
+FIXED. `SecretStoreBackend` advertised `auto`, `keyring`, `file` and
+`unsecured`, and `Settings.cadrumo_secret_store_backend` described them to the
+operator as real choices:
+
+    auto = OS keychain when available, encrypted file fallback otherwise.
+    keyring = OS keychain only (refuses to fall back).
+    file = encrypted file only (required for CI / headless).
+
+None of that was true. The keychain-backed and passphrase-derived file-backed
+master-key providers were deleted in the per-profile custody cutover -- the
+`master_key` module's own docstring records their removal -- and the ONLY
+production branch on this setting anywhere in the tree is
+`is not SecretStoreBackend.UNSECURED`, in the Google OAuth flow. `KEYRING` had
+zero references of any kind. `FILE` appeared only in test fixtures, where it
+meant nothing more than "not unsecured". The axis was a boolean wearing the
+costume of a four-way choice.
+
+The damage was operator-facing, not merely cosmetic, and the worst line is the
+one that reads most helpfully: "file = encrypted file only (required for CI /
+headless)". A headless operator follows that, sets
+`CADRUMO_SECRET_STORE_BACKEND=file`, and believes they have configured an
+encrypted file key store. They have configured nothing. The curated operator
+help surface said it too, in the isolation recipe reached from the root landing
+-- "set CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
+CADRUMO_SECRET_STORE_DIR and CADRUMO_SECRET_PASSPHRASE" -- so the CLI was
+actively handing out an instruction that selected nothing. That surface is one
+the CLI-contract rule already names as unscanned by gates and swept by hand,
+which is exactly why it kept a retired value alive.
+
+The set is now the two states that exist, `auto` and `unsecured`, with the
+description saying which is which and the enum docstring recording why the
+other two are gone. Removed rather than tolerated: `=file` and `=keyring` now
+fail Settings validation instead of parsing into a value nothing reads, which
+is the direction the no-legacy regime requires -- refuse, do not tolerate.
+The isolation recipe drops the variable entirely, in the shared translation key
+and all four catalogues through `dev.locales`, because `auto` is the default and
+needs no setting.
+
+One naming question is deliberately left open rather than decided here. With the
+set reduced to two, `auto` no longer describes automatic selection among
+anything; it now means "the profile's own password custody". Renaming it would
+be the more honest spelling and would also break every operator env file and
+`env/.env.example`, so it is a call for the owner rather than a cleanup to
+absorb.
+
+Two collateral notes. `docs/reference/environment-overrides.md` is generated
+from the settings model and was ALREADY stale at HEAD before this change -- it
+still listed `CADRUMO_KEYRING_PROBE_TIMEOUT_S`, deleted earlier in this
+campaign, and lacked a peer's newer KDF-calibration setting. Regenerating it
+necessarily picks up those rows too; the page is generated output catching up,
+not a sweep of peer work, and its drift gate was red before and is green now.
+Separately, the first sweep covered `src/cadrumo` only and left one
+`SecretStoreBackend.FILE` in `dev/locales/tests/`, found by re-running the
+search across both roots -- a reminder that this repo's `dev/` tree consumes
+core enums and is outside the habitual search path.
 
 ## Recommendations
 
