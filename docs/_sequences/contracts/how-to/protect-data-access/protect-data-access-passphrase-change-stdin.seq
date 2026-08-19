@@ -1,0 +1,2 @@
+@step Change the passphrase without an interactive prompt.
+@static aeat config passphrase change --secrets-stdin

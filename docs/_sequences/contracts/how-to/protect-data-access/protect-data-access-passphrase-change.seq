@@ -1,0 +1,2 @@
+@step Change the passphrase that protects the active profile.
+@static aeat config passphrase change
