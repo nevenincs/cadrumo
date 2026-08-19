@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 
 import pytest
 
@@ -16,13 +17,20 @@ from .....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_SEEDED_PROGRESS_AT = datetime(2026, 3, 11, 7, 45, 13, tzinfo=UTC)
+"""A stamp no default construction produces, so the seeded row is distinguishable."""
+
 
 def _seed_workflow_state() -> None:
-    """Create an active profile so a workflow-state envelope exists.
+    """Create an active profile and save the progress row this verb discards.
 
-    ``config profile create`` is bootstrap-exempt: it provisions the
-    profile bucket, opens its session, and writes the workflow-state
-    secure-object row that ``reset-progress`` later discards.
+    The progress row is written HERE rather than left to profile creation.
+    Creation used to leave one behind as a side effect of the scripted setup
+    flow, and these cases relied on that; the credential door that replaced it
+    writes no workflow state, which is correct -- a profile that was just
+    created has no interrupted command to resume. Relying on the side effect
+    left the subject of every case below absent, so ``reset-progress`` was
+    previewing nothing and reporting it accurately.
     """
 
     register_cli_profile(
@@ -36,6 +44,10 @@ def _seed_workflow_state() -> None:
             "activities.description": "Servicios",
         },
     )
+    # A non-default state, so a save-drops-field regression cannot hide behind
+    # a row that is indistinguishable from the empty one the reader returns
+    # when nothing is stored.
+    workflow_state_repository().save(WorkflowState(updated_at=_SEEDED_PROGRESS_AT))
 
 
 def _row_exists() -> bool:
