@@ -553,9 +553,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
         # `_check_revision_scoped_source_windows` refuses at snapshot build.
         # Those years ground the same read on that year's own Renta manual,
         # which documents Renta WEB and the consulta of filed declarations.
-        expected_ref = (
-            "aeat-modelo-100-procedure" if year >= 2025 else f"aeat-renta-{year}-manual-parte1"
-        )
+        expected_ref = "aeat-modelo-100-procedure" if year >= 2025 else f"aeat-renta-{year}-manual-parte1"
         assert expected_ref in cross_reference.source_refs
         assert_remote_operation_allowed(
             policy,

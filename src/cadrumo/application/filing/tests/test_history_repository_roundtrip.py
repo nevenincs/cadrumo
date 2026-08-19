@@ -86,11 +86,11 @@ def test_filing_history_persists_only_to_the_secure_database_object(
 ) -> None:
     """A saved history never reaches the plaintext ``filing-history`` directory.
 
-    :data:`StorageCategory.FILING_HISTORY` declares
-    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
-    that module only walks the directory to re-encrypt any
-    ``.envelope.json`` files found there on master-key rotation -- it is a
-    sweep, not a writer. :class:`ModeloHistoryRepository`'s own module
+    :data:`StorageCategory.FILING_HISTORY` now declares
+    no consumer at all. Its only one was the master-key rotation sweep,
+    deleted with the shared-master model it belonged to, and even then that
+    module only walked the directory looking for ``.envelope.json`` files to
+    re-encrypt -- it was a sweep, never a writer. :class:`ModeloHistoryRepository`'s own module
     docstring states "plaintext filing-history JSON or envelope file lands
     on disk" is what it avoids; this proves it, mirroring
     ``test_put_file_reads_source_but_persists_only_secure_database_object``

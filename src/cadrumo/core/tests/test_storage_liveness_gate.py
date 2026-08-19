@@ -161,6 +161,7 @@ def consumption_evidence(
         evidence exists.
     """
     docstrings = docstring_nodes(tree)
+    validator_arguments = validator_argument_nodes(tree)
     category_owners = _storage_category_binding_names(tree)
     found: set[str] = set()
     for node in ast.walk(tree):
@@ -177,8 +178,44 @@ def consumption_evidence(
             and isinstance(node.value, str)
             and node.value == settings_field
             and id(node) not in docstrings
+            and id(node) not in validator_arguments
         ):
             found.add(node.value)
+    return frozenset(found)
+
+
+def validator_argument_nodes(tree: ast.AST) -> frozenset[int]:
+    """Ids of field-name string constants sitting in a validator's argument list.
+
+    Pydantic's ``field_validator`` names the fields it normalises as bare string
+    constants, which is the same plumbing :func:`declares_field` already
+    discounts -- the machinery that gives a field its shape, not a consumption
+    of the location. ``declares_field`` cannot see this one, because it tests
+    for an ``AnnAssign`` in the SAME module and the settings facade normalises
+    fields an upstream mixin declares: the declaration and the normalisation
+    live in different files.
+
+    Deliberately structural rather than a list of excluded modules, matching
+    the sibling helper, so a future mixin split needs no entry anywhere. A real
+    consumer reads ``settings.<field>`` as an attribute, which this never
+    touches.
+    """
+    found: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        function = node.func
+        if isinstance(function, ast.Name):
+            name = function.id
+        elif isinstance(function, ast.Attribute):
+            name = function.attr
+        else:
+            continue
+        if name not in {"field_validator", "model_validator"}:
+            continue
+        for argument in node.args:
+            if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+                found.add(id(argument))
     return frozenset(found)
 
 
@@ -452,6 +489,49 @@ def test_consumption_is_found_below_module_level() -> None:
         "    def persist(self, settings):\n"
         '        target = settings.cadrumo_inbox_dir / "doc.pdf"\n'
         "        return target\n"
+    )
+    assert _evidence(source) == frozenset({"cadrumo_inbox_dir"})
+
+
+def test_a_validator_argument_is_not_a_consumption() -> None:
+    """Normalising a field is plumbing, the same as declaring it.
+
+    The settings facade lists every path field it normalises as a bare string
+    inside ``field_validator``. ``declares_field`` already discounts the
+    declaration, but it tests for an ``AnnAssign`` in the same module, and a
+    field declared by a mixin is normalised by the facade -- two different
+    files -- so the string survived as evidence and made every such member look
+    consumed. Eleven storage members were only ever walked by the master-key
+    rotation sweep; when that module was deleted, four of them could not be
+    declared dormant because of this shape alone.
+    """
+    source = (
+        "class Settings(Mixin):\n"
+        '    @field_validator("cadrumo_inbox_dir")\n'
+        "    @classmethod\n"
+        "    def _normalise(cls, value):\n"
+        "        return value.expanduser()\n"
+    )
+    assert _evidence(source) == frozenset(), "a validator argument must not count as consumption"
+
+
+def test_a_validator_argument_does_not_blind_a_real_read_in_the_same_module() -> None:
+    """DISCRIMINATING: the narrowing must not excuse the whole module.
+
+    Without this, excluding validator arguments could be read as excluding the
+    settings facade wholesale, and a genuine read added there later would go
+    unseen -- the exact failure mode of hiding a construct from a matcher
+    rather than teaching the matcher what it is looking at.
+    """
+    source = (
+        "class Settings(Mixin):\n"
+        '    @field_validator("cadrumo_inbox_dir")\n'
+        "    @classmethod\n"
+        "    def _normalise(cls, value):\n"
+        "        return value.expanduser()\n"
+        "\n"
+        "    def resolve(self):\n"
+        "        return self.cadrumo_inbox_dir\n"
     )
     assert _evidence(source) == frozenset({"cadrumo_inbox_dir"})
 

@@ -62,7 +62,6 @@ def register(profile_app: typer.Typer) -> None:
         """Promote the active profile's setup state to complete."""
         from ....application.user_profile import ProfileRecordRepository
         from ....domain.user_profile import ProfileSchemaValidationError, ProfileSetupState
-
         from .._common import _no_active_profile_refusal
 
         profile_id = resolve_active_bucket_id()

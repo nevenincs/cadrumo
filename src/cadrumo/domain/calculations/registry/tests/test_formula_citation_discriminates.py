@@ -75,9 +75,7 @@ def _bare_modelo_number_citations() -> dict[tuple[str, str, str], tuple[str, ...
         for revision_id, revision in modelo.revisions.items():
             for formula in revision.formulas:
                 for citation in formula.source_citations:
-                    offending = tuple(
-                        phrase for phrase in citation.required_text if phrase.strip() == modelo.id
-                    )
+                    offending = tuple(phrase for phrase in citation.required_text if phrase.strip() == modelo.id)
                     if offending:
                         found[(modelo.id, revision_id, formula.id)] = offending
     return found

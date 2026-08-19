@@ -192,23 +192,24 @@ def test_filing_amendment_persists_only_to_the_secure_database_object(
 ) -> None:
     """A saved amendment never reaches either plaintext ``submissions/amendments*`` directory.
 
-    :data:`StorageCategory.SUBMISSIONS_AMENDMENTS` declares
-    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
-    that module only walks the directory to re-encrypt any
-    ``.envelope.json`` files found there on master-key rotation -- it is a
-    sweep, not a writer. :class:`ModeloAmendmentRepository`'s own module
+    :data:`StorageCategory.SUBMISSIONS_AMENDMENTS` now declares
+    no consumer at all. Its only one was the master-key rotation sweep,
+    deleted with the shared-master model it belonged to, and even then that
+    module only walked the directory looking for ``.envelope.json`` files to
+    re-encrypt -- it was a sweep, never a writer. :class:`ModeloAmendmentRepository`'s own module
     docstring states "no plaintext amendment JSON or envelope file lands on
     disk"; this proves it for ``submissions/amendments``, mirroring
     ``test_put_file_reads_source_but_persists_only_secure_database_object``
     for the attachments store.
 
     :data:`StorageCategory.SUBMISSIONS_AMENDMENT_RESULTS` is checked here
-    too rather than in its own test: ``_rotation.py`` documents
-    ``ModeloAmendmentRepository`` as "one consumer identity" bound to BOTH
-    sibling directories under one shared HKDF context, but the repository
-    never references an "amendment result" concept anywhere in its source
-    -- the rotation-plan entry is a re-encryption-sweep target the
-    directory could hold, not evidence of a real writer for it. Asserting
+    too rather than in its own test: the deleted master-key rotation sweep
+    documented ``ModeloAmendmentRepository`` as "one consumer identity" bound
+    to BOTH sibling directories under one shared HKDF context, while the
+    repository never references an "amendment result" concept anywhere in its
+    source -- that rotation-plan entry was a re-encryption-sweep target the
+    directory could hold, never evidence of a real writer for it, and the
+    sweep itself is now gone. Asserting
     both absences in the one place that persists an amendment keeps that
     shared-consumer relationship visible instead of splitting it across two
     tests that could drift independently.

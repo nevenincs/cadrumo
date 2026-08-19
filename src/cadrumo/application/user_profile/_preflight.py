@@ -35,6 +35,7 @@ from ._projections import record_to_path_values
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ModeloRevision
 
+
 def build_profile_preflight_requirement(
     path: str,
     *,

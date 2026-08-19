@@ -16,8 +16,6 @@ See Also:
         Outbound storage factory that consumes the Google Drive vault defaults.
     :mod:`~adapters.inbound.financial.providers._csv`
         CSV financial-ingest provider that reads the default CSV encoding.
-    :mod:`~adapters.persistence.storage._rotation`
-        Storage-rotation repair path that enumerates the local financial stores.
 """
 
 from __future__ import annotations

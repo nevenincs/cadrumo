@@ -374,11 +374,7 @@ def _every_committed_revision() -> list[tuple[str, str]]:
     a new revision is covered the day it lands.
     """
     modelos, _catalogues = _committed_registry_tree()
-    return sorted(
-        (str(modelo.id), revision_id)
-        for modelo in modelos
-        for revision_id in modelo.revisions
-    )
+    return sorted((str(modelo.id), revision_id) for modelo in modelos for revision_id in modelo.revisions)
 
 
 @pytest.mark.parametrize(("modelo_id", "revision_id"), _every_committed_revision())

@@ -33,11 +33,9 @@ def test_m720_binding_derived_design_distinguishes_declared_binding_representati
     # narrowed assertion pins: an inline field that DID name a casilla would still
     # fail here, so this admits the filler without admitting inline representation.
     inline = [record.fields for layout in revision.export_layouts for record in layout.records]
-    assert all(
-        field.casilla_id is None and field.literal is None
-        for fields in inline
-        for field in fields
-    ), "M720 must represent every casilla through a binding, never an inline export field"
+    assert all(field.casilla_id is None and field.literal is None for fields in inline for field in fields), (
+        "M720 must represent every casilla through a binding, never an inline export field"
+    )
 
     statuses = clasificar_casillas_oficiales(revision)
 

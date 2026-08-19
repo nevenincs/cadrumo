@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from .....core.errors import get_registered_error_code
 from .....core.resources import resources
 from .. import (
-    select_revision,
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
     CENSO_MODELO_SERVICE_OWNER,
@@ -20,7 +19,6 @@ from .. import (
     CensoModeloFoundationLogFields,
     CensoModeloFoundationResult,
     CensoModeloRole,
-    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     censo_modelo_ownership,
@@ -29,6 +27,7 @@ from .. import (
     is_active_censo_modelo,
     resolve_censo_modelo_foundation,
     resolve_censo_modelo_work_unit_foundation,
+    select_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

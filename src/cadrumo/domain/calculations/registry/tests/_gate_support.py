@@ -11,7 +11,6 @@ from .._schema import RegistryCatalogues
 from .._snapshot import collect_snapshot_ref_ids
 
 
-
 def fragment_declaring(directory: Path, anchor: str) -> Path:
     """The one fragment under *directory* whose text contains *anchor*.
 

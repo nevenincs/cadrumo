@@ -22,9 +22,9 @@ from ....iva import (
     IvaLedgerObservationRole,
 )
 from .. import (
-    NoRevisionForPeriodError,
     InputKind,
     ModeloDefinition,
+    NoRevisionForPeriodError,
     RegistryCatalogues,
     RegistryValidator,
     binding_aggregation_op,

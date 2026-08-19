@@ -15,6 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from .... import __version__
+from ....core import RegistryAuthorityGrade
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,
@@ -23,7 +24,6 @@ from ....core.access_gate import (
 )
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
-from ....core import RegistryAuthorityGrade
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._identity import (
     FingerprintTuples,

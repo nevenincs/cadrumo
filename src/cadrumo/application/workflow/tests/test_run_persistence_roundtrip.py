@@ -345,17 +345,18 @@ def test_workflow_run_persists_only_to_the_secure_database_object(
 
     :data:`StorageCategory.WORKFLOW_RUNS` names
     ``application/workflow/_persistence.py`` as its consumer, not
-    ``_rotation.py`` -- but that module's own ``save_run`` docstring states
+    the deleted rotation sweep -- but that module's own ``save_run`` docstring states
     why: "``runs_dir`` remains part of the API as a logical marker path for
     callers and tests, but no plaintext run file is written there." The
     Path ``WorkflowRunRepository.save`` returns is a caller-facing marker
     built from that settings field, never something the method itself
     writes to; the only real write goes to the encrypted secure-object
-    backend. ``_rotation.py`` still lists ``cadrumo_workflow_runs_dir`` as
-    a rotation-plan entry (a re-encryption sweep target the directory
-    could hold), which is why the category also shares the same
-    architecture as the ``_rotation.py``-only categories despite the
-    different declared consumer. This proves the claim directly, mirroring
+    backend. The master-key rotation sweep used to list
+    ``cadrumo_workflow_runs_dir`` as a plan entry (a re-encryption target the
+    directory could hold), which is why the category shares the architecture
+    of the categories that sweep was the ONLY consumer of, despite declaring a
+    different one; those siblings are now declared dormant, and this one is
+    not, because ``_persistence.py`` really does consume it. This proves the claim directly, mirroring
     ``test_put_file_reads_source_but_persists_only_secure_database_object``
     for the attachments store. The assertion routes through
     :func:`storage_path` rather than a literal so a future taxonomy

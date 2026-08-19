@@ -301,28 +301,46 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SUBMISSIONS,
         "submissions",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_submissions_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
     ),
     _location(
-        # Was the bare literal ``"amendment-results"`` in ``_rotation.py``,
+        # Was the bare literal ``"amendment-results"`` in the since-deleted master-key rotation sweep,
         # joined onto ``cadrumo_submissions_dir``. Same override caveat as the
         # secret-store leaves above.
         StorageCategory.SUBMISSIONS_AMENDMENT_RESULTS,
         "submissions/amendment-results",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        # Was the bare literal ``"amendments"`` in ``_rotation.py``, joined
+        # Was the bare literal ``"amendments"`` in the since-deleted master-key rotation sweep, joined
         # onto ``cadrumo_submissions_dir``. Same override caveat.
         StorageCategory.SUBMISSIONS_AMENDMENTS,
         "submissions/amendments",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
         override_policy=StorageOverridePolicy.FIXED,
@@ -338,7 +356,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.DRAFTS,
         "drafts",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_drafts_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -346,7 +370,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.JUSTIFICANTES,
         "justificantes",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_justificantes_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -354,7 +384,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FILING_HISTORY,
         "filing-history",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_filing_history_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -386,7 +422,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FINANCIAL_TRANSACTIONS,
         "financial/transactions",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_financial_txs_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -394,7 +436,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.INVOICES,
         "financial/invoices",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_invoices_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -402,18 +450,30 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.ATTACHMENTS,
         "financial/attachments",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_attachments_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
     ),
     _location(
-        # Was the bare literal ``"manifests"`` in ``_rotation.py``, joined onto
+        # Was the bare literal ``"manifests"`` in the since-deleted master-key rotation sweep, joined onto
         # ``cadrumo_attachments_dir``. Same override caveat as the secret-store
         # leaves above.
         StorageCategory.ATTACHMENTS_MANIFESTS,
         "financial/attachments/manifests",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
         override_policy=StorageOverridePolicy.FIXED,
@@ -421,7 +481,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.USAGE_RATIOS,
         "financial/usage-ratios.json",
-        consumer_module="adapters/persistence/storage/_rotation.py",
+        dormant_reason=(
+            "the master-key rotation sweep was this location's only consumer, and it was "
+            "deleted with the shared-master model it belonged to. Nothing wrote plaintext "
+            "here even then -- the sweep only walked the directory looking for legacy "
+            "envelope files -- so the durable records live in the encrypted secure-object "
+            "store and this path is a logical marker nothing now reads or writes"
+        ),
         settings_field="cadrumo_usage_ratios_path",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

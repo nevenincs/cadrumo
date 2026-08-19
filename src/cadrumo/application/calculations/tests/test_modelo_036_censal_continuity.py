@@ -41,11 +41,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
-from ....core import RegistryAuthorityGrade
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
