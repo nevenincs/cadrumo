@@ -1,0 +1,833 @@
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.14-14.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-1", offset = 14, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.15-19.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-15"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-15", offset = 15, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.20-39.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-1", offset = 20, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.40-40.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-1", offset = 40, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.41-41.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-1", offset = 41, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.42-74.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42", offset = 42, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.75-87.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-1", offset = 75, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.88-88.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-2", offset = 88, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.89-93.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-89"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-89", offset = 89, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.94-113.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-2", offset = 94, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.114-114.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-2", offset = 114, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.115-115.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-2", offset = 115, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.116-148.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116", offset = 116, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.149-161.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-2", offset = 149, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.162-162.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-3", offset = 162, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.163-167.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-163"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-163", offset = 163, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.168-187.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-3", offset = 168, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.188-188.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-3", offset = 188, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.189-189.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-3", offset = 189, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.190-222.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190", offset = 190, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.223-235.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-3", offset = 223, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.236-236.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-4", offset = 236, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.237-241.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-237"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-237", offset = 237, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.242-261.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-4", offset = 242, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.262-262.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-4", offset = 262, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.263-263.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-4", offset = 263, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.264-296.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264", offset = 264, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.297-309.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-4", offset = 297, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.349-349.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-1", offset = 349, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.350-354.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-1", offset = 350, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.355-355.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-1", offset = 355, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.356-375.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-1", offset = 356, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.376-376.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-1", offset = 376, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.377-377.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-1", offset = 377, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.378-410.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-1", offset = 378, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.411-423.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-1", offset = 411, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.424-424.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-2", offset = 424, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.425-429.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-2", offset = 425, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.430-430.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-2", offset = 430, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.431-450.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-2", offset = 431, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.451-451.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-2", offset = 451, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.452-452.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-2", offset = 452, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.453-485.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-2", offset = 453, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.486-498.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-2", offset = 486, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.499-499.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-3", offset = 499, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.500-504.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-3", offset = 500, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.505-505.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-3", offset = 505, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.506-525.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-3", offset = 506, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.526-526.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-3", offset = 526, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.527-527.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-3", offset = 527, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.528-560.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-3", offset = 528, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.561-573.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-3", offset = 561, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.574-574.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-4", offset = 574, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.575-579.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-4", offset = 575, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.580-580.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-4", offset = 580, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.581-600.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-4", offset = 581, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.601-601.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-4", offset = 601, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.602-602.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-4", offset = 602, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.603-635.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-4", offset = 603, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.636-648.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-4", offset = 636, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.649-649.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-5", offset = 649, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.650-654.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-5", offset = 650, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.655-655.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-5", offset = 655, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.656-675.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-5", offset = 656, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.676-676.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-5", offset = 676, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.677-677.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-5", offset = 677, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.678-710.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-5", offset = 678, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.711-723.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-5", offset = 711, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.724-724.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-6", offset = 724, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.725-729.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-6", offset = 725, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.730-730.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-6", offset = 730, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.731-750.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-6", offset = 731, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.751-751.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-6", offset = 751, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.752-752.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-6", offset = 752, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.753-785.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-6", offset = 753, length = 33, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.786-798.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-6", offset = 786, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.825-825.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-1", offset = 825, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.826-830.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1", offset = 826, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.831-850.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1", offset = 831, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.851-851.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-1", offset = 851, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.852-852.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-1", offset = 852, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.853-889.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-1", offset = 853, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.890-902.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-1"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-1", offset = 890, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.903-903.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-2", offset = 903, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.904-908.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-2", offset = 904, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.909-928.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-2", offset = 909, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.929-929.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-2", offset = 929, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.930-930.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-2", offset = 930, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.931-967.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-2", offset = 931, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.968-980.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-2"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-2", offset = 968, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.981-981.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-3", offset = 981, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.982-986.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-3", offset = 982, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.987-1006.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-3", offset = 987, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1007-1007.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-3", offset = 1007, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1008-1008.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-3", offset = 1008, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1009-1045.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-3", offset = 1009, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1046-1058.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-3"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-3", offset = 1046, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1059-1059.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-4", offset = 1059, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1060-1064.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-4", offset = 1060, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1065-1084.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-4", offset = 1065, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1085-1085.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-4", offset = 1085, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1086-1086.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-4", offset = 1086, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1087-1123.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-4", offset = 1087, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1124-1136.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-4"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-4", offset = 1124, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1137-1137.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-5", offset = 1137, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1138-1142.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-5", offset = 1138, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1143-1162.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-5", offset = 1143, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1163-1163.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-5", offset = 1163, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1164-1164.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-5", offset = 1164, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1165-1201.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-5", offset = 1165, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1202-1214.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-5"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-5", offset = 1202, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1215-1215.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-6", offset = 1215, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1216-1220.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-6", offset = 1216, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1221-1240.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-6", offset = 1221, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1241-1241.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-6", offset = 1241, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1242-1242.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-6", offset = 1242, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1243-1279.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-6", offset = 1243, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.1280-1292.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-6"
+source = "manual_input"
+selector = { record = "714-02", field = "bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-6", offset = 1280, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-02.12-12.indicador-de-pagina-complementaria"
+source = "manual_input"
+selector = { record = "714-02", field = "indicador-de-pagina-complementaria-714-02", offset = 12, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]

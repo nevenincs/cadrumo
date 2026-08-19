@@ -1,0 +1,658 @@
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.14-18.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14", offset = 14, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.19-80.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1", offset = 19, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.81-93.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1", offset = 81, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.94-98.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94", offset = 94, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.99-160.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2", offset = 99, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.161-173.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2", offset = 161, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.174-178.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174", offset = 174, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.179-240.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3", offset = 179, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.241-253.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3", offset = 241, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.267-271.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1", offset = 267, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.272-333.bienes-y-derechos-p-opciones-contractuales-descripcion-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-1", offset = 272, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.334-346.bienes-y-derechos-p-opciones-contractuales-valor-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-1", offset = 334, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.347-351.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2", offset = 347, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.352-413.bienes-y-derechos-p-opciones-contractuales-descripcion-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-2", offset = 352, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.414-426.bienes-y-derechos-p-opciones-contractuales-valor-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-2", offset = 414, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.427-431.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3", offset = 427, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.432-493.bienes-y-derechos-p-opciones-contractuales-descripcion-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-3", offset = 432, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.494-506.bienes-y-derechos-p-opciones-contractuales-valor-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-3", offset = 494, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.520-520.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1", offset = 520, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.521-525.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1", offset = 521, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.526-587.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1", offset = 526, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.588-611.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1", offset = 588, length = 24, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.612-624.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1", offset = 612, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.625-625.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2", offset = 625, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.626-630.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2", offset = 626, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.631-692.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2", offset = 631, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.693-716.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2", offset = 693, length = 24, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.717-729.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2", offset = 717, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.730-730.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3", offset = 730, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.731-735.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3", offset = 731, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.736-797.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3", offset = 736, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.798-821.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3", offset = 798, length = 24, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.822-834.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3", offset = 822, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.848-848.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1", offset = 848, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.849-853.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1", offset = 849, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.854-915.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1", offset = 854, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.916-928.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1", offset = 916, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.929-929.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2", offset = 929, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.930-934.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2", offset = 930, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.935-996.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2", offset = 935, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.997-1009.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2", offset = 997, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1010-1010.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3", offset = 1010, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1011-1015.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3", offset = 1011, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1016-1077.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3", offset = 1016, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1078-1090.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3", offset = 1078, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1091-1091.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4", offset = 1091, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1092-1096.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4", offset = 1092, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1097-1158.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4", offset = 1097, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1159-1171.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4", offset = 1159, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1172-1172.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5", offset = 1172, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1173-1177.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5", offset = 1173, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1178-1239.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5", offset = 1178, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1240-1252.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5"
+source = "manual_input"
+selector = { record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5", offset = 1240, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1266-1270.deudas-deducibles-porcentaje-titularidad-1"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-1", offset = 1266, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1271-1290.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1", offset = 1271, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1291-1291.deudas-deducibles-nif-otro-pais-1"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-1", offset = 1291, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1292-1353.deudas-deducibles-descripcion-1"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-1", offset = 1292, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1354-1366.deudas-deducibles-valor-1"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-1", offset = 1354, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1367-1371.deudas-deducibles-porcentaje-titularidad-2"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-2", offset = 1367, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1372-1391.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2", offset = 1372, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1392-1392.deudas-deducibles-nif-otro-pais-2"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-2", offset = 1392, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1393-1454.deudas-deducibles-descripcion-2"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-2", offset = 1393, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1455-1467.deudas-deducibles-valor-2"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-2", offset = 1455, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1468-1472.deudas-deducibles-porcentaje-titularidad-3"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-3", offset = 1468, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1473-1492.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3", offset = 1473, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1493-1493.deudas-deducibles-nif-otro-pais-3"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-3", offset = 1493, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1494-1555.deudas-deducibles-descripcion-3"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-3", offset = 1494, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1556-1568.deudas-deducibles-valor-3"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-3", offset = 1556, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1569-1573.deudas-deducibles-porcentaje-titularidad-4"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-4", offset = 1569, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1574-1593.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4", offset = 1574, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1594-1594.deudas-deducibles-nif-otro-pais-4"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-4", offset = 1594, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1595-1656.deudas-deducibles-descripcion-4"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-4", offset = 1595, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1657-1669.deudas-deducibles-valor-4"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-4", offset = 1657, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1670-1674.deudas-deducibles-porcentaje-titularidad-5"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-5", offset = 1670, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1675-1694.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5", offset = 1675, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1695-1695.deudas-deducibles-nif-otro-pais-5"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-5", offset = 1695, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1696-1757.deudas-deducibles-descripcion-5"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-5", offset = 1696, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1758-1770.deudas-deducibles-valor-5"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-5", offset = 1758, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1771-1775.deudas-deducibles-porcentaje-titularidad-6"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-6", offset = 1771, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1776-1795.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6", offset = 1776, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1796-1796.deudas-deducibles-nif-otro-pais-6"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-6", offset = 1796, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1797-1858.deudas-deducibles-descripcion-6"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-6", offset = 1797, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1859-1871.deudas-deducibles-valor-6"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-6", offset = 1859, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1872-1876.deudas-deducibles-porcentaje-titularidad-7"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-7", offset = 1872, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1877-1896.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7", offset = 1877, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1897-1897.deudas-deducibles-nif-otro-pais-7"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-7", offset = 1897, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1898-1959.deudas-deducibles-descripcion-7"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-7", offset = 1898, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1960-1972.deudas-deducibles-valor-7"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-7", offset = 1960, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1973-1977.deudas-deducibles-porcentaje-titularidad-8"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-8", offset = 1973, length = 5, data_type = "integer", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1978-1997.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8", offset = 1978, length = 20, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1998-1998.deudas-deducibles-nif-otro-pais-8"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-nif-otro-pais-8", offset = 1998, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.1999-2060.deudas-deducibles-descripcion-8"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-descripcion-8", offset = 1999, length = 62, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.2061-2073.deudas-deducibles-valor-8"
+source = "manual_input"
+selector = { record = "714-08", field = "deudas-deducibles-valor-8", offset = 2061, length = 13, data_type = "money", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-714-2025.714-08.12-12.indicador-de-pagina-complementaria"
+source = "manual_input"
+selector = { record = "714-08", field = "indicador-de-pagina-complementaria-714-08", offset = 12, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]

@@ -1,0 +1,7 @@
+
+[[revisions."2021".bindings]]
+id = "modelo-714-2021.714-10.169-172.liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm"
+source = "manual_input"
+selector = { record = "714-10", field = "liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm", offset = 169, length = 4, data_type = "integer", signed = false }
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
