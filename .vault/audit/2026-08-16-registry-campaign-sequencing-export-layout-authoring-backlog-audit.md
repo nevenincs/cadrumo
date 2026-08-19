@@ -6244,3 +6244,47 @@ about sixty currently-passing tests, and replacing its synthetic two-sheet toy
 with real loaded artefacts risks trading seven known failures for an unknown
 number. I am flagging that as a recommendation for the next tick rather than
 claiming an exemption for it.
+
+## The isolated-tree fixture now builds a REAL tree (7 -> 0)
+
+Last tick's residue was recorded with a reason I flagged as NOT one of the three
+sanctioned ones -- a scope judgement about blast radius. It was taken first this
+tick and it closed.
+
+The fixture hand-assembled a synthetic modelo and rendered a two-sheet toy layout
+into it. The export-completeness gate reads the REAL diseño named by the
+revision's `source_refs`, so that layout covered 3 of the 41 positions modelo
+130's design requires and validation refused -- correctly. **No synthetic layout
+can satisfy that gate against a real design, and no bundled design is small
+enough to be covered by a toy**, which is why every attempt to patch the fixture
+in place kept surfacing another coupling.
+
+It now materialises an ENROLLED generated tree through the same two helpers the
+drift gate itself uses -- `_isolated_authority` for the export-free copy and
+`_authorities` for the real semantic map, design intermediate, join, transport
+and render profile. The fixture can no longer drift from what a real generated
+tree looks like, because it is built by the same code.
+
+**Modelo 202 was the first choice and was wrong.** It is the smallest enrolled
+candidate at 95 design fields, but its pagos fraccionados fold in modelo 200, and
+generated-tree validation requires the candidate root to contain exactly the
+target modelo -- the one tree blocked by a NEIGHBOUR rather than by itself, as
+the enrolled gate's own pending table already records. Modelo 184 is used
+instead: enrolled, no supporting modelo, and exactly one revision, so the
+isolated candidate needs neither a staged neighbour nor sibling pruning.
+
+Everything transcribed by hand against the old target was repointed to derive
+from the tree descriptor instead -- paths, modelo and revision ids, design epoch,
+source ref, source digest, layout id, the transport profile (now read straight
+off the real intermediate), and the render profile plus its source evidence,
+whose design identity validation checks against the tree's.
+
+Two drift cases tampered with fragment files by TRANSCRIBED name
+(`0001-record-generated-registro-tipo-1.toml`). A real tree names its fragments
+after that modelo's own records, so the tamper hit a file that does not exist and
+the case died on the setup rather than on the drift it tests. They now read the
+fragments the renderer actually wrote.
+
+Verified together with the enrolled gate, because the fixture now shares its
+machinery: **97 passed** across all four modules, the 30 drift gates included.
+Authority CLEAN; the six queue items re-measured green at 457 passed.
