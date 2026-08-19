@@ -6403,3 +6403,33 @@ exists to keep registration events out of filing periods. That is filing-grade
 semantics I cannot ground from official sources -- AEAT does not say how this
 application should model its own observation records -- so it is recorded rather
 than forced.
+
+## Two casilla tallies that had stopped detecting anything (10 -> 0)
+
+`test_cross_dependency_calculations_modelo_202_200` pinned
+`len(revision.casillas)` twice -- 50 for the 2025 span and 43 for the earlier
+ones. The revisions declare 61 and 54 now, so both constants failed on a
+population that grew exactly as the campaign intends. This is the shape
+`aeat-quality-gates` names outright: a count "encodes a moment, trains everyone
+to update the constant, and then detects nothing".
+
+Neither tally was the subject of its case, which is what made replacing them
+straightforward:
+
+- The first sits beside a formula-target SET assertion, which is the real pin.
+  It is replaced by the property the case needs: every casilla the synthetic
+  inputs feed, and every casilla a formula targets, is declared by the selected
+  revision.
+- The second belongs to a case about REVISION SELECTION across filing-year
+  boundaries, where a casilla count says nothing about whether selection landed
+  correctly. It is replaced by the block the 2025 diseño actually ADDS over the
+  earlier spans -- casillas 61..66 plus 67 -- asserted present exactly when the
+  selected revision is the 2025 span and absent otherwise. Verified against the
+  tree first: the three revisions split cleanly on that block, and a sibling case
+  in the same module already relies on it.
+
+Proven to bite rather than merely to pass: a scratchpad plugin that strips the
+correcciones block from the 2025 revision at `build_snapshot` fails **5 of 12**
+cases, including both revision-selection cases, where the untouched run passes
+all 12. The old tally would only have noticed that mutation by coincidence -- if
+removing seven casillas happened to move the count off its constant.
