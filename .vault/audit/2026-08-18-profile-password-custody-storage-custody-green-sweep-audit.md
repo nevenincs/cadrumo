@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c39ef7b388cdf043be791db5f1d96d47e340c4a6e0dda8a4e4dd19b836a00dd'
+body_hash: 'sha256:32a6f35f3b01726d972993d545ab81b726353c32d381da579f0626cc0b6d9519'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -872,6 +872,48 @@ differential already establishes causation.
 The corruption cases drive a REAL bucket database from the real runtime fixture
 rather than a hand-built table, so a fabricated schema cannot keep agreeing with
 itself if production moves.
+
+### The rotation subsystem is the retired model's, and is now uncallable rather than merely uncalled
+
+CLASSIFIED, deletion left with the owner. `adapters/persistence/storage/_rotation.py`
+exposes four public functions -- `rotate_master_key`, `default_rotation_plan`,
+`rotate_blob_stores`, `default_blob_store_roots` -- across 596 lines, with an
+804-line test module behind them. Not one has a production consumer. The only
+importers in the tree are the storage facade's own lazy-export map and `__all__`,
+which is what makes it read as live public API, and its own tests.
+
+Two facts settle what it is. Its model is the retired one stated outright: walk
+every consumer directory in a plan and re-wrap every envelope from an OLD master
+key to a NEW one. That is the shared-master-key design the per-profile custody
+cutover replaced. And it is now UNCALLABLE in any meaningful sense, not merely
+uncalled: `rotate_master_key` takes `old_master_key_provider` and
+`new_master_key_provider`, both typed `MasterKeyProvider`, while `_provider_enter`
+refuses every implementation of that protocol except `UnsecuredMasterKeyProvider`.
+The only call this tree admits rotates the published deterministic key to itself.
+
+The live replacement is per-profile and reachable: `aeat config passphrase change`
+to `rotate_profile_passphrase` to `application/user_profile/_passphrase_rotation.py`.
+It is a deliberately different operation -- it re-mints the password envelope over
+the SAME data-encryption key and preserves the DEK epoch, because re-keying would
+re-encrypt every record and silently invalidate any recovery phrase the taxpayer
+holds. So the old subsystem is not an unfinished version of the new one; they
+answer different questions, and only one of them is still asked.
+
+This is the most deceptive shape dead code takes. An 804-line suite passes green
+over it every run, so every health signal reports a working subsystem, and the
+facade advertises it as supported API.
+
+Deletion is NOT taken autonomously, and the reason is the rule rather than doubt
+about the classification. Key-management removals are owner-gated because
+deleting a key-schedule or DEK-derivation branch can strand encrypted data. The
+confirmation that gate asks for does hold here -- the creation path
+(`register_profile_with_credentials`) mints only the current per-profile
+envelope, and this module neither creates nor reads any live schedule, so
+removing it cannot render stored bytes unreadable; it removes a re-wrap
+capability nothing invokes. That is an argument for the owner to weigh, not a
+licence for the agent to act on a key-management surface. It has now been
+deferred three times in this campaign, so it is put to the operator directly
+rather than recorded a fourth time.
 
 ## Recommendations
 
