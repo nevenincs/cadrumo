@@ -3330,9 +3330,9 @@ cli:
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
         paragraph_storage_isolation: Elszigetelt üres állapothoz állítsa be ezeket
-          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
-          CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
-          szerint ezen tárhelygyökér alatt vannak.
+          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR
+          és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés szerint ezen tárhelygyökér
+          alatt vannak.
         passphrase_change: Az aktív profilt védő jelszó módosítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.

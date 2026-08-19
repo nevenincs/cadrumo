@@ -3359,9 +3359,8 @@ cli:
         paragraph_durable_state: El estado duradero (perfil, autenticación, libro)
           persiste entre sesiones.
         paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
-          y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
-          de almacenamiento.
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR y CADRUMO_SECRET_PASSPHRASE;
+          los logs quedan por defecto bajo ese directorio de almacenamiento.
         passphrase_change: Cambia la contraseña que protege el perfil activo.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.

@@ -3327,10 +3327,9 @@ cli:
         heading: Configuració i diagnòstic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticació, llibre) persisteix
           entre sessions.
-        paragraph_storage_isolation: Per a una execució aillada des de zero, definiu
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
-          i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
-          d'emmagatzematge.
+        paragraph_storage_isolation: Per a una execució aïllada des de zero, definiu
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR i CADRUMO_SECRET_PASSPHRASE;
+          els logs queden per defecte sota aquest directori d'emmagatzematge.
         passphrase_change: Canvia la contrasenya que protegeix el perfil actiu.
         profile_delete: Elimina un perfil emmagatzemat localment.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
