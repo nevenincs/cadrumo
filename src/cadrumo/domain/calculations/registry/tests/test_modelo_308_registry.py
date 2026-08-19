@@ -13,6 +13,13 @@ from ._registry_schema_support import _committed_modelo, _committed_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+#: Modelo 308 declares ONE revision, `2009-y-siguientes`. The cases here named
+#: `2022`, an id this modelo has never carried -- git shows no such revision
+#: directory has ever existed -- so every one of them died on the lookup rather
+#: than on what it asserts.
+_M308_REVISION = "2009-y-siguientes"
+
+
 def _load_modelo_308() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("308")
 
@@ -39,7 +46,7 @@ def test_modelo_308_metadata_matches_orden_eha_3786_2008_art_2() -> None:
 
 def test_modelo_308_revision_starts_at_2009() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_M308_REVISION]
     assert revision.valid_from == date(2009, 1, 1)
     assert revision.period_selector.year_from == 2009
     assert revision.period_selector.periods == ("AD-HOC",)
@@ -49,7 +56,7 @@ def test_modelo_308_revision_starts_at_2009() -> None:
 def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
     for filing_year in (2020, 2024, 2025, 2026):
         snapshot = _committed_snapshot("308", filing_year, "AD-HOC")
-        assert snapshot.revision.id == "2022"
+        assert snapshot.revision.id == _M308_REVISION
 
 
 def test_modelo_308_snapshot_carries_legal_authority() -> None:
@@ -65,7 +72,7 @@ def test_modelo_308_snapshot_carries_legal_authority() -> None:
 
 def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_M308_REVISION]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-308-ad-hoc")
     assert schedule.period_kind == "ad_hoc"
     assert schedule.periods == ("AD-HOC",)
@@ -74,7 +81,7 @@ def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
 
 def test_modelo_308_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_M308_REVISION]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-308-static-documentation"]
@@ -90,7 +97,7 @@ def test_modelo_308_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_308_construct_links_filing_workbook_parity() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_M308_REVISION]
     construct = next(c for c in revision.constructs if c.id == "modelo-308-iva-solicitud-devolucion")
     assert "modelo-308-filing" in construct.application_links
     assert "modelo-308-deadline" in construct.application_links

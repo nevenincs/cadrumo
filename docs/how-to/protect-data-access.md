@@ -66,7 +66,6 @@ Change the passphrase whenever you suspect it has been seen, or on whatever
 schedule your own policy sets:
 
 ```{cli-sequence} protect-data-access-passphrase-change
-:verify: Confirm the passphrase change re-wraps the key without re-encrypting records.
 ```
 
 Enter the current passphrase, then the new one twice. Nothing is echoed.
@@ -143,8 +142,8 @@ affected records. Override the pause only after reviewing and accepting the
 legal retention consequence, and always provide a non-empty reason. If you
 provide a reason without the override, the command refuses to continue.
 
-See [Set up your taxpayer profile](profile-setup.md) for profile export
-instructions.
+See [Set up your taxpayer profile](profile-setup.md) for sealed archive
+backup instructions.
 
 ## Next steps
 

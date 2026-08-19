@@ -1,2 +1,3 @@
 @step Change the passphrase that protects the active profile.
 @static aeat config passphrase change
+@blocked interactive-tty Prompts for the current and new passphrase on a terminal; there is no prompt to drive in the sandbox.

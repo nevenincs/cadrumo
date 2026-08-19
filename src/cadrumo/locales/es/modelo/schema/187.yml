@@ -10,18 +10,17 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              label: Número total de operaciones
+            '02':
+              label: Importe total de las adquisiciones
             '03':
-              help: null
-              label: Base retenciones e ingresos a cuenta
+              label: Importe total de las enajenaciones
             '04':
-              help: null
-              label: Retenciones e ingresos a cuenta declarados
-            '05':
-              help: null
-              label: Total retenciones del resumen anual
+              label: Importe total de las retenciones e ingresos a cuenta
           construct:
             modelo-187-calculation-construct:
               field:
                 title: Modelo 187 calculation construct
           field:
-            label: Orden EHA/3377/2011, ejercicios 2019 y siguientes
+            label: Orden HAP/1608/2014, ejercicios 2019 y siguientes

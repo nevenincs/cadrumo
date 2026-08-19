@@ -329,11 +329,9 @@ def _emit_iva_wallet_corrected_event(
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
-        BucketEvent,
         BucketEventObjectType,
         BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
+        emit_bucket_event,
     )
 
     occurred_at = now()
@@ -346,7 +344,12 @@ def _emit_iva_wallet_corrected_event(
         "new_amount": str(new_amount),
         "reason": reason,
     }
-    event_id = derive_bucket_event_id(
+    # Through the shared emitter: the history is a singleton row, so the
+    # load-append-save this replaced discarded any event another writer
+    # committed in between, and content-addressed survivors leave no gap to
+    # notice it.
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_IVA_WALLET_CORRECTED,
         occurred_at=occurred_at,
@@ -354,23 +357,8 @@ def _emit_iva_wallet_corrected_event(
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=object_id,
         payload=payload,
+        payload_version=1,
     )
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=bucket_id,
-            event_type=BucketEventType.MODELO_IVA_WALLET_CORRECTED,
-            occurred_at=occurred_at,
-            actor="operator",
-            object_type=BucketEventObjectType.WORK_UNIT,
-            object_id=object_id,
-            payload_version=1,
-            payload=payload,
-        ),
-    )
-    catalogue_repo.save(next_catalogue)
 
 
 def record_iva_compensation_override_for_bucket(
@@ -519,11 +507,9 @@ def _emit_iva_wallet_override_event(
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
-        BucketEvent,
         BucketEventObjectType,
         BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
+        emit_bucket_event,
     )
 
     occurred_at = now()
@@ -536,7 +522,12 @@ def _emit_iva_wallet_override_event(
         "reason": reason,
         "evidence_locator": evidence_locator,
     }
-    event_id = derive_bucket_event_id(
+    # Through the shared emitter: the history is a singleton row, so the
+    # load-append-save this replaced discarded any event another writer
+    # committed in between, and content-addressed survivors leave no gap to
+    # notice it.
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED,
         occurred_at=occurred_at,
@@ -544,23 +535,8 @@ def _emit_iva_wallet_override_event(
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=object_id,
         payload=payload,
+        payload_version=1,
     )
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=bucket_id,
-            event_type=BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED,
-            occurred_at=occurred_at,
-            actor="operator",
-            object_type=BucketEventObjectType.WORK_UNIT,
-            object_id=object_id,
-            payload_version=1,
-            payload=payload,
-        ),
-    )
-    catalogue_repo.save(next_catalogue)
 
 
 __all__ = [

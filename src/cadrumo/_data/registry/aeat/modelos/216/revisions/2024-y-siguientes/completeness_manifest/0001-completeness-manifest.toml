@@ -11,7 +11,7 @@
 
 [revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "boe-modelo-216-form-layout"
-legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]

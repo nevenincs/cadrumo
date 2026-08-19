@@ -68,10 +68,15 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 
-#: 2020 resolves to the 2022 revision (period_selector 2022),
-#: 2024 to its early-period epoch. Both windows sit entirely inside the unamended
-#: art. 102.Uno / art. 104.Uno text, so both are bound by the same reading.
-_LIVE_FILING_YEARS = (2020, 2024)
+#: 2022 resolves to the `2022` revision, 2024 to its early-period epoch. Both
+#: windows sit entirely inside the unamended art. 102.Uno / art. 104.Uno text, so
+#: both are bound by the same reading.
+#:
+#: This named 2020, which resolved while the earliest revision was the open
+#: 2009-2022 span. That span was retired when the revision was renamed to
+#: `2022`, so 2020 now resolves to no revision at all and every case here died
+#: on resolution rather than on the zero-volume grounding it asserts.
+_LIVE_FILING_YEARS = (2022, 2024)
 
 #: The percentage a full right to deduct carries. Read off arts. 92/94 (the
 #: whole of the input tax is deductible when no prorrata limitation applies),

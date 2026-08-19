@@ -37,12 +37,17 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
+# Modelos 179, 186, 233, 234 and 238 are deliberately ABSENT from this list.
+# AEAT publishes no record design for any of them -- confirmed against every
+# current and ejercicios-anteriores Diseno de Registro index page -- and the
+# registry's membership criterion is that a modelo earns a definition when AEAT
+# publishes a machine-readable submission format for it. They were relocated to
+# the recognized out-of-scope obligations, 179 to the suppressed-modelo map
+# after DAC7 absorbed it into 238. Listing them here asserted a registry
+# membership the tree deliberately does not grant.
 _MODELOS = [
-    ("179", "2021-y-siguientes", "orden-hac-612-2021:art-1", "orden-hac-612-2021:art-4", "BOE-A-2021-10163", True),
-    ("181", "2022", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
+    ("181", "2009-y-siguientes", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
     ("270", "2013-y-siguientes", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
-    ("234", "2021-y-siguientes", "orden-hac-342-2021:art-1", "orden-hac-342-2021:art-4", "BOE-A-2021-5780", False),
-    ("238", "2024-y-siguientes", "orden-hac-72-2024:art-1", "orden-hac-72-2024:art-9", "BOE-A-2024-2092", False),
 ]
 
 
@@ -73,7 +78,7 @@ def test_committed_definition_legal_authority_and_deadline_shape(
 
 def test_annual_january_windows_resolve() -> None:
     authority = bundled_authority()
-    for mid in ("179", "181", "270"):
+    for mid in ("181", "270"):
         windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
         wid = f"modelo-{mid}-2024-0a"
         assert wid in windows
@@ -82,13 +87,30 @@ def test_annual_january_windows_resolve() -> None:
 
 
 def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
+    """A modelo declaring no deadline window resolves no calendar window either.
+
+    This named modelos 234 and 238, which were relocated out of the registry
+    because AEAT publishes no record design for them. Emptying the list would
+    have left the case iterating nothing and asserting nothing, so the subjects
+    are DERIVED: every registry modelo whose revisions declare no deadline
+    window at all -- the event-driven and delegated ones -- must resolve none
+    through the authority either. The population is asserted non-empty so the
+    case cannot go quiet if that set ever empties.
+    """
     authority = bundled_authority()
-    for mid in ("234", "238"):
+    windowless = tuple(
+        str(modelo.id)
+        for modelo in authority.modelos
+        if not any(revision.deadline_windows for revision in modelo.revisions.values())
+    )
+    assert windowless, "no registry modelo declares an empty deadline-window set"
+
+    for mid in windowless:
         assert [w.id for _, _, w in authority.deadline_windows(2025, modelos=(mid,))] == []
 
 
 def test_all_five_are_registry_backed() -> None:
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
-    for mid in ("179", "181", "270", "234", "238"):
+    for mid in ("181", "270"):
         assert mid in CANONICAL_MODELO_FLEET

@@ -13,7 +13,7 @@ id = "modelo-216-numero-rentas-sometidas-total"
 target_casilla_id = "07"
 expression = { op = "add", args = [ { casilla_id = "05" }, { casilla_id = "06" } ] }
 rounding = "integer"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -25,7 +25,7 @@ id = "modelo-216-numero-rentas-no-sometidas-total"
 target_casilla_id = "16"
 expression = { op = "add", args = [ { casilla_id = "14" }, { casilla_id = "15" } ] }
 rounding = "integer"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -37,7 +37,7 @@ id = "modelo-216-base-no-sometidas-total"
 target_casilla_id = "19"
 expression = { op = "add", args = [ { casilla_id = "17" }, { casilla_id = "18" } ] }
 rounding = "money-2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]

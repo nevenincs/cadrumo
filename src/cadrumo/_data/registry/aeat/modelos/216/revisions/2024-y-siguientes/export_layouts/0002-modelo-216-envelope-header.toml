@@ -19,7 +19,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -33,7 +33,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -47,7 +47,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -61,7 +61,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -75,7 +75,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -89,7 +89,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -103,7 +103,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -116,7 +116,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 # EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
@@ -146,7 +146,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 # @101+9 "NIF Empresa Desarrollo (**)" is UNWRITTEN -- see the EEDD note above.
@@ -161,7 +161,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -175,5 +175,5 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]

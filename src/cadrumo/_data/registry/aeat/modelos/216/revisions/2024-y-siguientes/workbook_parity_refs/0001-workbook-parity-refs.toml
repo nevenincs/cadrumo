@@ -5,5 +5,5 @@ fixture_id = "modelo-216-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["boe-modelo-216-form-layout"]

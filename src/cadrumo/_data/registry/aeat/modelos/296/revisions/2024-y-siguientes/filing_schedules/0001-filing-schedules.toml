@@ -9,5 +9,5 @@
 id = "modelo-296-anual"
 period_kind = "annual"
 periods = ["0A"]
-legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-296-2024", "aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

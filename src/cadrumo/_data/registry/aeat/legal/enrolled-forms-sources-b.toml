@@ -79,6 +79,19 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
 review_status = "reviewed"
 
+[sources."boe-modelo-187-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2014-9225-modelo-187-annex-text.txt"
+sha256 = "dd9dfb283c05f7b917c5746a4c86420d99482473ede7df129f291a1a071405c8"
+bytes = 1092
+retrieved_at = 2026-08-19
+published_at = 2014-09-10
+applies_from = 2014-09-11
+source_url = "https://www.boe.es/datos/imagenes/disp/2014/220/09225_4930.png"
+review_status = "reviewed"
+
 [sources."boe-modelo-126-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

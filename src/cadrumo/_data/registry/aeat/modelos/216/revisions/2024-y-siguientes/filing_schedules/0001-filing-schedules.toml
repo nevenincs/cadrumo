@@ -11,7 +11,7 @@ id = "modelo-216-trimestral"
 period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 profile_condition_mode = "all"
-legal_refs = ["orden-eha-3290-2008:art-4", "orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-4", "orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".filing_schedules.profile_conditions]]

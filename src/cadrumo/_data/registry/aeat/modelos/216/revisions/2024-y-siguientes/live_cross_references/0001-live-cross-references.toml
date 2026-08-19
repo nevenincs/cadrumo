@@ -12,7 +12,7 @@ forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "m
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".live_cross_references]]
@@ -35,5 +35,5 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-4", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-4", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]

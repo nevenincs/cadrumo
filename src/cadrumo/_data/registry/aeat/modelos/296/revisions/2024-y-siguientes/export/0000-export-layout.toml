@@ -3,7 +3,7 @@ id = 'generated-modelo-296-2024-y-siguientes-fichero'
 format = 'fixed_width'
 source_refs = ['aeat-dr-296-2024']
 legal_refs = [
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
     'trlirnr-rdleg-5-2004:art-24',
 ]
 dictionary_path_overrides = []

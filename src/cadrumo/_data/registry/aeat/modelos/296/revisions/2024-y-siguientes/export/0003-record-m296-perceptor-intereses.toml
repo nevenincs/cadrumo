@@ -22,7 +22,7 @@ justification = 'none'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -39,7 +39,7 @@ justification = 'none'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -57,7 +57,7 @@ signed = false
 value_policy = 'four-digit-year'
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -74,7 +74,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -91,7 +91,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -108,7 +108,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -125,7 +125,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -142,7 +142,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -159,7 +159,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -177,7 +177,7 @@ signed = false
 value_policy = 'unsigned-integer'
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -193,7 +193,7 @@ justification = 'left'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 
@@ -210,7 +210,7 @@ justification = 'none'
 signed = false
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
-    'orden-hac-56-2024:art-1',
+    'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
 

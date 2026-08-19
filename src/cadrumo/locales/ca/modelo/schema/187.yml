@@ -7,15 +7,14 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              label: Nombre total d'operacions
+            '02':
+              label: Import total de les adquisicions
             '03':
-              help: null
-              label: Base de retencions i ingressos a compte
+              label: Import total de les alienacions
             '04':
-              help: null
-              label: Retencions i ingressos a compte declarats
-            '05':
-              help: null
-              label: Total de retencions del resum anual
+              label: Import total de les retencions i ingressos a compte
           construct:
             modelo-187-calculation-construct:
               field:

@@ -30,5 +30,5 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]

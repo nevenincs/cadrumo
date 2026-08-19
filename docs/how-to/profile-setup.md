@@ -349,11 +349,10 @@ worked *and* the child attended, so a count cannot say whether the two overlap.
 
 ## Maintain your profile
 
-The following steps edit a fact, rename the profile, duplicate it, delete the
-duplicate, and export the profile to a portable JSON file:
+The following steps edit a fact and back up the profile to a sealed archive:
 
 ```{cli-sequence} profile-setup-maintain
-:verify: Confirm the profile survives an edit, rename, duplicate, delete, and export.
+:verify: Confirm the profile survives an edit and a sealed archive backup.
 ```
 
 What each step does:
@@ -361,35 +360,18 @@ What each step does:
 - **Edit** re-runs the wizard, or changes only the flags you pass with
   `--quiet`. See [Modify your profile](#modify-your-profile). Run `show`,
   `status`, or `validate` again after editing.
-- **Rename** changes only the visible label; the active-profile pointer follows
-  it.
-- **Duplicate** starts a second profile from the same facts. The second name you
-  pass is the new profile's name, the name you address it by in every later
-  command. The new profile becomes the active one.
-- **Delete** removes a profile for good. If the deleted profile was active,
-  Cadrumo clears the active-profile pointer.
-- **Export** writes a portable JSON file. Pass `--cleartext-local` for a local
-  JSON file, or `--encrypt` for an encrypted transfer bundle; the passphrase is
-  prompted (hidden), never given on the command line.
+- **Archive export** writes a sealed, encrypted copy of the profile. The target
+  filename must end with `.cadrumo-bucket.tar.gz`. The archive is encrypted with
+  the profile passphrase and does not carry the profile label. Restore it with
+  `aeat config profile restore`, and read a sealed archive's header without
+  decrypting it using `aeat config profile archive inspect`.
 
-Import a saved file back into another session or storage root. Import under a
-fresh label; the imported profile becomes the active one. A store that still
-holds the same profile refuses the import on the profile's identifier, so import
-is for restoring into a different storage root:
+Delete a profile for good with `aeat config profile delete NAME --yes`. If the
+deleted profile was active, Cadrumo clears the active-profile pointer.
 
-```{cli-sequence} profile-setup-import
-```
-
-A portable profile file contains taxpayer data, including the tax identifier,
-activity, and local filing history. Store it as sensitive tax data, and don't
-attach it to a support request unless you've removed personal details.
-
-Two related outputs are easy to confuse with this one. `aeat config profile
-subject-access-request` writes the *same* bundle, framed as a data-subject
-right-of-access response - so a cleartext bundle carries the same handoff risk
-whichever purpose produced it. The sealed custody archive is a different thing
-again: it is the encrypted backup you restore from, and neither export is a
-substitute for it. See
+A sealed archive contains taxpayer data, including the tax identifier, activity,
+and local filing history. Store it as sensitive tax data, and don't attach it to
+a support request. See
 [import, export, and evidence](../reference/import-export-and-evidence.md).
 
 Sign out without deleting the profile using `aeat config logout`.

@@ -9,7 +9,7 @@ source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d037
 export_field_id = "m296-2024.anexo-b-certificados.f001"
 kind = "literal"
 literal = "2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -21,7 +21,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f002"
 kind = "literal"
 literal = "296"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -33,7 +33,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f003"
 kind = "header"
 producer_key = "m296.anb.ejercicio"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -45,7 +45,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f004"
 kind = "header"
 producer_key = "m296.anb.nif_del_declarante"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -57,7 +57,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f005"
 kind = "header"
 producer_key = "m296.anb.nif_del_perceptor"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -69,7 +69,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f006"
 kind = "header"
 producer_key = "m296.anb.nif_del_representante_legal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -81,7 +81,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f007"
 kind = "header"
 producer_key = "m296.anb.f_j"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -93,7 +93,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f008"
 kind = "header"
 producer_key = "m296.anb.apellidos_y_nombre_razon_social_o_deno"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -105,7 +105,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f009"
 kind = "header"
 producer_key = "m296.anb.identificador_de_registro_o_numero_de"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -117,7 +117,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f010"
 kind = "header"
 producer_key = "m296.anb.apellidos_y_nombre_razon_social_o_deno_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -129,7 +129,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f011"
 kind = "header"
 producer_key = "m296.anb.codigo_isin_del_certificado"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -141,7 +141,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f012"
 kind = "header"
 producer_key = "m296.anb.codigo_cuenta_valores_del_certificado"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -153,7 +153,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f013"
 kind = "header"
 producer_key = "m296.anb.codigo_lei_del_titular_registral"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -165,7 +165,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f014"
 kind = "header"
 producer_key = "m296.anb.titular_registral_de_la_cuenta_de_valo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -177,7 +177,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f015"
 kind = "header"
 producer_key = "m296.anb.parte_entera_del_numero_de_titulos"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -189,7 +189,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f016"
 kind = "header"
 producer_key = "m296.anb.parte_decimal_del_numero_de_titulos"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -201,7 +201,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f017"
 kind = "header"
 producer_key = "m296.anb.parte_entera_del_numero_de_titulos_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -213,7 +213,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f018"
 kind = "header"
 producer_key = "m296.anb.parte_decimal_del_numero_de_titulos_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -225,7 +225,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f019"
 kind = "header"
 producer_key = "m296.anb.fecha_de_pago"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -237,7 +237,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f020"
 kind = "header"
 producer_key = "m296.anb.entero"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -249,7 +249,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f021"
 kind = "header"
 producer_key = "m296.anb.decimal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -261,7 +261,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f022"
 kind = "header"
 producer_key = "m296.anb.entero_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -273,7 +273,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f023"
 kind = "header"
 producer_key = "m296.anb.decimal_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -285,7 +285,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f024"
 kind = "header"
 producer_key = "m296.anb.entero_3"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -297,7 +297,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f025"
 kind = "header"
 producer_key = "m296.anb.decimal_3"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -309,7 +309,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f026"
 kind = "header"
 producer_key = "m296.anb.numero_de_justificante_del_modelo_210"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -321,7 +321,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f027"
 kind = "header"
 producer_key = "m296.anb.fecha_de_presentacion_del_modelo_210"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -332,7 +332,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 [[entries]]
 export_field_id = "m296-2024.anexo-b-certificados.f028"
 kind = "filler"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
@@ -344,7 +344,7 @@ record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pag
 export_field_id = "m296-2024.anexo-b-certificados.f029"
 kind = "literal"
 literal = "B"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"

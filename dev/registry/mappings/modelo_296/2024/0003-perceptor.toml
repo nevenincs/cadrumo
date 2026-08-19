@@ -9,7 +9,7 @@ source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d037
 export_field_id = "m296-2024.perceptor.f001"
 kind = "literal"
 literal = "2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -21,7 +21,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f002"
 kind = "literal"
 literal = "296"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -33,7 +33,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f003"
 kind = "header"
 producer_key = "m296.per.ejercicio"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -45,7 +45,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f004"
 kind = "header"
 producer_key = "m296.per.nif_del_declarante"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -57,7 +57,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f005"
 kind = "header"
 producer_key = "m296.per.nif_del_perceptor"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -69,7 +69,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f006"
 kind = "header"
 producer_key = "m296.per.nif_del_representante_legal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -81,7 +81,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f007"
 kind = "header"
 producer_key = "m296.per.f_j"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -93,7 +93,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f008"
 kind = "header"
 producer_key = "m296.per.apellidos_y_nombre_razon_social_o_deno"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -105,7 +105,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f009"
 kind = "header"
 producer_key = "m296.per.identificador_de_registro_o_numero_de"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -117,7 +117,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f010"
 kind = "header"
 producer_key = "m296.per.codigo_bic_del_perceptor_mediador"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -129,7 +129,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f011"
 kind = "header"
 producer_key = "m296.per.fecha_de_devengo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -141,7 +141,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f012"
 kind = "header"
 producer_key = "m296.per.naturaleza"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -153,7 +153,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f013"
 kind = "header"
 producer_key = "m296.per.clave"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -165,7 +165,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f014"
 kind = "header"
 producer_key = "m296.per.subclave"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -177,7 +177,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f015"
 kind = "header"
 producer_key = "m296.per.base_retenciones_e_ingresos_a_cuenta"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -189,7 +189,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f016"
 kind = "header"
 producer_key = "m296.per.entero"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -201,7 +201,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f017"
 kind = "header"
 producer_key = "m296.per.decimal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -213,7 +213,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f018"
 kind = "header"
 producer_key = "m296.per.parte_entera_del_importe_de_las_retenc"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -225,7 +225,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f019"
 kind = "header"
 producer_key = "m296.per.parte_decimal_del_importe_de_las_reten"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -237,7 +237,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f020"
 kind = "header"
 producer_key = "m296.per.perceptor_mediador"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -249,7 +249,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f021"
 kind = "header"
 producer_key = "m296.per.codigo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -261,7 +261,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f022"
 kind = "header"
 producer_key = "m296.per.codigo_emisor"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -273,7 +273,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f023"
 kind = "header"
 producer_key = "m296.per.declarante"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -285,7 +285,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f024"
 kind = "header"
 producer_key = "m296.per.tipo_codigo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -297,7 +297,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f025"
 kind = "header"
 producer_key = "m296.per.codigo_cuenta_valores"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -309,7 +309,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f026"
 kind = "header"
 producer_key = "m296.per.pendiente"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -321,7 +321,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f027"
 kind = "header"
 producer_key = "m296.per.ejercicio_devengo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -333,7 +333,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f028"
 kind = "header"
 producer_key = "m296.per.fecha_de_inicio_del_prestamo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -345,7 +345,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f029"
 kind = "header"
 producer_key = "m296.per.fecha_de_vencimiento_del_prestamo"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -357,7 +357,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f030"
 kind = "header"
 producer_key = "m296.per.entero_numerico_parte_entera"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -369,7 +369,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f031"
 kind = "header"
 producer_key = "m296.per.decimal_numerico_parte_decimal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -381,7 +381,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f032"
 kind = "header"
 producer_key = "m296.per.entero_numerico_parte_entera_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -393,7 +393,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f033"
 kind = "header"
 producer_key = "m296.per.decimal_numerico_parte_decimal_2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -405,7 +405,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f034"
 kind = "header"
 producer_key = "m296.per.entero_numerico_parte_entera_3"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -417,7 +417,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f035"
 kind = "header"
 producer_key = "m296.per.decimal_numerico_parte_decimal_3"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -429,7 +429,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f036"
 kind = "header"
 producer_key = "m296.per.direccion_del_perceptor"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -441,7 +441,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f037"
 kind = "header"
 producer_key = "m296.per.ingresos_a_cuenta_repercutidos"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -453,7 +453,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f038"
 kind = "header"
 producer_key = "m296.per.nif_del_pagador_anterior"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -465,7 +465,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f039"
 kind = "header"
 producer_key = "m296.per.procedimiento_especial_de_retenciones"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -477,7 +477,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f040"
 kind = "header"
 producer_key = "m296.per.clave_de_mercado"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -489,7 +489,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f041"
 kind = "header"
 producer_key = "m296.per.codigo_lei_del_perceptor"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -501,7 +501,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f042"
 kind = "header"
 producer_key = "m296.per.nif_en_el_pais_de_residencia_fiscal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -513,7 +513,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f043"
 kind = "header"
 producer_key = "m296.per.fecha_de_nacimiento"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -525,7 +525,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f044"
 kind = "header"
 producer_key = "m296.per.ciudad"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -537,7 +537,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f045"
 kind = "header"
 producer_key = "m296.per.codigo_pais"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -549,7 +549,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 export_field_id = "m296-2024.perceptor.f046"
 kind = "header"
 producer_key = "m296.per.pais_o_territorio_de_residencia_fiscal"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -560,7 +560,7 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 [[entries]]
 export_field_id = "m296-2024.perceptor.f047"
 kind = "filler"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"

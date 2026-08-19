@@ -10,7 +10,7 @@ finalized-modelo blockers for the public ledger action services.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -22,7 +22,7 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import now
 
 if TYPE_CHECKING:
-    pass
+    from ...adapters.persistence.storage import SecureObjectWrite
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -882,6 +882,63 @@ def _append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, e
     emit_bucket_events(repository=repository, events=events)
 
 
+def _commit_with_guarded_events(
+    *,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
+    event_repository: BucketEventHistoryRepository,
+    events: tuple[BucketEvent, ...],
+    commit: Callable[[SecureObjectWrite], None],
+    attempts: int = 4,
+) -> None:
+    """Commit ``commit`` with the events composed in, guarded on their revision.
+
+    The co-commit is what these ledger writes need and what the self-committing
+    domain emitter cannot give them: the audit entry has to land in the SAME
+    batch as the record it describes, or a crash records a linkage that never
+    happened, or lands one with nothing saying so.
+
+    What the composition lacked was the other half. Reading the event catalogue
+    and handing it straight to the batch writes back whatever revision was read,
+    so an event another process appended in between is discarded -- the same
+    singleton-row loss ``append_guarded`` closes for the standalone path, on the
+    one shape that could not use it. Content-addressed events hide it perfectly:
+    every survivor is intact and the missing one leaves no gap.
+
+    So the write carries the revision the catalogue was READ at, and the whole
+    composition is re-run against the newly-current catalogue when the substrate
+    refuses it. ``commit`` is therefore called once per attempt and must be safe
+    to re-run; it is, because the domain catalogues it closes over are values
+    computed before this call, not reads that could go stale inside it.
+
+    Args:
+        event_repository: The bucket event-history repository.
+        events: The events to append, in order.
+        commit: Performs the real batch write, given the composed event write.
+        attempts: Maximum reads before the contention is surfaced.
+
+    Raises:
+        SecureObjectRevisionConflictError: Contention persisted across every
+            attempt. Refusing beats the silent discard this replaced.
+    """
+    from ...adapters.persistence.storage import SecureObjectRevisionConflictError
+
+    last_conflict: SecureObjectRevisionConflictError | None = None
+    for _attempt in range(attempts):
+        event_catalogue, revision_id = event_repository.load_revisioned()
+        for event in events:
+            event_catalogue = append_bucket_event(event_catalogue, event)
+        try:
+            commit(event_repository.to_secure_object_write(event_catalogue, expected_revision_id=revision_id))
+        except SecureObjectRevisionConflictError as exc:
+            last_conflict = exc
+            continue
+        return
+    if last_conflict is not None:
+        raise last_conflict
+    raise AssertionError("guarded event co-commit exhausted without a conflict")
+
+
 def _save_transaction_catalogue_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
@@ -891,12 +948,13 @@ def _save_transaction_catalogue_and_events(
     catalogue: TransactionCatalogue,
     events: tuple[BucketEvent, ...],
 ) -> None:
-    event_catalogue = event_repository.load()
-    for event in events:
-        event_catalogue = append_bucket_event(event_catalogue, event)
-    transaction_repository.save_with_secure_object_writes(
-        catalogue,
-        (event_repository.to_secure_object_write(event_catalogue),),
+    _commit_with_guarded_events(
+        event_repository=event_repository,
+        events=events,
+        commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
+            catalogue,
+            (event_write,),
+        ),
     )
 
 
@@ -911,14 +969,15 @@ def _save_transaction_catalogue_invoices_and_events(
     invoice_catalogue: InvoiceCatalogue,
     events: tuple[BucketEvent, ...],
 ) -> None:
-    event_catalogue = event_repository.load()
-    for event in events:
-        event_catalogue = append_bucket_event(event_catalogue, event)
-    transaction_repository.save_with_secure_object_writes(
-        transaction_catalogue,
-        (
-            invoice_repository.to_secure_object_write(invoice_catalogue),
-            event_repository.to_secure_object_write(event_catalogue),
+    _commit_with_guarded_events(
+        event_repository=event_repository,
+        events=events,
+        commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
+            transaction_catalogue,
+            (
+                invoice_repository.to_secure_object_write(invoice_catalogue),
+                event_write,
+            ),
         ),
     )
 
