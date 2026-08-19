@@ -226,20 +226,30 @@ class InventoryService:
                 context={"valuation_method": valuation_method},
             ) from exc
         repository = self._repository_for(bucket_id)
-        document = repository.load()
-        if _find_ledger(document, actividad_id, year) is not None:
-            raise InventoryActividadConflictError(
-                translated_message="application.inventory.service.errors.actividad_conflict",
-                context={"actividad_id": actividad_id, "year": str(year)},
-            )
         ledger = InventoryLedger(
             actividad_id=actividad_id,
             year=year,
             valuation_method=method,
             opening_stock=opening_stock,
         )
-        document = InventoryLedgerDocument(ledgers=(*document.ledgers, ledger))
-        repository.save(document)
+        # Delegated to the repository's guarded verb rather than repeating its
+        # read, duplicate-check and write here. The document is a singleton row,
+        # so creating one ledger rewrites all of them: performed unguarded, a
+        # ledger created for a DIFFERENT activity in the interim is discarded,
+        # and the duplicate check cannot notice because the two never met. The
+        # verb runs that check inside the guarded unit of work, so it is
+        # re-judged against the document each attempt actually writes to.
+        #
+        # The refusal is re-raised in this layer's own words: the adapter names
+        # a storage-level conflict, and the operator asked to create an
+        # actividad.
+        try:
+            repository.create(ledger)
+        except InventoryLedgerError as exc:
+            raise InventoryActividadConflictError(
+                translated_message="application.inventory.service.errors.actividad_conflict",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,

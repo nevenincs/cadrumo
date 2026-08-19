@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:4a075af40e3555420ccd8eb35e100bd721f5979b366b4a9acec92c78ccbf6105'
+body_hash: 'sha256:16021afd1516bcceeaa8b5ea1b8e1637b782a40bb01c93cbafaccb6e35a6eb41'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -241,6 +241,47 @@ the store's own package directory to cut noise, and the one production
 instantiation lives inside that directory, in the materialisation factory. A
 liveness question cannot be answered by a search that filters out the package
 being judged.
+
+### A guard can be built, tested, gated -- and bypassed by the live path
+
+The singleton catalogues share one defect shape: the document is a single
+encrypted row, so adding, correcting or removing one entry rewrites all of them,
+and two callers touching DIFFERENT entries lose one another's work. No
+uniqueness check notices, because the two entries never meet. On a financial
+catalogue the lost row is a dropped invoice, which under-declares.
+
+The invoice catalogue had it on all three of its mutators. It sat on the
+enveloped persistence, which carried no guarded seam at all while its bare-model
+sibling did, so it was the singleton the earlier fix never reached. All three now
+run inside the revision-guarded unit of work, through one shared helper, with
+their refusals and merges inside it so a retry re-judges them against the
+catalogue the write lands on.
+
+The inventory finding is the more instructive one, and it generalises past this
+codebase. The repository carries guarded create and record-movement verbs; a
+routing gate asserts they stay guarded; concurrency regressions prove the guard
+works. All of it passes. And the live path goes around it: the CLI calls the
+application service, which does its own load, rebuild and blind save, so the
+guarded verbs had no production caller at all. A guard that the operator path
+does not reach is indistinguishable, from the test suite's side, from one that
+works.
+
+The service's create now delegates to the guarded verb, re-raising the adapter's
+storage-level conflict in the layer's own words. Two sites are deliberately NOT
+converted yet, because each carries a real design question rather than a
+mechanical edit:
+
+* Movement recording runs the domain valuation guard in the application layer,
+  before persistence, on a document read outside the guard. Routing the append
+  through the repository verb without moving that check would validate against a
+  document the write never lands on; moving it into the adapter contradicts the
+  stated boundary that the adapter stays calculation-free. The ordering has to be
+  decided before the guard is applied.
+* Removal has no guarded verb to route to; one has to be authored, mirroring
+  create.
+
+Recorded rather than rushed: a wrong move on the first would let an invalid
+valuation persist, which is worse than the lost update it would be fixing.
 
 ## Recommendations
 
