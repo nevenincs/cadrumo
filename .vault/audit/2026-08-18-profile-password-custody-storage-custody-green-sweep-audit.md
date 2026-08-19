@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:187331fdaba28a4ab904fab5aaddd991866762d1f34e0b5aafb34abc9f2e68ba'
+body_hash: 'sha256:57d95bfc304da416f9a9e8cdc2b0ce78931027d6dc59d306e954282d930fcb56'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1297,6 +1297,37 @@ The correction applied here: run the FULL packages touched, not a filtered
 slice. This pass ran `adapters/persistence`, `application/invoices` and
 `domain/buckets` whole -- 1524 passing -- which is what surfaced the break in
 the first place.
+
+### The remaining sites were not unguarded by choice: the domain protocols hid the parameter
+
+The inventory's largest category was "the catalogue arrives as a parameter, so
+the revision belongs to the caller". That framing was incomplete. Those callers
+are typed against the NARROW DOMAIN PROTOCOLS, and three declarations in
+`domain/modelos/_protocols.py` (plus one in `domain/prorrata_register`) declared
+`to_secure_object_write` and `save_with_secure_object_writes` without
+`expected_revision_id`. A caller holding the protocol could not pass a revision
+at all, whatever it knew. The guard existed on every concrete repository and was
+unreachable through the interface most callers hold.
+
+How it was found is the reusable part, and it came from the previous failure
+rather than from fresh insight. The prorrata break repaired last pass had the
+same shape one layer lower -- a persistence base that could not express the
+guard -- so instead of looking at call sites again, this pass enumerated EVERY
+`to_secure_object_write` definition in the tree and classified each as
+accepting a revision, forwarding one, or neither. Eighteen definitions, four
+without a revision parameter, all four of them protocol declarations. A call-site
+search would not have found them, because the defect was in what the callers
+were permitted to say.
+
+With the protocols widened, the verification path is threaded end to end: the
+caller that performs the read now uses `load_revisioned` and passes the revision
+down to the persistence that composes the batch. Its inventory entry was REMOVED
+rather than reworded -- the site is guarded now, not differently excused -- and
+the staleness half of the gate is what forced that, exactly as intended.
+
+The same threading is now unblocked for the amendment, filed-revision and
+calculate paths. They remain listed, and the reason is budget rather than a
+missing capability.
 
 ## Recommendations
 
