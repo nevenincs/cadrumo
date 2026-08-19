@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:e6dc7bd01b9c267fc70caf58a947a05842515a7246590141c6922f35c68cb282'
+body_hash: 'sha256:17fda54120f56ec605c29d0239c4d3f717f225e96d713d5e5bb82d4e725690c7'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1361,6 +1361,37 @@ and left the persistence file at HEAD until it was noticed. And after any peer
 sweep, a partially-absorbed change is worth checking for explicitly: the
 signature and its callers can land in different commits, and the local tree
 gives no signal because it holds both halves.
+
+### The gate had a cheap-shortcut hole, found by sizing the next job rather than by reviewing it
+
+`persist_filed_revision` was the next threading target: one production caller,
+two catalogues still unguarded. Sizing it first turned up 26 TEST call sites,
+which changes the economics -- and that is exactly what exposed a hole in the
+gate.
+
+The obvious way to thread a revision into a function with that many callers is
+an OPTIONAL parameter defaulting to `None`. The gate checked for the
+`expected_revision_id` keyword and ignored its value, so that shortcut would
+have satisfied it permanently while guarding nothing. The site would have read
+as closed in the inventory, in the gate, and to every later reader.
+
+This is the same class of failure as the four detector blind spots already
+recorded, arriving from the opposite direction. Those were shapes the detector
+could not SEE; this is a shape it saw and misjudged. Both produce a green that
+is not earned, and both were found by doing something other than looking harder
+at the detector -- here, by pricing the work it was about to bless.
+
+A literal `None` is now rejected, with both directions pinned. What remains
+unjudgeable is a NAME that is `None` at runtime, so the rule moves into the
+module docstring: a site threading a revision makes its parameter REQUIRED,
+because a defaulted one is indistinguishable from a guarded one to any static
+check. The gate states that limit rather than implying it does not exist.
+
+The threading itself is deferred, and the entry now says why in terms that
+survive: blocked on cost, not capability, with the shortcut that must not be
+taken named explicitly. Deferring it is a budget decision. Taking the cheap
+route would have been a correctness one, and the inventory would have stopped
+showing it.
 
 ## Recommendations
 
