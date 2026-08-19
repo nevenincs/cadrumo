@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ._ledger_value_fixtures import secure_objects
 
 __all__ = ["secure_objects"]
@@ -37,6 +38,9 @@ from .._counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsRepository,
 )
+
+_BUCKET_ID = "37373737-3737-4737-8737-373737373739"
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

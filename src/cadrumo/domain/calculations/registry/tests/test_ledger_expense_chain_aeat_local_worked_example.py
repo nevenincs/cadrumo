@@ -79,7 +79,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
-_BUCKET = "bucket-aeat-local-gasto-worked-example"
+_BUCKET = "8c2f817f-ca4d-4527-97f0-9e71dee6589f"  # was 'bucket-aeat-local-gasto-worked-example'
 
 # The manual's utility lines, each quoted from its own bullet.
 _SUMINISTRO_ELECTRICO = Decimal("4000.00")

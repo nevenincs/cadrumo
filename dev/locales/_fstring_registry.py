@@ -155,6 +155,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard import WIZARD_FLOWS
     from cadrumo.core import StorageArea
+    from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.domain.contribuyente import CCAA
     from cadrumo.domain.deadlines import (
@@ -165,7 +166,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.domain.user_profile import ProfileSetupState
 
     return (

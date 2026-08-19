@@ -66,7 +66,8 @@ def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YE
 
 
 def _profile(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
         created_at=_CLOCK,

@@ -20,10 +20,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.identity import canonical_profile_bucket_id
-
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import ProfileId
+from .. import ProfileId, canonical_profile_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

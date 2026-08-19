@@ -54,7 +54,8 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 def _record(*descendientes: DescendantInfo) -> UserProfileRecord:
     facts = tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes))
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,

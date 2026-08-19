@@ -38,7 +38,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _INSTANT = datetime(2026, 4, 14, 9, 30, 0, tzinfo=UTC)
-_PROFILE_ID = "11111111-1111-1111-1111-111111111111"
+_PROFILE_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
 _COMMAND = "golden demo"
 
 

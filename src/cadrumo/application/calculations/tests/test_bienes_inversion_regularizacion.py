@@ -37,7 +37,7 @@ _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _M390_BINDING_ID = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 _CURRENT_YEAR_PRORRATA_ID = "iva.prorrata-porcentaje"
 _FILING_YEAR = 2024
-_BUCKET_ID = "bienes-inversion-regularizacion-source-resolver"
+_BUCKET_ID = "f4475676-5fc4-4beb-b132-e97d3b071fb5"  # was 'bienes-inversion-regularizacion-source-resolver'
 
 
 def _called_name(node: ast.Call) -> str | None:

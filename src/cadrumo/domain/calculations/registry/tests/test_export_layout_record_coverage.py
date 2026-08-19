@@ -536,8 +536,7 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
             for layout in _fixed_width_layouts(revision)
             for sheet in _design_sheets(layout, catalogues)
             for parent in sheet.fields
-            if parent.components
-            and any(_omissible_reason(component) is not None for component in parent.components)
+            if parent.components and any(_omissible_reason(component) is not None for component in parent.components)
         ),
         None,
     )
@@ -904,9 +903,7 @@ def test_a_position_two_cited_editions_share_is_counted_once(
     modelos, catalogues = registry_tree
     m190 = next(m for m in modelos if m.id == "190")
     revision = m190.revisions["2025-y-siguientes"]
-    perceptor_record = next(
-        r for r in revision.export_layouts[0].records if r.record_type == "perceptor"
-    )
+    perceptor_record = next(r for r in revision.export_layouts[0].records if r.record_type == "perceptor")
     layout = ExportLayoutDefinition(
         id="synthetic-190-dual-edition",
         format=ExportLayoutFormat.FIXED_WIDTH,
@@ -1058,6 +1055,7 @@ class TestAeatProgramSealedPositions:
 
         assert _omissible_reason(datum) is None
 
+
 def test_auxiliary_header_declaration_covers_the_header_and_its_absence_still_refuses(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
@@ -1077,9 +1075,7 @@ def test_auxiliary_header_declaration_covers_the_header_and_its_absence_still_re
         header_sheets = [sheet for sheet in sheets if sheet.auxiliary_envelope_header is not None]
         assert len(header_sheets) == 1, f"{revision_id}: expected exactly one auxiliary header sheet"
         header = header_sheets[0].auxiliary_envelope_header
-        source_ref = next(
-            source_ref for source_ref in layout.source_refs if source_ref.startswith("aeat-dr-232")
-        )
+        source_ref = next(source_ref for source_ref in layout.source_refs if source_ref.startswith("aeat-dr-232"))
         roles = tuple(
             role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
         )

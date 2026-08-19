@@ -161,7 +161,8 @@ def _pull_the_m130_history() -> tuple[str, ...]:
 
 def _seed_taxpayer_profile(*, bucket_id: str) -> None:
     """Seed the declared profile facts the annual M100 revision's profile bindings need."""
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_SYNTHETIC_TAX_ID),

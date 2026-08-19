@@ -59,7 +59,8 @@ _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_
 
 
 def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

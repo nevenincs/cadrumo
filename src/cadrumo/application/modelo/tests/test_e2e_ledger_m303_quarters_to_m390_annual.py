@@ -421,7 +421,8 @@ def _wallet_decision(
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
@@ -453,7 +454,8 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
 def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_IRENE_TAX_ID),

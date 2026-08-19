@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 from contextvars import copy_context
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
@@ -49,7 +50,6 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ._credential_screen import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
-    CredentialAttempt,
     run_credential_app,
 )
 from ._status_bar import PinnedStatusBar
@@ -58,7 +58,7 @@ from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ....application.user_profile import ProfileRegistrationOutcome
+    from ....application.user_profile import ProfileRecoveryEnrollment, ProfileRegistrationOutcome
 
 
 class PassphraseVerdict(Protocol):
@@ -86,12 +86,24 @@ class PassphraseVerdict(Protocol):
         ...  # pragma: no cover
 
 
-class RegistrationAttempt(CredentialAttempt["ProfileRegistrationOutcome"]):
+@dataclass(frozen=True, slots=True)
+class RegistrationAttempt:
     """The outcome of asking the application to create a profile.
 
-    Named rather than used as the bare generic so the seam that builds it
-    and the screen that reads it agree on more than a shape.
+    A refusal arrives as text the screen displays, not as an exception it
+    has to recognise. That keeps refusal *classification* with the layer
+    that owns the rules, and leaves the screen doing what a screen does:
+    show the operator what happened.
+
+    ``enrollment`` carries the recovery wrapper minted at creation, when one
+    was minted: the full-screen door shows the words itself, so the attempt
+    is the channel the wipeable container travels back through. The owner of
+    the attempt owns the wipe.
     """
+
+    outcome: ProfileRegistrationOutcome | None = None
+    refusal: str | None = None
+    enrollment: ProfileRecoveryEnrollment | None = None
 
 
 def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
@@ -193,6 +205,8 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         and reports that back as a selection, and this is what tells the
         two apart."""
         self._language_overrides = ExitStack()
+        self._pending_enrollment: ProfileRecoveryEnrollment | None = None
+        """The wrapper minted by the creation just confirmed, awaiting its words display."""
         """Holds the settings override the screen is rendering under.
 
         A stack rather than a bare handle so each choice closes the one
@@ -413,7 +427,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 
         def _register() -> RegistrationAttempt:
             try:
-                return registration_context.run(
+                attempt = registration_context.run(
                     self._create_profile,
                     username,
                     password_buffer.decode(UTF_8_ENCODING),
@@ -421,6 +435,9 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
                 )
             finally:
                 password_buffer[:] = b"\x00" * len(password_buffer)
+            if attempt.enrollment is not None:
+                self._pending_enrollment = attempt.enrollment
+            return attempt
 
         self.start_attempt(_register)
 
@@ -442,6 +459,17 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         language of its own, so nothing downstream needs the override to
         survive the screen.
         """
+        if self._pending_enrollment is not None:
+            enrollment = self._pending_enrollment
+            self._pending_enrollment = None
+            from ._recovery_words_screen import RecoveryWordsScreen
+
+            def _then() -> None:
+                self._language_overrides.close()
+                super().leave(outcome)
+
+            self.push_screen(RecoveryWordsScreen(enrollment=enrollment, on_done=_then))
+            return
         self._language_overrides.close()
         super().leave(outcome)
 

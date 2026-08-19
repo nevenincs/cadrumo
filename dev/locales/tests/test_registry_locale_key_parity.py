@@ -21,9 +21,9 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.locales import LocaleManager, scan_registry_keys
 
 from cadrumo.core.i18n import tr
+from dev.locales import LocaleManager, scan_registry_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -102,6 +102,10 @@ modelo:
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: null
               label: null
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
+              help: 9 pozíciós numerikus mező. A bevalló által megjelölt kapcsolattartó
+                személy telefonszáma.
+              label: A kapcsolattartó telefonszáma
             x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
               help: null
               label: null

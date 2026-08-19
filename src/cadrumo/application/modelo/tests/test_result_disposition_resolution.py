@@ -26,7 +26,7 @@ from .._result_disposition_resolution import resolve_modelo_result_disposition
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
-_BUCKET_ID = "result-disposition-resolution-test"
+_BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"  # was 'result-disposition-resolution-test'
 _M200_PRINTED_RESULT_NUMBER: CasillaId = validated_casilla_id(
     "00599",
     surface="_M200_PRINTED_RESULT_NUMBER",

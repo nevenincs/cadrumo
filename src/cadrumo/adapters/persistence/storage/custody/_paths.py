@@ -55,6 +55,7 @@ def profile_custody_directory_name(profile_id: object) -> str:
 
     Raises:
         PathContainmentError: When ``profile_id`` is not a :class:`~uuid.UUID`,
+            when it is a UUID of a version the profile aggregate never mints,
             or when its canonical rendering would not compose into a safe
             single directory name.
     """
@@ -66,7 +67,17 @@ def profile_custody_directory_name(profile_id: object) -> str:
                 "violation": "profile_id_not_uuid",
             },
         )
-    return safe_repository_id(canonical_profile_bucket_id(profile_id), context=_PROFILE_ID_PATH_CONTEXT)
+    try:
+        canonical = canonical_profile_bucket_id(profile_id)
+    except ValueError as exc:
+        raise PathContainmentError(
+            "profile custody path requires a canonical profile identity",
+            context={
+                "path_context": _PROFILE_ID_PATH_CONTEXT,
+                "violation": "profile_id_not_canonical_identity",
+            },
+        ) from exc
+    return safe_repository_id(canonical, context=_PROFILE_ID_PATH_CONTEXT)
 
 
 def profile_custody_path(

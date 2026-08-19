@@ -148,7 +148,8 @@ def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist the M130 natural-person profile required by the work-unit gate."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

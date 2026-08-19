@@ -44,7 +44,7 @@ from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "prorrata-advisory-bucket"
+_BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"  # was 'prorrata-advisory-bucket'
 _YEAR = 2026
 _PRIOR_YEAR = 2025
 

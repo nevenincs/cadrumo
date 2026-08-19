@@ -34,6 +34,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]
@@ -78,6 +79,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 _SPANISH_CIF = "B12345674"
 _GERMAN_IVA = "DE811234567"
 _GREEK_IVA = "EL123456789"

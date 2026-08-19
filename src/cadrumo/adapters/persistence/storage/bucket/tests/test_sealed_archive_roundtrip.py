@@ -36,7 +36,7 @@ from .._sealed_archive_writer import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_BUCKET_ID = "bucket-sealed-archive-roundtrip-test"
+_BUCKET_ID = "4334c746-ed37-4154-ba6a-c80b7fbbf5b0"  # was 'bucket-sealed-archive-roundtrip-test'
 _MANIFEST_DIGEST = "a" * 64
 _FROZEN_INSTANT = datetime(2026, 6, 3, 14, 30, 0, tzinfo=UTC)
 _PAYLOAD = b"sealed-payload-envelope-ciphertext-v1"

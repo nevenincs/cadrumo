@@ -102,6 +102,10 @@ modelo:
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: null
               label: null
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
+              help: Campo numérico de 9 posiciones. Teléfono de la persona con quien
+                relacionarse consignada por el declarante.
+              label: Teléfono de la persona con quien relacionarse
             x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
               help: null
               label: null

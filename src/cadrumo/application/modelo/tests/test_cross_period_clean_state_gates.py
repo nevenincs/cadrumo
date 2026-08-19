@@ -73,7 +73,8 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=str(_workflow_profile().tax_id)),

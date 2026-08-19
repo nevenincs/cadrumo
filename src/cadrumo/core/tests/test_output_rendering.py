@@ -17,7 +17,7 @@ from ..redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, C
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
+_PROFILE_ID = "986c0dc9-56dc-422b-9d8f-698661b9eb1e"  # was '123e4567-e89b-12d3-a456-426614174000'
 _NIF = "12345678Z"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"

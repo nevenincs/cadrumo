@@ -45,7 +45,7 @@ from .._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET_ID = "filing-binding-provenance"
+_BUCKET_ID = "54b1b7fc-dbe4-4295-b691-fbb219b96b68"  # was 'filing-binding-provenance'
 _DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _PROVENANCE_FIELDS = ("source", "legal_refs", "source_refs")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(

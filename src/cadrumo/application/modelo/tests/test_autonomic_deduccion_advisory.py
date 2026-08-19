@@ -86,7 +86,8 @@ def seeded_bucket(tmp_path: Path) -> Iterator[str]:
 
 
 def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=facts,
         created_at=_CLOCK,

@@ -100,10 +100,20 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
         "deleting_after_effect": "deleting",
         "deleted": "deleted",
     }
+    # Each entry anchors a crash on the RETURN of the effect that phase really
+    # performs, so both anchors track the flow rather than a past shape of it:
+    #
+    # * auth clearing anchors on the acquisition-lock sweep, not on the full
+    #   revocation. A reset holds locks on profiles it has not unlocked, and a
+    #   locked target deliberately gets the key-free half only -- driving the
+    #   full revocation at it was a defect the flow already closed -- so
+    #   `reset_operator_auth` is never reached on this path.
+    # * deletion anchors on the capsule lifecycle, which is where the erase
+    #   moved when the custody capsule became the sole profile authority.
     effect_return_by_boundary = {
-        "auth_clearing_after_effect": ("_operator.py", "reset_operator_auth"),
+        "auth_clearing_after_effect": ("_operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
         "pointer_reconciling_after_effect": ("_profile_pointer_transaction.py", "clear"),
-        "deleting_after_effect": ("_service.py", "delete"),
+        "deleting_after_effect": ("_lifecycle.py", "delete"),
     }
 
     def durable_target_phase() -> str | None:

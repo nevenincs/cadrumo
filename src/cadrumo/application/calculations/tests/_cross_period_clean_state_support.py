@@ -76,7 +76,8 @@ def _store_ready_profile(
     tax_id: str = "X1234567L",
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),

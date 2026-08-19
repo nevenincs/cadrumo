@@ -30,11 +30,11 @@ from .._bindings import (
 )
 from .._detail_record_bindings import _build_related_party_rows
 from .._donativo_bindings import _build_donativo_rows
+from .._errors import RegistryValidationError
 from .._withholding_bindings import (
     WithholdingObservation,
     _build_withholding_rows,
 )
-from .._errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -300,8 +300,7 @@ def _observation(**overrides: object) -> WithholdingObservation:
 def _build(*observations: WithholdingObservation, declared: bool = True) -> tuple[dict[str, object], ...]:
     fields = _M190_DECLARED_FIELDS if declared else frozenset()
     return tuple(
-        dict(row)
-        for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=fields)
+        dict(row) for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=fields)
     )
 
 
@@ -328,9 +327,7 @@ def test_build_withholding_rows_refuses_clave_a_without_contract_or_mobility() -
     whose observation carries neither refuses instead of filing a silent blank."""
     with pytest.raises(RegistryValidationError, match="contract_relation_clave"):
         _build(
-            _observation(
-                **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "contract_relation_clave"}
-            )
+            _observation(**{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != "contract_relation_clave"})
         )
     with pytest.raises(RegistryValidationError, match="geographic_mobility_clave"):
         _build(
@@ -343,11 +340,7 @@ def test_build_withholding_rows_refuses_clave_a_without_contract_or_mobility() -
 def test_build_withholding_rows_refuses_eligible_row_without_birth_situation_disability() -> None:
     for missing in ("perceptor_birth_year", "perceptor_situacion_familiar", "disability_clave"):
         with pytest.raises(RegistryValidationError, match=missing):
-            _build(
-                _observation(
-                    **{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != missing}
-                )
-            )
+            _build(_observation(**{key: value for key, value in _COMPLETE_CLAVE_A.items() if key != missing}))
 
 
 def test_build_withholding_rows_writes_design_no_content_for_ineligible_claves() -> None:
@@ -436,9 +429,7 @@ def test_build_withholding_rows_l29_requires_titular_clave_and_spouse_when_titul
     row = _build(_observation(**l29, unit_convivencia_titular_clave=1))[0]
     assert row["unit_convivencia_titular_clave"] == "1"
     assert row["spouse_or_unit_titular_tax_id"] == " " * 9
-    row = _build(
-        _observation(**l29, unit_convivencia_titular_clave=2, spouse_or_unit_titular_tax_id=titular_nif)
-    )[0]
+    row = _build(_observation(**l29, unit_convivencia_titular_clave=2, spouse_or_unit_titular_tax_id=titular_nif))[0]
     assert row["spouse_or_unit_titular_tax_id"] == titular_nif
 
 
@@ -531,13 +522,9 @@ def test_build_withholding_rows_refuses_deduction_amounts_outside_their_claves()
     with pytest.raises(RegistryValidationError, match="anualidades_alimentos"):
         _build(_observation(clave=RetencionClave.G, anualidades_alimentos=Decimal("100")))
     # E.02 declares gastos; G.06 declares reducciones: eligible rows pass.
-    row = _build(
-        _observation(clave=RetencionClave.E, subclave="02", gastos_deducibles=Decimal("120"))
-    )[0]
+    row = _build(_observation(clave=RetencionClave.E, subclave="02", gastos_deducibles=Decimal("120")))[0]
     assert row["gastos_deducibles"] == Decimal("120")
-    row = _build(
-        _observation(clave=RetencionClave.G, subclave="06", reducciones_aplicables=Decimal("120"))
-    )[0]
+    row = _build(_observation(clave=RetencionClave.G, subclave="06", reducciones_aplicables=Decimal("120")))[0]
     assert row["reducciones_aplicables"] == Decimal("120")
 
 
@@ -864,13 +851,17 @@ def _build193(*observations: WithholdingObservation) -> tuple[dict[str, object],
 def test_build_withholding_rows_193_requires_the_always_recorded_facts() -> None:
     """The 193 design records naturaleza, tipo de percepcion and the A/B/D
     identification block on every eligible row; a missing fact refuses."""
-    for missing in ("naturaleza", "tipo_percepcion", "clave_codigo", "codigo_emisor", "pago", "tipo_codigo", "clave_mercado"):
+    for missing in (
+        "naturaleza",
+        "tipo_percepcion",
+        "clave_codigo",
+        "codigo_emisor",
+        "pago",
+        "tipo_codigo",
+        "clave_mercado",
+    ):
         with pytest.raises(RegistryValidationError, match=missing):
-            _build193(
-                _observation(
-                    **{key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != missing}
-                )
-            )
+            _build193(_observation(**{key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != missing}))
     row = _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]
     assert row["naturaleza"] == "02"
     assert row["tipo_percepcion"] == "1"
@@ -894,7 +885,11 @@ def test_build_withholding_rows_193_out_of_context_facts_refuse() -> None:
     with pytest.raises(RegistryValidationError, match="compensaciones"):
         _build193(_observation(**_COMPLETE_CLAVE_A_193, compensaciones=Decimal("1")))
     prestamo = {key: value for key, value in _COMPLETE_CLAVE_A_193.items() if key != "tipo_codigo"}
-    row = _build193(_observation(**prestamo, tipo_codigo="P", fecha_inicio_prestamo="20240101", fecha_vencimiento_prestamo="20250101"))[0]
+    row = _build193(
+        _observation(
+            **prestamo, tipo_codigo="P", fecha_inicio_prestamo="20240101", fecha_vencimiento_prestamo="20250101"
+        )
+    )[0]
     assert row["fecha_inicio_prestamo"] == "20240101"
     assert _build193(_observation(**_COMPLETE_CLAVE_A_193))[0]["fecha_inicio_prestamo"] == "0" * 8
 
@@ -909,7 +904,15 @@ def test_build_withholding_rows_193_naturaleza_s_cascade_overrides() -> None:
     assert row["tipo_codigo"] == " "
     assert row["naturaleza_declarante"] == "S"
     with pytest.raises(RegistryValidationError, match="cascade declares a ceros"):
-        _build193(_observation(clave=RetencionClave.B, naturaleza="01", tipo_percepcion=1, naturaleza_declarante="S", penalizaciones=Decimal("5")))
+        _build193(
+            _observation(
+                clave=RetencionClave.B,
+                naturaleza="01",
+                tipo_percepcion=1,
+                naturaleza_declarante="S",
+                penalizaciones=Decimal("5"),
+            )
+        )
 
 
 def test_withholding_observation_design_claves_are_bounded() -> None:

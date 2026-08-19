@@ -8,13 +8,13 @@ import re
 from pathlib import Path
 
 import pytest
-from dev.locales import LocaleManager
 
 from cadrumo.core import scan_directory
 from cadrumo.core.i18n import tr
 from cadrumo.entrypoints.cli._config.tests._isolated_storage_fixture import config_check_backend
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from dev._paths import REPO_ROOT
+from dev.locales import LocaleManager
 
 __all__ = ["config_check_backend"]
 

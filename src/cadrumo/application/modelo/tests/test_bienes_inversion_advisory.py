@@ -35,7 +35,7 @@ from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bi-advisory-bucket"
+_BUCKET = "34d42853-3d81-4c00-b0b9-ad6c27290c49"  # was 'bi-advisory-bucket'
 
 
 def _revision(modelo: str, *, filing_year: int, period_token: str) -> ModeloRevision:

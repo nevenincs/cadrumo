@@ -11,6 +11,7 @@ from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.user_profile import register_minimal_profile
 from .. import ReviewSeverity, ReviewState
 from .._errors import ReviewError, ReviewKindReservedError
 from .._models import FindingReviewItem
@@ -76,8 +77,13 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
-    with open_test_profile_session("23232323-2323-4232-8232-232323232323"), pytest.raises(ReviewError) as exc_info:
-        project_review_item(sensitive_item_id, settings=Settings())
+    bucket_id = "23232323-2323-4232-8232-232323232323"
+    with open_test_profile_session(bucket_id):
+        # Registered first: the engine refuses to materialise a bucket custody
+        # never published, which would mask the refusal actually under test.
+        register_minimal_profile(profile_id=bucket_id, overrides={"identity.tax_id": "00000000T"})
+        with pytest.raises(ReviewError) as exc_info:
+            project_review_item(sensitive_item_id, settings=Settings())
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"
     assert exc_info.value.context is None

@@ -73,6 +73,9 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
     with open_test_profile_session(_PROFILE_ID):
+        # The engine refuses to materialise a bucket custody never published,
+        # so the capsule is registered before any repository is constructed.
+        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
         # Seeded through a detached WorkflowState, never a repository read:
         # the capsule publishes by an atomic no-replace rename onto
         # ``buckets/<profile-id>``, which a workflow-state repository
@@ -183,6 +186,9 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
 
 def _collect(settings: Settings, **kwargs: Any) -> tuple[Any, ...]:
     with open_test_profile_session(_PROFILE_ID):
+        # The engine refuses to materialise a bucket custody never published,
+        # so the capsule is registered before any repository is constructed.
+        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
         return ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, **kwargs)
 
 
@@ -232,4 +238,7 @@ def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:
 def test_collect_returns_empty_tuple_when_no_sources_present(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     with open_test_profile_session(_PROFILE_ID):
+        # The engine refuses to materialise a bucket custody never published,
+        # so the capsule is registered before any repository is constructed.
+        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
         assert ReviewQueue.collect(settings, bucket_id=_PROFILE_ID) == ()

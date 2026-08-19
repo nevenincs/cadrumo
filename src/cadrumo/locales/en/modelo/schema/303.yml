@@ -645,387 +645,362 @@ modelo:
         official_name: null
         title: null
       revision:
-        2009-y-siguientes:
+        '2022':
           casilla:
             '01':
               help: null
-              label: Accrued VAT, general regime super-reduced 4% rate - taxable base
+              label: null
             '02':
               help: null
-              label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
+              label: null
             '03':
               help: null
-              label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
+              label: null
             '04':
               help: null
-              label: Accrued VAT, general regime reduced 10% rate - taxable base
+              label: null
             '05':
               help: null
-              label: Accrued VAT, general regime reduced 10% rate - rate percentage
+              label: null
             '06':
               help: null
-              label: Accrued VAT, general regime reduced 10% rate - VAT amount
+              label: null
             '07':
               help: null
-              label: Accrued VAT, general regime standard 21% rate - taxable base
+              label: null
             08:
               help: null
-              label: Accrued VAT, general regime standard 21% rate - rate percentage
+              label: null
             09:
               help: null
-              label: Accrued VAT, general regime standard 21% rate - VAT amount
+              label: null
             '10':
               help: null
-              label: Accrued VAT on intra-Community acquisitions of goods and services
-                - base
+              label: null
             '108':
               help: null
-              label: Corrective return - other adjustments in cases determined by
-                discrepancy with administrative criterion
+              label: null
             '109':
               help: null
-              label: Result - refunds agreed by AEAT for previous self-assessments
-                for the same year and period
+              label: null
             '11':
               help: null
-              label: Accrued VAT on intra-Community acquisitions of goods and services
-                - VAT amount
+              label: null
             '111':
               help: null
-              label: Corrective return - correction amount
+              label: null
             '12':
               help: null
-              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
-                acquisitions - base
+              label: null
             '120':
               help: null
-              label: Additional information - transactions not subject due to place-of-supply
-                rules, excluding box 123
+              label: null
             '122':
               help: null
-              label: Additional information - transactions subject to reverse charge
+              label: null
             '123':
               help: null
-              label: Additional information - transactions not subject under one-stop
-                shop special schemes place-of-supply rules
+              label: null
             '124':
               help: null
-              label: Additional information - transactions subject under one-stop
-                shop special schemes
+              label: null
             '13':
               help: null
-              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
-                acquisitions - VAT amount
+              label: null
             '14':
               help: null
-              label: Changes to accrued VAT taxable bases and amounts - taxable base
+              label: null
             '15':
               help: null
-              label: Changes to accrued VAT taxable bases and amounts - VAT amount
+              label: null
             '150':
               help: null
-              label: Accrued VAT, general regime new rate tier 1 - taxable base
+              label: null
             '151':
               help: null
-              label: Accrued VAT, general regime new rate tier 1 - rate percentage
+              label: null
             '152':
               help: null
-              label: Accrued VAT, general regime new rate tier 1 - VAT amount
+              label: null
             '153':
               help: null
-              label: Accrued VAT, general regime new rate tier 2 - taxable base
+              label: null
             '154':
               help: null
-              label: Accrued VAT, general regime new rate tier 2 - rate percentage
+              label: null
             '155':
               help: null
-              label: Accrued VAT, general regime new rate tier 2 - VAT amount
+              label: null
             '156':
               help: null
-              label: Equivalence surcharge at 0.5% - taxable base
+              label: null
             '157':
               help: null
-              label: Equivalence surcharge at 0.5% - rate percentage
+              label: null
             '158':
               help: null
-              label: Equivalence surcharge at 0.5% - surcharge amount
+              label: null
             '16':
               help: null
-              label: Equivalence surcharge at 1.0% - taxable base
+              label: null
             '165':
               help: null
-              label: Accrued VAT, general regime 2% rate from 2024 - taxable base
+              label: null
             '166':
               help: null
-              label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
+              label: null
             '167':
               help: null
-              label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
+              label: null
             '168':
               help: null
-              label: New equivalence surcharge rate from 2024 - taxable base
+              label: null
             '169':
               help: null
-              label: New equivalence surcharge rate from 2024 - rate percentage
+              label: null
             '17':
               help: null
-              label: Equivalence surcharge at 1.0% - rate percentage
+              label: null
             '170':
               help: null
-              label: New equivalence surcharge rate from 2024 - surcharge amount
+              label: null
             '18':
               help: null
-              label: Equivalence surcharge at 1.0% - surcharge amount
+              label: null
             '19':
               help: null
-              label: Equivalence surcharge at 1.4% - taxable base
+              label: null
             '20':
               help: null
-              label: Equivalence surcharge at 1.4% - rate percentage
+              label: null
             '21':
               help: null
-              label: Equivalence surcharge at 1.4% - surcharge amount
+              label: null
             '22':
               help: null
-              label: Equivalence surcharge at 5.2% - taxable base
+              label: null
             '23':
               help: null
-              label: Equivalence surcharge at 5.2% - rate percentage
+              label: null
             '24':
               help: null
-              label: Equivalence surcharge at 5.2% - surcharge amount
+              label: null
             '25':
               help: null
-              label: Changes to equivalence surcharge bases and amounts - taxable
-                base
+              label: null
             '26':
               help: null
-              label: Changes to equivalence surcharge bases and amounts - surcharge
-                amount
+              label: null
             '27':
               help: null
-              label: Total accrued VAT amount
+              label: null
             '28':
               help: null
-              label: Deductible VAT on domestic current transactions - base
+              label: null
             '29':
               help: null
-              label: Deductible VAT on domestic current transactions - VAT amount
+              label: null
             '30':
               help: null
-              label: Deductible VAT on domestic capital goods - base
+              label: null
             '31':
               help: null
-              label: Deductible VAT on domestic capital goods - VAT amount
+              label: null
             '32':
               help: null
-              label: Deductible VAT on imports of current goods - base
+              label: null
             '33':
               help: null
-              label: Deductible VAT on imports of current goods - VAT amount
+              label: null
             '34':
               help: null
-              label: Deductible VAT on imports of capital goods - base
+              label: null
             '35':
               help: null
-              label: Deductible VAT on imports of capital goods - VAT amount
+              label: null
             '36':
               help: null
-              label: Deductible VAT on intra-Community acquisitions of current goods
-                - base
+              label: null
             '37':
               help: null
-              label: Deductible VAT on intra-Community acquisitions of current goods
-                - VAT amount
+              label: null
             '38':
               help: null
-              label: Deductible VAT on intra-Community acquisitions of capital goods
-                - base
+              label: null
             '39':
               help: null
-              label: Deductible VAT on intra-Community acquisitions of capital goods
-                - VAT amount
+              label: null
             '40':
               help: null
-              label: Deduction corrections - base
+              label: null
             '41':
               help: null
-              label: Deduction corrections - VAT amount
+              label: null
             '42':
               help: null
-              label: Special agriculture, livestock and fisheries scheme compensations
-                - amount
+              label: null
             '43':
               help: null
-              label: Capital goods regularization - amount
+              label: null
             '44':
               help: null
-              label: Pro rata regularization using final percentage - amount
+              label: null
             '45':
               help: null
-              label: Total deductible amount
+              label: null
             '47':
               help: null
-              label: Simplified regime, Q1-Q3 - sum of payments on account for all
-                activities
+              label: null
             '48':
               help: null
-              label: Simplified regime, Q4 - sum of derived amounts for all activities
+              label: null
             '49':
               help: null
-              label: Simplified regime, Q4 - sum of payments on account made in the
-                year
+              label: null
             '50':
               help: null
-              label: Simplified regime, Q4 - result ([48] - [49])
+              label: null
             '51':
               help: null
-              label: Simplified regime - accrued VAT on intra-Community acquisitions
-                of goods
+              label: null
             '52':
               help: null
-              label: Simplified regime - accrued VAT on supplies of fixed assets
+              label: null
             '53':
               help: null
-              label: Simplified regime - accrued VAT from reverse-charge transactions
+              label: null
             '54':
               help: null
-              label: Simplified regime - total resulting amount
+              label: null
             '55':
               help: null
-              label: Simplified regime - deductible VAT on acquisition or import of
-                fixed assets
+              label: null
             '56':
               help: null
-              label: Simplified regime - deductible VAT from capital goods regularization
+              label: null
             '57':
               help: null
-              label: Simplified regime - total deductible VAT ([55] + [56])
+              label: null
             '58':
               help: null
-              label: Simplified regime result ([54] - [57])
+              label: null
             '59':
               help: null
-              label: Additional information - intra-Community supplies of goods and
-                services
+              label: null
             '60':
               help: null
-              label: Additional information - exports and assimilated transactions
+              label: null
             '62':
               help: null
-              label: Additional information - cash accounting supplies accrued under
-                Article 75 LIVA - taxable base
+              label: null
             '63':
               help: null
-              label: Additional information - cash accounting supplies accrued under
-                Article 75 LIVA - VAT amount
+              label: null
             '64':
               help: null
-              label: Result - sum of results ([46] + [58] + [76])
+              label: null
             '65':
               help: null
-              label: Result - percentage attributable to the State Tax Administration
+              label: null
             '66':
               help: null
-              label: Result - amount attributable to the State Tax Administration
+              label: null
             '68':
               help: null
-              label: Result - joint taxation annual regularization result
+              label: null
             '70':
               help: null
-              label: Result - amounts payable from previous self-assessments for the
-                same year and period
+              label: null
             '71':
               help: null
-              label: Final result ([69] - [70] + [109])
+              label: null
             '74':
               help: null
-              label: Additional information - cash accounting acquisitions - taxable
-                base
+              label: null
             '75':
               help: null
-              label: Additional information - cash accounting acquisitions - VAT amount
+              label: null
             '76':
               help: null
-              label: Result - regularization under Article 80.Five.5 LIVA
+              label: null
             '77':
               help: null
-              label: Result - import VAT assessed by Customs pending payment
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Self-assessment tax year
+              label: null
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: Quarterly period
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: null
-              label: Deductible reverse-charge VAT on domestic transactions
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
               help: null
-              label: Accrued reverse-charge VAT on domestic transactions
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: Reverse-charge VAT amount on intra-Community acquisitions
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
               help: null
-              label: Deductible reverse-charge VAT on intra-Community acquisitions
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
               help: null
-              label: Accrued reverse-charge VAT on intra-Community acquisitions
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
-              label: Prior-period offsets applied in this period
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: null
-              label: Offset balance available at period end
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
               help: null
-              label: Offset balance generated in this period
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: null
-              label: Amounts to offset pending from prior periods
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: null
-              label: Prior-period offsets pending for later periods
+              label: null
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: Total deductible VAT amount
+              label: null
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: Total accrued VAT amount
+              label: null
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: General pro rata percentage
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
-              label: Annual turnover giving deduction rights
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: null
-              label: Total annual turnover
+              label: null
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: null
-              label: Capital goods adjustment
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: null
-              label: Output VAT amount at the standard rate (21%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: Output VAT amount at the reduced rate (10%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: Output VAT amount at the super-reduced rate (4%)
+              label: null
             x-d5r62bjiclpnar3kc5i6u:
               help: null
-              label: Self-assessment result
+              label: null
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: General regime result
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
               help: null
-              label: Deductible input VAT on imports of current goods
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: Deductible input VAT on domestic current transactions
+              label: null
           field:
             label: null
         '2023':
@@ -1142,9 +1117,6 @@ modelo:
               help: null
               label: null
             '165':
-              help: null
-              label: null
-            '166':
               help: null
               label: null
             '167':
@@ -1634,9 +1606,6 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:

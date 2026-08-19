@@ -55,7 +55,8 @@ def _bundle() -> UserProfilePortableExport:
     return UserProfilePortableExport(
         bundle_schema_version=3,
         exported_at=_INSTANT,
-        profile=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        profile=UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         ),

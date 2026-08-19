@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # values the repository under test writes at.
 PARTICIPATION_INDEX_NAMESPACE = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.namespace
 PARTICIPATION_INDEX_SCHEMA_VERSION = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.schema_version
-_BUCKET_ID = "modelo-participation-runtime"
+_BUCKET_ID = "1f8dbeda-8e90-4f36-9576-7e09554cf7ba"  # was 'modelo-participation-runtime'
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 20, 0, tzinfo=UTC)
 

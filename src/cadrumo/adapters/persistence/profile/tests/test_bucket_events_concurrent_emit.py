@@ -63,9 +63,7 @@ _MARKERS = frozenset({"first", "second", "interloper", "batch-a", "batch-b"})
 
 def _object_ids() -> list[str]:
     catalogue = BucketEventHistoryRepository().load()
-    return sorted(
-        event.object_id for event in catalogue.events.values() if (event.object_id or "") in _MARKERS
-    )
+    return sorted(event.object_id for event in catalogue.events.values() if (event.object_id or "") in _MARKERS)
 
 
 def test_sequentially_emitted_events_accumulate() -> None:

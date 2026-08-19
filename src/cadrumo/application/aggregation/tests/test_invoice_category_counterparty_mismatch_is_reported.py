@@ -54,7 +54,7 @@ from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-category-counterparty-mismatch"
+_BUCKET_ID = "e5cd70fc-3d46-4768-a775-f9443282596d"  # was 'bucket-category-counterparty-mismatch'
 _YEAR = 2024
 _PERIOD = "1T"
 _BASE = Decimal("4500.00")

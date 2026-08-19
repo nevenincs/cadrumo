@@ -76,7 +76,7 @@ class _SupervisedKdfWorker:
             self._close(failed=True)
             raise
 
-    def __exit__(self, exc_type: object, _exc_value: object, traceback: object) -> None:
+    def __exit__(self, exc_type: object, _exc_value: object, _traceback: object) -> None:
         self._close(failed=exc_type is not None)
 
     def calibrate(self, parameters: ProfileCustodyKdfParameters) -> None:

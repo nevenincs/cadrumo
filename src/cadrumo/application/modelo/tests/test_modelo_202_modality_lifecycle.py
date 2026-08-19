@@ -125,7 +125,8 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     if incn is not None:
         facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=tuple(facts),
             created_at=_CLOCK,

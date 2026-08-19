@@ -60,7 +60,8 @@ def _register_with_tax_id() -> None:
     call rather than a record field.
     """
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),

@@ -40,7 +40,7 @@ from .._verification_actions import _persist_verified_revision_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "modelo-participation-co-emission"
+_BUCKET_ID = "5fb44bbf-c0c5-4701-b2a9-d4d521e66fb5"  # was 'modelo-participation-co-emission'
 _T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 

@@ -248,6 +248,349 @@ class M303Exonerado390OperacionesTercerosProjectionRef(BaseModel):
     projection_kind: Literal["m303_exonerado_390_operaciones_terceros"]
 
 
+class M200EstablecimientoPermanenteField(StrEnum):
+    """Closed fields of one detail row for a permanent establishment abroad."""
+
+    IDENTIFICACION = "identificacion"
+    PAIS_RESIDENCIA_FISCAL = "pais_residencia_fiscal"
+    VOLUMEN_OPERACIONES = "volumen_operaciones"
+    BENEFICIO_O_PERDIDA = "beneficio_o_perdida"
+    SUMA_AJUSTES_RESULTADO_CONTABLE = "suma_ajustes_resultado_contable"
+    SUMA_DEDUCCIONES_DI_INTERNACIONAL_ANTERIORES = "suma_deducciones_di_internacional_anteriores"
+
+
+class M200EstablecimientoPermanenteProjectionRef(BaseModel):
+    """One numbered establecimiento permanente detail row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_establecimiento_permanente"]
+    slot: int = Field(ge=1, le=18)
+    field: M200EstablecimientoPermanenteField
+
+
+class M200SocioSicavDisolucionField(StrEnum):
+    """Closed fields of one SICAV disolucion socio row."""
+
+    NIF_SOCIEDAD_DISUELTA = "nif_sociedad_disuelta"
+    NIF_IIC_REINVERSION = "nif_iic_reinversion"
+
+
+class M200SocioSicavDisolucionProjectionRef(BaseModel):
+    """One numbered socio row of the SICAV disolucion y liquidacion regime."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_socio_sicav_disolucion"]
+    slot: int = Field(ge=1, le=5)
+    field: M200SocioSicavDisolucionField
+
+
+class M200EntidadMenorDependienteField(StrEnum):
+    """Closed fields of one dependent minor ecclesiastical entity row."""
+
+    NIF = "nif"
+    NOMBRE_O_RAZON_SOCIAL = "nombre_o_razon_social"
+
+
+class M200EntidadMenorDependienteProjectionRef(BaseModel):
+    """One numbered entidad menor dependiente row.
+
+    AEAT numbers these "Entidad 1", "Entidad 2" in the field's own description
+    rather than with a bracketed or dotted index, which is why an earlier pass
+    mistook the run for an unnumbered one.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_entidad_menor_dependiente"]
+    slot: int = Field(ge=1, le=10)
+    field: M200EntidadMenorDependienteField
+
+
+class M200IncnGrupoSociedadField(StrEnum):
+    """Closed fields of one group-company row of the INCN communication."""
+
+    NIF_ENTIDAD_GRUPO = "nif_entidad_grupo"
+    CODIGO_PAIS = "codigo_pais"
+
+
+class M200IncnGrupoSociedadProjectionRef(BaseModel):
+    """One numbered group company in the importe neto cifra negocios block."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_incn_grupo_sociedad"]
+    slot: int = Field(ge=1, le=12)
+    field: M200IncnGrupoSociedadField
+
+
+class M200IncnEstablecimientoPermanenteProjectionRef(BaseModel):
+    """One numbered permanent establishment of a non-resident in the INCN block.
+
+    Numbered from 1 on the SAME sheet as the group-company block above, which is
+    why slots are grouped by the block phrase preceding the number rather than
+    by sheet.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_incn_establecimiento_permanente"]
+    slot: int = Field(ge=1, le=5)
+
+
+class M200OperacionReestructuracionField(StrEnum):
+    """Closed fields of one fusion, escision or canje de valores row."""
+
+    TIPO_OPERACION = "tipo_operacion"
+    TRANSMITENTE_NIF = "transmitente_nif"
+    TRANSMITENTE_DENOMINACION_SOCIAL = "transmitente_denominacion_social"
+    ADQUIRENTE_NIF = "adquirente_nif"
+    ADQUIRENTE_DENOMINACION_SOCIAL = "adquirente_denominacion_social"
+    FECHA_INSCRIPCION_REGISTRO_MERCANTIL = "fecha_inscripcion_registro_mercantil"
+    FECHA_COMUNICACION_OPERACION = "fecha_comunicacion_operacion"
+    VALOR_ACCIONES_ENTREGADAS = "valor_acciones_entregadas"
+    VALOR_ACCIONES_RECIBIDAS = "valor_acciones_recibidas"
+    IMPORTE_RENTAS_NO_INTEGRADAS = "importe_rentas_no_integradas"
+
+
+class M200OperacionReestructuracionProjectionRef(BaseModel):
+    """One numbered restructuring operation row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_operacion_reestructuracion"]
+    slot: int = Field(ge=1, le=5)
+    field: M200OperacionReestructuracionField
+
+
+class M200ParticipeAieUteField(StrEnum):
+    """Closed fields of one AIE/UTE participe row."""
+
+    NIF = "nif"
+    REPRESENTANTE = "representante"
+    FORMA_JURIDICA = "forma_juridica"
+    RESIDENCIA = "residencia"
+    APELLIDOS_NOMBRE_RAZON_SOCIAL = "apellidos_nombre_razon_social"
+    CODIGO_PROVINCIA_PAIS = "codigo_provincia_pais"
+    BASE_IMPONIBLE = "base_imponible"
+    PORCENTAJE_PARTICIPACION = "porcentaje_participacion"
+
+
+class M200ParticipeAieUteProjectionRef(BaseModel):
+    """One numbered participe of an agrupacion de interes economico or UTE."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_participe_aie_ute"]
+    slot: int = Field(ge=1, le=10)
+    field: M200ParticipeAieUteField
+
+
+class M200TransparenciaFiscalInternacionalField(StrEnum):
+    """Closed fields of one transparencia fiscal internacional entity row."""
+
+    NOMBRE_O_RAZON_SOCIAL = "nombre_o_razon_social"
+    DOMICILIO_SOCIAL = "domicilio_social"
+    CLAVE_PAIS_TERRITORIO = "clave_pais_territorio"
+    IMPORTE_RENTA = "importe_renta"
+    ADMINISTRADORES_LINEA_1 = "administradores_linea_1"
+    ADMINISTRADORES_LINEA_2 = "administradores_linea_2"
+    ADMINISTRADORES_LINEA_3 = "administradores_linea_3"
+    ADMINISTRADORES_LINEA_4 = "administradores_linea_4"
+    ADMINISTRADORES_LINEA_5 = "administradores_linea_5"
+
+
+class M200TransparenciaFiscalInternacionalProjectionRef(BaseModel):
+    """One numbered entity row of the transparencia fiscal internacional regime.
+
+    AEAT letters each slot's importe -- "Importe renta [A]", "[B]", "[C]" -- which
+    is a slot marker rather than a different field, so every slot carries the same
+    nine fields.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_transparencia_fiscal_internacional"]
+    slot: int = Field(ge=1, le=6)
+    field: M200TransparenciaFiscalInternacionalField
+
+
+class M200AdministradorField(StrEnum):
+    """Closed fields of one row of the relacion de administradores."""
+
+    NIF = "nif"
+    FORMA_JURIDICA = "forma_juridica"
+    REPRESENTANTE = "representante"
+    APELLIDOS_NOMBRE_RAZON_SOCIAL = "apellidos_nombre_razon_social"
+    DOMICILIO_FISCAL = "domicilio_fiscal"
+    CODIGO_PROVINCIA = "codigo_provincia"
+
+
+class M200AdministradorProjectionRef(BaseModel):
+    """One numbered administrador row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_administrador"]
+    slot: int = Field(ge=1, le=5)
+    field: M200AdministradorField
+
+
+class M200EntidadParticipadaField(StrEnum):
+    """Closed fields of one AIE/UTE participada row.
+
+    Declared in the order AEAT prints them. The Canary-Islands investment
+    variants precede their plain counterparts, which is read from the design
+    rather than assumed.
+    """
+
+    NIF = "nif"
+    NOMBRE_O_RAZON_SOCIAL = "nombre_o_razon_social"
+    CODIGO_PROVINCIA_PAIS = "codigo_provincia_pais"
+    TIPO_AGRUPACION_INTERES_ECONOMICO_ESPANOLA = "tipo_agrupacion_interes_economico_espanola"
+    TIPO_AGRUPACION_EUROPEA_INTERES_ECONOMICO = "tipo_agrupacion_europea_interes_economico"
+    TIPO_UNION_TEMPORAL_EMPRESAS = "tipo_union_temporal_empresas"
+    TIPO_COLABORACION_EXTRANJERA_ANALOGA = "tipo_colaboracion_extranjera_analoga"
+    CRITERIO_IMPUTACION_FIN_PERIODO = "criterio_imputacion_fin_periodo"
+    CRITERIO_IMPUTACION_SIGUIENTE_PERIODO = "criterio_imputacion_siguiente_periodo"
+    VALORACION_PARTICIPACION_INICIO = "valoracion_participacion_inicio"
+    VALORACION_PARTICIPACION_FINAL = "valoracion_participacion_final"
+    INGRESOS_FINANCIEROS_PARTICIPACION = "ingresos_financieros_participacion"
+    RESULTADO_CONTABLE_IMPUTADO = "resultado_contable_imputado"
+    GASTOS_FINANCIEROS_NETOS_IMPUTADOS = "gastos_financieros_netos_imputados"
+    RESERVA_CAPITALIZACION_NO_APLICADA_IMPUTADA = "reserva_capitalizacion_no_aplicada_imputada"
+    BASE_IMPONIBLE_IMPUTADA = "base_imponible_imputada"
+    DEDUCCION_DOBLE_IMPOSICION_BASES_IMPUTADAS = "deduccion_doble_imposicion_bases_imputadas"
+    BONIFICACION_BASES_IMPUTADAS = "bonificacion_bases_imputadas"
+    DEDUCCION_ACTIVOS_FIJOS_CANARIAS = "deduccion_activos_fijos_canarias"
+    DEDUCCION_IDI_CANARIAS = "deduccion_idi_canarias"
+    DEDUCCION_PRODUCCION_ESPECTACULOS_CANARIAS = "deduccion_produccion_espectaculos_canarias"
+    DEDUCCION_RESTO_INVERSION_CANARIAS = "deduccion_resto_inversion_canarias"
+    DEDUCCION_IDI_BASES_IMPUTADAS = "deduccion_idi_bases_imputadas"
+    DEDUCCION_PRODUCCION_ESPECTACULOS_BASES_IMPUTADAS = "deduccion_produccion_espectaculos_bases_imputadas"
+    DEDUCCION_RESTO_INCENTIVAR_ACTIVIDADES = "deduccion_resto_incentivar_actividades"
+    DEDUCCION_RESTO_NO_MENCIONADAS = "deduccion_resto_no_mencionadas"
+    RETENCIONES_INGRESOS_A_CUENTA_IMPUTADOS = "retenciones_ingresos_a_cuenta_imputados"
+    DIVIDENDOS_EJERCICIOS_ANTERIORES = "dividendos_ejercicios_anteriores"
+    DIVIDENDOS_EJERCICIOS_POSTERIORES = "dividendos_ejercicios_posteriores"
+
+
+class M200EntidadParticipadaProjectionRef(BaseModel):
+    """One sub-lettered AIE/UTE participada row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_entidad_participada"]
+    slot: int = Field(ge=1, le=3)
+    field: M200EntidadParticipadaField
+
+
+class M200ParticipacionDirectaField(StrEnum):
+    """Closed fields of one B.1 participacion directa row of the declarante."""
+
+    NIF = "nif"
+    NOMBRE_O_RAZON_SOCIAL = "nombre_o_razon_social"
+    CODIGO_PROVINCIA_PAIS = "codigo_provincia_pais"
+    PORCENTAJE_PARTICIPACION = "porcentaje_participacion"
+    VALOR_NOMINAL_TOTAL = "valor_nominal_total"
+    VALOR_EN_LIBROS = "valor_en_libros"
+    INGRESOS_POR_DIVIDENDOS = "ingresos_por_dividendos"
+    CORRECCION_VALOR_PERDIDAS_GANANCIAS = "correccion_valor_perdidas_ganancias"
+    REVERSION_PERDIDAS_DETERIORO_VALORES = "reversion_perdidas_deterioro_valores"
+    ELIMINACION_DETERIORO_CONTABLE = "eliminacion_deterioro_contable"
+    ELIMINACION_DETERIORO_VALORES_PARTICIPACION = "eliminacion_deterioro_valores_participacion"
+    AJUSTE_VALOR_RAZONABLE = "ajuste_valor_razonable"
+    EFECTO_CORRECCION_VALORATIVA_BASE_IMPONIBLE = "efecto_correccion_valorativa_base_imponible"
+    SALDO_CORRECCIONES_FISCALES_PENDIENTES = "saldo_correcciones_fiscales_pendientes"
+    CAPITAL = "capital"
+    RESERVAS_Y_OTRAS_PARTIDAS_FONDOS_PROPIOS = "reservas_y_otras_partidas_fondos_propios"
+    OTRAS_PARTIDAS_PATRIMONIO_NETO = "otras_partidas_patrimonio_neto"
+    RESULTADO_ULTIMO_EJERCICIO = "resultado_ultimo_ejercicio"
+
+
+class M200ParticipacionDirectaProjectionRef(BaseModel):
+    """One numbered B.1 participacion of the declarante in another entity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_participacion_directa"]
+    slot: int = Field(ge=1, le=3)
+    field: M200ParticipacionDirectaField
+
+
+class M200ParticipacionSocioField(StrEnum):
+    """Closed fields of one B.2 row: a person or entity holding the declarante."""
+
+    NIF = "nif"
+    REPRESENTANTE = "representante"
+    FORMA_JURIDICA = "forma_juridica"
+    APELLIDOS_NOMBRE_RAZON_SOCIAL = "apellidos_nombre_razon_social"
+    CODIGO_PROVINCIA_PAIS = "codigo_provincia_pais"
+    NOMINAL = "nominal"
+    PORCENTAJE_PARTICIPACION = "porcentaje_participacion"
+
+
+class M200ParticipacionSocioProjectionRef(BaseModel):
+    """One B.2 holder row.
+
+    AEAT prints no index here; the row identity comes from the field labels
+    restarting at "N.I.F." every seventh field.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_participacion_socio"]
+    slot: int = Field(ge=1, le=6)
+    field: M200ParticipacionSocioField
+
+
+class M200SecretarioConsejoField(StrEnum):
+    """Closed fields of the secretario del consejo de administracion row."""
+
+    APELLIDOS_Y_NOMBRE = "apellidos_y_nombre"
+    NIF = "nif"
+
+
+class M200SecretarioConsejoProjectionRef(BaseModel):
+    """The secretario del consejo de administracion.
+
+    Exactly one slot: the design's section G prints a single secretario, then a
+    separately-shaped list of representantes legales, which is its own
+    projection rather than a further slot of this one.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_secretario_consejo"]
+    slot: int = Field(ge=1, le=1)
+    field: M200SecretarioConsejoField
+
+
+class M200RepresentanteLegalField(StrEnum):
+    """Closed fields of one representante legal row.
+
+    Wider than the secretario's: AEAT prints a fecha de poder and a notaria for
+    a representante and neither for the secretario, so the two cannot share one
+    field set without one of them declaring slots it can never fill.
+    """
+
+    APELLIDOS_Y_NOMBRE = "apellidos_y_nombre"
+    NIF = "nif"
+    FECHA_PODER = "fecha_poder"
+    NOTARIA_OTROS = "notaria_otros"
+
+
+class M200RepresentanteLegalProjectionRef(BaseModel):
+    """One representante legal de la entidad row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m200_representante_legal"]
+    slot: int = Field(ge=1, le=3)
+    field: M200RepresentanteLegalField
+
+
 FilingProjectionRef = Annotated[
     M303ProrrataActivityProjectionRef
     | M303DifferentiatedDeductionProjectionRef
@@ -255,7 +598,21 @@ FilingProjectionRef = Annotated[
     | M303RegimenSimplificadoFactProjectionRef
     | M303RegimenSimplificadoModuleProjectionRef
     | M303Exonerado390ActivityProjectionRef
-    | M303Exonerado390OperacionesTercerosProjectionRef,
+    | M303Exonerado390OperacionesTercerosProjectionRef
+    | M200EstablecimientoPermanenteProjectionRef
+    | M200SocioSicavDisolucionProjectionRef
+    | M200EntidadMenorDependienteProjectionRef
+    | M200IncnGrupoSociedadProjectionRef
+    | M200IncnEstablecimientoPermanenteProjectionRef
+    | M200OperacionReestructuracionProjectionRef
+    | M200ParticipeAieUteProjectionRef
+    | M200TransparenciaFiscalInternacionalProjectionRef
+    | M200AdministradorProjectionRef
+    | M200EntidadParticipadaProjectionRef
+    | M200ParticipacionDirectaProjectionRef
+    | M200ParticipacionSocioProjectionRef
+    | M200SecretarioConsejoProjectionRef
+    | M200RepresentanteLegalProjectionRef,
     Field(discriminator="projection_kind"),
 ]
 """Strict core-owned union for every repeated-row filing projection."""
@@ -341,6 +698,33 @@ def filing_projection_ref_casilla_id(reference: FilingProjectionRef) -> CasillaI
 
 __all__ = [
     "FilingProjectionRef",
+    "M200AdministradorField",
+    "M200AdministradorProjectionRef",
+    "M200EntidadMenorDependienteField",
+    "M200EntidadMenorDependienteProjectionRef",
+    "M200EntidadParticipadaField",
+    "M200EntidadParticipadaProjectionRef",
+    "M200EstablecimientoPermanenteField",
+    "M200EstablecimientoPermanenteProjectionRef",
+    "M200IncnEstablecimientoPermanenteProjectionRef",
+    "M200IncnGrupoSociedadField",
+    "M200IncnGrupoSociedadProjectionRef",
+    "M200OperacionReestructuracionField",
+    "M200OperacionReestructuracionProjectionRef",
+    "M200ParticipacionDirectaField",
+    "M200ParticipacionDirectaProjectionRef",
+    "M200ParticipacionSocioField",
+    "M200ParticipacionSocioProjectionRef",
+    "M200ParticipeAieUteField",
+    "M200ParticipeAieUteProjectionRef",
+    "M200RepresentanteLegalField",
+    "M200RepresentanteLegalProjectionRef",
+    "M200SecretarioConsejoField",
+    "M200SecretarioConsejoProjectionRef",
+    "M200SocioSicavDisolucionField",
+    "M200SocioSicavDisolucionProjectionRef",
+    "M200TransparenciaFiscalInternacionalField",
+    "M200TransparenciaFiscalInternacionalProjectionRef",
     "M303DifferentiatedDeductionProjectionField",
     "M303DifferentiatedDeductionProjectionRef",
     "M303Exonerado390ActivityField",

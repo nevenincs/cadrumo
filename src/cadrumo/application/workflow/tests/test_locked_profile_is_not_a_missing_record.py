@@ -32,12 +32,12 @@ import pytest
 from ....core import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
-from cadrumo.application.user_profile import (
+from ...user_profile import (
+    close_active_profile_record_session,
     profile_bind_bucket_session,
     profile_bucket_session_open_resumed,
     profile_close_bucket_session,
 )
-from ...user_profile import close_active_profile_record_session
 from .._profile_health import assess_active_profile_health
 from ._locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, RECORD_NAMESPACE
 

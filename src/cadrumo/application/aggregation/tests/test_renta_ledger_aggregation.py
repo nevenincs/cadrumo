@@ -21,6 +21,7 @@ calculation tautologies.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Decimal
 
@@ -43,6 +44,17 @@ from ._renta_income_aggregation_support import _period
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _tx_id(label: str) -> str:
+    """Map a readable fixture label to a conforming 64-hex transaction id.
+
+    ``TransactionId`` is a content-addressed digest, so a short label is not a
+    legal value. Deriving it here keeps every assertion written against the
+    readable label instead of a magic digest, and keeps distinct labels
+    distinct.
+    """
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
 def _observation(
     transaction_id: str,
     *,
@@ -51,7 +63,7 @@ def _observation(
 ) -> RentaDeductibleExpenseObservation:
     """Build a single Renta-deductible observation via the project factory."""
     fact = RentaDeductibleExpenseFact(
-        transaction_id=transaction_id,
+        transaction_id=_tx_id(transaction_id),
         catalogue_id="ledger",
         operation_date=date(2025, 4, 5),
         gross_amount=gross_amount,
@@ -120,7 +132,7 @@ def test_casilla_aggregation_single_observation_produces_one_total_and_one_prove
     assert len(result.provenance) == 1
     assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
     assert result.provenance[0].category_id == SpendingCategory.CUOTAS_AUTONOMOS_SS.value
-    assert result.provenance[0].transaction_ids == ("tx-1",)
+    assert result.provenance[0].transaction_ids == (_tx_id("tx-1"),)
 
 
 def test_casilla_aggregation_groups_observations_same_casilla_same_category_into_one_row() -> None:
@@ -133,7 +145,7 @@ def test_casilla_aggregation_groups_observations_same_casilla_same_category_into
 
     assert len(result.provenance) == 1
     assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
-    assert result.provenance[0].transaction_ids == ("tx-a", "tx-b")
+    assert result.provenance[0].transaction_ids == tuple(sorted((_tx_id("tx-a"), _tx_id("tx-b"))))
     assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
 
 
@@ -189,8 +201,12 @@ def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted() -> None
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
 
+    fed_order = (_tx_id("tx-z"), _tx_id("tx-a"), _tx_id("tx-m"))
+    # The claim below is only a claim about sorting if the order the
+    # observations were fed in is not already the sorted one.
+    assert fed_order != tuple(sorted(fed_order)), "pick labels whose derived ids are fed out of order"
     assert len(result.provenance) == 1
-    assert result.provenance[0].transaction_ids == ("tx-a", "tx-m", "tx-z")
+    assert result.provenance[0].transaction_ids == tuple(sorted(fed_order))
 
 
 # ---------------------------------------------------------------------------

@@ -195,7 +195,8 @@ def test_record_authority_re_derives_for_a_second_profile_in_one_process(tmp_pat
 
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -213,7 +214,8 @@ def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObject
 def test_snapshot_repository_refuses_a_foreign_profile_snapshot(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    foreign = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    foreign = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_FOREIGN_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -229,7 +231,8 @@ def test_snapshot_repository_refuses_a_foreign_profile_snapshot(
 def test_snapshot_repository_round_trip_requires_its_bound_profile(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -257,7 +260,8 @@ def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureO
 def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="a4f1c2e0-1111-4222-8333-444455556666",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -294,7 +298,8 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
 def test_snapshot_load_rejects_inner_version_without_identifier_leak(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="a4f1c2e0-1111-4222-8333-444455556666",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -357,7 +362,9 @@ def test_record_authority_re_derives_after_its_latched_session_is_retired(tmp_pa
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
             seed_test_profile_record(
-                UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_FIRST_SWITCH_PROFILE_ID, facts=facts),
+                UserProfileRecord(
+                    setup_state=ProfileSetupState.COMPLETE, profile_id=_FIRST_SWITCH_PROFILE_ID, facts=facts
+                ),
                 root=storage_root,
                 label="Retired authority subject",
             )

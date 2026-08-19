@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage.bucket import bucket_paths
 from ...core import StorageCategory, scan_directory, storage_location
+from ...domain.user_profile import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
     ConfigResetDeletionMarker,
@@ -107,8 +108,6 @@ def test_create_persists_canonical_bucket_identities(
     tmp_path: Path,
 ) -> None:
     """Every persisted reset identity uses the storage-wide canonical spelling."""
-    from ...domain.user_profile import ProfileSetupState
-
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
     started_at = datetime(2026, 7, 16, 8, 0, tzinfo=UTC)
     wrapped_bucket_id = f" {_BUCKET_ID} "

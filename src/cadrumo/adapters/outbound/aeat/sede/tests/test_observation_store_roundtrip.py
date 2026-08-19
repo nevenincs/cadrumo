@@ -38,7 +38,7 @@ from .._schema import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-_BUCKET_ID = "sede-observation"
+_BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 _M100_BASE_LIQUIDABLE_CASILLA: CasillaId = validated_casilla_id("0500", surface="_M100_BASE_LIQUIDABLE_CASILLA")

@@ -81,7 +81,8 @@ def _seed_ready_profile(
         for fact in _READY_PROFILE_FACTS
     )
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=facts,
             created_at=_T0,

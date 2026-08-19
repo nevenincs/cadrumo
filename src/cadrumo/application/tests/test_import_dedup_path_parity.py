@@ -37,7 +37,7 @@ from ..transactions import import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-parity"
+_BUCKET = "0dac9c08-a56b-41bf-9752-636041072300"  # was 'bucket-parity'
 _SOURCE = Path("project/data/parity.csv")
 _DIRECTION = TransactionDirection.OUTGOING
 

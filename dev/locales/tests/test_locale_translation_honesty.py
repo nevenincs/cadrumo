@@ -33,19 +33,20 @@ from __future__ import annotations
 import json
 import tomllib
 from functools import cache
-from pathlib import Path
 
 import pytest
-import yaml
 
 from cadrumo.domain.calculations.registry import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
 
+from .._paths import LOCALES_DIR, SRC_DIR
+from ..manager import LocaleManager, locale_catalogue_source
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
+
 _MODELO_SCHEMA_PREFIX = "modelo.schema."
 _MODELO_SOURCE_SUFFIXES = (".label", ".title", ".official_name")
 
@@ -82,7 +83,7 @@ def _load_allowlist() -> dict[str, set[str]]:
     from the returned set.
     """
 
-    path = _LOCALES_DIR / "_intentional_identical.json"
+    path = LOCALES_DIR / "_intentional_identical.json"
     raw = json.loads(path.read_text(encoding="utf-8")) or {}
     data: dict[str, dict[str, str]] = raw if isinstance(raw, dict) else {}
     result: dict[str, set[str]] = {}
@@ -120,10 +121,11 @@ def _parsed_catalogue(locale_code: str) -> tuple[tuple[str, str | None], ...]:
     value, no key echo and no reserved token, so each of those gates would
     report exactly what a clean catalogue reports.
     """
-    text = (_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8")
-    raw = yaml.load(text, Loader=yaml.CSafeLoader) if hasattr(yaml, "CSafeLoader") else yaml.safe_load(text)
+    source = locale_catalogue_source(LOCALES_DIR, locale_code)
+    assert source is not None, f"no committed catalogue for {locale_code!r}; every honesty gate over it is vacuous"
+    raw = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR).load_locale(source)
     leaves = _flatten(raw if isinstance(raw, dict) else {})
-    assert leaves, f"{locale_code}.yml flattened to no leaves; every honesty gate over it is vacuous"
+    assert leaves, f"catalogue {locale_code!r} flattened to no leaves; every honesty gate over it is vacuous"
     return tuple(leaves.items())
 
 
@@ -156,7 +158,7 @@ def _continuity_backing() -> dict[str, str]:
         which is what makes its null occurrence value a real offender.
     """
     backing: dict[str, str] = {}
-    modelos_dir = _LOCALES_DIR.parent / "_data" / "registry" / "aeat" / "modelos"
+    modelos_dir = SRC_DIR / "_data" / "registry" / "aeat" / "modelos"
     for casilla_file in modelos_dir.glob("*/revisions/*/casillas/*.toml"):
         modelo_id = casilla_file.parents[3].name
         try:
@@ -183,7 +185,7 @@ def _continuity_backing() -> dict[str, str]:
 def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
     """Return one integer ``_``-prefixed metadata field for *locale_code*."""
 
-    path = _LOCALES_DIR / "_intentional_identical.json"
+    path = LOCALES_DIR / "_intentional_identical.json"
     raw = json.loads(path.read_text(encoding="utf-8")) or {}
     data: dict[str, dict[str, object]] = raw if isinstance(raw, dict) else {}
     entries = data.get(locale_code, {})
@@ -227,9 +229,8 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     strips them from the interpolation map, so a catalogue token named after
     either is permanently unfillable regardless of what a call site passes.
     """
+    from cadrumo.core.i18n import extract_placeholders
     from dev.locales import RESERVED_INTERPOLATION_TOKENS
-
-    from ..core.i18n import extract_placeholders
 
     return sorted(
         key

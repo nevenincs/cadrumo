@@ -60,7 +60,7 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 # staleness checks through it (via ``runtime.bucket_id``) so the self-load lands
 # in the active session. The pure-fingerprint unit tests never touch storage, so
 # they use it only as the invoice-record stamp.
-_RUNTIME_BUCKET_ID = "filing-test"
+_RUNTIME_BUCKET_ID = "0fab7c94-777c-4598-ae8f-c4b539f300c3"  # was 'filing-test'
 _COUNTERPARTY_CIF = "A58818501"
 
 

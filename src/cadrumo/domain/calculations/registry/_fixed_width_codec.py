@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, Protocol
 
@@ -18,6 +18,7 @@ from ._export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyValue,
     normalize_parsed_export_policy_value,
+    policy_defines_absent_slot,
     project_export_value,
     validate_export_wire_value,
 )
@@ -202,12 +203,22 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         return " " * field.length
     if kind == "literal":
         value = field.literal
-    value = project_export_value(field.value_policy, value)
-    if _is_absent_numeric_slot(field, value):
+    if _is_absent_numeric_slot(field, value) and not policy_defines_absent_slot(field.value_policy):
+        # Absence is settled BEFORE projection for every policy that does not
+        # claim the empty slot. Every projector refuses ``None`` -- correctly, an
+        # absent quantity is not a quantity -- so testing absence only after
+        # projection made the blank fill unreachable on any field declaring a
+        # policy, and an optional casilla the taxpayer legitimately lacks could
+        # not be exported at all. The post-projection test below is kept for a
+        # policy that projects an empty slot through to an empty value.
         rendered = _render_absent_numeric(field)
     else:
-        _require_allowed_value(field, value)
-        rendered = _render_typed_value(field, value)
+        value = project_export_value(field.value_policy, value)
+        if _is_absent_numeric_slot(field, value):
+            rendered = _render_absent_numeric(field)
+        else:
+            _require_allowed_value(field, value)
+            rendered = _render_typed_value(field, value)
     validate_export_wire_value(field.value_policy, rendered)
     return rendered
 
@@ -408,6 +419,10 @@ def _require_decimals(field: _ExportField) -> int:
 
 def _render_typed_value(field: _ExportField, value: object) -> str:
     """Render one already-projected value under the field's declared data type."""
+    if field.value_policy is ExportValuePolicy.INTEGER_PART:
+        return _render_integer_part(field, value)
+    if field.value_policy is ExportValuePolicy.FRACTIONAL_DIGITS:
+        return _render_fractional_digits(field, value)
     if field.data_type == "money":
         return _render_money(field, value)
     if field.data_type == "decimal":
@@ -515,6 +530,42 @@ def _render_integer(field: _ExportField, value: object) -> str:
     if number != number.to_integral_value():
         raise RegistryValidationError(f"integer export field {field.id!r} cannot render a fractional value")
     return _render_numeric_digits(field, str(abs(int(number))), negative=number < 0)
+
+
+def _render_integer_part(field: _ExportField, value: object) -> str:
+    """Render the integer component of a quantity AEAT prints as a split pair.
+
+    Dispatched ahead of the data-type table because the part's representation is
+    settled entirely by its policy and its own slot width: the fractional digits
+    live in the sibling field, so scaling this one by the field's ``decimals``
+    would write the whole quantity into the half that carries none of it.
+    """
+    number = _coerce_numeric(field, value)
+    return _render_numeric_digits(
+        field,
+        str(int(number.to_integral_value(rounding=ROUND_DOWN))),
+        negative=False,
+    )
+
+
+def _render_fractional_digits(field: _ExportField, value: object) -> str:
+    """Render exactly the fractional digits this part's slot holds.
+
+    Refuses rather than truncates when the quantity carries more precision than
+    the slot represents. Dropping a digit here would under-declare a filed
+    figure while leaving a structurally valid record behind, which is precisely
+    the failure a fixed-width export must never produce silently.
+    """
+    assert field.length is not None
+    number = _coerce_numeric(field, value)
+    fraction = number - number.to_integral_value(rounding=ROUND_DOWN)
+    scaled = fraction * (Decimal(10) ** field.length)
+    if scaled != scaled.to_integral_value():
+        raise RegistryValidationError(
+            f"export field {field.id!r} cannot represent {field.length} fractional digits "
+            f"of a value carrying more precision",
+        )
+    return str(int(scaled)).rjust(field.length, "0")
 
 
 def _render_scaled_numeric(field: _ExportField, value: object, *, scale: int) -> str:

@@ -33,21 +33,24 @@ from .. import _filing_projection_ref as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REF_MODELS = (
-    M303ProrrataActivityProjectionRef,
-    M303DifferentiatedDeductionProjectionRef,
-    M303RegimenSimplificadoActivityProjectionRef,
-    M303RegimenSimplificadoFactProjectionRef,
-    M303RegimenSimplificadoModuleProjectionRef,
-    M303Exonerado390ActivityProjectionRef,
-    M303Exonerado390OperacionesTercerosProjectionRef,
-)
+#: Derived from the union rather than hand-listed, so a new member cannot be
+#: added to the union and silently skipped by every test below it.
+_REF_MODELS = get_args(get_args(FilingProjectionRef)[0])
 
 
 def test_core_facade_exposes_the_canonical_flat_projection_union() -> None:
     assert core.FilingProjectionRef is FilingProjectionRef
     assert core.compile_filing_projection_ref is compile_filing_projection_ref
-    assert len(get_args(get_args(FilingProjectionRef)[0])) == 7
+    # Gated on the PROPERTY, not the tally. A member count pins a moment and
+    # then detects nothing except its own staleness; what this union has to
+    # guarantee is that it stays flat and discriminated, so every member is
+    # asserted to be a distinct model carrying a unique required
+    # `projection_kind` discriminator.
+    members = get_args(get_args(FilingProjectionRef)[0])
+    assert members, "the projection union must not be empty"
+    assert len(set(members)) == len(members), "the projection union repeats a member"
+    discriminators = [get_args(member.model_fields["projection_kind"].annotation)[0] for member in members]
+    assert len(set(discriminators)) == len(discriminators), f"projection kinds are not unique: {discriminators}"
 
 
 def test_every_projection_discriminator_and_payload_field_is_required() -> None:

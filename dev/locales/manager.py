@@ -16,7 +16,7 @@ from typing import IO, Any, cast, override
 
 import yaml
 
-from cadrumo.core import iter_directory, normalise_product_identity_references, scan_directory
+from cadrumo.core import iter_directory, normalise_product_identity_references
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.logging import get_logger

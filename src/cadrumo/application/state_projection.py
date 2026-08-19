@@ -465,6 +465,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.REFUND_OPERATION: "cli.app.modelo.bindings.readiness.operacion_reembolso",
         BindingSourceKind.DONATIVO_DONOR: "cli.app.modelo.bindings.readiness.donante_donativo",
         BindingSourceKind.GASTO193_CONTRIBUTOR: "cli.app.modelo.bindings.readiness.gasto193_contribuyente",
+        BindingSourceKind.WITHHOLDING296: "cli.app.modelo.bindings.readiness.withholding296_perceptor",
     },
 )
 """Total locale-key projection for the noun describing each binding source."""
@@ -504,6 +505,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.REFUND_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.DONATIVO_DONOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.GASTO193_CONTRIBUTOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.WITHHOLDING296: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )
 """Total action spine for a readiness ``missing_bindings`` source."""

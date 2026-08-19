@@ -223,7 +223,8 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
 
 
 def _seed_first_year_activity_profile(repos_: _Repos) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -251,7 +252,8 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
 
 
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -279,7 +281,8 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
 
 
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

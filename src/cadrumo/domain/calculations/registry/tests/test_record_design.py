@@ -1636,8 +1636,7 @@ def test_modelo_296_perceptor_record_reads_whole_after_the_gap_fill() -> None:
     RESIDENCIA FISCAL`` carries one. The record was reported skipped entirely.
     """
     design = (
-        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files")
-        / "01-296-ejercicio-2024.pdf"
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files") / "01-296-ejercicio-2024.pdf"
     )
 
     sheets = {sheet.name: sheet for sheet in extract_record_design(design).sheets}
@@ -1755,8 +1754,7 @@ def test_modelo_296_reads_all_five_record_bodies() -> None:
     record dropped for an unread span, and both anexos unidentified.
     """
     design = (
-        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files")
-        / "01-296-ejercicio-2024.pdf"
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files") / "01-296-ejercicio-2024.pdf"
     )
 
     extraction = extract_record_design(design)

@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace
 _VERIFICATION_OBJECT_KEY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.require_default_object_key()
 _VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.schema_version
-_BUCKET_ID = "modelo-runtime"
+_BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 
 
 _IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")

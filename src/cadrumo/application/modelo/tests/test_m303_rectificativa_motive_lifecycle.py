@@ -82,7 +82,7 @@ from .._export import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "m303-rectificativa-motive"
+_BUCKET_ID = "0479178a-6678-4c43-8b7d-46fba6483f11"  # was 'm303-rectificativa-motive'
 _TAX_ID = "X1234567L"
 _CSV = "S92RECTIFICA2025"
 _RECEIPT = "1234567890123"

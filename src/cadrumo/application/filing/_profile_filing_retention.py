@@ -16,7 +16,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.application.user_profile import (
+from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ...core.identity import FilingRecordId
+from ...core.logging import get_logger
+from ...core.time import validate_utc_aware
+from ...domain.modelos import ModeloRecord
+from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
+from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..user_profile import (
     ProfileCustodyLocalRecordStore,
     canonical_snapshot_bytes,
     canonical_snapshot_digest,
@@ -25,14 +32,6 @@ from cadrumo.application.user_profile import (
     ensure_profile_custody_owner_root,
     profile_custody_owner_root,
 )
-
-from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
-from ...core.identity import FilingRecordId
-from ...core.logging import get_logger
-from ...core.time import validate_utc_aware
-from ...domain.modelos import ModeloRecord
-from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
-from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 
 _MAX_BYTES = 32 * 1024
 

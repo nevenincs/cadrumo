@@ -20,9 +20,9 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core import Period
 from ....domain import ModeloIdentifier
 from ....tests.secure_sql import TestRuntimeProfile
-from ..conftest import _BUCKET_ID
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
+from ..conftest import _BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

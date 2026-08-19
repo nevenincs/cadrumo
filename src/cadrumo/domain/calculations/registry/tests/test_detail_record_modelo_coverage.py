@@ -64,11 +64,7 @@ def test_detail_record_modelo_emits_row_sets_with_localized_headers(
     # The column-completeness universe is every row-producer binding the
     # revision declares, whatever its source: modelo 193 emits two cohorts
     # (perceptor and gastos rows) and both must produce localized columns.
-    row_producer_ids = {
-        b.id
-        for b in revision.bindings
-        if b.aggregation is not None and b.aggregation.op == "rows"
-    }
+    row_producer_ids = {b.id for b in revision.bindings if b.aggregation is not None and b.aggregation.op == "rows"}
 
     row_sets = collect_row_sets(revision)
 

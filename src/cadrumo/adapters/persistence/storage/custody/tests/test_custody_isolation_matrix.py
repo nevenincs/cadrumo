@@ -19,11 +19,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .. import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyPasswordError,
-    ProfileCustodyRecordError,
-)
 from ......application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileRecordSession,
@@ -37,6 +32,11 @@ from ......application.user_profile import (
 )
 from ......domain.user_profile import ProfileSetupState, UserProfileRecord
 from ......tests.secure_sql import isolated_profile_storage_root
+from .. import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

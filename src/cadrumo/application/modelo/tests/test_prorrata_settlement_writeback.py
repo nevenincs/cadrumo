@@ -56,7 +56,7 @@ from .._revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "prorrata-settlement-writeback"
+_BUCKET_ID = "a98e3d41-e45a-4616-a82b-d3e4bbe94e07"  # was 'prorrata-settlement-writeback'
 _T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
 
 _VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")

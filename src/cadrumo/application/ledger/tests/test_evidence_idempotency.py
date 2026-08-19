@@ -54,7 +54,7 @@ class _EvidenceIdFields(TypedDict):
     notes: str
 
 
-_BUCKET = "bucket-idem"
+_BUCKET = "f4e3be8f-a3ee-48a6-9cec-bee20131ddcd"  # was 'bucket-idem'
 
 
 def test_the_keyed_id_is_clock_free_so_a_retry_resolves_to_the_same_record() -> None:

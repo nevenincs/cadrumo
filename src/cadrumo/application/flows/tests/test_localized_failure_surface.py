@@ -31,6 +31,7 @@ from ....application.flows import (
 from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
+from ....tests.locale_catalogue import flatten_catalogue, shard_keys, shard_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,17 +46,25 @@ _FLOW_MODULE_DIRS = (
 )
 
 
-def _referenced_flow_keys() -> frozenset[str]:
+def _referenced_flow_keys() -> tuple[frozenset[str], frozenset[str]]:
+    """Split the swept literals into whole keys and dynamic-key prefixes.
+
+    A literal ending in ``.`` is a prefix a call site concatenates a runtime
+    value onto, so it is not itself a key and can never resolve. Dropping it
+    would silence the whole family it names, so it is returned separately and
+    held to the strongest claim its shape can support: the family exists.
+    """
     keys: set[str] = set()
     for directory in _FLOW_MODULE_DIRS:
         for module in scan_directory(directory, pattern="*.py"):
             keys |= set(_KEY_PATTERN.findall(module.read_text(encoding="utf-8")))
-    return frozenset(keys)
+    prefixes = {key for key in keys if key.endswith(".")}
+    return frozenset(keys - prefixes), frozenset(prefixes)
 
 
 def test_every_referenced_flow_key_resolves_in_all_locales() -> None:
     """No substrate/TUI translation key may fall back to humanised English."""
-    keys = _referenced_flow_keys()
+    keys, _ = _referenced_flow_keys()
     assert keys, "key sweep found nothing - the pattern or module set drifted"
     missing = [
         f"{locale}:{key}"
@@ -66,6 +75,25 @@ def test_every_referenced_flow_key_resolves_in_all_locales() -> None:
     assert not missing, "flow keys missing from locale catalogues:\n" + "\n".join(missing)
 
 
+def test_every_dynamic_flow_key_family_is_populated_in_all_locales() -> None:
+    """A concatenated key prefix must name a family every language declares.
+
+    The runtime half of such a key is not knowable statically, so this cannot
+    assert every member resolves. It asserts the strongest claim that is
+    checkable: an empty family in any language means every value routed through
+    that prefix falls back to humanised English in that language.
+    """
+    _, prefixes = _referenced_flow_keys()
+    assert prefixes, "no dynamic flow-key prefix found - the concatenating call sites drifted"
+    empty = [
+        f"{locale}:{prefix}*"
+        for prefix in sorted(prefixes)
+        for locale in _LOCALES
+        if not any(key.startswith(prefix) for key in shard_keys(locale, prefix))
+    ]
+    assert not empty, "dynamic flow-key families with no members:\n" + "\n".join(empty)
+
+
 def test_no_flows_leaf_is_a_self_referencing_placeholder() -> None:
     """A leaf whose value equals its own key is a scaffold echo, not a translation.
 
@@ -74,26 +102,13 @@ def test_no_flows_leaf_is_a_self_referencing_placeholder() -> None:
     no scaffold reconciles these leaves — this gate replaces the
     coverage that registration removed.
     """
-    import yaml
 
     echoes: list[str] = []
     for locale in _LOCALES:
-        catalogue = _SRC / "cadrumo" / "locales" / f"{locale}.yml"
-        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
-        for key, value in _flatten(payload.get(locale, payload)):
+        for key, value in flatten_catalogue(shard_payload(locale, "flows.")):
             if key.startswith("flows.") and value == key:
                 echoes.append(f"{locale}:{key}")
     assert not echoes, "self-referencing flows leaves (scaffold echoes):\n" + "\n".join(echoes)
-
-
-def _flatten(node: object, prefix: str = "") -> list[tuple[str, object]]:
-    if not isinstance(node, dict):
-        return [(prefix, node)]
-    leaves: list[tuple[str, object]] = []
-    for key, value in node.items():
-        dotted = f"{prefix}.{key}" if prefix else str(key)
-        leaves.extend(_flatten(value, dotted))
-    return leaves
 
 
 class _Answers(BaseModel):

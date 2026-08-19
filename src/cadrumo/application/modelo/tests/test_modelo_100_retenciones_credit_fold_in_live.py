@@ -228,7 +228,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     channel. Mirrors
     ``test_modelo_100_pagos_fraccionados_fold_in_live._seed_taxpayer_unit_profile``.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

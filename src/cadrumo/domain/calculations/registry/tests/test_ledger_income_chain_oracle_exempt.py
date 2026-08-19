@@ -85,7 +85,7 @@ _TAXABLE_BASE_BINDING = "modelo-130-actividad-economica-ingresos-taxable-base-cu
 _FILING_YEAR = 2026
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 3, 4)
-_BUCKET = "bucket-oracle-exempt"
+_BUCKET = "eeb87dd1-12bd-4e70-8f3e-751d9bb85455"  # was 'bucket-oracle-exempt'
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 

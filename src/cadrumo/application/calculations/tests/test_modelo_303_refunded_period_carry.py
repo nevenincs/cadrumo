@@ -59,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "303"
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
-_BUCKET_ID = "bucket-m303-refund"
+_BUCKET_ID = "2983d936-f658-4178-977b-3d11f30cb3b2"  # was 'bucket-m303-refund'
 
 
 #: The law-determined Modelo 303 revision for 2025/4T. Stamped on the persisted

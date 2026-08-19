@@ -160,7 +160,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     auto-fills these — no profile fact is hand-fed through the caller channel.
     Mirrors ``test_modelo_100_multiyear_renta_enrollment._seed_taxpayer_unit_profile``.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

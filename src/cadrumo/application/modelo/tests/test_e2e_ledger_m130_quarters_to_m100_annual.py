@@ -458,7 +458,8 @@ def _seed_taxpayer_profile() -> None:
     # display_name MUST equal the manifest label isolated_runtime_profile created
     # ("Test runtime profile") — CommittedProfileView._validate_cross_store_agreement
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),

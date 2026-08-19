@@ -89,20 +89,22 @@ _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
 _LEGAL_REFS = '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
 
+#: ``ordinal`` is the PRINTED label the official design carries, preserved
+#: verbatim as text rather than parsed into an arithmetic value.
 _OFFICIAL_DID_ROWS = (
-    (1, 1, 2, "An", 'Constante "<T"'),
-    (2, 3, 3, "Num", 'Constante "303"'),
-    (3, 6, 5, "An", 'Constante "DID00"'),
-    (4, 11, 1, "An", 'Constante ">"'),
-    (5, 12, 11, "An", "Nota 3"),
-    (6, 23, 34, "An", "Nota 3"),
-    (7, 57, 70, "An", None),
-    (8, 127, 35, "An", None),
-    (9, 162, 30, "An", None),
-    (10, 192, 2, "An", None),
-    (11, 194, 1, "Num", '"0", "1", "2", "3" Nota 2, Nota 3'),
-    (12, 195, 617, "An", None),
-    (13, 812, 12, "An", 'Constante "</T303DID00>"'),
+    ("1", 1, 2, "An", 'Constante "<T"'),
+    ("2", 3, 3, "Num", 'Constante "303"'),
+    ("3", 6, 5, "An", 'Constante "DID00"'),
+    ("4", 11, 1, "An", 'Constante ">"'),
+    ("5", 12, 11, "An", "Nota 3"),
+    ("6", 23, 34, "An", "Nota 3"),
+    ("7", 57, 70, "An", None),
+    ("8", 127, 35, "An", None),
+    ("9", 162, 30, "An", None),
+    ("10", 192, 2, "An", None),
+    ("11", 194, 1, "Num", '"0", "1", "2", "3" Nota 2, Nota 3'),
+    ("12", 195, 617, "An", None),
+    ("13", 812, 12, "An", 'Constante "</T303DID00>"'),
 )
 
 _DP30300_PREFIX_LENGTHS = (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)

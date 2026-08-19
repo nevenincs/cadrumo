@@ -34,7 +34,7 @@ from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata,
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "google-logout-atomicity"
+_BUCKET_ID = "80cc197a-74fe-4984-93cd-471aa29411ef"  # was 'google-logout-atomicity'
 _PROFILE = "operator-google"
 _ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
 #: A namespace no registry declares. Every write and deletion path validates

@@ -226,7 +226,8 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the taxpayer profile the M303 IVA-wallet gate reads (tax_id)."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

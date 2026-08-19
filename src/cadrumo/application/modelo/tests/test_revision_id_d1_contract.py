@@ -443,7 +443,8 @@ def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCata
 
 def _seed_m303_ready_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_M303_READY_PROFILE_FACTS,
             created_at=_T0,

@@ -70,7 +70,8 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope() -> None:
 
 
 def _common_profile() -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -84,7 +85,8 @@ def _common_profile() -> UserProfileRecord:
 
 
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

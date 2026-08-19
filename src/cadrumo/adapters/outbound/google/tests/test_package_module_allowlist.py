@@ -53,6 +53,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract
+        "test_api_typeddicts.py",  # contract: API response TypedDicts declare their required keys
         "test_apply_adapter_helpers.py",
         "test_calc_sheets_apply_evidence.py",  # online Evidencia render + offline/online evidence parity
         "test_calc_sheets_apply_no_empty_window.py",  # apply never leaves the workbook empty (write-then-clear-stale ordering)

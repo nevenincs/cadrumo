@@ -153,7 +153,8 @@ def _store_profile(
     iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),

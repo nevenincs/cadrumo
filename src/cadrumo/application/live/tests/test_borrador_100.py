@@ -31,7 +31,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-renta"
+_BUCKET_ID = "0acc74be-7842-4530-95f8-8ffca3a6b654"  # was 'bucket-renta'
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 _WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)

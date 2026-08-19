@@ -61,7 +61,8 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     """Seed the bucket profile with the taxpayer NIF so the IVA wallet
     reconciliation gate added to ``calculate_modelo_revision`` resolves
     the work-unit taxpayer identity."""
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),

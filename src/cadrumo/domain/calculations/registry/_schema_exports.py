@@ -335,6 +335,13 @@ _VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str 
     ExportValuePolicy.TWO_DIGIT_MONTH: ("integer", "left_zero", "right", False, None),
     ExportValuePolicy.TWO_DIGIT_DAY: ("integer", "left_zero", "right", False, None),
     ExportValuePolicy.IMPLIED_DECIMAL: ("decimal", "left_zero", "right", True, None),
+    # Both halves of a split quantity occupy an integer slot: each writes a
+    # zero-padded, right-justified digit run of its own width, and the decimal
+    # point is implied by the BOUNDARY between them rather than declared on
+    # either. Declaring the fractional half "decimal" would ask it for a scale
+    # it does not have -- its digits ARE the scale.
+    ExportValuePolicy.INTEGER_PART: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.FRACTIONAL_DIGITS: ("integer", "left_zero", "right", False, None),
     ExportValuePolicy.YYYYMMDD: ("date", "none", "none", False, "aaaammdd"),
     ExportValuePolicy.DDMMYYYY: ("date", "none", "none", False, "ddmmaaaa"),
     ExportValuePolicy.DIGIT_STRING: ("text", "none", "none", False, None),
@@ -943,8 +950,7 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
             return
         if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
             raise RegistryValidationError(
-                f"export layout {layout.id!r} declares an auxiliary envelope header on a "
-                "non-fixed-width layout",
+                f"export layout {layout.id!r} declares an auxiliary envelope header on a non-fixed-width layout",
             )
         if auxiliary_header.source_ref not in layout.source_refs:
             raise RegistryValidationError(

@@ -220,7 +220,8 @@ def _seed_sociedad_profile() -> None:
     general bracket (INCN > 10.000.000). ``tributacion_estado_porcentaje`` is
     100 (comun regimen, no forales mentioned in the scenario).
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="A12345674"),

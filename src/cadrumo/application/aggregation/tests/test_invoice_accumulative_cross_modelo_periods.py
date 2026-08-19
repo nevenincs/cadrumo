@@ -177,7 +177,8 @@ _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 def _seed_taxpayer_profile() -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

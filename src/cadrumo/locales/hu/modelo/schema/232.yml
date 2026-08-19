@@ -36,9 +36,6 @@ modelo:
             vinculada-1-razon-social:
               help: null
               label: null
-            vinculada-1-reservado-nombre:
-              help: null
-              label: null
             vinculada-1-tipo-operacion:
               help: null
               label: null
@@ -64,9 +61,6 @@ modelo:
               help: null
               label: null
             vinculada-2-razon-social:
-              help: null
-              label: null
-            vinculada-2-reservado-nombre:
               help: null
               label: null
             vinculada-2-tipo-operacion:
@@ -96,9 +90,6 @@ modelo:
             vinculada-3-razon-social:
               help: null
               label: null
-            vinculada-3-reservado-nombre:
-              help: null
-              label: null
             vinculada-3-tipo-operacion:
               help: null
               label: null
@@ -126,9 +117,6 @@ modelo:
             vinculada-4-razon-social:
               help: null
               label: null
-            vinculada-4-reservado-nombre:
-              help: null
-              label: null
             vinculada-4-tipo-operacion:
               help: null
               label: null
@@ -154,9 +142,6 @@ modelo:
               help: null
               label: null
             vinculada-5-razon-social:
-              help: null
-              label: null
-            vinculada-5-reservado-nombre:
               help: null
               label: null
             vinculada-5-tipo-operacion:
@@ -204,9 +189,6 @@ modelo:
             vinculada-1-razon-social:
               help: null
               label: 'Kapcsolt vállalkozás 1: Cégnév'
-            vinculada-1-reservado-nombre:
-              help: null
-              label: 'Kapcsolt vállalkozás 1: Fenntartott mező'
             vinculada-1-tipo-operacion:
               help: null
               label: 'Kapcsolt vállalkozás 1: Ügylettípus'
@@ -234,9 +216,6 @@ modelo:
             vinculada-2-razon-social:
               help: null
               label: 'Kapcsolt vállalkozás 2: Cégnév'
-            vinculada-2-reservado-nombre:
-              help: null
-              label: 'Kapcsolt vállalkozás 2: Fenntartott mező'
             vinculada-2-tipo-operacion:
               help: null
               label: 'Kapcsolt vállalkozás 2: Ügylettípus'
@@ -264,9 +243,6 @@ modelo:
             vinculada-3-razon-social:
               help: null
               label: 'Kapcsolt vállalkozás 3: Cégnév'
-            vinculada-3-reservado-nombre:
-              help: null
-              label: 'Kapcsolt vállalkozás 3: Fenntartott mező'
             vinculada-3-tipo-operacion:
               help: null
               label: 'Kapcsolt vállalkozás 3: Ügylettípus'
@@ -294,9 +270,6 @@ modelo:
             vinculada-4-razon-social:
               help: null
               label: 'Kapcsolt vállalkozás 4: Cégnév'
-            vinculada-4-reservado-nombre:
-              help: null
-              label: 'Kapcsolt vállalkozás 4: Fenntartott mező'
             vinculada-4-tipo-operacion:
               help: null
               label: 'Kapcsolt vállalkozás 4: Ügylettípus'
@@ -324,9 +297,6 @@ modelo:
             vinculada-5-razon-social:
               help: null
               label: 'Kapcsolt vállalkozás 5: Cégnév'
-            vinculada-5-reservado-nombre:
-              help: null
-              label: 'Kapcsolt vállalkozás 5: Fenntartott mező'
             vinculada-5-tipo-operacion:
               help: null
               label: 'Kapcsolt vállalkozás 5: Ügylettípus'

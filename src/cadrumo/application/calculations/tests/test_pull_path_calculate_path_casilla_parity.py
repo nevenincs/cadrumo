@@ -186,7 +186,8 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

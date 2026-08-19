@@ -13,11 +13,6 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.application.user_profile import (
-    committed_profile_custody_inventory,
-    default_profile_bucket_storage,
-)
-
 from ...application.filing import FilingRetentionAuthority
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
@@ -25,6 +20,10 @@ from ...domain.buckets import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
+from ..user_profile import (
+    committed_profile_custody_inventory,
+    default_profile_bucket_storage,
+)
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     AssessBucketDeletionCommand,
@@ -96,7 +95,7 @@ class BucketMaintenanceService:
 
     def assess_deletion(self, command: AssessBucketDeletionCommand) -> BucketDeletionAssessment:
         """Observe one deletion target: existence, label, contents and retention.
-        
+
         Retention is answered WITHOUT a session, and the distinction matters
         because it is why this surface can answer at all. Producing the filing
         retention position still needs the bucket's key -- it summarises the
@@ -105,7 +104,7 @@ class BucketMaintenanceService:
         creation and filing persistence. A deletion preflight runs against
         profiles it has NOT unlocked, so it reads that snapshot rather than the
         modelo records, which are encrypted under a key nobody here holds.
-        
+
         ``setup_state`` stays absent for the same reason it always did: it lives
         inside the encrypted profile record and no unauthenticated read can
         reach it. The field is optional on the assessment precisely so this
@@ -145,12 +144,14 @@ class BucketMaintenanceService:
                 bucket_id=command.bucket_id,
             ),
         )
+
+
 def _observed_deletion_fingerprint(
     *,
     root: Path,
     profile_id: UUID,
     bucket_id: str,
-    ) -> BucketDeletionFingerprint:
+) -> BucketDeletionFingerprint:
     """Fold the committed capsule's exact contents into the deletion fingerprint.
 
     The three facts the contract carries are exactly what the custody inventory
@@ -169,15 +170,15 @@ def _observed_deletion_fingerprint(
     # Broad on purpose: any inventory failure at all must block, never soften.
     except Exception as exc:
         raise BucketDeleteRefusedError(
-        "current custody deletion cannot fingerprint this target: its committed capsule "
-        "could not be inventoried, so a later resume could not tell whether the target "
-        "changed beneath the operation.",
-        context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
-    ) from exc
+            "current custody deletion cannot fingerprint this target: its committed capsule "
+            "could not be inventoried, so a later resume could not tell whether the target "
+            "changed beneath the operation.",
+            context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
+        ) from exc
     return BucketDeletionFingerprint(
-    digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
-    file_count=len(inventory.entries),
-    total_bytes=inventory.total_bytes,
+        digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
+        file_count=len(inventory.entries),
+        total_bytes=inventory.total_bytes,
     )
 
 
@@ -241,7 +242,6 @@ def _assessed_filing_retention(
                 "retention_snapshot": "unreadable",
             },
         ) from exc
-
 
 
 __all__ = ["BucketMaintenanceService"]

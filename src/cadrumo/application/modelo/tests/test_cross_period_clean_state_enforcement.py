@@ -163,7 +163,8 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         )
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=tuple(facts),
         created_at=_CLOCK,
@@ -173,7 +174,8 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),

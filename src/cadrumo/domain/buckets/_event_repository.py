@@ -279,6 +279,7 @@ def emit_bucket_events(
     """
     if not events:
         return
+
     def _append_all(current: BucketEventHistoryCatalogue) -> BucketEventHistoryCatalogue:
         """Append every event to whichever catalogue this attempt was handed."""
         catalogue = current

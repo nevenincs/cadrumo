@@ -136,7 +136,14 @@ _WithholdingRowField = Literal[
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
-    {"row_field", "perceptor_count", "percepcion_count", "percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"},
+    {
+        "row_field",
+        "perceptor_count",
+        "percepcion_count",
+        "percibido_sum",
+        "retencion_sum",
+        "retenciones_ingresadas_sum",
+    },
 )
 _WithholdingFact = Literal[
     "row_field",
@@ -564,7 +571,8 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
         raise RegistryValidationError(
             f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'count_distinct'",
         )
-    if selector.fact in {"percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"} and op != BindingAggregationOp.SUM:
+    sum_facts = {"percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"}
+    if selector.fact in sum_facts and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "row_field":
         if op != BindingAggregationOp.ROWS:
@@ -642,10 +650,7 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     """
     return sum(
         (
-            obs.percibido_dinerario
-            + obs.percibido_especie
-            + obs.incapacity_cash_perception
-            + obs.incapacity_kind_value
+            obs.percibido_dinerario + obs.percibido_especie + obs.incapacity_cash_perception + obs.incapacity_kind_value
             for obs in observations
         ),
         Decimal("0"),
@@ -662,8 +667,8 @@ def _retenciones_ingresadas_total(observations: Iterable[WithholdingObservation]
     """
     total = Decimal("0")
     for observation in observations:
-        clave_token = str(observation.clave)
-        if clave_token == "C" or (clave_token in {"A", "B", "D"} and observation.pago in (1, 3)):
+        clave_code = str(observation.clave)
+        if clave_code == "C" or (clave_code in {"A", "B", "D"} and observation.pago in (1, 3)):
             total += observation.retencion_practicada + observation.ingreso_a_cuenta
     return total
 
@@ -750,9 +755,7 @@ def resolve_withholding_binding_row_values(
         grouping = cohort_key[0]
         _, sample_selector = members[0]
         scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
-        required_fields = frozenset(
-            selector.row_field for _, selector in members if selector.row_field is not None
-        )
+        required_fields = frozenset(selector.row_field for _, selector in members if selector.row_field is not None)
         rows = _build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
         for binding, selector in members:
             assert selector.row_field is not None
@@ -792,14 +795,14 @@ def _declares_reducciones(clave: object, subclave: object) -> bool:
     Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E``, ``F
     (subclaves 01 a 06)``, ``G (subclaves 01 a 06 y 08)``, ``H`` e ``I``.
     """
-    token = str(clave)
-    if token in {"A", "C", "E", "H", "I"}:
+    clave_code = str(clave)
+    if clave_code in {"A", "C", "E", "H", "I"}:
         return True
-    if token == "B":
+    if clave_code == "B":
         return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
-    if token == "F":
+    if clave_code == "F":
         return str(subclave) in _REDUCCIONES_F_G_SUBCLAVES
-    if token == "G":
+    if clave_code == "G":
         return str(subclave) in _REDUCCIONES_G_SUBCLAVES
     return False
 
@@ -810,14 +813,14 @@ def _declares_gastos(clave: object, subclave: object) -> bool:
     Design: ``A``, ``B (subclaves 01, 03, 04 y 99)``, ``C``, ``E (subclaves 01
     y 02)``, and exceptionally ``L.05``, ``L.10`` and ``L.27``.
     """
-    token = str(clave)
-    if token in {"A", "C"}:
+    clave_code = str(clave)
+    if clave_code in {"A", "C"}:
         return True
-    if token == "B":
+    if clave_code == "B":
         return str(subclave) in _DATOS_ADICIONALES_B_SUBCLAVES
-    if token == "E":
+    if clave_code == "E":
         return str(subclave) in _GASTOS_E_SUBCLAVES
-    if token == "L":
+    if clave_code == "L":
         return str(subclave) in _GASTOS_L_SUBCLAVES
     return False
 
@@ -892,10 +895,12 @@ _DATOS_ADICIONALES_COUNT_FIELDS: tuple[str, ...] = (
 
 
 def _declares_incapacidad_dineraria(clave: object, subclave: object) -> bool:
-    """True for the claves the design's dineraria incapacidad-laboral block
-    (255-281) applies to: ``A`` and ``B.01``."""
-    token = str(clave)
-    return token == "A" or (token == "B" and str(subclave) == "01")
+    """True for the claves the dineraria incapacidad-laboral block applies to.
+
+    Design: campos 255-281, claves ``A`` and ``B.01``.
+    """
+    clave_code = str(clave)
+    return clave_code == "A" or (clave_code == "B" and str(subclave) == "01")
 
 
 def _is_clave_l29(clave: object, subclave: object) -> bool:
@@ -1040,34 +1045,46 @@ def _finalise_withholding_row(
                 "equals the perceptor's own NIF, which the design campo 17 excludes",
             )
 
-    if "reducciones_aplicables" in required_fields:
-        if row.get("reducciones_aplicables") not in (None, Decimal("0")) and not _declares_reducciones(clave, subclave):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "reducciones_aplicables, which design campo 22 declares only for claves A, "
-                "B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I",
-            )
-    if "gastos_deducibles" in required_fields:
-        if row.get("gastos_deducibles") not in (None, Decimal("0")) and not _declares_gastos(clave, subclave):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "gastos_deducibles, which design campo 23 declares only for claves A, "
-                "B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27",
-            )
-    if "pension_compensatoria" in required_fields:
-        if row.get("pension_compensatoria") not in (None, Decimal("0")) and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "pension_compensatoria, which design campo 24 declares only for claves A, "
-                "B (01, 03, 04, 99) and C",
-            )
-    if "anualidades_alimentos" in required_fields:
-        if row.get("anualidades_alimentos") not in (None, Decimal("0")) and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "anualidades_alimentos, which design campo 25 declares only for claves A, "
-                "B (01, 03, 04, 99) and C",
-            )
+    if (
+        "reducciones_aplicables" in required_fields
+        and row.get("reducciones_aplicables") not in (None, Decimal("0"))
+        and not _declares_reducciones(clave, subclave)
+    ):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "reducciones_aplicables, which design campo 22 declares only for claves A, "
+            "B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I",
+        )
+    if (
+        "gastos_deducibles" in required_fields
+        and row.get("gastos_deducibles") not in (None, Decimal("0"))
+        and not _declares_gastos(clave, subclave)
+    ):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "gastos_deducibles, which design campo 23 declares only for claves A, "
+            "B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27",
+        )
+    if (
+        "pension_compensatoria" in required_fields
+        and row.get("pension_compensatoria") not in (None, Decimal("0"))
+        and not datos_adicionales
+    ):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "pension_compensatoria, which design campo 24 declares only for claves A, "
+            "B (01, 03, 04, 99) and C",
+        )
+    if (
+        "anualidades_alimentos" in required_fields
+        and row.get("anualidades_alimentos") not in (None, Decimal("0"))
+        and not datos_adicionales
+    ):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "anualidades_alimentos, which design campo 25 declares only for claves A, "
+            "B (01, 03, 04, 99) and C",
+        )
     for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
         if count_field not in required_fields:
             continue
@@ -1109,24 +1126,21 @@ def _finalise_withholding_row(
     incap_kind_value = row["incapacity_kind_value"]
     incap_kind_ingreso = row["incapacity_kind_ingreso_a_cuenta"]
     assert isinstance(incap_cash, Decimal)
-    if "incapacity_cash_perception" in required_fields:
-        if incap_cash != 0 and not incap_dineraria:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "incapacity_cash_perception, which design campo 32 declares only for claves A and B.01",
-            )
-    if "incapacity_kind_value" in required_fields:
-        if incap_kind_value != 0 and clave != "A":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "incapacity_kind_value, which design campo 33 declares only for clave A",
-            )
-    if "incapacity_kind_ingreso_a_cuenta" in required_fields:
-        if incap_kind_ingreso != 0 and clave != "A":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "incapacity_kind_ingreso_a_cuenta, which design campo 33 declares only for clave A",
-            )
+    if "incapacity_cash_perception" in required_fields and incap_cash != 0 and not incap_dineraria:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "incapacity_cash_perception, which design campo 32 declares only for claves A and B.01",
+        )
+    if "incapacity_kind_value" in required_fields and incap_kind_value != 0 and clave != "A":
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "incapacity_kind_value, which design campo 33 declares only for clave A",
+        )
+    if "incapacity_kind_ingreso_a_cuenta" in required_fields and incap_kind_ingreso != 0 and clave != "A":
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "incapacity_kind_ingreso_a_cuenta, which design campo 33 declares only for clave A",
+        )
 
     if "complemento_infancia_clave" in required_fields:
         complemento = row.get("complemento_infancia_clave")
@@ -1144,7 +1158,8 @@ def _finalise_withholding_row(
 
     if "foral_retention_estatal" in required_fields:
         foral_parts = tuple(
-            row[field] for field in (
+            row[field]
+            for field in (
                 "foral_retention_estatal",
                 "foral_retention_navarra",
                 "foral_retention_araba",
@@ -1175,9 +1190,7 @@ def _finalise_withholding_row(
     if "emerging_stock_excess_clave" in required_fields:
         stock = row.get("emerging_stock_excess_clave")
         especie_content = (
-            row["percibido_especie"] != 0
-            or row["ingreso_a_cuenta"] != 0
-            or row["ingreso_a_cuenta_repercutido"] != 0
+            row["percibido_especie"] != 0 or row["ingreso_a_cuenta"] != 0 or row["ingreso_a_cuenta_repercutido"] != 0
         )
         if stock is not None and clave != "A":
             raise RegistryValidationError(
@@ -1235,9 +1248,7 @@ def _finalise_withholding_row(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
                 "perceptor_mediador_flag, which design position 76 declares only for claves A, B and D",
             )
-        finalised["perceptor_mediador_flag"] = (
-            " " if naturaleza_s else mediador if mediador is not None else " "
-        )
+        finalised["perceptor_mediador_flag"] = " " if naturaleza_s else mediador if mediador is not None else " "
     if "clave_codigo" in required_fields:
         clave_codigo = row.get("clave_codigo")
         if clave_codigo is not None and not clave_abd:
@@ -1250,9 +1261,7 @@ def _finalise_withholding_row(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
                 "clave_codigo (design position 79, clave 4 the general case): no observation carries it",
             )
-        finalised["clave_codigo"] = (
-            "0" if naturaleza_s else str(clave_codigo) if clave_codigo is not None else "0"
-        )
+        finalised["clave_codigo"] = "0" if naturaleza_s else str(clave_codigo) if clave_codigo is not None else "0"
     if "codigo_emisor" in required_fields:
         emisor = row.get("codigo_emisor")
         if emisor is not None and not clave_abd:
@@ -1265,20 +1274,13 @@ def _finalise_withholding_row(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
                 "codigo_emisor with clave_codigo 2, which design positions 80-91 declare empty then",
             )
-        if (
-            emisor is None
-            and clave_abd
-            and not naturaleza_s
-            and row.get("clave_codigo") in (1, 3, 4)
-        ):
+        if emisor is None and clave_abd and not naturaleza_s and row.get("clave_codigo") in (1, 3, 4):
             raise RegistryValidationError(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
                 "codigo_emisor (design positions 80-91, the issuer's NIF for clave codigo 1/4, "
                 "ZXX country code for 3): no observation carries it",
             )
-        finalised["codigo_emisor"] = (
-            " " * 12 if naturaleza_s else emisor if emisor is not None else " " * 12
-        )
+        finalised["codigo_emisor"] = " " * 12 if naturaleza_s else emisor if emisor is not None else " " * 12
     if "pago" in required_fields:
         pago193 = row.get("pago")
         if pago193 is not None and not clave_abd:
@@ -1312,9 +1314,7 @@ def _finalise_withholding_row(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
                 "codigo_cuenta, which design positions 97-116 declare only for claves A, B and D",
             )
-        finalised["codigo_cuenta"] = (
-            " " * 20 if naturaleza_s else cuenta if cuenta is not None else " " * 20
-        )
+        finalised["codigo_cuenta"] = " " * 20 if naturaleza_s else cuenta if cuenta is not None else " " * 20
     if "pendiente_flag" in required_fields:
         pendiente = row.get("pendiente_flag")
         if pendiente is not None and not clave_abd:
@@ -1418,9 +1418,7 @@ def _finalise_withholding_row(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
                 "nif_pagador_anterior, which design positions 322-330 declare only for claves A, B and D",
             )
-        finalised["nif_pagador_anterior"] = (
-            pagador_anterior if pagador_anterior is not None else " " * 9
-        )
+        finalised["nif_pagador_anterior"] = pagador_anterior if pagador_anterior is not None else " " * 9
     if "fecha_devengo" in required_fields:
         devengo193 = row.get("fecha_devengo")
         if devengo193 is not None and clave != "A":

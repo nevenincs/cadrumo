@@ -61,7 +61,8 @@ def _choice_label_key(question_id: str, token: str) -> str:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=new_profile_id(),
         facts=facts,
     )

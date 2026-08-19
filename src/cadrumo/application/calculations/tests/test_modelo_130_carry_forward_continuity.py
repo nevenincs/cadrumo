@@ -165,7 +165,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
 def _seed_ready_profile(*, profile_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,

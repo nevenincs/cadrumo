@@ -131,9 +131,7 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     try:
         resumed_session, resumed_assertion = await probe_provider.probe_persisted_session()
         assert isinstance(resumed_session, AeatSession)
-        assert (
-            resumed_session.identity_nif == settings.cadrumo_clave_movil_dni_nie.get_secret_value().strip().upper()
-        )
+        assert resumed_session.identity_nif == settings.cadrumo_clave_movil_dni_nie.get_secret_value().strip().upper()
         assert isinstance(resumed_session.provider_detail, ClaveMovilSessionDetail)
         assert isinstance(resumed_assertion, AeatLoginAssertion)
         assert resumed_assertion.is_valid is True, (

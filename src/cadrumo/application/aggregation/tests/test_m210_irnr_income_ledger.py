@@ -118,7 +118,8 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
 
 def _seed_m210_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

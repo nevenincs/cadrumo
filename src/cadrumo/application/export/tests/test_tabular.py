@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, declared_error_codes
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
+from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
 from .. import ExportSerializationFormat, serialize_tabular_rows
 from .._errors import ExportFieldError, ExportFormatError
 
@@ -165,25 +166,20 @@ def test_export_errors_build_error_envelope(error: ExportFormatError | ExportFie
 
 
 @pytest.mark.parametrize("locale_key", ("refused_export_format", "refused_export_field"))
-@pytest.mark.parametrize("locale_code", ("en", "es", "ca", "hu"))
+@pytest.mark.parametrize("locale_code", CATALOGUE_LANGUAGES)
 def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_code: str) -> None:
-    """The locale catalogue must carry export error keys for every locale."""
-    import importlib.resources
+    """The locale catalogue must carry export error keys for every locale.
 
-    import yaml
-
-    # Resolved through the `cadrumo` package the way the renderer does, not
-    # through `cadrumo.locales`: the catalogue directory carries data only, so
-    # it is a namespace package whose `files()` result does not survive a round
-    # trip through `str()`.
-    text = (
-        importlib.resources.files("cadrumo")
-        .joinpath("locales", f"{locale_code}.yml")
-        .read_text(encoding=UTF_8_ENCODING)
+    The shard is located through the shared catalogue reader rather than by
+    restating the layout here: this gate previously addressed the retired
+    monolithic ``<lang>.yml`` and so had stopped reading any catalogue at all.
+    """
+    dotted = f"errors.refused.{locale_key}"
+    payload = shard_payload(locale_code, dotted)
+    value = payload.get("errors", {}).get("refused", {}).get(locale_key)
+    assert value, (
+        f"locale {locale_code!r}: {dotted!r} is missing or empty in {catalogue_shard_path(locale_code, dotted)}"
     )
-    data = yaml.safe_load(text)
-    value = data.get("errors", {}).get("refused", {}).get(locale_key)
-    assert value, f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
 
 
 # ---------------------------------------------------------------------------
