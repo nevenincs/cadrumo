@@ -18,14 +18,19 @@ from ..pipeline._semantic_map_validation import SemanticMapAnomalyException
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+#: Validated against modelo 130, not modelo 200. The 200 revision declares 578
+#: projection endpoints that semantic-map validation checks as a bijection, and
+#: a synthetic two-entry map cannot satisfy them, so every case here refused on
+#: "omits target-revision projection declarations" before reaching the join it
+#: asserts. Modelo 130 is a real revision authority declaring none.
 def _intermediate(snapshot) -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
         {
             "source": {
-                "source_ref": "aeat-dr-200-2025",
-                "source_sha256": snapshot.sources["aeat-dr-200-2025"].sha256,
+                "source_ref": "aeat-dr-130-2019-v12",
+                "source_sha256": snapshot.sources["aeat-dr-130-2019-v12"].sha256,
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2025",
+                "design_epoch": "2019",
             },
             "sheets": (
                 {
@@ -85,18 +90,18 @@ def _entry(
         "export_field_id": field_id,
         "kind": "literal",
         "literal": literal,
-        "legal_refs": ("ley-27-2014:art-40",),
-        "source_refs": ("aeat-dr-200-2025",),
+        "legal_refs": ("rd-439-2007:art-110",),
+        "source_refs": ("aeat-dr-130-2019-v12",),
     }
 
 
 def _semantic_map(*, entries: tuple[dict[str, object], ...]) -> SemanticMap:
     return SemanticMap.model_validate(
         {
-            "modelo": "200",
-            "design_epoch": "2025",
-            "source_ref": "aeat-dr-200-2025",
-            "source_sha256": "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+            "modelo": "130",
+            "design_epoch": "2019",
+            "source_ref": "aeat-dr-130-2019-v12",
+            "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -110,9 +115,9 @@ def _semantic_map(*, entries: tuple[dict[str, object], ...]) -> SemanticMap:
     )
 
 
-def test_join_preserves_parser_coordinates_and_source_order_with_reviewed_meaning(m200_inspection_snapshot) -> None:
+def test_join_preserves_parser_coordinates_and_source_order_with_reviewed_meaning(m130_inspection_snapshot) -> None:
     """Map declaration order cannot alter the official parser's field sequence."""
-    intermediate = _intermediate(m200_inspection_snapshot)
+    intermediate = _intermediate(m130_inspection_snapshot)
     semantic_map = _semantic_map(
         entries=(
             _entry(row=15, ordinal=2, field_id="registro-tipo-1.literal.two", literal="0"),
@@ -120,7 +125,7 @@ def test_join_preserves_parser_coordinates_and_source_order_with_reviewed_meanin
         ),
     )
 
-    joined = join_record_design_semantics(semantic_map, intermediate, m200_inspection_snapshot)
+    joined = join_record_design_semantics(semantic_map, intermediate, m130_inspection_snapshot)
 
     assert joined.source == intermediate.source
     assert joined.records[0].semantic_record.export_record_id == "registro-tipo-1"
@@ -134,9 +139,9 @@ def test_join_preserves_parser_coordinates_and_source_order_with_reviewed_meanin
     assert tuple(field.semantic_entry.literal for field in joined.fields) == ("T", "0")
 
 
-def test_join_refuses_nearby_anchor_instead_of_matching_by_map_position(m200_inspection_snapshot) -> None:
+def test_join_refuses_nearby_anchor_instead_of_matching_by_map_position(m130_inspection_snapshot) -> None:
     """A field with changed official anchor cannot be paired to a nearby entry."""
-    intermediate = _intermediate(m200_inspection_snapshot)
+    intermediate = _intermediate(m130_inspection_snapshot)
     semantic_map = _semantic_map(
         entries=(
             _entry(row=14, ordinal=1, field_id="registro-tipo-1.literal.one", literal="T"),
@@ -145,7 +150,7 @@ def test_join_refuses_nearby_anchor_instead_of_matching_by_map_position(m200_ins
     )
 
     with pytest.raises(RegistryValidationError, match=r"missing semantic entries.*extra semantic entries"):
-        join_record_design_semantics(semantic_map, intermediate, m200_inspection_snapshot)
+        join_record_design_semantics(semantic_map, intermediate, m130_inspection_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -166,21 +171,21 @@ def test_join_refuses_nearby_anchor_instead_of_matching_by_map_position(m200_ins
     ],
 )
 def test_join_refuses_incomplete_or_duplicate_map_before_constructing_any_design(
-    m200_inspection_snapshot,
+    m130_inspection_snapshot,
     entries: tuple[dict[str, object], ...],
     message: str,
 ) -> None:
     """The join factory rejects the full design instead of retaining valid slots."""
-    intermediate = _intermediate(m200_inspection_snapshot)
+    intermediate = _intermediate(m130_inspection_snapshot)
     semantic_map = _semantic_map(entries=entries)
 
     with pytest.raises(RegistryValidationError, match=message):
-        join_record_design_semantics(semantic_map, intermediate, m200_inspection_snapshot)
+        join_record_design_semantics(semantic_map, intermediate, m130_inspection_snapshot)
 
 
-def test_join_refuses_cell_only_anchor_variant_without_fuzzy_matching(m200_inspection_snapshot) -> None:
+def test_join_refuses_cell_only_anchor_variant_without_fuzzy_matching(m130_inspection_snapshot) -> None:
     """Sharing row, ordinal, and record identity cannot substitute a workbook cell."""
-    intermediate = _intermediate(m200_inspection_snapshot)
+    intermediate = _intermediate(m130_inspection_snapshot)
     semantic_map = _semantic_map(
         entries=(
             _entry(row=14, ordinal=1, field_id="registro-tipo-1.literal.one", literal="T"),
@@ -195,12 +200,12 @@ def test_join_refuses_cell_only_anchor_variant_without_fuzzy_matching(m200_inspe
     )
 
     with pytest.raises(RegistryValidationError, match=r"missing semantic entries.*extra semantic entries"):
-        join_record_design_semantics(semantic_map, intermediate, m200_inspection_snapshot)
+        join_record_design_semantics(semantic_map, intermediate, m130_inspection_snapshot)
 
 
-def test_join_refuses_ambiguous_parser_anchor_before_constructing_any_design(m200_inspection_snapshot) -> None:
+def test_join_refuses_ambiguous_parser_anchor_before_constructing_any_design(m130_inspection_snapshot) -> None:
     """Duplicate parser identities cannot select one matching semantic entry."""
-    base_intermediate = _intermediate(m200_inspection_snapshot)
+    base_intermediate = _intermediate(m130_inspection_snapshot)
     base_payload = base_intermediate.model_dump()
     first_sheet = base_payload["sheets"][0]
     ambiguous_intermediate = RecordDesignIntermediate.model_validate(
@@ -222,18 +227,18 @@ def test_join_refuses_ambiguous_parser_anchor_before_constructing_any_design(m20
     )
 
     with pytest.raises(RegistryValidationError, match="duplicate exact anchors"):
-        join_record_design_semantics(semantic_map, ambiguous_intermediate, m200_inspection_snapshot)
+        join_record_design_semantics(semantic_map, ambiguous_intermediate, m130_inspection_snapshot)
 
 
-def test_join_never_uses_anomaly_exception_as_missing_mapping_authority(m200_inspection_snapshot) -> None:
+def test_join_never_uses_anomaly_exception_as_missing_mapping_authority(m130_inspection_snapshot) -> None:
     """A valid hash-pinned explanation cannot supply the absent semantic slot."""
-    intermediate = _intermediate(m200_inspection_snapshot)
+    intermediate = _intermediate(m130_inspection_snapshot)
     semantic_map = _semantic_map(
         entries=(_entry(row=14, ordinal=1, field_id="registro-tipo-1.literal.one", literal="T"),),
     )
     exception = SemanticMapAnomalyException(
-        source_ref="aeat-dr-200-2025",
-        source_sha256=m200_inspection_snapshot.sources["aeat-dr-200-2025"].sha256,
+        source_ref="aeat-dr-130-2019-v12",
+        source_sha256=m130_inspection_snapshot.sources["aeat-dr-130-2019-v12"].sha256,
         category="parser_anomaly",
         reason="The source condition is reviewed but cannot waive map coverage.",
     )
@@ -242,14 +247,14 @@ def test_join_never_uses_anomaly_exception_as_missing_mapping_authority(m200_ins
         join_record_design_semantics(
             semantic_map,
             intermediate,
-            m200_inspection_snapshot,
+            m130_inspection_snapshot,
             anomaly_exceptions=(exception,),
         )
 
 
-def test_joined_field_refuses_direct_nonidentical_anchor_pair(m200_inspection_snapshot) -> None:
+def test_joined_field_refuses_direct_nonidentical_anchor_pair(m130_inspection_snapshot) -> None:
     """The joined value preserves the exact-anchor invariant beyond the factory."""
-    parser_field = _intermediate(m200_inspection_snapshot).sheets[0].fields[0]
+    parser_field = _intermediate(m130_inspection_snapshot).sheets[0].fields[0]
     semantic_entry = _semantic_map(
         entries=(_entry(row=15, ordinal=2, field_id="registro-tipo-1.literal.two", literal="0"),),
     ).entries[0]
