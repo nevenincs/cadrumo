@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:65ef24546e75092d1e9aeb2a4f218125bc47f2bd0ca7d4973f1f5171bbd7bc7e'
+body_hash: 'sha256:8ab824f7e8441acf70ba8a37570e52609c5876f1545c7c1345dbcc18d3ba68ca'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -756,6 +756,73 @@ Separately, the first sweep covered `src/cadrumo` only and left one
 `SecretStoreBackend.FILE` in `dev/locales/tests/`, found by re-running the
 search across both roots -- a reminder that this repo's `dev/` tree consumes
 core enums and is outside the habitual search path.
+
+### The confidentiality fence around the published key had no test
+
+COVERED. `UnsecuredMasterKeyProvider` returns a PUBLISHED deterministic key and
+provides zero confidentiality by design. The only thing between it and a real
+taxpayer's records is the NIF canary: `refuse_unsecured_with_real_nif` and
+`refuse_unsecured_bucket_with_real_profile`, resting on the
+`looks_like_real_tax_id` predicate.
+
+None of it was tested. `looks_like_real_tax_id` had no coverage of any kind, and
+neither refusal function was named by a single test in the tree. The one file
+mentioning `UnsecuredModeRefusedError` covers the Google OAuth surface. The
+prior entry above judged this fence sound by READING it and said so; that
+reading was right, but a read is not a gate, and this is the load-bearing
+confidentiality guarantee of the application.
+
+Behaviour was probed before anything was asserted, and two results are worth
+recording beyond the obvious ones. A whitespace-padded real NIF still
+classifies real, so the canary canonicalises rather than string-matching --
+which matters because the value arrives from operator input where padding is
+ordinary and a raw comparison would be defeated by one space. And an id whose
+digits are a real NIF's but whose check letter is wrong (`12345678A`) is
+ADMITTED: it fails to parse, so it is treated as synthetic. That is defensible,
+since an id failing its own check digit identifies nobody, but it is a decision
+sitting one refactor away from mattering -- loosen tax-id parsing to tolerate a
+bad check letter and the fence silently widens onto real people's numbers. It is
+now pinned so that change reds here first.
+
+Both failure directions are asserted, and both were proven to bite by patching
+the predicate from a pytest plugin outside the repository. Neutralised towards
+"nothing is real", the refusal cases red; forced to "everything is real", the
+synthetic-admission cases red. The second direction is not padding: a canary
+hard-wired to refuse satisfies every refusal assertion while making unsecured
+mode unusable, and would read as a working fence. Nothing under `src` was
+modified to run either proof.
+
+The sanctioned placeholders are pinned as literals rather than imported from the
+private frozenset the code reads. Importing it would make the test agree with
+any edit to that set, including one that quietly admitted a real id -- the
+property under test is that THESE exact strings are the escape hatch the
+refusal message advertises.
+
+### The config-reset resume failures are another campaign's, established rather than assumed
+
+`application/tests/test_config_reset_recovery.py` and `test_state_projection.py`
+carry 18 failures at HEAD. The previous iteration attributed them away on the
+evidence that they were not caused by the change in flight at the time, which is
+weaker than it sounded: "not mine" is not "not storage", and config-reset
+recovery is squarely this campaign's surface.
+
+Run down properly. The resume pauses with `TARGET_STATE_CHANGED`, meaning the
+deletion fingerprint no longer matches the one journaled -- the guard at
+`application/config_reset.py:539` firing because the target's capsule changed
+beneath the operation. The specific worry worth chasing was this campaign's own
+throttle fix, since `reset_login_throttle` runs on every successful login and
+now creates a `.lock` sidecar: if the fingerprint folded the keystore, that
+sidecar would change the digest. It does not. The fingerprint folds
+`committed_profile_custody_inventory`, which walks one profile's committed
+capsule, and the failing module contains no login or throttle reference at all.
+
+Ownership is positive rather than residual: the seeding door the test's own
+docstring describes moved in `2c572da77d` under plan steps W05.P08.S188/S205,
+and the surrounding fixtures moved again in `ee5eeb889d` under S153/S184/S201.
+This is live work with named owners, and the lesson already recorded in this
+campaign -- an early attempt at a peer's Google sync module took it from six
+failures to eight -- argues against racing it. Left with its owner, with the
+mechanism and locator above so they do not have to rediscover it.
 
 ## Recommendations
 
