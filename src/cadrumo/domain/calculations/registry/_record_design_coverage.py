@@ -619,26 +619,34 @@ class DisenoCoverageReport:
     covered_casillas: tuple[DerivedDisenoCasilla, ...]
     coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]
     extracted_fields: int = 0
+    #: Fields NOT recovered by the chart-geometry fallback, i.e. those carrying the
+    #: design's own content/type columns rather than geometry alone.
     described_fields: int = 0
 
     @property
-    def descriptions_unavailable(self) -> bool:
-        """Whether the source yielded fields but no readable field descriptions.
+    def recovered_from_chart_geometry(self) -> bool:
+        """Whether every field came from the PDF chart-geometry fallback.
 
-        Casilla tags are recognised only inside field DESCRIPTIONS, so a
-        design parsed from chart geometry alone -- every field carrying the
-        visual-chart type code and a placeholder in place of prose -- can
-        never yield a casilla however many boxes the form prints. Its empty
-        set is an artefact of what could be read, not a statement about the
-        form.
+        **Correcting the claim this property first carried.** It was named
+        ``descriptions_unavailable`` and asserted that such a design "can never
+        yield a casilla however many boxes the form prints", because tags are
+        recognised only inside descriptions. Both halves were wrong.
+        :func:`_sheet_record_numbers` scans ``description``, ``validation`` AND
+        ``content``, and the geometry fallback populates ``description`` -- modelo
+        038's 58 fields all carry one (``TIPO DE REGISTRO``, ``MODELO``). Its
+        descriptions were scanned; no tag was there to find.
 
-        :attr:`extraction_found_no_casillas` tells a reader to "distinguish
-        the two by whether the source yielded fields at all", and until this
-        field existed the report carried no count with which to do it. Modelo
-        038 is the worked case: 58 fields extracted, 58 of them
-        description-less, zero casillas -- indistinguishable in the old
-        report from modelo 185, whose 35 fields carry 8283 characters of real
-        description and genuinely number nothing.
+        What the flag does say is narrower and still worth knowing: this source
+        was recovered from chart geometry, so the per-field CONTENT prose -- the
+        long "Se consignará…" column a text-parsed design carries -- is absent,
+        and the scan saw only the short description labels. A tag that AEAT wrote
+        only in that prose would be missed. That is a reason to treat an empty
+        result as weaker evidence here than for a fully text-parsed design, not a
+        proof that the form numbers nothing.
+
+        Modelo 038 (58 fields, all geometry-recovered) and modelo 185 (35 fields,
+        8283 characters of content prose) both derive zero casillas; only the
+        second is strong evidence about the form.
         """
         return self.extracted_fields > 0 and self.described_fields == 0
 
@@ -754,8 +762,8 @@ def build_diseno_coverage_report(
     # casilla set can be read as "nothing to scan" or "scanned, none present".
     # The geometry-only marker is read from the extractor that stamps it, never
     # copied: a second literal would silently stop matching if the extractor
-    # changed it, and `descriptions_unavailable` would quietly go false for every
-    # design instead of failing.
+    # changed it, and `recovered_from_chart_geometry` would quietly go false for
+    # every design instead of failing.
     from ._record_design import _VISUAL_CHART_TYPE_CODE
 
     extracted_fields = sum(len(sheet.fields) for sheet in sheets)
