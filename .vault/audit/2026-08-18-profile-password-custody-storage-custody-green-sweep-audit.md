@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:3513b435128de9a71b9750ac863a36fc12c1cbfc2219a6f0a0a7e2a447baea2e'
+body_hash: 'sha256:4a075af40e3555420ccd8eb35e100bd721f5979b366b4a9acec92c78ccbf6105'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -204,6 +204,43 @@ Two cases were asserting fields that had been deliberately retired: a rendered
 "suggestion" string on the error document, and a pre-cutover exit code. A test
 for a retired surface cannot pass without reviving it, so it is not a gap being
 tracked, it is a permanent red that teaches readers to skip the module.
+
+### The provider-named substrate is live; the ROTATION subsystem is what is dead
+
+The storage package named for the retired shared-master-key model is not
+residue. Its exported provider protocol is consumed by the rotation module, and
+the encrypted blob store behind it is instantiated on a live path: the
+certificate secret backend reaches it through the route-canonical secret-store
+factory. What that factory shows is that the name outlived the model rather than
+the code: the store falls through to the ACTIVE BUCKET SESSION's key when no
+provider is passed, so "master key" now denotes the current per-profile session
+key. The package name is stale; the mechanism under it is current, and the
+protective refusal that stops a real profile opening on an unsecured backend is
+live safety code rather than a leftover.
+
+What has no production caller is the ROTATION subsystem: the module-level
+rotate-master-key and rotate-blob-stores entry points, the default rotation plan
+and blob-store roots, and both rotation result models. Every reference outside
+the storage facade's own re-exports is a test of that module or the blob store's
+same-named method that the module drives. Nothing in application, domain or
+entrypoints calls any of it. That is coherent with the accepted custody
+decision, which makes DEK rotation unsupported and puts credential rotation on
+the profile passphrase instead -- the live verb is the passphrase group, routed
+to the profile passphrase rotation service.
+
+So the honest description is dead CAPACITY rather than dead code: a fully
+implemented, fully tested rotation path for a key model the cutover retired,
+exported from the facade and reachable by nobody. Retiring it is owner-gated,
+because deleting a key-schedule path can strand encrypted data, and the check
+that has to precede it is that the creation path mints only the current
+schedule.
+
+A method note, because it cost time and would cost the next reader the same: an
+early sweep concluded the blob store was dead. It was not -- the sweep excluded
+the store's own package directory to cut noise, and the one production
+instantiation lives inside that directory, in the materialisation factory. A
+liveness question cannot be answered by a search that filters out the package
+being judged.
 
 ## Recommendations
 
