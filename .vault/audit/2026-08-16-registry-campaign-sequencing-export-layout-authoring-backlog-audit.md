@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:57287597af79b2b4cf86f99cc38055298cb3fb247ffcc995c458b68900423078'
+body_hash: 'sha256:e6df5f0d4e753bfd17cadcf3a1c1be1765974b8e6131a258648c74f762a71862'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5429,3 +5429,36 @@ of its files were written within the preceding forty minutes; its author is
 mid-campaign on exactly the casillas this audit reported. Stamping a revision
 while someone is still changing it would attest to a state that will not survive
 the hour.
+
+### modelo 303's reserved-byte casillas are cleared on both affected revisions
+
+The author of modelo 303 corrected their 2023 revision after the byte-level
+finding was recorded, then stopped. Their fix is a clean template and this tick
+applied it to the other affected revision, `2024-hasta-08-y-2t`, which cites the
+2024-EARLY design and had been left carrying the same declarations.
+
+**The affected set is wider than the five originally reported.** Boxes 165-169
+were the ones the manifest drift surfaced, but the same test against all three
+designs shows 108, 111 and 170 have the identical history: absent from the 2023
+and 2024-early editions, present only in 2024-late. The 2023 revision's
+design-absent count is now zero, so its author removed all eight; mine removed
+five before the check caught the remaining three. **Fixing to the reported symptom
+rather than to the measured property is what left the gap** -- the check was
+already available and would have named all eight from the start.
+
+Removed from `2024-hasta-08-y-2t`: eight casilla declarations, two formulas
+computing boxes 166 and 167, their construct references, and four
+completeness-manifest entries. Authority CLEAN throughout, and the revisions that
+SHOULD carry these boxes -- 2024-desde-09-y-3t, 2025 and 2026-y-siguientes, all
+on the 2024-late design or later -- still declare all five of 165-169.
+
+Both revisions are now stamped. **Forty-five revisions carry a stamp.**
+
+The completeness module stays at 2 failed / 8 passed, but the failures have
+moved: they named modelo 303's 2023 revision before and now name 2022, which is a
+different revision and a separate question rather than a residue of this one.
+
+**A note on the coordination.** The author fixed 2023 while this audit was being
+written and did not touch 2024-hasta; waiting for them to stop, then applying
+their own template rather than inventing a different correction, is what made the
+second half safe to do. Their 2023 revision was the specification.
