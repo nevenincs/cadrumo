@@ -79,13 +79,13 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
-sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
-bytes = 251495
-retrieved_at = 2026-05-05
-published_at = 2011-12-12
-applies_from = 2011-12-13
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+corpus_path = "corpus/normatives/html/orden-1999-11-17.html"
+sha256 = "260e404f29946e96e317b31ea9bdce840f80a3ca71ad228e9de6aeaf04c8e8a7"
+bytes = 85431
+retrieved_at = 2026-08-19
+published_at = 1999-11-20
+applies_from = 1999-11-21
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
 review_status = "reviewed"
 
 [sources."aeat-dr-188-2023"]
