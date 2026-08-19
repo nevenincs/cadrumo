@@ -7,15 +7,14 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              label: Total number of transactions
+            '02':
+              label: Total amount of acquisitions
             '03':
-              help: null
-              label: Withholding and advance payment tax base
+              label: Total amount of disposals
             '04':
-              help: null
-              label: Withholdings and advance payments declared
-            '05':
-              help: null
-              label: Total withholdings on the annual summary
+              label: Total amount of withholdings and payments on account
           construct:
             modelo-187-calculation-construct:
               field:
