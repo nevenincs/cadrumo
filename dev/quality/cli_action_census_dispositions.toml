@@ -18,7 +18,6 @@ alias = "suggestion"
 action_identity = "aeat config profile edit"
 role = "producer"
 reason = "src/cadrumo/adapters/inbound/censo/_parser.py:36 parse_certificado_censal_bytes: CertificadoCensalParseError supplies 'suggestion' as the current action or no-recovery value (aeat config profile edit) for its consumer."
-migration_step = "S67"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat config profile edit'|1", "selector|constructor_keyword|suggestion|'aeat config profile edit'|2"]
 
 [[disposition]]
@@ -1235,7 +1234,6 @@ alias = "suggestion"
 action_identity = "aeat app ledger inventory create --valuation-method fifo|pmp"
 role = "producer"
 reason = "src/cadrumo/application/inventory/_service.py:224 InventoryService.create: InventoryServiceInputError supplies 'suggestion' as the current action or no-recovery value (aeat app ledger inventory create --valuation-method fifo|pmp) for its consumer."
-migration_step = "S76"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app ledger inventory create --valuation-method fifo|pmp'|1"]
 
 [[disposition]]
@@ -1246,7 +1244,6 @@ alias = "suggestion"
 action_identity = "aeat app ledger inventory list"
 role = "producer"
 reason = "src/cadrumo/application/inventory/_service.py:233 InventoryService.create: InventoryActividadConflictError supplies 'suggestion' as the current action or no-recovery value (aeat app ledger inventory list) for its consumer."
-migration_step = "S76"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app ledger inventory list'|1"]
 
 [[disposition]]
@@ -1266,7 +1263,6 @@ alias = "suggestion"
 action_identity = "aeat app ledger inventory list"
 role = "producer"
 reason = "src/cadrumo/application/inventory/_service.py:313 InventoryService.movement_add: InventoryServiceInputError supplies 'suggestion' as the current action or no-recovery value (aeat app ledger inventory list) for its consumer."
-migration_step = "S76"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app ledger inventory list'|1"]
 
 [[disposition]]
@@ -1286,7 +1282,6 @@ alias = "suggestion"
 action_identity = "aeat app ledger inventory list"
 role = "producer"
 reason = "src/cadrumo/application/inventory/_service.py:407 InventoryService.remove: InventoryActividadNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app ledger inventory list) for its consumer."
-migration_step = "S76"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app ledger inventory list'|1"]
 
 [[disposition]]
@@ -1306,7 +1301,6 @@ alias = "suggestion"
 action_identity = "aeat app ledger inventory list"
 role = "producer"
 reason = "src/cadrumo/application/inventory/_service.py:287 InventoryService.show: InventoryActividadNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app ledger inventory list) for its consumer."
-migration_step = "S76"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app ledger inventory list'|1"]
 
 [[disposition]]
@@ -1992,7 +1986,6 @@ alias = "suggestion"
 action_identity = "aeat app live borrador 100 list"
 role = "producer"
 reason = "src/cadrumo/application/live/_borrador_100.py:157 Borrador100SnapshotRepository.__init__: BorradorSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live borrador 100 list) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live borrador 100 list'|1"]
 
 [[disposition]]
@@ -2003,7 +1996,6 @@ alias = "suggestion"
 action_identity = "provide a longer snapshot id"
 role = "producer"
 reason = "src/cadrumo/application/live/_borrador_100.py:161 Borrador100SnapshotRepository.__init__: BorradorSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer snapshot id) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer snapshot id'|1"]
 
 [[disposition]]
@@ -2023,7 +2015,6 @@ alias = "suggestion"
 action_identity = "aeat app live deudas list"
 role = "producer"
 reason = "src/cadrumo/application/live/_deudas.py:117 _deudas_repository: DeudasSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live deudas list) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live deudas list'|1"]
 
 [[disposition]]
@@ -2034,7 +2025,6 @@ alias = "suggestion"
 action_identity = "provide a longer prefix"
 role = "producer"
 reason = "src/cadrumo/application/live/_deudas.py:123 _deudas_repository: DeudasSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer prefix) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer prefix'|1"]
 
 [[disposition]]
@@ -2054,7 +2044,6 @@ alias = "suggestion"
 action_identity = "aeat app live expedientes list"
 role = "producer"
 reason = "src/cadrumo/application/live/_expedientes.py:111 _expedientes_repository: ExpedientesSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live expedientes list) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live expedientes list'|1"]
 
 [[disposition]]
@@ -2065,7 +2054,6 @@ alias = "suggestion"
 action_identity = "provide a longer prefix"
 role = "producer"
 reason = "src/cadrumo/application/live/_expedientes.py:117 _expedientes_repository: ExpedientesSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer prefix) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer prefix'|1"]
 
 [[disposition]]
@@ -2085,7 +2073,6 @@ alias = "suggestion"
 action_identity = "aeat app live justificante list"
 role = "producer"
 reason = "src/cadrumo/application/live/_justificante.py:298 JustificanteCaptureSnapshotRepository.__init__: JustificanteCaptureSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live justificante list) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live justificante list'|1"]
 
 [[disposition]]
@@ -2096,7 +2083,6 @@ alias = "suggestion"
 action_identity = "provide a longer snapshot id"
 role = "producer"
 reason = "src/cadrumo/application/live/_justificante.py:302 JustificanteCaptureSnapshotRepository.__init__: JustificanteCaptureSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer snapshot id) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer snapshot id'|1"]
 
 [[disposition]]
@@ -2116,7 +2102,6 @@ alias = "suggestion"
 action_identity = "aeat app live notifications list"
 role = "producer"
 reason = "src/cadrumo/application/live/_notifications.py:126 _notifications_repository: NotificationsSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live notifications list) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live notifications list'|1"]
 
 [[disposition]]
@@ -2127,7 +2112,6 @@ alias = "suggestion"
 action_identity = "provide a longer prefix"
 role = "producer"
 reason = "src/cadrumo/application/live/_notifications.py:132 _notifications_repository: NotificationsSnapshotNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer prefix) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer prefix'|1"]
 
 [[disposition]]
@@ -2147,7 +2131,6 @@ alias = "suggestion"
 action_identity = "aeat app live verify nif-iva"
 role = "producer"
 reason = "src/cadrumo/application/live/_verify.py:413 VerifyService.show: VerifyObservationNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live verify nif-iva) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live verify nif-iva'|1"]
 
 [[disposition]]
@@ -2158,7 +2141,6 @@ alias = "suggestion"
 action_identity = "provide a longer prefix"
 role = "producer"
 reason = "src/cadrumo/application/live/_verify.py:420 VerifyService.show: VerifyObservationNotFoundError supplies 'suggestion' as the current action or no-recovery value (provide a longer prefix) for its consumer."
-migration_step = "S40"
 exception_observations = ["selector|constructor_keyword|suggestion|'provide a longer prefix'|1"]
 
 [[disposition]]
@@ -2394,7 +2376,6 @@ alias = "suggestion"
 action_identity = "Record the charge-account IBAN before exporting this domiciliación election."
 role = "producer"
 reason = "src/cadrumo/application/modelo/_export.py:583 _compose_charge_account_block: ModeloChargeAccountMissingError supplies 'suggestion' as the current action or no-recovery value (Record the charge-account IBAN before exporting this domiciliación election.) for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|'Record the charge-account IBAN before exporting this domiciliación election.'|1"]
 
 [[disposition]]
@@ -2414,7 +2395,6 @@ alias = "suggestion"
 action_identity = "f'aeat app modelo describe {modelo}'"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_export.py:894 _raise_if_export_layout_unsupported: ModeloExportUnsupportedError supplies 'suggestion' as the current action or no-recovery value (f'aeat app modelo describe {modelo}') for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|f'aeat app modelo describe {modelo}'|1"]
 
 [[disposition]]
@@ -2650,7 +2630,6 @@ alias = "suggestion"
 action_identity = "f'aeat app modelo describe {modelo.strip()}'"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_profile_readiness_gate.py:363 _require_modelo_applicable_for_local_work: ModeloProfileReadinessError supplies 'suggestion' as the current action or no-recovery value (f'aeat app modelo describe {modelo.strip()}') for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|f'aeat app modelo describe {modelo.strip()}'|1"]
 
 [[disposition]]
@@ -2670,7 +2649,6 @@ alias = "suggestion"
 action_identity = "f'aeat config profile edit {bucket_id}'"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_profile_readiness_gate.py:346 _require_not_pre_activity_period: ModeloProfileReadinessError supplies 'suggestion' as the current action or no-recovery value (f'aeat config profile edit {bucket_id}') for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|f'aeat config profile edit {bucket_id}'|1"]
 
 [[disposition]]
@@ -2690,7 +2668,6 @@ alias = "suggestion"
 action_identity = "f'aeat config profile edit {bucket_id}'"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_profile_readiness_gate.py:476 _require_profile_filing_ready: ModeloProfileReadinessError supplies 'suggestion' as the current action or no-recovery value (f'aeat config profile edit {bucket_id}') for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|f'aeat config profile edit {bucket_id}'|1"]
 
 [[disposition]]
@@ -2719,7 +2696,6 @@ alias = "suggestion"
 action_identity = "f'aeat config profile edit {bucket_id}'"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_profile_readiness_gate.py:579 require_profile_ready_for_modelo_work: ModeloProfileReadinessError supplies 'suggestion' as the current action or no-recovery value (f'aeat config profile edit {bucket_id}') for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|f'aeat config profile edit {bucket_id}'|1"]
 
 [[disposition]]
@@ -2730,7 +2706,6 @@ alias = "suggestion"
 action_identity = "aeat config profile create NAME"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_profile_readiness_gate.py:515 require_profile_ready_for_modelo_work: ModeloProfileReadinessError supplies 'suggestion' as the current action or no-recovery value (aeat config profile create NAME) for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat config profile create NAME'|1", "selector|constructor_keyword|suggestion|'aeat config profile create NAME'|2", "selector|constructor_keyword|suggestion|'aeat config profile create NAME'|3"]
 
 [[disposition]]
@@ -2741,7 +2716,6 @@ alias = "suggestion"
 action_identity = "suggestion"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_projection.py:121 ModeloProjectionError.__init__: super supplies 'suggestion' as the current action or no-recovery value (suggestion) for its consumer."
-migration_step = "S96"
 exception_observations = ["forwarder|super_init|suggestion|suggestion|1"]
 
 [[disposition]]
@@ -2761,7 +2735,6 @@ alias = "suggestion"
 action_identity = "aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf"
 role = "producer"
 reason = "src/cadrumo/application/modelo/_reconcile.py:230 _evidence_invalid_refusal: ReconciliationEvidenceInvalidError supplies 'suggestion' as the current action or no-recovery value (aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf) for its consumer."
-migration_step = "S96"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf'|1"]
 
 [[disposition]]
@@ -3096,7 +3069,6 @@ alias = "suggestion"
 action_identity = "aeat --help"
 role = "producer"
 reason = "src/cadrumo/application/operator_surface/_contract.py:555 require_accepted_root: OperatorSurfaceContractError supplies 'suggestion' as the current action or no-recovery value (aeat --help) for its consumer."
-migration_step = "S78"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat --help'|1"]
 
 [[disposition]]
@@ -3107,7 +3079,6 @@ alias = "suggestion"
 action_identity = "tr('cli.operator_surface.errors.source_kind_options', options=', '.join((source_kind.value for source_kind in SOURCE_KINDS)))"
 role = "producer"
 reason = "src/cadrumo/application/operator_surface/_contract.py:580 resolve_source_kind_alias: OperatorSurfaceContractError supplies 'suggestion' as the current action or no-recovery value (tr('cli.operator_surface.errors.source_kind_options', options=', '.join((source_kind.value for source_kind in SOURCE_KINDS)))) for its consumer."
-migration_step = "S78"
 exception_observations = ["selector|constructor_keyword|suggestion|tr('cli.operator_surface.errors.source_kind_options', options=', '.join((source_kind.value for source_kind in SOURCE_KINDS)))|1"]
 
 [[disposition]]
@@ -3184,7 +3155,6 @@ alias = "suggestion"
 action_identity = "suggestion"
 role = "producer"
 reason = "src/cadrumo/application/operator_surface/_errors.py:29 OperatorSurfaceContractError.__init__: super supplies 'suggestion' as the current action or no-recovery value (suggestion) for its consumer."
-migration_step = "S78"
 exception_observations = ["forwarder|super_init|suggestion|suggestion|1"]
 
 [[disposition]]
@@ -4527,7 +4497,6 @@ alias = "suggestion"
 action_identity = "aeat app live portals list"
 role = "producer"
 reason = "src/cadrumo/application/portals/_service.py:125 PortalsService.show: PortalNotFoundError supplies 'suggestion' as the current action or no-recovery value (aeat app live portals list) for its consumer."
-migration_step = "S79"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat app live portals list'|1"]
 
 [[disposition]]
@@ -4673,7 +4642,6 @@ alias = "suggestion"
 action_identity = "exc.suggestion"
 role = "transformer"
 reason = "src/cadrumo/application/registry/_diff.py:178 _revision_for_year: RegistryApplicationInputError forwards the already-owned 'suggestion' value (exc.suggestion); this site does not select the recovery action."
-migration_step = "S98"
 exception_observations = ["forwarder|constructor_keyword|suggestion|exc.suggestion|1"]
 
 [[disposition]]
@@ -4792,7 +4760,6 @@ alias = "suggestion"
 action_identity = "aeat config storage list"
 role = "producer"
 reason = "src/cadrumo/application/storage_management/_errors.py:43 StorageReclaimRefusedError.__init__: super supplies 'suggestion' as the current action or no-recovery value (aeat config storage list) for its consumer."
-migration_step = "S82"
 exception_observations = ["selector|super_init|suggestion|'aeat config storage list'|1"]
 
 [[disposition]]
@@ -4812,7 +4779,6 @@ alias = "suggestion"
 action_identity = "aeat config storage reclaim --yes"
 role = "producer"
 reason = "src/cadrumo/application/storage_management/_errors.py:79 StorageReclaimUnconfirmedError.__init__: super supplies 'suggestion' as the current action or no-recovery value (aeat config storage reclaim --yes) for its consumer."
-migration_step = "S82"
 exception_observations = ["selector|super_init|suggestion|'aeat config storage reclaim --yes'|1"]
 
 [[disposition]]
@@ -4913,7 +4879,6 @@ alias = "suggestion"
 action_identity = "_FORAL_REFUSAL_SUGGESTION"
 role = "producer"
 reason = "src/cadrumo/application/wizard/_commands.py:1231 _refuse_foral_ccaa: the 'suggestion' assignment constructs the current free-form action value (_FORAL_REFUSAL_SUGGESTION) at this producer boundary."
-migration_step = "S37"
 exception_observations = ["mutator|exception_attribute_mutation|suggestion|_FORAL_REFUSAL_SUGGESTION|1"]
 
 [[disposition]]
@@ -5266,7 +5231,6 @@ alias = "suggestion"
 action_identity = "suggestion"
 role = "producer"
 reason = "src/cadrumo/domain/calculations/registry/_errors.py:389 AmbiguousRevisionSelectionError.__init__: super supplies 'suggestion' as the current action or no-recovery value (suggestion) for its consumer."
-migration_step = "S84"
 exception_observations = ["forwarder|super_init|suggestion|suggestion|1"]
 
 [[disposition]]
@@ -5277,7 +5241,6 @@ alias = "suggestion"
 action_identity = "supply the filing period, or an as-of date, to select one of these revisions"
 role = "producer"
 reason = "src/cadrumo/domain/calculations/registry/_temporal.py:56 select_revision_for_year: AmbiguousRevisionSelectionError supplies 'suggestion' as the current action or no-recovery value (supply the filing period, or an as-of date, to select one of these revisions) for its consumer."
-migration_step = "S84"
 exception_observations = ["selector|constructor_keyword|suggestion|'supply the filing period, or an as-of date, to select one of these revisions'|1"]
 
 [[disposition]]
@@ -5297,7 +5260,6 @@ alias = "suggestion"
 action_identity = "aeat config profile edit NAME --tax-residence-ccaa <ccaa>"
 role = "producer"
 reason = "src/cadrumo/domain/contribuyente/__init__.py:189 parse_tax_region: TaxResidenceProfileError supplies 'suggestion' as the current action or no-recovery value (aeat config profile edit NAME --tax-residence-ccaa <ccaa>) for its consumer."
-migration_step = "S85"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat config profile edit NAME --tax-residence-ccaa <ccaa>'|1"]
 
 [[disposition]]
@@ -5317,7 +5279,6 @@ alias = "suggestion"
 action_identity = "aeat config profile edit NAME --tax-residence-ccaa <ccaa>"
 role = "producer"
 reason = "src/cadrumo/domain/contribuyente/_errors.py:36 ProfileNotConfiguredError.__init__: super supplies 'suggestion' as the current action or no-recovery value (aeat config profile edit NAME --tax-residence-ccaa <ccaa>) for its consumer."
-migration_step = "S85"
 exception_observations = ["selector|super_init|suggestion|'aeat config profile edit NAME --tax-residence-ccaa <ccaa>'|1"]
 
 [[disposition]]
@@ -5364,7 +5325,6 @@ alias = "suggestion"
 action_identity = "suggestion"
 role = "transformer"
 reason = "src/cadrumo/domain/justificante/_errors.py:75 PdfExtractionCoverageMixin.__init__: __init__ forwards the already-owned 'suggestion' value (suggestion); this site does not select the recovery action."
-migration_step = "S99"
 exception_observations = ["forwarder|cooperative_mro|suggestion|suggestion|1"]
 
 [[disposition]]
@@ -5420,7 +5380,6 @@ alias = "suggestion"
 action_identity = "aeat config repair --help"
 role = "producer"
 reason = "src/cadrumo/domain/user_profile/_errors.py:118 StoredProfileDriftError.__init__: super supplies 'suggestion' as the current action or no-recovery value (aeat config repair --help) for its consumer."
-migration_step = "S87"
 exception_observations = ["selector|super_init|suggestion|'aeat config repair --help'|1"]
 
 [[disposition]]

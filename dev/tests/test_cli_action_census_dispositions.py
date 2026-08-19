@@ -239,10 +239,10 @@ def test_excluded_rows_require_symbol_function_and_grounded_reason(
 
 
 def test_checked_in_exception_override_owners_cover_each_live_physical_observation() -> None:
-    """The current tree proves every override shape joins one open scoped Step."""
+    """The current tree proves every override shape joins exactly one ledger owner."""
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
     observations = validate_exception_override_owners(rows)
-    owner_rows = tuple(row for row in rows if row.migration_step is not None)
+    owner_rows = tuple(row for row in rows if row.exception_observations)
     observed_fingerprints = Counter((observation.key, observation.fingerprint) for observation in observations)
     ledger_fingerprints = Counter(
         (row.key, fingerprint) for row in owner_rows for fingerprint in row.exception_observations
@@ -256,29 +256,18 @@ def test_checked_in_exception_override_owners_cover_each_live_physical_observati
     assert current_exception_override_observations() == observations
 
 
-@pytest.mark.parametrize(
-    ("migration_step", "observations", "message"),
-    (
-        (None, (), "lacks migration_step"),
-        ("S999", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "unknown or ambiguous Step"),
-        ("S24", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "closed migration Step"),
-        ("S50", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "does not scope exception override"),
-    ),
-)
-def test_current_owner_gate_rejects_missing_unknown_closed_and_scope_drift(
-    migration_step: str | None,
-    observations: tuple[str, ...],
-    message: str,
-) -> None:
-    """Mutating real checked-in ownership cannot conceal a plan-linkage defect."""
+def test_current_owner_gate_rejects_an_owner_stripped_of_its_evidence() -> None:
+    """Mutating real checked-in ownership cannot conceal a missing-evidence defect.
+
+    The gate no longer asserts which plan Step owns an override -- reading that
+    meant citing a plan document, which `dev/` tooling must not do. The evidence
+    the tree can prove on its own still has to be there.
+    """
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
     target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
-    changed = tuple(
-        replace(row, migration_step=migration_step, exception_observations=observations) if row == target else row
-        for row in rows
-    )
+    changed = tuple(replace(row, exception_observations=()) if row == target else row for row in rows)
 
-    with pytest.raises(DispositionValidationError, match=message):
+    with pytest.raises(DispositionValidationError, match="lacks exception_observations"):
         validate_exception_override_owners(changed)
 
 

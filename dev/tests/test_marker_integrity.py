@@ -255,24 +255,6 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
     _SRC_CADRUMO / "entrypoints",
 )
 #: Test modules whose declared subject is the vault authoring pipeline itself.
-#:
-#: The campaign-metadata scan exists to catch a comment or docstring pointing at
-#: this repo's own process history — a numbered campaign-container id, a dated
-#: decision-record filename, a fixed process-review phrase — landing in
-#: ordinary source, the leak `aeat-architecture-boundaries` and the vaultspec
-#: "Code Stands Alone" mandate forbid. A dev-tooling gate that audits the vault
-#: authoring pipeline is not that leak: its docstring names the pipeline's own
-#: execution-unit and record-linkage nouns because that IS the mechanism under
-#: test, the same way the vault tooling package's own source must name that
-#: taxonomy as literal domain vocabulary. Pinned to exact files rather than
-#: exempting `dev/` wholesale, so an unrelated `dev/` gate that happens to use
-#: one of those nouns in the ordinary-English sense still gets scanned.
-_VAULT_PIPELINE_SELF_TEST_MODULES = frozenset(
-    {
-        Path("dev/quality/tests/test_exec_outcome_populated.py"),
-    },
-)
-
 
 class _MarkerModuleInventory(NamedTuple):
     campaign_metadata_violations: list[str]
@@ -391,8 +373,6 @@ def _campaign_metadata_violations_for_ranges(
     docstring-range derivation and its noqa handling, and every such drift is
     invisible from the outside because both shapes report an empty list.
     """
-    if path.relative_to(_REPO_ROOT) in _VAULT_PIPELINE_SELF_TEST_MODULES:
-        return []
     violations: list[str] = []
     tokens = tokenize.generate_tokens(io.StringIO(source).readline)
     for token in tokens:

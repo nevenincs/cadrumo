@@ -13,8 +13,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import re
-import subprocess
 import tomllib
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
@@ -60,12 +58,9 @@ _ROW_FIELDS: Final[frozenset[str]] = frozenset(
         "reason",
         "symbol",
         "enclosing_function",
-        "migration_step",
         "exception_observations",
     },
 )
-_STEP_ID: Final[re.Pattern[str]] = re.compile(r"^S[0-9]+$")
-_PLAN_PATH: Final[Path] = REPO_ROOT / ".vault/plan/2026-08-09-cli-action-envelope-hardening-plan.md"
 
 DEFAULT_DISPOSITIONS_PATH: Final[Path] = Path(__file__).with_suffix(".toml")
 """The checked-in ledger path to be populated after the model is established."""
@@ -163,7 +158,6 @@ class CandidateDisposition:
     role: DispositionRole
     reason: str
     exclusion: ExclusionGrounding | None = None
-    migration_step: str | None = None
     exception_observations: tuple[str, ...] = ()
 
 
@@ -219,17 +213,11 @@ def _parse_exception_owner(
     *,
     context: str,
     errors: list[str],
-) -> tuple[str | None, tuple[str, ...]]:
+) -> tuple[str, ...]:
     """Read optional current-tree ownership evidence without accepting half rows."""
-    raw_step = table.get("migration_step")
     raw_observations = table.get("exception_observations")
-    if raw_step is None and raw_observations is None:
-        return None, ()
-    if not isinstance(raw_step, str) or not _STEP_ID.fullmatch(raw_step):
-        errors.append(f"{context}: migration_step must be a canonical S## identifier")
-        step = None
-    else:
-        step = raw_step
+    if raw_observations is None:
+        return ()
     if not isinstance(raw_observations, list) or not raw_observations:
         errors.append(f"{context}: exception_observations must be a non-empty string array")
         observations: tuple[str, ...] = ()
@@ -242,7 +230,7 @@ def _parse_exception_owner(
             observations = tuple(cast(str, item) for item in observation_values)
             if len(set(observations)) != len(observations):
                 errors.append(f"{context}: exception_observations must not contain duplicates")
-    return step, observations
+    return observations
 
 
 def _parse_disposition_row(
@@ -268,7 +256,7 @@ def _parse_disposition_row(
     )
     role = _parse_role(row, context=context, errors=errors)
     reason = _require_reason(row, context=context, errors=errors)
-    migration_step, exception_observations = _parse_exception_owner(row, context=context, errors=errors)
+    exception_observations = _parse_exception_owner(row, context=context, errors=errors)
 
     if (
         path is None
@@ -297,7 +285,6 @@ def _parse_disposition_row(
             key=key,
             role=role,
             reason=reason,
-            migration_step=migration_step,
             exception_observations=exception_observations,
         )
 
@@ -310,7 +297,6 @@ def _parse_disposition_row(
         role=role,
         reason=reason,
         exclusion=ExclusionGrounding(symbol=symbol, enclosing_function=enclosing_function),
-        migration_step=migration_step,
         exception_observations=exception_observations,
     )
 
@@ -629,64 +615,21 @@ def current_exception_override_observations(
     return tuple(sorted(numbered, key=lambda item: (item.key.render(), item.line, item.column)))
 
 
-@dataclass(frozen=True, slots=True)
-class _PlanStep:
-    step_id: str
-    checked: bool
-    scope: tuple[str, ...]
-
-
-def _current_plan_steps(plan_path: Path = _PLAN_PATH) -> tuple[_PlanStep, ...]:
-    """Read accepted Step ownership from the plan CLI, never plan Markdown."""
-    completed = subprocess.run(  # noqa: S603 - fixed local command
-        ["uv", "run", "--no-sync", "vaultspec-core", "vault", "plan", "query", str(plan_path), "--json"],  # noqa: S607
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-    )
-    if completed.returncode != 0:
-        raise DispositionValidationError((f"cannot query accepted plan ownership: {completed.stderr.strip()}",))
-    try:
-        payload = cast(dict[str, object], json.loads(completed.stdout))
-        data = cast(dict[str, object], payload["data"])
-        rows = cast(list[object], data["steps"])
-    except (KeyError, TypeError, json.JSONDecodeError) as error:
-        raise DispositionValidationError((f"invalid canonical plan query response: {error}",)) from error
-    parsed: list[_PlanStep] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            raise DispositionValidationError(("invalid canonical plan Step row",))
-        plan_row = cast(dict[str, object], row)
-        display_path = plan_row.get("display_path")
-        checked = plan_row.get("checked")
-        scope = plan_row.get("scope")
-        if not isinstance(display_path, str) or not isinstance(checked, bool) or not isinstance(scope, str):
-            raise DispositionValidationError(("invalid canonical plan Step fields",))
-        step_id = display_path.rsplit(".", maxsplit=1)[-1]
-        if not _STEP_ID.fullmatch(step_id):
-            raise DispositionValidationError((f"invalid canonical plan Step id: {display_path}",))
-        parsed.append(_PlanStep(step_id, checked, tuple(part.strip() for part in scope.split(";") if part.strip())))
-    return tuple(parsed)
-
-
-def _scope_covers(path: str, scope: tuple[str, ...]) -> bool:
-    return any(path == item or path.startswith(f"{item.rstrip('/')}/") for item in scope)
-
-
 def validate_exception_override_owners(
     dispositions: Iterable[CandidateDisposition],
     *,
     root: Path = REPO_ROOT,
-    plan_path: Path = _PLAN_PATH,
 ) -> tuple[ExceptionOverrideObservation, ...]:
-    """Fail on missing, stale, duplicate, closed, or out-of-scope override ownership."""
+    """Fail on missing, stale, duplicate, or drifted override ownership.
+
+    Step ownership is deliberately NOT asserted here. Reading it meant citing a
+    plan document by path and shelling the vault CLI, which couples this gate to
+    the project's own development records -- the one direction the Code Stands
+    Alone mandate forbids. What survives is what this gate can prove from the
+    tree alone: the adjudicated role, the observation set, and the cooperative
+    MRO.
+    """
     observations = current_exception_override_observations(root=root)
-    plan_rows = _current_plan_steps(plan_path)
-    plan_by_id: dict[str, list[_PlanStep]] = {}
-    for step in plan_rows:
-        plan_by_id.setdefault(step.step_id, []).append(step)
     rows_by_key: dict[CandidateKey, list[CandidateDisposition]] = {}
     for row in dispositions:
         rows_by_key.setdefault(row.key, []).append(row)
@@ -706,28 +649,14 @@ def validate_exception_override_owners(
             errors.append(
                 f"exception override requires producer or transformer disposition role: {key.render()}",
             )
-        if not owner.migration_step:
-            errors.append(f"exception override lacks migration_step: {key.render()}")
-        elif len(plan_by_id.get(owner.migration_step, [])) != 1:
-            errors.append(
-                f"exception override references unknown or ambiguous Step {owner.migration_step!r}: {key.render()}"
-            )
-        else:
-            step = plan_by_id[owner.migration_step][0]
-            if step.checked:
-                errors.append(
-                    f"exception override references closed migration Step {owner.migration_step!r}: {key.render()}"
-                )
-            if not _scope_covers(key.path, step.scope):
-                errors.append(
-                    f"migration Step {owner.migration_step!r} does not scope exception override: {key.render()}"
-                )
+        if not owner.exception_observations:
+            errors.append(f"exception override lacks exception_observations: {key.render()}")
         if tuple(sorted(owner.exception_observations)) != expected:
             errors.append(f"exception override observation set drifted: {key.render()}")
         if any(not record.mro_proven for record in records):
             errors.append(f"exception override cooperative MRO is not proven: {key.render()}")
     for key, owners in sorted(rows_by_key.items(), key=lambda item: item[0].render()):
-        if any(owner.migration_step or owner.exception_observations for owner in owners) and key not in observed_by_key:
+        if any(owner.exception_observations for owner in owners) and key not in observed_by_key:
             errors.append(f"stale exception override owner has no current observation: {key.render()}")
     if errors:
         raise DispositionValidationError(errors)
@@ -756,10 +685,6 @@ def _disposition_shape_errors(disposition: CandidateDisposition, *, context: str
     raw_reason = cast(object, disposition.reason)
     if not isinstance(raw_reason, str) or not raw_reason.strip():
         errors.append(f"{context}: missing or empty 'reason'")
-    if (disposition.migration_step is None) != (not disposition.exception_observations):
-        errors.append(f"{context}: migration_step and exception_observations must occur together")
-    if disposition.migration_step is not None and not _STEP_ID.fullmatch(disposition.migration_step):
-        errors.append(f"{context}: migration_step must be a canonical S## identifier")
     if len(set(disposition.exception_observations)) != len(disposition.exception_observations):
         errors.append(f"{context}: exception_observations must not contain duplicates")
 
@@ -866,10 +791,9 @@ def render_dispositions(dispositions: Iterable[CandidateDisposition]) -> str:
                     f"enclosing_function = {_toml_string(disposition.exclusion.enclosing_function)}",
                 ),
             )
-        if disposition.migration_step is not None:
+        if disposition.exception_observations:
             lines.extend(
                 (
-                    f"migration_step = {_toml_string(disposition.migration_step)}",
                     "exception_observations = ["
                     + ", ".join(_toml_string(item) for item in disposition.exception_observations)
                     + "]",
