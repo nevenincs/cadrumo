@@ -1182,7 +1182,11 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(m130_inspection_snap
     target = tmp_path / "export"
     joined = _joined(
         m130_inspection_snapshot,
-        numeric_content='"00000" only if the taxpayer elects "00050"',
+        # Four digits each, matching the slot the fixture declares. The values
+        # were five digits wide, so the slot-width refusal fired first and this
+        # case never reached the ambiguity it is about -- both refusals are
+        # correct, but only one is this test's subject.
+        numeric_content='"0000" only if the taxpayer elects "0050"',
     )
 
     with pytest.raises(RegistryValidationError, match="ambiguous content"):
