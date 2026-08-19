@@ -31,7 +31,9 @@ source_refs = [
     "enrolled-modelo-341-layout",
     "aeat-dr-341-2016",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2000-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2000-y-siguientes' of modelo 341 has no strictly-earlier sibling revision of this modelo (valid_from 2000-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
