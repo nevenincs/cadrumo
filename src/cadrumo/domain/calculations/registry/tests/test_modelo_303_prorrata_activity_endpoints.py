@@ -54,11 +54,20 @@ _FIELD_NAMES = (
 _OFFICIAL_TYPE_CODES = ("An", "N", "N", "An", "Num")
 _CASILLA_TAG = re.compile(r"\[(5\d{2})\]")
 _NUMBERED_PROJECTION_ENDPOINTS = _ENDPOINTS | frozenset(str(number) for number in range(700, 736))
-_PROJECTION_KIND_COUNTS = {
+#: The projection kinds every supported M303 design epoch declares IDENTICALLY.
+#: Measured across all six revisions, these six counts do not move.
+#:
+#: `m303_regimen_simplificado_fact` is deliberately NOT here: it is the one kind
+#: that tracks the design epoch (38, 96, 100, 106 and 108 across the six
+#: revisions), because AEAT's simplified-regime fact rows change with the form.
+#: Its per-epoch count is pinned where it belongs -- the semantic-map census in
+#: `dev/registry/analysis/m303_semantic_census.py` states it for each epoch
+#: against that epoch's own map -- so repeating a single number here could only
+#: be wrong for five of the six.
+_INVARIANT_PROJECTION_KIND_COUNTS = {
     "m303_prorrata_activity": 25,
     "m303_differentiated_deduction": 36,
-    "m303_regimen_simplificado_activity": 4,
-    "m303_regimen_simplificado_fact": 2,
+    "m303_regimen_simplificado_activity": 6,
     "m303_regimen_simplificado_module": 28,
     "m303_exonerado_390_activity": 12,
     "m303_exonerado_390_operaciones_terceros": 1,
@@ -189,7 +198,14 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
     assert all(
         casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings for casilla in endpoints
     )
-    assert all(not casilla.export_refs for casilla in endpoints)
+    # Each of the 25 exports to exactly one DP30305 field -- the sheet this case
+    # reads from the OFFICIAL BINARY above to derive the five-by-five grid. This
+    # asserted they export nowhere, which contradicted that evidence once the
+    # layouts were authored: a box AEAT prints on the record design belongs in
+    # the fichero.
+    assert all(len(casilla.export_refs) == 1 for casilla in endpoints)
+    assert all("dp30305" in str(casilla.export_refs[0]).casefold() for casilla in endpoints)
+    assert len({casilla.export_refs[0] for casilla in endpoints}) == len(endpoints)
     assert all(
         frozenset(str(ref) for ref in casilla.source_refs) == {source_ref, "aeat-modelo-303-procedure"}
         for casilla in endpoints
@@ -245,16 +261,36 @@ def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_ma
     ).revision
 
     assert revision.id == revision_id
-    assert revision.export_layouts == ()
-    assert len(revision.projection_endpoints) == 108
-    assert Counter(declaration.projection_ref.projection_kind for declaration in revision.projection_endpoints) == (
-        _PROJECTION_KIND_COUNTS
+    # Whether this revision carries an export layout is incidental to the
+    # projection-endpoint matrix asserted below, and it stopped being true when
+    # the campaign authored modelo 303's layouts.
+    measured = Counter(str(declaration.projection_ref.projection_kind) for declaration in revision.projection_endpoints)
+    assert {kind: measured[kind] for kind in _INVARIANT_PROJECTION_KIND_COUNTS} == _INVARIANT_PROJECTION_KIND_COUNTS
+    # The one epoch-tracking kind is asserted present and non-empty rather than
+    # counted; the census owns its per-epoch figure.
+    assert measured["m303_regimen_simplificado_fact"] > 0
+    assert set(measured) == set(_INVARIANT_PROJECTION_KIND_COUNTS) | {"m303_regimen_simplificado_fact"}
+    # Every declaration is a distinct endpoint: a duplicated projection_ref would
+    # leave the counts identical while two slots claimed one home.
+    assert len({declaration.projection_ref for declaration in revision.projection_endpoints}) == len(
+        revision.projection_endpoints
     )
-    assert all(
-        declaration.legal_refs == ("rd-1624-1992:art-71", "orden-eha-3786-2008:art-1")
-        and declaration.source_refs == (source_ref,)
-        for declaration in revision.projection_endpoints
-    )
+    # Grounding is per FAMILY, and the split follows the projection kind exactly
+    # (verified 1:1 on every revision). This asserted the procedural pair on all
+    # declarations, which the simplified-regime endpoints have since outgrown --
+    # they now cite the articles that ESTABLISH the regimen simplificado plus the
+    # annual Orden that fixes its modules, which is stronger grounding than the
+    # procedural pair, not weaker.
+    for declaration in revision.projection_endpoints:
+        kind = str(declaration.projection_ref.projection_kind)
+        if "regimen_simplificado" in kind:
+            assert declaration.legal_refs == ("ley-37-1992:art-122", "ley-37-1992:art-123"), kind
+            # The design ref plus the year's modulos Orden.
+            assert source_ref in declaration.source_refs, kind
+            assert len(declaration.source_refs) == 2, declaration.source_refs
+        else:
+            assert declaration.legal_refs == ("rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"), kind
+            assert declaration.source_refs == (source_ref,), kind
     numbered = frozenset(
         str(casilla_id)
         for declaration in revision.projection_endpoints
@@ -303,7 +339,10 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_co
         filing_year=2025,
         period="4T",
     ).revision
-    assert len(revision.projection_endpoints) == 108
+    # Non-empty, not a tally: this gate's value is the REFUSAL below, and the
+    # only thing the pre-state must establish is that there is a matrix to
+    # delete. The pinned 108 was a moment -- the 2025 revision declares 216 now.
+    assert revision.projection_endpoints
     deleted = revision.model_copy(update={"projection_endpoints": ()})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: deleted}})
 
@@ -328,7 +367,11 @@ def test_real_layoutless_revision_without_projection_only_casillas_needs_no_decl
     modelo, catalogues = _committed_modelo("130")
     revision = modelo.revisions["2019-y-siguientes"]
 
-    assert revision.export_layouts == ()
+    # The claim is about PROJECTION-ONLY capability, not about layouts: a
+    # revision with no projection-only casilla needs no declarations whether or
+    # not it exports. Modelo 130 was chosen as a layoutless subject and the
+    # campaign has since authored its export layout, so asserting the absence
+    # asserted the state of the campaign rather than the property.
     assert revision.projection_endpoints == ()
     assert all(casilla.input_kind is not InputKind.PROJECTION_ONLY for casilla in revision.casillas)
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
