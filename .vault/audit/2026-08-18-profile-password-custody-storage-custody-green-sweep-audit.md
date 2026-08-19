@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c39ef7b388cdf043be791db5f1d96d47e340c4a6e0dda8a4e4dd19b836a00dd'
+body_hash: 'sha256:8ab824f7e8441acf70ba8a37570e52609c5876f1545c7c1345dbcc18d3ba68ca'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -823,55 +823,6 @@ This is live work with named owners, and the lesson already recorded in this
 campaign -- an early attempt at a peer's Google sync module took it from six
 failures to eight -- argues against racing it. Left with its owner, with the
 mechanism and locator above so they do not have to rediscover it.
-
-### The bucket-level canary admits at activation only, and cannot re-judge a later write
-
-COVERED, with one gap pinned rather than closed. The previous entry covered the
-tax-id decision; this covers the branch before it, where
-`refuse_unsecured_bucket_with_real_profile` must reach a bucket's stored profile
-at all. Five branches, all established empirically before anything was asserted:
-
-| bucket state | outcome |
-|---|---|
-| named by the literal `unsecured` label | admitted |
-| no database file yet | admitted |
-| database unreadable | REFUSED |
-| profile payload undecryptable | REFUSED |
-| real database, no profile rows | admitted |
-
-The two refusals are the fail-closed pair, and the sqlite one carries its own
-regression history in a source comment: an earlier revision RETURNED there,
-silently downgrading the check and admitting the published key on buckets that
-may have held real tax ids. Nothing was asserting that it now raises.
-
-The gap worth recording is in the admitting column. The canary runs at
-ACTIVATION only. A bucket with no database is admitted -- correctly, there is
-nothing yet to judge -- but a profile written after that point, inside the same
-unsecured session, is never re-examined. A real NIF typed into a fresh bucket
-therefore lands under the published zero-confidentiality key and is refused only
-on the NEXT activation, after the bytes already exist on disk.
-
-It is narrow and it is not being closed here. Reaching it takes the
-hostile-named `CADRUMO_ALLOW_UNENCRYPTED=1` together with the unsecured backend,
-an opt-in whose whole purpose is to declare the data disposable, and closing it
-means re-running the canary on the profile WRITE path -- a design change to that
-path rather than a fix to this function. It is pinned in a test docstring so the
-next reader meets the ordering as a stated property rather than inferring
-protection that is not there.
-
-On proof method, stated plainly rather than overclaimed. The discrimination
-evidence is differential: the same function and the same session admitted with
-no database and refused once the database was unreadable, so the assertions
-track a real state change in production code rather than something ambient. The
-stronger mutation -- making the fail-closed branch return instead of raise -- was
-NOT run, because it can only be expressed by editing a live security-guard file,
-and peers have swept this session's working tree into their own commits four
-times. A mutated canary is the worst possible file to have swept, and the
-differential already establishes causation.
-
-The corruption cases drive a REAL bucket database from the real runtime fixture
-rather than a hand-built table, so a fabricated schema cannot keep agreeing with
-itself if production moves.
 
 ## Recommendations
 
