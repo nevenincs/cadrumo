@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:feefd25fe131600fc66d2ad03ecc7ff8eb1c21743e4e5e5260fcac03608d884e'
+body_hash: 'sha256:16dc71e768329889d5d288b1ab68ec7c7230b83779fb409299bb51ad30d67ae6'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -467,9 +467,77 @@ different blast radii:
   its layout should carry, which restores the original conditioning and belongs
   to the registry campaign.
 
-Not chosen here. The first two change behaviour for every profile in the
-product, and the third is another campaign's data. What is not in doubt is the
-defect: the invariant the producer documents is currently enforced by nothing.
+RESOLVED, and none of the three was needed. The premise that this was a design
+choice was wrong: the mechanism already existed and already had a branch for
+exactly this taxpayer. `conditional_profile_required_paths` in
+`application/user_profile/_completeness.py` is the declared home for cross-field
+completeness -- its own docstring says static requirements belong to the schema
+validator and cross-field ones belong here -- and it already carried a
+legal-entity branch requiring `taxpayer_type.legal_entity_form`, with a comment
+explaining that the schema's `required` axis is unconditional so the conditional
+requirement lives here. The razon social is the same shape of fact about the
+same taxpayer, and it was simply absent. Adding `identity.legal_name` to that
+branch is a one-line extension of an established pattern, not a new policy.
+
+This also answers the blast-radius worry that made the three options look
+expensive. The requirement fires only for `entity_type = legal_entity`, so a
+natural person's preflight is untouched -- which is why "changes preflight for
+every profile in the product" was the wrong reading of option one. Measured
+rather than assumed: the failing gate now passes, and the failure sets of
+`application/user_profile`, `domain/user_profile`, `entrypoints/cli/_config`,
+`application/overview`, `application/wizard`, `application/flows` and the CLI
+work-readiness suite are byte-identical with and without the change. Zero
+delta.
+
+Two cautions for whoever reads this next. The requirement closes the missing
+half of the exclusivity, not both halves: a legal entity now owes a
+`legal_name`, but nothing yet refuses one that ALSO carries `surnames`, and the
+producer's `surnames or legal_name` fallback would still prefer the surname in
+that state. The forbidden direction is the one a conditional rule usually omits,
+and this module already models it elsewhere -- `atribucion_socio_forbidden_country_paths`
+exists precisely because a rule that only asks for a value when it is due leaves
+the prohibited case to whatever the operator typed. The same treatment is owed
+here and is not done. Separately, the measurement above is narrower than it
+looks: `application/filing` and `application/modelo` could not contribute a
+baseline because both lanes are entirely red at HEAD for an unrelated reason
+recorded below.
+
+### The filing runtime demands a filing-grade snapshot from a modelo declared not filing-grade
+
+Found while trying to measure the blast radius of the change above, not looked
+for. `application/filing` and `application/modelo` are entirely red at HEAD --
+106 and roughly 600 failures respectively -- and neither is a parallel-run
+flake: a single test reproduces it sequentially under `-n0`.
+
+One cause. `build_runtime_schema_provider` at
+`src/cadrumo/application/filing/runtime.py:517-531` walks EVERY loaded modelo
+and asks each for a snapshot; when it is called without a filing year and
+period, any modelo whose snapshot refuses aborts the whole provider rather than
+being skipped. Modelo 036 now refuses, because
+`registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml`
+declares `authority_grade = "applicability"` and the filing-grade snapshot check
+rejects a revision that is not reviewed:
+
+    RegistryValidationError: modelo 036 revision 2025-02-03-y-siguientes is
+    'pending_review'; filing-grade snapshot requires a reviewed revision
+
+The demotion itself is right and its own comment says why -- this application
+reads the censal declaration through censo synchronisation rather than producing
+it, so there is no filing artefact to emit. That is precisely the point: a
+provider assembling FILING schemas has no business demanding a filing-grade
+snapshot from a modelo that declares it has no filing artefact. The demotion did
+not create a bad revision; it exposed a provider that cannot express
+"applicability-grade, therefore not mine". The refusal is doing its job.
+
+Left to the registry campaign deliberately, with the locators above so it does
+not have to be rediscovered. It is their data and their code, both actively
+moving (`ddfa6640af` demoted fifteen revisions, `1a1adc9db8` retracted export
+layouts across nineteen modelos), and the choice between skipping non-filing
+grades in the provider and re-reviewing the demoted revisions is theirs to make.
+
+Worth stating plainly for anyone reading a green report from this campaign: two
+whole application lanes are red at HEAD for this reason, and no storage or
+custody work in this audit was measured against them.
 
 ## Recommendations
 
