@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:16dc71e768329889d5d288b1ab68ec7c7230b83779fb409299bb51ad30d67ae6'
+body_hash: 'sha256:74fb851d9bf685da0f80f85cd939db2c4dceeb80f4d948c4a286777356f0ca4f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -538,6 +538,23 @@ grades in the provider and re-reviewing the demoted revisions is theirs to make.
 Worth stating plainly for anyone reading a green report from this campaign: two
 whole application lanes are red at HEAD for this reason, and no storage or
 custody work in this audit was measured against them.
+
+A SECOND registry breakage landed during this session, distinct from the one
+above and worth separating so neither hides the other. Commit `241ef0acc3`
+swept casilla `source_refs` across the modelo tree to drop a stale procedure
+reference, and removed evidence that many modelos still require: registry
+validation now fails with `modelo 100 revision 2020: filing schedule
+modelo-100-2020-anual requires official_source_guidance source evidence` and
+the same for its cross-references, application links and deadline windows,
+across multiple revisions. Anything that validates the registry reds, which is
+why a profile-schema lane measured at 2 failures before that commit measured 28
+twenty minutes after it.
+
+The practical consequence for this campaign is a measurement one. Lane counts
+taken at different moments are not comparable while another campaign is landing
+registry sweeps, so every claim in this audit rests on a failure-set DIFF taken
+either side of a single change, never on a total. A green total here would be
+the less trustworthy number.
 
 ## Recommendations
 
