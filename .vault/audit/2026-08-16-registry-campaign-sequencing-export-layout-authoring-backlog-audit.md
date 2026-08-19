@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:0198201a27509715a89f45da3a41ec604bde86c3639ee58e7961dff3a8fe9136'
+body_hash: 'sha256:0d6b77c4fb76c9571b3116a2a3937b8925fdc4a6881ed0f3b058f1b7e85e4065'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5502,3 +5502,43 @@ load mid-tick briefly reported two failures that were clean on the next run: a
 peer was writing across `legal/`, modelo 190 and modelo 303 at that moment. A
 measurement taken while someone else is saving is not a finding, and re-running
 is what distinguishes them.
+
+### modelo 369's three esquemas verify, and the abstain list is down to eight
+
+**Fifty-two revisions carry a stamp.** Modelo 369's exterior, importación and
+unión schemes joined this tick, and the pairing that reached them again turned on
+reading how the modelo names things rather than on a general rule: its record ids
+END in the design's own record token, so `...-t36902` names sheet `T36902 Ext`,
+and three sheets share that record's declared length so no total could separate
+them. Matched on the token, anchored at the start of the identity,
+case-insensitive, and still requiring exactly one candidate.
+
+The verification carries the same independent check modelo 714 offered -- layout
+field count against design field count, per record:
+
+```
+exterior      6/6    160/160  147/147   7/7
+importacion   6/6    164/164  147/147   7/7
+union         6/6    161/161  147/147  203/203  203/203  147/147  7/7
+```
+
+Every record pairs to its own sheet, every count matches exactly, and uncovered
+DATA is zero throughout. That last figure independently re-confirms the
+withdrawal recorded earlier: modelo 369 has no missing data, and the "10,438
+unwritten positions" reading came from measuring the raw layout instead of the
+derived one.
+
+**Eight revisions still abstain, and none of them is an unverified defect.**
+
+- Seven are the acquisition gap: modelo 100's 2020-2024 and modelo 131's 2024
+  and 2025 each cite a procedure page whose applicability opens after the
+  revision ends, and the corpus holds no era-appropriate page. Modelo 190's case
+  was fixable because its bundled page named its own coverage; these pages name
+  only their own year, so there is nothing in them to re-date from.
+- One is a structural limit rather than a gap. Modelo 349's `operador` record
+  emits 500 positions while its design sheet's listed fields stop at 235, because
+  `declared_total` is the design's LAST LISTED POSITION and its sibling records
+  run to 500. Extent-based pairing cannot judge a record whose emitted length
+  exceeds its sheet's listed extent, and a name-based fallback would be worse
+  here -- the only candidates at 500 are the declarante and rectificaciones
+  sheets, so any match would be a wrong one. Abstaining is the correct answer.
