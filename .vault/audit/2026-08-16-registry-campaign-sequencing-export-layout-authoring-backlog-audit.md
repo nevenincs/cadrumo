@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:37ad9fe96b6d6a1ea7559748f4d3d6cd859093303fd4c7a00ff0f01dbe03a3fe'
+body_hash: 'sha256:57287597af79b2b4cf86f99cc38055298cb3fb247ffcc995c458b68900423078'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5387,3 +5387,45 @@ its contract requires the casilla to be formula-derived. These four are
 `input_kind = manual`, so they cannot carry that marker, and nothing else
 distinguishes an app-level input from an AEAT box. That is why they surface in a
 conformance comparison at all.
+
+### dictionary conformance is now an evidence path, and modelo 100/2025 is stamped
+
+Record coverage cannot reach an `xml_dictionary` layout -- modelo 100's declares
+ZERO records, so there is no fixed-width record to pair with a design sheet, and
+no pairing improvement will ever produce one. The reviewer now takes a different
+route for that format: measure the registry against the bundled dictionary and
+require `extra_casilla_ids` to be empty.
+
+**The direction matters and only one of the two is a completeness signal.**
+`extra` counts boxes the dictionary NUMBERS that the registry does not declare --
+a genuine gap, and the one the ten Anexo A columns closed. `missing` counts the
+reverse, and the previous entry established it is not a defect signal at all: it
+is dominated by fields the dictionary carries without a box number, plus app
+inputs AEAT has no box for. Gating on it would refuse a conformant revision
+forever.
+
+Modelo 100/2025 verifies on that basis and is stamped. The effect on its own
+gates is the largest single movement of the campaign:
+
+```
+before   198 failed, 168 passed
+after    113 failed, 253 passed
+```
+
+Eighty-five failures cleared by one stamp, because that revision alone carried 82
+of the `pending_review` refusals. Of the 111 that remain, 110 are the other five
+modelo 100 revisions and one is modelo 036.
+
+**Those five are blocked on an acquisition gap, not on evidence.** All of
+2020-2024 cite `aeat-modelo-100-procedure`, whose applicability opens 2025-01-01,
+and the corpus holds no era-appropriate procedure page for them. Unlike modelo
+190 -- where the bundled page's own text named "Ejercicio 2020 y siguientes" and
+the date was simply too narrow -- modelo 100's page names only ejercicio 2025, so
+there is nothing in it to re-date from. Fetching the earlier pages is the fix,
+and that is outside what this campaign can ground.
+
+**Modelo 303/2023 also reached READY and was deliberately not stamped.** Fourteen
+of its files were written within the preceding forty minutes; its author is
+mid-campaign on exactly the casillas this audit reported. Stamping a revision
+while someone is still changing it would attest to a state that will not survive
+the hour.
