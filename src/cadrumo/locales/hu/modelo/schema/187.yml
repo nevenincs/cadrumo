@@ -8,12 +8,20 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
+              help: A bevallott műveletek teljes száma, amely megegyezik a rekordterv
+                2-es típusú rekordjainak számával.
               label: Műveletek teljes száma
             '02':
+              help: A részvények és részesedések megszerzésére vagy jegyzésére irányuló
+                ügyletek összegeinek összege.
               label: A beszerzések teljes összege
             '03':
+              help: A részvények és részesedések elidegenítésére vagy visszaváltására
+                irányuló ügyletek összegeinek összege.
               label: Az elidegenítések teljes összege
             '04':
+              help: A bevallott ügyletekre alkalmazott levonások és előlegfizetések
+                összege.
               label: A levonások és előlegfizetések teljes összege
           construct:
             modelo-187-calculation-construct:

@@ -8,12 +8,20 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
+              help: Total number of declared transactions, equal to the number of
+                type 2 records in the record design.
               label: Total number of transactions
             '02':
+              help: Sum of the amounts of acquisition or subscription transactions
+                in shares and holdings.
               label: Total amount of acquisitions
             '03':
+              help: Sum of the amounts of disposal or redemption transactions in shares
+                and holdings.
               label: Total amount of disposals
             '04':
+              help: Sum of the withholdings and payments on account applied to the
+                declared transactions.
               label: Total amount of withholdings and payments on account
           construct:
             modelo-187-calculation-construct:
