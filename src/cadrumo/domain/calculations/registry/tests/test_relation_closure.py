@@ -249,10 +249,26 @@ def test_registry_validator_rejects_dependency_classification_to_unknown_source_
 
 
 def test_registry_validator_rejects_relation_source_period_outside_source_revision() -> None:
+    """A derived source period no source revision supports must refuse.
+
+    This mutated modelo 180, whose relations source modelo 115 -- and 115 has
+    exactly ONE revision. `_resolve_coordinate_owners` abstains when the source
+    modelo contributes at most one candidate, because generated-export-tree
+    validation runs against a candidate registry pruned to exactly one revision
+    and refusing there would report the pruning rather than the registry. With a
+    single-revision source that abstention swallows every period-support
+    question, so the case asserted a refusal that could not reach it.
+
+    Modelo 390 sources modelo 303, which has six revisions, so the check is
+    reachable. The token is `0A`: the period GRAMMAR accepts it, and no 303
+    revision declares it, which is exactly the shape this refusal is for. The
+    old token `99` is not a valid period at all and is refused at the typed
+    model boundary -- reachable here only because `model_copy` skips validation.
+    """
     modelos, catalogues = _committed_tree()
-    modelo = _modelo(modelos, "180")
-    revision = modelo.revisions["2023-y-siguientes"]
-    relation = revision.relations[0].model_copy(update={"source_periods": ("1T", "99")})
+    modelo = _modelo(modelos, "390")
+    revision = modelo.revisions["2025"]
+    relation = revision.relations[0].model_copy(update={"source_periods": ("1T", "0A")})
     mutated_revision = revision.model_copy(update={"relations": (relation, *revision.relations[1:])})
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
@@ -321,7 +337,10 @@ def test_m303_first_quarter_history_requires_an_observation_backed_target() -> N
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"lacks exact source revision coverage for derived period '4T' in source years 2008",
+        # Source year 2021, not 2008. The refusal itself is unchanged -- what
+        # moved is the year it names: the `2022` revision's look-back is the
+        # preceding year, where the retired 2009-2022 span's earliest was 2008.
+        match=r"lacks exact source revision coverage for derived period '4T' in source years 2021",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_303),
@@ -346,7 +365,9 @@ def test_registry_validator_rejects_relation_source_casilla_id_that_is_only_a_bi
     modelos, catalogues = _committed_tree()
     target_modelo = _modelo(modelos, "390")
     source_modelo = _modelo(modelos, "303")
-    revision = target_modelo.revisions["2010-y-siguientes"]
+    # Modelo 390's open-ended revision was split into exact-year revisions;
+    # `2010-y-siguientes` no longer exists, so this died on the lookup.
+    revision = target_modelo.revisions["2025"]
     source_revision = source_modelo.revisions["2022"]
     binding_id = source_revision.bindings[0].id
     assert binding_id not in {casilla.id for casilla in source_revision.casillas}
@@ -365,7 +386,9 @@ def test_registry_validator_rejects_relation_source_casilla_display_token() -> N
     modelos, catalogues = _committed_tree()
     target_modelo = _modelo(modelos, "390")
     source_modelo = _modelo(modelos, "303")
-    revision = target_modelo.revisions["2010-y-siguientes"]
+    # Modelo 390's open-ended revision was split into exact-year revisions;
+    # `2010-y-siguientes` no longer exists, so this died on the lookup.
+    revision = target_modelo.revisions["2025"]
     source_revision = source_modelo.revisions["2022"]
     relation = next(item for item in revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total")
     source_casilla = next(item for item in source_revision.casillas if item.number != item.id)

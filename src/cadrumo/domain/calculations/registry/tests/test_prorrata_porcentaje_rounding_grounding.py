@@ -69,10 +69,15 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 
-#: 2020 resolves to the 2022 revision, 2024 to its early-period epoch.
+#: 2022 resolves to the `2022` revision, 2024 to its early-period epoch.
 #: The art. 104.Dos sentence has stood unamended since BOE-A-1992-28740, so it
 #: binds both.
-_LIVE_FILING_YEARS = (2020, 2024)
+#:
+#: This named 2020, which resolved to the then-open 2009-2022 span. That span
+#: was retired when the revision was renamed to `2022`, so 2020 now resolves to
+#: no revision and every case here died on resolution rather than on the
+#: rounding code it asserts.
+_LIVE_FILING_YEARS = (2022, 2024)
 
 #: (con-derecho, total) volume pairs whose percentage has a fractional part
 #: STRICTLY below one half. These are exactly the ratios on which half-up and
