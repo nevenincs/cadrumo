@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-18'
+modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:7d29c320830d5be61f245e5f03f90caabdd4d434b8189d27b2d50d4063fd7781'
+body_hash: 'sha256:04b0e5d219df7bf79c585b5329d0a57ac009c2cda25ab698f70464ecc896193f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -147,6 +147,39 @@ headless host including CI. Marking them would move fourteen cases out of the
 default lane, which is a coverage decision belonging to the harness campaign
 rather than a repair to make in passing.
 
+### A refusal that named the problem and not the remedy
+
+Logging in with no password channel refused with nothing but the fact that a
+channel was required. The verb accepts four -- two machine channels, an
+interactive terminal and an environment variable -- and custody can name none
+of them, because they belong to the entrypoint rather than to the layer that
+detects their absence. Each was driven end to end before being advertised.
+
+The repair is worth recording for where it had to go rather than for what it
+says. Refusing before the call is wrong: login legitimately proceeds with no
+callback at all, since a configured passphrase and a resumed session are both
+unlocked inside it, so an early guard refuses operators who had a channel all
+along. The instructive refusal only becomes correct once custody has reported a
+password failure AND no callback was built AND no passphrase is configured. A
+wrong password offered through a real channel must fall through untouched:
+telling that operator to supply a channel they already supplied is worse than
+saying too little.
+
+Two cases here also still asserted the pre-cutover exit code, from when this
+condition surfaced as a generic secret-store failure rather than a typed
+refusal. The misdiagnosis they were written to catch -- calling a merely locked
+store an unreadable record and prescribing a destructive repair -- is a
+diagnosis rather than a number, and is asserted as one now.
+
+### Coverage survived a verb that was never built
+
+Four cases drove a profile-duplicate verb. No such command exists and no
+production module mentions one. Three failed against a command the CLI refuses
+to parse; the fourth passed vacuously, asserting only a non-zero exit, which a
+missing command satisfies exactly as well as a real refusal would. That is the
+failure mode to watch for in a retirement: the negative case keeps passing and
+reports the retirement as covered.
+
 ## Recommendations
 
 Treat the storage substrate package named for the retired shared-master-key
@@ -161,10 +194,16 @@ profile being opened on an unsecured backend. Classifying those apart is the
 work, and a name-driven deletion would remove a safety guard. A rename is a
 relocation and must land atomically with every consumer.
 
-Do not treat the profile-rename and profile-duplicate capabilities as pending.
-They exist in neither backend nor CLI, and the operator has ruled them out of
-scope on the reading that profile names are stable, which is the norm elsewhere.
-Recorded so a later reader does not re-derive them as a gap: the label is
-written only at capsule creation and has no in-place rewrite path, and
-duplication would require a new identity, a new data-encryption key and a full
-re-encryption, since the key is per-profile and its rotation is unsupported.
+Profile rename and profile duplicate are CLOSED as out of scope, not pending.
+They exist in neither backend nor CLI, and the operator ruled on them twice, on
+the reading that profile names are stable and that treating them as fixed is the
+norm in comparable programs. A lifecycle sweep will keep surfacing them as
+missing capability, so this is the record that their absence is a decision.
+
+The costing, should the ruling ever be revisited: the label is written only at
+capsule creation and a committed capsule has no in-place rewrite path, so rename
+needs its own journaled transaction doing a compare-and-swap over the label-head
+record rather than a field update. Duplication is the larger of the two, needing
+a new identity, a new data-encryption key and a full re-encryption, because the
+key is per-profile and its rotation is unsupported -- which puts it outside what
+the accepted custody roll-up decided.
