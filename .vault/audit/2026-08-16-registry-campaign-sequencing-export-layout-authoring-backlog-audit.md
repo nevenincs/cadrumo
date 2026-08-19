@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d6b77c4fb76c9571b3116a2a3937b8925fdc4a6881ed0f3b058f1b7e85e4065'
+body_hash: 'sha256:2d82cfe300b17cee939bd8c9528c981a814e3486f5de721c2bfb399c11b1875a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5542,3 +5542,47 @@ derived one.
   exceeds its sheet's listed extent, and a name-based fallback would be worse
   here -- the only candidates at 500 are the declarante and rectificaciones
   sheets, so any match would be a wrong one. Abstaining is the correct answer.
+
+### the completeness module goes fully green, and the suite drops another 272 failures
+
+The full registry domain suite moves from **787 failed / 4058 passed / 35 errors**
+to **515 failed / 4340 passed / 32 errors**, and
+`test_record_design_completeness` -- red for the whole campaign -- is now **10
+passed, nothing failing.**
+
+Three distinct defects were behind it, each surfacing only once the one ahead of
+it cleared:
+
+**Manifest entries outside the calculation closure.** The calculation-completeness
+manifest tracks the calculation surface -- formula targets, expression refs,
+formula/binding endpoints, verification operands -- and four modelo 347 casillas
+plus modelo 303/2022's boxes 47 and 48 sat in it while being plain manual inputs
+with no formula and no binding. Their own siblings (303's 49 and 50, same shape)
+were already absent from it, so the manifest was inconsistent with itself. The
+casillas stay; only the manifest entries went.
+
+**Legal refs drifted from the closure in BOTH directions, across eleven
+revisions.** Modelos 303, 353 carried refs no closure casilla cites; 309, 349 and
+all five modelo 714 revisions were MISSING refs their own closure uses. This was
+not a judgement call: the gate asserts the two sets are equal, so the closure is
+the correct value and syncing to it copies an answer the registry already
+computes.
+
+**A segmento naming convention the gate did not admit.** Modelo 714 declares
+casilla 32 under segmento `714-10`, and the design's sheet is named `714-10
+Patrimonio` -- the segmento is the sheet's leading code, where modelo 200's
+segmentos are exact sheet names (`DP200012`). Both identify one sheet. The match
+now accepts an exact name or that name followed by a space, which is a comparison
+to a word boundary rather than a bare prefix.
+
+**Proven still to bite, from outside the tree,** including the hazard the
+widening introduces:
+
+```
+714-10 + box 32   matched      (the real pairing)
+714-1  + box 32   refused      (a shorter code cannot claim a longer sheet)
+714-02 + box 32   refused      (wrong sheet)
+DP200002 + 00001  refused      (modelo 200's exact-name form still discriminates)
+```
+
+Authority CLEAN, lint clean.
