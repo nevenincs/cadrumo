@@ -6288,3 +6288,57 @@ fragments the renderer actually wrote.
 Verified together with the enrolled gate, because the fixture now shares its
 machinery: **97 passed** across all four modules, the 30 drift gates included.
 Authority CLEAN; the six queue items re-measured green at 457 passed.
+
+## A grounding gap the fixture drift was hiding
+
+Two more dev-fixture clusters cleared this tick, and the second one was a mask
+over a production defect.
+
+**`test_semantic_map_join` (8 -> 0)** carried the same int-`ordinal` fault as its
+two sibling modules -- the anchor ordinal is the design's PRINTED ordinal and the
+model requires a string -- and, once that cascade cleared, the same modelo-200
+projection-bijection masking. Repointed to the projection-free modelo 130
+authority.
+
+**`test_corpus_round_trip_gate` (8 -> 0)** validates modelo 130 against a
+deliberately NARROWED catalogue, so a rule leaning on an unrelated entry is
+caught. The narrowing was a hand-listed set of eight legal ids, and it went stale
+when modelo 130's applicability rule began citing `trlirnr-rdleg-5-2004:art-2`:
+every case then failed on "references unknown legal id". It now derives the
+narrowing from the modelo's own declared refs, so it stays a real narrowing and
+cannot go stale.
+
+### The applicability rules were the one grounded record kind the snapshot walk omitted
+
+Deriving the narrowing did NOT fix it, and that is the interesting part: the
+collector `collect_snapshot_ref_ids` walks thirteen flat record kinds plus the
+completeness manifest, continuity evolutions, verification predicates, cross
+references, export layouts and deadline schedules -- and **not**
+`revision.applicability`.
+
+The consequence is not a test artefact. A production snapshot CARRIES the
+applicability rules while `snapshot.legal` cannot resolve what they cite: modelo
+130's `m130-seed` names `trlirnr-rdleg-5-2004:art-2`, the provision that decides
+whether a non-resident files at all, and a consumer resolving that rule's
+grounding through the snapshot found a dangling id. `aeat-calculation-grounding`
+requires grounding to survive every domain boundary and every typed-ID reference
+to point at an existing entity.
+
+Measured before fixing: **19 revisions across eight modelos** -- 100 (all six
+revisions), 117, 126, 128, 130, 131 and others -- cite an applicability article
+their snapshot slice omits. After: **0**, and modelo 130's snapshot legal map
+goes 8 -> 9 ids with the article resolvable.
+
+The rules join the LEGAL-ONLY walk beside the verification predicates, not the
+flat grounded-record walk: an `ApplicabilityRuleDefinition` carries `legal_refs`
+and no `source_refs`, and adding it to the flat tuple raised `AttributeError`
+immediately -- the first attempt, corrected before it could ship.
+
+Proven to bite by the control that could disprove it: blanking the rule's own
+`legal_refs` drops the article from the collected slice, so it arrives via the
+applicability walk and not by some other route.
+
+The collected slice also feeds the legal-window checks, so widening it could have
+turned a silent omission into a spurious refusal. It did not: authority CLEAN,
+and the registry domain suite moved 196 -> **188 failed / 4825 passed** with no
+new failure kind.
