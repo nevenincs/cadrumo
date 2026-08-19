@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:16021afd1516bcceeaa8b5ea1b8e1637b782a40bb01c93cbafaccb6e35a6eb41'
+body_hash: 'sha256:ca6f2c799080cdfdca356b6d1c251c5e7bba2269f0f3107f8a26b3f76d343840'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -282,6 +282,36 @@ mechanical edit:
 
 Recorded rather than rushed: a wrong move on the first would let an invalid
 valuation persist, which is worse than the lost update it would be fixing.
+
+### The audit trail was losing entries, and the calculation catalogue may be next
+
+The bucket event history had the defect on both emit paths. It is the worst
+place to have it: events are content-addressed, so every survivor is internally
+consistent and a discarded one leaves no gap. The trail reads as COMPLETE while
+an operator action has vanished from it, which is less trustworthy than a trail
+that refuses, because nothing downstream can tell the difference. Everything
+needed was already present and used on exactly one path -- a revision-aware
+read, a write that already accepted an expected revision, and a capsule-record
+co-commit that passed one. The generic emit functions did not, and now do.
+
+The batch path reads the wrong way round at first glance: batching exists to pay
+one round-trip for N events, so its read-to-write window is WIDER than a single
+emission's and it can discard more at a time.
+
+The calculation revision catalogue is the next candidate and is NOT converted
+here, deliberately. It carries the same load-rebuild-write shape, and its write
+is blind. But it writes through a co-commit batch that lands the catalogue and
+the participation index in one transaction, and the index is derived inside the
+same span from the revision being persisted. A retry therefore cannot simply
+re-apply a prepared write set: the extra writes have to be rebuilt against the
+catalogue the retry actually read, or the index co-commits against a revision
+that lost. Getting that wrong desynchronises an index the deletion guards are
+documented NOT to trust for correctness, but which is still persisted as truth.
+
+This is the most safety-critical persistence in the application -- these
+revisions carry filing evidence and casilla provenance -- so it wants a
+deliberate decision about retry and derived-write rebuilding rather than the
+mechanical port that fitted the other singletons.
 
 ## Recommendations
 
