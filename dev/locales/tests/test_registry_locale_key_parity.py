@@ -17,7 +17,6 @@ key resolves to. Asserting a translated string would encode prose the test
 author wrote, which no defect can falsify.
 """
 
-from pathlib import Path
 from typing import cast
 
 import pytest

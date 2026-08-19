@@ -6,8 +6,7 @@ import ast
 import inspect
 from dataclasses import replace
 from pathlib import Path
-from shutil import copy2
-from typing import TypedDict
+from typing import Final, TypedDict
 
 import pytest
 
@@ -29,11 +28,6 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from ..pipeline import _export_tree
-from .test_generated_export_trees import (
-    _GeneratedTree,
-    _authorities as _enrolled_authorities,
-    _isolated_authority,
-)
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
@@ -58,6 +52,13 @@ from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design
 from ..pipeline._tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
+)
+from .test_generated_export_trees import (
+    _authorities as _enrolled_authorities,
+)
+from .test_generated_export_trees import (
+    _GeneratedTree,
+    _isolated_authority,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -484,7 +485,6 @@ source_refs = ["aeat-dr-130-2019-v12"]
 """
 
 
-
 def _real_authorities(tree: _GeneratedTree):
     """Return the real (joined, semantic map, transport, render profile, evidence).
 
@@ -510,8 +510,9 @@ def _real_authorities(tree: _GeneratedTree):
 #: revision, so the isolated candidate needs neither a staged neighbour nor
 #: sibling pruning -- modelo 202, the first choice, folds in modelo 200 and the
 #: candidate root must contain exactly the target modelo.
-_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A")
-
+_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree(
+    "184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
+)
 
 
 def _isolated_render_profile():
@@ -542,9 +543,7 @@ def _write_isolated_generated_authority_tree(
     registry_root = _isolated_authority(_ISOLATED_TREE, tmp_path / "candidate")
     joined, semantic_map, transport, render_profile, render_evidence = _real_authorities(_ISOLATED_TREE)
 
-    export_root = (
-        registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
-    )
+    export_root = registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
     assert not export_root.exists(), "the authority fixture must not copy legacy export fragments"
     rendered = render_complete_export_tree(
         export_root,

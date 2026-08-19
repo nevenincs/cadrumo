@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
-from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError
+from cadrumo.domain.calculations.registry import RegistryValidationError
 
 from ..pipeline import _tree_check
 from ..pipeline._export_tree import ExportTreeTransportProfile
@@ -27,9 +27,8 @@ from ..pipeline._tree_check import (
 )
 from .test_export_tree import (
     _ISOLATED_TREE,
-    _real_authorities,
     _isolated_render_profile,
-    _wire_evidence,
+    _real_authorities,
     _wire_profile,
     _write_isolated_generated_authority_tree,
 )
@@ -133,7 +132,14 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_insp
     assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(
         checked.candidate.layout,
     )
-    candidate_export_root = context.validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+    candidate_export_root = (
+        context.validation.registry_root
+        / "modelos"
+        / _ISOLATED_TREE.modelo
+        / "revisions"
+        / _ISOLATED_TREE.revision
+        / "export"
+    )
     assert _tree_hashes(candidate_export_root) == before
 
 
@@ -226,7 +232,14 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
 def test_check_refuses_candidate_reuse_without_changing_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A prior candidate output cannot become a check input or a silent green path."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
-    candidate_export_root = context.validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+    candidate_export_root = (
+        context.validation.registry_root
+        / "modelos"
+        / _ISOLATED_TREE.modelo
+        / "revisions"
+        / _ISOLATED_TREE.revision
+        / "export"
+    )
     candidate_export_root.mkdir()
     before = _tree_hashes(target_export_root)
 

@@ -24,7 +24,13 @@ from ..pipeline._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ..pipeline._tree_validation import validate_generated_export_tree
-from .test_export_tree import _isolated_render_profile, _ISOLATED_TREE, _wire_evidence, _wire_profile, _write_isolated_generated_authority_tree
+from .test_export_tree import (
+    _ISOLATED_TREE,
+    _isolated_render_profile,
+    _wire_evidence,
+    _wire_profile,
+    _write_isolated_generated_authority_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -93,7 +99,9 @@ def _publication_inputs(tmp_path: Path, snapshot, *, existing_export: bool, lega
         target_root=target_root,
         target_export_root=target_revision_root / "export",
     )
-    candidate_export_root = validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+    candidate_export_root = (
+        validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+    )
     return context, joined, semantic_map, rendered, candidate_export_root
 
 
