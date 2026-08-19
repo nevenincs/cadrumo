@@ -14,7 +14,7 @@ id = "modelo-296-prev-216-base-retenciones"
 source = "relation_prefill"
 selector = { source_modelo = "216", source_casilla_id = "10" }
 aggregation = { op = "sum" }
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -26,7 +26,7 @@ id = "modelo-296-prev-216-retenciones-total"
 source = "relation_prefill"
 selector = { source_modelo = "216", source_casilla_id = "13" }
 aggregation = { op = "sum" }
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]

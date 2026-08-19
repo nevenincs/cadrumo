@@ -24,4 +24,4 @@
 predicate_id = "modelo-216-retenciones-declaradas-cuando-base-sometida-positiva"
 expression = 'implies_nonzero(["10", "13"])'
 finding_kind = "ADVISORY"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]

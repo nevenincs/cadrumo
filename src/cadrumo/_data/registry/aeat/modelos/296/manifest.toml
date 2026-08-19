@@ -4,5 +4,5 @@ tax_domain = "irnr"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
-legal_refs = ["orden-eha-3290-2008:art-6", "orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-6", "orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

@@ -3,7 +3,7 @@ id = "modelo-216-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -19,7 +19,7 @@ id = "modelo-216-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -27,7 +27,7 @@ id = "modelo-216-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -35,7 +35,7 @@ id = "modelo-216-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -43,7 +43,7 @@ id = "modelo-216-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -51,5 +51,5 @@ id = "modelo-216-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
-legal_refs = ["orden-hac-56-2024:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure"]

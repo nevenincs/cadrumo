@@ -28,7 +28,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas dividendos twice: block I rentas sometidas [05] @109, block II no sometidas [14] @262. One casilla each; singleton by construction, not a typo of irnr_no_retencion_numero_rentas_dividendos."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-05"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -42,7 +42,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas resto twice: block I rentas sometidas [06] @126, block II no sometidas [15] @279. One casilla each; singleton by construction, not a typo of irnr_no_retencion_numero_rentas_resto."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-06"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -57,7 +57,7 @@ semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas t
 required = false
 input_kind = "computed"
 formula = "modelo-216-numero-rentas-sometidas-total"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-07"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -71,7 +71,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas dividendos twice: block I rentas sometidas [05] @109, block II no sometidas [14] @262. One casilla each; singleton by construction, not a typo of irnr_retencion_numero_rentas_dividendos."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-14"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -85,7 +85,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas resto twice: block I rentas sometidas [06] @126, block II no sometidas [15] @279. One casilla each; singleton by construction, not a typo of irnr_retencion_numero_rentas_resto."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-15"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -100,7 +100,7 @@ semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas t
 required = false
 input_kind = "computed"
 formula = "modelo-216-numero-rentas-no-sometidas-total"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-16"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -114,7 +114,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base dividendos twice: block I rentas sometidas [08] @160, block II no sometidas [17] @313. One casilla each; singleton by construction, not a typo of irnr_retencion_base_dividendos."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-17"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -128,7 +128,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base resto twice: block I rentas sometidas [09] @177, block II no sometidas [18] @330. One casilla each; singleton by construction, not a typo of irnr_retencion_base_resto."
 required = false
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-18"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
@@ -143,6 +143,6 @@ semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base total twice: 
 required = false
 input_kind = "computed"
 formula = "modelo-216-base-no-sometidas-total"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 export_refs = ["modelo-216-page-01-casilla-19"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]

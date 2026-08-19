@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".constructs]]
 id = "modelo-216-calculation-construct"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-4"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 formulas = [
     "modelo-216-base-total",
