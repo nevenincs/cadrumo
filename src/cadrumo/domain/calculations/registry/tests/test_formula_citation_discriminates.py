@@ -20,17 +20,26 @@ ingresos a cuenta y regularizacion, en su caso ([02] + [06])". Those phrases fai
 loudly against the wrong document, and they name the very computation the formula
 performs.
 
-WHY THE KNOWN OFFENDERS ARE ALLOWLISTED RATHER THAN FIXED. A formula may only cite
-an ``official_source_guidance``-tier source (``_validate_formulas.py`` requires that
-tier before validating the citation). For the modelos below, the ONLY guidance-tier
-source is an AEAT procedure landing page that never mentions a box: measured,
-``modelo-187-procedure.html`` carries "declaracion informativa" 73 times and zero
-occurrences of "Importe total" or "Numero total". The sources that DO describe the
-boxes -- the orden and the record design -- are ``layout_authority`` tier and are
-therefore ineligible to be cited. So the weak phrase is forced by the tier rule, not
-chosen: no phrase in the citable document could substantiate a box-level formula.
-Clearing an entry means bundling a guidance-tier form-text extract for that modelo,
-the way ``boe-modelo-128-form-text`` already is, and citing a printed phrase from it.
+THE ALLOWLIST IS NOW EMPTY, AND THAT IS THE POINT. It once held four entries --
+modelos 187, 188, 194 and 296 -- each justified the same way: a formula may only
+cite an ``official_source_guidance``-tier source (``_validate_formulas.py`` requires
+that tier), and for those four the only guidance-tier source was an AEAT procedure
+landing page that never mentions a box, while the sources that DO describe the boxes
+were ``layout_authority`` tier and ineligible. The weak phrase was forced by the
+tier rule rather than chosen.
+
+Every one was cleared the way the entries said it had to be: read the printed annex
+in the approving orden, transcribe it to a guidance-tier ``boe-modelo-NNN-form-text``
+extract beside ``boe-modelo-128-form-text``, and cite it. What that reading found
+was that none of the four formulas should have existed -- each was an identity
+``add`` over a single casilla, and in every case the box it targeted was either
+absent from the printed form or a different figure entirely. So the formulas were
+deleted rather than re-cited, and the allowlist emptied with them.
+
+An empty allowlist makes this a pure ratchet: a new bare-modelo-number citation
+fails outright. Re-adding an entry is legitimate only for a formula that genuinely
+must exist and genuinely has no citable guidance-tier source -- state which, and
+say why the annex route does not apply.
 
 The allowlist is keyed by ``(modelo, revision, formula)`` and every entry carries its
 reason. A stale entry FAILS rather than lingering: the test asserts each allowlisted
@@ -49,18 +58,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 #: Every entry means: this modelo has no ``official_source_guidance``-tier source
 #: that describes its numbered boxes, so no citable phrase can substantiate the
 #: formula. Remove the entry once such a source is bundled and cited.
-_NO_GUIDANCE_TIER_SOURCE_DESCRIBES_THE_BOXES: dict[tuple[str, str, str], str] = {
-    ("296", "2024-y-siguientes", "modelo-296-total"): (
-        "modelo-296-procedure.html is an AEAT landing page with no box "
-        "vocabulary, and the orden and record design are layout_authority tier "
-        "and cannot be cited by a formula. Modelos 187, 188 and 194 carried "
-        "identical entries until each annex was read, transcribed to a "
-        "boe-modelo-NNN-form-text extract and cited; 296 is the last of the four "
-        "and its annex has not been read. Unlike those three its casillas do "
-        "carry export_refs into the record design, so its box set may well be "
-        "right where theirs was not -- that is unmeasured, not assumed"
-    ),
-}
+_NO_GUIDANCE_TIER_SOURCE_DESCRIBES_THE_BOXES: dict[tuple[str, str, str], str] = {}
 
 
 def _bare_modelo_number_citations() -> dict[tuple[str, str, str], tuple[str, ...]]:

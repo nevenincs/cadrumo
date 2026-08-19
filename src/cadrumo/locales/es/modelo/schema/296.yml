@@ -9,15 +9,19 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
-            '03':
-              help: null
+            '02':
+              help: Suma algebraica de las bases de retención e ingreso a cuenta de
+                los registros de perceptor.
               label: Base retenciones e ingresos a cuenta
+            '03':
+              help: Suma de las retenciones e ingresos a cuenta de los registros de
+                perceptor.
+              label: Retenciones e ingresos a cuenta
             '04':
-              help: null
-              label: Retenciones e ingresos a cuenta declarados
-            '05':
-              help: null
-              label: Total retenciones del resumen anual
+              help: 'Parte de las retenciones efectivamente ingresadas: sólo los perceptores
+                con clave 3 a 25, y los de clave 1 o 2 con pago 1. Puede ser inferior
+                a la casilla 03.'
+              label: Retenciones e ingresos a cuenta ingresados
           construct:
             modelo-296-calculation-construct:
               field:

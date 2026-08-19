@@ -7,15 +7,18 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '02':
+              help: A kedvezményezetti rekordok levonási alapjainak algebrai összege.
+              label: A levonások és előlegfizetések alapja
             '03':
-              help: null
-              label: Levonások és előlegfizetések adóalapja
+              help: A kedvezményezetti rekordok levonásainak és előlegfizetéseinek
+                összege.
+              label: Levonások és előlegfizetések
             '04':
-              help: null
-              label: Bejelentett levonások és előlegfizetések
-            '05':
-              help: null
-              label: Az éves összesítő teljes levonása
+              help: 'A ténylegesen befizetett levonások része: csak a 3-25 kulcsú
+                kedvezményezettek, valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke
+                1. Alacsonyabb lehet, mint a 03. rovat.'
+              label: Ténylegesen befizetett levonások és előlegfizetések
           construct:
             modelo-296-calculation-construct:
               field:

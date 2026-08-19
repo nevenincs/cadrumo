@@ -79,6 +79,19 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
 review_status = "reviewed"
 
+[sources."boe-modelo-296-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-18497-modelo-296-annex-text.txt"
+sha256 = "2eeb6480eb0c532b87f373a0df9a1672283184d175a620a30384c605f2c33cd8"
+bytes = 839
+retrieved_at = 2026-08-19
+published_at = 2008-11-17
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/datos/imagenes/disp/2008/277/18497_11330375_image3.png"
+review_status = "reviewed"
+
 [sources."boe-modelo-194-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

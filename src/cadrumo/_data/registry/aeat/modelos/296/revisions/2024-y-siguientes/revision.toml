@@ -60,3 +60,15 @@ source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 296's corpus carries its diseno de registro (aeat-dr-296-2024), which is a wire-record description printing no form labels, and no label-printing specimen. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2024-y-siguientes".family_dispositions.formulas]
+reason = "The hoja-resumen approved as ANEXO II of Orden EHA/3290/2008 prints four boxes and computes none of them. Box 01 is the perceptor count, 02 the suma algebraica of the perceptor bases, 03 the suma of the retenciones, and 04 the suma of the retenciones INGRESADAS -- each one an aggregation the declarante performs over its own tipo-2 perceptor records, which this registry does not hold, and none an arithmetic relation between the boxes themselves. Box 04 in particular is NOT derivable from 03: it counts only perceptores whose CLAVE is 3 to 25, or whose CLAVE is 1 or 2 with PAGO = 1, so any formula relating the two would assert an identity the diseno explicitly denies. The family is inapplicable by the shape of this form rather than absent by omission."
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "orden-eha-3290-2008:art-6",
+]
+source_refs = [
+    "boe-modelo-296-form-text",
+    "boe-modelo-296-form-layout",
+    "aeat-dr-296-2024",
+]
