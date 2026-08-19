@@ -295,6 +295,29 @@ def _render_click_exception_text(exc: BaseException) -> None:
         sys.stderr.write(str(exc) + "\n")
 
 
+def _resolved_command_identifier(exc: BaseException) -> str | None:
+    """Return the dotted command identifier when click already resolved one.
+
+    Not every parse failure happens before a command is known, and the spine
+    was reporting as if it did. ``aeat frobnicate`` genuinely resolves nothing
+    and null is the honest answer there; ``aeat config profile preflight
+    --bogus`` resolved the command and then rejected an option, and click
+    carries that resolution on the exception's own context. Reading it names
+    the failing command on the error spine exactly as its success envelope
+    would, which is what the shared-spine contract asks for.
+
+    Duck-typed on ``command_path`` for the same reason the sibling resolver is:
+    the vendored Typer Context is not a guaranteed subclass of click's.
+    """
+    from ._errors import _command_identifier_from_path
+
+    context = getattr(exc, "ctx", None)
+    command_path = getattr(context, "command_path", None)
+    if not isinstance(command_path, str):
+        return None
+    return _command_identifier_from_path(command_path)
+
+
 def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
@@ -302,7 +325,13 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
         from ._errors import active_profile_label_for_error, write_stderr
 
         boundary = _build_parse_time_refusal(exc)
-        write_stderr(render_error_json(boundary, active_profile=active_profile_label_for_error()))
+        write_stderr(
+            render_error_json(
+                boundary,
+                active_profile=active_profile_label_for_error(),
+                command=_resolved_command_identifier(exc),
+            ),
+        )
     else:
         _render_click_exception_text(exc)
     sys.exit(exit_code)
