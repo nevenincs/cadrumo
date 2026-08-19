@@ -270,7 +270,8 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_pa
         descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=tuple(facts),
                 created_at=_T0,
@@ -300,7 +301,8 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=(
                     *facts,
@@ -482,7 +484,8 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
                 created_at=_T0,

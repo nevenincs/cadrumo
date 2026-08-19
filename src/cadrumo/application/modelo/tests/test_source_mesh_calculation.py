@@ -74,7 +74,8 @@ _READY_PROFILE_FACTS = (
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

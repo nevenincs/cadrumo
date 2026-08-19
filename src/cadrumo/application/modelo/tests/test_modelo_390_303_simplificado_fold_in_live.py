@@ -84,7 +84,8 @@ _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56"
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

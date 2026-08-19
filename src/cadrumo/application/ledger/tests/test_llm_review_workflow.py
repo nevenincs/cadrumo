@@ -62,7 +62,7 @@ from ._llm_saturation_support import _saturating_subprocess_classifier
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-review-workflow"
+_BUCKET = "a8de1d73-fd40-4766-bc01-b591ea364997"  # was 'bucket-review-workflow'
 _UNKNOWN_TRANSACTION_ID = "f" * 64
 
 

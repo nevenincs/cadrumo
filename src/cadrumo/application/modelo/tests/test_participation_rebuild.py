@@ -42,7 +42,7 @@ from .._participation_index_rebuild import rebuild_participation_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "modelo-participation-rebuild"
+_BUCKET_ID = "1cfbce2c-6cf7-43fe-a1a0-60c2e44cd95b"  # was 'modelo-participation-rebuild'
 _T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 _TX_FILED = "1" * 64

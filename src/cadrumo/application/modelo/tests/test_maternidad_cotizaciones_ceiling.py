@@ -53,7 +53,8 @@ _FIRST_UNCEILINGED_YEAR = 2023
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     """A profile with one clearly-eligible descendant declaring a full year of months."""
     child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list((child,))),
         created_at=_T0,

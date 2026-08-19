@@ -29,7 +29,7 @@ from ...modelo._verification_actions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "revision-stamp-blocking"
+_BUCKET_ID = "33bf8a22-b0de-4f9c-8c83-f92cfb84c669"  # was 'revision-stamp-blocking'
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 _M303_REQUIREMENT_LEGAL_REFS = ("ley-58-2003:art-119",)
 _M303_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-303-procedure",)

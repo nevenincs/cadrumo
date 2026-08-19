@@ -220,7 +220,8 @@ def _seed_m200_sociedad_profile() -> None:
     no profile binding is hand-fed through the caller channel. ``display_name``
     matches the ``isolated_runtime_profile`` manifest label.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID_M200,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B87654323"),
@@ -318,7 +319,8 @@ def _seed_sociedad_profile() -> None:
     manifest label (``"Test runtime profile"``) so the loaded
     :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

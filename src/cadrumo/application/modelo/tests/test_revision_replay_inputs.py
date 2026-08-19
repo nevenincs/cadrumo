@@ -28,7 +28,7 @@ from .._revision_replay_inputs import revision_filing_replay_inputs
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 6, 27, 12, 45, tzinfo=UTC)
-_BUCKET_ID = "revision-replay-inputs"
+_BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
     surface="_M390_EJERCICIO_CASILLA",

@@ -26,7 +26,7 @@ from .._profile_export_binding import compose_legal_full_name, resolve_profile_e
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-under-test"
+_BUCKET = "d24bdc40-1623-4255-a9c3-a4b5c34dd9bb"  # was 'bucket-under-test'
 
 
 @dataclass(frozen=True)

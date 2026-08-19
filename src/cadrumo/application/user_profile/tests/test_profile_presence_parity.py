@@ -52,7 +52,8 @@ def test_completeness_reports_a_whitespace_only_required_field_missing(blank: st
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
     )
@@ -68,7 +69,8 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
 
 
 def test_overview_and_key_authority_agree_on_a_real_value() -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
     )

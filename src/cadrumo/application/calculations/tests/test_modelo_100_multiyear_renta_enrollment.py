@@ -145,7 +145,8 @@ def _seed_taxpayer_unit_profile() -> None:
     # The display_name MUST match the label the isolated_runtime_profile
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
     # a divergent label trips the torn-rename guard in CommittedProfileView.
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

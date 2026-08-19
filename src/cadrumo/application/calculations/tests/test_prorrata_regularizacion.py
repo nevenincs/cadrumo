@@ -80,7 +80,7 @@ from .._prorrata_regularizacion import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "prorrata-regularizacion-s27"
+_BUCKET_ID = "52aedff7-7cc1-46ed-a615-afa5e56f6a89"  # was 'prorrata-regularizacion-s27'
 _T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
 _SETTLEMENT_YEAR = 2026
 _CARRY_YEAR = 2027

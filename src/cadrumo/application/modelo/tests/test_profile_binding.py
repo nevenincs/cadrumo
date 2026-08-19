@@ -92,7 +92,8 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -154,7 +155,8 @@ def test_profile_resolution_skips_caller_supplied_bindings() -> None:
 
 def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
@@ -200,7 +202,8 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     must not leak into ``enum_binding_values``.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -348,7 +351,8 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 
 
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -417,7 +421,8 @@ class TestBoolTypedProfileBinding:
         # Construct a snapshot whose CCAA binding (enum channel) is satisfied
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
-        bool_profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        bool_profile = UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -449,7 +454,8 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     without echoing the raw value, preserving redaction and localization.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

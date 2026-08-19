@@ -76,7 +76,8 @@ _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 def _seed_taxpayer_unit_profile() -> None:
     """Seed a single-taxpayer profile so the profile-sourced bindings resolve."""
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

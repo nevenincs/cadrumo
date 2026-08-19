@@ -60,7 +60,8 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
@@ -73,7 +74,8 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
 
 def _registered_modelo_profile() -> UserProfileRecord:
     """Supply one calculation-relevant fact for every registered modelo profile surface."""
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="censo.status", value="alta"),

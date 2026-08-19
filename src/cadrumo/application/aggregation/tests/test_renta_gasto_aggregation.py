@@ -654,7 +654,8 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
 
 def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="44444444-4444-4444-8444-444444444444",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )

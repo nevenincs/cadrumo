@@ -219,7 +219,8 @@ def _store_operator_profile() -> None:
 
 def _store_operator_profile_with_tax_id(tax_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),

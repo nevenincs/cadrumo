@@ -287,7 +287,8 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
     """Persist a minimal UserProfileRecord so the M100 2025 profile-sourced
     bindings (age_at_year_end birth-date plus declaration-type) resolve from
     the bucket profile during calculate."""
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         # Must agree with the bucket manifest label set by isolated_runtime_profile.
         facts=(

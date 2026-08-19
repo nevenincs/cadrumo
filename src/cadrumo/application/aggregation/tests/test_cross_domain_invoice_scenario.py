@@ -70,7 +70,7 @@ _RETENCION = Decimal("150.00")
 _TOTAL = _BASE + _CUOTA
 _CASH = _TOTAL - _RETENCION
 
-_BUCKET = "bucket-cross-domain"
+_BUCKET = "cc3c6664-c25c-49c0-8f90-2d33f2b3dfa4"  # was 'bucket-cross-domain'
 _VALUE_DATE = date(2024, 2, 15)
 _PERIOD = Period.from_year_and_code(2024, "1T")
 

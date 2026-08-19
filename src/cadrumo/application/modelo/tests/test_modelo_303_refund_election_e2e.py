@@ -119,7 +119,8 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
     activity_start_date = _activity_start_date_for_period(period_token)
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

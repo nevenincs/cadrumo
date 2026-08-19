@@ -25,6 +25,7 @@ order), not any external tax-authoritative calculation.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Decimal
 
@@ -72,8 +73,14 @@ def _invoice(
     )
 
 
+#: ``invoice_id`` is a content-addressed digest, not the human invoice number
+#: on the document; it is derived from that number so the fixture stays
+#: readable while satisfying the identity type.
+_INVOICE_ID = hashlib.sha256(b"INV-001").hexdigest()
+
+
 def _review(fields: dict[str, str]) -> InvoiceReviewRecord:
-    return InvoiceReviewRecord.model_validate({"invoice_id": "INV-001", "fields": fields})
+    return InvoiceReviewRecord.model_validate({"invoice_id": _INVOICE_ID, "fields": fields})
 
 
 # ---------------------------------------------------------------------------

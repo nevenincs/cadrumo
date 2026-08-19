@@ -44,13 +44,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile import (
+from ....core import SecureObjectWrite
+from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from .. import (
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
-
-from ....core import SecureObjectWrite
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from .._capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,

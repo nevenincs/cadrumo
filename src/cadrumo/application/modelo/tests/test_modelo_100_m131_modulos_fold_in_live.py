@@ -88,7 +88,8 @@ _M131_PAGOS_RELATION = "renta-2024-rel-131-pagos-fraccionados"
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

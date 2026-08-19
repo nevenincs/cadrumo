@@ -24,8 +24,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile import profile_close_bucket_session, profile_current_bucket_session
-
 from ....adapters.persistence.storage.custody import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
@@ -34,6 +32,7 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
+from .. import profile_close_bucket_session, profile_current_bucket_session
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._custody_transactions import (
     ProfileCustodyTransactionConflictError,

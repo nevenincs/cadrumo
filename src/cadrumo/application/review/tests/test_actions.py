@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 import pytest
 
 from ...workflow import WorkflowState
@@ -10,17 +12,22 @@ from .._errors import ReviewError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+#: A conforming transaction identity. ``transaction_id`` is a content-addressed
+#: 64-hex digest, so a short readable token is not a legal value; it is derived
+#: from a label here so the assertions stay readable.
+_TRANSACTION_ID = hashlib.sha256(b"tx-1").hexdigest()
+
 
 def test_update_ledger_review_records_attention_history_only() -> None:
     updated = update_ledger_review(
         WorkflowState(),
-        "tx-1",
+        _TRANSACTION_ID,
         action="inspect",
         reason="operator opened the row",
     )
 
-    review = LedgerReviewRecord.model_validate(updated.ledger_reviews["tx-1"])
-    assert review.transaction_id == "tx-1"
+    review = LedgerReviewRecord.model_validate(updated.ledger_reviews[_TRANSACTION_ID])
+    assert review.transaction_id == _TRANSACTION_ID
     assert len(review.history) == 1
     assert review.history[0].action == "inspect"
     assert review.history[0].reason == "operator opened the row"

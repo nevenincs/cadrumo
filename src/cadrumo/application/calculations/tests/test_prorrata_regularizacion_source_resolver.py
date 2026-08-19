@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ORACLE_PATH = Path(
     bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
 )
-_BUCKET_ID = "prorrata-regularizacion-source-resolver"
+_BUCKET_ID = "ca06894b-1eb7-4f25-b325-531f43bc0e48"  # was 'prorrata-regularizacion-source-resolver'
 _FILING_YEAR = 2025
 _PRIOR_YEAR = _FILING_YEAR - 1
 _CAPTURED_AT = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)

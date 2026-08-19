@@ -87,7 +87,9 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=PROFILE_ID, facts=READY_FACTS),
+            initial_record=UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE, profile_id=PROFILE_ID, facts=READY_FACTS
+            ),
             record_session=session,
         )
     finally:

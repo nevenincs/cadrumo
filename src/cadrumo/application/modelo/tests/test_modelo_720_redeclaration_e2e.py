@@ -116,7 +116,8 @@ def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),

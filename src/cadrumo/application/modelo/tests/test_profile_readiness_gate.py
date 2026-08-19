@@ -55,7 +55,8 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 def _store_incomplete_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
@@ -66,7 +67,8 @@ def _store_incomplete_profile(bucket_id: str) -> None:
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(),
             created_at=_NOW,
@@ -77,7 +79,8 @@ def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
 
 def _store_profile_without_activity(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -103,7 +106,8 @@ def _store_profile_without_activity(bucket_id: str) -> None:
 
 def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -131,7 +135,8 @@ def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B66012345"),
@@ -164,7 +169,8 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     Renta).
     """
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
@@ -586,7 +592,8 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     returns ``None`` (applicable, no refusal) for a resident IRPF natural
     person whose only differing fact is the residency axis.
     """
-    nonresident = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    nonresident = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_NONRESIDENT_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
@@ -598,7 +605,8 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
         created_at=_NOW,
         updated_at=_NOW,
     )
-    resident = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    resident = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -873,7 +881,8 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -922,7 +931,8 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
     Both facts are live at one effective-dated path, so declaration order and
     ``valid_from`` order disagree and the two readers can be told apart.
     """
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
             UserProfileFact(

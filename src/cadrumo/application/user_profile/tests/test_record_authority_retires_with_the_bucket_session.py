@@ -18,13 +18,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.application.user_profile import profile_close_bucket_session, profile_current_bucket_session
-
 from ....domain.user_profile import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     ProfileRecordRepository,
     login_profile,
+    profile_close_bucket_session,
+    profile_current_bucket_session,
     profile_record_session_if_authenticated,
     register_profile_with_credentials,
 )

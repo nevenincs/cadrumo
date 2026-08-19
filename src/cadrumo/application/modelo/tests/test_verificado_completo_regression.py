@@ -117,7 +117,8 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),

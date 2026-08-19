@@ -64,6 +64,7 @@ from ...domain.calculations.registry import (
     RefundOperationObservation,
     RegistryValidationError,
     RelatedPartyOperationObservation,
+    Withholding296Observation,
     WithholdingObservation,
     binding_aggregation_op,
     binding_row_set_selector,
@@ -78,6 +79,7 @@ __all__ = [
     "assemble_observations_for_grouping",
     "assemble_refund_observations",
     "assemble_related_party_observations",
+    "assemble_withholding296_observations",
     "assemble_withholding_observations",
 ]
 
@@ -95,6 +97,7 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_refund_operation": RowSetGroupingKind.REFUND,
     "per_donativo_donor": RowSetGroupingKind.DONATIVO,
     "per_gasto193_contribuyente": RowSetGroupingKind.GASTO193,
+    "per_perceptor_296": RowSetGroupingKind.WITHHOLDING296,
 }
 
 
@@ -111,6 +114,7 @@ AssembledObservations = (
     | tuple[str, tuple[RefundOperationObservation, ...]]
     | tuple[str, tuple[DonativoDonorObservation, ...]]
     | tuple[str, tuple[Gasto193Observation, ...]]
+    | tuple[str, tuple[Withholding296Observation, ...]]
 )
 
 
@@ -173,6 +177,8 @@ def assemble_observations_for_grouping(
         return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.GASTO193:
         return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.WITHHOLDING296:
+        return (source_kind, assemble_withholding296_observations(cells, revision, filing_year=filing_year))
     # Unreachable: dispatch table is exhaustive.
     raise RegistryValidationError(
         translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
@@ -493,46 +499,30 @@ def assemble_withholding_observations(
                     ingreso_a_cuenta_repercutido=coerce_decimal(
                         fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
                     ),
-                    reducciones_aplicables=coerce_decimal(
-                        fields.get("reducciones_aplicables"), default=Decimal("0")
-                    ),
+                    reducciones_aplicables=coerce_decimal(fields.get("reducciones_aplicables"), default=Decimal("0")),
                     gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
-                    pension_compensatoria=coerce_decimal(
-                        fields.get("pension_compensatoria"), default=Decimal("0")
-                    ),
-                    anualidades_alimentos=coerce_decimal(
-                        fields.get("anualidades_alimentos"), default=Decimal("0")
-                    ),
+                    pension_compensatoria=coerce_decimal(fields.get("pension_compensatoria"), default=Decimal("0")),
+                    anualidades_alimentos=coerce_decimal(fields.get("anualidades_alimentos"), default=Decimal("0")),
                     incapacity_cash_perception=coerce_decimal(
                         fields.get("incapacity_cash_perception"), default=Decimal("0")
                     ),
                     incapacity_cash_withholding=coerce_decimal(
                         fields.get("incapacity_cash_withholding"), default=Decimal("0")
                     ),
-                    incapacity_kind_value=coerce_decimal(
-                        fields.get("incapacity_kind_value"), default=Decimal("0")
-                    ),
+                    incapacity_kind_value=coerce_decimal(fields.get("incapacity_kind_value"), default=Decimal("0")),
                     incapacity_kind_ingreso_a_cuenta=coerce_decimal(
                         fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
                     ),
                     incapacity_kind_repercutido=coerce_decimal(
                         fields.get("incapacity_kind_repercutido"), default=Decimal("0")
                     ),
-                    foral_retention_estatal=coerce_decimal(
-                        fields.get("foral_retention_estatal"), default=Decimal("0")
-                    ),
-                    foral_retention_navarra=coerce_decimal(
-                        fields.get("foral_retention_navarra"), default=Decimal("0")
-                    ),
-                    foral_retention_araba=coerce_decimal(
-                        fields.get("foral_retention_araba"), default=Decimal("0")
-                    ),
+                    foral_retention_estatal=coerce_decimal(fields.get("foral_retention_estatal"), default=Decimal("0")),
+                    foral_retention_navarra=coerce_decimal(fields.get("foral_retention_navarra"), default=Decimal("0")),
+                    foral_retention_araba=coerce_decimal(fields.get("foral_retention_araba"), default=Decimal("0")),
                     foral_retention_gipuzkoa=coerce_decimal(
                         fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
                     ),
-                    foral_retention_bizkaia=coerce_decimal(
-                        fields.get("foral_retention_bizkaia"), default=Decimal("0")
-                    ),
+                    foral_retention_bizkaia=coerce_decimal(fields.get("foral_retention_bizkaia"), default=Decimal("0")),
                     # The design's optional identity facts: forwarded verbatim
                     # when the row carries them, left to the observation model's
                     # None defaults otherwise -- the resolver applies the design's
@@ -808,6 +798,84 @@ def assemble_refund_observations(
                 ),
             )
         except ValidationError as exc:
+            raise _row_assembly_refusal(row_index, exc) from exc
+    return tuple(observations)
+
+
+def assemble_withholding296_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[Withholding296Observation, ...]:
+    """Reassemble Modelo 296 perceptor rows from row-set cells.
+
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The
+            :class:`~domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default dates.
+    """
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[Withholding296Observation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                Withholding296Observation(
+                    source_id=f"detalle:per_perceptor_296:row-{row_index}",
+                    perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
+                    perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
+                    **_optional_text_kwarg(fields, "representative_tax_id"),
+                    **_optional_text_kwarg(fields, "persona_juridica_flag"),
+                    **_optional_text_kwarg(fields, "codigo_bic"),
+                    **_optional_text_kwarg(fields, "fecha_devengo"),
+                    naturaleza=_coerce_text(fields.get("naturaleza"), default="D") or "D",
+                    clave=_coerce_text(fields.get("clave"), default="01") or "01",
+                    subclave=_coerce_text(fields.get("subclave")),
+                    **_optional_text_kwarg(fields, "perceptor_mediador_flag"),
+                    **_optional_text_kwarg(fields, "codigo"),
+                    **_optional_text_kwarg(fields, "codigo_emisor"),
+                    **_optional_int_kwarg(fields, "pago"),
+                    **_optional_text_kwarg(fields, "tipo_codigo"),
+                    **_optional_text_kwarg(fields, "codigo_cuenta"),
+                    **_optional_text_kwarg(fields, "pendiente_flag"),
+                    **_optional_int_kwarg(fields, "accrual_year"),
+                    **_optional_text_kwarg(fields, "fecha_inicio_prestamo"),
+                    **_optional_text_kwarg(fields, "fecha_vencimiento_prestamo"),
+                    **_optional_text_kwarg(fields, "direccion_perceptor"),
+                    **_optional_text_kwarg(fields, "nif_pagador_anterior"),
+                    **_optional_text_kwarg(fields, "procedimiento_especial_flag"),
+                    **_optional_text_kwarg(fields, "clave_mercado"),
+                    **_optional_text_kwarg(fields, "codigo_lei"),
+                    **_optional_text_kwarg(fields, "nif_pais_residencia"),
+                    **_optional_text_kwarg(fields, "fecha_nacimiento"),
+                    **_optional_text_kwarg(fields, "ciudad_nacimiento"),
+                    **_optional_text_kwarg(fields, "codigo_pais"),
+                    **_optional_text_kwarg(fields, "pais_residencia_fiscal"),
+                    transaction_date=default_date,
+                    base_retenciones=coerce_decimal(fields.get("base_retenciones"), default=Decimal("0")),
+                    porcentaje_retencion=coerce_decimal(fields.get("porcentaje_retencion"), default=Decimal("0")),
+                    retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
+                    compensaciones=coerce_decimal(fields.get("compensaciones"), default=Decimal("0")),
+                    garantias=coerce_decimal(fields.get("garantias"), default=Decimal("0")),
+                    otros_importes=coerce_decimal(fields.get("otros_importes"), default=Decimal("0")),
+                    ingreso_a_cuenta_repercutido=coerce_decimal(
+                        fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
+                    ),
+                ),
+            )
+        except (ValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 

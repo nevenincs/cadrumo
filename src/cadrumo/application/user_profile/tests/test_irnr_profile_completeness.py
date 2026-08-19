@@ -144,7 +144,8 @@ def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_i
 
 def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
     schema = resources().user_profile_schema.singleton
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="88888888-8888-4888-8888-888888888888",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),

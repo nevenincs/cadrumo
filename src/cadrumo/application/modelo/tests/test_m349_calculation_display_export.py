@@ -47,7 +47,7 @@ from .._revision_replay_inputs import _m349_detail_row_replay_inputs
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
-_BUCKET_ID = "m349-display-export-parity"
+_BUCKET_ID = "9c4acfdc-abb7-4206-8755-1d8c027b6114"  # was 'm349-display-export-parity'
 _PROFILE_TAX_ID = "12345678Z"
 _DECL_NUMERO_OPERADORES: CasillaId = validated_casilla_id(
     "decl.numero-operadores",

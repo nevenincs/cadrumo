@@ -85,7 +85,8 @@ _AUTO_RESOLVED_SOURCES = frozenset(
 
 
 def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

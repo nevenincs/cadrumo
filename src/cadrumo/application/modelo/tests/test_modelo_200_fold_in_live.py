@@ -178,7 +178,8 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
     ``isolated_runtime_profile`` manifest label so the loaded
     :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

@@ -32,8 +32,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile import profile_current_bucket_session, profile_record_login_failure
-
 from ....adapters.persistence.storage.custody import profile_session_path
 from ....adapters.persistence.storage.master_key import (
     BucketSession,
@@ -45,6 +43,7 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
+from .. import profile_current_bucket_session, profile_record_login_failure
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._login_session import (
@@ -64,7 +63,7 @@ _INSTANT = datetime(2026, 8, 15, 10, 15, 0, tzinfo=UTC)
 
 def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
-    from cadrumo.application.user_profile import profile_close_bucket_session
+    from .. import profile_close_bucket_session
 
     close_active_profile_record_session()
     profile_close_bucket_session()

@@ -25,7 +25,8 @@ _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="19191919-1919-4191-8191-191919191919",
         facts=facts,
         created_at=_NOW,

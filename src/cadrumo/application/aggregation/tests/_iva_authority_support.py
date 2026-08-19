@@ -13,7 +13,7 @@ from .._iva_ledger import (
     aggregate_iva_ledger_observations as _aggregate,
 )
 
-_PROFILE_ID = "aggregation-test-profile"
+_PROFILE_ID = "484081b3-cc99-46ad-9b87-90097405670d"  # was 'aggregation-test-profile'
 _EMPTY_REGISTER = BienesInversionIvaRegister()
 
 

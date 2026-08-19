@@ -124,7 +124,8 @@ def _declare_home_office_m2(bucket_id: str) -> None:
         UserProfileFact(path=path, value=Decimal(value)) for path, value in _home_office_censo_facts().items()
     )
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=m2_facts,
         ),

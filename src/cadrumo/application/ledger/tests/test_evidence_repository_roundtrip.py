@@ -23,6 +23,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ._ledger_value_fixtures import secure_objects
 
 __all__ = ["secure_objects"]
@@ -40,6 +41,7 @@ from .._evidence import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 _DIGEST = "b" * 64
 _CREATED_AT = datetime(2026, 2, 5, 9, 30, tzinfo=UTC)
 _UPDATED_AT = datetime(2026, 3, 11, 17, 45, tzinfo=UTC)

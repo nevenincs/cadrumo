@@ -54,4 +54,3 @@ class BucketDeletionAssessment(BaseModel):
         if not self.exists and any(value is not None for value in present_fields):
             raise ValueError("absent deletion assessment cannot carry bucket metadata")
         return self
-

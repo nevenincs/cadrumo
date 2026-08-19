@@ -166,7 +166,8 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _store_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

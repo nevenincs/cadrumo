@@ -17,11 +17,6 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from cadrumo.application.user_profile import (
-    profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
-    profile_close_bucket_session,
-)
 from ....application.state_projection import _build_active_profile
 from ....application.user_profile import active_profile_pointer_transaction
 from ....application.user_profile._capsule_record import ProfileRecordSession
@@ -30,6 +25,11 @@ from ....application.user_profile._profile_record_repository import bound_profil
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...user_profile import (
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+)
 from .._models import WorkflowState
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 

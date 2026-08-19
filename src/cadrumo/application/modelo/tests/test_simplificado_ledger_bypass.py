@@ -114,7 +114,8 @@ def _blocking_transaction() -> Transaction:
 
 def _seed_profile(bucket_id: str, *, iva_regime: str, m303_regime_composition: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="iva.regime", value=iva_regime),

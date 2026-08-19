@@ -115,7 +115,8 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

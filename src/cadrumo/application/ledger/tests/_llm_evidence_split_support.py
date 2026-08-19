@@ -32,7 +32,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-split"
+_BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'
 
 
 def _split_subprocess_proposer(*, response: LLMSplitResponse, model: str = "test-model") -> SubprocessLLMClassifier:

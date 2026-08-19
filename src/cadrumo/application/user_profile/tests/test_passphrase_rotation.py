@@ -13,12 +13,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile import (
-    profile_custody_recovery_envelope_path,
-    profile_is_password_authentication_failure,
-    unlock_profile_custody_password,
-)
-
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
@@ -31,8 +25,11 @@ from .. import (
     ProfileRecordRepository,
     login_profile,
     logout_active_profile,
+    profile_custody_recovery_envelope_path,
+    profile_is_password_authentication_failure,
     register_profile_with_credentials,
     rotate_profile_passphrase,
+    unlock_profile_custody_password,
 )
 
 if TYPE_CHECKING:

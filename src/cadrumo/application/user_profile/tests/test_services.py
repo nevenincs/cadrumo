@@ -10,7 +10,6 @@ from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.calculations.registry import ProfileKeyGrounding
 from ....domain.user_profile import (
-    ProfilePreflightRequirement,
     ProfileSchemaDefinition,
     ProfileSetupState,
     UserProfileFact,
@@ -18,6 +17,7 @@ from ....domain.user_profile import (
     profile_field_label,
 )
 from .. import (
+    ProfilePreflightRequirement,
     ProfilePreflightService,
     ProfileValidationService,
     build_profile_preflight_requirement,
@@ -189,7 +189,8 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema
     bill of health.
     """
     svc = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -216,7 +217,8 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
     svc = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2024, "0A")
 
-    empty_record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    empty_record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(),
     )
@@ -229,7 +231,8 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
     assert missing_report.per_operation_requirements_assessed is True
     assert any(item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing)
 
-    complete_record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    complete_record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -246,7 +249,8 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
 def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
     period = Period.from_year_and_code(2026, "1P")
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -278,7 +282,8 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
         ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),
         ("short-name-only", UserProfileFact(path="identity.name", value="Rocio")),
     ):
-        record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        record = UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id="11111111-1111-4111-8111-111111111111",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -306,7 +311,9 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
 def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=())
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=()
+    )
     report = pre.report(
         record=record,
         modelo="303",
@@ -388,7 +395,8 @@ def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
     """
     svc = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2024, "0A")
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(),
     )

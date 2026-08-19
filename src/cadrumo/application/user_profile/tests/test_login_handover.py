@@ -25,8 +25,6 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from cadrumo.application.user_profile import profile_current_bucket_session, profile_session_path
-
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
     ProfileCustodyPasswordError,
@@ -48,6 +46,7 @@ from ....core.config import Settings
 from ....core.time import now as _now
 from ....domain.buckets import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
+from .. import profile_current_bucket_session, profile_session_path
 from .._login_session import (
     _HANDOVER_JOURNAL_MAX_BYTES,
     _clear_handover_journal,
@@ -107,7 +106,7 @@ def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
 
 
 def _close_live_login() -> None:
-    from cadrumo.application.user_profile import profile_close_bucket_session
+    from .. import profile_close_bucket_session
 
     close_active_profile_record_session()
     profile_close_bucket_session()

@@ -47,7 +47,8 @@ def bucket_id() -> str:
 def _save_profile(*facts: UserProfileFact) -> None:
     """Persist a profile carrying ``facts`` through the real repository."""
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
             created_at=_CLOCK,

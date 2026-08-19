@@ -118,6 +118,7 @@ def test_adapters_return_empty_when_source_missing(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     for adapter in (transactions_pending, invoices_pending, drafts_pending):
         with open_test_profile_session(_PROFILE_ID):
+            _seed_active_profile(_PROFILE_ID)
             assert adapter(settings, bucket_id=_PROFILE_ID) == ()
 
 
@@ -171,6 +172,7 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
         ),
     )
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         items = transactions_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
@@ -185,6 +187,7 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         items = transactions_pending(settings, bucket_id=_PROFILE_ID)
 
@@ -198,11 +201,14 @@ def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> Non
     settings = _build_settings(tmp_path)
     other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
     with open_test_profile_session(_OTHER_PROFILE_ID):
+        _seed_active_profile(_OTHER_PROFILE_ID)
         TransactionCatalogueRepository(bucket_id=_OTHER_PROFILE_ID).save(other_bucket_catalogue)
 
     with open_test_profile_session(_ACTIVE_PROFILE_ID):
+        _seed_active_profile(_ACTIVE_PROFILE_ID)
         assert transactions_pending(settings, bucket_id=_ACTIVE_PROFILE_ID) == ()
     with open_test_profile_session(_OTHER_PROFILE_ID):
+        _seed_active_profile(_OTHER_PROFILE_ID)
         assert len(transactions_pending(settings, bucket_id=_OTHER_PROFILE_ID)) == 1
 
 
@@ -219,6 +225,7 @@ def test_transactions_pending_severity_mapping(tmp_path: Path) -> None:
             (_transaction(source_row_index=index, classification=state),),
         )
         with open_test_profile_session(bucket_id):
+            _seed_active_profile(bucket_id)
             TransactionCatalogueRepository(bucket_id=bucket_id).save(catalogue)
             items = transactions_pending(settings, bucket_id=bucket_id)
         assert len(items) == 1
@@ -241,6 +248,7 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
         ),
     )
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         assert transactions_pending(settings, bucket_id=_PROFILE_ID) == ()
 
@@ -265,6 +273,7 @@ def test_transactions_pending_skips_reviewed_excluded(tmp_path: Path) -> None:
         ),
     )
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         pending = transactions_pending(settings, bucket_id=_PROFILE_ID)
     assert [item.source.business_classification for item in pending] == [
@@ -332,6 +341,7 @@ def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
             ),
         )
         with open_test_profile_session(bucket_id):
+            _seed_active_profile(bucket_id)
             InvoiceCatalogueRepository(bucket_id=bucket_id).save(catalogue)
             items = invoices_pending(settings, bucket_id=bucket_id)
         assert len(items) == 1
@@ -355,6 +365,7 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
         ),
     )
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         InvoiceCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         assert invoices_pending(settings, bucket_id=_PROFILE_ID) == ()
 
@@ -363,6 +374,7 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         InvoiceCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
         items = invoices_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
@@ -373,17 +385,21 @@ def test_invoices_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     other_catalogue = InvoiceCatalogue.from_invoices((_invoice(invoice_number="INV-OTHER"),))
     with open_test_profile_session(_OTHER_PROFILE_ID):
+        _seed_active_profile(_OTHER_PROFILE_ID)
         InvoiceCatalogueRepository(bucket_id=_OTHER_PROFILE_ID).save(other_catalogue)
 
     with open_test_profile_session(_ACTIVE_PROFILE_ID):
+        _seed_active_profile(_ACTIVE_PROFILE_ID)
         assert invoices_pending(settings, bucket_id=_ACTIVE_PROFILE_ID) == ()
     with open_test_profile_session(_OTHER_PROFILE_ID):
+        _seed_active_profile(_OTHER_PROFILE_ID)
         assert len(invoices_pending(settings, bucket_id=_OTHER_PROFILE_ID)) == 1
 
 
 def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile(_PROFILE_ID)
         secure_object_repository_for_active_bucket().save(
             namespace=_INVOICE_NAMESPACE,
             object_key=_INVOICE_OBJECT_KEY,

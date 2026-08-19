@@ -51,7 +51,7 @@ from .._llm_review_workflow import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-reject"
+_BUCKET = "289258a6-d3b8-4261-9d44-6ed6657c6ea0"  # was 'bucket-reject'
 _UNKNOWN_TRANSACTION_ID = "f" * 64
 
 

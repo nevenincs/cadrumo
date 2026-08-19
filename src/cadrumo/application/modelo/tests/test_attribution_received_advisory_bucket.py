@@ -66,7 +66,8 @@ def test_advisory_loads_attribution_facts_from_real_bucket(tmp_path: Path) -> No
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label="Socio atribucion"):
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=_received_facts(),
                 created_at=_CLOCK,

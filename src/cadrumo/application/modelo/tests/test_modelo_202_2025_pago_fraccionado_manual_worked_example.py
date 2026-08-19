@@ -145,7 +145,8 @@ def _seed_sociedad_m_profile() -> None:
     (clave 03) is the applicable one - matching the manual's scenario, which
     never mentions the art. 40.3 obligation.
     """
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
