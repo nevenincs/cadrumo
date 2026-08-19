@@ -18,7 +18,7 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["declaradas en las casillas 05 y 06"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-216-numero-rentas-no-sometidas-total"
@@ -30,7 +30,7 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["declaradas en las casillas 14 y 15"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-216-base-no-sometidas-total"
@@ -42,4 +42,4 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["correspondientes a las rentas declaradas en las casillas 17 y 18"]

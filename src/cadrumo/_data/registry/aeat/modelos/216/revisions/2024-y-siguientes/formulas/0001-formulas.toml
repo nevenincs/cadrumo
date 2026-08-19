@@ -8,7 +8,7 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["la suma total de las bases de retención o de ingreso a cuenta declaradas en las casillas 08 y 09"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-216-retenciones-total"
@@ -20,7 +20,7 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["el importe total de las retenciones e ingresos a cuenta declaradas en las casillas 11 y 12"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-216-resultado"
@@ -32,4 +32,4 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-216-procedure"
-required_text = ["216"]
+required_text = ["el importe correspondiente a la resta de las casillas 13 y 20"]
