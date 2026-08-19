@@ -47,7 +47,7 @@ def _intermediate_payload(*, source_sha256: str = "0" * 64) -> dict[str, object]
                         "record_identity": "registro-tipo-1",
                         "source_row": 14,
                         "source_cell": "A14",
-                        "ordinal": 1,
+                        "ordinal": "1",
                         "offset": 1,
                         "length": 1,
                         "aeat_type": "AN",
@@ -58,7 +58,7 @@ def _intermediate_payload(*, source_sha256: str = "0" * 64) -> dict[str, object]
                         "record_identity": "registro-tipo-1",
                         "source_row": 15,
                         "source_cell": "A15",
-                        "ordinal": 2,
+                        "ordinal": "2",
                         "offset": 2,
                         "length": 1,
                         "aeat_type": "AN",
@@ -99,7 +99,12 @@ def _entry(*, row: int, ordinal: int, field_id: str, kind: str = "literal", **pa
             "sheet": "Registro tipo 1",
             "source_row": row,
             "source_cell": f"A{row}",
-            "ordinal": ordinal,
+            # The anchor ordinal is the design's PRINTED ordinal and is carried
+            # as a string -- DP30302's simplified rows number sequentially with
+            # no dotted or `bis` label, but other sheets do. This fixture passed
+            # an int, which the model now refuses, and the refusal cascaded into
+            # a `too_short` on the field tuple that made the cause unreadable.
+            "ordinal": str(ordinal),
             "record_identity": "registro-tipo-1",
         },
         "export_field_id": field_id,
