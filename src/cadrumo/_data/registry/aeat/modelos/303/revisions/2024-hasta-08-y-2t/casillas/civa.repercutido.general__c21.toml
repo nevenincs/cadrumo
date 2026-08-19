@@ -656,6 +656,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early"]
+export_exemption_reason = "not_in_record_design"
 
 [[revisions.2024-hasta-08-y-2t.casillas]]
 id = "169"
@@ -668,6 +669,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early"]
+export_exemption_reason = "not_in_record_design"
 
 [[revisions.2024-hasta-08-y-2t.casillas]]
 id = "170"
@@ -677,15 +679,14 @@ data_type = "money"
 semantic_role = "dr303_170"
 continuidad_id = "dr303-170"
 required = false
-# Recargo de equivalencia cuota for the rung whose Tipo [169] admits "00026" and
-# "00050" -- the LIVA art. 161.3 super-reducido 0,5 % and its RDL 4/2024 0,26 %
-# transitional companion. Both land in this one rung, so the transitional rates
-# do not change this destination. Section corrected from regimen_general: the
-# design names this row Recargo equivalencia.
-input_kind = "bound"
-binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+# Cuota of the RD-ley 4/2024 transitional recargo rung, exempt for the same
+# reason as [165]-[167]: this epoch's Diseno de Registros carries no field for
+# the rung. The super-reducido recargo cuota that IS declarable in these
+# periods is carried by [18], whose Tipo [17] admits "00050".
+input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early"]
+export_exemption_reason = "not_in_record_design"
 
 [[revisions.2024-hasta-08-y-2t.casillas]]
 id = "01"
@@ -921,9 +922,14 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_18"
 continuidad_id = "dr303-18"
+# Recargo de equivalencia cuota for the low-band rung. This epoch's design
+# gives the rung one variable Tipo field [17] admitting "00000", "00050" and
+# "00062", so the LIVA art. 161.3 super-reducido 0,5 % recargo lands here --
+# not on [170], which this epoch's design does not carry at all.
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early"]
 export_refs = ["m303-2024-early.dp30301.f051"]
 
