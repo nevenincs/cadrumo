@@ -34,6 +34,7 @@ have passed any assertion written against its output.
 from __future__ import annotations
 
 import pytest
+
 from dev.identity.tax_id_respelling_census import (
     EXEMPTIONS,
     Finding,

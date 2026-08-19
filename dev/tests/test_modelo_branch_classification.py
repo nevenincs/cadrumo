@@ -24,6 +24,7 @@ orchestration claim resting on the author's word.
 from __future__ import annotations
 
 import pytest
+
 from dev.quality.modelo_branch_classification import (
     BranchClassification,
     BranchClassificationError,

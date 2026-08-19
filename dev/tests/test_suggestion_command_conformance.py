@@ -68,8 +68,15 @@ from typing import cast
 
 import click
 import pytest
+
+from cadrumo.application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
+from cadrumo.core import scan_directory
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
+from cadrumo.tests.cli_runner import cadrumo_click_command
 from dev._paths import REPO_ROOT
 from dev.locales import LocaleManager, LocaleNode
+from dev.locales.manager import locale_catalogue_source
 from dev.quality.cli_action_census import census
 from dev.quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
@@ -78,10 +85,6 @@ from dev.quality.cli_action_census_dispositions import (
     checked_in_dispositions,
     validate_dispositions,
 )
-
-from cadrumo.application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
-from cadrumo.core import scan_directory
-from cadrumo.tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -295,6 +298,17 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     for cited, tokens, has_trailing_help, cited_options in _iter_citations(text):
         dead_token, terminates_on_group = _resolve_citation(tokens)
         if dead_token is not None:
+            # A surface whose verb was deliberately withdrawn while its
+            # capability stayed live is declared, not dead. The declaration is
+            # the only visible evidence that a capability lost its door, so
+            # naming it must not be an error -- but the judgement is READ from
+            # the one register that holds it, never restated here, or the two
+            # lists drift and a genuinely dead verb hides behind the copy.
+            # CLI verbs are hyphenated ("subject-access-request") while the
+            # register keys them by schema name ("subject_access_request"),
+            # so the two spellings are reconciled here rather than in either.
+            if ".".join(tokens).replace("-", "_") in DECLARED_UNIMPLEMENTED_SURFACES:
+                continue
             failures.append(f"{origin}: cites {cited!r} but {dead_token!r} does not resolve in the live CLI tree")
             continue
         if require_runnable_leaf and terminates_on_group and not has_trailing_help:
@@ -819,7 +833,8 @@ def _notice_suggestion_transport_failures(module_path: Path) -> list[str]:
         )
         if projects_parameter:
             failures.append(
-                f"{relative}:{function.lineno}: helper {function.name} accepts suggestion for canonical Notice projection"
+                f"{relative}:{function.lineno}: helper {function.name} accepts suggestion "
+                "for canonical Notice projection"
             )
 
     for node in ast.walk(tree):
@@ -925,21 +940,43 @@ def test_locale_catalogues_cite_live_commands() -> None:
     citation while still catching a renamed or invented verb.
     """
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
-    locale_paths = scan_directory(_LOCALES_DIR, pattern="*.yml")
+    # Resolved per language rather than by scanning for "*.yml": a catalogue
+    # ships as a shard DIRECTORY, which a non-recursive glob of the root
+    # does not see at all.
+    locale_paths = [
+        source
+        for language in SUPPORTED_OUTPUT_LANGUAGES
+        if (source := locale_catalogue_source(_LOCALES_DIR, str(language))) is not None
+    ]
     assert locale_paths, f"no locale catalogues found under {_LOCALES_DIR}"
     failures: list[str] = []
-    citation_count = 0
+    citations_by_locale: dict[str, int] = {}
     for path in locale_paths:
         data = manager.load_locale(path)
+        counted = 0
         for key, value in _iter_locale_leaves(data):
             if not isinstance(value, str):
                 continue
-            citation_count += _count_citations(value)
+            counted += _count_citations(value)
             failures.extend(_dead_citations_in(value, origin=f"{path.name}:{key}"))
+        citations_by_locale[path.name] = counted
     assert not failures, "\n".join(failures)
-    assert citation_count >= 700, (
-        f"only {citation_count} command citations found across the locale catalogues; "
-        "the extractor appears blind — the four catalogues carried 880+ when this gate landed"
+    # Non-vacuity is asserted as a PROPERTY, not a pinned tally. A count
+    # calibrated to the corpus of the day fails whenever content legitimately
+    # changes -- retiring the dead `config profile sandbox` leaves dropped it
+    # by ~240 -- which trains everyone to edit the constant, and a constant
+    # everyone edits detects nothing. Blindness has a shape instead: an
+    # extractor that cannot see a catalogue yields nothing for it, and one
+    # that half-sees yields an outlier against its siblings, which carry
+    # translations of the same prose and so cite comparably.
+    blind = sorted(name for name, count in citations_by_locale.items() if count == 0)
+    assert not blind, f"no command citations extracted from {blind}; the extractor is blind to those catalogues"
+
+    highest = max(citations_by_locale.values())
+    outliers = sorted(name for name, count in citations_by_locale.items() if count * 2 < highest)
+    assert not outliers, (
+        f"{outliers} carry fewer than half the citations of the richest catalogue "
+        f"({citations_by_locale}); the extractor is partially blind or those catalogues lost content"
     )
 
 
@@ -1180,7 +1217,7 @@ def test_every_redaction_rule_declares_its_identifier_vocabulary() -> None:
     landing without an entry fails HERE, naming the rule, instead of silently
     narrowing what the gate can see.
     """
-    from ....core.redaction import default_rules
+    from cadrumo.core.redaction import default_rules
 
     declared = frozenset(_REDACTABLE_IDENTIFIER_TOKENS)
     shipped = frozenset(default_rules())

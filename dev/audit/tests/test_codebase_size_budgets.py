@@ -38,6 +38,7 @@ import ast
 from pathlib import Path
 
 import pytest
+
 from cadrumo.core import scan_directory
 from cadrumo.tests._size_budget import (
     CALLABLE_POLICY,
@@ -59,7 +60,6 @@ from dev._paths import REPO_ROOT
 from ..size_budget import (
     SIZE_BUDGET_BASELINE_PATH,
     load_size_budget_baseline,
-    write_size_budget_baseline,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -29,6 +29,7 @@ import sys
 import textwrap
 
 import pytest
+
 from dev.ci.perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds, wall_advisory_message
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -114,7 +115,7 @@ _FORBIDDEN_COMMAND_MODULES = (
 def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     """Execute ``code`` in a fresh interpreter and return the result."""
 
-    return subprocess.run(
+    return subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
         [sys.executable, "-c", textwrap.dedent(code)],
         capture_output=True,
         text=True,

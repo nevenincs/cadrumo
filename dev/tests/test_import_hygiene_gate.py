@@ -95,6 +95,11 @@ from pathlib import Path
 from typing import Final, TypedDict
 
 import pytest
+from pydantic import TypeAdapter
+
+from cadrumo.core import scan_directory
+from cadrumo.tests._inventory import repo_relative
+from dev._paths import REPO_ROOT
 from dev.quality.import_hygiene_scan import (
     _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,
     CANONICAL_TUI_PACKAGE,
@@ -120,12 +125,6 @@ from dev.quality.import_hygiene_scan import (
     walk_module_imports,
     wheel_exclude_globs,
 )
-from pydantic import TypeAdapter
-
-from dev._paths import REPO_ROOT
-
-from cadrumo.core import scan_directory
-from cadrumo.tests._inventory import repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -771,8 +770,8 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
 # Four raw-loader names (ModeloRevisionSource, ModeloSource,
 # discover_modelo_sources, load_modelo_source) were demoted from the registry
 # package's public __all__, and build_snapshot followed as the same
-# unguarded-entry-point class as the raw loader family. Every one of the five had zero cross-package PRODUCTION consumers
-# at demotion time (build_snapshot's sole external caller is a test fixture).
+# unguarded-entry-point class as the raw loader family. Every one of the five had
+# zero cross-package PRODUCTION consumers at demotion time (build_snapshot's sole external caller is a test fixture).
 # The Python import itself still succeeds -- __all__ only governs star-imports
 # and introspection -- so this family is the actual enforcement: it reds a NEW
 # production import of any of these five names, keeping the demotion from

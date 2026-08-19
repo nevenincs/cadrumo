@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+
 from cadrumo.core import scan_directory
 from cadrumo.tests._inventory import ast_for_path, qualified_name, repo_relative
 from dev._paths import REPO_ROOT
@@ -42,11 +43,10 @@ from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS as _PRODUCTION_SCOPED_PATTERNS
 from ._marker_metadata_patterns import RETIRED_SCRAMBLED_PLAN_PATTERN as _RETIRED_SCRAMBLED_PLAN_PATTERN
 from ._marker_metadata_patterns import MarkerScanScope as _MarkerScanScope
-from ._project_inventory import PROJECT_TEST_ROOTS, project_test_modules
-
 from ._marker_metadata_patterns import PatternCase as _PatternCase
 from ._marker_metadata_patterns import assert_cases_discriminate as _assert_cases_discriminate
 from ._marker_metadata_patterns import campaign_metadata_scan_text as _campaign_metadata_scan_text
+from ._project_inventory import PROJECT_TEST_ROOTS, project_test_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

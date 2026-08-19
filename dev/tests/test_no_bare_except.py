@@ -26,8 +26,9 @@ from typing import NamedTuple
 
 import pytest
 
-from ._project_inventory import project_test_control_modules
 from cadrumo.tests._inventory import ast_for_path, discover_test_modules, qualified_name, repo_relative
+
+from ._project_inventory import project_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

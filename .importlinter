@@ -179,6 +179,7 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
+    cadrumo.core.tests.** -> cadrumo.llm
     # The shared fixture package reaches storage itself, so a core test that
     # imports a helper from it inherits the edge. Both the bare package and its
     # submodules are listed: `cadrumo.tests.**` does not match `cadrumo.tests`.
@@ -403,6 +404,7 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
+    cadrumo.core.tests.** -> cadrumo.llm
     # conftest.py modules sitting directly in a layer subpackage (not nested
     # under a tests/ folder) are the same roundtrip-discipline fixture pattern.
     cadrumo.application.**.conftest -> cadrumo.adapters.**
@@ -420,6 +422,7 @@ ignore_imports =
     # package -- which `.**` does not match. Both forms are needed per layer.
     cadrumo.domain.**.tests.** -> cadrumo.tests.**
     cadrumo.domain.**.tests.** -> cadrumo.tests
+    cadrumo.domain.tests.** -> cadrumo.tests.**
     cadrumo.application.tests.** -> cadrumo.tests.**
     cadrumo.application.tests.** -> cadrumo.tests
     cadrumo.application.**.tests.** -> cadrumo.tests.**

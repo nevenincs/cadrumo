@@ -117,9 +117,8 @@ def test_no_src_module_imports_dev_tooling() -> None:
     files = _live_boundary_files()
     _assert_not_vacuous(files)
     offenders = find_dev_tooling_import_violations(files, src_root=_SRC_ROOT)
-    assert offenders == [], (
-        "modules under src/ import the dev tree (absolute boundary, tests included):\n"
-        + "\n".join(f"  {v.importer_path}:{v.lineno} -> {v.target_mod}" for v in offenders)
+    assert offenders == [], "modules under src/ import the dev tree (absolute boundary, tests included):\n" + "\n".join(
+        f"  {v.importer_path}:{v.lineno} -> {v.target_mod}" for v in offenders
     )
 
 
@@ -128,9 +127,8 @@ def test_no_src_module_reaches_a_dev_path() -> None:
     files = _live_boundary_files()
     _assert_not_vacuous(files)
     offenders = find_dev_path_reach_violations(files, src_root=_SRC_ROOT)
-    assert offenders == [], (
-        "modules under src/ build paths into the dev tree (absolute boundary):\n"
-        + "\n".join(f"  [{v.form}] {v.module_path}:{v.lineno} -> {v.detail!r}" for v in offenders)
+    assert offenders == [], "modules under src/ build paths into the dev tree (absolute boundary):\n" + "\n".join(
+        f"  [{v.form}] {v.module_path}:{v.lineno} -> {v.detail!r}" for v in offenders
     )
 
 
@@ -200,7 +198,7 @@ def test_path_scanner_catches_relative_and_windows_separator_forms(tmp_path: Pat
     path = _planted_module(
         tmp_path,
         "cadrumo/core/_planted.py",
-        r'A = "./dev/some_config.json"' '\n' r'B = "..\dev\other.json"' '\n',
+        r'A = "./dev/some_config.json"' "\n" r'B = "..\dev\other.json"' "\n",
     )
     violations = find_dev_path_reach_violations([path], src_root=tmp_path)
     details = [v.detail for v in violations]
@@ -217,25 +215,19 @@ def test_path_scanner_catches_project_root_anchored_join(tmp_path: Path) -> None
 
 
 def test_path_scanner_catches_the_reversed_join_operand(tmp_path: Path) -> None:
-    path = _planted_module(
-        tmp_path, "cadrumo/core/_planted.py", 'from pathlib import Path\nX = "dev" / root\n'
-    )
+    path = _planted_module(tmp_path, "cadrumo/core/_planted.py", 'from pathlib import Path\nX = "dev" / root\n')
     violations = find_dev_path_reach_violations([path], src_root=tmp_path)
     assert any(v.form is DevPathForm.PATH_JOIN for v in violations)
 
 
 def test_path_scanner_catches_call_assembled_dev_segment(tmp_path: Path) -> None:
-    path = _planted_module(
-        tmp_path, "cadrumo/core/_planted.py", 'import os\nX = os.path.join(root, "dev", "x.json")\n'
-    )
+    path = _planted_module(tmp_path, "cadrumo/core/_planted.py", 'import os\nX = os.path.join(root, "dev", "x.json")\n')
     violations = find_dev_path_reach_violations([path], src_root=tmp_path)
     assert any(v.form is DevPathForm.CALL_JOIN for v in violations)
 
 
 def test_path_scanner_catches_fstring_composed_dev_path(tmp_path: Path) -> None:
-    path = _planted_module(
-        tmp_path, "cadrumo/core/_planted.py", 'X = f"{root}/dev/conformance_baseline.json"\n'
-    )
+    path = _planted_module(tmp_path, "cadrumo/core/_planted.py", 'X = f"{root}/dev/conformance_baseline.json"\n')
     violations = find_dev_path_reach_violations([path], src_root=tmp_path)
     assert any(v.form is DevPathForm.FSTRING for v in violations)
 
@@ -257,9 +249,7 @@ def test_path_scanner_does_not_fire_on_an_fstring_device_path(tmp_path: Path) ->
 def test_path_scanner_does_not_fire_on_a_mid_path_dev_segment_after_an_interpolation(
     tmp_path: Path,
 ) -> None:
-    path = _planted_module(
-        tmp_path, "cadrumo/core/_planted.py", 'X = f"{root}-sandbox/dev/notes.json"\n'
-    )
+    path = _planted_module(tmp_path, "cadrumo/core/_planted.py", 'X = f"{root}-sandbox/dev/notes.json"\n')
     violations = find_dev_path_reach_violations([path], src_root=tmp_path)
     assert violations == [], f"another tree's dev directory must stay silent: {violations!r}"
 
@@ -329,7 +319,7 @@ def test_prose_scanner_stays_silent_on_near_miss_words(tmp_path: Path) -> None:
     path = _planted_module(
         tmp_path,
         "cadrumo/core/_planted.py",
-        '# A devengada stem, a bare word dev, and dev.example.com stay silent.\n',
+        "# A devengada stem, a bare word dev, and dev.example.com stay silent.\n",
     )
     violations = find_dev_prose_violations([path], src_root=tmp_path)
     assert violations == [], f"near-miss prose must stay silent: {violations!r}"

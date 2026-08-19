@@ -20,10 +20,10 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import tracked_test_files
 
 from cadrumo.core import scan_directory
+from dev._paths import REPO_ROOT
+from dev.ci.lane_reachability import tracked_test_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -129,7 +129,7 @@ def collection_report(targets: tuple[Path, ...]) -> tuple[tuple[str, ...], int]:
     ``-n0`` matters: this runs inside a pytest process that is itself under
     ``-n auto``, and inheriting that would fan out a second worker pool.
     """
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
         [
             sys.executable,
             "-m",
@@ -219,7 +219,7 @@ def test_discovery_excludes_a_real_gitignored_scratch_tree() -> None:
     try:
         git = shutil.which("git")
         assert git is not None, "the control requires git to confirm the planted tree is genuinely ignored"
-        ignore_check = subprocess.run(
+        ignore_check = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
             [git, "check-ignore", str(scratch_root)],
             cwd=_REPO_ROOT,
             capture_output=True,

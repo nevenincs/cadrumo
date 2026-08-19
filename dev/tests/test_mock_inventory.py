@@ -30,7 +30,7 @@ See Also:
         Companion production-test guard for monkeypatch mutation shortcuts.
     :mod:`~tests.test_no_skip_xfail`
         Companion guard for skip and xfail shortcuts across deterministic tests.
-    :func:`~tests._inventory.all_test_control_modules`
+    :func:`~tests._inventory.discover_test_control_modules`
         Shared inventory surface walked by this test-control ratchet.
     :class:`_TestControlInventorySites`
         AST-level site carrier collected for each inspected source tree.
@@ -48,8 +48,9 @@ from typing import Final, NamedTuple
 
 import pytest
 
-from ._project_inventory import all_test_control_modules
 from cadrumo.tests._inventory import ast_for_path, repo_relative
+
+from ._project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

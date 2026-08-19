@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from ._project_inventory import project_test_control_modules, project_test_modules
 from cadrumo.tests._inventory import (
     FIXTURES_DIR,
     REPO_ROOT,
@@ -34,6 +33,8 @@ from cadrumo.tests._inventory import (
     repo_path,
     repo_relative,
 )
+
+from ._project_inventory import project_test_control_modules, project_test_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

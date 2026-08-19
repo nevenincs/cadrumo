@@ -43,6 +43,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 from dev.quality.import_hygiene_scan import (
     DanglingImportKind,
     discover_facades,
@@ -52,8 +54,6 @@ from dev.quality.import_hygiene_scan import (
     first_party_census_files,
     walk_module_imports,
 )
-
-from dev._paths import REPO_ROOT
 
 from .test_import_hygiene_gate import _package_import_sites, _package_py_files, _plant_module
 
