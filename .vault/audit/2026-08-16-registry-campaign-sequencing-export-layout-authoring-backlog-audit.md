@@ -6082,3 +6082,33 @@ boundary refuses it outright -- it only survived here because `model_copy` skips
 validation. It now mutates a modelo-390 relation with `0A`, a token the GRAMMAR
 accepts and no 303 revision declares, which is the exact shape the refusal is
 for.
+
+### Two further era-differences, and one fixture left open
+
+- **Casilla 166 does not exist in modelo 303's 2023 revision.** The transitional
+  recargo boxes arrive with the 2024-late diseno, so a table expecting 166 to
+  resolve to `0.00` in 2023 asserted a value for a box that is not there. `None`
+  now means "this revision declares no such box", and it is asserted ABSENT
+  rather than skipped -- a revision that gains the box without the table being
+  updated still fails.
+- **`test_semantic_map_validation.py`'s fixture carried int ordinals.** The
+  anchor ordinal is the design's PRINTED ordinal and is a string; the int was
+  refused and the refusal cascaded into a `too_short` on the field tuple that
+  made the real cause unreadable. 16 failing -> 7.
+
+**Left open with a diagnosis, not a shrug.** The remaining 7 in that module are
+one problem: the fixture is a synthetic modelo-200 map validated against modelo
+200's REAL revision, which has since gained projection endpoints
+(`M200AdministradorProjectionRef` and siblings). The map declares none, so a
+projection-completeness refusal now fires BEFORE the specific defect each case
+plants, and each case's `pytest.raises` regex never matches. Re-pointing the
+fixture at a modelo whose revision has no projection endpoints means a new design
+ref, a new source digest and a rewritten entry set -- a fixture rewrite, and a
+fresh thread rather than part of this sweep.
+
+Modules changed this tick: **550 passed.** Registry-wide, unfiltered across both
+test trees: **286 failed / 5349 passed**, and every module worked here is at
+zero. The remaining failures are concentrated in surfaces this tick did not
+touch -- `test_export_tree` (27), `test_generated_tree_publication` (15),
+`test_generated_tree_check` (14), `test_semantic_map_join` (8), and the 353, 322,
+347 and informativa registries.
