@@ -2358,6 +2358,27 @@ required_text = [
     "será del 0,26 por ciento",
 ]
 
+[legal."real-decreto-ley-11-2022:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-11-2022-art-18.html#a1-10"
+document_id = "BOE-A-2022-10557"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-10557"
+published_at = 2022-06-26
+effective_from = 2022-07-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-19
+reviewed_by = "agent-prepared-pending-operator"
+notes = "RDL 11/2022 art. 18: the 5 % IVA tipo on electricity supplies, imports and intra-community acquisitions to holders of contracts at or below 10 kW contracted power when the daily-market average price exceeded 45 EUR/MWh, and to bono social recipients recognised as vulnerable severo. This is the provision that puts a 5 % tipo in force during the 2022 ejercicio: it is the ONLY one that does. The sibling real-decreto-ley-20-2022:art-72 opens a 5 % tipo on FOODSTUFFS from 1 January 2023, and real-decreto-ley-4-2024:art-1 continues that food window into 2024; neither reaches a 2022 devengo, so neither can ground the Tipo 5 % rows of the modelo 390 2022 diseño de registros. Scope: electricity only, not a general reduced-rate change. WINDOW. effective_to is 2023-12-31, the CURRENT consolidated sunset, not the law original 2022-12-31: the block was amended by art. 3 of Real Decreto-ley 20/2022, de 27 de diciembre (BOE-A-2022-22685), which extended it by a year, and the bundled excerpt carries that extended wording. One entry therefore grounds the Tipo 5 % rows of both the 2022 and the 2023 revisions. PROVENANCE. Consolidated text fetched via buscar/act.php (act.php, not the diario original); the article block offers two redacciones and the LAST was taken (Ultima actualizacion, publicada el 28/12/2022, en vigor a partir del 28/12/2022; the other being the Texto original, publicado el 26/06/2022). Entry agent-prepared from the packaged authoritative excerpt (article text only, not the full omnibus law, which spans Ukraine-war, social-vulnerability and La Palma measures unrelated to this grounding); not reviewed by a human operator, which reviewed_by declares honestly per the pattern on the sibling real-decreto-ley-20-2022:art-72 entry."
+required_text = [
+    "se aplicará el tipo del 5 por ciento del Impuesto sobre el Valor Añadido",
+    "adquisiciones intracomunitarias de energía eléctrica",
+    "Con efectos desde el 1 de julio de 2022 y vigencia hasta el 31 de diciembre de 2023",
+]
+
 [legal."real-decreto-ley-20-2022:art-72"]
 evidence_tier = "legal_authority"
 authority = "boe"
