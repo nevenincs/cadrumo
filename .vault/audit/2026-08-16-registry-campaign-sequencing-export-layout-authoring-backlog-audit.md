@@ -5612,3 +5612,59 @@ how a test stops testing. It does not apply: every one of these tests asserts th
 by the refusal still firing, not by the snapshot succeeding.
 
 `test_referential_integrity_part1.py`: 25 failed / 6 passed -> **31 passed**.
+
+### The seven "acquisition-gap" abstentions were a citation error, not a missing source
+
+Seven revisions -- 100/2020 through 100/2024, 131/2024 and 131/2025 -- abstained
+because each cited a sede *procedure ficha* whose `applies_from` opens after the
+revision ends. I had recorded this as an acquisition gap: no era-appropriate page
+is bundled, so nothing could be cited. That framing was wrong, and it survived
+because I never asked what the citation was FOR.
+
+**The windows are honest; the citations were not.** The tempting fix was the one
+already applied to modelo 190, whose `applies_from` was widened 2025 -> 2020. That
+precedent does not transfer, and reading the pages is what settles it: modelo
+190's bundled page carries the verbatim link "Modelo 190. Ejercicio 2020 y
+siguientes", which is the page's own claim of multi-year reach. Modelo 100's page
+states *ejercicio 2025* and nothing earlier; modelo 131's states *Ejercicio 2026*.
+Widening either would have been fabrication. `_check_revision_scoped_source_windows`
+(`_snapshot.py:665`) refuses these at snapshot build, so the refusal was correct
+and the data was wrong.
+
+**Modelo 131 (21 + 6 citations).** Replaced with `aeat-modelo-131-instructions`
+(2019-01-01 ->), which is strictly better grounding at every site: its bundled text
+states the windows verbatim -- "entre los días 1 y 20, ambos inclusive, de los
+meses de abril, julio y octubre", the fourth-quarter-in-January rule, and the
+weekend/holiday shift -- where the 2026 ficha states none of them. The already-
+stamped 2019-2023 revision carried the same anachronistic citation and was swept
+with it; 131/2026 keeps the ficha, which genuinely governs it.
+
+**Modelo 100 (9,341 files).** The ficha was a redundant fourth source on 9,553
+casilla-level lists that already cite that year's dictionary, input dictionary and
+XSD -- dropped, grounding untouched. Thirty entities across the five revisions
+(the deadline window, filing schedule, filing link, deadline link, filed-
+declarations observation and cross-reference read) require an
+`official_source_guidance`-tier source, and the ficha had been supplying it. The
+first substitute I reached for, that year's approving Orden, is `layout_authority`
+tier and the authority said so immediately -- **content fit is not tier fit.** The
+correct source is `aeat-renta-<year>-manual-parte1`, guidance-tier and scoped to
+exactly that filing year, verified by extracting the PDF rather than assuming:
+p42 carries "Plazo de presentación del borrador y de las declaraciones del IRPF"
+and pp. 11/28/40/41 document Renta WEB, which is the referent of the filed-
+declaration links.
+
+Seven revisions stamped: **131/2024, 131/2025 and 100/2020-2024.** Modelo 100's
+stamp is a separate wording, because its layout is an `xml_dictionary` declaring
+ZERO fixed-width records -- the fixed-width stamp's "every record paired to its
+design sheet" sentence would have been an overclaim. Its evidence is the
+dictionary-side population comparison: no numbered box the registry lacks.
+
+**A blanket test asserted the defect.** `test_modelo_131_guidance_and_layout_sources_are_separated`
+required EVERY revision to cite the procedure ficha -- demanding exactly what the
+window check refuses. Corrected to the enforced predicate: required where the
+source's window covers the revision, refused where it does not. Both branches are
+exercised by real data (131/2026 positive, the three earlier revisions negative),
+so the relaxation is not vacuous.
+
+Only **349/2020-y-siguientes** still abstains, on the known structural limit of
+its `operador` record. Authority CLEAN throughout.
