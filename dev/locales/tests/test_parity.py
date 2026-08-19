@@ -508,14 +508,15 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
             )
 
 
-def test_custody_passphrase_strings_are_held_by_the_family_register() -> None:
+def test_custody_passphrase_family_is_mounted_with_its_catalogue_strings() -> None:
     """The passphrase namespace's disposition is read, not judged.
 
-    The catalogue strings for ``config passphrase`` are neither live nor prunable:
-    the operator surface declares the family and records that credential rotation
-    exists at no layer. That disposition lives in ``MOUNTED_COMMAND_FAMILIES``, so
-    the register is read here directly and the answer is currently
-    ``DECLARED_UNIMPLEMENTED`` rather than silently absent. The resolver's own
+    ``config passphrase change`` is a live verb backed by
+    :func:`~cadrumo.application.user_profile.rotate_profile_passphrase`, so the
+    family register records it MOUNTED and its catalogue strings are live rather
+    than held. This assertion previously read DECLARED_UNIMPLEMENTED, on the
+    since-retired premise that credential rotation existed at no layer. The
+    register is read here directly rather than judged, and the resolver's own
     refusal path is pinned below; its happy path is covered by every namespace
     the parity assertions route through it.
     """
@@ -524,7 +525,7 @@ def test_custody_passphrase_strings_are_held_by_the_family_register() -> None:
         ("cli", family.root.value, family.child): family.mount_state for family in MOUNTED_COMMAND_FAMILIES
     }
 
-    assert declared_states[_CUSTODY_PASSPHRASE_NAMESPACE] is FamilyMountState.DECLARED_UNIMPLEMENTED
+    assert declared_states[_CUSTODY_PASSPHRASE_NAMESPACE] is FamilyMountState.MOUNTED
 
     with pytest.raises(AssertionError, match="resolves to no declared command family"):
         _declared_family_mount_state(("cli", "config", "recover"))
