@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from datetime import date
 
 import pytest
@@ -57,13 +59,44 @@ def test_m390_has_no_open_compatibility_revision() -> None:
     assert set(modelo.revisions) == {"2022", "2023", "2024", "2025"}
 
 
+#: Binding ids embed the revision year (`modelo-390-2024.page_5.223-239....`),
+#: so the same logical binding necessarily has a different id in every epoch.
+#: Comparing them raw reports all 175 page-scoped bindings as "dropped" every
+#: year, which says nothing about identity stability.
+_M390_BINDING_YEAR_TOKEN = re.compile(r"^modelo-390-\d{4}\.")
+
+#: Bindings AEAT RETIRED from the form, so their absence in a later epoch is the
+#: registry following the diseno rather than losing an identity. Both are the
+#: Lorca reduccion slots (RD-ley 6/2011 earthquake relief): the 2024 diseno drops
+#: them and the 2025 diseno marks their positions -- page 5, 223..239 and
+#: 543..559 -- "RESERVADO PARA LA A.E.A.T. (Dejar en blanco)".
+_M390_RETIRED_BINDINGS: frozenset[str] = frozenset(
+    {
+        "modelo-390.page_5.223-239.operaciones-reg-simplificado-actividad-1-lorca",
+        "modelo-390.page_5.543-559.operaciones-reg-simplificado-actividad-2-lorca",
+    },
+)
+
+
 def test_m390_preserves_canonical_casilla_and_calculation_identities_across_epochs() -> None:
+    """A later epoch may ADD boxes, but never renames or silently drops one.
+
+    This asserted set EQUALITY across the four epochs, which the tree contradicts
+    for a grounded reason: the 2024 diseno added "Pag. 2 bis" and its boxes, so
+    the revisions carry 325, 329, 393 and 393 casillas. Equality would forbid
+    AEAT's own additions; what must hold is that nothing already canonical
+    disappears or is renamed under a filer's feet.
+    """
     modelo, _catalogues = _committed_modelo("390")
     baseline = modelo.revisions["2022"]
 
+    def _stripped(bindings: object) -> set[str]:
+        return {_M390_BINDING_YEAR_TOKEN.sub("modelo-390.", str(item.id)) for item in bindings}
+
     for year in ("2023", "2024", "2025"):
         revision = modelo.revisions[year]
-        assert {casilla.id for casilla in revision.casillas} == {casilla.id for casilla in baseline.casillas}
-        assert {binding.id for binding in revision.bindings} == {binding.id for binding in baseline.bindings}
-        assert {formula.id for formula in revision.formulas} == {formula.id for formula in baseline.formulas}
-        assert {relation.id for relation in revision.relations} == {relation.id for relation in baseline.relations}
+        assert {c.id for c in baseline.casillas} <= {c.id for c in revision.casillas}
+        assert {f.id for f in baseline.formulas} <= {f.id for f in revision.formulas}
+        assert {r.id for r in baseline.relations} <= {r.id for r in revision.relations}
+        # Year token normalised, and the two retired Lorca slots excused by name.
+        assert _stripped(baseline.bindings) - _M390_RETIRED_BINDINGS <= _stripped(revision.bindings)

@@ -115,8 +115,13 @@ def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:
     return tuple(value) if isinstance(value, (list, tuple)) else ()
 
 
-def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+#: Modelo 390's four exact-year revisions, after the revision-span split.
+_M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
+
+
+def _m390_revision(filing_year: str | int = 2024) -> ModeloRevision:
+    """Resolve one filing year's revision through the law-determined selector."""
+    return resources().modelos.authority.snapshot("390", filing_year=int(filing_year), period="0A").revision
 
 
 def _rated_rows() -> tuple[IvaLedgerObservation, ...]:
@@ -325,20 +330,36 @@ def test_the_rate_blind_recargo_casillas_still_feed_the_devengada_total() -> Non
         assert casilla_id in referenced, f"{casilla_id} left the annual devengada total"
 
 
-def test_the_recargo_box_layer_does_not_export_yet() -> None:
-    """The box layer lands inert, and that is deliberate rather than an oversight.
+def test_no_recargo_rate_box_exports_without_something_to_populate_it() -> None:
+    """A recargo rate box may export only once something computes its figure.
 
-    The recargo record decomposition is being established separately. Until the
-    shortfall refusal covers this block, exporting a rate box would render an
-    unpopulated money field as ``0,00`` and turn a silence into a false nil. The
-    tier casillas keep their export references meanwhile, so the fichero is no
-    worse than before this change and its declared total is unaffected.
+    The hazard is precise: an export reference on a box that nothing populates
+    renders an empty money field as ``0,00``, which turns a silence into a false
+    nil -- a filer who owes recargo reads a declared zero. That is why this
+    originally asserted the whole box layer exports NOTHING: the layer landed
+    inert while the recargo decomposition was established separately.
+
+    The layer is no longer inert. All six boxes now carry a ledger binding, and
+    the three AEAT prints on "Pag. 2 bis" -- the sheet the 2024 diseno added --
+    export to their own official positions. Keeping the blanket refusal would now
+    assert the ABSENCE of shipped, grounded behaviour.
+
+    So the guard is narrowed to the hazard rather than dropped, and it is the
+    binding, not the export, that is the precondition: an exporting box with no
+    binding and no formula still fails here. Measured across all four revisions,
+    nothing currently trips it (2022 exports 0 of 6, 2023 one, 2024 and 2025
+    three each, every one of them bound), so this discards no live finding.
     """
-    casillas = {casilla.id: casilla for casilla in _m390_revision().casillas}
-    for casilla_id in _OFFICIAL_BOX_NUMBER:
-        assert not casillas[casilla_id].export_refs, (
-            f"{casilla_id} exports while the recargo shortfall refusal is not yet in place"
-        )
+    for revision_id in _M390_REVISION_IDS:
+        casillas = {casilla.id: casilla for casilla in _m390_revision(revision_id).casillas}
+        for casilla_id in _OFFICIAL_BOX_NUMBER:
+            casilla = casillas.get(casilla_id)
+            if casilla is None or not casilla.export_refs:
+                continue
+            assert casilla.binding is not None or casilla.formula is not None, (
+                f"{casilla_id} exports in revision {revision_id} while nothing populates it, "
+                "so an empty field would render as a false 0,00"
+            )
 
 
 def _with_applied_rates(
