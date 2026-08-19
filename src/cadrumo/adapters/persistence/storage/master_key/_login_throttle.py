@@ -21,6 +21,14 @@ treated as "no active throttle" and rewritten on the next failure, never a
 hard refusal that could strand the legitimate operator. The counter resets
 to clear on a successful login and on logout.
 
+Every read-modify-write of the sidecar is serialized under
+:func:`~cadrumo.core.exclusive_file_lock`, because the counter is the whole
+substance of the control: overlapping attempts that each read ``n`` and each
+write ``n + 1`` advance it once, so a burst of wrong passwords faces the
+backoff owed to a single failure. That tolerance is not one of the ones above
+-- treating an unusable file as cleared protects the legitimate operator,
+while a lost increment only helps whoever is guessing.
+
 See Also:
     :class:`~adapters.persistence.storage.master_key.BucketSession`
         The unlock session whose authentication attempts this throttle guards.
@@ -36,8 +44,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import exclusive_file_lock
 from .....core.atomic_write import atomic_write_hardened_bytes
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.locks_errors import LockAcquisitionError
 from .....core.logging import get_logger
 from .....core.time import UtcInstant
 from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
@@ -198,14 +208,30 @@ def record_login_failure(*, storage_root: Path, bucket_id: str, now: datetime) -
         The persisted :class:`LoginThrottleState` after the increment.
     """
     path = login_throttle_path(storage_root=storage_root, bucket_id=bucket_id)
-    current = _read_state(path)
-    updated = LoginThrottleState(
-        schema_version=LOGIN_THROTTLE_SCHEMA_VERSION,
-        consecutive_failures=current.consecutive_failures + 1,
-        last_failure_at=now,
-    )
-    _write_state(path, updated)
-    return updated
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with exclusive_file_lock(path):
+            current = _read_state(path)
+            updated = LoginThrottleState(
+                schema_version=LOGIN_THROTTLE_SCHEMA_VERSION,
+                consecutive_failures=current.consecutive_failures + 1,
+                last_failure_at=now,
+            )
+            _write_state(path, updated)
+            return updated
+    except (LockAcquisitionError, OSError):
+        # Never propagate out of the throttle. This runs inside the caller's
+        # authentication-failure handler, so an exception raised here REPLACES
+        # the wrong-password error the operator needs to see with a lock or
+        # filesystem error about a sidecar they did not ask about. The sibling
+        # reset already logs rather than raises for exactly this reason; the
+        # increment path simply never adopted it, and on Windows overlapping
+        # attempts made that visible by colliding in the atomic rename.
+        _log.warning(
+            "login throttle increment could not be persisted; the attempt is uncounted path=%s",
+            path,
+        )
+        return _read_state(path)
 
 
 def reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
@@ -216,9 +242,12 @@ def reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
     the success path — the stale window expires by clock regardless.
     """
     path = login_throttle_path(storage_root=storage_root, bucket_id=bucket_id)
+    if not path.parent.is_dir():
+        return
     try:
-        path.unlink(missing_ok=True)
-    except OSError:
+        with exclusive_file_lock(path):
+            path.unlink(missing_ok=True)
+    except (LockAcquisitionError, OSError):
         _log.debug("login throttle sidecar removal failed; window expires by clock path=%s", path)
 
 
