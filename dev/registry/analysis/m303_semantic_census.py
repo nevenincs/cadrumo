@@ -110,6 +110,49 @@ class M303SemanticCensusExpectation:
 
 
 M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectation]] = {
+    "2022": M303SemanticCensusExpectation(
+        # The 2022 semantic map was authored without its census expectation, so
+        # every case that censuses this epoch refused with "no reviewed
+        # expectation" -- the map exists and resolves, but nothing pinned its
+        # shape. The anchor count is cross-checked against the design itself:
+        # the 2022 diseno parses to 314 fields, which is the figure the map's
+        # own authoring recorded.
+        #
+        # This epoch carries markedly fewer simplified-regime entries than 2023
+        # (38 facts against 100) and no pure-INTEGER DP30302 slot at all: the
+        # Regimen Simplificado actividad modules -- epigrafe, numero de unidades,
+        # modulos -- arrive on DP30302 with the 2023 design.
+        design_epoch="2022",
+        fixed_anchor_count=314,
+        class_totals={
+            "casilla": 103,
+            "computed": 5,
+            "draft": 2,
+            "filler": 7,
+            "header": 24,
+            "literal": 27,
+            "projection": 146,
+        },
+        review_home_totals={
+            "casilla": 103,
+            "computed": 5,
+            "draft": 2,
+            "filler": 7,
+            "literal": 27,
+            "producer": 24,
+            "projection:m303_differentiated_deduction": 36,
+            "projection:m303_exonerado_390_activity": 12,
+            "projection:m303_exonerado_390_operaciones_terceros": 1,
+            "projection:m303_prorrata_activity": 25,
+            "projection:m303_regimen_simplificado_activity": 6,
+            "projection:m303_regimen_simplificado_fact": 38,
+            "projection:m303_regimen_simplificado_module": 28,
+        },
+        # One contiguous span, verified gap-free: ordinals 6..77 inclusive, all
+        # 72 carrying a simplified projection, so no ordinal is carved out.
+        simplified_ordinal_spans=(range(6, 78),),
+        simplified_filler_ordinals=frozenset(),
+    ),
     "2023": M303SemanticCensusExpectation(
         design_epoch="2023",
         fixed_anchor_count=393,

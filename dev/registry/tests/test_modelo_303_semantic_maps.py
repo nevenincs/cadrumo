@@ -670,7 +670,47 @@ def test_real_static_compiler_normalizes_the_complete_map(epoch: _EpochAuthoriti
     )
 
 
-@pytest.mark.parametrize("width", [4, 7])
+def _integer_slot_widths(design_epoch: str) -> frozenset[int]:
+    """Widths for which ``design_epoch``'s DP30302 sheet declares a pure-integer slot."""
+    authorities = _authorities(design_epoch)
+    return frozenset(
+        field.parser_field.length
+        for record in authorities.joined.records
+        for field in record.fields
+        if field.semantic_entry.anchor.record_identity == "DP30302"
+        and field.semantic_entry.kind.value not in {"literal", "filler"}
+        and (match := _INTEGER_CONTENT.fullmatch((field.parser_field.content or "").strip())) is not None
+        and int(match.group("whole")) == field.parser_field.length
+    )
+
+
+def _epoch_width_pairs() -> list[tuple[str, int]]:
+    """Every (epoch, width) the DESIGNS actually declare a pure-integer slot for.
+
+    The note-grammar probes were parametrised over every epoch crossed with the
+    fixed widths 4 and 7. The 2022 design declares NO pure-integer DP30302 slot
+    at all -- every numeric slot on that sheet is money ("15 enteros y 2
+    decimales") -- because the pure-integer slots are the Regimen Simplificado
+    actividad modules (epigrafe, numero de unidades, modulos) that the 2023
+    design introduced on DP30302. So 2022 x {4, 7} asked for slots that design
+    has never had, and `_integer_field_of_width`'s anti-vacuity guard correctly
+    refused rather than passing on nothing.
+
+    Deriving the pairs keeps that guard meaningful -- an epoch that LOSES a slot
+    silently drops out of its own coverage, which is why the widths are asserted
+    non-empty below -- while covering strictly more than the hardcoded pair did:
+    widths 2 and 3 are probed too, wherever a design declares them.
+    """
+    pairs = [
+        (design_epoch, width)
+        for design_epoch in _DESIGN_EPOCHS
+        for width in sorted(_integer_slot_widths(design_epoch))
+    ]
+    assert pairs, "no design epoch declares a pure-integer DP30302 slot; the note-grammar probes would all vanish"
+    return pairs
+
+
+@pytest.mark.parametrize(("design_epoch", "width"), _epoch_width_pairs())
 @pytest.mark.parametrize(
     "suffix",
     [
@@ -695,15 +735,29 @@ def test_real_static_compiler_normalizes_the_complete_map(epoch: _EpochAuthoriti
     ],
 )
 def test_integer_source_grammar_peels_any_trailing_note_reference(
-    epoch: _EpochAuthorities,
+    design_epoch: str,
     width: int,
     suffix: str,
 ) -> None:
     """A trailing note reference annotates official content without changing its wire fact."""
+    epoch = _authorities(design_epoch)
     field_id = _integer_field_of_width(epoch, width)
     _render_with_integer_content(epoch, field_id=field_id, content=f"{width} enteros{suffix}")
 
 
+def _epochs_declaring_width(width: int) -> list[str]:
+    """Design epochs whose DP30302 sheet declares a pure-integer slot of ``width``."""
+    epochs = [item for item in _DESIGN_EPOCHS if width in _integer_slot_widths(item)]
+    assert epochs, f"no design epoch declares a pure-integer DP30302 slot of width {width}"
+    return epochs
+
+
+#: Every probe below is written for a FOUR-integer slot, so the epochs are those
+#: whose design declares one. The 2022 sheet declares no pure-integer slot at any
+#: width -- those are the Regimen Simplificado actividad modules the 2023 design
+#: introduced -- so it was asking `_integer_field_of_width` for a field that
+#: design has never carried.
+@pytest.mark.parametrize("design_epoch", _epochs_declaring_width(4))
 @pytest.mark.parametrize(
     "content",
     [
@@ -715,10 +769,11 @@ def test_integer_source_grammar_peels_any_trailing_note_reference(
     ],
 )
 def test_integer_source_grammar_refuses_malformed_or_mismatched_content(
-    epoch: _EpochAuthorities,
+    design_epoch: str,
     content: str,
 ) -> None:
     """A numberless, trailing-prose, non-numeric or width-mismatched form still fails closed."""
+    epoch = _authorities(design_epoch)
     field_id = _integer_field_of_width(epoch, 4)
     with pytest.raises(RegistryValidationError):
         _render_with_integer_content(epoch, field_id=field_id, content=content)
