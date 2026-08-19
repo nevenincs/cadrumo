@@ -233,19 +233,6 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "session still seals at this cap (default 4 h, 12 h hard ceiling)"
         ),
     )
-    cadrumo_keyring_probe_timeout_s: float = Field(
-        default=10.0,
-        gt=0,
-        le=120,
-        description=(
-            "Wall-clock budget (seconds) for the AUTO backend's OS-keychain read before it is "
-            "treated as locked. macOS Keychain ACLs are per-binary, so a process distinct from "
-            "the one that minted the item must answer an authorization dialog that a headless or "
-            "background context can never show, and the read would otherwise block forever. "
-            "Generous enough that a foreground operator can answer the prompt; short enough that "
-            "a dialog-less context degrades promptly instead of hanging"
-        ),
-    )
     cadrumo_auth_clave_movil_lock_buffer_s: int = Field(
         default=90,
         gt=0,
