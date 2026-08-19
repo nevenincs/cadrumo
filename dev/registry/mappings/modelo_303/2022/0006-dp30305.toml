@@ -552,10 +552,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f031"
-kind = "casilla"
-casilla_id = "700"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_current_base"
+casilla_id = "700"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -566,10 +571,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f032"
-kind = "casilla"
-casilla_id = "701"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "domestic_current_cuota"
+casilla_id = "701"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -694,10 +704,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f039"
-kind = "casilla"
-casilla_id = "708"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_current_base"
+casilla_id = "708"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -708,10 +723,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f040"
-kind = "casilla"
-casilla_id = "709"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "intra_eu_current_cuota"
+casilla_id = "709"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -836,10 +856,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f047"
-kind = "casilla"
-casilla_id = "716"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 1
+field = "investment_regularisation"
+casilla_id = "716"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -869,10 +894,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f049"
-kind = "casilla"
-casilla_id = "718"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_current_base"
+casilla_id = "718"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -883,10 +913,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f050"
-kind = "casilla"
-casilla_id = "719"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "domestic_current_cuota"
+casilla_id = "719"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -1011,10 +1046,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f057"
-kind = "casilla"
-casilla_id = "726"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_current_base"
+casilla_id = "726"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -1025,10 +1065,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f058"
-kind = "casilla"
-casilla_id = "727"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "intra_eu_current_cuota"
+casilla_id = "727"
 
 [entries.anchor]
 sheet = "DP30305"
@@ -1153,10 +1198,15 @@ record_identity = "DP30305"
 
 [[entries]]
 export_field_id = "m303-2022.dp30305.f065"
-kind = "casilla"
-casilla_id = "734"
-legal_refs = ["orden-eha-3786-2008:art-1"]
+kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
+
+[entries.projection_ref]
+projection_kind = "m303_differentiated_deduction"
+slot = 2
+field = "investment_regularisation"
+casilla_id = "734"
 
 [entries.anchor]
 sheet = "DP30305"

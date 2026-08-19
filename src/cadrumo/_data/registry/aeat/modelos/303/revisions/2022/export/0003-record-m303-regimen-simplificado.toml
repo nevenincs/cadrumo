@@ -1,0 +1,591 @@
+[[revisions.2022.export_layouts]]
+id = 'generated-modelo-303-2022-fichero'
+
+[[revisions.2022.export_layouts.records]]
+id = 'm303-regimen-simplificado'
+record_type = 'regimen-simplificado'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f062'
+offset = 695
+length = 10
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_module'
+cohort = 'no_agricola'
+slot = 2
+module_order = 6
+value = 'declared_quantity'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f063'
+offset = 705
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_module'
+cohort = 'no_agricola'
+slot = 2
+module_order = 6
+value = 'cuota_devengada'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f064'
+offset = 722
+length = 10
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_module'
+cohort = 'no_agricola'
+slot = 2
+module_order = 7
+value = 'declared_quantity'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f065'
+offset = 732
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_module'
+cohort = 'no_agricola'
+slot = 2
+module_order = 7
+value = 'cuota_devengada'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f066'
+offset = 749
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'cuota_devengada_operaciones_corrientes'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f067'
+offset = 766
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'reducciones'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f068'
+offset = 783
+length = 3
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'indice_corrector_actividad_temporada'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f069'
+offset = 786
+length = 5
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'porcentaje_ingreso_cuenta'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f070'
+offset = 791
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'ingreso_cuenta'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f071'
+offset = 808
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'cuotas_soportadas_operaciones_corrientes'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f072'
+offset = 825
+length = 3
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'indice_corrector_actividades_temporada'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f073'
+offset = 828
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'resultado_cuarto_trimestre'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f074'
+offset = 845
+length = 5
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'porcentaje_cuota_minima'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f075'
+offset = 850
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'devolucion_cuotas_soportadas_otros_paises'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f076'
+offset = 867
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'cuota_minima'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f077'
+offset = 884
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'cuota_anual_derivada_regimen_simplificado'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f078'
+offset = 901
+length = 17
+kind = 'casilla'
+casilla_id = '47'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f079'
+offset = 918
+length = 17
+kind = 'casilla'
+casilla_id = '48'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f080'
+offset = 935
+length = 17
+kind = 'casilla'
+casilla_id = '49'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f081'
+offset = 952
+length = 17
+kind = 'casilla'
+casilla_id = '50'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f082'
+offset = 969
+length = 17
+kind = 'casilla'
+casilla_id = '51'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f083'
+offset = 986
+length = 17
+kind = 'casilla'
+casilla_id = '52'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f084'
+offset = 1003
+length = 17
+kind = 'casilla'
+casilla_id = '53'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f085'
+offset = 1020
+length = 17
+kind = 'casilla'
+casilla_id = '54'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f086'
+offset = 1037
+length = 17
+kind = 'casilla'
+casilla_id = '55'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f087'
+offset = 1054
+length = 17
+kind = 'casilla'
+casilla_id = '56'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f088'
+offset = 1071
+length = 17
+kind = 'casilla'
+casilla_id = '57'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f089'
+offset = 1088
+length = 17
+kind = 'casilla'
+casilla_id = '58'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f090'
+offset = 1105
+length = 590
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30302.f091'
+offset = 1695
+length = 12
+kind = 'literal'
+literal = '</T30302000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]

@@ -357,8 +357,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2022.dp30301.f026"
-kind = "literal"
-literal = "00400"
+kind = "casilla"
+casilla_id = "02"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
@@ -399,8 +399,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2022.dp30301.f029"
-kind = "literal"
-literal = "01000"
+kind = "casilla"
+casilla_id = "05"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
@@ -441,8 +441,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2022.dp30301.f032"
-kind = "literal"
-literal = "02100"
+kind = "casilla"
+casilla_id = "08"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
@@ -609,8 +609,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2022.dp30301.f044"
-kind = "literal"
-literal = "00140"
+kind = "casilla"
+casilla_id = "20"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
@@ -651,8 +651,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2022.dp30301.f047"
-kind = "literal"
-literal = "00520"
+kind = "casilla"
+casilla_id = "23"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
