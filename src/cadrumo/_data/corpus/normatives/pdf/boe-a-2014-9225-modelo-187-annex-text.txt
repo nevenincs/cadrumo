@@ -1,0 +1,32 @@
+Declaracion informativa de acciones y participaciones representativas del capital
+o del patrimonio de las instituciones de inversion colectiva y resumen anual de
+retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas
+Fisicas, Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes en
+relacion con las rentas o ganancias patrimoniales obtenidas como consecuencia de
+las transmisiones o reembolsos de esas acciones y participaciones.
+
+Modelo 187
+
+Hoja Resumen
+
+Identificacion:
+NIF del declarante
+Denominacion o razon social del declarante
+Apellidos y nombre (por este orden) de la persona con quien relacionarse
+Telefono de contacto
+
+Ejercicio (con 4 cifras)
+
+Resumen de los datos incluidos en la declaracion:
+
+Numero total de operaciones: 01
+Importe total de las adquisiciones: 02
+Importe total de las enajenaciones: 03
+Importe total de las retenciones e ingresos a cuenta: 04
+
+Declaracion complementaria o sustitutiva:
+Declaracion complementaria por inclusion de datos
+Declaracion sustitutiva
+Numero identificativo de la declaracion anterior
+
+Fecha y firma
