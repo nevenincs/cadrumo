@@ -546,7 +546,17 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
         assert cross_reference.synthetic_data_allowed is False
         assert cross_reference.requires_authentication is True
         assert cross_reference.requires_aeat_authorization is True
-        assert "aeat-modelo-100-procedure" in cross_reference.source_refs
+        # The sede procedure ficha grounds this read only for the revisions it
+        # governs. Its bundled page documents the ejercicio 2025 campaign and
+        # declares applies_from 2025-01-01, so an earlier revision citing it
+        # would claim grounding from a later campaign's page -- which
+        # `_check_revision_scoped_source_windows` refuses at snapshot build.
+        # Those years ground the same read on that year's own Renta manual,
+        # which documents Renta WEB and the consulta of filed declarations.
+        expected_ref = (
+            "aeat-modelo-100-procedure" if year >= 2025 else f"aeat-renta-{year}-manual-parte1"
+        )
+        assert expected_ref in cross_reference.source_refs
         assert_remote_operation_allowed(
             policy,
             RemoteOperation(
