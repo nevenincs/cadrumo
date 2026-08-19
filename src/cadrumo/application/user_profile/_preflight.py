@@ -35,13 +35,6 @@ from ._projections import record_to_path_values
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ModeloRevision
 
-_LEGAL_ENTITY_TYPE = "legal_entity"
-_PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
-_PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
-_PROFILE_NAME_PATH = "identity.name"
-_PROFILE_SURNAMES_PATH = "identity.surnames"
-
-
 def build_profile_preflight_requirement(
     path: str,
     *,
