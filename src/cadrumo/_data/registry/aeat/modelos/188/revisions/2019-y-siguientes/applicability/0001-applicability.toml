@@ -5,4 +5,4 @@ required_payer_fact = "pays_capital_income_with_retencion"
 applicable_reason = "Modelo 188 (resumen anual de retenciones sobre capitalizacion y seguros de vida): el contribuyente satisface rendimientos del capital mobiliario de operaciones de capitalizacion o seguros sujetos a retencion y presenta el resumen anual."
 not_applicable_reason = "Modelo 188 no aplica: solo corresponde a quien satisface rendimientos de capitalizacion o seguros sujetos a retencion."
 cuota_bearing = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-1999-11-17:apartado-quinto"]

@@ -3,7 +3,7 @@ id = "modelo-188-total"
 target_casilla_id = "05"
 expression = { op = "add", args = [ { casilla_id = "04" } ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]

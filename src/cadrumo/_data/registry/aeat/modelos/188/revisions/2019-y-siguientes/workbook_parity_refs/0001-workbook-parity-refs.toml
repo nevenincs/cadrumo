@@ -5,6 +5,6 @@ fixture_id = "modelo-188-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-eha-3377-2011:art-1"]
+legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["boe-modelo-188-form-layout"]
 
