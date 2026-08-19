@@ -17,7 +17,6 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core.identity import InvoiceId, TransactionId
 from ...domain.invoices import (
     InvoiceCatalogue,
-    InvoiceCatalogueRepositoryProtocol,
     InvoiceError,
     ReconciliationSuggestion,
     link_transaction,
@@ -25,7 +24,6 @@ from ...domain.invoices import (
 )
 from ...domain.transactions import (
     TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
     TransactionError,
     link_invoice,
 )
@@ -123,8 +121,13 @@ def reconcile_invoice_repositories(
     *,
     bucket_id: str,
     apply: bool = False,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    # rationale: both repositories are concrete because this writer calls the
+    # adapter-only co-commit escape hatches (to_secure_object_write /
+    # save_with_secure_object_writes), absent from the domain protocols. The
+    # sibling linking writer carries the identical note for the identical
+    # reason.
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> InvoiceReconciliationResult:
     """Reconcile persisted invoice and transaction catalogues and return an :class:`InvoiceReconciliationResult`.
 
@@ -140,6 +143,14 @@ def reconcile_invoice_repositories(
         apply=apply,
     )
     if apply and result.applied:
-        invoices_repo.save(result.invoices)
-        transactions_repo.save(result.transactions)
+        # ONE all-or-nothing write, not two. Reconciliation is what establishes
+        # and removes the invoice/transaction links, so it is the last place
+        # that can afford to persist one side without the other: two
+        # independent saves leave a crash between them resting in exactly the
+        # one-sided state verify_link_consistency reports, and the sibling
+        # linking writer already commits both together for that reason.
+        transactions_repo.save_with_secure_object_writes(
+            result.transactions,
+            (invoices_repo.to_secure_object_write(result.invoices),),
+        )
     return result

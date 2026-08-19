@@ -22,6 +22,7 @@ and the :class:`~domain.invoices.InvoicePersistenceError` boundary error.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
@@ -195,6 +196,39 @@ class InvoiceCatalogueRepository:
         self._assert_catalogue_bucket(catalogue, direction="saved through")
         self._storage.save(catalogue)
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
+
+    def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
+        """Apply ``mutation`` to the stored catalogue as one guarded unit of work.
+
+        The catalogue is a SINGLETON row, so adding one invoice is really
+        read-whole-catalogue, rebuild, write whole catalogue. Two operators
+        adding DIFFERENT invoices at once both read the same catalogue and the
+        later write discards the earlier invoice -- silently, because the
+        duplicate-identity check never sees the other invoice. A dropped
+        invoice under-declares, which is the failure this repository exists to
+        make impossible.
+
+        The bucket-ownership guard runs on the mutation's OWN result rather
+        than once before it, so a mutation that introduces a foreign invoice is
+        refused on every attempt instead of only the first.
+
+        Args:
+            mutation: Builds the next catalogue from the current one. Raising
+                refuses the whole mutation, unretried.
+
+        Returns:
+            The catalogue as written.
+        """
+
+        def _guarded(current: InvoiceCatalogue) -> InvoiceCatalogue:
+            self._assert_catalogue_bucket(current, direction="read from")
+            updated = mutation(current)
+            self._assert_catalogue_bucket(updated, direction="saved through")
+            return updated
+
+        catalogue = self._storage.mutate(_guarded)
+        _log.debug("mutated invoice catalogue (%d invoices)", len(catalogue.invoices))
+        return catalogue
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.

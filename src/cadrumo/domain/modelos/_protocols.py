@@ -23,7 +23,10 @@ from ._participation_index import TransactionRevisionParticipationIndex
 from ._verification_report import VerificationReportCatalogue
 from ._work_unit import WorkUnitCatalogue
 
-if TYPE_CHECKING:  # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
     from ...core import SecureObjectWrite
 
 
@@ -51,6 +54,17 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
+        ...
+
+    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> WorkUnitCatalogue:
+        """Apply ``mutation`` to the stored catalogue as one revision-guarded unit of work.
+
+        Part of the port because the application NEEDS it, not merely because
+        the adapter offers it: the catalogue is a singleton row, so any caller
+        changing one work unit rewrites all of them, and doing that through
+        ``save`` discards whatever a concurrent caller wrote. A stand-in that
+        cannot offer this cannot stand in on those paths.
+        """
         ...
 
     def save_with_secure_object_writes(

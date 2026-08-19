@@ -40,6 +40,10 @@ from .....application.live import (
     SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
+from .....application.modelo import (
+    RecipientFingerprintRegistryRepository,
+    RecipientReplayGuardRepository,
+)
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -145,7 +149,7 @@ from ....outbound.google import (
     OAuthToken,
 )
 from ....outbound.google import _session_store as google_session_store
-from ....outbound.llm import LLMCache, UsageRecorder
+from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
@@ -176,6 +180,7 @@ __all__ = [
     "CalculationObservationRepository",
     "CalculationRevisionCatalogueRepository",
     "Callable",
+    "EvidenceConsentLedger",
     "ExpedienteNotFoundError",
     "FiledDeclaracionObservationStore",
     "InvoiceCatalogue",
@@ -185,11 +190,14 @@ __all__ = [
     "JustificanteRepository",
     "LLMCache",
     "LLMProvider",
+    "LLMRunTelemetryRecorder",
     "ModeloAmendmentRepository",
     "ModeloDraftRepository",
     "ModeloHistoryRepository",
     "ModeloRecordCatalogueRepository",
     "Path",
+    "RecipientFingerprintRegistryRepository",
+    "RecipientReplayGuardRepository",
     "RegistryModeloObservation",
     "RepairRemediationDecisionRepository",
     "SpendingCategory",

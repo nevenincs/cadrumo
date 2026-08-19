@@ -57,6 +57,7 @@ from ...domain.invoices import (
     numeric_iva_rate_slots,
 )
 from ...domain.iva import InvoiceKind, IvaCategory
+from ._catalogue_mutation import mutate_catalogue
 
 
 class CatalogueInvoiceCreateResult(BaseModel):
@@ -484,17 +485,27 @@ def create_catalogue_invoice(
     if bucket_id is None:
         raise InvoiceValidationError("a catalogue invoice must declare its bucket_id before persistence")
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    catalogue = repo.load()
-    if invoice.invoice_id in catalogue:
-        raise InvoiceValidationError(
-            "an invoice with the same identity already exists in the catalogue",
-            translated_message="application.invoices.creation.errors.duplicate_invoice",
-            context={"invoice_id": invoice.invoice_id},
-        )
-    updated = dict(catalogue.invoices)
-    updated[invoice.invoice_id] = invoice
-    new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
-    repo.save(new_catalogue)
+
+    def _add(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
+        """Rebuild the catalogue with this invoice, refusing an identity it already holds."""
+        if invoice.invoice_id in catalogue:
+            raise InvoiceValidationError(
+                "an invoice with the same identity already exists in the catalogue",
+                translated_message="application.invoices.creation.errors.duplicate_invoice",
+                context={"invoice_id": invoice.invoice_id},
+            )
+        updated = dict(catalogue.invoices)
+        updated[invoice.invoice_id] = invoice
+        return InvoiceCatalogue.model_validate({"invoices": updated})
+
+    # Guarded rather than load-then-save: the catalogue is one encrypted row, so
+    # two operators adding DIFFERENT invoices at once would both read the same
+    # catalogue and the later write would drop the earlier invoice. Nothing
+    # would report it -- the duplicate check above cannot see an invoice it
+    # never read -- and a dropped invoice under-declares. Re-running the
+    # duplicate check on each attempt is the point: it must be judged against
+    # the catalogue actually being written to, not the one first read.
+    new_catalogue = mutate_catalogue(repo, _add)
     # Emitted AFTER the save, so the audit trail never records a creation that
     # did not persist. The reverse order would leave an event pointing at an
     # invoice that is not there, which is worse than a missing event: it reads

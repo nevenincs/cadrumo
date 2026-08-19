@@ -61,7 +61,10 @@ from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventHistoryPe
 from ..storage import BUCKET_EVENT_HISTORY_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
@@ -219,6 +222,56 @@ class BucketEventHistoryRepository:
                 persist.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
+
+    def append_guarded(
+        self,
+        appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
+        *,
+        attempts: int = 4,
+    ) -> BucketEventHistoryCatalogue:
+        """Append through ``appender`` as one revision-guarded unit of work.
+
+        The event history is a SINGLETON row, so appending one event rewrites
+        the whole catalogue. Performed unguarded, two callers recording
+        DIFFERENT transitions both read the same catalogue and the later write
+        discards the earlier event. Nothing detects it: the events are
+        content-addressed, so the survivors all look internally consistent and
+        the missing one leaves no gap to notice. On an append-only audit trail
+        that is the worst shape of loss -- the record reads as complete.
+
+        The write carries the revision the catalogue was READ at, so the
+        substrate refuses it if the row moved, and ``appender`` is re-applied to
+        the newly-current catalogue. It is therefore called once per attempt and
+        MUST be a pure function of what it is handed.
+
+        Args:
+            appender: Builds the next catalogue from the current one.
+            attempts: Maximum reads before the contention is surfaced.
+
+        Returns:
+            The catalogue as written.
+
+        Raises:
+            SecureObjectRevisionConflictError: Contention persisted across every
+                attempt.
+        """
+        from ..storage import SecureObjectRevisionConflictError
+
+        last_conflict: SecureObjectRevisionConflictError | None = None
+        for _attempt in range(attempts):
+            current, revision_id = self.load_revisioned()
+            updated = appender(current)
+            try:
+                self._objects.save_many(
+                    (self.to_secure_object_write(updated, expected_revision_id=revision_id),),
+                )
+            except SecureObjectRevisionConflictError as exc:
+                last_conflict = exc
+                continue
+            return updated
+        if last_conflict is not None:
+            raise last_conflict
+        raise AssertionError("append_guarded exhausted without a conflict")
 
     def to_secure_object_write(
         self,

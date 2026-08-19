@@ -572,72 +572,6 @@ source_refs = ["aeat-dr-303-2023"]
 export_refs = ["m303-2023.dp30301.f048"]
 
 [[revisions.2023.casillas]]
-id = "165"
-number = "165"
-section = ["iva", "regimen_general", "devengado"]
-data_type = "money"
-semantic_role = "dr303_165"
-continuidad_id = "dr303-165"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
-
-[[revisions.2023.casillas]]
-id = "167"
-number = "167"
-section = ["iva", "regimen_general", "devengado"]
-data_type = "money"
-semantic_role = "dr303_167"
-continuidad_id = "dr303-167"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
-
-[[revisions.2023.casillas]]
-id = "168"
-number = "168"
-section = ["iva", "regimen_general", "devengado"]
-data_type = "money"
-semantic_role = "dr303_168"
-continuidad_id = "dr303-168"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
-
-[[revisions.2023.casillas]]
-id = "169"
-number = "169"
-section = ["iva", "regimen_general", "devengado"]
-data_type = "ratio"
-semantic_role = "dr303_169"
-continuidad_id = "dr303-169"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
-
-[[revisions.2023.casillas]]
-id = "170"
-number = "170"
-section = ["iva", "recargo_equivalencia", "devengado"]
-data_type = "money"
-semantic_role = "dr303_170"
-continuidad_id = "dr303-170"
-required = false
-# Recargo de equivalencia cuota for the rung whose Tipo [169] admits "00026" and
-# "00050" -- the LIVA art. 161.3 super-reducido 0,5 % and its RDL 4/2024 0,26 %
-# transitional companion. Both land in this one rung, so the transitional rates
-# do not change this destination. Section corrected from regimen_general: the
-# design names this row Recargo equivalencia.
-input_kind = "bound"
-binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
-
-[[revisions.2023.casillas]]
 id = "01"
 number = "01"
 section = ["iva", "regimen_general", "devengado"]
@@ -872,7 +806,8 @@ data_type = "money"
 semantic_role = "dr303_18"
 continuidad_id = "dr303-18"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
 export_refs = ["m303-2023.dp30301.f051"]

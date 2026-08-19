@@ -149,3 +149,50 @@ def test_a_duplicate_pair_is_still_refused_and_not_retried() -> None:
         InventoryLedgerRepository().create(_ledger("retail", opening="900.00"))
 
     assert len(InventoryLedgerRepository().load().ledgers) == 1
+
+def test_a_concurrent_create_is_not_discarded_by_a_removal() -> None:
+    """Removal rewrites the whole document too, so the seam must survive it.
+
+    An operator deleting ``retail`` must not take ``wholesale`` with it because
+    that ledger was created while the removal was in flight.
+
+    Like its siblings above, this reaches the interleaving window through the
+    seam directly, because the public verb exposes none. It therefore measures
+    the GUARD and cannot see whether ``remove`` still routes through it --
+    reverting the verb to an inline load-and-save leaves this green. The
+    routing gate is the instrument for that half, and ``remove`` is enrolled in
+    it for exactly this reason.
+    """
+    InventoryLedgerRepository().create(_ledger("retail", opening="150.00"))
+
+    repo = InventoryLedgerRepository()
+    interloper_written = False
+
+    def _remove_retail_while_wholesale_lands(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+        nonlocal interloper_written
+        if not interloper_written:
+            interloper_written = True
+            InventoryLedgerRepository().create(_ledger("wholesale", opening="250.00"))
+        return InventoryLedgerDocument(
+            ledgers=tuple(item for item in current.ledgers if item.actividad_id != "retail"),
+        )
+
+    repo._storage.mutate(_remove_retail_while_wholesale_lands)
+
+    pairs = [(item.actividad_id, item.year) for item in InventoryLedgerRepository().load().ledgers]
+    assert pairs == [("wholesale", _YEAR)]
+
+
+def test_removing_a_ledger_that_is_already_gone_refuses_as_absent() -> None:
+    """A second removal of the same ledger refuses rather than reporting success.
+
+    Sequential rather than interleaved, deliberately: this pins the refusal
+    itself, which is what a caller re-judging the absence check on a retry
+    depends on. Without it a retry could find nothing to remove and report a
+    deletion the call never performed.
+    """
+    InventoryLedgerRepository().create(_ledger("retail", opening="150.00"))
+    InventoryLedgerRepository().remove("retail", year=_YEAR)
+
+    with pytest.raises(InventoryLedgerError):
+        InventoryLedgerRepository().remove("retail", year=_YEAR)

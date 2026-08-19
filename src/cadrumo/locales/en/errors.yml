@@ -55,8 +55,9 @@ errors:
       Check that a credential store is installed and active.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
-    auth_storage_master_key_unavailable: The master key could not be acquired from
-      any provider. Check the keychain or the file-fallback passphrase.
+    auth_storage_master_key_unavailable: This profile session was resumed and carries
+      only its data key; the key-encryption material is login-scoped. Run `aeat config
+      login` to re-authenticate.
     clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
       its checksum letter does not match its digits. Check the final letter on your
       document and try again.

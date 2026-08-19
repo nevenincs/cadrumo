@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.buckets import BucketEventType
@@ -335,8 +335,18 @@ class TestBucketIsolation:
     def test_requested_bucket_must_match_active_runtime(self, secure_engine: TestRuntimeProfile) -> None:
         svc = _make_svc(secure_engine)
 
-        with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+        # The typed readiness code, not prose: the refusal is locale-neutral, so
+        # a regex over its message matches a translation key and would pass on
+        # any unrelated storage refusal just as readily.
+        with pytest.raises(StorageValidationError) as raised:
             svc.list_all(bucket_id=_OTHER_BUCKET_ID)
+
+        assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] in {
+            StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value,
+            StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value,
+        }
 
     def test_ledgers_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:

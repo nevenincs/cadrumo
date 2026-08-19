@@ -222,6 +222,7 @@ adapters:
             regularisation register.
       inventory:
         errors:
+          inventory_ledger_absent: That inventory ledger does not exist.
           inventory_ledger_already_exists: That inventory ledger already exists.
           inventory_ledger_not_found: The requested inventory ledger was not found.
           load_inventory_ledger_failed: Unable to load the encrypted inventory ledger.

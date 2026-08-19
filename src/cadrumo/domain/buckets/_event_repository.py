@@ -14,7 +14,7 @@ domain error, the pure helper, and the primitive that composes them.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -219,8 +219,32 @@ def emit_bucket_event(
         payload=payload,
         payload_version=payload_version,
     )
-    repository.save(append_bucket_event(repository.load(), event))
+    _append_through_the_guard(repository, lambda current: append_bucket_event(current, event))
     return event
+
+
+def _append_through_the_guard(
+    repository: BucketEventHistoryRepositoryProtocol,
+    appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
+) -> None:
+    """Append through the repository's revision guard when it offers one.
+
+    The catalogue is a singleton row, so appending one event rewrites all of
+    them and two concurrent emitters lose one another's event. The loss is
+    undetectable after the fact: the events are content-addressed, so every
+    survivor is internally consistent and the missing one leaves no gap. An
+    append-only audit trail that silently drops entries is worse than one that
+    refuses, because it still reads as complete.
+
+    The narrow port promises only ``exists``/``load``/``save``, so an injected
+    alternative may offer no guard; that fallback keeps the old behaviour and
+    its exposure, and is not reachable from the production repository.
+    """
+    guarded = getattr(repository, "append_guarded", None)
+    if guarded is not None:
+        guarded(appender)
+        return
+    repository.save(appender(repository.load()))
 
 
 def emit_bucket_events(
@@ -255,10 +279,14 @@ def emit_bucket_events(
     """
     if not events:
         return
-    catalogue = repository.load()
-    for event in events:
-        catalogue = append_bucket_event(catalogue, event)
-    repository.save(catalogue)
+    def _append_all(current: BucketEventHistoryCatalogue) -> BucketEventHistoryCatalogue:
+        """Append every event to whichever catalogue this attempt was handed."""
+        catalogue = current
+        for event in events:
+            catalogue = append_bucket_event(catalogue, event)
+        return catalogue
+
+    _append_through_the_guard(repository, _append_all)
 
 
 __all__ = [

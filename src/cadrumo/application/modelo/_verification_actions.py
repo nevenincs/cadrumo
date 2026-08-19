@@ -96,6 +96,7 @@ from ...domain.modelos import (
     VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
+    WorkUnitCatalogue,
     WorkUnitCatalogueRepositoryProtocol,
     derive_verification_report_id,
     upsert_calculation_revision,
@@ -1134,17 +1135,29 @@ def _repair_verified_revision_current_pointer(
         return
     if latest.current_calculation_revision_id is not None:
         return
-    work_unit_repository.save(
-        upsert_work_unit(
-            work_units,
-            latest.model_copy(
+    # Guarded: stamping this pointer rewrites the WHOLE singleton catalogue, so
+    # a work unit another operator created or advanced in the interim would be
+    # discarded by a repair that was only meant to fill in one pointer. The
+    # already-set and absent checks above ran against the catalogue this call
+    # read; re-running them inside the mutation is what makes the retry honest,
+    # because a concurrent verification may have set the very pointer this
+    # repair exists to fill.
+    def _stamp(current: WorkUnitCatalogue) -> WorkUnitCatalogue:
+        """Fill in the pointer, unless the catalogue being written already has one."""
+        present = current.get(work_unit.work_unit_id)
+        if present is None or present.current_calculation_revision_id is not None:
+            return current
+        return upsert_work_unit(
+            current,
+            present.model_copy(
                 update={
                     "current_calculation_revision_id": calculation_revision_id,
                     "updated_at": verified_at,
                 },
             ),
-        ),
-    )
+        )
+
+    work_unit_repository.mutate(_stamp)
 
 
 def _build_participation_writes(

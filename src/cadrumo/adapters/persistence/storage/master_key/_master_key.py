@@ -170,23 +170,23 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
         # downgraded the check silently and admitted the published key
         # on profiles that may have held real tax IDs.
         raise UnsecuredModeRefusedError(
-            "unsecured master-key backend cannot read the active profile bucket DB "
+            "unsecured storage backend cannot read the active profile bucket DB "
             "to prove the profile is synthetic; "
-            "use the file or keyring backend before decrypting or persisting records.",
+            "it is not safe for real data, so open the profile through its own password.",
         ) from exc
     for (payload_wire,) in rows:
         try:
             payload_plain = decrypt_encrypted_bytes_column(bytes(payload_wire))
         except (DecryptionError, TypeError, ValueError) as exc:
             raise UnsecuredModeRefusedError(
-                "unsecured master-key backend cannot prove the active profile is synthetic; "
-                "use the file or keyring backend before decrypting or persisting records.",
+                "unsecured storage backend cannot prove the active profile is synthetic; "
+                "it is not safe for real data, so open the profile through its own password.",
             ) from exc
         tax_ids = _extract_profile_tax_ids(payload_plain)
         if tax_ids is None:
             raise UnsecuredModeRefusedError(
-                "unsecured master-key backend cannot prove the active profile is synthetic; "
-                "use the file or keyring backend before decrypting or persisting records.",
+                "unsecured storage backend cannot prove the active profile is synthetic; "
+                "it is not safe for real data, so open the profile through its own password.",
             )
         for tax_id in tax_ids:
             refuse_unsecured_with_real_nif(tax_id, provider=UnsecuredMasterKeyProvider())
@@ -371,7 +371,7 @@ def refuse_unsecured_with_real_nif(
         return
     if looks_like_real_tax_id(tax_id):
         raise UnsecuredModeRefusedError(
-            "unsecured master-key backend is incompatible with a real tax id; either remove "
+            "unsecured storage backend is incompatible with a real tax id; either remove "
             "CADRUMO_ALLOW_UNENCRYPTED=1 / cadrumo_secret_store_backend=unsecured, "
             "or use a synthetic placeholder (e.g. '00000000T').",
         )

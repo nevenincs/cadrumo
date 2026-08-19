@@ -49,6 +49,8 @@ import pytest
 
 from ..assets import AssetsLedgerRepository
 from ..inventory import InventoryLedgerRepository
+from ..invoices import InvoiceCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -65,11 +67,20 @@ _BYPASSING_WRITE_PATHS = (
     "to_secure_object_write(",
 )
 
+#: The guarded seam an APPLICATION service reaches, one layer above the
+#: repository's own. The invoice-catalogue services own their read-modify-write
+#: rather than delegating to a repository verb, and all three share one helper
+#: so they cannot drift into three different answers.
+_GUARDED_SERVICE_SEAM = "mutate_catalogue("
+
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
     ("AssetsLedgerRepository.add", AssetsLedgerRepository.add),
     ("InventoryLedgerRepository.create", InventoryLedgerRepository.create),
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
+    ("InventoryLedgerRepository.remove", InventoryLedgerRepository.remove),
+    ("InvoiceCatalogueRepository.mutate", InvoiceCatalogueRepository.mutate),
+    ("WorkUnitCatalogueRepository.mutate", WorkUnitCatalogueRepository.mutate),
 )
 _VERB_IDS = tuple(name for name, _fn in _GUARDED_VERBS)
 
@@ -102,6 +113,51 @@ def test_write_verb_carries_no_unguarded_write_path(name: str, verb: Callable[..
     assert not reintroduced, (
         f"{name} reaches storage directly via {reintroduced}; every write to a profile "
         f"singleton must go through {_GUARDED_SEAM} so it carries the revision it was read at"
+    )
+
+
+def _catalogue_services() -> tuple[tuple[str, Callable[..., object]], ...]:
+    """The application services that mutate the invoice catalogue in place."""
+    from .....application.invoices._creation import create_catalogue_invoice
+    from .....application.invoices._lifecycle import remove_catalogue_invoice, update_catalogue_invoice
+
+    return (
+        ("create_catalogue_invoice", create_catalogue_invoice),
+        ("remove_catalogue_invoice", remove_catalogue_invoice),
+        ("update_catalogue_invoice", update_catalogue_invoice),
+    )
+
+
+@pytest.mark.parametrize("name", [entry[0] for entry in _catalogue_services()])
+def test_the_invoice_catalogue_services_route_through_the_guarded_helper(name: str) -> None:
+    """A catalogue service must not rebuild and save the singleton itself.
+
+    These are the singleton mutators that live in the APPLICATION layer rather
+    than behind a repository verb, so the repository-seam gates above cannot see
+    them. They were the last unguarded singleton writes: the catalogue composes
+    the enveloped persistence, which carried no guarded seam until one was
+    ported to it.
+
+    Removal and correction need the guard as much as creation does, and that is
+    easy to miss: each rewrites the WHOLE catalogue, so deleting or correcting
+    one invoice could discard an invoice created in the interim -- for an
+    operator who was only touching something else.
+
+    Asserted on spelling, with the same limits the module docstring states.
+    ``test_invoices_concurrent_create`` is what measures the behaviour.
+    """
+    verb = dict(_catalogue_services())[name]
+    source = inspect.getsource(verb)
+
+    assert _GUARDED_SERVICE_SEAM in source, (
+        f"{name} does not route through {_GUARDED_SERVICE_SEAM}; a service that loads, "
+        f"rebuilds and saves the catalogue itself drops a concurrently written invoice, "
+        f"which under-declares"
+    )
+    reintroduced = [path for path in ("repo.save(", "repository.save(") if path in source]
+    assert not reintroduced, (
+        f"{name} reaches storage directly via {reintroduced}; the guarded helper is the "
+        f"only write path for a singleton catalogue"
     )
 
 
