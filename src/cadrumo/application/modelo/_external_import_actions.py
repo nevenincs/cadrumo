@@ -199,7 +199,10 @@ def import_external_filing_evidence[CasillaKey](
         filing_instance_evidence=None,
         m303_regimen_simplificado_annual_summary_handoff=None,
     )
-    revisions = cr_repo.load()
+    # Revisioned: both catalogues are composed into the co-commit below, so
+    # neither can use a self-committing mutation, and an unguarded read would
+    # write the whole singleton row back over a concurrent writer's entry.
+    revisions, revisions_revision_id = cr_repo.load_revisioned()
     if revision_id in revisions:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_duplicate_revision",
@@ -232,7 +235,7 @@ def import_external_filing_evidence[CasillaKey](
         filed_by=actor.strip(),
     )
 
-    filing_catalogue = fr_repo.load()
+    filing_catalogue, filing_revision_id = fr_repo.load_revisioned()
     prior_current = filing_catalogue.current_for(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
@@ -298,10 +301,11 @@ def import_external_filing_evidence[CasillaKey](
     fr_repo.save_with_secure_object_writes(
         updated_filing_catalogue,
         (
-            cr_repo.to_secure_object_write(revisions),
+            cr_repo.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
             wu_repo.to_secure_object_write(advanced_work_units),
             _bucket_event_write(bv_repo, (imported_event,)),
         ),
+        expected_revision_id=filing_revision_id,
     )
 
     return new_filing

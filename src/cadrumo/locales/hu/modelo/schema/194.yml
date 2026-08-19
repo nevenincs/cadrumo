@@ -7,15 +7,26 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                pozitív.
+              label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
+            '02':
+              help: A pozitív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések alapja
             '03':
-              help: null
-              label: Levonások és előlegfizetések adóalapja
+              help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
+                összege.
+              label: Levonások és előlegfizetések
             '04':
-              help: null
-              label: Bejelentett levonások és előlegfizetések
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                negatív.
+              label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
             '05':
-              help: null
-              label: Az éves összesítő teljes levonása
+              help: A negatív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések negatív alapja
           construct:
             modelo-194-calculation-construct:
               field:

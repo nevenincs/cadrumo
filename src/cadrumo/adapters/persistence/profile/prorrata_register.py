@@ -179,14 +179,29 @@ class ProrrataRegisterRepository:
             self._storage.object_key,
         )
 
-    def to_secure_object_write(self, register: ProrrataRegister) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[ProrrataRegister, str]:
+        """Return the register and the revision id it was read at.
+
+        The read a guarded co-commit needs: this register is composed into the
+        calculate batch, so it cannot use a self-committing mutation, and an
+        unguarded write puts the whole singleton row back over a sector entry
+        another writer added in between.
+        """
+        return self._storage.load_revisioned()
+
+    def to_secure_object_write(
+        self,
+        register: ProrrataRegister,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``register`` without committing it.
 
         The filing persistence path co-emits the settled prorrata register with
         the filed revision and filing catalogue in one secure-object transaction,
         mirroring the participation-index write pattern.
         """
-        return self._storage.to_secure_object_write(register)
+        return self._storage.to_secure_object_write(register, expected_revision_id=expected_revision_id)
 
     def upsert_entry(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
         """Atomically add or replace ``entry`` by its ``(ejercicio, sector_id)`` key.

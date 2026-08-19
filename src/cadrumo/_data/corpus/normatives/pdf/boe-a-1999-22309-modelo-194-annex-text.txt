@@ -1,0 +1,45 @@
+Impuesto sobre la Renta de las Personas Fisicas
+Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes
+(establecimientos permanentes)
+
+Retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas
+derivadas de la transmision, amortizacion, reembolso, canje o conversion de
+cualquier clase de activos representativos de la captacion y utilizacion de
+capitales ajenos.
+
+Modelo 194
+
+Resumen anual en euros
+
+Hoja-resumen
+
+Declarante:
+N.I.F.
+Telefono de contacto
+Apellidos y nombre (por este orden), razon social o denominacion
+Domicilio fiscal
+
+Ejercicio y modalidad de presentacion:
+Ejercicio
+Modalidad de presentacion: Impreso / Soporte individual / Soporte colectivo
+
+Declaracion complementaria o sustitutiva:
+Declaracion complementaria
+Declaracion sustitutiva
+Numero identificativo de la declaracion anterior
+
+Resumen de los datos incluidos en la declaracion:
+
+N. Total de Perceptores: 01
+Base retenciones e ingresos a cuenta: 02
+Retenciones e ingresos a cuenta: 03
+N. Total de Perceptores: 04
+Base retenciones e ingresos a cuenta: 05
+
+Presentacion en soporte colectivo: datos adicionales:
+
+Numero total de personas o entidades declarantes incluidas en el soporte colectivo: 06
+Numero total de perceptores incluidos en el soporte colectivo: 07
+Numero identificativo de la hoja-resumen correspondiente al presentador: 08
+
+Fecha y firma

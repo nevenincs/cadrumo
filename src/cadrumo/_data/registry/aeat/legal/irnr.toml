@@ -779,13 +779,13 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
-bytes = 141184
-retrieved_at = 2026-05-27
-published_at = 2024-01-31
-applies_from = 2024-02-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+corpus_path = "corpus/normatives/html/orden-eha-3290-2008-consolidada.html"
+sha256 = "4f7ae85ad8145fae015debe5294210bd49a021d18284b62ce76503c6d6cf09cf"
+bytes = 298648
+retrieved_at = 2026-08-19
+published_at = 2008-11-17
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497"
 review_status = "reviewed"
 
 [sources."aeat-dr-216-2024"]
@@ -838,13 +838,13 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
-bytes = 141184
-retrieved_at = 2026-05-27
-published_at = 2024-01-31
-applies_from = 2024-02-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+corpus_path = "corpus/normatives/html/orden-eha-3290-2008-consolidada.html"
+sha256 = "4f7ae85ad8145fae015debe5294210bd49a021d18284b62ce76503c6d6cf09cf"
+bytes = 298648
+retrieved_at = 2026-08-19
+published_at = 2008-11-17
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497"
 review_status = "reviewed"
 
 [sources."aeat-dr-296-2024"]

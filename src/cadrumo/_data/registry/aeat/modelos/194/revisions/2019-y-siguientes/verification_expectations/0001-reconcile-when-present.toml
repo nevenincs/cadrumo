@@ -1,14 +1,17 @@
-# First reconcile-when-present verification for Modelo 194 revision
-# 2019-y-siguientes: the computed casilla 05 is value-reconciled
-# against the engine WHEN the filing prints it (a filed-vs-computed
-# divergence surfaces a discrepancy), but is EXCLUDED from the coverage
-# denominator (min_coverage = 0), so enrollment can never lower coverage
-# or flip a legitimate filing's verdict. Grounded in the casilla's own
-# declared legal_refs/source_refs.
+# Reconcile-when-present for Modelo 194 revision 2019-y-siguientes. The
+# hoja-resumen prints five declaration boxes and every one is operator input, so
+# none is engine-computed: each is reconciled against the filing WHEN the filing
+# prints it, and all are EXCLUDED from the coverage denominator
+# (min_coverage = 0), so enrollment can never lower coverage or flip a
+# legitimate filing's verdict.
 [[revisions."2019-y-siguientes".verification_expectations]]
 id = "modelo-194-2019-y-siguientes-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
+    "01",
+    "02",
+    "03",
+    "04",
     "05",
 ]
 tolerance = "0.01"
@@ -16,4 +19,4 @@ rounding = "money-2"
 min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-layout"]
+source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-text", "boe-modelo-194-form-layout"]

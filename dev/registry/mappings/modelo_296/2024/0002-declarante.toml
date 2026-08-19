@@ -152,7 +152,7 @@ record_identity = "PDF record design"
 [[entries]]
 export_field_id = "m296-2024.declarante.f013"
 kind = "casilla"
-casilla_id = "03"
+casilla_id = "02"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -164,7 +164,7 @@ record_identity = "PDF record design"
 [[entries]]
 export_field_id = "m296-2024.declarante.f014"
 kind = "casilla"
-casilla_id = "04"
+casilla_id = "03"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -176,7 +176,7 @@ record_identity = "PDF record design"
 [[entries]]
 export_field_id = "m296-2024.declarante.f015"
 kind = "casilla"
-casilla_id = "04"
+casilla_id = "03"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -188,7 +188,7 @@ record_identity = "PDF record design"
 [[entries]]
 export_field_id = "m296-2024.declarante.f016"
 kind = "casilla"
-casilla_id = "05"
+casilla_id = "04"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -200,7 +200,7 @@ record_identity = "PDF record design"
 [[entries]]
 export_field_id = "m296-2024.declarante.f017"
 kind = "casilla"
-casilla_id = "05"
+casilla_id = "04"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]

@@ -2,15 +2,26 @@
 # periodic sibling modelo 216 keys its own: a positive base subject to retencion
 # with nothing declared as retained is a real observation about the filing.
 #
-# This family was briefly dispositioned inapplicable on the premise that casilla
-# 03 mixes rentas sometidas a retencion with rentas lawfully NOT sometidas, which
-# would have made any antecedent fire on the exempt population. That premise was
-# wrong and the disposition is withdrawn. AEAT's own label for casilla 03 is
+# This family was briefly dispositioned inapplicable on the premise that the base
+# casilla mixes rentas sometidas a retencion with rentas lawfully NOT sometidas,
+# which would have made any antecedent fire on the exempt population. That premise
+# was wrong and the disposition is withdrawn. AEAT's own label for the box is
 # "Base retenciones e ingresos a cuenta" -- the base OF the retenciones, not a
 # mixed income total -- and the 2024 diseño prints the same words over the
-# corresponding perceptor field. Casilla 04 is "Retenciones e ingresos a cuenta
-# declarados". The antecedent is therefore already scoped to the sometidas side,
-# exactly as modelo 216's casilla 10 is.
+# corresponding perceptor field. The antecedent is therefore already scoped to the
+# sometidas side, exactly as modelo 216's casilla 10 is.
+#
+# The BOX NUMBERS this predicate names were 03 and 04 and are now 02 and 03. That
+# is a correction, not a re-scoping: the printed hoja-resumen (ANEXO II of Orden
+# EHA/3290/2008) numbers the perceptor count 01, the base 02, the retenciones 03
+# and the retenciones INGRESADAS 04, and the registry had every monetary box one
+# place too high. The reasoning above always described the base and the
+# retenciones, and it still does.
+#
+# Box 04, retenciones ingresadas, is deliberately NOT the consequent. It is a
+# filtered subset of box 03 -- only those perceptores whose CLAVE is 3 to 25, or
+# whose CLAVE is 1 or 2 with PAGO = 1 -- so a declarante may lawfully report less
+# there than in 03, and firing on that difference would be noise.
 #
 # ADVISORY, not BLOCKING, and for modelo 216's stated reason: implies_nonzero
 # holds trivially when the antecedent is at or below zero, so a declarante with
@@ -19,6 +30,6 @@
 
 [[revisions."2024-y-siguientes".verification_predicates]]
 predicate_id = "modelo-296-retenciones-declaradas-cuando-base-positiva"
-expression = 'implies_nonzero(["03", "04"])'
+expression = 'implies_nonzero(["02", "03"])'
 finding_kind = "ADVISORY"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]

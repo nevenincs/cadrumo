@@ -1,0 +1,58 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["resumen"]
+data_type = "integer"
+semantic_role = "capital_ajeno_resumen_perceptores_base_positiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The hoja-resumen prints the perceptor count twice, once for perceptores whose base de retenciones is positive (box 01) and once for those whose base is negative (box 04); the two counts are distinct declared figures, not a repeated role."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capital_ajeno_resumen_base_positiva"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capital_ajeno_resumen_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["resumen"]
+data_type = "integer"
+semantic_role = "capital_ajeno_resumen_perceptores_base_negativa"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Counterpart of box 01: perceptores whose base de retenciones is negative. The record design carries both counts separately, at offsets 136 and 175."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capital_ajeno_resumen_base_negativa"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]

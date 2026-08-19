@@ -7,15 +7,18 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
-            '03':
-              help: null
+            '02':
+              help: Suma algebraica de les bases de retenció dels registres de perceptor.
               label: Base de retencions i ingressos a compte
+            '03':
+              help: Suma de les retencions i ingressos a compte dels registres de
+                perceptor.
+              label: Retencions i ingressos a compte
             '04':
-              help: null
-              label: Retencions i ingressos a compte declarats
-            '05':
-              help: null
-              label: Total de retencions del resum anual
+              help: 'Part de les retencions efectivament ingressades: només els perceptors
+                amb clau 3 a 25, i els de clau 1 o 2 amb pagament 1. Pot ser inferior
+                a la casella 03.'
+              label: Retencions i ingressos a compte ingressats
           construct:
             modelo-296-calculation-construct:
               field:

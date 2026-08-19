@@ -7,15 +7,18 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '02':
+              help: Algebraic sum of the withholding bases across the recipient records.
+              label: Base for withholdings and payments on account
             '03':
-              help: null
-              label: Withholding and advance payment tax base
+              help: Sum of the withholdings and payments on account across the recipient
+                records.
+              label: Withholdings and payments on account
             '04':
-              help: null
-              label: Withholdings and advance payments declared
-            '05':
-              help: null
-              label: Total withholdings on the annual summary
+              help: 'The portion of withholdings actually paid in: only recipients
+                with clave 3 to 25, and those with clave 1 or 2 where pago is 1. May
+                be lower than box 03.'
+              label: Withholdings and payments on account actually paid in
           construct:
             modelo-296-calculation-construct:
               field:
