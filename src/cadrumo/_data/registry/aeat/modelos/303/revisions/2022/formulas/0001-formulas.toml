@@ -17,7 +17,7 @@ rounding = "money-2"
 # binding wired into this aggregate on either revision and remain out of scope
 # of this fix, matching the later explicit record-design templates exactly.
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -55,7 +55,7 @@ id = "modelo-303-iva-cuota-deducible-total"
 target_casilla_id = "iva.cuota-deducible-total"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -91,7 +91,7 @@ rounding = "money-2"
 # casilla 45 = Total a deducir (LIVA arts. 92-94).  Source: boe-modelo-303-2008-form (Orden
 # EHA/3786/2008 form spec) and aeat-modelo-303-procedure (AEAT instrucciones de cumplimentación).
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+source_refs = ["aeat-dr-303-2022", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -145,7 +145,7 @@ legal_refs = [
     "rd-1624-1992:art-71",
     "orden-eha-3786-2008:art-1",
 ]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -210,7 +210,7 @@ id = "modelo-303-compensacion-aplicada-periodo"
 target_casilla_id = "iva.compensacion-aplicada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -236,7 +236,7 @@ id = "modelo-303-compensacion-pendiente-periodos-posteriores"
 target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -256,7 +256,7 @@ id = "modelo-303-iva-resultado"
 target_casilla_id = "iva.resultado"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -276,7 +276,7 @@ id = "modelo-303-compensacion-disponible-fin-periodo"
 target_casilla_id = "iva.compensacion-disponible-fin-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -296,7 +296,7 @@ id = "modelo-303-compensacion-generada-periodo"
 target_casilla_id = "iva.compensacion-generada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

@@ -52,14 +52,13 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core import scan_directory
 from cadrumo.tests._inventory import (
     aeat_relative,
     bare_utf8_literal_violations,
     non_test_package_python_files,
 )
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

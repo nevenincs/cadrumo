@@ -9,7 +9,7 @@ import pytest
 from ..adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .secure_sql import TestRuntimeProfile
 
-_BUCKET_ID = "llm-test-runtime"
+_BUCKET_ID = "70316d3b-62cd-4735-b831-c6712f01a418"  # was 'llm-test-runtime'
 
 
 @pytest.fixture(autouse=True)

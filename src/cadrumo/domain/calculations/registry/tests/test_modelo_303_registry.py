@@ -418,7 +418,7 @@ def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> No
     assert "modelo-303-extractor" in construct.application_links
     assert "modelo-303-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-303-trimestral",)
-    assert "modelo-303-dr-2025" in construct.workbook_parity_refs
+    assert "modelo-303-dr-2022" in construct.workbook_parity_refs
 
 
 def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings() -> None:
@@ -1129,11 +1129,11 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
-    parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr-2025")
+    parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr-2022")
 
-    assert parity.workbook_source == "aeat-dr-303-2025"
+    assert parity.workbook_source == "aeat-dr-303-2022"
     assert parity.formula_coverage == "record_design_layout"
-    assert parity.fixture_id == "modelo-303-2025-record-design-layout"
+    assert parity.fixture_id == "modelo-303-2022-record-design-layout"
 
 
 # The defect-C2 regression that pinned the no-volume prorrata default used one

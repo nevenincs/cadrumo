@@ -97,9 +97,9 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from dev.identity.identifier_noun_census import annotation_text, is_bare_str
 
 from cadrumo.core import identity, scan_directory
+from dev.identity.identifier_noun_census import annotation_text, is_bare_str
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -337,105 +337,150 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         model="InboundBorradorObservation",
         field="tax_id",
         group="verbatim external evidence",
-        reason="The parser preserves the filer identifier printed by the PDF; SubjectTaxId would canonicalise or refuse evidence before the extraction can report it.",
+        reason=(
+            "The parser preserves the filer identifier printed by the PDF; SubjectTaxId would canonicalise or refuse "
+            "evidence before the extraction can report it."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/adapters/inbound/borrador/_schema.py",
         model="InboundBorradorObservation",
         field="registry_extraction_profile_id",
         group="semantic tail collisions",
-        reason="This names a registry extraction-profile selector, not a user ProfileId; the match comes only from its profile_id suffix.",
+        reason=(
+            "This names a registry extraction-profile selector, not a user ProfileId; the match comes only from its "
+            "profile_id suffix."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
         model="InboundDeclaracionObservation",
         field="tax_id",
         group="verbatim external evidence",
-        reason="The parser records the tax identifier exactly as the declaration printed it, before identity validation can be a separate diagnostic.",
+        reason=(
+            "The parser records the tax identifier exactly as the declaration printed it, before identity validation "
+            "can be a separate diagnostic."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
         model="InboundDeclaracionObservation",
         field="extraction_profile_id",
         group="semantic tail collisions",
-        reason="This is an extraction-profile configuration key, not a ProfileId; its trailing profile_id spelling is coincidental.",
+        reason=(
+            "This is an extraction-profile configuration key, not a ProfileId; its trailing profile_id spelling is "
+            "coincidental."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/aggregation/_iva_ledger.py",
         model="IvaLedgerAggregationIssue",
         field="transaction_id",
         group="mixed-source diagnostic references",
-        reason="An IVA candidate may carry a 1-128-character _LedgerId rather than a catalogued hex-64 TransactionId; constraining the exclusion report would hide the very candidate it must explain.",
+        reason=(
+            "An IVA candidate may carry a 1-128-character _LedgerId rather than a catalogued hex-64 TransactionId; "
+            "constraining the exclusion report would hide the very candidate it must explain."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/auth/_diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_id",
         group="redacted diagnostic projections",
-        reason="The encrypted-artifact summary projects a redacted diagnostic value, not a profile identity boundary, so ProfileId would assert a value the redactor need not retain.",
+        reason=(
+            "The encrypted-artifact summary projects a redacted diagnostic value, not a profile identity boundary, so "
+            "ProfileId would assert a value the redactor need not retain."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/auth/_diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_label",
         group="redacted diagnostic projections",
-        reason="The value is display text in a redacted diagnostic summary, not the ProfileLabel domain field; its name matches only the label vocabulary token.",
+        reason=(
+            "The value is display text in a redacted diagnostic summary, not the ProfileLabel domain field; its name "
+            "matches only the label vocabulary token."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/ledger/_evidence_draft.py",
         model="CounterpartyDraftSide",
         field="tax_id",
         group="verbatim external evidence",
-        reason="The draft holds the counterparty identifier exactly as a document stated it so later grounding can distinguish evidence from a canonicalised identity.",
+        reason=(
+            "The draft holds the counterparty identifier exactly as a document stated it so later grounding can "
+            "distinguish evidence from a canonicalised identity."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/ledger/_models.py",
         model="BulkClassifyFailure",
         field="transaction_id",
         group="mixed-source diagnostic references",
-        reason="A file-classification failure must report the supplied row reference even when it is malformed or not yet a catalogue TransactionId.",
+        reason=(
+            "A file-classification failure must report the supplied row reference even when it is malformed or not yet "
+            "a catalogue TransactionId."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/modelo/_borrador_binding.py",
         model="Modelo100BorradorBindingCommand",
         field="borrador_snapshot_id",
         group="semantic tail collisions",
-        reason="This selects a borrador snapshot under its own 1-128-character contract, not the hex-64 core SnapshotId namespace.",
+        reason=(
+            "This selects a borrador snapshot under its own 1-128-character contract, not the hex-64 core SnapshotId "
+            "namespace."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/user_profile/_commands.py",
         model="ProfileSnapshot",
         field="snapshot_id",
         group="semantic tail collisions",
-        reason="A filing-time profile snapshot has an application-specific 1-128-character identifier, distinct from the content-hash SnapshotId alias.",
+        reason=(
+            "A filing-time profile snapshot has an application-specific 1-128-character identifier, distinct from the "
+            "content-hash SnapshotId alias."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/application/user_profile/_commands.py",
         model="ProfileStaleCheckReport",
         field="snapshot_id",
         group="semantic tail collisions",
-        reason="The stale-report repeats the ProfileSnapshot identifier, whose 1-128-character contract is not the core content-hash SnapshotId namespace.",
+        reason=(
+            "The stale-report repeats the ProfileSnapshot identifier, whose 1-128-character contract is not the core "
+            "content-hash SnapshotId namespace."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/calculations/registry/_invoice_bindings.py",
         model="InvoiceObservation",
         field="invoice_id",
         group="open ledger-source references",
-        reason="Registry invoice observations accept a source-ledger reference up to 128 characters; it is not necessarily the core hex-64 InvoiceId namespace.",
+        reason=(
+            "Registry invoice observations accept a source-ledger reference up to 128 characters; it is not "
+            "necessarily the core hex-64 InvoiceId namespace."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/invoices/_service.py",
         model="LinkInconsistency",
         field="invoice_id",
         group="mixed-source diagnostic references",
-        reason="The diagnostic exists to report a dangling Transaction.invoice_id; InvoiceId would reject the unresolved reference before the inconsistency could be shown.",
+        reason=(
+            "The diagnostic exists to report a dangling Transaction.invoice_id; InvoiceId would reject the unresolved "
+            "reference before the inconsistency could be shown."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/modelos/_ledger_filing_snapshot.py",
         model="LedgerEvidenceRow",
         field="invoice_id",
         group="open ledger-source references",
-        reason="This persistence projection mirrors Transaction.invoice_id beside distinct purchase-evidence references, preserving its open foreign-key contract rather than asserting InvoiceId.",
+        reason=(
+            "This persistence projection mirrors Transaction.invoice_id beside distinct purchase-evidence references, "
+            "preserving its open foreign-key contract rather than asserting InvoiceId."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/renta/_ledger_expenses.py",
@@ -449,42 +494,60 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         model="RentaDeductibilityResult",
         field="invoice_id",
         group="open ledger-source references",
-        reason="The result preserves the source fact's optional ledger invoice reference for review; it does not construct an InvoiceId.",
+        reason=(
+            "The result preserves the source fact's optional ledger invoice reference for review; it does not "
+            "construct an InvoiceId."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/renta/_ledger_expenses.py",
         model="RentaDeductibleExpenseObservation",
         field="invoice_id",
         group="open ledger-source references",
-        reason="The binding-ready observation carries through the unvalidated ledger invoice reference so binding can report the actual source fact.",
+        reason=(
+            "The binding-ready observation carries through the unvalidated ledger invoice reference so binding can "
+            "report the actual source fact."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/transactions/_models.py",
         model="Transaction",
         field="invoice_id",
         group="open ledger-source references",
-        reason="Transaction stores an optional reconciliation foreign key that may be dangling until consistency verification; it is deliberately not an InvoiceId boundary.",
+        reason=(
+            "Transaction stores an optional reconciliation foreign key that may be dangling until consistency "
+            "verification; it is deliberately not an InvoiceId boundary."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/domain/transactions/_raw_transaction.py",
         model="RawTransaction",
         field="provider_transaction_id",
         group="verbatim external evidence",
-        reason="This is the bank/feed's native row identifier, preserved verbatim and distinct from the derived core TransactionId hash.",
+        reason=(
+            "This is the bank/feed's native row identifier, preserved verbatim and distinct from the derived core "
+            "TransactionId hash."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/entrypoints/cli/_ledger_payloads.py",
         model="BulkClassifyFailurePayload",
         field="transaction_id",
         group="mixed-source diagnostic references",
-        reason="The CLI failure payload mirrors the application failure's supplied row reference, which can be malformed or not yet a TransactionId.",
+        reason=(
+            "The CLI failure payload mirrors the application failure's supplied row reference, which can be malformed "
+            "or not yet a TransactionId."
+        ),
     ),
     _Adjudication(
         path="src/cadrumo/entrypoints/cli/_ledger_payloads.py",
         model="LedgerLinkInconsistencyPayload",
         field="invoice_id",
         group="mixed-source diagnostic references",
-        reason="The CLI mirrors a dangling invoice reference from LinkInconsistency; validating it as InvoiceId would suppress the reported mismatch.",
+        reason=(
+            "The CLI mirrors a dangling invoice reference from LinkInconsistency; validating it as InvoiceId would "
+            "suppress the reported mismatch."
+        ),
     ),
 )
 

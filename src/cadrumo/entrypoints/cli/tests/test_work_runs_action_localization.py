@@ -84,7 +84,8 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     ):
         register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_PROFILE_FACTS,
                 created_at=_T,

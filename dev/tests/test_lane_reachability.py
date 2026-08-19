@@ -51,6 +51,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from dev._paths import REPO_ROOT
 from dev.ci.lane_reachability import (
     Lane,
@@ -474,7 +475,8 @@ def test_justfile_variable_interpolation_resolves_before_ignore_parsing(tmp_path
     """
     (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
     (tmp_path / "justfile").write_text(
-        'excluded_file := "src/tests/test_excluded.py"\n\ncheck:\n    pytest -q src -m unit --ignore={{excluded_file}}\n',
+        'excluded_file := "src/tests/test_excluded.py"\n\n'
+        "check:\n    pytest -q src -m unit --ignore={{excluded_file}}\n",
         encoding="utf-8",
     )
     module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"

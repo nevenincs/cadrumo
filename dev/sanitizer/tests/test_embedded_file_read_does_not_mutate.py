@@ -33,8 +33,8 @@ from io import BytesIO
 
 import pytest
 
-from cadrumo.core import scan_directory
 from cadrumo.adapters.inbound.einvoice._shape import iter_pdf_embedded_files
+from cadrumo.core import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -119,6 +119,7 @@ def test_the_sanitiser_still_strips_what_the_probe_can_read() -> None:
     changed to accommodate the other.
     """
     import pikepdf
+
     from dev.sanitizer._dynamic import strip_attachments
 
     source = _pdf_with_embedded_xml()

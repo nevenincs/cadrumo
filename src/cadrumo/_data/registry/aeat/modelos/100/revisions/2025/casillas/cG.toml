@@ -1,0 +1,16 @@
+# Anexo A deduction column "G", which AEAT identifies by LETTER rather
+# than by number. Its identity and concept are the bundled dictionary"s own:
+# entry APM carries casilla_id "G" and the label this casilla
+# records. The conformance comparison reported it as declared by the
+# dictionary and absent from the registry.
+
+[[revisions."2025".casillas]]
+id = "G"
+number = "G"
+section = ["anexo_a", "deducciones"]
+data_type = "money"
+semantic_role = "irpf_deduccion_actividades_prioritarias_mecenazgo"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-19", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]

@@ -37,6 +37,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+
 from dev.quality.facade_export_scan import REPO_ROOT, ScanResult, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -70,8 +71,8 @@ def _rev_is_available(rev: str) -> bool:
     for a reason that has nothing to do with facade integrity.
     """
     return (
-        subprocess.run(
-            ["git", "cat-file", "-e", f"{rev}^{{commit}}"],
+        subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+            ["git", "cat-file", "-e", f"{rev}^{{commit}}"],  # noqa: S607 - fixed argv resolved by the platform PATH
             cwd=REPO_ROOT,
             capture_output=True,
             check=False,
@@ -84,7 +85,7 @@ def _rev_is_available(rev: str) -> bool:
 def head_scan() -> ScanResult:
     """Scan the resolved HEAD commit once for every check in this module."""
     head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", "HEAD"],  # noqa: S607 - fixed argv resolved by the platform PATH
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -166,7 +167,7 @@ def test_scanner_recovers_the_known_historical_breaks() -> None:
 
 
 def _run_git(args: list[str], *, cwd: Path) -> None:
-    subprocess.run(["git", *args], cwd=cwd, capture_output=True, check=True)
+    subprocess.run(["git", *args], cwd=cwd, capture_output=True, check=True)  # noqa: S603,S607 - test-owned argv, no shell
 
 
 def _init_fixture_repo(root: Path) -> str:
@@ -184,7 +185,7 @@ def _init_fixture_repo(root: Path) -> str:
     _run_git(["add", "-A"], cwd=root)
     _run_git(["commit", "-q", "-m", "sound facade"], cwd=root)
     return subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", "HEAD"],  # noqa: S607 - fixed argv resolved by the platform PATH
         cwd=root,
         capture_output=True,
         text=True,
@@ -236,7 +237,7 @@ def test_scanner_reads_git_not_the_working_tree(tmp_path: Path) -> None:
     _run_git(["add", "-A"], cwd=tmp_path)
     _run_git(["commit", "-q", "-m", "plant an absent symbol"], cwd=tmp_path)
     committed_rev = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", "HEAD"],  # noqa: S607 - fixed argv resolved by the platform PATH
         cwd=tmp_path,
         capture_output=True,
         text=True,

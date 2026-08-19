@@ -30,7 +30,8 @@ runtime = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name=
 
 def _declare_vivienda_office() -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),

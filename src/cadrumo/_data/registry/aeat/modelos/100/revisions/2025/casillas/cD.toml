@@ -1,0 +1,16 @@
+# Anexo A deduction column "D", which AEAT identifies by LETTER rather
+# than by number. Its identity and concept are the bundled dictionary"s own:
+# entry BASEDEDU carries casilla_id "D" and the label this casilla
+# records. The conformance comparison reported it as declared by the
+# dictionary and absent from the registry.
+
+[[revisions."2025".casillas]]
+id = "D"
+number = "D"
+section = ["anexo_a", "deducciones"]
+data_type = "money"
+semantic_role = "irpf_deduccion_empresas_nueva_creacion_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-68", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]

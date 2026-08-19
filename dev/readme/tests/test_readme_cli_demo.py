@@ -6,9 +6,8 @@ import subprocess
 import sys
 
 import pytest
-from dev.readme import prepare_cli_demo, render_cli_demo
-
 from dev._paths import REPO_ROOT
+from dev.readme import prepare_cli_demo, render_cli_demo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

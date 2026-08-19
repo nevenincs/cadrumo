@@ -247,9 +247,7 @@ def build_installed_oracle_evidence(
             # refuses to mint a PASSED record.
             checkout_imports_removed=tax_evidence.checkout_imports_removed,
             ambient_product_executables_removed=tax_evidence.ambient_product_executables_removed,
-            installed_executables=(
-                _installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),
-            ),
+            installed_executables=(_installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),),
         )
         assertions = (
             f"installed CLI computed {tax_evidence.target_casilla}={tax_evidence.target_value} "

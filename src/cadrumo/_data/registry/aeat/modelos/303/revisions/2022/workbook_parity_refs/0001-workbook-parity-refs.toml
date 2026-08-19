@@ -1,9 +1,9 @@
 [[revisions.2022.workbook_parity_refs]]
-id = "modelo-303-dr-2025"
-workbook_source = "aeat-dr-303-2025"
-fixture_id = "modelo-303-2025-record-design-layout"
+id = "modelo-303-dr-2022"
+workbook_source = "aeat-dr-303-2022"
+fixture_id = "modelo-303-2022-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
+source_refs = ["aeat-dr-303-2022"]

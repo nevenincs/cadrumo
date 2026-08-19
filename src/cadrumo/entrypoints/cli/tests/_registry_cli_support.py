@@ -15,7 +15,7 @@ from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
-_BUCKET_ID = "registry-cli"
+_BUCKET_ID = "4300e0dd-8359-4cf6-91e4-7cc4befbfac1"  # was 'registry-cli'
 _CLI_ENV: dict[str, str] = {}
 
 _ENGLISH_CLI_ENV: Mapping[str, str] = {"CADRUMO_OUTPUT_LANGUAGE": "en"}

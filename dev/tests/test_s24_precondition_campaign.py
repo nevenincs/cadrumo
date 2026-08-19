@@ -8,6 +8,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+
 from cadrumo.application.modelo import MODELO_PRECONDITION_PROFILES
 from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface import (

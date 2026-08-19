@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
 
-from ._inventory import all_test_control_modules, production_ast_items, repo_relative
+from ._inventory import discover_test_control_modules, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -227,13 +227,13 @@ def test_versioned_record_anchors_resolve(source_tree_ast: Mapping[Path, ast.AST
 
 def test_scan_surface_is_non_empty() -> None:
     """The scan walks real test modules; an empty surface would pass vacuously."""
-    assert list(all_test_control_modules()), "test-module surface is empty; the gate would enforce nothing"
+    assert list(discover_test_control_modules()), "test-module surface is empty; the gate would enforce nothing"
 
 
 def test_no_test_constructs_a_versioned_record_with_a_literal_version() -> None:
     """A fixture must bind the canonical constant rather than restate its value."""
     offenders = [
-        site for site in _scan(all_test_control_modules()) if site.exemption_key not in LITERAL_VERSION_EXEMPTIONS
+        site for site in _scan(discover_test_control_modules()) if site.exemption_key not in LITERAL_VERSION_EXEMPTIONS
     ]
 
     assert not offenders, (
@@ -252,7 +252,7 @@ def test_every_exemption_names_a_live_site() -> None:
     from one that still earns its place, and it silently pre-authorises the next
     literal that lands in that function.
     """
-    live = {site.exemption_key for site in _scan(all_test_control_modules())}
+    live = {site.exemption_key for site in _scan(discover_test_control_modules())}
     stale = sorted(key for key in LITERAL_VERSION_EXEMPTIONS if key not in live)
 
     assert not stale, (

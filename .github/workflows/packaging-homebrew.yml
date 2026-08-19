@@ -235,25 +235,24 @@ jobs:
             --repo-root "$GITHUB_WORKSPACE" \
             --retain-install
 
-      # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
-      # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
-      # immutable release cohort verified and extracted above. No re-run.
+      # Mint the sanctioned homebrew-<os>-<arch> row from the real captured tax
+      # oracle JSON (the CLI-only smoke wrote tax-evidence.json host-visible;
+      # the formula carries no MCP leg, so the record marks it absent), bound to
+      # THE immutable release cohort verified and extracted above. No re-run.
       - name: Emit the sanctioned Homebrew distribution-evidence record
         env:
           ROW_ID: ${{ matrix.row_id }}
         run: |
           tax="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name tax-evidence.json -print -quit)"
-          mcp="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name mcp-evidence.json -print -quit)"
-          if [[ -z "$tax" || -z "$mcp" ]]; then
-            echo "homebrew oracle evidence JSONs not found under $CADRUMO_HOMEBREW_ROOT/evidence" >&2
+          if [[ -z "$tax" ]]; then
+            echo "homebrew tax oracle evidence JSON not found under $CADRUMO_HOMEBREW_ROOT/evidence" >&2
             exit 1
           fi
-          uv run --no-project --with packaging --with pydantic --with mcp \
+          uv run --no-project --with packaging --with pydantic \
             python -m dev.packaging.distribution_evidence_emit \
             --row-id "$ROW_ID" \
             --release-cohort-dir "$CADRUMO_HOMEBREW_ROOT/release-cohort" \
             --tax-evidence "$tax" \
-            --mcp-evidence "$mcp" \
             --acquisition-mechanism brew \
             --acquisition-source "nevenincs/tap" \
             --destination-kind homebrew-cellar \

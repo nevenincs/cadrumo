@@ -269,6 +269,21 @@ def _create_profile() -> None:
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_SOPORTE_PATH = "auth.numero_soporte"
 _AUTH_PROVIDER_VALUE = "clave_movil"
+
+
+def _auth_provider_display() -> str:
+    """The text the surface renders for the stored ``auth.provider`` token."""
+    from .....application.user_profile import profile_field_choices
+    from .....domain.user_profile import load_user_profile_schema
+
+    field = load_user_profile_schema().field(_AUTH_PROVIDER_PATH)
+    return next(
+        choice.label
+        for choice in profile_field_choices(field, path=_AUTH_PROVIDER_PATH)
+        if choice.value == _AUTH_PROVIDER_VALUE
+    )
+
+
 _AUTH_SOPORTE_VALUE = "ABC123456"
 
 
@@ -347,25 +362,50 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     # nothing unless an unmasked auth row is really in the set. Both arms
     # are named, so a fixture that silently stops projecting either one
     # fails here rather than quietly emptying the net.
-    provider_row = next((row for row in rows if row.value == _AUTH_PROVIDER_VALUE), None)
+    provider_row = next((row for row in rows if row.value == _auth_provider_display()), None)
     assert provider_row is not None, (
         f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
     )
     assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
-    soporte_row = next((row for row in rows if row.value == _AUTH_SOPORTE_VALUE), None)
-    assert soporte_row is not None, "auth.numero_soporte must project a row"
-    assert soporte_row.masked is True, "auth.numero_soporte is declared secret and must render masked"
+    from .....domain.user_profile import load_user_profile_schema, profile_field_label
 
-    # No unmasked row may carry a credential-shaped label. The question is
-    # put to the canonical policy rather than restated here: this carried a
-    # hand-listed copy of it that had drifted to five of the nine keywords,
-    # missing "credential" and "key", so a net named for the policy quietly
-    # covered less than the policy did. Passing sensitivity=None is what
-    # selects the keyword arm, which is exactly the reading wanted of a
-    # label -- the row's own masking has already been decided above.
-    for row in rows:
-        if row.masked:
-            continue
+    soporte_section = _AUTH_SOPORTE_PATH.split(".", 1)[0]
+    soporte_label = profile_field_label(soporte_section, load_user_profile_schema().field(_AUTH_SOPORTE_PATH))
+    soporte_row = next((row for row in rows if row.label == soporte_label), None)
+    assert soporte_row is not None, (
+        f"auth.numero_soporte must project a row; labels: {sorted(row.label for row in rows)}"
+    )
+    assert soporte_row.masked is True, "auth.numero_soporte is declared secret and must render masked"
+    # The confidentiality claim, stated where it bites: redaction happens when
+    # the row is BUILT, so the secret never enters the view-model and cannot
+    # leak through any later consumer of it -- a screen, a dump, a snapshot.
+    assert soporte_row.value != _AUTH_SOPORTE_VALUE, "the secret reached the view-model in the clear"
+    assert _AUTH_SOPORTE_VALUE not in "".join(f"{row.label}{row.value}" for row in rows), (
+        "the secret appears somewhere in the projected rows"
+    )
+
+    # No unmasked row for an UNDECLARED fact may carry a credential-shaped
+    # label. The question is put to the canonical policy rather than restated
+    # here: this carried a hand-listed copy of it that had drifted to five of
+    # the nine keywords, missing "credential" and "key", so a net named for
+    # the policy quietly covered less than the policy did.
+    #
+    # It is scoped to undeclared facts because that is the only place the
+    # policy's keyword arm applies -- it is "a net under the unclassified,
+    # not a second opinion on the classified". Run over declared fields it
+    # contradicts the schema, and contradicts this very test: the keyword set
+    # carries "nif"/"nie"/"tax_id", so it demands a mask on the identity NIF
+    # that the assertion above correctly requires in the clear. A NIF is the
+    # identifier printed on every filing, not a credential.
+    declared_labels = {
+        profile_field_label(section.key, field)
+        for section in load_user_profile_schema().sections
+        for field in section.fields
+    }
+    assert declared_labels, "no declared field labels resolved; the net below would cover everything"
+
+    unclassified = [row for row in rows if not row.masked and row.label not in declared_labels]
+    for row in unclassified:
         assert not mask_profile_field(path=row.label, label=row.label, sensitivity=None), (
             f"credential-shaped row {row.label!r} rendered unmasked"
         )
@@ -396,7 +436,7 @@ def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
 
     rows, record = _fact_rows_over_a_real_profile()
 
-    status_label = next(row.label for row in rows if row.value == _AUTH_PROVIDER_VALUE)
+    status_label = next(row.label for row in rows if row.value == _auth_provider_display())
     overview = build_profile_overview(record)
     manager_label = next(
         field.label for section in overview.sections for field in section.fields if field.path == _AUTH_PROVIDER_PATH
@@ -425,6 +465,7 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
     production builder against the real shipped schema.
     """
     from .....domain.user_profile import (
+        ProfileSetupState,
         UserProfileFact,
         load_user_profile_schema,
         profile_field_label,
@@ -435,7 +476,7 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
     second_path = "attribution_entity_socios.1.nif"
     record = _Record(
         profile_id="00000000-0000-4000-8000-0000000000a1",
-        display_name="Socios status row",
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path=first_path, value="B12345678"),
             UserProfileFact(path=second_path, value="B87654321"),
@@ -465,10 +506,22 @@ def test_every_zone_degrades_on_an_empty_storage_root(profile_storage_root: Path
     instead of raising — the crash-safety property the status surface
     promises.
     """
+    from dataclasses import fields as dataclass_fields
+
     from .....adapters.inbound.tui import StatusPageData
 
     data = _status_frontend.build_status_page_data()
     assert isinstance(data, StatusPageData)
-    assert data.recovery.enrolled is False
-    assert data.recovery.fingerprint is None
+
+    zones = tuple(field.name for field in dataclass_fields(StatusPageData))
+    assert zones, "StatusPageData declares no zones; this gate would assert nothing"
+
+    # Degraded means every zone reached its declared empty shape rather than
+    # raising on the way. Comparing against a pristine instance states that
+    # per zone without restating what each zone's empty value is.
+    pristine = StatusPageData()
+    degraded = {zone: getattr(data, zone) for zone in zones}
+    assert degraded == {zone: getattr(pristine, zone) for zone in zones}, (
+        f"a zone did not degrade to its declared empty shape: {degraded}"
+    )
     assert _status_frontend._build_profile_rows(active_uuid="no-such-uuid") == ()

@@ -5,6 +5,7 @@ and auth tests still need to seed a record while exercising a real active
 bucket session, so this module composes the production capsule lifecycle and
 binds the exact record session around each read or replacement.
 """
+
 from __future__ import annotations
 
 from base64 import b64encode
@@ -15,8 +16,6 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.application.user_profile import load_profile_custody_password_material
-
 from ..adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -25,6 +24,7 @@ from ..adapters.persistence.storage.custody import (
     list_current_profile_custody_capsule_ids,
 )
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
+from ..application.user_profile import load_profile_custody_password_material
 from ..application.user_profile._capsule_record import ProfileRecordSession
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile._profile_record_repository import (

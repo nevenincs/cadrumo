@@ -33,9 +33,10 @@ from pathlib import Path
 
 import pytest
 
-from ._project_inventory import all_test_control_modules
 from cadrumo.core.logging import get_logger
 from cadrumo.tests._inventory import ast_for_path, repo_relative
+
+from ._project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

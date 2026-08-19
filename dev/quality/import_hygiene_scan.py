@@ -1159,6 +1159,7 @@ def find_dev_path_reach_violations(
 # Violation family 10: prose awareness of the dev tree under src/
 # ---------------------------------------------------------------------------
 
+
 #: Live top-level names of the dev tree, read from disk at scan time so this
 #: family tracks the tree it guards without a maintained list. Only a path or
 #: module reference naming a REAL dev child fires -- ``dev.example.com``,
@@ -2696,7 +2697,9 @@ def main() -> int:
     harness_root = SRC_ROOT / "cadrumo-harness" / "src"
     dev_boundary_files = list(py_files)
     if harness_root.is_dir():
-        dev_boundary_files += scan_directory(harness_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        dev_boundary_files += scan_directory(
+            harness_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)
+        )
 
     facades = discover_facades()
     real_facades = {pkg: info for pkg, info in facades.items() if info.has_real_all}

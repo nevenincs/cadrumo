@@ -159,7 +159,7 @@ def test_scoop_workflow_binds_the_smoke_evidence_before_minting_the_row() -> Non
     )
     # The CLI-only lane emits from the tax oracle JSON alone: the emitter runs
     # without the mcp dependency and the record marks the MCP leg absent.
-    assert '--tax-evidence $tax' in emit["run"]
+    assert "--tax-evidence $tax" in emit["run"]
     assert "mcp-evidence.json" not in emit["run"]
     assert "--mcp-evidence" not in emit["run"]
     assert "--with mcp" not in emit["run"]

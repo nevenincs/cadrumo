@@ -65,8 +65,8 @@ your ability to recover once it does.
 Change the passphrase whenever you suspect it has been seen, or on whatever
 schedule your own policy sets:
 
-```
-aeat config passphrase change
+```{cli-sequence} protect-data-access-passphrase-change
+:verify: Confirm the passphrase change re-wraps the key without re-encrypting records.
 ```
 
 Enter the current passphrase, then the new one twice. Nothing is echoed.
@@ -83,8 +83,7 @@ the existing passphrase working.
 To change the passphrase without an interactive prompt, pass the three values as
 one JSON object on standard input:
 
-```
-aeat config passphrase change --secrets-stdin
+```{cli-sequence} protect-data-access-passphrase-change-stdin
 ```
 
 Send `{"current_passphrase": "...", "new_passphrase": "...",

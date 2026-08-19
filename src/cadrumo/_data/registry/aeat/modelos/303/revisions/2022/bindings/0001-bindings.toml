@@ -2,7 +2,7 @@
 id = "modelo-303-iva-repercutido-general-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -23,7 +23,7 @@ op = "sum"
 id = "modelo-303-iva-repercutido-reducido-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -44,7 +44,7 @@ op = "sum"
 id = "modelo-303-iva-repercutido-super-reducido-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -65,7 +65,7 @@ op = "sum"
 id = "modelo-303-iva-soportado-interiores-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -96,7 +96,7 @@ op = "sum"
 id = "modelo-303-iva-repercutido-general-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -117,7 +117,7 @@ op = "sum"
 id = "modelo-303-iva-repercutido-reducido-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -138,7 +138,7 @@ op = "sum"
 id = "modelo-303-iva-repercutido-super-reducido-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -159,7 +159,7 @@ op = "sum"
 id = "modelo-303-iva-soportado-interiores-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -189,7 +189,7 @@ op = "sum"
 id = "modelo-303-recargo-equivalencia-general-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -210,7 +210,7 @@ op = "sum"
 id = "modelo-303-recargo-equivalencia-reducido-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -231,7 +231,7 @@ op = "sum"
 id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -262,7 +262,7 @@ op = "sum"
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -283,7 +283,7 @@ op = "sum"
 id = "modelo-303-casilla-60-exportaciones-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -304,7 +304,7 @@ op = "sum"
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -338,7 +338,7 @@ op = "sum"
 id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -359,7 +359,7 @@ op = "sum"
 id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -387,7 +387,7 @@ op = "sum"
 id = "modelo-303-iva-soportado-importaciones-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -408,7 +408,7 @@ op = "sum"
 id = "modelo-303-compensacion-pendiente-anteriores"
 source = "previous_filing"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -426,7 +426,7 @@ op = "copy"
 id = "modelo-303-criterio-caja-entregas-art75-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -447,7 +447,7 @@ op = "sum"
 id = "modelo-303-criterio-caja-entregas-art75-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -468,7 +468,7 @@ op = "sum"
 id = "modelo-303-criterio-caja-adquisiciones-base"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -489,7 +489,7 @@ op = "sum"
 id = "modelo-303-criterio-caja-adquisiciones-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -510,7 +510,7 @@ op = "sum"
 id = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 source = "bienes_inversion_regularizacion"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -524,7 +524,7 @@ regularizacion_output = "modelo_303_casilla_43"
 id = "modelo-303-prorrata-regularizacion-casilla-44"
 source = "prorrata_regularizacion"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

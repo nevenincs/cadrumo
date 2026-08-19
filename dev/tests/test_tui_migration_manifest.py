@@ -7,6 +7,8 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core import scan_directory
 from dev.quality.import_hygiene_scan import (
     LEGACY_TUI_PACKAGE,
     LEGACY_TUI_ROOT,
@@ -18,8 +20,6 @@ from dev.quality.import_hygiene_scan import (
     _tui_migration_identity_sha256,
     generate_tui_migration_manifest,
 )
-
-from cadrumo.core import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

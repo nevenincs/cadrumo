@@ -26,6 +26,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import pytest
+
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

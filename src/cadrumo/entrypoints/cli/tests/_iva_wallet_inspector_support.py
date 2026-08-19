@@ -67,7 +67,8 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=created_at,

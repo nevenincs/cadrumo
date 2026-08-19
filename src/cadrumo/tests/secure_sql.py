@@ -54,6 +54,7 @@ _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
+
 def reap_profile_session_keys(storage_root: Path) -> None:
     """Revoke every current session receipt discoverable under ``storage_root``.
 
@@ -410,12 +411,27 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
             dispose_engine(settings)
 
 
+def default_test_profile_label(bucket_id: str) -> str:
+    """Return the default label for a test profile on ``bucket_id``.
+
+    Derived from the bucket rather than constant: the custody service refuses
+    a second committed capsule carrying a label an existing one already holds,
+    so a shared constant made two profiles under one storage root collide on
+    the label instead of on whatever the test was exercising. A caller that
+    passes its own label is unaffected.
+    """
+    # The FULL identity, not a prefix: test bucket ids are commonly minted
+    # from a shared prefix with only the last octets varying, so a truncated
+    # slice collides exactly where two buckets are most likely to coexist.
+    return f"Test runtime profile {bucket_id}"
+
+
 @contextmanager
 def isolated_runtime_profile(
     *,
     tmp_path: Path,
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
-    label: str = "Test runtime profile",
+    label: str | None = None,
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real active-profile bucket runtime for tests.
 
@@ -463,7 +479,7 @@ def isolated_runtime_profile(
         dispose_engine(settings)
         session, paths = _provision_bucket_session(
             bucket_id=bucket_id,
-            label=label,
+            label=label if label is not None else default_test_profile_label(bucket_id),
             storage_root=storage_root,
             opened_at=opened_at,
         )
@@ -630,7 +646,7 @@ def isolated_cli_runtime_profile(
     *,
     tmp_path: Path,
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
-    label: str = "Test runtime profile",
+    label: str | None = None,
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real runtime profile with CLI-adjacent directories isolated.
 
@@ -661,7 +677,7 @@ def isolated_cli_runtime_profile(
         isolated_runtime_profile(
             tmp_path=tmp_path,
             bucket_id=bucket_id,
-            label=label,
+            label=label if label is not None else default_test_profile_label(bucket_id),
         ) as profile,
     ):
         # The active session opened by ``isolated_runtime_profile`` already

@@ -74,7 +74,6 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from dev.ci.perf_measurement import wall_advisory_message
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -82,6 +81,11 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository
+from cadrumo.application.aggregation import (
+    aggregate_iva_ledger_observations_from_repositories,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
+from cadrumo.application.aggregation.tests._iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.calculations import CalculationObservationRepository
 from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation,
@@ -106,11 +110,7 @@ from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation import (
-    aggregate_iva_ledger_observations_from_repositories,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
-from cadrumo.application.aggregation.tests._iva_authority_support import aggregate_iva_ledger_observations
+from dev.ci.perf_measurement import wall_advisory_message
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

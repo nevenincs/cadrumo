@@ -304,8 +304,7 @@ jobs:
             "smoke_scoop.ps1",
             "_command.py",
             "constraint_effect.py",
-            "installed_tax_oracle.py",
-            "installed_mcp_oracle.py"
+            "installed_tax_oracle.py"
           )) {
             Copy-Item `
               -LiteralPath (Join-Path "dev/packaging" $file) `
@@ -388,19 +387,17 @@ jobs:
         run: |
           $evidenceRoot = "$env:CADRUMO_SCOOP_ROOT/evidence"
           $tax = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter tax-evidence.json | Select-Object -First 1).FullName
-          $mcp = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter mcp-evidence.json | Select-Object -First 1).FullName
-          if (-not $tax -or -not $mcp) {
-            throw "scoop oracle evidence JSONs not found under $evidenceRoot"
+          if (-not $tax) {
+            throw "scoop tax oracle evidence JSON not found under $evidenceRoot"
           }
           $scoop = Get-Content -LiteralPath (Join-Path $evidenceRoot "scoop-evidence.json") -Raw | ConvertFrom-Json
           $locator = if ($scoop.installed_prefix) { [string]$scoop.installed_prefix } else { "cadrumo" }
           $source = if ($scoop.bucket_url) { [string]$scoop.bucket_url } else { "scoop-bucket" }
-          uv run --no-project --with packaging --with pydantic --with mcp `
+          uv run --no-project --with packaging --with pydantic `
             python -m dev.packaging.distribution_evidence_emit `
             --row-id scoop-windows-x86-64 `
             --release-cohort-dir "$env:CADRUMO_SCOOP_ROOT/release-cohort" `
             --tax-evidence $tax `
-            --mcp-evidence $mcp `
             --acquisition-mechanism scoop `
             --acquisition-source $source `
             --destination-kind scoop-install `

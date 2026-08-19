@@ -176,8 +176,8 @@ def _qualified_function_names(tree: ast.Module) -> set[str]:
 
 def _tracked_python_modules() -> list[str]:
     """Return tracked, gated ``.py`` paths: everything but ``test_*.py`` modules."""
-    completed = subprocess.run(
-        ["git", "ls-files", "--", *SCAN_ROOTS],
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+        ["git", "ls-files", "--", *SCAN_ROOTS],  # noqa: S607 - fixed argv resolved by the platform PATH
         cwd=REPO_ROOT,
         capture_output=True,
         check=True,

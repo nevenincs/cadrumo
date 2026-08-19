@@ -86,6 +86,22 @@ def _display_literals(path: Path) -> list[tuple[int, str]]:
         if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
         and (text := ast.get_docstring(node, clean=False))
     }
+    # An ATTRIBUTE docstring -- the bare string statement following an
+    # assignment, which Sphinx renders as that constant's documentation -- is
+    # developer prose exactly like the docstrings above, but `get_docstring`
+    # does not see it: it only reads the FIRST statement of a module, class or
+    # function. Collected by identity rather than by value so a real display
+    # string that happens to repeat one is still caught.
+    in_attribute_docstring = {
+        id(statement.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+        for previous, statement in zip(node.body, node.body[1:], strict=False)
+        if isinstance(previous, ast.Assign | ast.AnnAssign)
+        and isinstance(statement, ast.Expr)
+        and isinstance(statement.value, ast.Constant)
+        and isinstance(statement.value.value, str)
+    }
     in_raise = {id(inner) for node in ast.walk(tree) if isinstance(node, ast.Raise) for inner in ast.walk(node)}
     # Every string inside a class that subclasses an exception: its messages are
     # developer-facing, whether raised here or passed to ``super().__init__``.
@@ -109,6 +125,8 @@ def _display_literals(path: Path) -> list[tuple[int, str]]:
             continue
         value = node.value
         if value in docstrings or id(node) in in_raise or id(node) in in_dunder_all:
+            continue
+        if id(node) in in_attribute_docstring:
             continue
         if id(node) in in_exception_class:
             continue
@@ -203,9 +221,15 @@ def test_every_docs_chrome_key_is_visible_to_the_locale_scanner() -> None:
     Reaching zero here is what makes scaffold safe to run.
     """
     from ...locales import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR, LocaleManager
+    from ...locales.manager import locale_catalogue_source
 
     manager = LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
-    catalogue = manager.get_yaml_keys(manager.load_locale(LOCALES_DIR / "es.yml"))
+    # Resolve the catalogue's shipped shape rather than hardcoding the flat
+    # file: addressing `es.yml` raised once the tree was resharded, and a gate
+    # that raises has stopped checking.
+    source = locale_catalogue_source(LOCALES_DIR, "es")
+    assert source is not None, "no committed Spanish catalogue; this gate would be vacuous"
+    catalogue = manager.get_yaml_keys(manager.load_locale(source))
     declared = {key for key in catalogue if key.startswith("docs.")}
     assert declared, "no docs.* chrome keys found; the namespace moved and this gate went vacuous"
 

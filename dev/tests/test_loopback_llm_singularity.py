@@ -68,7 +68,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ._project_inventory import project_test_control_modules
 from cadrumo.tests._inventory import (
     ast_for_path,
     import_binding_map,
@@ -76,6 +75,8 @@ from cadrumo.tests._inventory import (
     repo_relative,
     resolve_dotted_origin,
 )
+
+from ._project_inventory import project_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

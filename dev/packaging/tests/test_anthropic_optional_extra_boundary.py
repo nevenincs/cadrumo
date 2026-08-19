@@ -16,6 +16,8 @@ import textwrap
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core import ANTHROPIC_EXTRA
 from dev.packaging._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -25,8 +27,6 @@ from dev.packaging._smoke_common import (
     isolated_product_env,
     venv_python_path,
 )
-
-from cadrumo.core import ANTHROPIC_EXTRA
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter, pytest.mark.serial]
 

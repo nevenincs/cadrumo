@@ -55,7 +55,8 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
     from ....tests.profile_capsule import seed_test_profile_record
 
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -439,7 +440,8 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c200000-0000-4000-8000-000000000002") as runtime:
         seed_test_profile_record(
-            UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
                 profile_id=runtime.bucket_id,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="B12345674"),
