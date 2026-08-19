@@ -5709,3 +5709,119 @@ touched to prove it.
 Modelo 100 + 131 selection: **15 failed / 606 passed -> 5 failed / 616 passed.**
 None of the five cites the swept source or a locale key; they are the content
 layer the review stamps unblocked.
+
+## Queue items 1-4, and the last abstention closed
+
+Re-measured each item before working it, rather than trusting the queue text.
+**Items 1, 2, 3 and 4 were all already resolved at the data layer**; what
+remained under each was a ring of consumers left stale by the fix. Recording
+that explicitly, because "the finding is gone" and "the finding was fixed and
+its dependents were not swept" look identical from a passing probe.
+
+- **184 casilla 77** — the pair set the coverage gate builds is genuinely EMPTY
+  (this design prints zero bracketed tags), so the empty-set rule abstains and
+  the derivation returns casilla 77 cleanly. Verified by driving
+  `derive_calculation_completeness_casillas` directly, not by suite inference.
+- **151/2015-2022** — no casilla in that revision cites the 2023 diseño; the
+  revision split gave it `aeat-dr-151-2015` and its tree gate is green.
+- **193** — declarante/perceptor/gastos emit **500/500/500** against a design
+  declaring 500. The 235/339/207 reading is gone.
+- **720** — type_1 and type_2 emit **500/500**. Each gained ONE trailing filler
+  (181..500 and 481..500), and the control matters here: both ranges are single
+  design fields the diseño itself marks reserved, so the fillers pad reserved
+  space and blank no data.
+
+### Six gates that had decayed into asserting the defect
+
+Every one had the same shape -- a premise true when written, falsified by the
+campaign's own progress, failing on the premise rather than on the property.
+
+- Two hand-listed `(modelo, revision)` inventories in `test_orden_aplicabilidad.py`.
+  The first named `151/2015-y-siguientes`, retired by the split. The second
+  claimed 193/2024, 303/2022, 303/2023, 210/2025 and 308/2022 were *open-ended*
+  when all five now carry a `valid_to`, and it needed a curated comment
+  explaining why 714 had been removed. Both now derive their population -- all
+  95 revisions, and the 58 with `valid_to is None`. Coverage roughly doubled and
+  the membership question answers itself.
+- `test_modelo_184_revision_period_selector_starts_at_2015` asserted
+  `valid_from == 2015-10-30`, the BOE date of Orden HAP/2250/2015. `valid_from`
+  is a DEVENGO date: 87 of 95 revisions sit on January 1, and the eight that do
+  not are genuine mid-year regime starts (the 369 OSS esquemas, 490's 2T), never
+  an orden's publication. The orden's date is asserted where it lives, on
+  `ley...art-1.effective_from`, so nothing is dropped by moving it.
+- `test_escala_ahorro_absent_from_2015_revision` claimed the impatriado savings
+  escala is "a 2025 amendment (Ley 7/2024)". It is a **2023** amendment: art. 63.3
+  of Ley 31/2022 introduced it from 2023-01-01 (`ley-35-2006:art-93-ahorro-2023`,
+  effective 2023-01-01..2024-12-31) and it was RE-fixed for 2025
+  (`ley-35-2006:art-93-ahorro`). Reading the later redaction as the introduction
+  is the error. The revision governing 2023 onward SHOULD carry it; the
+  pre-escala revision is `2015-2022`, ending exactly the day before.
+- `test_layoutless_revision_is_explicitly_undefined` pinned modelo 130 as its
+  layoutless subject -- and this campaign then authored 130's layout. Subject now
+  derived (14 revisions). Because that population shrinks to zero by design as
+  the campaign completes, a **contrapositive** case was added on a revision that
+  HAS a layout, so classification cannot silently stop being covered.
+- `test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent` rested on
+  modelo 349 declaring NO verification expectations. It now declares one, whose
+  `tolerance = 0.00`. The replacement is stronger, not weaker: the registry's own
+  published contract now AGREES with exact equality rather than being silent.
+
+Each derived gate carries a disproving control run from OUTSIDE the tree, as a
+pytest plugin on `PYTHONPATH` in the scratchpad, tampering with one named
+revision: **1 failed / 94 passed** and **1 failed / 57 passed**. No tracked file
+was touched to prove either.
+
+### A dangling legal ref in the applicability router
+
+`_applicability.py` grounded the Art. 93 M151 route on
+`orden-eha-2887-2008:modelo-151`. The registry had already retired that id as
+"a stub whose document_id never resolved to real text" and replaced it -- but
+only in its own data. The code kept emitting it, and it is absent from the legal
+catalogue, so the route carried a ref that resolves to nothing. Replaced with the
+two real bundled instruments: Orden HAP/2783/2015 (2015-2022) and Orden
+HFP/1338/2023 (2023 onward, per its own Disposicion Final Segunda(a)).
+
+### 349: the last abstention was a measurement artefact, and it hid a real defect
+
+The reviewer abstained on `349/2020-y-siguientes` with `unpaired=2`, which I had
+recorded as a structural limit of the `operador` record. Both halves were
+measurement, not data:
+
+- The rectificaciones record pairs to a sheet AEAT names **"Tipo 2 - Registro De
+  Retificaciones"** -- AEAT's own spelling, missing the first "c" -- so a noun
+  match finds nothing.
+- The operador sheet's `declared_total` is **235**, and 235 is the last LISTED
+  position, not the record length. Its sibling rectificaciones sheet carries
+  identical fields at 179..195 and 196..235 and then an explicit trailing block
+  at **236..500**; the operador sheet simply stops listing. A fixed-width file
+  interleaves all three tipo records, and the other two are 500, so a
+  235-position operador line would make the file unparseable.
+
+All three records cover their sheets with **zero unaddressed DATA positions**, so
+the revision was stamped -- with bespoke wording, because the standard template's
+"none reaches past its declared record length" would have been FALSE of operador.
+
+**The gap measurement was not enough, and that is the lesson.** Coverage is
+set-based, so it is blind to double-writes. The declarante record summed to
+**587** across positions 1..500: seven ranges written TWICE, every one a (real
+field, filler) pair. Six fillers had reserved those ranges before the real fields
+existed and were never removed -- the persona-relacion filler still carried its
+comment explaining that Cadrumo held no contact-person fact, next to the
+telefono and nombre fields since authored over it. Removing the six yields
+exactly 500 (87 = the overlap, to the position) and offset-sorted contiguity
+1..500 on all three records.
+
+Two further unswept dependents of the same authoring: the
+`modelo-349-informative` construct collected 13 of 20 casillas, and the
+`modelo-349-submitted-file` extraction profile targeted 4 of 9 declarante
+casillas. Both completed; the construct's existing legal and source refs already
+covered the seven new members, so no grounding was widened.
+
+`test_committed_modelo_349_export_records_match_fixed_width_contract` was reading
+the RAW layout, where the declarante record starts at offset 59 because 1..58
+come from bindings -- the raw-versus-derived trap again. Repointed at the derived
+layout and ordered by offset, since derivation appends binding-derived fields
+after inline ones and tuple order is not wire order.
+
+**Reviewer state: 0 ready, 0 abstaining** -- every filing-grade revision with an
+export layout is now stamped. Items 1-4 plus 349: **230 passed**, authority CLEAN.
