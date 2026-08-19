@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:57d95bfc304da416f9a9e8cdc2b0ce78931027d6dc59d306e954282d930fcb56'
+body_hash: 'sha256:e6dc7bd01b9c267fc70caf58a947a05842515a7246590141c6922f35c68cb282'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1328,6 +1328,39 @@ the staleness half of the gate is what forced that, exactly as intended.
 The same threading is now unblocked for the amendment, filed-revision and
 calculate paths. They remain listed, and the reason is budget rather than a
 missing capability.
+
+### The calculate path is threaded end to end, and a peer sweep briefly split it in half
+
+The work-unit catalogue was the last unguarded document on the calculate
+co-commit, and it was the one the earlier passes kept deferring because it
+arrives as a parameter. With the protocols widened it became a plain threading
+job: `prepare` reads with `load_revisioned`, `PreparedCalculation` carries the
+revision as a declared field, and `persist_calculation_revision` asserts it on
+the batch write. Single constructor, single caller, verified by search rather
+than assumed -- and no test constructs either directly, so the chain is closed.
+
+A worktree hazard is worth recording, because it produced a genuinely broken
+HEAD rather than the usual harmless sweep. Peers have absorbed this session's
+working tree into their commits repeatedly with no ill effect. This time the
+sweep took TWO of the three files -- the preparation and the action, both of
+which now PASS the new keyword -- and left the persistence that ACCEPTS it
+uncommitted. HEAD therefore had callers handing `persist_calculation_revision`
+an argument it did not take, and any calculate run against that commit raises
+`TypeError`.
+
+It was found by accident and nearly made worse. Reverting the three files to
+HEAD to measure a baseline showed the revision field still present in two of
+them, which is what exposed the split; had the baseline measurement not
+happened, the local copy would have masked the broken HEAD indefinitely, since
+the working tree behaved correctly.
+
+Two practices to carry forward. Revert-and-restore for baselining must be split
+into SEPARATE commands, because a timeout inside a single chained command
+strands the reverted files -- which happened here on a six-minute package run
+and left the persistence file at HEAD until it was noticed. And after any peer
+sweep, a partially-absorbed change is worth checking for explicitly: the
+signature and its callers can land in different commits, and the local tree
+gives no signal because it holds both halves.
 
 ## Recommendations
 
