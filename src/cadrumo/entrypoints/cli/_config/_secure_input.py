@@ -107,17 +107,34 @@ def _validate_secrets_payload[SecretsModelT: BaseModel](
     keys differ, because a message naming the wrong flag sends the operator to a
     channel they did not use.
     """
+    # The accepted key set travels with every refusal on this channel. It is
+    # the CLI-boundary contract -- a refusal names what it would accept rather
+    # than only what it rejected -- and it matters most here: this is the
+    # channel a caller with no terminal MUST use, so "not a valid JSON object"
+    # left the one operator who cannot be prompted with nothing to correct
+    # towards. The names are the model's own declared fields, so they cannot
+    # drift from what validation actually accepts. No value is ever included.
+    expected_fields = ", ".join(model.model_fields)
     try:
         decoded = raw.decode(UTF_8_ENCODING)
         payload = json.loads(decoded, object_pairs_hook=_reject_duplicate_object_keys)
     except (ValueError, UnicodeDecodeError) as exc:
-        raise _CliRefusedBoundaryError(translated_message=invalid_json_key) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message=invalid_json_key,
+            context={"expected_fields": expected_fields},
+        ) from exc
     if not isinstance(payload, dict):
-        raise _CliRefusedBoundaryError(translated_message=invalid_json_key)
+        raise _CliRefusedBoundaryError(
+            translated_message=invalid_json_key,
+            context={"expected_fields": expected_fields},
+        )
     try:
         return model.model_validate(payload)
     except ValidationError as exc:
-        raise _CliRefusedBoundaryError(translated_message=missing_fields_key) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message=missing_fields_key,
+            context={"expected_fields": expected_fields},
+        ) from exc
 
 
 def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
