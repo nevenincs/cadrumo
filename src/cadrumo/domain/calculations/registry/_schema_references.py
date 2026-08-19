@@ -158,6 +158,33 @@ class TemporalApplicability(RegistryModel):
         return self
 
 
+def _validate_legal_governed_periods(
+    legal_id: str,
+    *,
+    governs_periods_from: date | None,
+    governs_periods_to: date | None,
+    effective_from: date,
+) -> None:
+    """Refuse a governed-period declaration that is not a retroactive reach."""
+    if governs_periods_to is not None and governs_periods_from is None:
+        raise RegistryValidationError(
+            f"legal reference {legal_id!r} declares governs_periods_to without governs_periods_from",
+        )
+    if governs_periods_from is None:
+        return
+    if governs_periods_from >= effective_from:
+        raise RegistryValidationError(
+            f"legal reference {legal_id!r} declares governs_periods_from "
+            f"{governs_periods_from.isoformat()} on or after effective_from "
+            f"{effective_from.isoformat()}: the field declares RETROACTIVE reach only, and a "
+            f"forward value would let a stale citation ground a period its norm never governed",
+        )
+    if governs_periods_to is not None and governs_periods_to < governs_periods_from:
+        raise RegistryValidationError(
+            f"legal reference {legal_id!r} governs_periods_to must be on or after governs_periods_from",
+        )
+
+
 class LegalReference(RegistryModel):
     """Legal-authority citation row carried by registry definitions."""
 
@@ -215,11 +242,43 @@ class LegalReference(RegistryModel):
     which pins its vintage forward as well as backward.
     """
 
+    governs_periods_from: date | None = None
+    """Earliest devengo this provision governs, when it reaches back before force.
+
+    ``effective_from`` / ``effective_to`` record when a norm entered and left
+    FORCE. A retroactive provision governs tax periods that closed before it
+    existed: RDL 13/2025, in force from 2025-11-27, extends the La Palma
+    deduction "durante los periodos impositivos 2022, 2023, 2024 y 2025" in its
+    own operative text. Checking such a citation against the in-force window
+    rejects a correct grounding, and the cheapest way to silence that refusal is
+    to backdate ``effective_from`` -- which misstates when the norm came into
+    force and corrupts every other consumer of that field.
+
+    So reach is declared here, separately, and only ever by an author who has
+    read the clause that states it. Absent, the governed span IS the in-force
+    span, so adding this field relaxes no existing citation. The declaration is
+    deliberately retroactive-only: it must precede ``effective_from``, because a
+    forward-reaching value would let a stale citation ground a period its norm
+    never governed.
+    """
+    governs_periods_to: date | None = None
+    """Latest devengo this provision governs; ``None`` leaves the reach open.
+
+    Only meaningful alongside :attr:`governs_periods_from`, which the validator
+    requires.
+    """
+
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
         _validate_legal_review_metadata(self.review_status, self.reviewed_by, self.reviewed_at)
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
+        _validate_legal_governed_periods(
+            self.id,
+            governs_periods_from=self.governs_periods_from,
+            governs_periods_to=self.governs_periods_to,
+            effective_from=self.effective_from,
+        )
         _validate_legal_reference_text(self.id, self.required_text, self.forbidden_text)
         _validate_legal_corpus_ref(self.id, self.corpus_ref)
         return self

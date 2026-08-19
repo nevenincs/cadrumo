@@ -490,6 +490,25 @@ _SUBSTANTIVE_LAW_KINDS = frozenset(
 )
 
 
+def _governed_period_span(reference: LegalReference) -> tuple[date, date | None]:
+    """Return the devengo span ``reference`` governs, which may precede its force.
+
+    Defaults to the in-force window, so a reference that declares nothing is
+    tested exactly as before -- the retroactive fields cannot relax a citation
+    by existing. A reference that DOES declare reach is tested against the
+    declared span, because that is the axis its citation defends: RDL 13/2025 is
+    in force only from 2025-11-27 yet governs periods 2022 through 2025 by its
+    own operative text, so the 2024 devengo it grounds is inside its reach and
+    outside its force.
+
+    The declaration is validated retroactive-only at the model boundary, so this
+    can widen a span backwards but never forwards.
+    """
+    if reference.governs_periods_from is None:
+        return reference.effective_from, reference.effective_to
+    return reference.governs_periods_from, reference.governs_periods_to
+
+
 def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalReference) -> bool:
     """Return whether ``reference``'s effective window grounds ``revision``.
 
@@ -522,15 +541,16 @@ def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefer
     """
     if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
         return RevisionLegalApplicabilityWindow.from_revision(revision).overlaps(reference)
-    if reference.effective_to is not None and reference.effective_to < revision.valid_from:
+    governs_from, governs_to = _governed_period_span(reference)
+    if governs_to is not None and governs_to < revision.valid_from:
         return False
     if revision.valid_to is None:
         # Open-ended (*-y-siguientes) revision: no fixed devengo date to
         # anchor to. Mirrors the orden gate's own open-ended carve-out.
         return True
-    if reference.effective_from > revision.valid_to:
+    if governs_from > revision.valid_to:
         return False
-    return reference.effective_to is None or reference.effective_to >= revision.valid_to
+    return governs_to is None or governs_to >= revision.valid_to
 
 
 def _check_revision_scoped_legal_windows(
