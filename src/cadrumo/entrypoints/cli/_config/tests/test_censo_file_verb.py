@@ -41,9 +41,16 @@ def test_non_pdf_artefact_refuses_with_the_registered_parse_code(tmp_path: Path)
     error = document.get("error")
     assert isinstance(error, dict)
     assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE"
-    suggestion = error.get("suggestion")
-    suggestion_text = suggestion if isinstance(suggestion, str) else ""
-    assert "profile edit" in suggestion_text
+    # The refusal must say WHAT was expected. It used to be asserted through a
+    # `suggestion` string, which the envelope retired: that name is reserved
+    # for the typed action projection now, and the error model refuses it
+    # outright, so the old assertion could only ever fail. This refusal carries
+    # no typed action yet -- naming a next step here would mean enrolling one
+    # in the operator action catalogue rather than reviving the retired field.
+    assert "suggestion" not in error
+    message = error.get("message")
+    assert isinstance(message, str)
+    assert "Certificado de Situación Censal" in message
 
 
 def test_pdf_artefact_refuses_while_extraction_is_unpinned(tmp_path: Path) -> None:

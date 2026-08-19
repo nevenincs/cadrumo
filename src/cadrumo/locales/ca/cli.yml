@@ -690,6 +690,7 @@ cli:
           regularizacion_bienes_inversion: regularització de béns d’inversió
           regularizacion_prorrata: regularització de prorrata
           retencion: retenció
+          withholding296_perceptor: perceptor de la declaració de retencions
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
           useu --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunes vinculacions següents s'alimenten de relacions
@@ -1760,6 +1761,10 @@ cli:
           obligatoris o en té d'inesperats.
         secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
           permesa.
+      recovery_words_confirm: Ja l'he anotada
+      recovery_words_heading: Desa aquesta frase de recuperació
+      recovery_words_warning: Només es mostra una vegada. Qui tingui aquesta frase
+        pot obrir el perfil sense la contrasenya.
       secrets_fd_help: Descriptor de fitxer per llegir secrets de màquina.
       secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
         de l'entrada estàndard en lloc de demanar-los.
@@ -1974,6 +1979,9 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que la sessió no es pot desar; aquest inici de sessió només val per
           a l'ordre actual.
+      passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executa
+        aquest verb en un terminal, usa --secrets-stdin o --secrets-fd, o defineix
+        CADRUMO_SECRET_PASSPHRASE per a una execució desatesa.
       passphrase_prompt: 'Contrasenya del perfil: '
       refusal:
         abandoned: S'ha cancel·lat l'inici de sessió; no s'ha obert cap perfil.
@@ -2256,72 +2264,6 @@ cli:
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
-        already_exists: Ja existeix un sandbox anomenat %{label}. Trieu un altre nom
-          o descarteu primer l'existent.
-        archive_active_profile: El sandbox %{name} és el perfil actiu; canvia a un
-          altre perfil abans d'arxivar-lo.
-        archive_dry_run_help: Previsualitza l'arxivat sense treure el sandbox de la
-          superfície activa.
-        archive_help: Converteix un sandbox en un estat latent reversible sense eliminar-lo.
-        archive_name_help: Nom del sandbox (sense el prefix).
-        archive_requires_yes: Arxivar un sandbox és una transició d'estat. Torna a
-          executar 'aeat config profile sandbox archive %{name} --yes' per confirmar.
-        archive_restorable_info: El sandbox %{name} ara està latent i es pot recuperar.
-        archive_yes_help: Confirma l'arxivat.
-        create_active_info: El sandbox és ara el perfil ACTIU; tots els comandaments
-          s'executen sobre ell fins que canviï de perfil o el descarti.
-        create_from_profile_help: Còpia les dades d'un perfil existent al sandbox
-          (el perfil d'origen només es llegeix).
-        create_help: Crea un nou sandbox aïllat i l'activa.
-        create_name_help: Nom del sandbox.
-        discard_active_profile: El sandbox %{name} és el perfil actiu; canvieu a un
-          altre perfil abans de descartar-lo.
-        discard_dry_run_help: Mostra una previsualització del que eliminaria el descart
-          sense eliminar res.
-        discard_help: Elimina permanentment un sandbox.
-        discard_name_help: Nom del sandbox (sense el prefix).
-        discard_not_a_sandbox: '%{name} no és un sandbox; la superfície de sandbox
-          es nega a descartar un perfil real.'
-        discard_requires_yes: Descartar un sandbox és destructiu. Torneu a executar
-          'aeat config profile sandbox discard %{name} --yes' per confirmar.
-        discard_yes_help: Confirma l'eliminació destructiva.
-        help: Executa experiments en un bucket aïllat i descartable que mai afecta
-          l'estat del perfil principal.
-        list_help: Llista tots els sandboxes.
-        merge_help: Promou els moviments del llibre o els registres de models d'un
-          sandbox a un altre perfil.
-        merge_into_help: Nom del perfil de destinació al qual es promouen els registres
-          del sandbox.
-        merge_name_help: Nom del sandbox (sense el prefix).
-        merge_promoted_info: S'ha promogut %{scope} de %{source} a %{target}.
-        merge_refused: L'entorn aïllat {name} no es pot fusionar a {into} perquè no
-          es compleixen les precondicions de la fusió.
-        merge_requires_yes: Fusionar l'entorn aïllat {name} a {into} amb l'àmbit {scope}
-          modifica l'estat i requereix confirmació explícita.
-        merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
-        merge_target_ambiguous: El perfil {into} és ambigu; identifica la destinació
-          mitjançant el seu ID de contenidor.
-        merge_target_not_found: No existeix cap perfil actiu anomenat {into} que es
-          pugui usar com a destinació de la fusió.
-        merge_yes_help: Confirma la promoció de les dades del sandbox.
-        prune_dry_run_help: Mostra una previsualització de quins sandboxes es descartarien
-          sense descartar-los.
-        prune_help: Descarta tots els sandboxes alhora.
-        prune_requires_yes: Descartar tots els sandboxes és destructiu. Torna a executar
-          'aeat config profile sandbox prune --yes' per confirmar.
-        prune_skipped_active_info: S'ha omès el sandbox actiu %{names}; canvia a un
-          altre perfil per descartar-lo.
-        prune_yes_help: Confirma el descart de tots els sandboxes.
-        restore_help: Recupera un sandbox arxivat i el torna a l'estat actiu.
-        restore_name_help: Nom del sandbox (sense el prefix).
-        restore_not_archived: '%{name} no està arxivat; no hi ha res a recuperar.'
-        source_not_found: No existeix cap perfil actiu anomenat %{name} per copiar
-          al sandbox.
-        unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile
-          sandbox list'' per veure els sandboxes registrats.'
-        usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
-        usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
-          tots.
       sar_catalogue_info: 'Aquest arxiu conté les categories de dades personals indicades
         al camp data_categories d''aquesta resposta. No és tot el que es conserva
         del perfil: les categories d''excluded_data_categories romanen a l''emmagatzematge

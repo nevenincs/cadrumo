@@ -1,4 +1,4 @@
-[revisions.2025-y-siguientes]
+[revisions."2025-y-siguientes"]
 authority_grade = "filing"
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["1P", "2P", "3P"] }
@@ -20,6 +20,9 @@ source_refs = [
     "boe-modelo-202-base-order",
     "boe-modelo-202-2025-amendment",
 ]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."

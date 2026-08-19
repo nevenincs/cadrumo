@@ -22,7 +22,7 @@ from textual.widgets import Static
 from .....adapters.inbound.tui import StatusApp
 from .....application.calculations import CalculationObservationRepository
 from .....application.overview import NO_AEAT_HISTORY_NOTICE_CODE
-from .....application.user_profile import register_profile_with_credentials
+from .....application.user_profile import login_profile, register_profile_with_credentials
 from .....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from .....domain.calculations.registry import RegistryModeloObservation
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -44,10 +44,24 @@ _FILING_YEAR = 2025
 _PERIOD = "1T"
 
 
+def _register_and_unlock() -> None:
+    """Bring a profile into existence AND unlock it, which are two steps.
+
+    Registration closes the session it opened, so a freshly registered profile
+    is locked. The status surface reads facts and observations through an
+    authenticated session, so registering alone leaves it with nothing to
+    report -- no facts, no notices, and a runtime that answers not-ready. The
+    absent advisory these cases were written to catch would then look like the
+    producer failing rather than the profile never having been opened.
+    """
+    register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+    login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
+
+
 def test_a_fresh_profile_with_no_aeat_history_raises_a_real_info_notice(tmp_path) -> None:
     """The real producer fires on a profile holding no official observation."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        _register_and_unlock()
 
         data = build_status_page_data()
 
@@ -69,7 +83,7 @@ def test_one_official_observation_silences_the_notice(tmp_path) -> None:
     returning the same fixed notice regardless of what is persisted.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        _register_and_unlock()
         CalculationObservationRepository().save(
             CalculationObservationRepository().prepare_observation_envelope(
                 RegistryModeloObservation(modelo=_MODELO, filing_year=_FILING_YEAR, period=_PERIOD),
@@ -92,7 +106,7 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
     reaches a painted cell, which is the gap this fix closes.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        _register_and_unlock()
         data = build_status_page_data()
         assert data.notices, "fixture premise: this profile must carry the real advisory"
         expected_message = data.notices[0].message

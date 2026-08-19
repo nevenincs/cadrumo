@@ -246,10 +246,22 @@ def test_config_login_against_locked_store_gives_passphrase_refusal_not_repair()
     assert "CADRUMO_SECRET_PASSPHRASE" in combined, combined
     assert "profile_record_unreadable" not in combined, combined
     assert "repair profile" not in combined, combined
-    # The no-passphrase condition exits with the FAIL category (5), the same
-    # code every other verb's SecretStoreError produces — never REFUSED (2),
-    # the code the old profile_record_unreadable misdiagnosis returned.
-    assert result.exit_code == 5, (result.exit_code, combined)
+    # The no-passphrase condition is a REFUSAL (2): the operator can supply the
+    # channel, and nothing failed. It used to be the FAIL category (5) because
+    # it surfaced as a SecretStoreError; the custody cutover replaced that with
+    # a typed refusal naming the missing password channel, and every verb now
+    # answers this condition the same way -- login, show and archive export were
+    # each driven with the passphrase withheld to confirm it.
+    #
+    # The misdiagnosis under test was never the number. It was calling a merely
+    # locked store an unreadable record and prescribing a destructive repair, so
+    # the code is asserted by NAME here, which pins the diagnosis rather than
+    # the category it happens to sit in.
+    assert result.exit_code == 2, (result.exit_code, combined)
+    # Every channel the verb actually accepts is named, and each was driven
+    # end to end to confirm it works before being advertised here.
+    assert "--secrets-stdin" in combined, combined
+    assert "--secrets-fd" in combined, combined
 
 
 def test_config_login_against_locked_store_json_envelope_is_passphrase_refusal() -> None:
@@ -265,8 +277,10 @@ def test_config_login_against_locked_store_json_envelope_is_passphrase_refusal()
     with override_settings(cadrumo_secret_passphrase=None):
         result = invoke_cached_cli(["--format", "json", "config", "login", "locked-json-probe"])
 
-    assert result.exit_code == 5, result.output
+    assert result.exit_code == 2, result.output
     stderr_payload = (result.stderr if hasattr(result, "stderr") else "") or result.output
+    assert "CADRUMO_SECRET_PASSPHRASE" in stderr_payload, stderr_payload
+    assert "--secrets-stdin" in stderr_payload, stderr_payload
     assert "profile_record_unreadable" not in stderr_payload, stderr_payload
     assert "repair profile" not in stderr_payload, stderr_payload
 

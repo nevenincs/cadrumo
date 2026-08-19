@@ -215,8 +215,10 @@ def _login_through_the_prompt(
     console-less one keeps the substrate's own refusal and exit code
     rather than acquiring this package's; neither behaviour moves.
     """
-    from ....application.user_profile import login_profile
+    from ....application.user_profile import login_profile, profile_is_password_authentication_failure
+    from ....core.config import load_settings
     from .. import _headless_secret_channel_active
+    from .._errors import CliRefusedBoundaryError
     from ._secure_input import (
         prompt_secret_no_echo,
         read_secrets_fd,
@@ -248,7 +250,27 @@ def _login_through_the_prompt(
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
-    except SecretStoreError:
+    except SecretStoreError as exc:
+        # Distinguish "no password was offered" from "the password was wrong".
+        # Custody refuses both through one error, and its absent-channel
+        # wording is necessarily terse: it cannot name --secrets-stdin,
+        # --secrets-fd or the environment variable, because those belong to
+        # this entrypoint. Only here is it knowable that NO channel existed --
+        # no callback was built and no passphrase is configured -- and only
+        # then is the instructive refusal the right answer. A wrong password
+        # offered through a real channel falls through unchanged: telling that
+        # operator to supply a channel they already supplied would be worse
+        # than the terse refusal. The check cannot move earlier either, because
+        # login legitimately proceeds with no callback at all -- a configured
+        # passphrase and a resumed session are both unlocked inside it.
+        if (
+            profile_is_password_authentication_failure(exc)
+            and passphrase_callback is None
+            and load_settings().cadrumo_secret_passphrase is None
+        ):
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.login.passphrase_channel_absent",
+            ) from None
         # The target could not be unlocked (a wrong passphrase, a corrupt
         # bucket DEK); render the refusal in the target's own output
         # language rather than the previous selection's. Both a UUID and a

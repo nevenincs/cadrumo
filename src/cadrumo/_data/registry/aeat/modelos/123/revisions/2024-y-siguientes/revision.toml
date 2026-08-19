@@ -11,6 +11,9 @@ source_refs = [
     "boe-modelo-123-2024-form",
     "boe-modelo-123-2024-form-text",
 ]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-123-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
