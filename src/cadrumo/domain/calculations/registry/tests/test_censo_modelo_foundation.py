@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from .....core.errors import get_registered_error_code
 from .....core.resources import resources
 from .. import (
+    select_revision,
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
     CENSO_MODELO_SERVICE_OWNER,
@@ -34,8 +35,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture(scope="module")
-def _m036_2025_alta_snapshot():
-    return resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
+def _m036_2025_alta_revision():
+    """The revision modelo 036's `alta` event resolves to, selected not snapshotted.
+
+    Both cases below read revision-level facts -- the period selector and the
+    filing schedule. `authority.snapshot` takes no grade and always builds at the
+    FILING rung, so it demanded a reviewed revision and filing capability from
+    modelo 036, whose registry declares `authority_grade = applicability`: a
+    censal alta/modificacion/baja is filed on AEAT's sede and this application
+    produces no fichero for it.
+
+    `select_revision` is the sanctioned resolver for "which revision governs this
+    period" and keeps the teeth -- a period no revision declares still raises.
+    """
+    authority = resources().modelos.authority
+    return select_revision(authority.validate_modelo("036"), filing_year=2025, period="alta")
 
 
 def test_censo_foundation_owner_is_registry_domain() -> None:
@@ -70,26 +84,27 @@ def test_modelo_036_is_active_event_triggered_foundation() -> None:
     assert is_active_censo_modelo("036") is True
 
 
-def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_snapshot: RegistrySnapshot) -> None:
+def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_revision) -> None:
     record = censo_modelo_ownership("036")
-    snapshot = _m036_2025_alta_snapshot
+    revision = _m036_2025_alta_revision
+    schedules = {schedule.id: schedule for schedule in revision.filing_schedules}
 
-    assert record.event_kinds == snapshot.revision.period_selector.periods
-    assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == record.event_kinds
+    assert record.event_kinds == revision.period_selector.periods
+    assert schedules["modelo-036-event-triggered"].periods == record.event_kinds
 
 
 def test_active_036_work_unit_periods_resolve_from_committed_registry_revision(
-    _m036_2025_alta_snapshot: RegistrySnapshot,
+    _m036_2025_alta_revision,
 ) -> None:
-    snapshot = _m036_2025_alta_snapshot
+    revision = _m036_2025_alta_revision
 
-    for period in snapshot.revision.period_selector.periods:
+    for period in revision.period_selector.periods:
         result = resolve_censo_modelo_work_unit_foundation(modelo="036", period=period)
 
         assert result is not None
         assert result.modelo == "036"
         assert result.event_kind is CensoModeloEventKind(period)
-        expected_event_kinds = tuple(CensoModeloEventKind(kind) for kind in snapshot.revision.period_selector.periods)
+        expected_event_kinds = tuple(CensoModeloEventKind(kind) for kind in revision.period_selector.periods)
         assert result.event_kinds == expected_event_kinds
 
 
