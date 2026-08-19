@@ -225,13 +225,134 @@ def _simplified_fact_home(cohort: str, fact: str, slot: int, sub_index: int | No
 
 
 _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
+    "2022": _EpochSurfaceExpectation(
+        # The 2022 semantic map was authored without a surface expectation, so
+        # every epoch-scoped case refused with "no reviewed surface expectation".
+        # 2022 precedes 2023, so it -- not 2023 -- is the root of the chain.
+        #
+        # Its DP30303 markers sit one slot apart from where 2023 puts them: the
+        # complementaria marker at ordinal 27 and the no-activity marker at 29,
+        # against 29 and 28 in 2023. That is a re-layout, which is exactly the
+        # per-epoch fact this row exists to state rather than assume.
+        #
+        # `general_rate_allowed_values` is None because the 2022 DP30301
+        # general-rate slot states no closed enumeration, measured through the
+        # same rendered-field accessor the case below reads.
+        no_activity_marker_ordinal="29",
+        amendment_evidence=(("DP30303", "27", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
+        general_rate_allowed_values=None,
+        predecessor=None,
+        introduced_homes=(),
+        retired_homes=(),
+    ),
     "2023": _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
-        predecessor=None,
-        introduced_homes=(),
-        retired_homes=(),
+        # 2023 re-lays out 2022. Two changes account for the whole diff, and both
+        # are AEAT's, not the registry's:
+        #
+        #  - the RATE-BOX relayout: the fixed printed "Tipo %" boxes are retired
+        #    (02, 05 and 08 of the three general-regime devengado triplets, plus
+        #    20 and 23 of the recargo de equivalencia rows) and a variable-rate
+        #    base/tipo/cuota block arrives as 150 and 152-155, because a rate
+        #    that moves mid-period cannot be printed on the form. Box 109,
+        #    "Devoluciones acordadas por la AEAT", arrives with them.
+        #  - the REGIMEN SIMPLIFICADO actividad modules arrive on DP30302: 62 of
+        #    the 82 introduced homes are simplified-regime projections, which is
+        #    also why 2022 declares no pure-integer DP30302 slot at all.
+        predecessor="2022",
+        introduced_homes=(
+            ('DP30301', '25', 'casilla:150'),
+            ('DP30301', '26', "literal:'00000'@DP30301"),
+            ('DP30301', '27', 'casilla:152'),
+            ('DP30301', '29', "literal:'00400'@DP30301"),
+            ('DP30301', '31', 'casilla:153'),
+            ('DP30301', '32', 'casilla:154'),
+            ('DP30301', '33', 'casilla:155'),
+            ('DP30301', '38', "literal:'02100'@DP30301"),
+            ('DP30301', '46', 'casilla:156'),
+            ('DP30301', '47', "literal:'00175'@DP30301"),
+            ('DP30301', '48', 'casilla:158'),
+            ('DP30301', '53', "literal:'00140'@DP30301"),
+            ('DP30301', '56', "literal:'00520'@DP30301"),
+            ('DP30302', '90', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=actividad_temporada_dias_ejercicio_anio_anterior,slot=1)'),
+            ('DP30302', '91', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=dias_ejercicio_trimestre,slot=1)'),
+            ('DP30302', '92', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=empleados_inicio_ejercicio,slot=1)'),
+            ('DP30302', '93', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=actividad_temporada_dias_ejercicio_cuarto_trimestre,slot=1)'),
+            ('DP30302', '94', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=max_asalariados_simultaneos,slot=1)'),
+            ('DP30302', '95', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=lorca_elegible,slot=1)'),
+            ('DP30302', '96', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=cuotas_soportadas_cuarto_trimestre,slot=1)'),
+            ('DP30302', '97', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=compensaciones_reagp_cuarto_trimestre,slot=1)'),
+            ('DP30302', '98', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_mayores_19,slot=1)'),
+            ('DP30302', '99', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_menores_19_o_formacion,slot=1)'),
+            ('DP30302', '100', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_discapacidad_33,slot=1)'),
+            ('DP30302', '101', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_convenio_colectivo,slot=1)'),
+            ('DP30302', '102', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_titular,slot=1)'),
+            ('DP30302', '103', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_titular_discapacidad_33,slot=1)'),
+            ('DP30302', '104', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_conyuge,slot=1)'),
+            ('DP30302', '105', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_hijos_menores_18,slot=1)'),
+            ('DP30302', '106', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=1,sub_index=1)'),
+            ('DP30302', '107', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=1,sub_index=1)'),
+            ('DP30302', '108', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=1,sub_index=1)'),
+            ('DP30302', '109', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=1,sub_index=2)'),
+            ('DP30302', '110', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=1,sub_index=2)'),
+            ('DP30302', '111', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=1,sub_index=2)'),
+            ('DP30302', '112', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=1,sub_index=3)'),
+            ('DP30302', '113', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=1,sub_index=3)'),
+            ('DP30302', '114', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=1,sub_index=3)'),
+            ('DP30302', '115', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=1,sub_index=4)'),
+            ('DP30302', '116', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=1,sub_index=4)'),
+            ('DP30302', '117', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=1,sub_index=4)'),
+            ('DP30302', '118', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=actividad_temporada_dias_ejercicio_anio_anterior,slot=2)'),
+            ('DP30302', '119', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=dias_ejercicio_trimestre,slot=2)'),
+            ('DP30302', '120', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=empleados_inicio_ejercicio_actual,slot=2)'),
+            ('DP30302', '121', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=actividad_temporada_dias_ejercicio_cuarto_trimestre,slot=2)'),
+            ('DP30302', '122', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=max_asalariados_simultaneos,slot=2)'),
+            ('DP30302', '123', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=lorca_elegible,slot=2)'),
+            ('DP30302', '124', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=cuotas_soportadas_cuarto_trimestre,slot=2)'),
+            ('DP30302', '125', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=compensaciones_reagp_cuarto_trimestre,slot=2)'),
+            ('DP30302', '126', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_mayores_19,slot=2)'),
+            ('DP30302', '127', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_menores_19_o_formacion,slot=2)'),
+            ('DP30302', '128', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_discapacidad_33,slot=2)'),
+            ('DP30302', '129', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_asalariado_horas_convenio_colectivo,slot=2)'),
+            ('DP30302', '130', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_titular,slot=2)'),
+            ('DP30302', '131', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_titular_discapacidad_33,slot=2)'),
+            ('DP30302', '132', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_conyuge,slot=2)'),
+            ('DP30302', '133', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=personal_no_asalariado_horas_hijos_menores_18,slot=2)'),
+            ('DP30302', '134', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=2,sub_index=1)'),
+            ('DP30302', '135', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=2,sub_index=1)'),
+            ('DP30302', '136', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=2,sub_index=1)'),
+            ('DP30302', '137', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=2,sub_index=2)'),
+            ('DP30302', '138', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=2,sub_index=2)'),
+            ('DP30302', '139', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=2,sub_index=2)'),
+            ('DP30302', '140', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=2,sub_index=3)'),
+            ('DP30302', '141', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=2,sub_index=3)'),
+            ('DP30302', '142', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=2,sub_index=3)'),
+            ('DP30302', '143', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_capacidad,slot=2,sub_index=4)'),
+            ('DP30302', '144', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_numero,slot=2,sub_index=4)'),
+            ('DP30302', '145', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=mesas_dias_cuarto_trimestre,slot=2,sub_index=4)'),
+            ('DP30302', '146', 'projection:m303_regimen_simplificado_fact(cohort=agricola,fact=cuotas_soportadas_cuarto_trimestre,slot=1)'),
+            ('DP30302', '147', 'projection:m303_regimen_simplificado_fact(cohort=agricola,fact=compensaciones_reagp_cuarto_trimestre,slot=1)'),
+            ('DP30302', '148', 'projection:m303_regimen_simplificado_fact(cohort=agricola,fact=cuotas_soportadas_cuarto_trimestre,slot=2)'),
+            ('DP30302', '149', 'projection:m303_regimen_simplificado_fact(cohort=agricola,fact=compensaciones_reagp_cuarto_trimestre,slot=2)'),
+            ('DP30302', '150', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=superficie_horno_dias_cuarto_trimestre,slot=1)'),
+            ('DP30302', '151', 'projection:m303_regimen_simplificado_fact(cohort=no_agricola,fact=superficie_horno_dias_cuarto_trimestre,slot=2)'),
+            ('DP30303', '26', 'casilla:109'),
+            ('DP303DID', '1', "literal:'<T'@DP303DID"),
+            ('DP303DID', '2', "literal:'303'@DP303DID"),
+            ('DP303DID', '3', "literal:'DID00'@DP303DID"),
+            ('DP303DID', '4', "literal:'>'@DP303DID"),
+            ('DP303DID', '12', 'filler@DP303DID'),
+            ('DP303DID', '13', "literal:'</T303DID00>'@DP303DID"),
+        ),
+        retired_homes=(
+            ('DP30301', '26', 'casilla:02'),
+            ('DP30301', '29', 'casilla:05'),
+            ('DP30301', '32', 'casilla:08'),
+            ('DP30301', '44', 'casilla:20'),
+            ('DP30301', '47', 'casilla:23'),
+        ),
     ),
     "2024-early": _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
@@ -647,7 +768,22 @@ def test_real_static_compiler_normalizes_the_complete_map(epoch: _EpochAuthoriti
     """The static compiler resolves every sourced field without filing-instance inputs."""
     records, derivations = _render_records(epoch.joined.records, epoch.transport(), epoch.profile)
 
-    assert tuple(record.id for record in records) == _RECORD_IDS
+    # Body records in official order, but only the ones THIS design lays out.
+    # `_RECORD_IDS` is the full official sequence; the 2022 design carries five
+    # body sheets (DP30301..DP30305) and the domiciliacion record DP303DID
+    # arrives with the 2023 design, so a flat equality asserted a record that
+    # design has never had. The count comes from the design's own sheets and the
+    # ORDER from `_RECORD_IDS`, so a record that renders out of official order,
+    # or a design sheet that renders no record at all, still fails.
+    rendered = tuple(record.id for record in records)
+    declared_sheets = {
+        field.semantic_entry.anchor.record_identity for record in epoch.joined.records for field in record.fields
+    }
+    assert len(rendered) == len(declared_sheets), (
+        f"{epoch.design_epoch} lays out {len(declared_sheets)} body sheets but rendered {len(rendered)} records"
+    )
+    assert rendered == tuple(record_id for record_id in _RECORD_IDS if record_id in set(rendered))
+    assert set(rendered) <= set(_RECORD_IDS)
     by_field_id = {str(derivation.field.id): derivation.field for derivation in derivations}
     blank_page_marker_ids = {
         f"{epoch.field_id_prefix}.dp30301.f005",
@@ -881,17 +1017,38 @@ def test_note_reference_peeling_only_ever_removes_a_trailing_annotation() -> Non
     assert not failures, "\n".join(failures)
 
 
-def test_a_parenthesised_note_reference_belongs_to_the_value_and_is_never_peeled() -> None:
-    """``blanco, "1" o "2" (Nota 3)`` is one value description, not an annotation.
+def test_a_parenthesised_note_reference_is_peeled_only_from_the_tail() -> None:
+    """A parenthesised note is an annotation when it TRAILS and part of the value when it does not.
 
-    The reference sits inside the enumeration rather than after it, so a peeler
-    that reached it would truncate the value the design states and the loss
-    would be silent -- the shortened stem is still a well-formed string.
+    This asserted that a parenthesised reference is never peeled at all, on the
+    reading that ``blanco, "1" o "2" (Nota 3)`` carries its reference INSIDE the
+    enumeration. It does not: the reference trails the complete enumeration, and
+    peeling it leaves ``blanco, "1" o "2"`` with nothing lost. The peeler says so
+    itself -- `_TRAILING_NOTE_REFERENCE_RE` spells an optional ``\(?`` and
+    ``\)?`` around the reference and anchors on ``$`` -- so refusing to peel a
+    trailing parenthesised note contradicted the shipped grammar rather than
+    guarding the value.
+
+    The hazard the old wording named is real but is a DIFFERENT shape: a note
+    sitting between two enumeration members. That is asserted directly below,
+    and the ``$`` anchor is what makes it safe.
     """
     parenthesised = tuple(form for form in _bundled_design_note_forms() if form.notes_are_all_parenthesised)
     assert parenthesised, "the corpus no longer exercises a parenthesised note reference"
     for form in parenthesised:
-        assert _split_official_note_references(form.content) == (form.content, ()), form.content
+        stem, notes = _split_official_note_references(form.content)
+        # Only a TAIL may be removed: the stem must be a leading slice of the
+        # content, and everything dropped must be note text and punctuation.
+        assert form.content.startswith(stem), form.content
+        removed = form.content[len(stem) :]
+        assert notes, form.content
+        assert all(f"Nota {number}" in removed for number in notes), form.content
+        assert re.fullmatch(r"[\s.,;()]*(?:Nota\s+\d+[\s.,;()]*)+", removed), removed
+
+    # An INTERIOR reference is part of the value and stays untouched, which is
+    # what keeps the peel from truncating an enumeration mid-way.
+    interior = '"1" (Nota 3) o "2"'
+    assert _split_official_note_references(interior) == (interior, ())
 
 
 def test_every_numeric_note_bearing_form_peels_to_one_readable_value_grammar() -> None:
