@@ -186,6 +186,15 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
+    def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
+        """Apply ``mutation`` to the stored catalogue as one revision-guarded unit of work.
+
+        On the port because the application needs it: the catalogue is a
+        singleton row, so stamping one record rewrites every other, and doing
+        that through ``save`` discards whatever a concurrent caller wrote.
+        """
+        ...
+
     def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
         """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it."""
         ...
