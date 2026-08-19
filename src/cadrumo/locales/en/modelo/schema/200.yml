@@ -368,6 +368,9 @@ modelo:
               help: null
               label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
                 - Increase - Corrections for the period - Permanent [00095]
+            00096:
+              help: Deduction pending or generated — Innovación tecnológica (IT)
+              label: Innovación tecnológica (IT). Deduction pending or generated
             00097:
               help: null
               label: 'Special regime for ships and shipping companies in the Canary
@@ -2698,6 +2701,9 @@ modelo:
               help: null
               label: Deductions under Transitional Provision 24.7 LIS - Deduction
                 DT 24.7 LIS 2023 - Applied in this settlement [00697]
+            00698:
+              help: Applied in this settlement — Innovación tecnológica (IT)
+              label: Innovación tecnológica (IT). Applied in this settlement
             00699:
               help: null
               label: Detail of offset of negative tax bases - 2014 - Pending application
@@ -2755,6 +2761,10 @@ modelo:
               help: null
               label: 'Balance sheet: Equity and liabilities (I) - Equity and liabilities
                 - Mandatory reserve fund of cooperatives [00712]'
+            '00713':
+              help: Pending application in future periods — Innovación tecnológica
+                (IT)
+              label: Innovación tecnológica (IT). Pending application in future periods
             '00714':
               help: null
               label: Internal double taxation deductions RDLeg. 4/2004 - Internal
@@ -3090,11 +3100,32 @@ modelo:
               label: Profit and loss account (I) - Continuing operations - From marketable
                 securities and other financial instruments - From members (cooperatives)
                 [00794]
+            00795:
+              help: Deduction pending or generated — Deducción por creación de empleo
+                trabaj. con discapacidad (CE)
+              label: Deducción por creación de empleo trabaj. con discapacidad (CE).
+                Deduction pending or generated
             00796:
               help: null
               label: Profit and loss account (II) - Continuing operations - Interest
                 and mandatory return on contributions to share capital and other funds
                 classified with debt characteristics (coo...
+            00797:
+              help: Pending application in future periods — Deducción por creación
+                de empleo trabaj. con discapacidad (CE)
+              label: Deducción por creación de empleo trabaj. con discapacidad (CE).
+                Pending application in future periods
+            00798:
+              help: Deduction pending or generated — Investigación y desarrollo (CT)
+              label: Investigación y desarrollo (CT). Deduction pending or generated
+            00799:
+              help: Applied in this settlement — Investigación y desarrollo (CT)
+              label: Investigación y desarrollo (CT). Applied in this settlement
+            00800:
+              help: Pending application in future periods — Investigación y desarrollo
+                (CT)
+              label: Investigación y desarrollo (CT). Pending application in future
+                periods
             00801:
               help: null
               label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
@@ -3121,6 +3152,21 @@ modelo:
               help: null
               label: Canary Islands investment deductions - Canary Islands investments
                 2017 - Pending application in future periods [00806]
+            00807:
+              help: 'Deduction pending or generated — Productor: producciones cinematográficas
+                españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Deduction
+                pending or generated'
+            00808:
+              help: 'Applied in this settlement — Productor: producciones cinematográficas
+                españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Applied
+                in this settlement'
+            00809:
+              help: 'Pending application in future periods — Productor: producciones
+                cinematográficas españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Pending
+                application in future periods'
             00810:
               help: null
               label: Deductions to incentivize certain activities - 2015 Research
@@ -3399,11 +3445,25 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2021 - With repeated donations to the same entity - Applied in this
                 settlement [00873]
+            00874:
+              help: Deduction pending or generated — Bicentenario de la Policía Nacional
+                (PN)
+              label: Bicentenario de la Policía Nacional (PN). Deduction pending or
+                generated
+            00875:
+              help: Applied in this settlement — Bicentenario de la Policía Nacional
+                (PN)
+              label: Bicentenario de la Policía Nacional (PN). Applied in this settlement
             00876:
               help: null
               label: Deduction for donations to non-profit entities - General donations
                 - 2022 without repeated donations to the same entity - Applied in
                 this settlement [00876]
+            00877:
+              help: Pending application in future periods — Bicentenario de la Policía
+                Nacional (PN)
+              label: Bicentenario de la Policía Nacional (PN). Pending application
+                in future periods
             00878:
               help: null
               label: Conversion of deferred tax assets into receivable credit against
@@ -3452,6 +3512,15 @@ modelo:
               help: null
               label: Canary Islands investment deductions - Total - Pending application
                 in future periods [00887]
+            00888:
+              help: Applied in this settlement — Deducción por inversión en beneficios
+                (IB)
+              label: Deducción por inversión en beneficios (IB). Applied in this settlement
+            00889:
+              help: Pending application in future periods — Deducción por inversión
+                en beneficios (IB)
+              label: Deducción por inversión en beneficios (IB). Pending application
+                in future periods
             00890:
               help: null
               label: Deduction for donations to non-profit entities - General donations
@@ -3857,6 +3926,9 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2016 without repeated donations to the same entity - Pending application
                 in future periods [00995]
+            00999:
+              help: '6.- Double taxation relief: deduction base — B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: deduction base'
             '01000':
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -4185,6 +4257,21 @@ modelo:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2022 - With repeated donations to the same...
+            '01075':
+              help: 'Deduction pending or generated — Productor: espectáculos en vivo
+                artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Deduction pending or generated'
+            '01076':
+              help: 'Applied in this settlement — Productor: espectáculos en vivo
+                artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Applied in this settlement'
+            '01077':
+              help: 'Pending application in future periods — Productor: espectáculos
+                en vivo artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Pending application in future periods'
             01078:
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -4294,6 +4381,9 @@ modelo:
               help: null
               label: Pending addition for unapplied operating profit limit - Generation
                 year 2022 - Pending application in future periods [01105]
+            01108:
+              help: '6.- Double taxation relief: deduction amount — B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
             01109:
               help: null
               label: Equalization reserve - Tax base reduction - Generation year 2021
@@ -4405,6 +4495,9 @@ modelo:
               help: null
               label: Capitalization reserve - Total - Right to reduce tax base generated
                 in period/pending application at start of period [01137]
+            01138:
+              help: '6.- Double taxation relief: deduction base — B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: deduction base'
             01139:
               help: null
               label: Capitalization reserve - Total - Tax base reduction pending application
@@ -4499,6 +4592,9 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
                 - Total - Pending amount [01173]
+            '01174':
+              help: '6.- Double taxation relief: deduction amount — B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
             '01175':
               help: null
               label: Special Canary Islands investment reserve regime - RIC 2021 -
@@ -4516,6 +4612,11 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
                 - 2015 - Amount generated/pending at beginning of period [01179]
+            01180:
+              help: Applied in this settlement — Año de Investigación Santiago Ramón
+                y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Applied
+                in this settlement
             01181:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
@@ -4579,11 +4680,20 @@ modelo:
               label: Limitation on deductibility of financial expenses. financial
                 expenses pending deduction - Generation year 2013 - Applied in this
                 settlement [01194]
+            01195:
+              help: Pending application in future periods — Año de Investigación Santiago
+                Ramón y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Pending
+                application in future periods
             01196:
               help: null
               label: Limitation on deductibility of financial expenses. financial
                 expenses pending deduction - Generation year 2013 - Pending application
                 in future periods - Remainder [01196]
+            01197:
+              help: Deduction pending or generated — Año Jubilar Lebaniego 2023-2024
+                (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Deduction pending or generated
             01198:
               help: null
               label: Limitation on deductibility of financial expenses. financial
@@ -4629,6 +4739,14 @@ modelo:
               label: Limitation on deductibility of financial expenses. financial
                 expenses pending deduction - Generation year 2015 - Pending application
                 in future periods - Remainder [01206]
+            '01207':
+              help: Applied in this settlement — Año Jubilar Lebaniego 2023-2024 (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Applied in this settlement
+            01208:
+              help: Pending application in future periods — Año Jubilar Lebaniego
+                2023-2024 (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Pending application in
+                future periods
             01209:
               help: null
               label: Limitation on deductibility of financial expenses. financial
@@ -4682,6 +4800,11 @@ modelo:
               label: Allowances for impairment of receivables or other assets - Generation
                 year - 2024 - Allowances pending integration in future periods - That
                 have met tax deductibility conditions [01219]
+            '01223':
+              help: Deduction pending or generated — Caravaca de la Cruz 2024. Año
+                Jubilar (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Deduction pending
+                or generated
             '01224':
               help: null
               label: Cooperative regime - Tax liability compensation detail. 2000
@@ -4694,6 +4817,20 @@ modelo:
               help: null
               label: Cooperative regime - Tax liability compensation detail. 2024
                 Pending application in future periods [01226]
+            '01227':
+              help: 2.- Net finance costs not deducted by the entity — B) Datos económicos
+              label: B) Datos económicos. 2.- Net finance costs not deducted by the
+                entity
+            01228:
+              help: 3.- Capitalisation reserve not applied by the entity — B) Datos
+                económicos
+              label: B) Datos económicos. 3.- Capitalisation reserve not applied by
+                the entity
+            01229:
+              help: Applied in this settlement — Caravaca de la Cruz 2024. Año Jubilar
+                (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Applied in this
+                settlement
             '01230':
               help: null
               label: Settlement I - Profit and loss account result - Corrections to
@@ -4702,6 +4839,11 @@ modelo:
               help: null
               label: Settlement I - Profit and loss account result - Corrections to
                 accounting tax referring to the tax group - Decreases [01231]
+            '01232':
+              help: Pending application in future periods — Caravaca de la Cruz 2024.
+                Año Jubilar (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Pending application
+                in future periods
             '01234':
               help: null
               label: Settlement IV - Self-assessment result - Payment of R&D&I deductions
@@ -4831,6 +4973,20 @@ modelo:
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Negative tax bases generated within the tax group by the
                 transferred entity and offset - Decreases [0...
+            '01277':
+              help: '6.- Double taxation relief: total deduction base — B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: total deduction
+                base'
+            01278:
+              help: '6.- Double taxation relief: total deduction amount — B) Datos
+                económicos'
+              label: 'B) Datos económicos. 6.- Double taxation relief: total deduction
+                amount'
+            01279:
+              help: 'Holding details: Valuation of the holding at the start of the
+                tax period'
+              label: 'Holding details: Valuation of the holding at the start of the
+                tax period'
             01280:
               help: null
               label: Settlement III - Allowances/Double taxation deductions - Double
@@ -5215,6 +5371,21 @@ modelo:
               help: null
               label: Deductions to incentivize certain activities - 2025(*) Technological
                 innovation (IT) - Pending application in future periods [01368]
+            01369:
+              help: Deduction pending or generated — Gastos e inversiones de sociedades
+                forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Deduction
+                pending or generated
+            '01370':
+              help: Applied in this settlement — Gastos e inversiones de sociedades
+                forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Applied in
+                this settlement
+            '01371':
+              help: Pending application in future periods — Gastos e inversiones de
+                sociedades forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Pending application
+                in future periods
             '01372':
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -5583,10 +5754,30 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision
                 37.2 LIS) - 2017 - Pending amount [01454]
+            '01455':
+              help: 'Holding details: Valuation of the holding at the end of the tax
+                period'
+              label: 'Holding details: Valuation of the holding at the end of the
+                tax period'
+            '01456':
+              help: 'Holding details: Finance income from the holding'
+              label: 'Holding details: Finance income from the holding'
             '01457':
               help: null
               label: LIS international double taxation deductions - International
                 D.T. 2023 - 2025 pending deduction [01457]
+            01458:
+              help: 'Amounts attributed: Attributed accounting result'
+              label: 'Amounts attributed: Attributed accounting result'
+            01459:
+              help: 'Amounts attributed: Attributed net finance costs'
+              label: 'Amounts attributed: Attributed net finance costs'
+            '01460':
+              help: 'Amounts attributed: Attributed capitalisation reserve not applied'
+              label: 'Amounts attributed: Attributed capitalisation reserve not applied'
+            '01461':
+              help: 'Amounts attributed: Attributed taxable base'
+              label: 'Amounts attributed: Attributed taxable base'
             '01462':
               help: null
               label: Limitation on deductibility of financial expenses. financial
@@ -5612,6 +5803,16 @@ modelo:
               label: Limitation on deductibility of financial expenses. financial
                 expenses pending deduction - Generation year 2017 - Pending application
                 in future periods - Remainder [01466]
+            '01467':
+              help: 'Amounts attributed: Deduction generated from the attributed double-taxation-relief
+                deduction bases'
+              label: 'Amounts attributed: Deduction generated from the attributed
+                double-taxation-relief deduction bases'
+            01468:
+              help: 'Amounts attributed: Allowance generated from the attributed allowance
+                bases'
+              label: 'Amounts attributed: Allowance generated from the attributed
+                allowance bases'
             '01470':
               help: null
               label: Impairment allowances for receivables or other assets - Generation
@@ -5824,6 +6025,11 @@ modelo:
               help: null
               label: Transitory Provision 24.7 LIS deductions - D.T. 24.7 LIS 2024
                 deductions - Applied in this settlement [01522]
+            '01523':
+              help: 'Amounts attributed: Fixed-asset deduction generated from the
+                attributed Canary Islands investment deduction bases'
+              label: 'Amounts attributed: Fixed-asset deduction generated from the
+                attributed Canary Islands investment deduction bases'
             '01524':
               help: null
               label: Conversion of deferred tax assets into enforceable credit against
@@ -6237,6 +6443,13 @@ modelo:
               label: Internal double taxation deductions (Transitional Provision 23.1
                 LIS) - Internal D.T. 2017 - Pending application in future periods
                 [01599]
+            '01601':
+              help: 'Amounts attributed: R&D and technological innovation deduction
+                generated from the attributed Canary Islands investment deduction
+                bases'
+              label: 'Amounts attributed: R&D and technological innovation deduction
+                generated from the attributed Canary Islands investment deduction
+                bases'
             '01602':
               help: null
               label: Adjustments for impairment of securities representing holdings
@@ -6395,6 +6608,23 @@ modelo:
               help: null
               label: Joint taxation of State and provincial tax administrations -
                 Instalment option art. 19.1 LIS - Tax debt - Bizkaia [01637]
+            01638:
+              help: 'Amounts attributed: Deduction generated for Spanish film productions
+                and live performing-arts and musical shows from the attributed Canary
+                Islands investment deductions'
+              label: 'Amounts attributed: Deduction generated for Spanish film productions
+                and live performing-arts and musical shows from the attributed Canary
+                Islands investment deductions'
+            01639:
+              help: 'Amounts attributed: Deduction generated from the remaining attributed
+                Canary Islands investment deductions'
+              label: 'Amounts attributed: Deduction generated from the remaining attributed
+                Canary Islands investment deductions'
+            '01640':
+              help: 'Amounts attributed: R&D and technological innovation deduction
+                generated from the attributed deduction bases'
+              label: 'Amounts attributed: R&D and technological innovation deduction
+                generated from the attributed deduction bases'
             '01641':
               help: null
               label: Joint taxation of State and provincial tax administrations -
@@ -6861,6 +7091,13 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS RDL 4/2024) - Increase - Corrections
                 for the year - Temporary (originating in the year) ... [01742]
+            '01743':
+              help: 'Amounts attributed: Deduction generated for Spanish film productions
+                and live performing-arts and musical shows from the attributed deduction
+                bases'
+              label: 'Amounts attributed: Deduction generated for Spanish film productions
+                and live performing-arts and musical shows from the attributed deduction
+                bases'
             '01744':
               help: null
               label: Special regime for Canary Islands investment reserve - CIR 2021
@@ -7442,6 +7679,11 @@ modelo:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.1 and 2 LIS) - Decrease
                 - Balance carried forward at year-end [01869]
+            01871:
+              help: Deduction pending or generated — Año de Investigación Santiago
+                Ramón y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Deduction
+                pending or generated
             01872:
               help: null
               label: Levelling reserve - Reserve allocation - Year of generation 2023
@@ -7586,6 +7828,21 @@ modelo:
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
                 in periods ...
+            01900:
+              help: Deduction pending or generated — Inauguración de la Galería de
+                las Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Deduction
+                pending or generated
+            01901:
+              help: Applied in this settlement — Inauguración de la Galería de las
+                Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Applied
+                in this settlement
+            01902:
+              help: Pending application in future periods — Inauguración de la Galería
+                de las Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Pending
+                application in future periods
             01905:
               help: null
               label: Settlement II - Detail of adjustments to the profit and loss
@@ -7596,6 +7853,31 @@ modelo:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - 37th America's Cup Barcelona (Law 31/2022) - Decreases
                 [01906]
+            01907:
+              help: Deduction pending or generated — Programa EN PLAN BIEN (EPB)
+              label: Programa EN PLAN BIEN (EPB). Deduction pending or generated
+            01908:
+              help: Applied in this settlement — Programa EN PLAN BIEN (EPB)
+              label: Programa EN PLAN BIEN (EPB). Applied in this settlement
+            01909:
+              help: 'Amounts attributed: Remaining deductions to incentivise certain
+                activities generated from the attributed deduction bases'
+              label: 'Amounts attributed: Remaining deductions to incentivise certain
+                activities generated from the attributed deduction bases'
+            01910:
+              help: 'Amounts attributed: Remaining deductions generated from attributed
+                deduction bases not mentioned above'
+              label: 'Amounts attributed: Remaining deductions generated from attributed
+                deduction bases not mentioned above'
+            01911:
+              help: 'Amounts attributed: Attributed withholdings and payments on account'
+              label: 'Amounts attributed: Attributed withholdings and payments on
+                account'
+            01912:
+              help: 'Amounts attributed: Dividends and profit shares received from
+                years before the holding was acquired'
+              label: 'Amounts attributed: Dividends and profit shares received from
+                years before the holding was acquired'
             01913:
               help: null
               label: Deductions for investment in the Canary Islands - Fixed assets
@@ -7704,6 +7986,11 @@ modelo:
               help: null
               label: Deductions for foreign film productions (art. 36.2 LIS) - 2015
                 - Amount paid due to insufficient tax liability [01933]
+            01934:
+              help: 'Amounts attributed: Dividends and profit shares received from
+                years after the holding was acquired'
+              label: 'Amounts attributed: Dividends and profit shares received from
+                years after the holding was acquired'
             01935:
               help: null
               label: R&D&i deductions excluded from the limit - Additional information
@@ -7948,6 +8235,111 @@ modelo:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.3 LIS) - Increase
                 - Adjustments for the tax year - Permanent [01996]
+            01999:
+              help: Pending application in future periods — Programa EN PLAN BIEN
+                (EPB)
+              label: Programa EN PLAN BIEN (EPB). Pending application in future periods
+            '02026':
+              help: Deduction pending or generated — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Deduction pending or generated
+            '02027':
+              help: Applied in this settlement — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Applied in this settlement
+            02028:
+              help: Pending application in future periods — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Pending application in future periods
+            02029:
+              help: Deduction pending or generated — Open Barcelona-Trofeo Conde de
+                Godó (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Deduction pending or
+                generated
+            '02030':
+              help: Applied in this settlement — Open Barcelona-Trofeo Conde de Godó
+                (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Applied in this settlement
+            '02031':
+              help: Pending application in future periods — Open Barcelona-Trofeo
+                Conde de Godó (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
+                in future periods
+            '02032':
+              help: Deduction pending or generated — 125 aniversario del Real Club
+                de Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Deduction
+                pending or generated
+            '02033':
+              help: Applied in this settlement — 125 aniversario del Real Club de
+                Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Applied
+                in this settlement
+            '02034':
+              help: Pending application in future periods — 125 aniversario del Real
+                Club de Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Pending
+                application in future periods
+            '02035':
+              help: Deduction pending or generated — 750 aniversario del Consolat
+                del Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Deduction pending
+                or generated
+            '02036':
+              help: Applied in this settlement — 750 aniversario del Consolat del
+                Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Applied in this settlement
+            '02037':
+              help: Pending application in future periods — 750 aniversario del Consolat
+                del Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Pending application
+                in future periods
+            02038:
+              help: Deduction pending or generated — Congreso de la Unión Internacional
+                de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Deduction
+                pending or generated
+            02039:
+              help: Applied in this settlement — Congreso de la Unión Internacional
+                de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Applied
+                in this settlement
+            '02040':
+              help: Pending application in future periods — Congreso de la Unión Internacional
+                de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Pending
+                application in future periods
+            '02041':
+              help: Deduction pending or generated — Festival Internacional Sónar
+                de Música, Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Deduction pending or generated
+            '02042':
+              help: Applied in this settlement — Festival Internacional Sónar de Música,
+                Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Applied in this settlement
+            '02043':
+              help: Pending application in future periods — Festival Internacional
+                Sónar de Música, Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Pending application in future periods
+            '02044':
+              help: Deduction pending or generated — XXXVII Copa América Barcelona
+                (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Deduction pending or generated
+            '02053':
+              help: Applied in this settlement — XXXVII Copa América Barcelona (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Applied in this settlement
+            '02054':
+              help: Pending application in future periods — XXXVII Copa América Barcelona
+                (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Pending application in future
+                periods
+            '02055':
+              help: Deduction pending or generated — Programa deportivo "RETO DE"
+                (RD)
+              label: Programa deportivo "RETO DE" (RD). Deduction pending or generated
+            02058:
+              help: Applied in this settlement — Programa deportivo "RETO DE" (RD)
+              label: Programa deportivo "RETO DE" (RD). Applied in this settlement
             '02070':
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision
@@ -8533,6 +8925,25 @@ modelo:
                 account result - Exemption on income obtained in the cases of art.
                 21.3, 21.10 and Transitional Provision 40 LIS other than transfers
                 of securities ...
+            02190:
+              help: Deduction pending or generated — Inversiones en territ. África
+                Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
+                (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Deduction pending or
+                generated
+            02191:
+              help: Applied in this settlement — Inversiones en territ. África Occidental
+                y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Applied in this settlement
+            02192:
+              help: Pending application in future periods — Inversiones en territ.
+                África Occidental y gastos de propaganda y publicidad (art. 27 bis
+                Ley 19/1994) (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Pending application
+                in future periods
             02193:
               help: null
               label: Detail of offset of negative taxable bases - 2019 - Carried forward
@@ -8906,6 +9317,11 @@ modelo:
               help: null
               label: R&D&i deductions excluded from the limit - 2024 Technological
                 innovation - Amount paid due to insufficient tax liability [02279]
+            02280:
+              help: Pending application in future periods — Programa deportivo "RETO
+                DE" (RD)
+              label: Programa deportivo "RETO DE" (RD). Pending application in future
+                periods
             02281:
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2019
@@ -9286,6 +9702,21 @@ modelo:
               label: Limitation on the deductibility of finance costs. Finance costs
                 carried forward - Year of generation 2024 - Carried forward at the
                 start of the period - Due to limit [02370]
+            '02371':
+              help: Deduction pending or generated — Plan de Fomento de la ópera en
+                la Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Deduction pending or generated
+            '02372':
+              help: Applied in this settlement — Plan de Fomento de la ópera en la
+                Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Applied in this settlement
+            '02373':
+              help: Pending application in future periods — Plan de Fomento de la
+                ópera en la Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Pending application in future periods
             '02374':
               help: null
               label: Special regime for the Balearic Islands investment reserve -
@@ -9296,6 +9727,11 @@ modelo:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.3 LIS) - Increase
                 - Balance carried forward at year-end [02375]
+            '02376':
+              help: b) Reversal of impairment losses on securities (LIS transitional
+                provision 16) — B.1. Participaciones declarante en otras entidades
+              label: B.1. Participaciones declarante en otras entidades. b) Reversal
+                of impairment losses on securities (LIS transitional provision 16)
             02378:
               help: null
               label: Joint taxation, State and regional (foral) administrations -
@@ -9629,12 +10065,42 @@ modelo:
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2020
                 Carried forward for application in future periods [02454]
+            '02455':
+              help: 'Deduction pending or generated — Financiador: espectáculos en
+                vivo artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Deduction pending or generated'
+            '02456':
+              help: 'Applied in this settlement — Financiador: espectáculos en vivo
+                artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Applied in this settlement'
+            '02457':
+              help: 'Pending application in future periods — Financiador: espectáculos
+                en vivo artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Pending application in future periods'
             '02461':
               help: null
               label: Deductions to incentivise certain activities - 2025(*) Sum of
                 deductions under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and
                 LIS (excluding R&D&i and TAP) - Carried forward for application in
                 future periods [02461]
+            '02462':
+              help: 'Deduction pending or generated — Financiador: producciones cinematográficas
+                españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Deduction pending or generated'
+            '02463':
+              help: 'Applied in this settlement — Financiador: producciones cinematográficas
+                españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Applied in this settlement'
+            '02464':
+              help: 'Pending application in future periods — Financiador: producciones
+                cinematográficas españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Pending application in future periods'
             '02465':
               help: null
               label: Carried forward for addition due to unapplied operating-profit
@@ -11839,6 +12305,21 @@ modelo:
               label: Special regime for the Balearic Islands investment reserve -
                 Advance investments 2023 - Balearic Islands investment reserve pending
                 allocation at period-end [02941]
+            02942:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
+            02944:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
+            02946:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
+            02948:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
+            02950:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
             02951:
               help: null
               label: Effects of an accounting valuation different from the tax valuation
@@ -11887,16 +12368,31 @@ modelo:
               help: null
               label: Effects of an accounting valuation different from the tax valuation
                 (art. 20 LIS) - Decrease - Balance carried forward at year-end [02960]
+            02962:
+              help: Allowance base — B) Datos económicos
+              label: B) Datos económicos. Allowance base
+            02964:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             02966:
               help: null
               label: Exemption on dividends or profit-sharing income from resident
                 entities (art. 21.1, 21.10 and Transitional Provision 40 LIS) - Decrease
                 - Adjustments for the tax year - Permanent [02966]
+            02967:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            02969:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             02972:
               help: null
               label: Carried forward for addition due to unapplied operating-profit
                 limit - Year of generation 2025(*) - Carried forward for application
                 in future periods [02972]
+            02973:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             02975:
               help: null
               label: Special regime for the Canary Islands investment reserve - Canary
@@ -11913,6 +12409,12 @@ modelo:
                 Islands investment reserve 2023 - Applied/materialised in this return
                 - Reincorporated into the taxable base for failure to meet requirements
                 [02977]
+            02978:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            02980:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             02981:
               help: null
               label: Exemption on income obtained from the transfer of securities
@@ -12329,6 +12831,18 @@ modelo:
               label: Foreign tax on the profits from which the dividends subject to
                 the international double-taxation deduction are paid (art. 32.1 LIS)
                 - Increase - Adjustments for the tax year...
+            '03063':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            '03065':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            '03067':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            03069:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             '03071':
               help: null
               label: Economic interest grouping (Chapter II of Title VII LIS) - Increase
@@ -13166,6 +13680,12 @@ modelo:
               help: null
               label: Communally-owned neighbourhood woodlands (chapter XV of title
                 VII LIS) - Decrease - Adjustments for the tax year - Permanent [03246]
+            '03247':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            03249:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             '03251':
               help: null
               label: Tonnage-based regime for shipping entities (chapter XVI of title
@@ -13298,10 +13818,25 @@ modelo:
               help: null
               label: Tax regime for non-profit entities (Law 49/2002) - Decrease -
                 Balance carried forward at year-end [03280]
+            03281:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            03283:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            03285:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             03286:
               help: null
               label: 'Cooperatives: mandatory reserve fund (Law 20/1990) - Decrease
                 - Adjustments for the tax year - Permanent [03286]'
+            03288:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
+            03290:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             03291:
               help: null
               label: Reserve for investments in the Canary Islands (Law 19/1994) -
@@ -13395,6 +13930,9 @@ modelo:
               label: Special regime for the Canary Islands investment reserve - Canary
                 Islands investment reserve 2024 - Canary Islands investment reserve
                 pending materialisation at period-end [03313]
+            '03314':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             '03316':
               help: null
               label: Income from the transfer of fixed assets obtained by Port Authorities
@@ -13566,6 +14104,9 @@ modelo:
               label: Special regime for the Canary Islands investment reserve - Advance
                 investments 2024 - Canary Islands investment reserve pending allocation
                 at period-end [03354]
+            '03355':
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             '03357':
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2024
@@ -13574,6 +14115,9 @@ modelo:
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2024
                 Applied in this return [03358]
+            03359:
+              help: Deduction base — B) Datos económicos
+              label: B) Datos económicos. Deduction base
             '03361':
               help: null
               label: Entities under the income-attribution regime incorporated abroad
@@ -13982,6 +14526,339 @@ modelo:
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
                 in periods ...
+            03448:
+              help: Deduction pending or generated — Barcelona Music Lab. El Futuro
+                de la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Deduction pending
+                or generated
+            03449:
+              help: Applied in this settlement — Barcelona Music Lab. El Futuro de
+                la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Applied in
+                this settlement
+            '03450':
+              help: Pending application in future periods — Barcelona Music Lab. El
+                Futuro de la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Pending application
+                in future periods
+            '03451':
+              help: Deduction pending or generated — Primavera Sound, created in Barcelona
+                (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Deduction pending
+                or generated
+            '03452':
+              help: Applied in this settlement — Primavera Sound, created in Barcelona
+                (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Applied in this
+                settlement
+            '03453':
+              help: Pending application in future periods — Primavera Sound, created
+                in Barcelona (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Pending application
+                in future periods
+            '03454':
+              help: 'Deduction pending or generated — Año Tàpies. Cien años del nacimiento
+                del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Deduction pending or generated'
+            '03455':
+              help: 'Applied in this settlement — Año Tàpies. Cien años del nacimiento
+                del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Applied in this settlement'
+            '03456':
+              help: 'Pending application in future periods — Año Tàpies. Cien años
+                del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Pending application in future periods'
+            '03457':
+              help: Deduction pending or generated — Eduardo Chillida 100 años (EC)
+              label: Eduardo Chillida 100 años (EC). Deduction pending or generated
+            03458:
+              help: Applied in this settlement — Eduardo Chillida 100 años (EC)
+              label: Eduardo Chillida 100 años (EC). Applied in this settlement
+            03459:
+              help: Pending application in future periods — Eduardo Chillida 100 años
+                (EC)
+              label: Eduardo Chillida 100 años (EC). Pending application in future
+                periods
+            '03460':
+              help: 'Deduction pending or generated — VIII Centenario de la Catedral
+                gótica de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Deduction pending or generated'
+            '03461':
+              help: 'Applied in this settlement — VIII Centenario de la Catedral gótica
+                de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Applied in this settlement'
+            '03462':
+              help: 'Pending application in future periods — VIII Centenario de la
+                Catedral gótica de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Pending application in future periods'
+            '03463':
+              help: Deduction pending or generated — Año Santo Jacobeo 2027 (J27)
+              label: Año Santo Jacobeo 2027 (J27). Deduction pending or generated
+            '03464':
+              help: Applied in this settlement — Año Santo Jacobeo 2027 (J27)
+              label: Año Santo Jacobeo 2027 (J27). Applied in this settlement
+            '03465':
+              help: Pending application in future periods — Año Santo Jacobeo 2027
+                (J27)
+              label: Año Santo Jacobeo 2027 (J27). Pending application in future periods
+            '03466':
+              help: Deduction pending or generated — Centenario de la Generación del
+                27 (G27)
+              label: Centenario de la Generación del 27 (G27). Deduction pending or
+                generated
+            '03467':
+              help: Applied in this settlement — Centenario de la Generación del 27
+                (G27)
+              label: Centenario de la Generación del 27 (G27). Applied in this settlement
+            03468:
+              help: Pending application in future periods — Centenario de la Generación
+                del 27 (G27)
+              label: Centenario de la Generación del 27 (G27). Pending application
+                in future periods
+            03469:
+              help: Deduction pending or generated — Música clásica para todos (MC)
+              label: Música clásica para todos (MC). Deduction pending or generated
+            '03470':
+              help: Applied in this settlement — Música clásica para todos (MC)
+              label: Música clásica para todos (MC). Applied in this settlement
+            '03471':
+              help: Pending application in future periods — Música clásica para todos
+                (MC)
+              label: Música clásica para todos (MC). Pending application in future
+                periods
+            '03472':
+              help: Deduction pending or generated — 150.º aniversario del nacimiento
+                de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Deduction
+                pending or generated
+            '03473':
+              help: Applied in this settlement — 150.º aniversario del nacimiento
+                de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Applied
+                in this settlement
+            '03474':
+              help: Pending application in future periods — 150.º aniversario del
+                nacimiento de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Pending
+                application in future periods
+            '03475':
+              help: Deduction pending or generated — Petit Liceu (PL)
+              label: Petit Liceu (PL). Deduction pending or generated
+            '03476':
+              help: Applied in this settlement — Petit Liceu (PL)
+              label: Petit Liceu (PL). Applied in this settlement
+            '03477':
+              help: Pending application in future periods — Petit Liceu (PL)
+              label: Petit Liceu (PL). Pending application in future periods
+            03478:
+              help: Deduction pending or generated — Fundación Joan Miró 50.º aniversario
+                (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Deduction pending
+                or generated
+            03479:
+              help: Applied in this settlement — Fundación Joan Miró 50.º aniversario
+                (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Applied in this
+                settlement
+            03480:
+              help: Pending application in future periods — Fundación Joan Miró 50.º
+                aniversario (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Pending application
+                in future periods
+            03481:
+              help: Deduction pending or generated — Centenario Gaudí 2026 (G26)
+              label: Centenario Gaudí 2026 (G26). Deduction pending or generated
+            03482:
+              help: Applied in this settlement — Centenario Gaudí 2026 (G26)
+              label: Centenario Gaudí 2026 (G26). Applied in this settlement
+            03483:
+              help: Pending application in future periods — Centenario Gaudí 2026
+                (G26)
+              label: Centenario Gaudí 2026 (G26). Pending application in future periods
+            03484:
+              help: Deduction pending or generated — Quincuagésimo aniversario del
+                Teatre Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Deduction pending
+                or generated
+            03485:
+              help: Applied in this settlement — Quincuagésimo aniversario del Teatre
+                Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Applied in
+                this settlement
+            03486:
+              help: Pending application in future periods — Quincuagésimo aniversario
+                del Teatre Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Pending application
+                in future periods
+            03490:
+              help: Deduction pending or generated — Vigésimo aniversario del Festival
+                Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Deduction
+                pending or generated
+            03491:
+              help: Applied in this settlement — Vigésimo aniversario del Festival
+                Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Applied
+                in this settlement
+            03492:
+              help: Pending application in future periods — Vigésimo aniversario del
+                Festival Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Pending
+                application in future periods
+            03493:
+              help: Deduction pending or generated — 75.ª edición del Festival Música
+                y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Deduction
+                pending or generated
+            03494:
+              help: Applied in this settlement — 75.ª edición del Festival Música
+                y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Applied
+                in this settlement
+            03495:
+              help: Pending application in future periods — 75.ª edición del Festival
+                Música y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Pending
+                application in future periods
+            03496:
+              help: Deduction pending or generated — 150.º aniversario del nacimiento
+                de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Deduction
+                pending or generated
+            03497:
+              help: Applied in this settlement — 150.º aniversario del nacimiento
+                de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Applied
+                in this settlement
+            03498:
+              help: Pending application in future periods — 150.º aniversario del
+                nacimiento de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Pending
+                application in future periods
+            03499:
+              help: Deduction pending or generated — Dansàneu, Festival de Cultures
+                del Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Deduction pending
+                or generated
+            '03500':
+              help: Applied in this settlement — Dansàneu, Festival de Cultures del
+                Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Applied in this
+                settlement
+            '03501':
+              help: Pending application in future periods — Dansàneu, Festival de
+                Cultures del Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Pending application
+                in future periods
+            '03502':
+              help: Deduction pending or generated — San Diego Comic-Con Málaga (SD)
+              label: San Diego Comic-Con Málaga (SD). Deduction pending or generated
+            '03503':
+              help: Applied in this settlement — San Diego Comic-Con Málaga (SD)
+              label: San Diego Comic-Con Málaga (SD). Applied in this settlement
+            '03504':
+              help: Pending application in future periods — San Diego Comic-Con Málaga
+                (SD)
+              label: San Diego Comic-Con Málaga (SD). Pending application in future
+                periods
+            '03505':
+              help: Deduction pending or generated — Programa de preparación de los
+                deportistas españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Deduction pending or generated
+            '03506':
+              help: Applied in this settlement — Programa de preparación de los deportistas
+                españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Applied in this settlement
+            '03507':
+              help: Pending application in future periods — Programa de preparación
+                de los deportistas españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Pending application in future periods
+            03508:
+              help: Deduction pending or generated — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Deduction pending or generated
+            03509:
+              help: Applied in this settlement — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Applied in this settlement
+            '03510':
+              help: Pending application in future periods — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Pending application in future periods
+            '03511':
+              help: Deduction pending or generated — Gran Premio de España de Motociclismo
+                (GP)
+              label: Gran Premio de España de Motociclismo (GP). Deduction pending
+                or generated
+            '03512':
+              help: Applied in this settlement — Gran Premio de España de Motociclismo
+                (GP)
+              label: Gran Premio de España de Motociclismo (GP). Applied in this settlement
+            '03513':
+              help: Pending application in future periods — Gran Premio de España
+                de Motociclismo (GP)
+              label: Gran Premio de España de Motociclismo (GP). Pending application
+                in future periods
+            '03514':
+              help: Deduction pending or generated — Deporte Inclusivo III (DI3)
+              label: Deporte Inclusivo III (DI3). Deduction pending or generated
+            '03515':
+              help: Applied in this settlement — Deporte Inclusivo III (DI3)
+              label: Deporte Inclusivo III (DI3). Applied in this settlement
+            '03516':
+              help: Pending application in future periods — Deporte Inclusivo III
+                (DI3)
+              label: Deporte Inclusivo III (DI3). Pending application in future periods
+            '03517':
+              help: Deduction pending or generated — Plan 2030 de Apoyo al Deporte
+                Base II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Deduction pending
+                or generated
+            03518:
+              help: Applied in this settlement — Plan 2030 de Apoyo al Deporte Base
+                II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Applied in this
+                settlement
+            03519:
+              help: Pending application in future periods — Plan 2030 de Apoyo al
+                Deporte Base II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Pending application
+                in future periods
+            '03520':
+              help: Deduction pending or generated — Ironman Calella-Barcelona (IC)
+              label: Ironman Calella-Barcelona (IC). Deduction pending or generated
+            '03521':
+              help: Applied in this settlement — Ironman Calella-Barcelona (IC)
+              label: Ironman Calella-Barcelona (IC). Applied in this settlement
+            '03522':
+              help: Pending application in future periods — Ironman Calella-Barcelona
+                (IC)
+              label: Ironman Calella-Barcelona (IC). Pending application in future
+                periods
             '03523':
               help: null
               label: 'Deductions to incentivise certain activities - 2025: Barcelona
@@ -14587,6 +15464,25 @@ modelo:
               label: Adjustment for the tax on the interest and fee margin of certain
                 financial entities (Final Provision 9, Law 7/2024) - Increase - Adjustments
                 for the tax year - Permanent [03646]
+            '03647':
+              help: RIC allocation outstanding at the start of the period — Inversiones
+                anticipadas 2022
+              label: Inversiones anticipadas 2022. RIC allocation outstanding at the
+                start of the period
+            03648:
+              help: RIC allocation outstanding at the start of the period — Inversiones
+                anticipadas 2023
+              label: Inversiones anticipadas 2023. RIC allocation outstanding at the
+                start of the period
+            03649:
+              help: RIC allocation outstanding at the end of the period — Inversiones
+                anticipadas 2023
+              label: Inversiones anticipadas 2023. RIC allocation outstanding at the
+                end of the period
+            '1501':
+              label: Total nominal value of the holding
+            '1502':
+              label: Book value of the holding (in the declarant's assets)
             '2231':
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision

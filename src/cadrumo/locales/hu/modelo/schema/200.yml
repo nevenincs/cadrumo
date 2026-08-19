@@ -373,6 +373,10 @@ modelo:
               help: null
               label: Baleár-szigeteki beruházási tartalék (31/2022. törvény 70. kiegészítő
                 rendelkezés) - Növelés - Az időszak korrekciói - Végleges [00095]
+            00096:
+              help: Függőben lévő vagy keletkezett levonás — Innovación tecnológica
+                (IT)
+              label: Innovación tecnológica (IT). Függőben lévő vagy keletkezett levonás
             00097:
               help: null
               label: 'A Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
@@ -2734,6 +2738,9 @@ modelo:
               label: LIS 24.7. átmeneti rendelkezés szerinti levonások - LIS 24.7.
                 átmeneti rendelkezés 2023. évi levonása - Ebben az elszámolásban alkalmazva
                 [00697]
+            00698:
+              help: Ebben az elszámolásban alkalmazva — Innovación tecnológica (IT)
+              label: Innovación tecnológica (IT). Ebben az elszámolásban alkalmazva
             00699:
               help: null
               label: Negatív adóalapok kompenzálásának részletezése - 2014 - Jövőbeli
@@ -2791,6 +2798,9 @@ modelo:
               help: null
               label: 'Mérleg: Saját tőke és kötelezettségek (I) - Saját tőke és kötelezettségek
                 - Szövetkezetek kötelező tartalékalapja [00712]'
+            '00713':
+              help: Jövőbeli időszakokban alkalmazandó — Innovación tecnológica (IT)
+              label: Innovación tecnológica (IT). Jövőbeli időszakokban alkalmazandó
             '00714':
               help: null
               label: Belső kettős adóztatás levonásai RDLeg. 4/2004 - Belső kettős
@@ -3133,11 +3143,34 @@ modelo:
               label: Eredménykimutatás (I) - Folytatódó tevékenységek - Forgatható
                 értékpapírokból és egyéb pénzügyi instrumentumokból - Tagoktól (szövetkezetek)
                 [00794]
+            00795:
+              help: Függőben lévő vagy keletkezett levonás — Deducción por creación
+                de empleo trabaj. con discapacidad (CE)
+              label: Deducción por creación de empleo trabaj. con discapacidad (CE).
+                Függőben lévő vagy keletkezett levonás
             00796:
               help: null
               label: Eredménykimutatás (II) - Folytatódó tevékenységek - A jegyzett
                 tőkéhez való hozzájárulások és adósságjellegűnek minősített egyéb
                 alapok kamatai és kötelező hozama (szöv...
+            00797:
+              help: Jövőbeli időszakokban alkalmazandó — Deducción por creación de
+                empleo trabaj. con discapacidad (CE)
+              label: Deducción por creación de empleo trabaj. con discapacidad (CE).
+                Jövőbeli időszakokban alkalmazandó
+            00798:
+              help: Függőben lévő vagy keletkezett levonás — Investigación y desarrollo
+                (CT)
+              label: Investigación y desarrollo (CT). Függőben lévő vagy keletkezett
+                levonás
+            00799:
+              help: Ebben az elszámolásban alkalmazva — Investigación y desarrollo
+                (CT)
+              label: Investigación y desarrollo (CT). Ebben az elszámolásban alkalmazva
+            00800:
+              help: Jövőbeli időszakokban alkalmazandó — Investigación y desarrollo
+                (CT)
+              label: Investigación y desarrollo (CT). Jövőbeli időszakokban alkalmazandó
             00801:
               help: null
               label: Befektetési tartalék az Illes Balears területén (31/2022. törvény
@@ -3166,6 +3199,21 @@ modelo:
               help: null
               label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
                 2017 - Jövőbeli időszakokban alkalmazandó [00806]
+            00807:
+              help: 'Függőben lévő vagy keletkezett levonás — Productor: producciones
+                cinematográficas españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Függőben
+                lévő vagy keletkezett levonás'
+            00808:
+              help: 'Ebben az elszámolásban alkalmazva — Productor: producciones cinematográficas
+                españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Ebben
+                az elszámolásban alkalmazva'
+            00809:
+              help: 'Jövőbeli időszakokban alkalmazandó — Productor: producciones
+                cinematográficas españolas (PC)'
+              label: 'Productor: producciones cinematográficas españolas (PC). Jövőbeli
+                időszakokban alkalmazandó'
             00810:
               help: null
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2015 Kutatás-fejlesztés
@@ -3446,11 +3494,26 @@ modelo:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - 2021 - Ugyanazon szervezetnek ismételt adományozással
                 - Ebben az elszámolásban alkalmazva [00873]
+            00874:
+              help: Függőben lévő vagy keletkezett levonás — Bicentenario de la Policía
+                Nacional (PN)
+              label: Bicentenario de la Policía Nacional (PN). Függőben lévő vagy
+                keletkezett levonás
+            00875:
+              help: Ebben az elszámolásban alkalmazva — Bicentenario de la Policía
+                Nacional (PN)
+              label: Bicentenario de la Policía Nacional (PN). Ebben az elszámolásban
+                alkalmazva
             00876:
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - 2022 ugyanazon szervezetnek ismételt adományozás nélkül
                 - Ebben az elszámolásban alkalmazva [00876]
+            00877:
+              help: Jövőbeli időszakokban alkalmazandó — Bicentenario de la Policía
+                Nacional (PN)
+              label: Bicentenario de la Policía Nacional (PN). Jövőbeli időszakokban
+                alkalmazandó
             00878:
               help: null
               label: Halasztott adókövetelések adóhatósággal szemben követelhető hitellé
@@ -3499,6 +3562,16 @@ modelo:
               help: null
               label: Kanári-szigeteki beruházási levonások - Összesen - Jövőbeli időszakokban
                 alkalmazandó [00887]
+            00888:
+              help: Ebben az elszámolásban alkalmazva — Deducción por inversión en
+                beneficios (IB)
+              label: Deducción por inversión en beneficios (IB). Ebben az elszámolásban
+                alkalmazva
+            00889:
+              help: Jövőbeli időszakokban alkalmazandó — Deducción por inversión en
+                beneficios (IB)
+              label: Deducción por inversión en beneficios (IB). Jövőbeli időszakokban
+                alkalmazandó
             00890:
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
@@ -3905,6 +3978,11 @@ modelo:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - 2016 ugyanazon szervezetnek ismételt adományozás nélkül
                 - Jövőbeli időszakokban alkalmazandó [00995]
+            00999:
+              help: '6.- Kettős adóztatás elkerülése: a levonás alapja — B) Datos
+                económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                alapja'
             '01000':
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
@@ -4232,6 +4310,21 @@ modelo:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 -
                 Ugyanazon...
+            '01075':
+              help: 'Függőben lévő vagy keletkezett levonás — Productor: espectáculos
+                en vivo artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Függőben lévő vagy keletkezett levonás'
+            '01076':
+              help: 'Ebben az elszámolásban alkalmazva — Productor: espectáculos en
+                vivo artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Ebben az elszámolásban alkalmazva'
+            '01077':
+              help: 'Jövőbeli időszakokban alkalmazandó — Productor: espectáculos
+                en vivo artes escénicas y musicales (EV)'
+              label: 'Productor: espectáculos en vivo artes escénicas y musicales
+                (EV). Jövőbeli időszakokban alkalmazandó'
             01078:
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
@@ -4341,6 +4434,11 @@ modelo:
               help: null
               label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben
                 - Keletkezési év 2022 - Jövőbeli időszakokban alkalmazandó [01105]
+            01108:
+              help: '6.- Kettős adóztatás elkerülése: a levonás összege — B) Datos
+                económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                összege'
             01109:
               help: null
               label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezési év
@@ -4452,6 +4550,11 @@ modelo:
               help: null
               label: Tőkésítési tartalék - Összesen - Időszakban keletkezett/időszak
                 elején alkalmazásra váró adóalap-csökkentési jog [01137]
+            01138:
+              help: '6.- Kettős adóztatás elkerülése: a levonás alapja — B) Datos
+                económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                alapja'
             01139:
               help: null
               label: Tőkésítési tartalék - Összesen - Jövőbeli időszakokban alkalmazandó
@@ -4547,6 +4650,11 @@ modelo:
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (D.T.37.
                 1 LIS) - Összesen - Függőben lévő összeg [01173]
+            '01174':
+              help: '6.- Kettős adóztatás elkerülése: a levonás összege — B) Datos
+                económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                összege'
             '01175':
               help: null
               label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC
@@ -4564,6 +4672,11 @@ modelo:
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (D.T.37.
                 2 LIS) - 2015 - Időszak elején keletkezett/függőben lévő összeg [01179]
+            01180:
+              help: Ebben az elszámolásban alkalmazva — Año de Investigación Santiago
+                Ramón y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Ebben
+                az elszámolásban alkalmazva
             01181:
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (D.T.37.
@@ -4627,11 +4740,21 @@ modelo:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
                 váró pénzügyi ráfordítások - Keletkezési év 2013 - Ebben az elszámolásban
                 alkalmazva [01194]
+            01195:
+              help: Jövőbeli időszakokban alkalmazandó — Año de Investigación Santiago
+                Ramón y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Jövőbeli
+                időszakokban alkalmazandó
             01196:
               help: null
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
                 váró pénzügyi ráfordítások - Keletkezési év 2013 - Jövőbeli időszakokban
                 alkalmazandó - Maradék [01196]
+            01197:
+              help: Függőben lévő vagy keletkezett levonás — Año Jubilar Lebaniego
+                2023-2024 (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Függőben lévő vagy keletkezett
+                levonás
             01198:
               help: null
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
@@ -4677,6 +4800,16 @@ modelo:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
                 váró pénzügyi ráfordítások - Keletkezési év 2015 - Jövőbeli időszakokban
                 alkalmazandó - Maradék [01206]
+            '01207':
+              help: Ebben az elszámolásban alkalmazva — Año Jubilar Lebaniego 2023-2024
+                (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Ebben az elszámolásban
+                alkalmazva
+            01208:
+              help: Jövőbeli időszakokban alkalmazandó — Año Jubilar Lebaniego 2023-2024
+                (L23)
+              label: Año Jubilar Lebaniego 2023-2024 (L23). Jövőbeli időszakokban
+                alkalmazandó
             01209:
               help: null
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
@@ -4732,6 +4865,11 @@ modelo:
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
                 Keletkezési év - 2024 - Jövőbeli időszakokban beépítésre váró ráfordítások
                 - Amelyek teljesítették az adólevonhatósági feltételeket [01219]
+            '01223':
+              help: Függőben lévő vagy keletkezett levonás — Caravaca de la Cruz 2024.
+                Año Jubilar (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Függőben lévő vagy
+                keletkezett levonás
             '01224':
               help: null
               label: Szövetkezeti rendszer - Adókötelezettség-kompenzáció részletezése.
@@ -4744,6 +4882,21 @@ modelo:
               help: null
               label: Szövetkezeti rendszer - Adókötelezettség-kompenzáció részletezése.
                 2024 Jövőbeli időszakokban alkalmazandó [01226]
+            '01227':
+              help: 2.- Az entitás által le nem vont nettó pénzügyi ráfordítások —
+                B) Datos económicos
+              label: B) Datos económicos. 2.- Az entitás által le nem vont nettó pénzügyi
+                ráfordítások
+            01228:
+              help: 3.- Az entitás által nem alkalmazott tőkésítési tartalék — B)
+                Datos económicos
+              label: B) Datos económicos. 3.- Az entitás által nem alkalmazott tőkésítési
+                tartalék
+            01229:
+              help: Ebben az elszámolásban alkalmazva — Caravaca de la Cruz 2024.
+                Año Jubilar (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Ebben az elszámolásban
+                alkalmazva
             '01230':
               help: null
               label: Elszámolás I - Eredménykimutatás eredménye - Az adócsoporthoz
@@ -4752,6 +4905,11 @@ modelo:
               help: null
               label: Elszámolás I - Eredménykimutatás eredménye - Az adócsoporthoz
                 kapcsolódó számviteli adó korrekciói - Csökkentések [01231]
+            '01232':
+              help: Jövőbeli időszakokban alkalmazandó — Caravaca de la Cruz 2024.
+                Año Jubilar (C24)
+              label: Caravaca de la Cruz 2024. Año Jubilar (C24). Jövőbeli időszakokban
+                alkalmazandó
             '01234':
               help: null
               label: Elszámolás IV - Önbevallás eredménye - K+F+i levonások kifizetése
@@ -4885,6 +5043,21 @@ modelo:
               label: Elszámolás II - Eredménykimutatás eredményének korrekciói - Az
                 átruházott szervezet által az adócsoporton belül keletkezett és kompenzált
                 negatív adóalapok - Csökkentések [0...
+            '01277':
+              help: '6.- Kettős adóztatás elkerülése: a levonás alapja összesen —
+                B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                alapja összesen'
+            01278:
+              help: '6.- Kettős adóztatás elkerülése: a levonás összege összesen —
+                B) Datos económicos'
+              label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+                összege összesen'
+            01279:
+              help: 'A részesedés adatai: A részesedés értéke az adómegállapítási
+                időszak elején'
+              label: 'A részesedés adatai: A részesedés értéke az adómegállapítási
+                időszak elején'
             01280:
               help: null
               label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
@@ -5260,6 +5433,21 @@ modelo:
               help: null
               label: Bizonyos tevékenységek ösztönzésére szolgáló levonások - 2025(*)
                 Technológiai innováció (IT) - Jövőbeli időszakokban alkalmazandó [01368]
+            01369:
+              help: Függőben lévő vagy keletkezett levonás — Gastos e inversiones
+                de sociedades forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Függőben
+                lévő vagy keletkezett levonás
+            '01370':
+              help: Ebben az elszámolásban alkalmazva — Gastos e inversiones de sociedades
+                forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Ebben az
+                elszámolásban alkalmazva
+            '01371':
+              help: Jövőbeli időszakokban alkalmazandó — Gastos e inversiones de sociedades
+                forestales (SF)
+              label: Gastos e inversiones de sociedades forestales (SF). Jövőbeli
+                időszakokban alkalmazandó
             '01372':
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecénási
@@ -5638,10 +5826,30 @@ modelo:
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.2
                 átmeneti rendelkezés) - 2017 - Függőben lévő összeg [01454]
+            '01455':
+              help: 'A részesedés adatai: A részesedés értéke az adómegállapítási
+                időszak végén'
+              label: 'A részesedés adatai: A részesedés értéke az adómegállapítási
+                időszak végén'
+            '01456':
+              help: 'A részesedés adatai: A részesedésből származó pénzügyi bevétel'
+              label: 'A részesedés adatai: A részesedésből származó pénzügyi bevétel'
             '01457':
               help: null
               label: LIS szerinti nemzetközi kettős adóztatási levonások - Nemzetközi
                 kettős adóztatás 2023 - 2025. évi függőben lévő levonás [01457]
+            01458:
+              help: 'Betudott összegek: Betudott számviteli eredmény összege'
+              label: 'Betudott összegek: Betudott számviteli eredmény összege'
+            01459:
+              help: 'Betudott összegek: Betudott nettó pénzügyi ráfordítások'
+              label: 'Betudott összegek: Betudott nettó pénzügyi ráfordítások'
+            '01460':
+              help: 'Betudott összegek: Betudott, nem alkalmazott tőkésítési tartalék'
+              label: 'Betudott összegek: Betudott, nem alkalmazott tőkésítési tartalék'
+            '01461':
+              help: 'Betudott összegek: Betudott adóalap'
+              label: 'Betudott összegek: Betudott adóalap'
             '01462':
               help: null
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
@@ -5667,6 +5875,16 @@ modelo:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
                 váró pénzügyi ráfordítások - Keletkezés éve 2017 - Jövőbeli időszakokban
                 alkalmazandó - Maradék [01466]
+            '01467':
+              help: 'Betudott összegek: A betudott kettős adóztatás elkerülésére szolgáló
+                levonási alapokból keletkezett levonás összege'
+              label: 'Betudott összegek: A betudott kettős adóztatás elkerülésére
+                szolgáló levonási alapokból keletkezett levonás összege'
+            01468:
+              help: 'Betudott összegek: A betudott kedvezményalapokból keletkezett
+                kedvezmény összege'
+              label: 'Betudott összegek: A betudott kedvezményalapokból keletkezett
+                kedvezmény összege'
             '01470':
               help: null
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
@@ -5896,6 +6114,11 @@ modelo:
               label: LIS 24.7 átmeneti rendelkezés szerinti levonások - LIS 24.7 átmeneti
                 rendelkezés 2024. évi levonásai - Ebben az elszámolásban alkalmazva
                 [01522]
+            '01523':
+              help: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonási
+                alapokból keletkezett tárgyieszköz-levonás összege'
+              label: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonási
+                alapokból keletkezett tárgyieszköz-levonás összege'
             '01524':
               help: null
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
@@ -6321,6 +6544,11 @@ modelo:
               label: Belső kettős adóztatás levonásai (LIS 23.1 átmeneti rendelkezés)
                 - Belső kettős adóztatás 2017 - Jövőbeli időszakokban alkalmazandó
                 [01599]
+            '01601':
+              help: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonási
+                alapokból keletkezett K+F és technológiai innovációs levonás összege'
+              label: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonási
+                alapokból keletkezett K+F és technológiai innovációs levonás összege'
             '01602':
               help: null
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
@@ -6481,6 +6709,23 @@ modelo:
               help: null
               label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
                 lehetőség LIS 19.1 cikk - Adótartozás - Bizkaia [01637]
+            01638:
+              help: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonásokból
+                keletkezett levonás spanyol filmgyártásra és élő előadó-művészeti
+                produkciókra'
+              label: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonásokból
+                keletkezett levonás spanyol filmgyártásra és élő előadó-művészeti
+                produkciókra'
+            01639:
+              help: 'Betudott összegek: A fennmaradó betudott Kanári-szigeteki beruházási
+                levonásokból keletkezett levonás összege'
+              label: 'Betudott összegek: A fennmaradó betudott Kanári-szigeteki beruházási
+                levonásokból keletkezett levonás összege'
+            '01640':
+              help: 'Betudott összegek: A betudott levonási alapokból keletkezett
+                K+F és technológiai innovációs levonás összege'
+              label: 'Betudott összegek: A betudott levonási alapokból keletkezett
+                K+F és technológiai innovációs levonás összege'
             '01641':
               help: null
               label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
@@ -6940,6 +7185,11 @@ modelo:
               label: Bizonyos járművek és új töltési infrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés RDL 4/2024) - Növekedés - Évi korrekciók
                 - Időleges (az évben keletkezett) ... [01742]
+            '01743':
+              help: 'Betudott összegek: A betudott levonási alapokból keletkezett
+                levonás spanyol filmgyártásra és élő előadó-művészeti produkciókra'
+              label: 'Betudott összegek: A betudott levonási alapokból keletkezett
+                levonás spanyol filmgyártásra és élő előadó-művészeti produkciókra'
             '01744':
               help: null
               label: Kanári-szigeteki beruházási tartalék különleges rendszere - RIC
@@ -7515,6 +7765,11 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Év
                 végén függőben lévő egyenleg [01869]
+            01871:
+              help: Függőben lévő vagy keletkezett levonás — Año de Investigación
+                Santiago Ramón y Cajal 2022 (RC)
+              label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Függőben
+                lévő vagy keletkezett levonás
             01872:
               help: null
               label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2023
@@ -7639,6 +7894,21 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
                 27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+            01900:
+              help: Függőben lévő vagy keletkezett levonás — Inauguración de la Galería
+                de las Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Függőben
+                lévő vagy keletkezett levonás
+            01901:
+              help: Ebben az elszámolásban alkalmazva — Inauguración de la Galería
+                de las Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Ebben
+                az elszámolásban alkalmazva
+            01902:
+              help: Jövőbeli időszakokban alkalmazandó — Inauguración de la Galería
+                de las Colecciones Reales (GC)
+              label: Inauguración de la Galería de las Colecciones Reales (GC). Jövőbeli
+                időszakokban alkalmazandó
             01905:
               help: null
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
@@ -7648,6 +7918,31 @@ modelo:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - XXXVII. America's Cup Barcelona (31/2022. törvény) - Csökkentések
                 [01906]
+            01907:
+              help: Függőben lévő vagy keletkezett levonás — Programa EN PLAN BIEN
+                (EPB)
+              label: Programa EN PLAN BIEN (EPB). Függőben lévő vagy keletkezett levonás
+            01908:
+              help: Ebben az elszámolásban alkalmazva — Programa EN PLAN BIEN (EPB)
+              label: Programa EN PLAN BIEN (EPB). Ebben az elszámolásban alkalmazva
+            01909:
+              help: 'Betudott összegek: A betudott levonási alapokból keletkezett,
+                egyes tevékenységek ösztönzésére szolgáló további levonások összege'
+              label: 'Betudott összegek: A betudott levonási alapokból keletkezett,
+                egyes tevékenységek ösztönzésére szolgáló további levonások összege'
+            01910:
+              help: 'Betudott összegek: A fentiekben nem említett betudott levonási
+                alapokból keletkezett további levonások összege'
+              label: 'Betudott összegek: A fentiekben nem említett betudott levonási
+                alapokból keletkezett további levonások összege'
+            01911:
+              help: 'Betudott összegek: Betudott levonások és előlegfizetések'
+              label: 'Betudott összegek: Betudott levonások és előlegfizetések'
+            01912:
+              help: 'Betudott összegek: A részesedés megszerzését megelőző évekből
+                származó osztalékok és nyereségrészesedések'
+              label: 'Betudott összegek: A részesedés megszerzését megelőző évekből
+                származó osztalékok és nyereségrészesedések'
             01913:
               help: null
               label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök La Palma,
@@ -7747,6 +8042,11 @@ modelo:
               help: null
               label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) -
                 2015 - Elégtelen adókötelezettség miatt kifizetett összeg [01933]
+            01934:
+              help: 'Betudott összegek: A részesedés megszerzését követő évekből származó
+                osztalékok és nyereségrészesedések'
+              label: 'Betudott összegek: A részesedés megszerzését követő évekből
+                származó osztalékok és nyereségrészesedések'
             01935:
               help: null
               label: Korlátból kizárt K+F+i levonások - Kiegészítő információk a levonási
@@ -7987,6 +8287,115 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztésének kiigazításai (LIS 16.3 átmeneti rendelkezés) - Növekedés
                 - Évi korrekciók - Végleges [01996]
+            01999:
+              help: Jövőbeli időszakokban alkalmazandó — Programa EN PLAN BIEN (EPB)
+              label: Programa EN PLAN BIEN (EPB). Jövőbeli időszakokban alkalmazandó
+            '02026':
+              help: Függőben lévő vagy keletkezett levonás — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Függőben lévő vagy keletkezett levonás
+            '02027':
+              help: Ebben az elszámolásban alkalmazva — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Ebben az elszámolásban alkalmazva
+            02028:
+              help: Jövőbeli időszakokban alkalmazandó — Ryder Cup 2031 (RC31)
+              label: Ryder Cup 2031 (RC31). Jövőbeli időszakokban alkalmazandó
+            02029:
+              help: Függőben lévő vagy keletkezett levonás — Open Barcelona-Trofeo
+                Conde de Godó (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Függőben lévő vagy
+                keletkezett levonás
+            '02030':
+              help: Ebben az elszámolásban alkalmazva — Open Barcelona-Trofeo Conde
+                de Godó (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Ebben az elszámolásban
+                alkalmazva
+            '02031':
+              help: Jövőbeli időszakokban alkalmazandó — Open Barcelona-Trofeo Conde
+                de Godó (OB)
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Jövőbeli időszakokban
+                alkalmazandó
+            '02032':
+              help: Függőben lévő vagy keletkezett levonás — 125 aniversario del Real
+                Club de Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Függőben
+                lévő vagy keletkezett levonás
+            '02033':
+              help: Ebben az elszámolásban alkalmazva — 125 aniversario del Real Club
+                de Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Ebben
+                az elszámolásban alkalmazva
+            '02034':
+              help: Jövőbeli időszakokban alkalmazandó — 125 aniversario del Real
+                Club de Tenis Barcelona (TB)
+              label: 125 aniversario del Real Club de Tenis Barcelona (TB). Jövőbeli
+                időszakokban alkalmazandó
+            '02035':
+              help: Függőben lévő vagy keletkezett levonás — 750 aniversario del Consolat
+                del Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Függőben lévő vagy
+                keletkezett levonás
+            '02036':
+              help: Ebben az elszámolásban alkalmazva — 750 aniversario del Consolat
+                del Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Ebben az elszámolásban
+                alkalmazva
+            '02037':
+              help: Jövőbeli időszakokban alkalmazandó — 750 aniversario del Consolat
+                del Mar (CM)
+              label: 750 aniversario del Consolat del Mar (CM). Jövőbeli időszakokban
+                alkalmazandó
+            02038:
+              help: Függőben lévő vagy keletkezett levonás — Congreso de la Unión
+                Internacional de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Függőben
+                lévő vagy keletkezett levonás
+            02039:
+              help: Ebben az elszámolásban alkalmazva — Congreso de la Unión Internacional
+                de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Ebben
+                az elszámolásban alkalmazva
+            '02040':
+              help: Jövőbeli időszakokban alkalmazandó — Congreso de la Unión Internacional
+                de Arquitectos (UIA)
+              label: Congreso de la Unión Internacional de Arquitectos (UIA). Jövőbeli
+                időszakokban alkalmazandó
+            '02041':
+              help: Függőben lévő vagy keletkezett levonás — Festival Internacional
+                Sónar de Música, Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Függőben lévő vagy keletkezett levonás
+            '02042':
+              help: Ebben az elszámolásban alkalmazva — Festival Internacional Sónar
+                de Música, Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Ebben az elszámolásban alkalmazva
+            '02043':
+              help: Jövőbeli időszakokban alkalmazandó — Festival Internacional Sónar
+                de Música, Creativitat i Tecnología (FIS)
+              label: Festival Internacional Sónar de Música, Creativitat i Tecnología
+                (FIS). Jövőbeli időszakokban alkalmazandó
+            '02044':
+              help: Függőben lévő vagy keletkezett levonás — XXXVII Copa América Barcelona
+                (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Függőben lévő vagy keletkezett
+                levonás
+            '02053':
+              help: Ebben az elszámolásban alkalmazva — XXXVII Copa América Barcelona
+                (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Ebben az elszámolásban alkalmazva
+            '02054':
+              help: Jövőbeli időszakokban alkalmazandó — XXXVII Copa América Barcelona
+                (CAB)
+              label: XXXVII Copa América Barcelona (CAB). Jövőbeli időszakokban alkalmazandó
+            '02055':
+              help: Függőben lévő vagy keletkezett levonás — Programa deportivo "RETO
+                DE" (RD)
+              label: Programa deportivo "RETO DE" (RD). Függőben lévő vagy keletkezett
+                levonás
+            02058:
+              help: Ebben az elszámolásban alkalmazva — Programa deportivo "RETO DE"
+                (RD)
+              label: Programa deportivo "RETO DE" (RD). Ebben az elszámolásban alkalmazva
             '02070':
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.2
@@ -8556,6 +8965,27 @@ modelo:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
+            02190:
+              help: Függőben lévő vagy keletkezett levonás — Inversiones en territ.
+                África Occidental y gastos de propaganda y publicidad (art. 27 bis
+                Ley 19/1994) (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Függőben lévő vagy keletkezett
+                levonás
+            02191:
+              help: Ebben az elszámolásban alkalmazva — Inversiones en territ. África
+                Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
+                (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Ebben az elszámolásban
+                alkalmazva
+            02192:
+              help: Jövőbeli időszakokban alkalmazandó — Inversiones en territ. África
+                Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
+                (TAP)
+              label: Inversiones en territ. África Occidental y gastos de propaganda
+                y publicidad (art. 27 bis Ley 19/1994) (TAP). Jövőbeli időszakokban
+                alkalmazandó
             02193:
               help: null
               label: Negatív adóalapok kompenzálásának részletezése - 2019 - Az időszak
@@ -8922,6 +9352,10 @@ modelo:
               help: null
               label: Korlátból kizárt K+F+i levonások - 2024 Technológiai innováció
                 - Elégtelen adókötelezettség miatt kifizetett összeg [02279]
+            02280:
+              help: Jövőbeli időszakokban alkalmazandó — Programa deportivo "RETO
+                DE" (RD)
+              label: Programa deportivo "RETO DE" (RD). Jövőbeli időszakokban alkalmazandó
             02281:
               help: null
               label: Szövetkezeti rendszer - A kvóták kompenzációjának részletezése.
@@ -9290,6 +9724,21 @@ modelo:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra
                 váró pénzügyi ráfordítások - Keletkezés éve 2024 - Időszak elején
                 alkalmazásra váró - Korlát alapján [02370]
+            '02371':
+              help: Függőben lévő vagy keletkezett levonás — Plan de Fomento de la
+                ópera en la Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Függőben lévő vagy keletkezett levonás
+            '02372':
+              help: Ebben az elszámolásban alkalmazva — Plan de Fomento de la ópera
+                en la Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Ebben az elszámolásban alkalmazva
+            '02373':
+              help: Jövőbeli időszakokban alkalmazandó — Plan de Fomento de la ópera
+                en la Calle del Teatro Real (FO)
+              label: Plan de Fomento de la ópera en la Calle del Teatro Real (FO).
+                Jövőbeli időszakokban alkalmazandó
             '02374':
               help: null
               label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
@@ -9299,6 +9748,11 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztésének kiigazításai (LIS 16.3 átmeneti rendelkezés) - Növekedés
                 - Év végén függőben lévő egyenleg [02375]
+            '02376':
+              help: b) Értékpapírok értékvesztésének visszaírása (LIS 16. átmeneti
+                rendelkezés) — B.1. Participaciones declarante en otras entidades
+              label: B.1. Participaciones declarante en otras entidades. b) Értékpapírok
+                értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
             02378:
               help: null
               label: Állami és tartományi adóhatóságok együttes adóztatása - Igazgatási
@@ -9625,12 +10079,42 @@ modelo:
               help: null
               label: Szövetkezeti rendszer - A kvóták kompenzációjának részletezése.
                 2020 Jövőbeli időszakokban alkalmazandó [02454]
+            '02455':
+              help: 'Függőben lévő vagy keletkezett levonás — Financiador: espectáculos
+                en vivo artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Függőben lévő vagy keletkezett levonás'
+            '02456':
+              help: 'Ebben az elszámolásban alkalmazva — Financiador: espectáculos
+                en vivo artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Ebben az elszámolásban alkalmazva'
+            '02457':
+              help: 'Jövőbeli időszakokban alkalmazandó — Financiador: espectáculos
+                en vivo artes escénicas y musicales (FEV)'
+              label: 'Financiador: espectáculos en vivo artes escénicas y musicales
+                (FEV). Jövőbeli időszakokban alkalmazandó'
             '02461':
               help: null
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*)
                 A 43/95. törvény, a 4/2004. RDLeg. és a LIS VI. cím IV. fejezete szerinti
                 levonások összege (a K+F+i és a TAP kivételével) - Jövőbeli időszakokban
                 alkalmazandó [02461]
+            '02462':
+              help: 'Függőben lévő vagy keletkezett levonás — Financiador: producciones
+                cinematográficas españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Függőben lévő vagy keletkezett levonás'
+            '02463':
+              help: 'Ebben az elszámolásban alkalmazva — Financiador: producciones
+                cinematográficas españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Ebben az elszámolásban alkalmazva'
+            '02464':
+              help: 'Jövőbeli időszakokban alkalmazandó — Financiador: producciones
+                cinematográficas españolas (FPC)'
+              label: 'Financiador: producciones cinematográficas españolas (FPC).
+                Jövőbeli időszakokban alkalmazandó'
             '02465':
               help: null
               label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben
@@ -11783,6 +12267,21 @@ modelo:
               help: null
               label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
                 beruházások 2023 - Az időszak végén képzésre váró RIIB [02941]
+            02942:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
+            02944:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
+            02946:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
+            02948:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
+            02950:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
             02951:
               help: null
               label: A számviteli értékelés adózási értékeléstől való eltérésének
@@ -11831,15 +12330,30 @@ modelo:
               label: A számviteli értékelés adózási értékeléstől való eltérésének
                 hatásai (LIS 20. cikk) - Csökkenés - Év végén függőben lévő egyenleg
                 [02960]
+            02962:
+              help: A kedvezmény alapja — B) Datos económicos
+              label: B) Datos económicos. A kedvezmény alapja
+            02964:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             02966:
               help: null
               label: Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
                 vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
                 - Csökkenés - Évi korrekciók - Végleges [02966]
+            02967:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            02969:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             02972:
               help: null
               label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben
                 - Keletkezés éve 2025(*) - Jövőbeli időszakokban alkalmazandó [02972]
+            02973:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             02975:
               help: null
               label: Kanári-szigeteki beruházási tartalék különös rendszere - Kanári-szigeteki
@@ -11855,6 +12369,12 @@ modelo:
               label: Kanári-szigeteki beruházási tartalék különös rendszere - Kanári-szigeteki
                 beruházási tartalék (RIC) 2023 - Ebben az elszámolásban alkalmazva/materializálva
                 - Az adóalapba beépítve a feltételek nem teljesítése miatt [02977]
+            02978:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            02980:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             02981:
               help: null
               label: Belföldi illetőségű jogalanyok értékpapír-átruházásából származó
@@ -12237,6 +12757,18 @@ modelo:
               label: Külföldi adó azon nyereségen, amelyből a nemzetközi kettős adóztatás
                 elleni levonás tárgyát képező osztalékot fizetik (LIS 32.1. cikk)
                 - Növekedés - Évi korrekciók
+            '03063':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            '03065':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            '03067':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            03069:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             '03071':
               help: null
               label: Gazdasági érdekcsoportosulás (LIS VII. cím II. fejezet) - Növekedés
@@ -13038,6 +13570,12 @@ modelo:
               help: null
               label: Közösségi tulajdonú szomszédos erdők (LIS VII. cím XV. fejezet)
                 - Csökkenés - Évi korrekciók - Végleges [03246]
+            '03247':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            03249:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             '03251':
               help: null
               label: Tonnatartalom alapú hajózási társasági szabályozás (LIS VII.
@@ -13168,10 +13706,25 @@ modelo:
               help: null
               label: Nonprofit jogalanyok adózási szabályozása (49/2002. törvény)
                 - Csökkenés - Év végén függőben lévő egyenleg [03280]
+            03281:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            03283:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            03285:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             03286:
               help: null
               label: 'Szövetkezetek: kötelező tartalékalap (20/1990. törvény) - Csökkenés
                 - Évi korrekciók - Végleges [03286]'
+            03288:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
+            03290:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             03291:
               help: null
               label: Kanári-szigeteki beruházási tartalék (19/1994. törvény) - Növekedés
@@ -13257,6 +13810,9 @@ modelo:
               label: Kanári-szigeteki beruházási tartalék különös rendszere - Kanári-szigeteki
                 beruházási tartalék (RIC) 2024 - Időszak végén materializálásra váró
                 RIC [03313]
+            '03314':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             '03316':
               help: null
               label: A kikötői hatóságok által tárgyi eszköz átruházásából szerzett
@@ -13408,6 +13964,9 @@ modelo:
               help: null
               label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
                 beruházások 2024 - Az időszak végén képzésre váró RIC [03354]
+            '03355':
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             '03357':
               help: null
               label: Szövetkezeti rendszer - Adókötelezettség-kompenzáció részletezése.
@@ -13416,6 +13975,9 @@ modelo:
               help: null
               label: Szövetkezeti rendszer - A kvóták kompenzációjának részletezése.
                 2024 Ebben az elszámolásban alkalmazva [03358]
+            03359:
+              help: A levonás alapja — B) Datos económicos
+              label: B) Datos económicos. A levonás alapja
             '03361':
               help: null
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
@@ -13804,6 +14366,350 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2024 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
                 27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+            03448:
+              help: Függőben lévő vagy keletkezett levonás — Barcelona Music Lab.
+                El Futuro de la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Függőben lévő
+                vagy keletkezett levonás
+            03449:
+              help: Ebben az elszámolásban alkalmazva — Barcelona Music Lab. El Futuro
+                de la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Ebben az elszámolásban
+                alkalmazva
+            '03450':
+              help: Jövőbeli időszakokban alkalmazandó — Barcelona Music Lab. El Futuro
+                de la Música (BM)
+              label: Barcelona Music Lab. El Futuro de la Música (BM). Jövőbeli időszakokban
+                alkalmazandó
+            '03451':
+              help: Függőben lévő vagy keletkezett levonás — Primavera Sound, created
+                in Barcelona (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Függőben lévő vagy
+                keletkezett levonás
+            '03452':
+              help: Ebben az elszámolásban alkalmazva — Primavera Sound, created in
+                Barcelona (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Ebben az elszámolásban
+                alkalmazva
+            '03453':
+              help: Jövőbeli időszakokban alkalmazandó — Primavera Sound, created
+                in Barcelona (PSB)
+              label: Primavera Sound, created in Barcelona (PSB). Jövőbeli időszakokban
+                alkalmazandó
+            '03454':
+              help: 'Függőben lévő vagy keletkezett levonás — Año Tàpies. Cien años
+                del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Függőben lévő vagy keletkezett levonás'
+            '03455':
+              help: 'Ebben az elszámolásban alkalmazva — Año Tàpies. Cien años del
+                nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Ebben az elszámolásban alkalmazva'
+            '03456':
+              help: 'Jövőbeli időszakokban alkalmazandó — Año Tàpies. Cien años del
+                nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T)'
+              label: 'Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies
+
+                (1923 – 2012) (T). Jövőbeli időszakokban alkalmazandó'
+            '03457':
+              help: Függőben lévő vagy keletkezett levonás — Eduardo Chillida 100
+                años (EC)
+              label: Eduardo Chillida 100 años (EC). Függőben lévő vagy keletkezett
+                levonás
+            03458:
+              help: Ebben az elszámolásban alkalmazva — Eduardo Chillida 100 años
+                (EC)
+              label: Eduardo Chillida 100 años (EC). Ebben az elszámolásban alkalmazva
+            03459:
+              help: Jövőbeli időszakokban alkalmazandó — Eduardo Chillida 100 años
+                (EC)
+              label: Eduardo Chillida 100 años (EC). Jövőbeli időszakokban alkalmazandó
+            '03460':
+              help: 'Függőben lévő vagy keletkezett levonás — VIII Centenario de la
+                Catedral gótica de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Függőben lévő vagy keletkezett levonás'
+            '03461':
+              help: 'Ebben az elszámolásban alkalmazva — VIII Centenario de la Catedral
+                gótica de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Ebben az elszámolásban alkalmazva'
+            '03462':
+              help: 'Jövőbeli időszakokban alkalmazandó — VIII Centenario de la Catedral
+                gótica de Toledo, primada
+
+                de España (CT)'
+              label: 'VIII Centenario de la Catedral gótica de Toledo, primada
+
+                de España (CT). Jövőbeli időszakokban alkalmazandó'
+            '03463':
+              help: Függőben lévő vagy keletkezett levonás — Año Santo Jacobeo 2027
+                (J27)
+              label: Año Santo Jacobeo 2027 (J27). Függőben lévő vagy keletkezett
+                levonás
+            '03464':
+              help: Ebben az elszámolásban alkalmazva — Año Santo Jacobeo 2027 (J27)
+              label: Año Santo Jacobeo 2027 (J27). Ebben az elszámolásban alkalmazva
+            '03465':
+              help: Jövőbeli időszakokban alkalmazandó — Año Santo Jacobeo 2027 (J27)
+              label: Año Santo Jacobeo 2027 (J27). Jövőbeli időszakokban alkalmazandó
+            '03466':
+              help: Függőben lévő vagy keletkezett levonás — Centenario de la Generación
+                del 27 (G27)
+              label: Centenario de la Generación del 27 (G27). Függőben lévő vagy
+                keletkezett levonás
+            '03467':
+              help: Ebben az elszámolásban alkalmazva — Centenario de la Generación
+                del 27 (G27)
+              label: Centenario de la Generación del 27 (G27). Ebben az elszámolásban
+                alkalmazva
+            03468:
+              help: Jövőbeli időszakokban alkalmazandó — Centenario de la Generación
+                del 27 (G27)
+              label: Centenario de la Generación del 27 (G27). Jövőbeli időszakokban
+                alkalmazandó
+            03469:
+              help: Függőben lévő vagy keletkezett levonás — Música clásica para todos
+                (MC)
+              label: Música clásica para todos (MC). Függőben lévő vagy keletkezett
+                levonás
+            '03470':
+              help: Ebben az elszámolásban alkalmazva — Música clásica para todos
+                (MC)
+              label: Música clásica para todos (MC). Ebben az elszámolásban alkalmazva
+            '03471':
+              help: Jövőbeli időszakokban alkalmazandó — Música clásica para todos
+                (MC)
+              label: Música clásica para todos (MC). Jövőbeli időszakokban alkalmazandó
+            '03472':
+              help: Függőben lévő vagy keletkezett levonás — 150.º aniversario del
+                nacimiento de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Függőben
+                lévő vagy keletkezett levonás
+            '03473':
+              help: Ebben az elszámolásban alkalmazva — 150.º aniversario del nacimiento
+                de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Ebben az
+                elszámolásban alkalmazva
+            '03474':
+              help: Jövőbeli időszakokban alkalmazandó — 150.º aniversario del nacimiento
+                de Pau Casals (PCA)
+              label: 150.º aniversario del nacimiento de Pau Casals (PCA). Jövőbeli
+                időszakokban alkalmazandó
+            '03475':
+              help: Függőben lévő vagy keletkezett levonás — Petit Liceu (PL)
+              label: Petit Liceu (PL). Függőben lévő vagy keletkezett levonás
+            '03476':
+              help: Ebben az elszámolásban alkalmazva — Petit Liceu (PL)
+              label: Petit Liceu (PL). Ebben az elszámolásban alkalmazva
+            '03477':
+              help: Jövőbeli időszakokban alkalmazandó — Petit Liceu (PL)
+              label: Petit Liceu (PL). Jövőbeli időszakokban alkalmazandó
+            03478:
+              help: Függőben lévő vagy keletkezett levonás — Fundación Joan Miró 50.º
+                aniversario (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Függőben lévő vagy
+                keletkezett levonás
+            03479:
+              help: Ebben az elszámolásban alkalmazva — Fundación Joan Miró 50.º aniversario
+                (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Ebben az elszámolásban
+                alkalmazva
+            03480:
+              help: Jövőbeli időszakokban alkalmazandó — Fundación Joan Miró 50.º
+                aniversario (JM50)
+              label: Fundación Joan Miró 50.º aniversario (JM50). Jövőbeli időszakokban
+                alkalmazandó
+            03481:
+              help: Függőben lévő vagy keletkezett levonás — Centenario Gaudí 2026
+                (G26)
+              label: Centenario Gaudí 2026 (G26). Függőben lévő vagy keletkezett levonás
+            03482:
+              help: Ebben az elszámolásban alkalmazva — Centenario Gaudí 2026 (G26)
+              label: Centenario Gaudí 2026 (G26). Ebben az elszámolásban alkalmazva
+            03483:
+              help: Jövőbeli időszakokban alkalmazandó — Centenario Gaudí 2026 (G26)
+              label: Centenario Gaudí 2026 (G26). Jövőbeli időszakokban alkalmazandó
+            03484:
+              help: Függőben lévő vagy keletkezett levonás — Quincuagésimo aniversario
+                del Teatre Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Függőben lévő
+                vagy keletkezett levonás
+            03485:
+              help: Ebben az elszámolásban alkalmazva — Quincuagésimo aniversario
+                del Teatre Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Ebben az elszámolásban
+                alkalmazva
+            03486:
+              help: Jövőbeli időszakokban alkalmazandó — Quincuagésimo aniversario
+                del Teatre Lliure (LL)
+              label: Quincuagésimo aniversario del Teatre Lliure (LL). Jövőbeli időszakokban
+                alkalmazandó
+            03490:
+              help: Függőben lévő vagy keletkezett levonás — Vigésimo aniversario
+                del Festival Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Függőben
+                lévő vagy keletkezett levonás
+            03491:
+              help: Ebben az elszámolásban alkalmazva — Vigésimo aniversario del Festival
+                Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Ebben
+                az elszámolásban alkalmazva
+            03492:
+              help: Jövőbeli időszakokban alkalmazandó — Vigésimo aniversario del
+                Festival Bilbao BBK Live (FB)
+              label: Vigésimo aniversario del Festival Bilbao BBK Live (FB). Jövőbeli
+                időszakokban alkalmazandó
+            03493:
+              help: Függőben lévő vagy keletkezett levonás — 75.ª edición del Festival
+                Música y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Függőben
+                lévő vagy keletkezett levonás
+            03494:
+              help: Ebben az elszámolásban alkalmazva — 75.ª edición del Festival
+                Música y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Ebben
+                az elszámolásban alkalmazva
+            03495:
+              help: Jövőbeli időszakokban alkalmazandó — 75.ª edición del Festival
+                Música y Danza de Granada (FG)
+              label: 75.ª edición del Festival Música y Danza de Granada (FG). Jövőbeli
+                időszakokban alkalmazandó
+            03496:
+              help: Függőben lévő vagy keletkezett levonás — 150.º aniversario del
+                nacimiento de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Függőben
+                lévő vagy keletkezett levonás
+            03497:
+              help: Ebben az elszámolásban alkalmazva — 150.º aniversario del nacimiento
+                de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Ebben
+                az elszámolásban alkalmazva
+            03498:
+              help: Jövőbeli időszakokban alkalmazandó — 150.º aniversario del nacimiento
+                de Manuel de Falla (MF)
+              label: 150.º aniversario del nacimiento de Manuel de Falla (MF). Jövőbeli
+                időszakokban alkalmazandó
+            03499:
+              help: Függőben lévő vagy keletkezett levonás — Dansàneu, Festival de
+                Cultures del Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Függőben lévő
+                vagy keletkezett levonás
+            '03500':
+              help: Ebben az elszámolásban alkalmazva — Dansàneu, Festival de Cultures
+                del Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Ebben az elszámolásban
+                alkalmazva
+            '03501':
+              help: Jövőbeli időszakokban alkalmazandó — Dansàneu, Festival de Cultures
+                del Pirineu (D)
+              label: Dansàneu, Festival de Cultures del Pirineu (D). Jövőbeli időszakokban
+                alkalmazandó
+            '03502':
+              help: Függőben lévő vagy keletkezett levonás — San Diego Comic-Con Málaga
+                (SD)
+              label: San Diego Comic-Con Málaga (SD). Függőben lévő vagy keletkezett
+                levonás
+            '03503':
+              help: Ebben az elszámolásban alkalmazva — San Diego Comic-Con Málaga
+                (SD)
+              label: San Diego Comic-Con Málaga (SD). Ebben az elszámolásban alkalmazva
+            '03504':
+              help: Jövőbeli időszakokban alkalmazandó — San Diego Comic-Con Málaga
+                (SD)
+              label: San Diego Comic-Con Málaga (SD). Jövőbeli időszakokban alkalmazandó
+            '03505':
+              help: Függőben lévő vagy keletkezett levonás — Programa de preparación
+                de los deportistas españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Függőben lévő vagy keletkezett levonás
+            '03506':
+              help: Ebben az elszámolásban alkalmazva — Programa de preparación de
+                los deportistas españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Ebben az elszámolásban alkalmazva
+            '03507':
+              help: Jövőbeli időszakokban alkalmazandó — Programa de preparación de
+                los deportistas españoles de los Juegos de Los Ángeles 2028 (LA28)
+              label: Programa de preparación de los deportistas españoles de los Juegos
+                de Los Ángeles 2028 (LA28). Jövőbeli időszakokban alkalmazandó
+            03508:
+              help: Függőben lévő vagy keletkezett levonás — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Függőben lévő vagy keletkezett levonás
+            03509:
+              help: Ebben az elszámolásban alkalmazva — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Ebben az elszámolásban alkalmazva
+            '03510':
+              help: Jövőbeli időszakokban alkalmazandó — Universo Mujer IV (UM4)
+              label: Universo Mujer IV (UM4). Jövőbeli időszakokban alkalmazandó
+            '03511':
+              help: Függőben lévő vagy keletkezett levonás — Gran Premio de España
+                de Motociclismo (GP)
+              label: Gran Premio de España de Motociclismo (GP). Függőben lévő vagy
+                keletkezett levonás
+            '03512':
+              help: Ebben az elszámolásban alkalmazva — Gran Premio de España de Motociclismo
+                (GP)
+              label: Gran Premio de España de Motociclismo (GP). Ebben az elszámolásban
+                alkalmazva
+            '03513':
+              help: Jövőbeli időszakokban alkalmazandó — Gran Premio de España de
+                Motociclismo (GP)
+              label: Gran Premio de España de Motociclismo (GP). Jövőbeli időszakokban
+                alkalmazandó
+            '03514':
+              help: Függőben lévő vagy keletkezett levonás — Deporte Inclusivo III
+                (DI3)
+              label: Deporte Inclusivo III (DI3). Függőben lévő vagy keletkezett levonás
+            '03515':
+              help: Ebben az elszámolásban alkalmazva — Deporte Inclusivo III (DI3)
+              label: Deporte Inclusivo III (DI3). Ebben az elszámolásban alkalmazva
+            '03516':
+              help: Jövőbeli időszakokban alkalmazandó — Deporte Inclusivo III (DI3)
+              label: Deporte Inclusivo III (DI3). Jövőbeli időszakokban alkalmazandó
+            '03517':
+              help: Függőben lévő vagy keletkezett levonás — Plan 2030 de Apoyo al
+                Deporte Base II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Függőben lévő vagy
+                keletkezett levonás
+            03518:
+              help: Ebben az elszámolásban alkalmazva — Plan 2030 de Apoyo al Deporte
+                Base II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Ebben az elszámolásban
+                alkalmazva
+            03519:
+              help: Jövőbeli időszakokban alkalmazandó — Plan 2030 de Apoyo al Deporte
+                Base II (2P30)
+              label: Plan 2030 de Apoyo al Deporte Base II (2P30). Jövőbeli időszakokban
+                alkalmazandó
+            '03520':
+              help: Függőben lévő vagy keletkezett levonás — Ironman Calella-Barcelona
+                (IC)
+              label: Ironman Calella-Barcelona (IC). Függőben lévő vagy keletkezett
+                levonás
+            '03521':
+              help: Ebben az elszámolásban alkalmazva — Ironman Calella-Barcelona
+                (IC)
+              label: Ironman Calella-Barcelona (IC). Ebben az elszámolásban alkalmazva
+            '03522':
+              help: Jövőbeli időszakokban alkalmazandó — Ironman Calella-Barcelona
+                (IC)
+              label: Ironman Calella-Barcelona (IC). Jövőbeli időszakokban alkalmazandó
             '03523':
               help: null
               label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2025:
@@ -14394,6 +15300,25 @@ modelo:
               label: Egyes pénzügyi jogalanyok kamat- és jutalékmarzs-adójából eredő
                 korrekció (7/2024. törvény DF 9. cikk) - Növekedés - Évi korrekciók
                 - Végleges [03646]
+            '03647':
+              help: A RIC-hez az időszak elején még hozzárendelendő összeg — Inversiones
+                anticipadas 2022
+              label: Inversiones anticipadas 2022. A RIC-hez az időszak elején még
+                hozzárendelendő összeg
+            03648:
+              help: A RIC-hez az időszak elején még hozzárendelendő összeg — Inversiones
+                anticipadas 2023
+              label: Inversiones anticipadas 2023. A RIC-hez az időszak elején még
+                hozzárendelendő összeg
+            03649:
+              help: A RIC-hez az időszak végén még hozzárendelendő összeg — Inversiones
+                anticipadas 2023
+              label: Inversiones anticipadas 2023. A RIC-hez az időszak végén még
+                hozzárendelendő összeg
+            '1501':
+              label: A részesedés teljes névértéke
+            '1502':
+              label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
             '2231':
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1
