@@ -423,6 +423,54 @@ inside it takes the change without its reasoning. Commit narrowly and early, and
 put anything that must survive into the source comment or this document rather
 than the commit message.
 
+### A legal entity can reach filing with a natural person's surname in its name field
+
+The domain unit lane has exactly one failure left, and it is real. A profile
+declaring `entity_type = legal_entity` with `identity.surnames` set and no
+`identity.legal_name` passes preflight as READY, and its sibling case with a
+short `identity.name` does too.
+
+What that costs downstream is specific. The export producer maps the AEAT
+"Apellidos o Razon Social" header to `surnames or legal_name`, and its own
+comment states the assumption it rests on: the two are "mutually exclusive by
+construction -- a natural person carries surnames and no legal_name, an entity
+carries legal_name and no surnames". Nothing enforces that any more, so the
+profile above resolves the field to the SURNAME, and a company files under a
+natural person's surname. Silently, and in the header AEAT identifies the filer
+by.
+
+The enforcement existed and was removed. A preflight method collected the
+required HEADER fields from the revision's export layouts and, when any
+name-shaped header was required, demanded `identity.legal_name` from a legal
+entity and both name parts from a natural person. It went in the typed-producer
+integration commit, which left its four module constants behind, defined and
+referenced nowhere -- which is how the loss stayed invisible.
+
+The paired tests show why nobody noticed: the ACCEPTING case (entity WITH a
+legal_name is ready) passes vacuously once no requirement exists, and only the
+REJECTING case detects the loss. A positive test that passes for the wrong
+reason is worse than no test, because it reads as coverage of exactly this.
+
+Restoring the old method verbatim will NOT fix it, and this is where the choice
+lies. Modelo 202's 2026 revision declares no required headers at all, so the
+original early return fires and the check never runs. Three ways out, with
+different blast radii:
+
+* Make the legal-entity requirement unconditional in preflight. Defensible on
+  its own terms -- an entity without a razon social is an incomplete profile
+  whatever it is filing -- but it changes preflight for every modelo.
+* Encode the conditionality in the profile schema, which is where a fact like
+  "a legal entity needs a razon social" belongs. Today none of `name`,
+  `surnames` or `legal_name` is required and none carries a `required_when`, so
+  the schema says nothing about entity type at all.
+* Treat modelo 202's registry data as the gap and declare the required headers
+  its layout should carry, which restores the original conditioning and belongs
+  to the registry campaign.
+
+Not chosen here. The first two change behaviour for every profile in the
+product, and the third is another campaign's data. What is not in doubt is the
+defect: the invariant the producer documents is currently enforced by nothing.
+
 ## Recommendations
 
 Treat the storage substrate package named for the retired shared-master-key
