@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:32a6f35f3b01726d972993d545ab81b726353c32d381da579f0626cc0b6d9519'
+body_hash: 'sha256:9a8aea558a98a87b067393093d0040f1381dc58e7a621e679fcf10582f81b510'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -903,8 +903,51 @@ This is the most deceptive shape dead code takes. An 804-line suite passes green
 over it every run, so every health signal reports a working subsystem, and the
 facade advertises it as supported API.
 
-Deletion is NOT taken autonomously, and the reason is the rule rather than doubt
-about the classification. Key-management removals are owner-gated because
+DELETED, on the operator's decision, after the classification below was put to
+them directly. The removal took `_rotation.py` (596 lines), its three test
+modules (`test_rotation.py`, `test_rotation_crash_windows.py`,
+`test_rotation_target_containment.py`), the storage facade's six exports of it,
+and its API stub. Thirty-eight tests went with it.
+
+What the deletion then surfaced is the part worth recording. Eleven storage
+taxonomy members named `_rotation.py` as their `consumer_module`, and the
+liveness gate caught every one by name -- "re-point the claim in the same change
+that moves or deletes the module" -- which is the gate working exactly as
+designed. Those eleven directories are now dormant: nothing writes plaintext
+there, the durable records live in the encrypted secure-object store, and the
+sweep only ever walked them looking for legacy envelope files. Each now carries
+a `dormant_reason` saying so.
+
+Four of the eleven then refused to be declared dormant, and that was also the
+gate working. `consumption_evidence` counts a bare settings-field STRING as
+evidence, deliberately, because some live consumers resolve fields dynamically
+by name -- and `core/config.py` lists those four fields as string constants in a
+path-normalising `field_validator`. The gate's sibling skip already discounts
+exactly this kind of plumbing, with a docstring saying so ("the declaration and
+the machinery that gives it a default"), but it tests for an `AnnAssign` in the
+SAME module, and these four are declared by a mixin and normalised by the
+facade: two different files.
+
+So the detector was narrowed to treat validator arguments as plumbing, keyed
+structurally rather than by an excluded-module list, matching the sibling's
+stated preference. This is a gate change made to let this campaign's own change
+pass, which deserves naming rather than burying: the guard against it is a
+second discrimination test proving a real `settings.<field>` read in the SAME
+module is still counted, so the narrowing cannot be read as excusing the
+settings facade wholesale. Verified first that nothing outside the declaration,
+the validator and the taxonomy reads any of the four fields -- they are dormant
+in fact, not merely by declaration.
+
+The prose sweep was larger than the code change. Nine test modules carried
+docstrings asserting `_rotation.py` was some category's "sole consumer"; each
+now states that the category has no consumer and why. One fixture string in
+`test_custody_hard_cutover_absence.py` names `_rotation` and was deliberately
+LEFT: that module's own comment records how a previous sweep broke its proof by
+rewriting fixture strings, and it is testing path-shape detection, not import
+resolution.
+
+The original classification, retained because the reasoning is what justified
+the deletion: Key-management removals are owner-gated because
 deleting a key-schedule or DEK-derivation branch can strand encrypted data. The
 confirmation that gate asks for does hold here -- the creation path
 (`register_profile_with_credentials`) mints only the current per-profile
