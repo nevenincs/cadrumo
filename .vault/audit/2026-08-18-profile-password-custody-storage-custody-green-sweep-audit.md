@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:9a8aea558a98a87b067393093d0040f1381dc58e7a621e679fcf10582f81b510'
+body_hash: 'sha256:ce3b03c3b6599da5816099b9d48c697bee3d730dc6cd5e771e967ccf5b50241a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -957,6 +957,55 @@ capability nothing invokes. That is an argument for the owner to weigh, not a
 licence for the agent to act on a key-management surface. It has now been
 deferred three times in this campaign, so it is put to the operator directly
 rather than recorded a fourth time.
+
+### Four audit-trail emissions bypassed the guard this campaign had already built
+
+FIXED. The lost-update work earlier in this campaign added `append_guarded` to
+the bucket-event repository and routed `emit_bucket_event` / `emit_bucket_events`
+through it. Four production sites never used that door and wrote the trail
+themselves with a bare load-append-save: purchase-invoice evidence attachment
+(`application/ledger/_evidence.py`), the profile-activation record written at
+login (`application/user_profile/_login_session.py`), live filed-evidence
+stamping (`application/live/_filed_observation_persistence.py`), and both
+ledger-ratio emissions in `entrypoints/cli/_ledger_ratios_cli.py`.
+
+Each re-derived the id-build-append-save sequence that `emit_bucket_event`'s own
+docstring names as the thing every emitting domain must share. The cost was not
+duplication for its own sake: the shared primitive appends through the
+catalogue's revision guard and a bare rewrite does not, so an emission
+concurrent with another process's discards it. Content-addressed events make
+that invisible -- every survivor is internally consistent, the missing one
+leaves no gap, and the trail still reads complete.
+
+Found by semantic search rather than grep, which is the transferable part. The
+question asked was "load the catalogue, modify one entry, save the whole
+catalogue back", and the answer set was the already-fixed repositories plus
+these. A keyword sweep for `save(append_bucket_event(` then found only two of
+the four: the other two span several lines, so the shape was invisible to a
+line-oriented pattern. The AST gate written afterwards found them immediately.
+
+The gate is deliberately narrow, and the boundary is the useful record here. It
+forbids the bare `save(append_bucket_event(...))` composition, which is never
+right -- neither guarded nor atomic with anything. It does NOT forbid composing
+an event into a CO-COMMIT via `to_secure_object_write(...)` in another write's
+`extra_writes`, because there the event must land in the same transaction as
+the record it describes and a self-committing emitter cannot provide that.
+Those sites (`_actions_manual.py`, `_actions_common.py`, `_capsule_record.py`,
+`workflow/_persistence.py` among them) carry the SAME lost-update exposure and
+are not covered by anything: they need a guarded-composition seam, which is the
+co-commit retry design already standing open for the owner. The gate carries a
+discrimination case proving it leaves that shape alone, so nobody reads its
+green as covering them.
+
+No behavioural concurrency regression accompanies the fix, and the reason is
+worth recording because it constrains every future test in this area. Worker
+threads do not inherit the active-session `ContextVar` -- deliberately, so an
+encrypt path cannot observe a sibling context's key -- so a second emitter
+cannot be staged in-process at all; the attempt fails with `NO_ACTIVE_SESSION`
+before reaching the catalogue. The real concurrency here is cross-PROCESS. And
+the bare write is a single expression, so there is no seam to interleave from
+outside the way the earlier bucket-event and work-unit regressions did. A
+thread-raced test would have passed before the fix as well as after.
 
 ## Recommendations
 
