@@ -15211,9 +15211,10 @@ modelo:
               label: Inversiones anticipadas 2023. Pendent de dotar RIC al final del
                 període
             '1501':
-              label: Valor nominal total de la participació
+              label: Valor nominal total de la participació [1501]
             '1502':
               label: Valor en llibres (en l'actiu de la declarant) de la participació
+                [1502]
             '2231':
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -

@@ -15316,9 +15316,10 @@ modelo:
               label: Inversiones anticipadas 2023. A RIC-hez az időszak végén még
                 hozzárendelendő összeg
             '1501':
-              label: A részesedés teljes névértéke
+              label: A részesedés teljes névértéke [1501]
             '1502':
               label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
+                [1502]
             '2231':
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1

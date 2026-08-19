@@ -15480,9 +15480,9 @@ modelo:
               label: Inversiones anticipadas 2023. RIC allocation outstanding at the
                 end of the period
             '1501':
-              label: Total nominal value of the holding
+              label: Total nominal value of the holding [1501]
             '1502':
-              label: Book value of the holding (in the declarant's assets)
+              label: Book value of the holding (in the declarant's assets) [1502]
             '2231':
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision
