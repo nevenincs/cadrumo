@@ -485,7 +485,18 @@ def derive_calculation_completeness_casillas(
         # This does not soften the check where it has teeth: a design that prints
         # tags for any sheet yields a non-empty set, and a casilla declared under
         # a segment that set does not carry still refuses.
-        if diseno_pairs and segmento is not None and (segmento, number) not in diseno_pairs:
+        # A segmento NAMES a design sheet, and designs differ in whether the name
+        # carries a trailing description. Modelo 200's segmentos are exact sheet
+        # names ("DP200012"); modelo 714's are the sheet's leading code, where the
+        # design writes "714-10 Patrimonio". Both identify one sheet, so the match
+        # admits an exact name or that name followed by a space. It stays a
+        # prefix-to-WORD-boundary comparison rather than a bare startswith, so
+        # "714-1" cannot claim "714-10 Patrimonio".
+        matched = any(
+            number == pair_number and (segmento == sheet_name or sheet_name.startswith(f"{segmento} "))
+            for sheet_name, pair_number in diseno_pairs
+        )
+        if diseno_pairs and segmento is not None and not matched:
             raise RegistryValidationError(
                 f"calculation-completeness derivation: casilla {number!r} is "
                 f"declared under segmento {segmento!r} but the AEAT Diseño de "
