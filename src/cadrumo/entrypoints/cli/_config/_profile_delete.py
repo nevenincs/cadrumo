@@ -38,9 +38,10 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from ....core.i18n import tr
+from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
+from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
@@ -206,8 +207,19 @@ def register_profile_delete_command(
     """
 
     @app.command("delete", help=tr("cli.config.profile.delete.help"))
-    def config_profile_delete(ctx: typer.Context, name: _NameArg, yes: _YesOpt = False) -> None:
+    def config_profile_delete(
+        ctx: typer.Context,
+        name: _NameArg,
+        yes: _YesOpt = False,
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
         """Destroy one named profile capsule, after a preflight the operator confirms."""
+        _activate_subcommand_output_language(ctx, output_language)
         pointer = resolve_profile_by_label(name)
         _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
         assessment = _assess(pointer.bucket_id)
