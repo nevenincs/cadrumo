@@ -767,6 +767,11 @@ convention = "google"
 # and real pipes; every argv is a fixed `sys.executable -c <literal>`.
 "src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
+# Cross-process custody-root exclusion is only provable against real spawned
+# processes killed abruptly; every argv is a fixed `sys.executable -c <script>`
+# built in-repo, which ruff's S603 heuristic cannot see through. Same contract
+# as the bucket lockfile gate above.
+"src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_root_lock_exclusion.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
 # The acceptance-wall regression gate runs the trusted `sys.executable -m pytest`
