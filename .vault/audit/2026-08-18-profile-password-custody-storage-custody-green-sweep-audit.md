@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:708ee0acd96743e543c15c1927fa6dd5a249d25246f73d9cc2367ad55700efb0'
+body_hash: 'sha256:e60f2f65dbf5d62896d545ba953129639f363feefdb2be470800d8fe17b83926'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1434,6 +1434,53 @@ violate the secure-storage-only rule. The design is correct under this
 codebase's own rules, the warning notice reaches the operator in the envelope,
 and there is no fix available that does not break one of those rules. Recorded
 as a known operability limit rather than a defect.
+
+### The full profile round trip works, and driving it found the refusal that blocked it
+
+The lifecycle was exercised end to end against an isolated storage root rather
+than reasoned about: create, validate, archive export, archive inspect, logout,
+delete, list-empty, restore, list-restored. It works. That is the goal's
+"verified" clause discharged by observation, and it is worth recording as a
+positive result -- the sealed-capsule round trip is not merely covered by unit
+tests, it survives a real operator sequence.
+
+The defect it exposed was at the restore step. ``--secrets-stdin`` refused a
+malformed payload with "not a valid JSON object" and named nothing else. Both
+machine channels did, since they share one validator. That is precisely what
+the CLI-boundary contract forbids -- a refusal lists the accepted set rather
+than only what it rejected -- and the surface makes it worse than a generic
+lapse: these are the channels a caller with NO terminal must use, and this
+CLI's stated operator is an autonomous agent that cannot be prompted. The one
+operator who cannot be asked was told the least.
+
+The accepted set is now read from the strict model's own declared fields, not
+restated in prose, so the message cannot drift from what validation accepts.
+
+Three directions are pinned, and the third is the one worth keeping: naming the
+accepted KEYS must never drift into echoing the value SENT. On a channel whose
+entire purpose is carrying a password, a refusal that quoted the payload back
+would put the secret into an error envelope, a log, and whatever the operator
+pastes into an issue. The guard against a well-meaning "show them what they
+sent" improvement is a test, not a comment.
+
+### Two behaviours observed and deliberately not changed
+
+Recorded so the next pass does not re-derive them as defects.
+
+The redaction funnel replaces EVERY UUID-shaped substring in CLI string output
+with ``<profile-id>``, including UUIDs inside filesystem paths that are neither
+profile nor bucket identifiers. The archive export's returned ``target`` path
+therefore comes back unusable whenever the destination sits under a
+UUID-named directory -- a temp dir, a CI workspace, a per-run scratch path.
+This is deliberate policy with a documented opt-out
+(``CADRUMO_CLI_REVEAL_IDENTIFIERS=1``), and the redactor genuinely cannot tell a
+profile UUID from any other. The practical harm is bounded because the operator
+supplied the path and therefore already holds it. Left alone; the trade-off was
+made knowingly, and the safe direction is the one it chose.
+
+The JSON flag is ``--format json`` at the root, not a per-verb ``--json``.
+Every profile read verb answers "No such option: --json" to the first thing an
+operator tries. Not a defect, and not worth a second spelling.
 
 ## Recommendations
 
