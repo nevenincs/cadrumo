@@ -1,0 +1,31 @@
+# Scope read from the approving Orden's own title and from LIRPF DA 33 rather
+# than inferred. Orden HAP/70/2013 names modelo 136 "Impuesto sobre la Renta de
+# las Personas Fisicas e Impuesto sobre la Renta de no Residentes. Gravamen
+# Especial sobre los Premios de determinadas Loterias y Apuestas.
+# Autoliquidacion", and DA 33 apartado 1 binds "los premios obtenidos por
+# contribuyentes de este Impuesto". Both are person taxes, so
+# applicable_entity_types is natural_person alone.
+#
+# Entity prizes are NOT filed here: the same Orden's title puts "Impuesto sobre
+# Sociedades: Retenciones e ingresos a cuenta sobre los premios" on the PAYER's
+# modelo 230, not on this autoliquidacion. That is also why this revision's
+# dependency_classifications family names no in-registry source -- modelo 230 is
+# not carried here.
+#
+# No required_payer_fact is declared. The vocabulary carries no fact for "obtuvo
+# un premio de loteria sujeto al gravamen especial", and 32 of the 61
+# applicability entries in this registry omit the field, modelo 390 among them,
+# so omission is the shipped shape for an obligation the profile does not model
+# rather than a gap left open here.
+#
+# cuota_bearing is true: this revision computes a cuota in casilla 05 and a
+# resultado a ingresar in casilla 07, unlike the informativa resumenes that
+# declare it false.
+
+[[revisions."2026".applicability]]
+id = "m136-seed"
+applicable_entity_types = ["natural_person"]
+applicable_reason = "Modelo 136 (IRPF e IRNR, gravamen especial sobre los premios de determinadas loterias y apuestas): el contribuyente que ha obtenido un premio sujeto al gravamen especial autoliquida la cuota cuando no se le ha practicado la retencion o el ingreso a cuenta correspondiente, conforme a la disposicion adicional 33 de la Ley 35/2006."
+not_applicable_reason = "Modelo 136 no aplica: la disposicion adicional 33 de la Ley 35/2006 exime de presentar la autoliquidacion cuando el premio es de cuantia inferior al importe exento o cuando el pagador ha practicado la retencion o el ingreso a cuenta sobre el."
+cuota_bearing = true
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]

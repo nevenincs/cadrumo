@@ -1,0 +1,22 @@
+# Modelo 721 derives no value from another modelo's filing: the contribuyente
+# enters the custodio, the clave of each moneda virtual and its balances at 31
+# December and at the start of the year from the custodio's own records. What it
+# DOES do is stand as factual evidence about the contribuyente's own position,
+# which is the classification sibling modelo 720 makes about itself for bienes y
+# derechos situados en el extranjero -- source_modelo equal to the modelo itself,
+# treatment "factual_evidence", targeting its own informative construct.
+#
+# treatment = "factual_evidence" and not "direct_annual_settlement": the latter
+# describes an annual resumen rolling up the filer's own periodic
+# self-assessments and registry validation requires it to declare the relation
+# refs or previous_filing bindings that carry the values. Nothing is rolled up
+# here and nothing is settled, so that treatment would be both false and
+# unprovable.
+
+[[revisions."2023-y-siguientes".dependency_classifications]]
+id = "modelo-721-dep-721"
+source_modelo = "721"
+treatment = "factual_evidence"
+target_constructs = ["modelo-721-informative"]
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]

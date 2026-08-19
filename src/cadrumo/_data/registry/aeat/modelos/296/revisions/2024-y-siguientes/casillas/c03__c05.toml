@@ -8,6 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
 source_refs = ["boe-modelo-296-form-layout"]
+export_refs = ["m296-2024.declarante.f013"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "04"
@@ -19,6 +20,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
 source_refs = ["boe-modelo-296-form-layout"]
+export_refs = ["m296-2024.declarante.f014", "m296-2024.declarante.f015"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "05"
@@ -31,4 +33,5 @@ input_kind = "computed"
 formula = "modelo-296-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
 source_refs = ["boe-modelo-296-form-layout"]
+export_refs = ["m296-2024.declarante.f016", "m296-2024.declarante.f017"]
 

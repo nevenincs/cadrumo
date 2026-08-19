@@ -1,0 +1,32 @@
+# The gravamen especial rate applied to the base imponible of casilla 04 to
+# produce the cuota of casilla 05.
+#
+# It was previously inlined in the formula as `{ literal = "20" }`. A rate is a
+# regulatory value versioned by filing year and revision, and the parameters
+# family exists to hold exactly that; modelo 115 is the shipped precedent, whose
+# casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate)
+# rather than against a literal. Moving it here makes the rate greppable,
+# datable, and citable in its own right instead of buried in an expression tree.
+#
+# GROUNDING: LIRPF disposicion adicional 33, apartado 4, states it verbatim in
+# the bundled consolidated text -- "La cuota integra del gravamen especial sera
+# la resultante de aplicar a la base imponible prevista en el apartado 3 anterior
+# el tipo del 20 por ciento" -- read from
+# corpus/normatives/html/ley-35-2006.html#datrigesimatercera rather than
+# transcribed from the formula it replaces.
+
+[[revisions."2026".parameters]]
+id = "irpf.lottery_prize_special_levy_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:da-33"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[[revisions."2026".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+
+[[revisions."2026".parameters.source_citations]]
+source_ref = "boe-lirpf-lottery-prize-special-levy"
+required_text = ["tipo del 20 por ciento"]

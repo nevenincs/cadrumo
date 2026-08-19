@@ -76,7 +76,7 @@ casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
 ]
-formulas = ["modelo-303-2009-regimen-simplificado-c47-neutral", "modelo-303-2009-regimen-simplificado-c48-neutral", "modelo-303-iva-cuota-devengada-total", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
+formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
 bindings = [
     "modelo-303-iva-repercutido-general-cuota",
     "modelo-303-iva-repercutido-reducido-cuota",

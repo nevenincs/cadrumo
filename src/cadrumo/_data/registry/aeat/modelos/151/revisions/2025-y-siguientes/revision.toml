@@ -1,4 +1,22 @@
 [revisions."2025-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseno de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement rather than assertion: every
+# casilla legal_ref and source_ref resolves to the legal catalogue; every cited
+# source's corpus file is present; every formula targets a casilla of this
+# revision; every enrolled schema family resolves; and the committed export tree
+# reproduces byte-for-byte from a fresh render off the hash-verified official
+# design, then validates through the real registry authority. 
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 # valid_from corrected from 2025 to 2023. The prior boundary was wrong on two
 # independent grounds: Orden HFP/1338/2023's own Disposicion Final Segunda(a)

@@ -2262,7 +2262,15 @@ corpus_path = "corpus/aeat_official/instructions/modelo_190/files/modelo-190-pro
 sha256 = "b845bec1120bbc152b888ea03f15527f04618abe8d35365e5ba91400b2df0e86"
 bytes = 58856
 retrieved_at = 2026-05-05
-applies_from = 2025-01-01
+# applies_from corrected from 2025-01-01, which the bundled page itself
+# contradicts: it carries the link "Modelo 190. Ejercicio 2020 y siguientes.
+# Consultas y bajas de declaraciones", so the procedure it documents covers
+# 2020 onward rather than 2025 onward. The narrow date made revision
+# 190/2024 cite a source that opens after the revision ends, which the
+# source-applicability rule refuses. Sibling procedure sources are dated the
+# same way -- 193 to 2024, 180 to 2020, 303 to 2009 -- to the modelo's
+# coverage rather than to the day the page was fetched.
+applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml"
 review_status = "reviewed"
 

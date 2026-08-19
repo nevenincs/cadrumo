@@ -1,0 +1,520 @@
+[[revisions.2024-y-siguientes.export_layouts]]
+id = 'generated-modelo-296-2024-y-siguientes-fichero'
+
+[[revisions.2024-y-siguientes.export_layouts.records]]
+id = 'm296-anexo-b-certificados'
+record_type = 'anexo-b-certificados'
+order = 4
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '296'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f003'
+offset = 5
+length = 4
+kind = 'header'
+producer_key = 'm296.anb.ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'm296.anb.nif_del_declarante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f005'
+offset = 18
+length = 9
+kind = 'header'
+producer_key = 'm296.anb.nif_del_perceptor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f006'
+offset = 27
+length = 9
+kind = 'header'
+producer_key = 'm296.anb.nif_del_representante_legal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f007'
+offset = 36
+length = 1
+kind = 'header'
+producer_key = 'm296.anb.f_j'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f008'
+offset = 37
+length = 40
+kind = 'header'
+producer_key = 'm296.anb.apellidos_y_nombre_razon_social_o_deno'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f009'
+offset = 77
+length = 8
+kind = 'header'
+producer_key = 'm296.anb.identificador_de_registro_o_numero_de'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f010'
+offset = 85
+length = 40
+kind = 'header'
+producer_key = 'm296.anb.apellidos_y_nombre_razon_social_o_deno_2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f011'
+offset = 125
+length = 12
+kind = 'header'
+producer_key = 'm296.anb.codigo_isin_del_certificado'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f012'
+offset = 137
+length = 20
+kind = 'header'
+producer_key = 'm296.anb.codigo_cuenta_valores_del_certificado'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f013'
+offset = 157
+length = 20
+kind = 'header'
+producer_key = 'm296.anb.codigo_lei_del_titular_registral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f014'
+offset = 177
+length = 40
+kind = 'header'
+producer_key = 'm296.anb.titular_registral_de_la_cuenta_de_valo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f015'
+offset = 217
+length = 11
+kind = 'header'
+producer_key = 'm296.anb.parte_entera_del_numero_de_titulos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f016'
+offset = 228
+length = 6
+kind = 'header'
+producer_key = 'm296.anb.parte_decimal_del_numero_de_titulos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f017'
+offset = 234
+length = 11
+kind = 'header'
+producer_key = 'm296.anb.parte_entera_del_numero_de_titulos_2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f018'
+offset = 245
+length = 6
+kind = 'header'
+producer_key = 'm296.anb.parte_decimal_del_numero_de_titulos_2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f019'
+offset = 251
+length = 8
+kind = 'header'
+producer_key = 'm296.anb.fecha_de_pago'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f020'
+offset = 259
+length = 11
+kind = 'header'
+producer_key = 'm296.anb.entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f021'
+offset = 270
+length = 2
+kind = 'header'
+producer_key = 'm296.anb.decimal'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f022'
+offset = 272
+length = 11
+kind = 'header'
+producer_key = 'm296.anb.entero_2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f023'
+offset = 283
+length = 2
+kind = 'header'
+producer_key = 'm296.anb.decimal_2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f024'
+offset = 285
+length = 2
+kind = 'header'
+producer_key = 'm296.anb.entero_3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f025'
+offset = 287
+length = 2
+kind = 'header'
+producer_key = 'm296.anb.decimal_3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f026'
+offset = 289
+length = 13
+kind = 'header'
+producer_key = 'm296.anb.numero_de_justificante_del_modelo_210'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f027'
+offset = 302
+length = 8
+kind = 'header'
+producer_key = 'm296.anb.fecha_de_presentacion_del_modelo_210'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f028'
+offset = 310
+length = 190
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-b-certificados.f029'
+offset = 500
+length = 1
+kind = 'literal'
+literal = 'B'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.row_field_casilla_ids]

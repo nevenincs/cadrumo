@@ -1,0 +1,217 @@
+[[revisions.2024-y-siguientes.export_layouts]]
+id = 'generated-modelo-296-2024-y-siguientes-fichero'
+
+[[revisions.2024-y-siguientes.export_layouts.records]]
+id = 'm296-perceptor-intereses'
+record_type = 'perceptor-intereses'
+order = 2
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '296'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f003'
+offset = 5
+length = 4
+kind = 'header'
+producer_key = 'm296.pin.ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'm296.pin.nif_del_declarante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f005'
+offset = 18
+length = 9
+kind = 'header'
+producer_key = 'm296.pin.nif_del_perceptor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f006'
+offset = 27
+length = 9
+kind = 'header'
+producer_key = 'm296.pin.nif_del_representante_legal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f007'
+offset = 36
+length = 1
+kind = 'header'
+producer_key = 'm296.pin.f_j'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f008'
+offset = 37
+length = 40
+kind = 'header'
+producer_key = 'm296.pin.apellidos_y_nombre_razon_social_o_deno'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f009'
+offset = 77
+length = 8
+kind = 'header'
+producer_key = 'm296.pin.identificador_de_registro_o_numero_de'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f010'
+offset = 85
+length = 65
+kind = 'header'
+producer_key = 'm296.pin.retenciones_e_ingresos_a_cuenta_ingres'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f011'
+offset = 150
+length = 350
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.perceptor-intereses.f012'
+offset = 500
+length = 1
+kind = 'literal'
+literal = 'F'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.row_field_casilla_ids]

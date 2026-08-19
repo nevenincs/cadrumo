@@ -1,0 +1,34 @@
+# Materialisation slots for the two annual_summary relations this revision
+# declares. A binding that exists only as a relation's target_binding MUST carry
+# source = "relation_prefill" -- it is filled by relation resolution, never by a
+# direct selector -- which is the shape modelo 390 uses for its own carries from
+# modelo 303.
+#
+# This family was briefly dispositioned empty. That disposition reasoned about
+# the two shapes it knew, a casilla resolver and a layout descriptor, and named a
+# revisit condition for layout binding_rows. It did not anticipate the third
+# shape, and is withdrawn rather than amended.
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-296-prev-216-base-retenciones"
+source = "relation_prefill"
+selector = { source_modelo = "216", source_casilla_id = "10" }
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-296-procedure"
+required_text = ["modelo 296"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-296-prev-216-retenciones-total"
+source = "relation_prefill"
+selector = { source_modelo = "216", source_casilla_id = "13" }
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-296-procedure"
+required_text = ["modelo 296"]

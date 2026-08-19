@@ -1,0 +1,20 @@
+# The other half of modelo 216's own sentence: "The dependency in this family runs
+# the OTHER way: modelo 296 is the annual resumen that summarises the 216 filings
+# of the year, so it is 296 that classifies a dependency on 216."
+#
+# treatment = "direct_annual_settlement" follows modelo 390's dependency on modelo
+# 303 -- one filer, an annual resumen rolling up that filer's OWN periodic
+# self-assessments. An earlier attempt at this declaration was REFUSED by registry
+# validation for declaring no relation refs, which was correct: the treatment
+# requires the mechanism that carries the values, and "it depends on 216" without
+# one is a claim with no content. Both relations now exist and are named here.
+
+[[revisions."2024-y-siguientes".dependency_classifications]]
+id = "modelo-296-dep-216"
+source_modelo = "216"
+treatment = "direct_annual_settlement"
+taxpayer_files_source = true
+target_constructs = ["modelo-296-calculation-construct"]
+relation_refs = ["modelo-296-rel-216-base-retenciones", "modelo-296-rel-216-retenciones-total"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

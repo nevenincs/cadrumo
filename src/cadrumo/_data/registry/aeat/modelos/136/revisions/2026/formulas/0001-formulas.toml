@@ -19,7 +19,7 @@ required_text = ["Base imponible", "02", "03"]
 [[revisions."2026".formulas]]
 id = "modelo-136-cuota-gravamen-especial"
 target_casilla_id = "05"
-expression = { op = "percent", args = [{ casilla_id = "04" }, { literal = "20" }] }
+expression = { op = "percent", args = [{ casilla_id = "04" }, { parameter = "irpf.lottery_prize_special_levy_rate" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]

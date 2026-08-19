@@ -1,0 +1,41 @@
+# Modelo 296 is the annual resumen of the retenciones the retenedor self-assessed
+# period by period on modelo 216. The fold-in enrolls under an EXISTING row of the
+# aggregation taxonomy -- kind = "annual_summary", the cross-modelo fold-in row --
+# rather than inventing a mechanism, so it needs no amendment to the taxonomy ADR.
+# Modelo 390's carries from modelo 303 are the same row and the same shape.
+#
+# The two source casillas are 216's own totals: casilla 10, irnr_retencion_base_total,
+# and casilla 13, irnr_retencion_cuota_total. They align to 296's casillas 03 and 04,
+# whose AEAT labels are "Base retenciones e ingresos a cuenta" and "Retenciones e
+# ingresos a cuenta declarados". Modelo 216 files 1T-4T and modelo 296 files 0A, so
+# the alignment sums the four quarters into the annual slot.
+
+[[revisions."2024-y-siguientes".relations]]
+id = "modelo-296-rel-216-base-retenciones"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "216"
+source_revision_selector = { year_from = 2024 }
+source_casilla_id = "10"
+target_binding = "modelo-296-prev-216-base-retenciones"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[[revisions."2024-y-siguientes".relations]]
+id = "modelo-296-rel-216-retenciones-total"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "216"
+source_revision_selector = { year_from = 2024 }
+source_casilla_id = "13"
+target_binding = "modelo-296-prev-216-retenciones-total"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

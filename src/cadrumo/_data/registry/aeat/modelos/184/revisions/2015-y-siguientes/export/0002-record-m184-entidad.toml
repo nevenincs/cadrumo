@@ -359,12 +359,12 @@ offset = 121
 length = 2
 kind = 'casilla'
 casilla_id = 'tipo2.fecha-adquisicion'
-data_type = 'text'
+data_type = 'integer'
 required = false
-padding = 'none'
-justification = 'none'
+padding = 'left_zero'
+justification = 'right'
 signed = false
-value_policy = 'digit-string'
+value_policy = 'two-digit-month'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -380,12 +380,12 @@ offset = 123
 length = 2
 kind = 'casilla'
 casilla_id = 'tipo2.fecha-adquisicion'
-data_type = 'text'
+data_type = 'integer'
 required = false
-padding = 'none'
-justification = 'none'
+padding = 'left_zero'
+justification = 'right'
 signed = false
-value_policy = 'digit-string'
+value_policy = 'two-digit-day'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -406,7 +406,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -427,7 +427,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -448,7 +448,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -469,7 +469,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -510,7 +510,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -531,7 +531,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -572,7 +572,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -593,7 +593,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -634,7 +634,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -655,7 +655,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -676,7 +676,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -697,7 +697,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -718,7 +718,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -739,7 +739,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -801,7 +801,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -822,7 +822,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -843,7 +843,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -864,7 +864,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -885,7 +885,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -906,7 +906,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -927,7 +927,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -948,7 +948,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -969,7 +969,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -990,7 +990,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1011,7 +1011,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1032,7 +1032,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1053,7 +1053,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1074,7 +1074,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1095,7 +1095,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1116,7 +1116,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1137,7 +1137,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1158,7 +1158,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1179,7 +1179,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1200,7 +1200,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1221,7 +1221,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1242,7 +1242,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1284,7 +1284,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1305,7 +1305,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1326,7 +1326,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1347,7 +1347,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'fractional-digits'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',
@@ -1368,7 +1368,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-hap-2250-2015:art-1',
     'orden-hap-2250-2015:art-3',

@@ -1,28 +1,4 @@
 [[revisions.2022.formulas]]
-id = "modelo-303-2009-regimen-simplificado-c47-neutral"
-target_casilla_id = "47"
-expression = { literal = "0" }
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2022.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[[revisions.2022.formulas]]
-id = "modelo-303-2009-regimen-simplificado-c48-neutral"
-target_casilla_id = "48"
-expression = { literal = "0" }
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2022.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[[revisions.2022.formulas]]
 id = "modelo-303-iva-cuota-devengada-total"
 target_casilla_id = "iva.cuota-devengada-total"
 rounding = "money-2"

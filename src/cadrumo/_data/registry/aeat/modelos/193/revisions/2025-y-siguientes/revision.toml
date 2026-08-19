@@ -1,4 +1,27 @@
 [revisions."2025-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement: every casilla legal_ref and
+# source_ref resolves to the legal catalogue; every cited source's corpus file is
+# present; every formula targets a casilla of this revision; every enrolled
+# schema family resolves; every layout record's emitted extent now equals the
+# 500 positions its diseño declares; and NO design DATA position is left
+# unaddressed by the layout -- the uncovered runs are the reserved/blank ones the
+# design itself declares, which space-fill at the correct total length.
+#
+# This revision's layout is HAND-AUTHORED rather than generated, so it carries no
+# fresh-render reproduction evidence, and this stamp deliberately does not claim
+# any. That is the difference between it and the generated-tree revisions.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2025-y-siguientes"
 valid_from = 2025-01-01

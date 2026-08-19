@@ -1,0 +1,30 @@
+# Filing year 2022 only, and only its FOURTH quarter, because that is the only
+# window of this revision whose close date this repository can read from an
+# official source. The close date is READ from AEAT's own Calendario del
+# Contribuyente rather than derived from the statutory "primeros veinte dias"
+# rule: the day moves for weekends and holidays, and a filing deadline written
+# from the rule rather than the published calendar is a filing-grade harm.
+#
+# Bundled calendar 2023 states it verbatim under "Hasta el 30 de enero":
+# "Cuarto trimestre 2022. Autoliquidacion: 303". The fourth quarter of 2022 is
+# filed in January 2023, which is why it falls inside a calendar this repository
+# holds while the rest of its own year does not.
+#
+# The first, second and third quarters of 2022 are NOT declared. Their windows
+# close in April, July and October 2022, and AEAT's calendars are bundled only
+# from 2023 onward, so their close dates cannot be read from any source this
+# repository carries. Declaring a window per governed period is not required --
+# modelo 115's open-ended revision declares 2026 alone, and modelo 123's
+# 2019-2023 revision declares filing year 2023 alone on exactly this reasoning --
+# so the family is populated with what is grounded rather than padded with
+# guessed dates.
+
+[[revisions."2022".deadline_windows]]
+id = "modelo-303-2022-4t"
+filing_year = 2022
+period = "2022 4T"
+period_kind = "quarterly"
+opens_on = 2023-01-01
+closes_on = 2023-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]

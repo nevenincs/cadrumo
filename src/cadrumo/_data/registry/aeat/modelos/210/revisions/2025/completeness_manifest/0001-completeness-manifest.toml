@@ -30,7 +30,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
-source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "aeat-dr-210-2022"]
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "base_imponible"

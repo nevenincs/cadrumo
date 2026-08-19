@@ -17,8 +17,6 @@ source_refs = [
     "aeat-modelo-353-procedure",
     "boe-modelo-322-2007-form",
     "boe-modelo-353-2007-form",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-    "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 casilla_ids = [
     "iva.repercutido.general",
@@ -69,7 +67,6 @@ deadline_windows = [
     "modelo-353-2025-01",
     "modelo-353-2025-06",
     "modelo-353-2025-12",
-    "modelo-353-2026-01",
 ]
 
 # Calculation-completeness manifest for revision 2008-2025: the
