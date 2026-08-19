@@ -1,2 +1,3 @@
 @step Change the passphrase without an interactive prompt.
 @static aeat config passphrase change --secrets-stdin
+@blocked sandbox-posture The sandbox capsule derives its custody material from the profile identity rather than an operator passphrase, so a passphrase change has no current secret to authenticate against.

@@ -66,7 +66,6 @@ Change the passphrase whenever you suspect it has been seen, or on whatever
 schedule your own policy sets:
 
 ```{cli-sequence} protect-data-access-passphrase-change
-:verify: Confirm the passphrase change re-wraps the key without re-encrypting records.
 ```
 
 Enter the current passphrase, then the new one twice. Nothing is echoed.

@@ -1,11 +1,11 @@
 @setup aeat config profile create carla-2026 --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
-@setup aeat config profile rename carla-2026 carla-real
-@setup aeat config profile edit carla-real --quiet --address-postcode 28013
+@setup aeat config login carla-2026
+@setup aeat config profile edit carla-2026 --quiet --address-postcode 28013
 @step Filter to a single event type.
-aeat config profile history carla-real --event-type profile.renamed
+aeat config profile history carla-2026 --event-type profile.values.updated
 @step Filter by date range.
-aeat config profile history carla-real --since 2026-01-01 --until 2026-03-31
+aeat config profile history carla-2026 --since 2026-01-01 --until 2026-03-31
 @step Filter to one actor.
-@result aeat --format json config profile history carla-real --actor operator
+@result aeat --format json config profile history carla-2026 --actor operator
 @expect result.actor == "operator"
 @expect exit_code == 0

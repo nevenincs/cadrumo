@@ -78,6 +78,7 @@ from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
+    bound_test_profile_record,
     open_test_profile_session,
     publish_test_profile_capsule,
     upsert_test_profile_facts,
@@ -467,8 +468,9 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
         )
 
 
-def _provision_sandbox_profile() -> None:
-    """Publish the deterministic sandbox profile through the capsule writer.
+@contextmanager
+def _provisioned_sandbox_profile() -> Iterator[None]:
+    """Publish the deterministic sandbox profile and hold its custody span open.
 
     Mirrors production exactly, so the sandbox introduces no parallel write
     path: a bucket root comes into existence only through capsule
@@ -476,10 +478,24 @@ def _provision_sandbox_profile() -> None:
     published record through the same production writer. The injected fixed
     ``profile_id`` is what makes every profile-derived identifier in a frame's
     output deterministic across runs.
+
+    The session stays open for the whole sandbox span rather than just the
+    facts merge. A published test capsule derives its custody material from
+    the profile's immutable identity, not from an operator passphrase, so
+    there is no password any frame could present: an in-process frame reaches
+    the bucket only by reusing the session bound here. Closing it after the
+    merge would leave every profile-bound verb refusing on custody.
     """
     publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
-        upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
+        record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
+        with bound_test_profile_record(SANDBOX_PROFILE_ID) as repository:
+            repository.complete_setup(
+                SANDBOX_PROFILE_ID,
+                expected_revision=record.record_revision,
+                expected_content_digest=record.content_digest,
+            )
+        yield
 
 
 #: Environment prefixes scrubbed from the process environment for the whole
@@ -738,8 +754,8 @@ def sequence_sandbox(
         _isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
+        _provisioned_sandbox_profile(),
     ):
-        _provision_sandbox_profile()
         effective_settings = load_settings()
         try:
             yield SequenceSandbox(
