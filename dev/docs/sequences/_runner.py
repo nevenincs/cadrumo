@@ -5,9 +5,11 @@ isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_roo
 — genuine ``bucket-dek-v1`` provisioning under the ephemeral dev-test master-key
 backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
-identity :data:`SANDBOX_PROFILE_ID` registered through the canonical atomic
-create (:func:`~cadrumo.application.user_profile.register_active_profile` inside
-:func:`~cadrumo.application.user_profile.open_test_profile_session` — never a
+identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
+writer (:func:`~cadrumo.tests.profile_capsule.publish_test_profile_capsule`,
+with facts merged by
+:func:`~cadrumo.tests.profile_capsule.upsert_test_profile_facts` inside
+:func:`~cadrumo.tests.profile_capsule.open_test_profile_session` — never a
 parallel write path), English output pinned via the central settings surface,
 and the live-AEAT gate off. Frames are invoked in-process through the cached
 Click tree (:func:`~cadrumo.tests.cli_runner.invoke_cached_cli`). Sequences never
@@ -75,7 +77,11 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from cadrumo.tests.profile_capsule import open_test_profile_session
+from cadrumo.tests.profile_capsule import (
+    open_test_profile_session,
+    publish_test_profile_capsule,
+    upsert_test_profile_facts,
+)
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 from dev._paths import REPO_ROOT
 
@@ -462,36 +468,18 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
 
 
 def _provision_sandbox_profile() -> None:
-    """Register the deterministic sandbox profile through the canonical create.
+    """Publish the deterministic sandbox profile through the capsule writer.
 
-    Mirrors the workspace-initialization composition exactly — the
-    cross-store atomic create is owned by
-    :func:`~cadrumo.application.user_profile.register_active_profile` inside a
-    :func:`~cadrumo.application.user_profile.open_test_profile_session` — so
-    the sandbox introduces no parallel write path. The injected fixed
+    Mirrors production exactly, so the sandbox introduces no parallel write
+    path: a bucket root comes into existence only through capsule
+    publication's atomic no-replace rename, and the facts are merged onto that
+    published record through the same production writer. The injected fixed
     ``profile_id`` is what makes every profile-derived identifier in a frame's
     output deterministic across runs.
-    The application-layer imports are deferred: importing
-    ``cadrumo.application.*`` transitively resolves product settings at module
-    import time, which must only happen after the sandbox has pinned an
-    isolated storage root (the docs-build ``ensure_isolated_storage_root``
-    pattern). Both targets are public top-level facades.
     """
-    from cadrumo.application.user_profile import (
-        register_active_profile,
-    )
-    from cadrumo.application.workflow import workflow_state_repository
-
-    with open_test_profile_session(SANDBOX_PROFILE_ID) as routing_profile_id:
-        workflow_state_repository().update(
-            lambda state: register_active_profile(
-                state,
-                profile_id=SANDBOX_PROFILE_ID,
-                display_name=SANDBOX_PROFILE_LABEL,
-                facts=_SANDBOX_PROFILE_FACTS,
-                routing_profile_id=routing_profile_id,
-            ),
-        )
+    publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
+    with open_test_profile_session(SANDBOX_PROFILE_ID):
+        upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
 
 
 #: Environment prefixes scrubbed from the process environment for the whole

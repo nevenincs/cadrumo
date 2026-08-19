@@ -1,15 +1,8 @@
 @setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --tax-residence-jurisdiction-scope common_regime --iva-m303-regime-composition general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
 @step Edit a fact with the flags you want to change.
 aeat config profile edit bruno-2026 --quiet --address-postcode 28013
-@step Rename the profile; the active-profile pointer follows the rename.
-aeat config profile rename bruno-2026 bruno-real
-@step Duplicate it to start a second profile from the same facts.
-aeat config profile duplicate bruno-real bruno-copy
-@step Delete the duplicate; deletion is local and irreversible.
-aeat config profile delete bruno-copy --yes
-@step Log in to the retained profile before exporting it.
-aeat config login bruno-real
-@step Export the profile to a portable cleartext JSON file.
-@result aeat --format json config profile export bruno-real --to bruno-real-profile.json --cleartext-local
-@expect result.schema_version == 3
+@step Log in to the profile before backing it up.
+aeat config login bruno-2026
+@step Back up the profile to a sealed, encrypted archive.
+@result aeat --format json config profile archive export bruno-2026 --to bruno-2026.cadrumo-bucket.tar.gz
 @expect exit_code == 0

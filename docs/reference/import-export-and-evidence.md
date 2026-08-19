@@ -104,8 +104,6 @@ the full revision workflow in [Prepare and manage filings](../how-to/filing-spin
 | Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a filing artefact or authoritative calculation record |
 | Accountant review package | Shares the draft, calculation revision, provenance, and ledger evidence when present in a checksum-verifiable ZIP | Checksums alone do not identify who created or approved it |
 | Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued evidence |
-| Portable profile export | Produces a structured, portable copy of one profile (identity and facts, work units, ledger transactions, calculation revisions, and filing records) as a JSON bundle, passphrase-encrypted by default | It is not a full backup: attachment evidence bytes, AEAT captures, and the audit trail are excluded |
-| Subject-access request | Produces the same portable profile bundle as a data-subject right-of-access response | It is not AEAT-issued evidence and not a full backup |
 | Sealed custody archive | Backup and full recovery of the secured profile | It is not the same thing as an audit or accountant package |
 
 The filing exporter explicitly writes a local file and never contacts AEAT. It
@@ -133,20 +131,12 @@ bytes supplied to it, but does not first require checksum or signature
 verification. After decryption, verify the recovered package and signatures
 separately.
 
-The portable profile export and the subject-access request are the same
-operation with two purposes. The `aeat config profile export` command writes a
-passphrase-encrypted bundle by default, with a cleartext option for
-unencrypted JSON intended only for local or subject-access handling; the
-`aeat config profile subject-access-request` command writes that same bundle as
-a right-of-access response. Both go through one export service and one bundle
-schema; the data categories the response reports are derived from the bundle
-itself, not a fixed list. Publication is atomic: the bundle is staged, then
-replaced into place in one step, so a crash never leaves a half-written file.
-The cleartext form is equally readable once it leaves the application whichever
-purpose produced it, so both carry the same handoff risk. Delete a cleartext
-bundle after the local or subject-access handling is complete; do not email,
-sync, or transfer it. Neither is a full backup; use the sealed custody archive
-for that.
+The portable profile bundle and the data-subject right-of-access response are
+not available in this version. The commands that produced them were withdrawn
+when profile storage moved to the sealed capsule, and no other command currently
+writes a portable per-profile bundle. The sealed custody archive is not a
+substitute: it is an encrypted full-custody transport for recovery, not a
+structured, readable copy of one profile's records.
 
 The sealed custody archive serves a different purpose. It is an encrypted
 full-custody recovery transport for classified durable custody. Process-local

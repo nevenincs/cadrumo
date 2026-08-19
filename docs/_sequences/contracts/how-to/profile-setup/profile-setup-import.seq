@@ -1,3 +1,0 @@
-@step Restore a saved profile file under a fresh label.
-@static aeat config profile import ./bruno-real-profile.json --label bruno-restored
-@blocked operator-artifact Needs an operator-exported profile bundle that no committed fixture provides.

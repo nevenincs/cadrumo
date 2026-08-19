@@ -143,8 +143,8 @@ affected records. Override the pause only after reviewing and accepting the
 legal retention consequence, and always provide a non-empty reason. If you
 provide a reason without the override, the command refuses to continue.
 
-See [Set up your taxpayer profile](profile-setup.md) for profile export
-instructions.
+See [Set up your taxpayer profile](profile-setup.md) for sealed archive
+backup instructions.
 
 ## Next steps
 
