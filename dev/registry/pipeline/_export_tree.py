@@ -266,6 +266,26 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: extracted value must equal the map's declared literal byte for byte, and its
 #: encoded length must equal the official slot width. A mis-read prefix fails
 #: both, so this widens what can be PARSED without widening what is ACCEPTED.
+#: TWO quoted constants joined by an alternation connector, which states a CHOICE
+#: rather than one constant with a label. `Constante "<T" o "ZZ"` names two
+#: possible byte strings and the design does not say which applies, so the
+#: renderer cannot know what to write.
+#:
+#: This is checked BEFORE the labelled form below, which would otherwise read the
+#: first alternative as the constant and the rest as its label -- silently
+#: choosing `<T` and discarding `o "ZZ"`. Wrong constant bytes on the wire is the
+#: worst outcome available here, and it would be invisible: the emitted record is
+#: well formed and the wrong literal is the right width.
+#:
+#: The labelled form it guards is not weakened. Measured across all 121 bundled
+#: designs, `_OFFICIAL_LABELLED_LITERAL_RE` matches NOTHING: the modelo 296 cells
+#: it was written for -- `Constante «F» ANEXO «VALORES NEGOCIABLES...»` -- carry
+#: TYPOGRAPHIC quotes, which its straight-quote character class never admits.
+_OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
+    r"\s*(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote)\s*\.?\s*$",
+    re.IGNORECASE,
+)
 _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\s+\S.*$",
     re.IGNORECASE | re.DOTALL,
@@ -780,6 +800,11 @@ def _literal_derivation(
             official_literal = folded_content
         elif (unquoted := _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)) is not None:
             official_literal = unquoted.group("literal")
+        elif _OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
+            raise RegistryValidationError(
+                f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
+                f"content {official_content!r}: it states two alternative constants and not which one applies",
+            )
         elif (labelled := _OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)) is not None:
             official_literal = labelled.group("literal")
         else:

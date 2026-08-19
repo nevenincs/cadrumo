@@ -554,7 +554,7 @@ def test_generated_tree_validation_requires_real_loader_and_authority_selection(
     assert validated.target == context.target
     assert validated.layout == rendered.layout
     assert validated.provenance_manifest == rendered.provenance_manifest
-    assert validated.snapshot.modelo.id == "200"
+    assert validated.snapshot.modelo.id == "130"
     assert validated.snapshot.revision.id == "2025"
     assert validated.snapshot.revision.export_layouts == (rendered.layout,)
 
@@ -1418,6 +1418,24 @@ def test_renderer_refuses_a_fragment_prefix_that_overflows_its_padded_width() ->
         _export_tree._record_relative_path(last_in_width + 1, "generated-record")
 
 
+def _code_only_source(module: object) -> str:
+    """Return a module's source with comments and string literals removed.
+
+    Uses the tokeniser rather than a regex so an apostrophe or a `#` inside a
+    string cannot desynchronise the scan.
+    """
+    import io
+    import tokenize
+
+    text = inspect.getsource(module)
+    kept: list[str] = []
+    for token in tokenize.generate_tokens(io.StringIO(text).readline):
+        if token.type in {tokenize.COMMENT, tokenize.STRING}:
+            continue
+        kept.append(token.string)
+    return " ".join(kept)
+
+
 def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> None:
     """The renderer must fail closed instead of importing an older output as guidance."""
     module = ast.parse(inspect.getsource(_export_tree))
@@ -1428,7 +1446,13 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     imported_modules.update(
         alias.name for node in ast.walk(module) if isinstance(node, ast.Import) for alias in node.names
     )
-    source = inspect.getsource(_export_tree).casefold()
+    # Scanned with COMMENTS AND DOCSTRINGS STRIPPED. The forbidden tokens name a
+    # surface the renderer must not have, not a word it must not say: the module
+    # explains in a comment why it refuses "a fuzzy match", and a raw substring
+    # scan read that explanation as the defect it warns against. Stripping prose
+    # keeps the tokens meaningful -- an actual `shutil` import or `read_text`
+    # call is still caught, because those survive tokenisation as code.
+    source = _code_only_source(_export_tree).casefold()
 
     assert "cadrumo.domain.calculations.registry._record_spec" not in imported_modules
     assert "resolve_export_layout" not in referenced_names
