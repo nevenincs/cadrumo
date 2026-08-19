@@ -71,15 +71,30 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
         self,
         catalogue: WorkUnitCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
         ...
 
-    def to_secure_object_write(self, catalogue: WorkUnitCatalogue) -> SecureObjectWrite:
+    def to_secure_object_write(
+        self,
+        catalogue: WorkUnitCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
 
         Lets a mutation advance the work-unit pointer inside the same unit of
         work as the catalogues and lifecycle event the pointer names.
+
+        ``expected_revision_id`` is the compare-and-swap half. These
+        catalogues are SINGLETON rows, so a co-commit composed from an
+        unguarded read writes the whole row back and discards any entry
+        another caller added in between. It is declared HERE, not only on
+        the concrete repository, because a caller typed against this
+        protocol could otherwise not pass it at all -- the guard existed
+        and was unreachable.
         """
         ...
 
@@ -115,14 +130,30 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
-    def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it."""
+    def to_secure_object_write(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
+
+        ``expected_revision_id`` is the compare-and-swap half. These
+        catalogues are SINGLETON rows, so a co-commit composed from an
+        unguarded read writes the whole row back and discards any entry
+        another caller added in between. It is declared HERE, not only on
+        the concrete repository, because a caller typed against this
+        protocol could otherwise not pass it at all -- the guard existed
+        and was unreachable.
+        """
         ...
 
     def save_with_secure_object_writes(
         self,
         catalogue: CalculationRevisionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
         ...
@@ -195,14 +226,30 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
         """
         ...
 
-    def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it."""
+    def to_secure_object_write(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
+
+        ``expected_revision_id`` is the compare-and-swap half. These
+        catalogues are SINGLETON rows, so a co-commit composed from an
+        unguarded read writes the whole row back and discards any entry
+        another caller added in between. It is declared HERE, not only on
+        the concrete repository, because a caller typed against this
+        protocol could otherwise not pass it at all -- the guard existed
+        and was unreachable.
+        """
         ...
 
     def save_with_secure_object_writes(
         self,
         catalogue: ModeloRecordCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
         ...

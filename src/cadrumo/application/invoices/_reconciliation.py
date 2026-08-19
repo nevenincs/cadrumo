@@ -137,8 +137,13 @@ def reconcile_invoice_repositories(
     """
     invoices_repo = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    # Revisioned on the invoice side only: that catalogue is a SINGLETON row, so
+    # an unguarded write rewrites it whole over any invoice added since the read.
+    # The transaction store writes a row per transaction and carries no
+    # equivalent whole-collection risk.
+    invoice_catalogue, invoice_revision_id = invoices_repo.load_revisioned()
     result = reconcile_invoice_catalogues(
-        invoices_repo.load(),
+        invoice_catalogue,
         transactions_repo.load(),
         apply=apply,
     )
@@ -151,6 +156,6 @@ def reconcile_invoice_repositories(
         # linking writer already commits both together for that reason.
         transactions_repo.save_with_secure_object_writes(
             result.transactions,
-            (invoices_repo.to_secure_object_write(result.invoices),),
+            (invoices_repo.to_secure_object_write(result.invoices, expected_revision_id=invoice_revision_id),),
         )
     return result

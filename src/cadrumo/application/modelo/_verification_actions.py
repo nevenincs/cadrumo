@@ -900,7 +900,10 @@ def verify_modelo_revision_with_preconditions(
     cr_repo = repos.calculation
     wu_repo = repos.work_unit
     vr_repo = repos.verification
-    revisions = cr_repo.load()
+    # Revisioned, and threaded to the persistence below: the catalogue is
+    # composed into a co-commit there, so it cannot use a self-committing
+    # mutation, and the revision belongs to whoever performed the read.
+    revisions, revisions_revision_id = cr_repo.load_revisioned()
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(
@@ -1032,6 +1035,7 @@ def verify_modelo_revision_with_preconditions(
             actor=actor,
             now=now,
             revisions=revisions,
+            revisions_revision_id=revisions_revision_id,
             work_unit=work_unit,
             transaction_repository=transaction_repository,
             calculation_repository=cr_repo,
@@ -1199,6 +1203,7 @@ def _persist_verified_revision_evidence(
     actor: str,
     now: datetime,
     revisions: CalculationRevisionCatalogue,
+    revisions_revision_id: str,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
@@ -1254,7 +1259,11 @@ def _persist_verified_revision_evidence(
     # composition-service single-writer discipline): the index and the verified
     # revision land or fail together. A revision with no contributing
     # transactions produces no extra writes and degenerates to the plain save.
-    calculation_repository.save_with_secure_object_writes(updated_catalogue, participation_writes)
+    calculation_repository.save_with_secure_object_writes(
+        updated_catalogue,
+        participation_writes,
+        expected_revision_id=revisions_revision_id,
+    )
 
 
 def _emit_verification_bucket_event(

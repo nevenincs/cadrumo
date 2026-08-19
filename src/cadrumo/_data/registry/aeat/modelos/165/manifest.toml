@@ -2,6 +2,7 @@
 id = "165"
 tax_domain = "informative"
 cadence = "annual"
+calculation_class = "informative"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
 legal_refs = [
