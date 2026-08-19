@@ -43,7 +43,6 @@ import pytest
 
 from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from ....core.resources import resources
-from ....domain.iva import IvaDeductionClassificationProvenance
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -51,7 +50,13 @@ from ....domain.calculations.registry import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
@@ -94,8 +99,7 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         # only for the input direction.
         deduction_fact_kind=(
             IvaDeductionFactKind.DOMESTIC_CURRENT
-            if flow
-            in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            if flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
             else None
         ),
         deduction_provenance=(
@@ -104,8 +108,7 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="a" * 64,
             )
-            if flow
-            in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            if flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
             else None
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,

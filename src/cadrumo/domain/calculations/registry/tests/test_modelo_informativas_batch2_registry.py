@@ -35,6 +35,14 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, period_kind)
+# Modelos 179, 186, 233, 234 and 238 are deliberately ABSENT from this list.
+# AEAT publishes no record design for any of them -- confirmed against every
+# current and ejercicios-anteriores Diseno de Registro index page -- and the
+# registry's membership criterion is that a modelo earns a definition when AEAT
+# publishes a machine-readable submission format for it. They were relocated to
+# the recognized out-of-scope obligations, 179 to the suppressed-modelo map
+# after DAC7 absorbed it into 238. Listing them here asserted a registry
+# membership the tree deliberately does not grant.
 _MODELOS = [
     (
         "165",
@@ -42,14 +50,6 @@ _MODELOS = [
         "orden-hap-2455-2013:art-1",
         "orden-hap-2455-2013:art-4",
         "BOE-A-2013-13798",
-        "annual",
-    ),
-    (
-        "233",
-        "2018-y-siguientes",
-        "orden-hac-1400-2018:art-1",
-        "orden-hac-1400-2018:art-4",
-        "BOE-A-2018-17772",
         "annual",
     ),
     (
@@ -69,7 +69,6 @@ _MODELOS = [
         "BOE-A-2025-21726",
         "monthly",
     ),
-    ("186", "2003-y-siguientes", "orden-hac-539-2003:art-1", "orden-hac-539-2003:art-4", "BOE-A-2003-5304", "monthly"),
 ]
 
 
@@ -100,7 +99,7 @@ def test_committed_definition_legal_refs_and_deadlines_are_grounded(
 def test_annual_january_windows_resolve() -> None:
     """165/233/156 file in January of the year following the filing year."""
     authority = bundled_authority()
-    for mid in ("165", "233", "156"):
+    for mid in ("165", "156"):
         windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
         wid = f"modelo-{mid}-2024-0a"
         assert wid in windows
@@ -112,7 +111,7 @@ def test_monthly_windows_resolve_following_month() -> None:
     """038/186 close on the last natural day, 185 on the 10th, of the next month."""
     authority = bundled_authority()
     # January 2025 reference month -> filed in February 2025.
-    for mid, close in (("038", date(2025, 2, 28)), ("186", date(2025, 2, 28)), ("185", date(2025, 2, 10))):
+    for mid, close in (("038", date(2025, 2, 28)), ("185", date(2025, 2, 10))):
         windows = {str(w.period): w for _, _, w in authority.deadline_windows(2025, modelos=(mid,))}
         assert len(windows) == 12
         jan = windows["2025 01"]
@@ -123,5 +122,5 @@ def test_monthly_windows_resolve_following_month() -> None:
 def test_all_six_are_registry_backed() -> None:
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
-    for mid in ("165", "233", "156", "038", "185", "186"):
+    for mid in ("165", "156", "038", "185"):
         assert mid in CANONICAL_MODELO_FLEET
