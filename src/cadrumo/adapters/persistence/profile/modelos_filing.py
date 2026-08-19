@@ -294,9 +294,7 @@ class ModeloRecordCatalogueRepository:
             self._assert_records_belong_to_this_bucket(updated, boundary="save")
             return updated
 
-        updated = _guarded(self.load())
-        self.save(updated)
-        return updated
+        return self._storage.mutate(_guarded)
 
     def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
