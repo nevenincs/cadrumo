@@ -80,10 +80,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (
         "src/cadrumo/application/modelo/_revision_persistence.py",
-        "persist_calculation_revision",
-    ): "the work-unit catalogue arrives as a parameter; its own calculation catalogue IS guarded here",
-    (
-        "src/cadrumo/application/modelo/_revision_persistence.py",
         "persist_filed_revision",
     ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded here",
     (
