@@ -2,6 +2,7 @@
 id = "038"
 tax_domain = "informative"
 cadence = "monthly"
+calculation_class = "informative"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
 legal_refs = [
