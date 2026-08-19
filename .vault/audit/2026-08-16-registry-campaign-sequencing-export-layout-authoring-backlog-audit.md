@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:43e113d85341ecea58572ace6096831ec4a1d8ff800347f14638f90ad0e904c3'
+body_hash: 'sha256:05565f2f6ade63fc17c5fc9cbeb21a5c983f48cc8a8e181cd90e890dd042d36a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6476,3 +6476,39 @@ carries either. Shape copied from the sibling fixtures that already satisfy it
 rather than invented: `DOMESTIC_CURRENT` with `INVOICE_EVIDENCE` provenance.
 
 All six touched modules: **38 passed.** Authority CLEAN.
+
+## Consumers of a deliberate relocation, and a nearly-vacuous replacement (19 -> 0)
+
+**`test_prorrata_porcentaje_zero_volume_grounding` (7 -> 0)** named filing year
+2020, which resolved while modelo 303's earliest revision was the open 2009-2022
+span. That span was retired in the rename to `2022`, so every case died on
+resolution rather than on the zero-volume grounding it asserts. Repointed to
+2022, the same correction its sibling rounding module already carries.
+
+**The informativas batches (12 -> 0)** asserted that modelos 179, 186, 233, 234
+and 238 are registry-backed. They are deliberately not: a peer relocated nine
+designless modelos out of the registry, and the commit states both the evidence
+and the rule -- AEAT publishes no record design for any of them, confirmed
+against every current and ejercicios-anteriores Diseno de Registro index page,
+and **a modelo earns a registry definition when AEAT publishes a machine-readable
+submission format for it**. 179 was absorbed into 238 under DAC7 and took the
+suppressed-modelo treatment.
+
+Checking that before acting is what turned this from "author five missing
+modelos" -- a very large and completely wrong piece of work -- into removing five
+stale assertions. `CANONICAL_MODELO_FLEET` already excludes them, so the core had
+recorded the decision and only these tests had not. Modelo 181's revision id was
+also stale (`2022` for a revision that is `2009-y-siguientes`).
+
+### Emptying a list is not the same as fixing it
+
+Removing 234 and 238 from
+`test_event_driven_and_delegated_modelos_have_no_calendar_windows` left it
+iterating an empty tuple: passing, asserting nothing, and indistinguishable from
+a green result. Its subjects are now DERIVED -- every registry modelo whose
+revisions declare no deadline window at all, which is 036, 122, 145, 308, 309,
+576 and 840 -- with the population asserted non-empty so the case cannot go quiet
+if that set ever empties.
+
+Proven to bite: a scratchpad plugin making modelo 036 resolve a calendar window
+fails it, where the untouched run passes.
