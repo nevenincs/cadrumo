@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:df97961b9cc0ea4e9d5e2fbd7aae7278e24d8ce4d5ca30e2aa7abd25823b409f'
+body_hash: 'sha256:a45737e884e4f7c680c52723dff18b2020fcbeec03d74ab14f24d8067fece66b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5668,3 +5668,44 @@ so the relaxation is not vacuous.
 
 Only **349/2020-y-siguientes** still abstains, on the known structural limit of
 its `operador` record. Authority CLEAN throughout.
+
+### The letter-identified Anexo A casillas shipped without locale entries
+
+The ten letter casillas authored for modelo 100 (2024 and 2025) had registry
+definitions but no catalogue leaves, so nine tests died on
+`MissingTranslationError: modelo.schema.100.revision.2024.casilla.A.label`. That
+was my own unfinished work, not a discovery.
+
+Labels come from the bundled dictionary itself, read at the byte level rather
+than transcribed: the properties file is **cp1252**, not UTF-8, and decoding it
+wrongly is how a label acquires mojibake that then ships. Entry `VHADQ` carries
+casilla `A`; the ten entries are identical across both filing years.
+
+Eighty leaves set through `python -m dev.locales set` across all four
+catalogues, with real Catalan and Hungarian strings rather than the
+en/es-only shortcut the honesty ratchet refuses. The `.help` counterparts are
+`null` by sibling convention, which only `scaffold` can write -- and scaffold is
+tree-wide, so it was run against a **byte-snapshot of the whole locale tree**
+and every file outside the four modelo-100 shards restored afterwards. Forty
+files were restored to peers' uncommitted state; nothing of theirs was staged,
+reverted or clobbered. Modelo 100's drift count is now zero; the pre-existing
+drift on modelos 360, 190, 193, 303, 309 and 308 is untouched and remains
+theirs.
+
+**A stale gate found on the way.** `test_no_catalogue_leaf_echoes_its_own_key`
+built its catalogue path as `Path(__file__).parents[2] / "src" / ...`, which from
+`dev/locales/tests/` lands on `dev/` and resolved to a nonexistent
+`dev/src/cadrumo/locales/<locale>.yml` -- a monolithic file the shard split had
+already retired. All four parametrisations died on `FileNotFoundError`, so the
+placeholder-honesty gate had been **passing nothing at all**. Repointed at the
+tooling's own `LOCALES_DIR` constant and at the locale's shard directory, which
+`load_locale` merges.
+
+Proven to bite, from OUTSIDE the tree: a pytest plugin on `PYTHONPATH` in the
+scratchpad patches `LocaleManager.load_locale` to inject one leaf whose value
+equals its key. 4 passed clean, 4 failed with the probe, and no tracked file was
+touched to prove it.
+
+Modelo 100 + 131 selection: **15 failed / 606 passed -> 5 failed / 616 passed.**
+None of the five cites the swept source or a locale key; they are the content
+layer the review stamps unblocked.
