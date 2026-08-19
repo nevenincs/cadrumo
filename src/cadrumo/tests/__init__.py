@@ -152,7 +152,7 @@ __all__ = [
     "scan_callable_lines",
     "scan_module_lines",
     "temporary_env",
-    ]
+]
 
 
 #: Re-exported name -> owning submodule (relative, resolved through

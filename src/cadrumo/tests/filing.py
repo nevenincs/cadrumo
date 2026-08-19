@@ -38,7 +38,7 @@ from ..domain.invoices import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus
 from ..domain.transactions import TransactionCatalogue
 
-_REGISTRY_TEST_BUCKET_ID = "registry-test"
+_REGISTRY_TEST_BUCKET_ID = "1465aefb-768a-4344-a564-1f0737966d59"  # was 'registry-test'
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 
