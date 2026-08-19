@@ -388,6 +388,21 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyDuplicateLabelError",
+        ErrorCode(
+            code="REFUSED_PROFILE_CUSTODY_DUPLICATE_LABEL",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            # NOT retryable, unlike the conflict class it extends: that one
+            # reports a stale witness a re-read fixes, while a label already
+            # bound to a committed capsule can never be taken by the identical
+            # command. Publishing it as retryable invites the agent operator
+            # into a loop that cannot terminate.
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._custody_service.ProfileCustodyDisplacedSessionRetirementError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_DISPLACED_SESSION_RETIREMENT",

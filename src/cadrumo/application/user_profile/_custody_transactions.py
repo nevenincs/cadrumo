@@ -58,6 +58,20 @@ class ProfileCustodyTransactionConflictError(ProfileCustodyTransactionError):
     """Raised when a captured local witness no longer matches live state."""
 
 
+class ProfileCustodyDuplicateLabelError(ProfileCustodyTransactionConflictError):
+    """Raised when the requested label already names a committed capsule.
+
+    A SUBCLASS of the conflict error because every existing handler that treats
+    a custody conflict as a conflict should keep catching this one. It carries
+    its own error code for one reason: retryability. Its parent means "a
+    captured witness went stale", which a re-read genuinely fixes, so that code
+    is published as retryable. A label collision is permanent -- the name is
+    bound to a committed capsule and the identical command can never succeed --
+    and this CLI's operator is an autonomous agent that retries what it is told
+    is retryable.
+    """
+
+
 class ProfileCustodyTransactionRefusalError(ProfileCustodyTransactionError):
     """Raised when local deletion is not explicitly authorized by its evidence."""
 
