@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:676a05e343ce885c4c59ee7daa1098ae9821ca35514c569bd7063f2cf121fc6e'
+body_hash: 'sha256:f0c66ada3c18575802799e8b36dfdbb1fa67dee2ca6ac33e6aee3e09c641cd51'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1164,6 +1164,42 @@ can assert -- the work-unit catalogue in the calculate path is exactly that --
 and those sites remain unguarded and unreported. Closing them means threading
 the revision from whoever performed the read, which is a signature change
 through several callers rather than a local fix.
+
+### Three false greens from one habit: the detector kept matching shapes, not properties
+
+Work-unit rename and discard both read `catalogue: WorkUnitCatalogue =
+repo.load()` and composed it into a batch with their lifecycle event, rewriting
+the whole singleton row over any unit another caller had touched. The gate
+written the iteration before reported both as CLEAN, because it tracked
+`ast.Assign` and an annotated assignment is an `ast.AnnAssign`. The binding form
+alone hid two live defects.
+
+That is the third instance of one habit in this campaign, and the pattern is
+worth more than any of the three fixes:
+
+* a line-oriented `grep` for `save(append_bucket_event(` found two of four
+  sites, missing the two whose call spanned several lines;
+* the gate that replaced it matched `save(append_bucket_event(...))`
+  syntactically and missed three sites that bound the appended catalogue to a
+  variable first;
+* the gate that replaced THAT tracked one binding form and missed two sites
+  using another.
+
+Every time, the detector encoded the shape the known defects happened to take
+rather than the property they violate. Every time it went green and the class
+looked closed. The correction is not "write better patterns" but a test
+discipline: a detector's discrimination cases must include the shapes it does
+NOT yet handle, written from how the code actually reads rather than from the
+examples that motivated it. The gate now carries the annotated form as its own
+case, naming the two functions it hid, so the next reader sees why it is there.
+
+A related discipline, already recorded once and reinforced here: in a tree with
+hundreds of unrelated failures, TOTALS are not evidence. This change's selection
+reported 98 failures at HEAD and 62 with the fix, which reads as a large
+improvement; the set difference showed zero failures appearing that were not
+already present, and nothing was claimed about the other direction. The empty
+difference is the property that matters, and it is the only one this lane can
+support.
 
 ## Recommendations
 
