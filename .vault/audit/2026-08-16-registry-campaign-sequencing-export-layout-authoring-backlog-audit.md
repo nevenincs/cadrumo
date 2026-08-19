@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:a45737e884e4f7c680c52723dff18b2020fcbeec03d74ab14f24d8067fece66b'
+body_hash: 'sha256:93858eb383951dda707bb2692faec3caf8846da1dac5250ee3e77c29aa927934'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
