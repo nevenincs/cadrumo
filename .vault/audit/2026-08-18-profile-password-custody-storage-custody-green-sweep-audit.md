@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:74fb851d9bf685da0f80f85cd939db2c4dceeb80f4d948c4a286777356f0ca4f'
+body_hash: 'sha256:5be6bbcf48f83fbd6433177ac06c2866384a4e070f64466356309eabad746330'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -555,6 +555,113 @@ taken at different moments are not comparable while another campaign is landing
 registry sweeps, so every claim in this audit rests on a failure-set DIFF taken
 either side of a single change, never on a total. A green total here would be
 the less trustworthy number.
+
+### Concurrent failed logins collapsed the brute-force throttle
+
+FIXED. `record_login_failure` in
+`adapters/persistence/storage/master_key/_login_throttle.py` read the sidecar,
+added one, and wrote it back with no mutual exclusion. Overlapping attempts all
+read `n` and all write `n + 1`, so a burst of `k` wrong passwords advanced the
+counter once.
+
+The counter is not incidental to this control, it IS the control: the caller
+evaluates `min(2 ** n, 60)` seconds of required wait BEFORE running any
+Argon2id derivation, specifically so the KDF cannot be used as a
+passphrase-testing oracle. A collapsed counter leaves a burst of eight wrong
+passwords facing the two seconds owed to one. Producing the burst needs no
+privileged position, because the surface is a local CLI: run the login verb
+`k` times at once.
+
+On Windows it was worse than an undercount. The overlapping writes collided in
+the atomic rename and the function raised `PermissionError` (WinError 5) out of
+the security control. It is called from inside the caller's
+authentication-failure handler at `application/user_profile/_login_session.py:1136`,
+so that exception REPLACED the wrong-password error the operator needed to see,
+and the attempt went unrecorded as well. The operator gets `Access is denied`
+about a sidecar they never heard of.
+
+Closed under `core.exclusive_file_lock` rather than a new primitive -- it is
+already this codebase's cross-process answer and already carries the operation
+lease repository. A write that still cannot be persisted now logs and returns
+the on-disk state instead of propagating, which is the policy the sibling
+`reset_login_throttle` already documents in its own docstring and which the
+increment path simply never adopted.
+
+The sidecar's documented tolerances were deliberately NOT extended. A missing,
+unreadable or version-mismatched file still reads as "no active throttle",
+because that direction protects a legitimate operator from being stranded by a
+local-CLI self-DoS. A lost increment runs the other way -- it only helps
+whoever is guessing -- which is why it was never one of the declared
+tolerances and should not have been treated as covered by them.
+
+The regression was written and run against unmodified HEAD BEFORE the fix,
+where it failed on the WinError 5 collision. That ordering is the point: an
+oracle authored after a fix asserts whatever the fix does.
+
+### The master-key provider lead resolves the other way: the residue is a protocol nothing may implement
+
+The standing lead read the `master_key` package as retired-model residue
+exporting `MasterKeyProvider` to roughly ten consumers and
+`UnsecuredMasterKeyProvider` to five. Enumerated against HEAD, that is not what
+is there, and the correction matters more than the original count.
+
+Every `MasterKeyProvider` reference outside the `master_key` package is itself
+INSIDE `adapters/persistence/storage` -- blob_store, envelope, secret_store,
+_rotation and the package facade -- and nearly all are type annotations on an
+optional parameter or Sphinx roles in docstrings. There are ZERO consumers
+outside the storage package. The only cross-package references anywhere are to
+`EphemeralMasterKeyProvider` in `cadrumo/tests/master_key.py`, which is a
+separate harness class that satisfies the protocol structurally rather than an
+import of it.
+
+The protective code carrying the legacy name is live and should not be touched.
+`refuse_unsecured_bucket_with_real_profile` and `refuse_unsecured_with_real_nif`
+are the NIF canary, and they fail CLOSED in every branch that cannot prove the
+profile synthetic: an unreadable bucket DB, an undecryptable payload, and an
+unparseable profile all raise rather than admitting the published key. The
+package also houses the LIVE per-profile session substrate -- bucket sessions,
+KDF parameters, idle timeout, the login throttle above. A name-driven deletion
+takes all of that with it.
+
+The sharp finding is a different shape than the lead expected, and it is a
+contradiction rather than dead code. `_provider_enter` at
+`master_key/_master_key.py:248` refuses EVERY provider except one concrete
+class:
+
+    if not isinstance(provider, UnsecuredMasterKeyProvider):
+        raise MasterKeyMaterialMissingError(...)
+
+So `MasterKeyProvider` is not an extension point. It is a one-member closed set
+enforced by an isinstance check at runtime -- while still being exported from
+the storage facade's public `__all__`, where it reads as an interface someone
+may implement. Anyone who does is refused at session-open time by a check that
+names a class rather than a capability. Whether the honest form is a narrowed
+export, a documented closed set, or a capability check rather than an identity
+check is a design call and is left with the owner; recording it as "provider
+residue awaiting deletion" would have been wrong in both directions, since the
+protocol is load-bearing internally and the thing that is misleading is its
+publicity.
+
+### Multiuser safety: what was checked and what was not
+
+In-process session isolation is sound and deliberately so. The active-session
+binding is a `ContextVar`, so each thread and each asyncio task carries its own
+session and an encrypt path cannot observe a sibling context's key; child tasks
+inherit by PEP 567 copy-on-create, which is the same logical session extending
+rather than a leak. `_live_sessions.py` is an in-memory `WeakSet` guarded by a
+`threading.Lock`, weak by construction so the registry never extends the
+lifetime of key material it exists to destroy, and its docstring is explicit
+that it must never be used to FIND a session to work with. It documents its one
+blind spot -- a thread cannot see another thread's binding -- and justifies it
+against the case it exists for, `os._exit` reaping from a watchdog thread.
+
+Cross-process coordination is where the defect was, and the throttle was the
+one found. Two things are NOT closed by this pass and should not be read as
+cleared: the canonical bucket locking that `_provider_enter`'s docstring
+attributes to "application mutation spans" was not exercised here, and no
+concurrent-access test drives two live processes against one profile. The
+throttle finding is evidence that cross-process shared state in this package
+deserves that treatment rather than evidence that the rest of it has had it.
 
 ## Recommendations
 
