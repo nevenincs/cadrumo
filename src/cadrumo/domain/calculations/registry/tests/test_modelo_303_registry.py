@@ -22,6 +22,7 @@ from ....iva import (
     IvaLedgerObservationRole,
 )
 from .. import (
+    NoRevisionForPeriodError,
     InputKind,
     ModeloDefinition,
     RegistryCatalogues,
@@ -74,7 +75,10 @@ _M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
     "2026-y-siguientes",
 )
 _M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
-    "2022": "aeat-dr-303-2025",
+    # `aeat-dr-303-2022`, not 2025. The 2022 revision borrowed a later design
+    # while it was still the open-ended 2009-2022 span with none of its own;
+    # it now cites the 2022 diseno, which is the one that governs its year.
+    "2022": "aeat-dr-303-2022",
     "2023": "aeat-dr-303-2023",
     "2024-hasta-08-y-2t": "aeat-dr-303-2024-early",
     "2024-desde-09-y-3t": "aeat-dr-303-2024-late",
@@ -155,12 +159,21 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
 
 
-def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
+def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None:
+    """Each revision claims exactly the filing year(s) it is named for.
+
+    The earliest revision used to span 2009-2022 and this asserted that. The
+    pre-window span was deliberately retired when it was renamed to `2022`, so
+    the supported floor is now filing year 2022. Eight bundled designs
+    (2014 through 2021) currently have no revision citing them; that is a scope
+    question about the supported floor, recorded rather than reverted here.
+    """
     modelo, _ = _load_modelo_303()
 
     rev_old = modelo.revisions["2022"]
-    assert rev_old.valid_from == date(2009, 1, 1)
-    assert rev_old.period_selector.year_from == 2009
+    assert rev_old.valid_from == date(2022, 1, 1)
+    assert rev_old.valid_to == date(2022, 12, 31)
+    assert rev_old.period_selector.year_from == 2022
     assert rev_old.period_selector.year_to == 2022
     assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
 
@@ -237,15 +250,29 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
         )
         assert snapshot.revision.id == "2026-y-siguientes"
 
+    # Filing year 2022 resolves to the `2022` revision. This asked for 2021,
+    # which the retired pre-window span used to cover and nothing covers now, so
+    # it raised NoRevisionForPeriodError rather than asserting anything.
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2021,
+            filing_year=2022,
             period=period,
         )
         assert snapshot.revision.id == "2022"
+
+    # And the retirement is asserted, not merely worked around: the floor
+    # refuses rather than silently resolving a 2021 filing under 2022's norms.
+    with pytest.raises(NoRevisionForPeriodError):
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2021,
+            period="1T",
+        )
 
 
 def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> None:
