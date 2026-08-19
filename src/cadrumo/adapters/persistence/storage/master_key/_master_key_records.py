@@ -36,4 +36,3 @@ class EnvelopeDocument(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     payload: _EnvelopePayload | None = None
-

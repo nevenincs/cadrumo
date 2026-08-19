@@ -109,7 +109,7 @@ __all__ = [
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "sede-declarations"
+_BUCKET_ID = "2ffddd8e-61e6-4ea7-81b2-73f08392183d"  # was 'sede-declarations'
 
 _AEAT = Settings.external_constants().aeat
 

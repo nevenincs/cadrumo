@@ -65,7 +65,7 @@ from ..modelos_calculation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_BUCKET_ID = "modelo-runtime"
+_BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 45, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 50, 0, tzinfo=UTC)
 _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(

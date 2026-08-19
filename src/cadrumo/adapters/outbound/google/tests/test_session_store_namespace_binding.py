@@ -42,7 +42,7 @@ from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata,
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "google-session-namespace-binding"
+_BUCKET_ID = "c638b552-05ee-427e-82e4-21e5f4936157"  # was 'google-session-namespace-binding'
 _PROFILE = "operator-google"
 _ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
 

@@ -28,15 +28,15 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import (
+from ......application.user_profile import create_profile_custody_registration_material
+from ......core import pid_is_alive
+from ......core.config import Settings
+from ......core.hashing import canonical_json_bytes
+from .. import (
     ProfileCustodyEnvelope,
     ProfileCustodySentinelRecord,
     unlock_profile_custody,
 )
-from cadrumo.application.user_profile import create_profile_custody_registration_material
-from cadrumo.core import pid_is_alive
-from cadrumo.core.config import Settings
-from cadrumo.core.hashing import canonical_json_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -51,8 +51,11 @@ class StatusFactRow:
     """One resolved profile fact: its display label, value, and mask flag.
 
     ``masked`` is decided by the entry-point builder from the schema
-    sensitivity (and a defensive key-like path/label heuristic); when it is
-    ``True`` the screen renders the mask token and never the ``value``.
+    sensitivity (and a defensive key-like path/label heuristic). When it is
+    ``True`` the builder has ALREADY replaced ``value`` with the mask token,
+    so the secret never enters this view-model: a later consumer -- a screen,
+    a diagnostic dump, a snapshot -- cannot leak what it was never given.
+    The flag remains so a renderer can style a redacted cell distinctly.
     """
 
     label: str
@@ -95,11 +98,9 @@ class StatusAuthView:
 class StatusPageData:
     """The full read-only view-model rendered by :class:`StatusApp`.
 
-    Masking is a render-side invariant today: a ``StatusFactRow`` still
-    carries its raw value and the screen substitutes the mask token when the
-    row is masked. Should a genuinely secret-bearing zone ever be added, the
-    direction is to redact at build time so the secret never enters the
-    view-model at all, rather than relying on render-side substitution.
+    Masking is a build-time invariant: the entry-point builder substitutes
+    the mask token before a ``StatusFactRow`` is constructed, so a secret
+    never enters this view-model and no renderer can be trusted wrongly.
     """
 
     active_profile_label: str | None = None

@@ -50,7 +50,7 @@ from .._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "sede-namespace-binding"
+_BUCKET_ID = "7303a2b7-83c8-4937-99f7-8259455fafe4"  # was 'sede-namespace-binding'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 

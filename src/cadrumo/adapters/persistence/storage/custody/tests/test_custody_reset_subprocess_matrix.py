@@ -22,15 +22,15 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import (
-    ProfileCustodyRecoveryGuidance,
-    ProfileCustodyRefusal,
-)
-from cadrumo.application.user_profile import (
+from ......application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileCustodyTransactionRefusalError,
 )
-from cadrumo.tests.secure_sql import isolated_profile_storage_root
+from ......tests.secure_sql import isolated_profile_storage_root
+from .. import (
+    ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRefusal,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -107,7 +107,7 @@ os._exit(97)
 
 def _child_env(root: Path) -> dict[str, str]:
     """Mirror the isolated-root overrides into a fresh interpreter's settings."""
-    from cadrumo.core.config import load_settings
+    from ......core.config import load_settings
 
     settings = load_settings()
     return {

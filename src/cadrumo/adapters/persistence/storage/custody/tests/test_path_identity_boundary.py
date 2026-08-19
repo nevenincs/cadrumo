@@ -49,19 +49,38 @@ _WRONG_TYPES: tuple[object, ...] = ("", None, 42, b"2691dda2-224b-48b5-bdf4-b6a8
 
 
 def _mintable_profile_ids() -> tuple[UUID, ...]:
-    """Every shape of ``UUID`` the system can put in front of this boundary."""
+    """Every ``UUID`` the profile aggregate actually mints.
+
+    The aggregate mints version 4 exclusively (``new_profile_id`` and the
+    capsule lifecycle both call :func:`uuid.uuid4`), and ``ProfileId``
+    constrains the persisted spelling to that version. Enumerating other UUID
+    versions here would assert an acceptance the identity boundary is
+    deliberately narrower than; those shapes are exercised as refusals below.
+    """
     return (
         uuid4(),
-        uuid1(),
-        uuid3(NAMESPACE_DNS, "cadrumo"),
-        uuid5(NAMESPACE_DNS, "cadrumo"),
-        UUID(int=0),
-        UUID(int=(1 << 128) - 1),
         # Constructed from non-canonical input: the boundary must judge the
         # value, not the spelling it arrived in.
         UUID("AEF86776-E8B4-4CD2-8C1B-F96099261AD6"),
         UUID("{ac63571e-4135-4723-8535-f7ac7bbbc03c}"),
         UUID("2691dda2224b48b5bdf4b6a8685d7c6a"),
+    )
+
+
+def _unmintable_profile_ids() -> tuple[UUID, ...]:
+    """``UUID`` values that parse but are not profile identities.
+
+    A profile identity is a version-4 UUID. Every other version, plus the nil
+    and max sentinels, is a value no minting path in this system produces, so
+    the boundary must refuse it rather than publish a capsule under a name the
+    anchored discoverer would not recognise.
+    """
+    return (
+        uuid1(),
+        uuid3(NAMESPACE_DNS, "cadrumo"),
+        uuid5(NAMESPACE_DNS, "cadrumo"),
+        UUID(int=0),
+        UUID(int=(1 << 128) - 1),
     )
 
 
@@ -92,6 +111,18 @@ class TestRefusedIdentifiers:
     def test_wrong_typed_identifiers_refuse(self, value: object) -> None:
         with pytest.raises(PathContainmentError):
             profile_custody_directory_name(value)
+
+    @pytest.mark.parametrize("profile_id", _unmintable_profile_ids())
+    def test_non_version_4_uuids_refuse(self, profile_id: UUID) -> None:
+        """A UUID of a version no minting path produces is not an identity.
+
+        The refusal arrives as the boundary's own documented error class, not
+        as the bare ``ValueError`` the identity helper raises: a caller
+        translating custody refusals must not have to catch two classes to
+        cover one boundary.
+        """
+        with pytest.raises(PathContainmentError):
+            profile_custody_directory_name(profile_id)
 
     def test_canonical_uuid_string_refuses(self) -> None:
         """Even the canonical rendering refuses: the type is the contract."""

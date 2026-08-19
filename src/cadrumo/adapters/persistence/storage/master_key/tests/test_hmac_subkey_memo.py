@@ -21,8 +21,8 @@ from .._bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_BUCKET_ID = "11111111-1111-1111-1111-111111111111"
-_OTHER_BUCKET_ID = "22222222-2222-2222-2222-222222222222"
+_BUCKET_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
+_OTHER_BUCKET_ID = "05d17100-b346-429d-a760-a0fdedcf8623"  # was '22222222-2222-2222-2222-222222222222'
 _KEK = b"k" * 32
 _DEK = b"d" * 32
 _OTHER_DEK = b"e" * 32

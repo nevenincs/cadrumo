@@ -55,7 +55,6 @@ See Also:
         The in-process materialisation this persisted record re-opens.
 """
 
-
 from __future__ import annotations
 
 import binascii

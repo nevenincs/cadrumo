@@ -14,7 +14,7 @@ from .._impersonation import GoogleCredentialSourceSelection, GoogleImpersonatio
 from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-_BUCKET_ID = "google-session"
+_BUCKET_ID = "1a92e8a0-9da5-4712-8b71-a8aadd4eed42"  # was 'google-session'
 
 
 def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: Path) -> None:

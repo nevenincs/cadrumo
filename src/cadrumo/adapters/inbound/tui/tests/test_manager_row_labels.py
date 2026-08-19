@@ -99,7 +99,8 @@ def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
     from .....domain.user_profile import UserProfileFact, UserProfileRecord
 
     storage_value = "app_request"
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="00000000-0000-4000-8000-0000000000c1",
         facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
     )

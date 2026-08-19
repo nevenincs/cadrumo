@@ -150,6 +150,7 @@ def test_a_duplicate_pair_is_still_refused_and_not_retried() -> None:
 
     assert len(InventoryLedgerRepository().load().ledgers) == 1
 
+
 def test_a_concurrent_create_is_not_discarded_by_a_removal() -> None:
     """Removal rewrites the whole document too, so the seam must survive it.
 
