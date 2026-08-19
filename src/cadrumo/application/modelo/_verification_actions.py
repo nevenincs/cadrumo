@@ -1135,6 +1135,7 @@ def _repair_verified_revision_current_pointer(
         return
     if latest.current_calculation_revision_id is not None:
         return
+
     # Guarded: stamping this pointer rewrites the WHOLE singleton catalogue, so
     # a work unit another operator created or advanced in the interim would be
     # discarded by a repair that was only meant to fill in one pointer. The

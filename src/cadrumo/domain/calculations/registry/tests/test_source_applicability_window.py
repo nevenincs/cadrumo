@@ -316,3 +316,92 @@ def test_modelo_level_source_refs_stay_exempt_from_the_revision_window() -> None
 
     assert snapshot.revision.id == _REVISION
     assert catalogues.sources[stale_id].id == stale_id
+
+
+# A period's filing deadline lawfully falls after the period itself ends: the
+# fourth-quarter return of one year is filed in the January of the next, so the
+# calendario that states its deadline is the FOLLOWING year's. These cover the
+# axis that citation is validated against.
+
+_DEADLINE_MODELO = "123"
+_DEADLINE_REVISION = "2019-2023"
+_DEADLINE_FILING_YEAR = 2023
+_DEADLINE_PERIOD = "4T"
+_NEXT_YEAR_CALENDARIO = "aeat-calendario-contribuyente-2024"
+
+
+def _rebuild_m123_with_source_window(
+    source_id: str,
+    *,
+    applies_from: date | None,
+    applies_to: date | None,
+) -> RegistrySnapshot:
+    """Rebuild the M123 2023 4T snapshot with one source moved into a new window."""
+    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    source = catalogues.sources[source_id]
+    restaged = source.model_copy(update={"applies_from": applies_from, "applies_to": applies_to})
+    catalogues = catalogues.model_copy(
+        update={"sources": {**catalogues.sources, source_id: restaged}},
+    )
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=_DEADLINE_FILING_YEAR,
+        period=_DEADLINE_PERIOD,
+    )
+
+
+def test_a_deadline_window_source_is_validated_against_the_window_not_the_revision() -> None:
+    """The shipped 4T citation must survive, and not vacuously.
+
+    The preconditions are asserted rather than assumed: if the calendario ever
+    stopped starting after the revision closed, this test would pass while
+    proving nothing about the axis.
+    """
+    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    revision = modelo.revisions[_DEADLINE_REVISION]
+    calendario = catalogues.sources[_NEXT_YEAR_CALENDARIO]
+
+    assert revision.valid_to is not None
+    assert calendario.applies_from is not None
+    assert calendario.applies_from > revision.valid_to, (
+        "precondition: the next-year calendario must start after the revision closes"
+    )
+    fourth_quarter = next(window for window in revision.deadline_windows if window.id.endswith("2023-4t"))
+    assert _NEXT_YEAR_CALENDARIO in fourth_quarter.source_refs
+    assert fourth_quarter.closes_on > revision.valid_to
+
+    snapshot = _committed_snapshot(_DEADLINE_MODELO, _DEADLINE_FILING_YEAR, _DEADLINE_PERIOD)
+
+    assert snapshot.revision.id == _DEADLINE_REVISION
+
+
+def test_a_deadline_source_outside_both_the_revision_and_its_window_still_refuses() -> None:
+    """The window axis is a real bound, not a blanket exemption for deadline refs."""
+    with pytest.raises(RegistryValidationError, match=_NEXT_YEAR_CALENDARIO):
+        _rebuild_m123_with_source_window(
+            _NEXT_YEAR_CALENDARIO,
+            applies_from=date(2030, 1, 1),
+            applies_to=date(2030, 12, 31),
+        )
+
+
+def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() -> None:
+    """The exemption follows the deadline-window citation, not the calendar date.
+
+    A design source is cited by casillas, so falling inside some window's dates
+    earns it nothing: it still has to overlap the revision it grounds.
+    """
+    design_source = "aeat-dr-123-2019-2023-v13"
+    modelo, _catalogues = _committed_modelo(_DEADLINE_MODELO)
+    revision = modelo.revisions[_DEADLINE_REVISION]
+    window_source_ids = {ref for window in revision.deadline_windows for ref in window.source_refs}
+    assert design_source not in window_source_ids
+
+    with pytest.raises(RegistryValidationError, match=design_source):
+        _rebuild_m123_with_source_window(
+            design_source,
+            applies_from=date(2024, 1, 1),
+            applies_to=date(2024, 1, 22),
+        )

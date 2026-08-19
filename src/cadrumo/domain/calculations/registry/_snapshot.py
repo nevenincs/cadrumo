@@ -123,13 +123,15 @@ def _collect_deadline_schedule_refs(
     *,
     legal_ids: set[str],
     source_ids: set[str],
+    include_deadline_windows: bool = True,
 ) -> None:
-    for window in revision.deadline_windows:
-        legal_ids.update(window.legal_refs)
-        source_ids.update(window.source_refs)
-        for condition in window.applicability_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
+    if include_deadline_windows:
+        for window in revision.deadline_windows:
+            legal_ids.update(window.legal_refs)
+            source_ids.update(window.source_refs)
+            for condition in window.applicability_conditions:
+                legal_ids.update(condition.legal_refs)
+                source_ids.update(condition.source_refs)
     for schedule in revision.filing_schedules:
         legal_ids.update(schedule.legal_refs)
         source_ids.update(schedule.source_refs)
@@ -671,6 +673,11 @@ def _check_revision_scoped_source_windows(
             overlap the revision's own validity window.
     """
     _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
+    _elsewhere_legal_ids, elsewhere_source_ids = collect_snapshot_ref_ids(
+        modelo,
+        revision,
+        include_deadline_windows=False,
+    )
     scoped_source_ids = revision_source_ids - set(modelo.source_refs)
     deadline_spans = _deadline_window_source_spans(revision)
     failures: list[str] = []
@@ -680,7 +687,7 @@ def _check_revision_scoped_source_windows(
             continue
         if _source_applies_across(source, revision.valid_from, revision.valid_to):
             continue
-        if any(
+        if source_id not in elsewhere_source_ids and any(
             _source_applies_across(source, opens_on, closes_on)
             for opens_on, closes_on in deadline_spans.get(source_id, ())
         ):
@@ -707,6 +714,8 @@ def _check_revision_scoped_source_windows(
 def collect_snapshot_ref_ids(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
+    *,
+    include_deadline_windows: bool = True,
 ) -> tuple[set[str], set[str]]:
     """Walk every record kind and return its (legal_ids, source_ids) pair.
 
@@ -748,5 +757,10 @@ def collect_snapshot_ref_ids(
         _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
     _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_deadline_schedule_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
+    _collect_deadline_schedule_refs(
+        revision,
+        legal_ids=legal_ids,
+        source_ids=source_ids,
+        include_deadline_windows=include_deadline_windows,
+    )
     return legal_ids, source_ids
