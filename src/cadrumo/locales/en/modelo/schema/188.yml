@@ -7,15 +7,24 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              help: Number of recipients (records) whose withholding base is positive.
+              label: Total number of recipients with a positive base
+            '02':
+              help: Sum of the withholding bases reported in recipient records with
+                a positive base.
+              label: Base for withholdings and payments on account
             '03':
-              help: null
-              label: Withholding and advance payment tax base
+              help: Sum of the withholdings and payments on account applied to the
+                declared income.
+              label: Withholdings and payments on account
             '04':
-              help: null
-              label: Withholdings and advance payments declared
+              help: Number of recipients (records) whose withholding base is negative.
+              label: Total number of recipients with a negative base
             '05':
-              help: null
-              label: Total withholdings on the annual summary
+              help: Sum of the withholding bases reported in recipient records with
+                a negative base.
+              label: Negative base for withholdings and payments on account
           construct:
             modelo-188-calculation-construct:
               field:

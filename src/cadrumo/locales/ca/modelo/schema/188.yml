@@ -7,15 +7,26 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
-            '03':
-              help: null
+            '01':
+              help: Nombre de perceptors (registres) la base de retencions dels quals
+                és positiva.
+              label: Nombre total de perceptors amb base positiva
+            '02':
+              help: Suma de les bases de retenció reflectides en els registres de
+                perceptor amb base positiva.
               label: Base de retencions i ingressos a compte
+            '03':
+              help: Suma de les retencions i ingressos a compte practicats sobre les
+                rendes declarades.
+              label: Retencions i ingressos a compte
             '04':
-              help: null
-              label: Retencions i ingressos a compte declarats
+              help: Nombre de perceptors (registres) la base de retencions dels quals
+                és negativa.
+              label: Nombre total de perceptors amb base negativa
             '05':
-              help: null
-              label: Total de retencions del resum anual
+              help: Suma de les bases de retenció reflectides en els registres de
+                perceptor amb base negativa.
+              label: Base de retencions i ingressos a compte negativa
           construct:
             modelo-188-calculation-construct:
               field:

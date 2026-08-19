@@ -11,12 +11,20 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
+              help: Número total de operaciones declaradas, equivalente al número
+                de registros de tipo 2 del diseño de registro.
               label: Número total de operaciones
             '02':
+              help: Suma de los importes de las operaciones de adquisición o suscripción
+                de acciones y participaciones.
               label: Importe total de las adquisiciones
             '03':
+              help: Suma de los importes de las operaciones de enajenación o reembolso
+                de acciones y participaciones.
               label: Importe total de las enajenaciones
             '04':
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las operaciones declaradas.
               label: Importe total de las retenciones e ingresos a cuenta
           construct:
             modelo-187-calculation-construct:

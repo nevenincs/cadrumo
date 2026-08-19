@@ -8,12 +8,20 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
+              help: Nombre total d'operacions declarades, equivalent al nombre de
+                registres de tipus 2 del disseny de registre.
               label: Nombre total d'operacions
             '02':
+              help: Suma dels imports de les operacions d'adquisició o subscripció
+                d'accions i participacions.
               label: Import total de les adquisicions
             '03':
+              help: Suma dels imports de les operacions d'alienació o reemborsament
+                d'accions i participacions.
               label: Import total de les alienacions
             '04':
+              help: Suma de les retencions i ingressos a compte practicats sobre les
+                operacions declarades.
               label: Import total de les retencions i ingressos a compte
           construct:
             modelo-187-calculation-construct:
