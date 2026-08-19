@@ -538,7 +538,22 @@ def derive_diseno_coverage_casillas(
     This is an off-load-path tool: it parses the multi-megabyte Diseño
     corpus and must never run on the snapshot-build path.
     """
-    sheets = _extract_record_design(path)
+    return _derive_diseno_coverage_casillas_from_sheets(
+        _extract_record_design(path),
+        multi_segment=multi_segment,
+    )
+
+
+def _derive_diseno_coverage_casillas_from_sheets(
+    sheets: tuple[RecordDesignSheet, ...],
+    *,
+    multi_segment: bool,
+) -> tuple[DerivedDisenoCasilla, ...]:
+    """Derive the casilla set from ALREADY-EXTRACTED sheets.
+
+    Split out so a caller that needs both the casillas and facts about the
+    extraction itself parses the multi-megabyte source once instead of twice.
+    """
     if multi_segment:
         seen: set[tuple[str | None, str]] = set()
         ordered: list[DerivedDisenoCasilla] = []
@@ -603,6 +618,29 @@ class DisenoCoverageReport:
     diseno_casillas: tuple[DerivedDisenoCasilla, ...]
     covered_casillas: tuple[DerivedDisenoCasilla, ...]
     coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]
+    extracted_fields: int = 0
+    described_fields: int = 0
+
+    @property
+    def descriptions_unavailable(self) -> bool:
+        """Whether the source yielded fields but no readable field descriptions.
+
+        Casilla tags are recognised only inside field DESCRIPTIONS, so a
+        design parsed from chart geometry alone -- every field carrying the
+        visual-chart type code and a placeholder in place of prose -- can
+        never yield a casilla however many boxes the form prints. Its empty
+        set is an artefact of what could be read, not a statement about the
+        form.
+
+        :attr:`extraction_found_no_casillas` tells a reader to "distinguish
+        the two by whether the source yielded fields at all", and until this
+        field existed the report carried no count with which to do it. Modelo
+        038 is the worked case: 58 fields extracted, 58 of them
+        description-less, zero casillas -- indistinguishable in the old
+        report from modelo 185, whose 35 fields carry 8283 characters of real
+        description and genuinely number nothing.
+        """
+        return self.extracted_fields > 0 and self.described_fields == 0
 
     @property
     def extraction_found_no_casillas(self) -> bool:
@@ -702,7 +740,8 @@ def build_diseno_coverage_report(
             compared against the extracted Diseño casilla set.
         multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
-    diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
+    sheets = _extract_record_design(path)
+    diseno = _derive_diseno_coverage_casillas_from_sheets(sheets, multi_segment=multi_segment)
     declared_metadata = {(casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas}
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
@@ -711,12 +750,29 @@ def build_diseno_coverage_report(
             covered.append(casilla)
         else:
             gap.append(casilla)
+    # Counted from the same source the casillas were derived from, so an empty
+    # casilla set can be read as "nothing to scan" or "scanned, none present".
+    # The geometry-only marker is read from the extractor that stamps it, never
+    # copied: a second literal would silently stop matching if the extractor
+    # changed it, and `descriptions_unavailable` would quietly go false for every
+    # design instead of failing.
+    from ._record_design import _VISUAL_CHART_TYPE_CODE
+
+    extracted_fields = sum(len(sheet.fields) for sheet in sheets)
+    described_fields = sum(
+        1
+        for sheet in sheets
+        for design_field in sheet.fields
+        if design_field.type_code != _VISUAL_CHART_TYPE_CODE
+    )
     return DisenoCoverageReport(
         modelo_id=modelo_id,
         revision_id=revision.id,
         diseno_casillas=diseno,
         covered_casillas=tuple(covered),
         coverage_gap_casillas=tuple(gap),
+        extracted_fields=extracted_fields,
+        described_fields=described_fields,
     )
 
 
