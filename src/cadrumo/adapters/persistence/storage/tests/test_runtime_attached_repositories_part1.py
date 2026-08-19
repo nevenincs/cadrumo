@@ -26,6 +26,7 @@ from ._runtime_attached_repositories_support import (
     CalculationObservationRepository,
     CalculationRevisionCatalogueRepository,
     Callable,
+    EvidenceConsentLedger,
     ExpedienteNotFoundError,
     FiledDeclaracionObservationStore,
     InvoiceCatalogue,
@@ -35,6 +36,7 @@ from ._runtime_attached_repositories_support import (
     JustificanteRepository,
     LLMCache,
     LLMProvider,
+    LLMRunTelemetryRecorder,
     ModeloAmendmentRepository,
     ModeloDraftRepository,
     ModeloHistoryRepository,
@@ -119,6 +121,8 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("google_drive_config", lambda: google_session_store.load_drive_config("operator-google")),
     ("llm_cache_stats", lambda: LLMCache(root_dir=Path("runtime-cache")).stats()),
     ("llm_usage_load", lambda: UsageRecorder(root_dir=Path("runtime-usage")).load_records()),
+    ("llm_run_telemetry", lambda: LLMRunTelemetryRecorder(root_dir=Path("runtime-telemetry")).load_records()),
+    ("llm_consent_ledger", lambda: EvidenceConsentLedger().load_entries()),
     (
         "sede_artefact",
         lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(

@@ -145,7 +145,7 @@ from ....outbound.google import (
     OAuthToken,
 )
 from ....outbound.google import _session_store as google_session_store
-from ....outbound.llm import LLMCache, UsageRecorder
+from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
@@ -176,6 +176,7 @@ __all__ = [
     "CalculationObservationRepository",
     "CalculationRevisionCatalogueRepository",
     "Callable",
+    "EvidenceConsentLedger",
     "ExpedienteNotFoundError",
     "FiledDeclaracionObservationStore",
     "InvoiceCatalogue",
@@ -185,6 +186,7 @@ __all__ = [
     "JustificanteRepository",
     "LLMCache",
     "LLMProvider",
+    "LLMRunTelemetryRecorder",
     "ModeloAmendmentRepository",
     "ModeloDraftRepository",
     "ModeloHistoryRepository",

@@ -58,6 +58,8 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/outbound/google/_session_store.py": "google_oauth_token",
     "src/cadrumo/adapters/outbound/llm/_cache.py": "llm_cache_stats",
     "src/cadrumo/adapters/outbound/llm/_usage.py": "llm_usage_load",
+    "src/cadrumo/adapters/outbound/llm/_consent_ledger.py": "llm_consent_ledger",
+    "src/cadrumo/adapters/outbound/llm/_run_telemetry.py": "llm_run_telemetry",
     "src/cadrumo/application/auth/_diagnostics.py": "auth_diagnostics",
     "src/cadrumo/application/workflow/_persistence.py": "workflow_state",
 }
@@ -68,12 +70,6 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
 #: exemption: it says a surface's refusal behaviour is asserted nowhere, which is
 #: worth seeing rather than discovering during an incident.
 _NOT_IN_THE_REFUSAL_TABLE: dict[str, str] = {
-    "src/cadrumo/adapters/outbound/llm/_consent_ledger.py": (
-        "profile-scoped consent records; no refusal case drives this store"
-    ),
-    "src/cadrumo/adapters/outbound/llm/_run_telemetry.py": (
-        "profile-scoped run telemetry; no refusal case drives this store"
-    ),
     "src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py": (
         "reaches storage inside a live browser flow the table cannot drive"
     ),
