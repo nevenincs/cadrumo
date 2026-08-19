@@ -5586,3 +5586,29 @@ DP200002 + 00001  refused      (modelo 200's exact-name form still discriminates
 ```
 
 Authority CLEAN, lint clean.
+
+### The referential-integrity fixtures demanded a filing capability they do not test
+
+`src/cadrumo/domain/calculations/registry/tests/_referential_integrity_support.py:85`
+built every fixture snapshot at the strictest rung, because
+`build_validated_snapshot` pins `grade=RegistryAuthorityGrade.FILING` by contract.
+The fixture revision carries no export layout, so the snapshot refused on the
+missing filing capability -- *before any reference was ever checked*. 25 of the 31
+part-1 tests failed on a precondition orthogonal to what they assert.
+
+Two corrections, in order, each exposing the next:
+
+- The fixture revision was `pending_review`; it now stamps `agent_reviewed` with
+  `reviewed_by` and `reviewed_at`, which is what any real revision must carry.
+- The snapshot is now built at `APPLICABILITY` grade through the grade-taking
+  `_build_validated_snapshot` (an intra-package private, so no ownership boundary
+  is crossed). Referential integrity -- dangling legal ids, bound casillas with no
+  binding definition -- is grade-independent; the filing rung additionally demands
+  an export layout the fixture has no reason to own.
+
+**The vacuity hazard is the whole risk here,** since relaxing a grade is exactly
+how a test stops testing. It does not apply: every one of these tests asserts that
+`RegistryValidationError` *is raised* for a planted dangling reference. They pass
+by the refusal still firing, not by the snapshot succeeding.
+
+`test_referential_integrity_part1.py`: 25 failed / 6 passed -> **31 passed**.
