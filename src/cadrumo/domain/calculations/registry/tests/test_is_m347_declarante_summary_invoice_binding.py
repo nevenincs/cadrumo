@@ -113,7 +113,17 @@ def test_a_renamed_record_field_is_refused_not_silently_read_as_non_summary() ->
     function's OWN validation (not the constructor's) is what is under test.
     """
     revision = _modelo_347_revision()
-    binding = {binding.id: binding for binding in revision.bindings}[_M347_COUNT_BINDING]
+    shared = {binding.id: binding for binding in revision.bindings}[_M347_COUNT_BINDING]
+    # Mutate a COPY, never the shared instance. `_modelo_347_revision()` is
+    # cached, so writing through `object.__setattr__` on the binding it returns
+    # left every later test that loads modelo 347 looking at a selector carrying
+    # `recrd`: this module passed alone and took five sibling cases down with it
+    # whenever it ran first, which reads as a defect in THOSE modules.
+    #
+    # The argument the mutation stands on is unchanged. `model_copy` does not
+    # revalidate, so the drifted shape still cannot come from the constructor,
+    # and the copy is a real, already-validated instance.
+    binding = shared.model_copy()
     drifted_selector = dict(binding.selector)
     drifted_selector["recrd"] = drifted_selector.pop("record")
     object.__setattr__(binding, "selector", drifted_selector)

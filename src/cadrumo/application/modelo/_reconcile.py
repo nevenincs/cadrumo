@@ -689,8 +689,14 @@ def _finalise_reconciliation(
         payload=event_payload,
     )
     catalogue_repo = BucketEventHistoryRepository()
+    # Read WITH its revision: the event write below rides a co-commit, so it
+    # cannot use the self-committing emitter, and composing from a bare load
+    # would write back the revision it read -- discarding whatever another
+    # writer appended in between, invisibly, because the surviving
+    # content-addressed events leave no gap.
+    event_catalogue, event_revision_id = catalogue_repo.load_revisioned()
     next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
+        event_catalogue,
         BucketEvent(
             event_id=event_id,
             bucket_id=work_unit.bucket_id,
@@ -721,7 +727,7 @@ def _finalise_reconciliation(
     objects = catalogue_repo.secure_object_repository
     objects.save_many(
         (
-            catalogue_repo.to_secure_object_write(next_catalogue),
+            catalogue_repo.to_secure_object_write(next_catalogue, expected_revision_id=event_revision_id),
             ModeloReconciliationRecordRepository(objects=objects).to_secure_object_write(record),
         ),
     )

@@ -31,7 +31,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
+    bucket_event_history_write,
 )
 from ...domain.currency import CurrencyNormalizationService
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
@@ -485,7 +485,7 @@ def link_manual_transaction_invoice(
         transaction_id=current.transaction_id,
         invoice_repository=invoices_repo,
         transaction_repository=repository,
-        extra_writes=(event_repository.to_secure_object_write(append_bucket_event(event_repository.load(), event)),),
+        extra_writes=(bucket_event_history_write(event_repository, (event,)),),
     )
 
 

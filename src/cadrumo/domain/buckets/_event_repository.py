@@ -100,11 +100,35 @@ def bucket_event_history_write(
     domain-specific: every emitter that needs its event to share a transaction
     with its state change needs exactly this, and a per-domain copy is how one
     of them silently drifts from the append contract.
+
+    The read is REVISIONED, and that half was missing. Composing from a plain
+    ``load()`` writes back the revision it read, so an event another writer
+    appended between the read and the batch is discarded -- the singleton-row
+    loss :func:`emit_bucket_event` avoids by appending under the guard, landing
+    on the one shape that cannot use it. Carrying the observed revision turns
+    that silent discard into a refusal the caller can retry, which is the
+    weaker outcome only until you notice the discard leaves nothing to notice:
+    the surviving content-addressed events are all internally consistent and
+    the missing one leaves no gap.
+
+    A caller wanting the retry re-runs this composition against the newly
+    current catalogue; it is a pure function of what it reads, so re-running is
+    safe.
     """
-    catalogue = repository.load()
+    revisioned = getattr(repository, "load_revisioned", None)
+    if revisioned is None:
+        # The narrow port promises only exists/load/save, so an injected
+        # alternative may offer no revisioned read. That caller keeps the old
+        # exposure; the production repository does not, and this is the same
+        # tolerance `_append_through_the_guard` already documents.
+        catalogue = repository.load()
+        for event in events:
+            catalogue = append_bucket_event(catalogue, event)
+        return repository.to_secure_object_write(catalogue)
+    catalogue, revision_id = revisioned()
     for event in events:
         catalogue = append_bucket_event(catalogue, event)
-    return repository.to_secure_object_write(catalogue)
+    return repository.to_secure_object_write(catalogue, expected_revision_id=revision_id)
 
 
 def build_bucket_event(
