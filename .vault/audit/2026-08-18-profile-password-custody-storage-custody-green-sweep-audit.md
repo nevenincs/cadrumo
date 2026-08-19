@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:b395cf0b5b89113f7d5c0ff2d3de4961c1bb74dfdbe90419a9e65407ebc3e96d'
+body_hash: 'sha256:187331fdaba28a4ab904fab5aaddd991866762d1f34e0b5aafb34abc9f2e68ba'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1245,6 +1245,58 @@ mis-classification costs.
 
 The residual exposure is therefore now VISIBLE rather than unknown, which is
 the honest description of what changed. It is not fixed.
+
+### Tracing the inventory found a wrong declaration, a fifth blind spot, and a break this campaign shipped
+
+The inventory built last pass was explicitly an inventory rather than a
+clearance, with six entries reading "unclassified". Tracing them was worth
+doing, because one of the entries that was NOT marked unclassified turned out
+to be wrong.
+
+Invoice linking and reconciliation were declared as receiving their catalogues
+as parameters. The REPOSITORIES are parameters; the catalogues are read
+locally, `invoices_repo.load()` passed inline as a call argument with
+`result.invoices` derived from it. That is the defect class, not an exemption
+from it. The invoice catalogue is a singleton row, so both batches rewrote it
+whole over any invoice another caller had added -- a dropped invoice, which
+under-declares.
+
+That is a fifth detector blind spot on top of the four already recorded:
+derivation reaching the write as an ATTRIBUTE on a result object
+(`result.invoices`), which no amount of name-taint tracking would have caught.
+It is also the exact failure the inventory was built to make survivable, and it
+did: the site was listed, so tracing it was a finite task rather than a search.
+
+The distinction that resolved it is worth keeping. The transaction store beside
+these writes is NOT a singleton -- it writes a row per transaction -- so its
+side carries no whole-collection risk and needs no revision. Guarding only the
+invoice side is the correct scope, and the declarations now say so rather than
+the wrong thing they said before.
+
+### A regression this campaign shipped, and the two habits that hid it
+
+`test_register_secure_object_write_keeps_a_conflicted_batch_atomic` has been red
+since the prorrata guard landed two iterations ago. That change had
+`prorrata_register` pass `expected_revision_id` to
+`ProfileBareModelSecurePersistence`, a base that never accepted it -- the
+enveloped sibling was extended, this one was not. Confirmed by running the test
+against HEAD before fixing it.
+
+Two habits let it through, and both are correctable:
+
+* the regression check ran a keyword-FILTERED selection (`-k "work or revision
+  or import or prorrata or calculat"`) which did not collect that test. A
+  filtered slice is a convenience, and it silently narrows what "no regression"
+  means.
+* the required domain lanes for this campaign do not cover
+  `adapters/persistence/profile` at all. Every catalogue repository this work
+  has been changing lives there, so the standing lanes could never have caught
+  it.
+
+The correction applied here: run the FULL packages touched, not a filtered
+slice. This pass ran `adapters/persistence`, `application/invoices` and
+`domain/buckets` whole -- 1524 passing -- which is what surfaced the break in
+the first place.
 
 ## Recommendations
 
