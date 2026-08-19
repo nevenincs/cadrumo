@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:6dc013738b844c6e011a37481d90dc9b78329ed782ef6bf1423dc2561de6a7cd'
+body_hash: 'sha256:d0ff418664754ddce7ad15aa42a7aee601ed14211dcf6453c7faf8b0ffdf20c8'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1038,13 +1038,58 @@ active-session `ContextVar`, so a second writer cannot be driven in-process at
 all, and a thread-raced test here would be measuring nothing.
 
 Scope, stated so the green is not over-read. This closes the ledger's two batch
-writers. The same unguarded composition remains in
-`application/user_profile/_capsule_record.py`,
-`application/workflow/_persistence.py`,
-`application/modelo/_iva_wallet_seed.py` (two sites) and
-`application/modelo/_reconcile.py`. They are now a mechanical application of a
-seam that exists and is proven, not a design question -- the reason they are not
-done here is budget, not doubt.
+writers. The remaining sites were listed here as `_capsule_record.py`,
+`workflow/_persistence.py`, `_iva_wallet_seed.py` (two sites) and
+`_reconcile.py`.
+
+CORRECTION, from checking each rather than applying the seam mechanically. Two
+of those five were already correct: `_capsule_record.py` reads with
+`load_revisioned()`, compares the observed revision against an expected one and
+raises `ProfileRecordConflictError` on divergence, and
+`workflow/_persistence.py` composes inside a CAS update with
+`expected_revision_id` set. Listing them cost nothing here only because the
+next pass looked before editing; a mechanical sweep would have "fixed" two
+sites that were already right.
+
+The three real ones are fixed: both IVA wallet emissions were standalone bare
+saves and now go through `emit_bucket_event`, and the `_reconcile.py`
+co-commit now carries its read revision.
+
+### The canonical co-commit composer was itself unguarded, and the gate that should have said so was matching a shape
+
+The larger find sits under all of it. `bucket_event_history_write` in
+`domain/buckets/_event_repository.py` is the shared composer for an audit entry
+that must land in the same batch as its record -- its own docstring says it
+lives in the domain precisely so no emitter keeps a private copy that drifts --
+and it composed from a plain `load()`. All four consumers inherited the
+exposure: `sync_runs.py`, `_m036_lifecycle.py`, `_m145_communication_records.py`
+and `_revision_persistence.py`. One fix at the composer closes all four.
+
+The gate written a pass earlier did NOT catch any of this, and why is the
+transferable part. It matched `save(append_bucket_event(...))` syntactically,
+so it passed green over three live defects that bound the appended catalogue to
+a variable first -- the argument to `save` was then a Name, not a Call. That is
+exactly the failure mode of the line-oriented grep it replaced, repeated one
+level up: gating a SHAPE rather than a PROPERTY. It now gates the read (no
+append onto an unrevisioned load) and follows what a name was bound from.
+
+Building that detector surfaced two bugs in it, both worth recording because
+they are easy to repeat. It double-counted every call inside a function, having
+walked scopes from the module down and then again from each function. And its
+name-binding scan used `ast.walk` with a `continue` on nested functions, which
+does not work: `ast.walk` keeps yielding a skipped node's descendants, so one
+function's plain `load()` tainted that name across every sibling function in
+the module. That second bug is what falsely reported `_capsule_record.py`, and
+believing it would have meant "fixing" correct code. Both are now pinned by
+discrimination cases.
+
+One exemption, with its reason: the module DEFINING the composer keeps a
+deliberate fallback for the narrow domain port, which promises only
+exists/load/save and so may carry no revisioned read. Excluding the definition
+rather than the shape keeps a second module adopting it reportable.
+
+Measured rather than asserted: the modelo/buckets selection moves from 147
+failed / 313 passed at HEAD to 144 / 316 -- three fixed, none introduced.
 
 ## Recommendations
 
