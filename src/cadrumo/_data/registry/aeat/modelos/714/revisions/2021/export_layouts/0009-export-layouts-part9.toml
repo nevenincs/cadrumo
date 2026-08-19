@@ -1,0 +1,192 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-08"
+record_type = "714-08"
+order = 8
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "08000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-declaracion-20"
+offset = 254
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-20"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-declaracion-21"
+offset = 507
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-21"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-declaracion-46"
+offset = 802
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-46"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-declaracion-22"
+offset = 1220
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-22"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-declaracion-24"
+offset = 2041
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-24"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-complementaria-slot"
+offset = 12
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.12-12.indicador-de-pagina-complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-reserved-1"
+offset = 13
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-reserved-2"
+offset = 2054
+length = 135
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-end"
+offset = 2189
+length = 12
+kind = "literal"
+literal = "</T71408000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]

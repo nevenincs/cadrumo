@@ -1,0 +1,366 @@
+
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.459-460.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18", offset = 459, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.461-477.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18", offset = 461, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.478-479.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19", offset = 478, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.480-483.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19", offset = 480, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.484-484.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19", offset = 484, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.485-486.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19", offset = 485, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.487-503.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19", offset = 487, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.504-505.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20", offset = 504, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.506-509.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20", offset = 506, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.510-510.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20", offset = 510, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.511-512.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20", offset = 511, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.513-529.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20", offset = 513, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.530-531.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21", offset = 530, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.532-535.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21", offset = 532, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.536-536.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21", offset = 536, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.537-538.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21", offset = 537, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.539-555.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21", offset = 539, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.556-557.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22", offset = 556, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.558-561.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22", offset = 558, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.562-562.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22", offset = 562, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.563-564.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22", offset = 563, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.565-581.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22", offset = 565, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.582-583.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23", offset = 582, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.584-587.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23", offset = 584, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.588-588.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23", offset = 588, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.589-590.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23", offset = 589, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.591-607.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23", offset = 591, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.608-609.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24", offset = 608, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.610-613.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24", offset = 610, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.614-614.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24", offset = 614, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.615-616.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24", offset = 615, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.617-633.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24", offset = 617, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.634-635.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25", offset = 634, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.636-639.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25", offset = 636, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.640-640.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25", offset = 640, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.641-642.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25", offset = 641, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.643-659.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25", offset = 643, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.660-661.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26", offset = 660, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.662-665.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26", offset = 662, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.666-666.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26", offset = 666, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.667-668.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26", offset = 667, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.669-685.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26", offset = 669, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.686-687.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27", offset = 686, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.688-691.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27", offset = 688, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.692-692.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27", offset = 692, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.693-694.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27", offset = 693, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.695-711.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27", offset = 695, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.712-713.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28", offset = 712, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.714-717.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28", offset = 714, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.718-718.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28", offset = 718, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.719-720.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28", offset = 719, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-fichero.721-737.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28"
+source = "manual_input"
+selector = { record = "modelo-369-exterior-t36902", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28", offset = 721, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+

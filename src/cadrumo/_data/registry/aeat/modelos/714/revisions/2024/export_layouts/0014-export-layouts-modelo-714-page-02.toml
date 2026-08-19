@@ -1,0 +1,1197 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2024".export_layouts.records]]
+id = "modelo-714-page-02"
+record_type = "714-02"
+order = 2
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-1"
+offset = 14
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.14-14.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-15"
+offset = 15
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.15-19.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-15"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Referencia Catastral 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-1"
+offset = 20
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.20-39.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-1"
+offset = 40
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.40-40.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valor utilizado 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-1"
+offset = 41
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.41-41.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42"
+offset = 42
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.42-74.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-1"
+offset = 75
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.75-87.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Clave 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-2"
+offset = 88
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.88-88.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-89"
+offset = 89
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.89-93.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-89"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Referencia Catastral 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-2"
+offset = 94
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.94-113.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-2"
+offset = 114
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.114-114.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valor utilizado 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-2"
+offset = 115
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.115-115.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116"
+offset = 116
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.116-148.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-2"
+offset = 149
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.149-161.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Clave 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-3"
+offset = 162
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.162-162.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-163"
+offset = 163
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.163-167.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-163"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Referencia Catastral 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-3"
+offset = 168
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.168-187.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-3"
+offset = 188
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.188-188.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valor utilizado 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-3"
+offset = 189
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.189-189.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190"
+offset = 190
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.190-222.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-3"
+offset = 223
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.223-235.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Clave 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-4"
+offset = 236
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.236-236.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-237"
+offset = 237
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.237-241.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-237"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Referencia Catastral 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-4"
+offset = 242
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.242-261.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-referencia-catastral-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-4"
+offset = 262
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.262-262.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-situacion-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valor utilizado 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-4"
+offset = 263
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.263-263.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valor-utilizado-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Situación 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264"
+offset = 264
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.264-296.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-4"
+offset = 297
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.297-309.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-valoracion-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-1"
+offset = 349
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.349-349.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-1"
+offset = 350
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.350-354.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-1"
+offset = 355
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.355-355.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-1"
+offset = 356
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.356-375.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-1"
+offset = 376
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.376-376.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-1"
+offset = 377
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.377-377.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-1"
+offset = 378
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.378-410.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-1"
+offset = 411
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.411-423.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-2"
+offset = 424
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.424-424.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-2"
+offset = 425
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.425-429.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-2"
+offset = 430
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.430-430.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-2"
+offset = 431
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.431-450.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-2"
+offset = 451
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.451-451.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-2"
+offset = 452
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.452-452.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-2"
+offset = 453
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.453-485.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-2"
+offset = 486
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.486-498.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-3"
+offset = 499
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.499-499.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-3"
+offset = 500
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.500-504.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-3"
+offset = 505
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.505-505.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-3"
+offset = 506
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.506-525.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-3"
+offset = 526
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.526-526.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-3"
+offset = 527
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.527-527.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-3"
+offset = 528
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.528-560.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-3"
+offset = 561
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.561-573.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-4"
+offset = 574
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.574-574.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-4"
+offset = 575
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.575-579.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-4"
+offset = 580
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.580-580.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-4"
+offset = 581
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.581-600.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-4"
+offset = 601
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.601-601.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-4"
+offset = 602
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.602-602.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-4"
+offset = 603
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.603-635.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-4"
+offset = 636
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.636-648.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-5"
+offset = 649
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.649-649.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-5"
+offset = 650
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.650-654.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-5"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-5"
+offset = 655
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.655-655.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-5"
+offset = 656
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.656-675.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-5"
+offset = 676
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.676-676.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-5"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-5"
+offset = 677
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.677-677.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-5"
+offset = 678
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.678-710.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-5"
+offset = 711
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.711-723.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Clave 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-6"
+offset = 724
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.724-724.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - % Titularidad 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-6"
+offset = 725
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.725-729.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-porcentaje-titularidad-6"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Tipo 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-6"
+offset = 730
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.730-730.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-tipo-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Referencia catastral 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-6"
+offset = 731
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.731-750.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-referencia-catastral-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-6"
+offset = 751
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.751-751.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-6"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valor utilizado 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-6"
+offset = 752
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.752-752.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valor-utilizado-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Situación del inmueble 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-6"
+offset = 753
+length = 33
+kind = "binding"
+binding = "modelo-714-2024.714-02.753-785.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-situacion-del-inmueble-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Valoración 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-6"
+offset = 786
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-02.786-798.bienes-y-derechos-a2-bienes-inmuebles-naturaleza-urbana-otros-inmuebles-valoracion-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - B. Bienes inmuebles naturaleza rústica - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-1"
+offset = 825
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-02.825-825.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - B. Bienes inmuebles naturaleza rústica - % Titularidad 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1"
+offset = 826
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-02.826-830.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - B. Bienes inmuebles naturaleza rústica - Referencia catastral 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1"
+offset = 831
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-02.831-850.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]

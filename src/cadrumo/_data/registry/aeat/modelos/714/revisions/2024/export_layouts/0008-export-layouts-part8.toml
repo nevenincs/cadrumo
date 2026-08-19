@@ -1,0 +1,178 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records]]
+id = "modelo-714-page-07"
+record_type = "714-07"
+order = 7
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "07000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-declaracion-16"
+offset = 721
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-16"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-declaracion-17"
+offset = 1220
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-17"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-declaracion-18"
+offset = 1683
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-18"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-declaracion-19"
+offset = 1921
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-19"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-complementaria-slot"
+offset = 12
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.12-12.indicador-de-pagina-complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-reserved-1"
+offset = 13
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-reserved-2"
+offset = 1934
+length = 155
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-end"
+offset = 2089
+length = 12
+kind = "literal"
+literal = "</T71407000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]

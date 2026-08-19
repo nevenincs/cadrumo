@@ -1,0 +1,405 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-05"
+record_type = "714-05"
+order = 5
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Nº Valores 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2679"
+offset = 2679
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.2679-2691.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2679"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF/NIE entidad emisora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2692"
+offset = 2692
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.2692-2711.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2692"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF otro país 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2712"
+offset = 2712
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.2712-2712.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2712"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2713"
+offset = 2713
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.2713-2774.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2713"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2775"
+offset = 2775
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.2775-2787.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2775"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2788"
+offset = 2788
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.2788-2788.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2788"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2789"
+offset = 2789
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.2789-2793.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2789"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Nº Valores 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2794"
+offset = 2794
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.2794-2806.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2794"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF/NIE entidad emisora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2807"
+offset = 2807
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.2807-2826.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2807"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF otro país 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2827"
+offset = 2827
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.2827-2827.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2827"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2828"
+offset = 2828
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.2828-2889.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2828"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2890"
+offset = 2890
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.2890-2902.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2890"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2903"
+offset = 2903
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.2903-2903.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2903"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2904"
+offset = 2904
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.2904-2908.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2904"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Nº Valores 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2909"
+offset = 2909
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.2909-2921.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2909"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF/NIE entidad emisora 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2922"
+offset = 2922
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.2922-2941.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2922"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF otro país 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2942"
+offset = 2942
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.2942-2942.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2942"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2943"
+offset = 2943
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.2943-3004.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2943"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3005"
+offset = 3005
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.3005-3017.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3005"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3018"
+offset = 3018
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.3018-3018.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3018"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3019"
+offset = 3019
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.3019-3023.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3019"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Nº Valores 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3024"
+offset = 3024
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.3024-3036.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3024"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF/NIE entidad emisora 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3037"
+offset = 3037
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.3037-3056.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3037"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF otro país 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3057"
+offset = 3057
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.3057-3057.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3057"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3058"
+offset = 3058
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.3058-3119.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3058"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3120"
+offset = 3120
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.3120-3132.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3120"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# 714-06: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

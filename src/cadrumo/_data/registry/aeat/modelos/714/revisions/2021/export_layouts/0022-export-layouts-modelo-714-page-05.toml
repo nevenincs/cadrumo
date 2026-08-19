@@ -1,0 +1,1197 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-05"
+record_type = "714-05"
+order = 5
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-14"
+offset = 14
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.14-14.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-14"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-15"
+offset = 15
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.15-19.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-15"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20"
+offset = 20
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.20-32.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-33"
+offset = 33
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.33-52.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-33"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-53"
+offset = 53
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.53-72.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-53"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-73"
+offset = 73
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.73-73.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-73"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74"
+offset = 74
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.74-135.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-136"
+offset = 136
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.136-148.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-136"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-149"
+offset = 149
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.149-149.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-149"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-150"
+offset = 150
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.150-154.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-150"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-155"
+offset = 155
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.155-167.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-155"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-168"
+offset = 168
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.168-187.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-168"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-188"
+offset = 188
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.188-207.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-188"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-208"
+offset = 208
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.208-208.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-208"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-209"
+offset = 209
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.209-270.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-209"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-271"
+offset = 271
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.271-283.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-271"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-284"
+offset = 284
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.284-284.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-284"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-285"
+offset = 285
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.285-289.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-285"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290"
+offset = 290
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.290-302.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-303"
+offset = 303
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.303-322.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-303"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-323"
+offset = 323
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.323-342.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-323"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-343"
+offset = 343
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.343-343.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-343"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-344"
+offset = 344
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.344-405.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-344"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas- Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-406"
+offset = 406
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.406-418.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-406"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-419"
+offset = 419
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.419-419.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-419"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-420"
+offset = 420
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.420-424.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-420"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-425"
+offset = 425
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.425-437.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-425"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-438"
+offset = 438
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.438-457.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-438"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-458"
+offset = 458
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.458-477.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-458"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-478"
+offset = 478
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.478-478.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-478"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-479"
+offset = 479
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.479-540.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-479"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-541"
+offset = 541
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.541-553.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-541"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-554"
+offset = 554
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.554-554.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-554"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-555"
+offset = 555
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.555-559.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-555"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-560"
+offset = 560
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.560-572.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-560"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-573"
+offset = 573
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.573-592.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-573"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-593"
+offset = 593
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.593-612.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-593"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-613"
+offset = 613
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.613-613.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-613"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-614"
+offset = 614
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.614-675.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-614"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-676"
+offset = 676
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.676-688.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-676"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-689"
+offset = 689
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.689-689.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-689"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-690"
+offset = 690
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.690-694.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-690"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-695"
+offset = 695
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.695-707.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-695"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-708"
+offset = 708
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.708-727.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-708"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-728"
+offset = 728
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.728-747.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-728"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-748"
+offset = 748
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.748-748.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-748"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-749"
+offset = 749
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.749-810.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-749"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-811"
+offset = 811
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.811-823.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-811"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-824"
+offset = 824
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.824-824.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-824"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-825"
+offset = 825
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.825-829.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-825"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-830"
+offset = 830
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.830-842.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-830"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843"
+offset = 843
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.843-862.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-863"
+offset = 863
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.863-882.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-863"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-883"
+offset = 883
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.883-883.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-883"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-884"
+offset = 884
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.884-945.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-884"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-946"
+offset = 946
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.946-958.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-946"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Clave 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-959"
+offset = 959
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.959-959.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-959"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-960"
+offset = 960
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.960-964.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-960"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Nº Valores 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-965"
+offset = 965
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.965-977.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-965"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - ISIN 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-978"
+offset = 978
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.978-997.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-978"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF/NIE entidad emisora 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-998"
+offset = 998
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.998-1017.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-998"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - NIF otro país 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1018"
+offset = 1018
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.1018-1018.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1018"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Descripción 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1019"
+offset = 1019
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.1019-1080.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1019"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1081"
+offset = 1081
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.1081-1093.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-1081"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-1"
+offset = 1107
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.1107-1107.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1108"
+offset = 1108
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.1108-1112.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1108"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1113"
+offset = 1113
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.1113-1125.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1113"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - ISIN 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-1"
+offset = 1126
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.1126-1145.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1146"
+offset = 1146
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.1146-1165.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1146"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro pasís 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1166"
+offset = 1166
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.1166-1166.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1166"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1167"
+offset = 1167
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.1167-1228.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1167"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-1"
+offset = 1229
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.1229-1241.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-2"
+offset = 1242
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.1242-1242.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1243"
+offset = 1243
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-05.1243-1247.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1243"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1248"
+offset = 1248
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-05.1248-1260.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1248"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-2"
+offset = 1261
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.1261-1280.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1281"
+offset = 1281
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-05.1281-1300.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1281"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro pasís 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1301"
+offset = 1301
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-05.1301-1301.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1301"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1302"
+offset = 1302
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-05.1302-1363.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1302"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
