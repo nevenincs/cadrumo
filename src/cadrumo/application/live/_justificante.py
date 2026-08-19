@@ -700,8 +700,8 @@ def register_capture_as_filing_evidence(
         BucketEvent,
         BucketEventObjectType,
         BucketEventType,
-        append_bucket_event,
         derive_bucket_event_id,
+        emit_bucket_events,
     )
     from ...domain.modelos import (
         ExternalEvidence,
@@ -775,6 +775,17 @@ def register_capture_as_filing_evidence(
                 },
             ),
         )
+    # ORDER IS LOAD-BEARING, and these are separate writes rather than one.
+    # The justificante lands BEFORE the filing record cites it, so a failure
+    # between them leaves an orphan receipt -- harmless, and re-running restores
+    # the pair. The reverse order leaves a filing record carrying
+    # AEAT_LIVE_CAPTURE evidence whose justificante does not load, and that
+    # record CLEARS the cross-period clean-state gate's missing-justificante
+    # blocker on the strength of evidence that is not there. Do not reorder
+    # these to read more naturally, and prefer making them one unit of work over
+    # swapping them: the sibling linking and reconciliation writers co-commit
+    # their two catalogues through the transaction repository's composed write
+    # for the same class of reason.
     JustificanteRepository().save(justificante)
 
     stamped_at = now()
@@ -803,10 +814,12 @@ def register_capture_as_filing_evidence(
         "captured_at": snapshot.captured_at.isoformat(),
         "expediente_id": snapshot.expediente_id,
     }
-    bucket_event_repository = BucketEventHistoryRepository()
-    bucket_event_repository.save(
-        append_bucket_event(
-            bucket_event_repository.load(),
+    # Through the domain emitter, not a local load-append-save: the history is a
+    # singleton row, so appending here directly discards an event a concurrent
+    # caller wrote, and content-addressed survivors leave no gap to notice it.
+    emit_bucket_events(
+        repository=BucketEventHistoryRepository(),
+        events=(
             BucketEvent(
                 event_id=derive_bucket_event_id(
                     bucket_id=snapshot.bucket_id,

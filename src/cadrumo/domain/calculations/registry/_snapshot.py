@@ -32,6 +32,7 @@ from ._schema import (
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
+    SourceReference,
     filing_period_from_scope,
 )
 from ._temporal import select_revision
@@ -603,6 +604,42 @@ def _legal_window_failure(
     )
 
 
+def _source_applies_across(
+    source: SourceReference,
+    span_from: date,
+    span_to: date | None,
+) -> bool:
+    """Report whether ``source``'s applicability window overlaps one date span."""
+    if source.applies_to is not None and source.applies_to < span_from:
+        return False
+    return not (source.applies_from is not None and span_to is not None and source.applies_from > span_to)
+
+
+def _deadline_window_source_spans(
+    revision: ModeloRevision,
+) -> dict[str, tuple[tuple[date, date], ...]]:
+    """Map every deadline-window-cited source to the spans those windows cover.
+
+    A period's filing deadline lawfully falls after the period itself ends: a
+    fourth-quarter return is filed in the January of the following year, so the
+    calendario that states its deadline is the FOLLOWING year's. Intersecting
+    such a ref with the revision's own devengo window would reject the correct
+    citation and push an author toward a calendario that does not state the
+    deadline at all -- fabricated grounding in the name of a window check. The
+    window's own ``opens_on``/``closes_on`` span is the axis that citation has
+    to defend, so it is checked against that instead.
+
+    Only a window's own ``source_refs`` earn the window span. Its
+    ``applicability_conditions`` ground WHO must file rather than WHEN, so their
+    refs stay on the revision span.
+    """
+    spans: dict[str, list[tuple[date, date]]] = {}
+    for window in revision.deadline_windows:
+        for source_id in window.source_refs:
+            spans.setdefault(source_id, []).append((window.opens_on, window.closes_on))
+    return {source_id: tuple(windows) for source_id, windows in spans.items()}
+
+
 def _check_revision_scoped_source_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
@@ -635,24 +672,30 @@ def _check_revision_scoped_source_windows(
     """
     _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     scoped_source_ids = revision_source_ids - set(modelo.source_refs)
+    deadline_spans = _deadline_window_source_spans(revision)
     failures: list[str] = []
     for source_id in sorted(scoped_source_ids):
         source = catalogues.sources.get(source_id)
         if source is None:
+            continue
+        if _source_applies_across(source, revision.valid_from, revision.valid_to):
+            continue
+        if any(
+            _source_applies_across(source, opens_on, closes_on)
+            for opens_on, closes_on in deadline_spans.get(source_id, ())
+        ):
             continue
         if source.applies_to is not None and source.applies_to < revision.valid_from:
             failures.append(
                 f"source {source_id!r} applies_to {source.applies_to.isoformat()} is before "
                 f"revision valid_from {revision.valid_from.isoformat()}",
             )
-        elif (
-            source.applies_from is not None
-            and revision.valid_to is not None
-            and source.applies_from > revision.valid_to
-        ):
+        else:
             failures.append(
-                f"source {source_id!r} applies_from {source.applies_from.isoformat()} is after "
-                f"revision valid_to {revision.valid_to.isoformat()}",
+                f"source {source_id!r} applies_from "
+                f"{source.applies_from.isoformat() if source.applies_from else '-'} is after "
+                f"revision valid_to "
+                f"{revision.valid_to.isoformat() if revision.valid_to else '-'}",
             )
     if failures:
         raise RegistryValidationError(
