@@ -139,7 +139,15 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
     assert all(casilla.input_kind == InputKind.MANUAL for casilla in endpoints)
     assert all(casilla.required is False for casilla in endpoints)
     assert all(casilla.binding is None and casilla.formula is None for casilla in endpoints)
-    assert all(not casilla.export_refs for casilla in endpoints)
+    # Each endpoint exports to exactly one field on DP30304 -- the same sheet
+    # this test reads above to build `official_fields`, and whose numbered field
+    # set it asserts equals `_ENDPOINTS`. This previously asserted the endpoints
+    # carry NO export refs, which contradicted that evidence: a box AEAT prints
+    # on the record design belongs in the fichero. The export wiring has since
+    # landed for all six revisions, so the assertion is inverted to the property
+    # the design actually supports.
+    assert all(len(casilla.export_refs) == 1 for casilla in endpoints)
+    assert all("dp30304" in str(casilla.export_refs[0]).casefold() for casilla in endpoints)
     assert all(frozenset(str(ref) for ref in casilla.legal_refs) == _LEGAL_REFS for casilla in endpoints)
     assert all(
         frozenset(str(ref) for ref in casilla.source_refs) == frozenset({source_ref, "aeat-modelo-303-procedure"})
@@ -169,8 +177,15 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
         assert {
             str(relation.source_casilla_id) for relation in revision.relations if relation.source_casilla_id is not None
         }.isdisjoint(_ENDPOINTS)
-        assert revision.export_layouts == ()
-        assert all(not casilla.export_refs for casilla in endpoint_rows)
+        # No PARALLEL producer on the export axis either: each endpoint owns
+        # exactly one export field and no two endpoints share one. This asserted
+        # that the revision had no export layouts at all and that the endpoints
+        # carried no export refs, which was true only while modelo 303's export
+        # layouts were unauthored; it is the absence of the feature, not the
+        # uniqueness this test is named for.
+        endpoint_refs = [ref for casilla in endpoint_rows for ref in casilla.export_refs]
+        assert len(endpoint_refs) == len(endpoint_rows)
+        assert len(set(endpoint_refs)) == len(endpoint_refs)
 
     exonerado_producer_tokens = {member.value for member in FilingProducerKey if "exonerado_390" in member.value}
     assert exonerado_producer_tokens == {FilingProducerKey.M303_EXONERADO_390_APPLICABLE.value}

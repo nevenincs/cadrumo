@@ -44,7 +44,11 @@ from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2010-y-siguientes"
+#: The revision-span split replaced the open-ended `2010-y-siguientes` revision
+#: with one revision per bundled diseno year, so this names the current one. The
+#: constant also builds the scratch-tree paths the mutation gates below copy, so
+#: it has to be a revision that exists on disk, not just one that resolves.
+_REVISION_ID = "2025"
 _CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
 _CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"
 _CASILLA_AIC_BLIND = "iva.anual.autorepercutido.intracomunitaria"

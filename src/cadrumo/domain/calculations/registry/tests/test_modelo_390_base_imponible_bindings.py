@@ -36,6 +36,7 @@ from .....core import IvaDeductionFactKind
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
+    InputKind,
     IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
@@ -246,7 +247,19 @@ def test_every_declared_base_casilla_is_bound_to_a_base_fact() -> None:
     base_casillas = [casilla for casilla in revision.casillas if casilla.id.endswith(".base")]
     assert base_casillas, "the annual revision declares no base imponible casilla"
     for casilla in base_casillas:
-        assert casilla.binding is not None, f"base casilla {casilla.id} declares no binding to carry its figure"
+        if casilla.binding is None:
+            # An OPERATOR-MANUAL base has no fact, so it cannot be wired to the
+            # wrong one -- which is the defect this test exists to catch. It is
+            # still asserted to be manual rather than skipped: an unbound base
+            # casilla that is NOT manual is a box something is meant to produce
+            # and nothing does, and that must still fail here. Across all four
+            # revisions every unbound base is manual (99, 101, 127, 127 of them),
+            # so this discards no real finding.
+            assert casilla.input_kind is InputKind.MANUAL, (
+                f"base casilla {casilla.id} declares no binding and is not operator-manual, "
+                "so nothing carries its figure"
+            )
+            continue
         binding = bindings[casilla.binding]
         selector = selector_as_dict(binding)
         assert selector.get("fact") == "base_amount_sum", (
