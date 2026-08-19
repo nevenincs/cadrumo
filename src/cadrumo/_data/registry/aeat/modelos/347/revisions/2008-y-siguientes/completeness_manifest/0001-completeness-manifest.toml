@@ -30,14 +30,6 @@ casilla_id = "decl.importe-total-anual"
 number = "decl.importe-total-anual"
 
 [[revisions."2008-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "decl.total-inmuebles"
-number = "decl.total-inmuebles"
-
-[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "decl.importe-total-arrendamiento-locales"
-number = "decl.importe-total-arrendamiento-locales"
-
-[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "contraparte.nif"
 number = "contraparte.nif"
 
@@ -49,10 +41,3 @@ number = "contraparte.clave-operacion"
 casilla_id = "contraparte.importe-anual"
 number = "contraparte.importe-anual"
 
-[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "inmueble.arrendatario-nif"
-number = "inmueble.arrendatario-nif"
-
-[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "inmueble.importe-operacion"
-number = "inmueble.importe-operacion"

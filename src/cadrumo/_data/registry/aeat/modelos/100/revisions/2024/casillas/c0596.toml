@@ -7,4 +7,4 @@ input_kind = "bound"
 binding = "renta-2024-modelo-111-retenciones-periodicas"
 alternate_bindings = ["renta-2024-certificado-trabajo-retenciones"]
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86", "ley-35-2006:art-99"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure", "aeat-renta-2024-manual-parte1"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]

@@ -7,4 +7,4 @@ semantic_role = "irpf_num_hijos_maternidad_2020"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "2022-only maternity-deduction expansion catch-up row for the 2020 children count; ids 1911-1915 are reused for real-estate gains from 2023."
 legal_refs = ["ley-35-2006:art-81"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

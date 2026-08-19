@@ -5,4 +5,4 @@ section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_vivienda_precio_adquisicion"
 continuidad_id = "irpf-deduccion-madrid-vivienda-precio-adquisicion"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

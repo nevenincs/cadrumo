@@ -7,4 +7,4 @@ formula = "renta-2021-estimacion-directa-rendimiento-neto-reducido-total"
 data_type = "decimal"
 semantic_role = "irpf_ed_rdto_neto_reducido_total"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

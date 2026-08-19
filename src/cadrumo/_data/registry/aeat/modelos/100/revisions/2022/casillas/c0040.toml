@@ -7,4 +7,4 @@ formula = "renta-2022-capital-mobiliario-ahorro-rendimiento-neto-reducido"
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_rendimiento_neto_reducido"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

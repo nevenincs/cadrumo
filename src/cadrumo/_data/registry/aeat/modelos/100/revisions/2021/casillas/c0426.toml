@@ -6,4 +6,4 @@ semantic_role = "irpf_red_prevision_social_contribuciones_empresariales_anexo_c3
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "2021 RGONEMP is a distinct Anexo C.3 employer-contribution slot; later 0426 revisions are worker contributions conditioned on employer contributions."
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

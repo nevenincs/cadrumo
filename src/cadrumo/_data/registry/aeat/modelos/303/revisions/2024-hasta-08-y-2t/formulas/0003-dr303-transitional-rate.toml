@@ -16,15 +16,3 @@ required_text = ["modelo 303"]
 [revisions.2024-hasta-08-y-2t.formulas.expression]
 parameter = "m303-dr303-154-transitional-rate-percent"
 
-[[revisions.2024-hasta-08-y-2t.formulas]]
-id = "modelo-303-dr303-166-rate"
-target_casilla_id = "166"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-hasta-08-y-2t.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2024-hasta-08-y-2t.formulas.expression]
-parameter = "m303-dr303-166-transitional-rate-percent"

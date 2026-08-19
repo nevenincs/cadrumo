@@ -16,7 +16,7 @@ source = "previous_filing"
 selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-modelo-100-procedure", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"

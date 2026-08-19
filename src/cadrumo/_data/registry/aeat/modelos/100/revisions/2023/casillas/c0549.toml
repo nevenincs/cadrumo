@@ -4,4 +4,4 @@ number = "0549"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_empresa_nueva_creacion"
 legal_refs = ["ley-35-2006:art-68.1"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

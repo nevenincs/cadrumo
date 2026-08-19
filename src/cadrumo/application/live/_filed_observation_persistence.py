@@ -376,11 +376,17 @@ def enroll_filed_justificante_evidence(
 
     justificante_repo = justificante_repository or JustificanteRepository()
     filing_repo = filing_repository or ModeloRecordCatalogueRepository()
-    filing_catalogue = filing_repo.load()
     saved_csvs: list[str] = []
     stamped_record_ids: list[str] = []
     conflicting_record_ids: list[str] = []
     notices: list[Notice] = []
+    # Parsing is done FIRST and the stamping afterwards, rather than interleaved
+    # with the catalogue write, because the catalogue is a singleton row: reading
+    # it here and writing it after N PDFs have been parsed leaves a window wide
+    # enough for another caller's filing record to land and be discarded. The
+    # parsed receipts are collected instead, and every stamping is applied inside
+    # one guarded unit of work below.
+    stampable: list[tuple[Justificante, object]] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue
@@ -390,21 +396,39 @@ def enroll_filed_justificante_evidence(
                 notices.append(_unreached_justificante_notice(observation, parsed.reason))
             continue
         justificante = parsed.justificante
+        # The receipt lands before any record cites it, so a failure between the
+        # two leaves an orphan receipt rather than a filing record pointing at
+        # evidence that does not load.
         justificante_repo.save(justificante)
         saved_csvs.append(justificante.csv)
+        stampable.append((justificante, artefact))
 
-        outcome = _stamp_filing_with_filed_justificante(
-            justificante,
-            observation=observation,
-            artefact=artefact,
-            bucket_id=bucket_id,
-            catalogue=filing_catalogue,
-        )
-        filing_catalogue = outcome.catalogue
-        stamped_record_ids.extend(outcome.stamped_record_ids)
-        conflicting_record_ids.extend(outcome.conflicting_record_ids)
-    if stamped_record_ids:
-        filing_repo.save(filing_catalogue)
+    if stampable:
+
+        def _stamp_all(current: ModeloRecordCatalogue) -> ModeloRecordCatalogue:
+            """Re-apply every stamping to whichever catalogue this attempt read.
+
+            Pure in the catalogue it is handed and in the already-parsed
+            receipts, so a retry re-stamps against the catalogue the write
+            actually lands on without re-reading or re-parsing a single PDF.
+            """
+            stamped_record_ids.clear()
+            conflicting_record_ids.clear()
+            catalogue = current
+            for justificante, artefact in stampable:
+                outcome = _stamp_filing_with_filed_justificante(
+                    justificante,
+                    observation=observation,
+                    artefact=artefact,
+                    bucket_id=bucket_id,
+                    catalogue=catalogue,
+                )
+                catalogue = outcome.catalogue
+                stamped_record_ids.extend(outcome.stamped_record_ids)
+                conflicting_record_ids.extend(outcome.conflicting_record_ids)
+            return catalogue
+
+        filing_repo.mutate(_stamp_all)
     return FiledJustificanteEnrollmentResult(
         justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
         filing_record_ids=tuple(dict.fromkeys(stamped_record_ids)),

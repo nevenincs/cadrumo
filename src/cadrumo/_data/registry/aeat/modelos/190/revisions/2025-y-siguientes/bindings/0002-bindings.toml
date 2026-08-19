@@ -128,7 +128,7 @@ id = "modelo-190-perceptor-row-territorial-deduccion"
 source = "withholding"
 selector = { fact = "row_field", row_field = "territorial_deduction_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]

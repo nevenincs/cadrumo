@@ -4,4 +4,4 @@ number = "0406"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_valor_aplicable_dt9"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

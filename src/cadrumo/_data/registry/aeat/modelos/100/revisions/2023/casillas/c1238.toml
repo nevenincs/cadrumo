@@ -5,4 +5,4 @@ section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 semantic_role = "irpf_anexo_c_exencion_rv_importe_total_transmision"
 continuidad_id = "irpf-anexo-c-exencion-rv-importe-total-transmision"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

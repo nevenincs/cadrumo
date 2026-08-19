@@ -4,4 +4,4 @@ number = "0269"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_tr_fiscal_inter"]
 semantic_role = "irpf_re_tfi_imputacion_importe"
 legal_refs = ["ley-35-2006:art-91", "orden-hfp-310-2023:art-11"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

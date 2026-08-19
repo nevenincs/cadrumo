@@ -6,4 +6,4 @@ semantic_role = "irpf_deduccion_ceuta_melilla_autonomica"
 input_kind = "computed"
 formula = "renta-2020-deduccion-ceuta-melilla-autonomica-50-porciento"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2015", "ley-35-2006:art-67", "ley-35-2006:art-68.4", "ley-35-2006:art-73", "ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

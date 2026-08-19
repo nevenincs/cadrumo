@@ -324,6 +324,11 @@ _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
     (2, 4): "180",
     (5, 8): "2026",
     (9, 17): "B12345678",
+    # Tipo de soporte. The layout declares this position a LITERAL "T" -- the
+    # design admits only "C" (cinta magnetica) and "T" (transmision telematica),
+    # and this producer writes a telematic file -- so a payload that leaves it
+    # blank cannot parse against the layout it is meant to exercise.
+    (58, 58): "T",
     (136, 144): "000000002",
     (145, 160): " " + "100050".zfill(15),
     (161, 175): "19010".zfill(15),

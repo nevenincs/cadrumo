@@ -4,4 +4,4 @@ number = "0130"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_base_amortizacion"
 legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

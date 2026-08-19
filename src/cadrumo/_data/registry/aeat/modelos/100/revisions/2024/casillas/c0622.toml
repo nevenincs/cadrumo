@@ -5,4 +5,4 @@ section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_familiar_beneficiario_nif"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

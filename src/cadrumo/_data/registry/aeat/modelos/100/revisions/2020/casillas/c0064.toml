@@ -6,4 +6,4 @@ data_type = "ratio"
 semantic_role = "irpf_inmueble_porcentaje_usufructo"
 continuidad_id = "irpf-inmueble-porcentaje-usufructo"
 legal_refs = ["ley-35-2006:art-22"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

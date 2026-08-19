@@ -5,4 +5,4 @@ section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 data_type = "nif"
 semantic_role = "irpf_anualidades_alimentos_otro_progenitor_nif"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

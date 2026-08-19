@@ -4,4 +4,4 @@ number = "0782"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"
 legal_refs = ["ley-35-2006:art-68.2"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

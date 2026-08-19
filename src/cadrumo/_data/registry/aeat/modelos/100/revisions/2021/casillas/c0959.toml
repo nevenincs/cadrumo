@@ -5,4 +5,4 @@ section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_discapacidad_familiar"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-discapacidad-familiar"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

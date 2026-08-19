@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomone
 semantic_role = "irpf_ganancia_cripto_importe_percibir_resto"
 continuidad_id = "irpf-ganancia-cripto-importe-percibir-resto"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

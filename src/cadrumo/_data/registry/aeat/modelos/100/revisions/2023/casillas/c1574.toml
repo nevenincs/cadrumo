@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "decimal"
 semantic_role = "irpf_re_atrib_cap_inmo_reducciones_23_3"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

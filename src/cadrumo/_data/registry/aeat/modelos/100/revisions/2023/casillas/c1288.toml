@@ -4,4 +4,4 @@ number = "1288"
 section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_rt_res"]
 semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

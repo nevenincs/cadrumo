@@ -29,7 +29,7 @@ semantic_role = "payee_ceuta_melilla_clave"
 # additional provision 57 extension carried by the two RDL entries.
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]

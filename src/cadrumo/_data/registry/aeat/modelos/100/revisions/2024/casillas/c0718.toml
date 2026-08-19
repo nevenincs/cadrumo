@@ -5,4 +5,4 @@ section = ["resultados", "anexo_a_res", "deduccion_alquiler_res"]
 data_type = "boolean"
 semantic_role = "irpf_deduccion_alquiler_arrendador_nif_extranjero_flag"
 legal_refs = ["ley-35-2006:dt-15"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

@@ -5,4 +5,4 @@ section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_donaciones_idi"
 continuidad_id = "irpf-deduccion-galicia-donaciones-idi"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

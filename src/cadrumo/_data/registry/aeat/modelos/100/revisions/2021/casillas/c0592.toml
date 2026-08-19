@@ -4,4 +4,4 @@ number = "0592"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_retencion_atribuida_capital_mobiliario"
 legal_refs = ["ley-35-2006:art-99"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

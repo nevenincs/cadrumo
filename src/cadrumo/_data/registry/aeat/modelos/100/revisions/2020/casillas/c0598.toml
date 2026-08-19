@@ -5,4 +5,4 @@ section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
 semantic_role = "irpf_suma_retenciones_capital_inmobiliario_aggregate"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "ley-35-2006:art-99", "rd-439-2007:art-100"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

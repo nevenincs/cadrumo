@@ -4,4 +4,4 @@ number = "0228"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_arrendamiento_familia_monoparental"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

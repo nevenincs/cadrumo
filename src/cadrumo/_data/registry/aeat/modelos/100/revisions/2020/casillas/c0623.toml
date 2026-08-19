@@ -4,4 +4,4 @@ number = "0623"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
 semantic_role = "irpf_deduccion_descendiente_discapacidad"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

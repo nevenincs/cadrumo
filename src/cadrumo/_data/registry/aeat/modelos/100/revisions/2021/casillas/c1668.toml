@@ -4,4 +4,4 @@ number = "1668"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_cantidades_satisfechas"
 legal_refs = ["ley-35-2006:da-50"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

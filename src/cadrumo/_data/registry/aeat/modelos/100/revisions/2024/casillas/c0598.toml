@@ -7,4 +7,4 @@ semantic_role = "irpf_suma_retenciones_capital_inmobiliario_aggregate"
 input_kind = "computed"
 formula = "renta-2024-retenciones-arrendamientos-urbanos"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "ley-35-2006:art-99"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

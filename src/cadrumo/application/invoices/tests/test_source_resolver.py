@@ -1114,14 +1114,27 @@ def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, p
     This fails the moment an invoice-sourced binding is added to either modelo,
     which is the change that would silently widen the fold's blast radius past
     what the parity proof above verifies.
+
+    Every declared revision is swept rather than the one a filing year selects.
+    The guard is a claim about the modelo, not about a year, and pinning it to a
+    year made it depend on AEAT having published that year's orden: modelo 390's
+    registry ends at 2025 because the 2026 orden does not exist yet, so a
+    hardcoded 2026 failed on registry coverage while saying nothing about
+    bindings. Sweeping every revision also widens the guard, since a binding
+    added to any revision now trips it.
     """
     _modelos, _catalogues = bundled_registry_tree()
     _modelo = next(candidate for candidate in _modelos if candidate.id == modelo_id)
-    revision = select_revision(_modelo, filing_year=2026, period=period)
-    invoice_sourced = [binding for binding in revision.bindings if binding.source in _OWNED_SOURCES]
+    assert _modelo.revisions, f"modelo {modelo_id} declares no revisions to inspect"
 
-    assert invoice_sourced == [], (
-        f"modelo {modelo_id} now declares invoice-sourced bindings; "
+    offenders = {
+        revision_id: [binding.id for binding in revision.bindings if binding.source in _OWNED_SOURCES]
+        for revision_id, revision in _modelo.revisions.items()
+    }
+    offenders = {revision_id: bindings for revision_id, bindings in offenders.items() if bindings}
+
+    assert offenders == {}, (
+        f"modelo {modelo_id} now declares invoice-sourced bindings {offenders}; "
         "extend the capability-parity proof before relying on it"
     )
 

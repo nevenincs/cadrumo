@@ -4,4 +4,4 @@ number = "0023"
 section = ["resultados", "rdto_trabajo_res"]
 semantic_role = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 legal_refs = ["ley-35-2006:art-20"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

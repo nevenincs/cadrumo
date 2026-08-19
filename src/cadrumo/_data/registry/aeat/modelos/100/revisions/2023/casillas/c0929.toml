@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_deduccion_canarias_referencia_catastral_1"
 continuidad_id = "irpf-deduccion-canarias-referencia-catastral-1"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

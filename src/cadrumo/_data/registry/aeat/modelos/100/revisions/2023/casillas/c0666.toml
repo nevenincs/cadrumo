@@ -4,4 +4,4 @@ number = "0666"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_ascendiente_res"]
 semantic_role = "irpf_regularizacion_cobro_anticipado_ascendiente"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

@@ -6,4 +6,4 @@ semantic_role = "irpf_anexo_a_residente_ue_diferencia"
 input_kind = "computed"
 formula = "renta-2022-deduccion-unidad-familiar-clamp-positiva"
 legal_refs = ["ley-35-2006:da-48"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

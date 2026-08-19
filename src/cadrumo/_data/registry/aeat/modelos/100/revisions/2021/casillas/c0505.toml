@@ -7,4 +7,4 @@ formula = "renta-2021-base-liquidable-general-sometida-a-gravamen"
 data_type = "decimal"
 semantic_role = "irpf_base_liquidable_general_gravamen"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

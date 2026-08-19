@@ -6,4 +6,4 @@ data_type = "decimal"
 semantic_role = "irpf_re_atrib_act_eco_reduccion_32_2_3"
 continuidad_id = "irpf-re-atrib-act-eco-reduccion-32-2-3"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

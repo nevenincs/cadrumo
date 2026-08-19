@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobil
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_rentas_imposicion_capitales"
 legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

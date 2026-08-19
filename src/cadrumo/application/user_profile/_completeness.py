@@ -22,6 +22,7 @@ REPRESENTANTE_FISCAL_NIF_PATH = "taxpayer_type.representante_fiscal_nif"
 REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
 ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 LEGAL_ENTITY_FORM_PATH = "taxpayer_type.legal_entity_form"
+LEGAL_NAME_PATH = "identity.legal_name"
 IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
@@ -68,6 +69,14 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
         # corporate tax rate schedule; the schema's `required` axis is
         # unconditional so the conditional requirement lives here.
         required.append(LEGAL_ENTITY_FORM_PATH)
+        # And without a razon social there is no name to file under. The export
+        # producer fills "Apellidos o Razon Social" with `surnames or
+        # legal_name`, documenting the two as mutually exclusive by
+        # construction -- so an entity carrying only surnames does not blank the
+        # slot, it files the company under a natural person's surname. Nothing
+        # enforced that exclusivity, which is what made the fallback wrong
+        # rather than merely redundant.
+        required.append(LEGAL_NAME_PATH)
 
     if _token(values.get(FISCAL_RESIDENCY_PATH)).lower() != FiscalResidency.NON_RESIDENT_IRNR.value:
         return tuple(required)

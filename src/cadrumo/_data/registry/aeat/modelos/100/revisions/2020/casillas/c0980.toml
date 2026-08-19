@@ -4,4 +4,4 @@ number = "0980"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_fomento_emprendimiento"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

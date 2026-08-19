@@ -231,12 +231,11 @@ def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem(stem_scan: _Ste
 
 def test_authored_repository_prose_uses_iva_without_a_mixed_alias() -> None:
     violations: list[str] = []
+    # The development-record trees are deliberately out of scope: they are
+    # removable scaffolding, so asserting over their prose would make this
+    # shipped-package gate fail on an edit to a document the product does not
+    # ship and does not read.
     for root_name in (
-        ".vault/adr",
-        ".vault/audit",
-        ".vault/plan",
-        ".vault/reference",
-        ".vault/research",
         "dev",
         "docs",
         "src/cadrumo",

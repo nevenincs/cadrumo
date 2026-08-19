@@ -93,4 +93,4 @@ legal_refs = [
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
 ]
-source_refs = ["aeat-dr-100-2022-dictionary", "boe-modelo-100-2022-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "boe-modelo-100-2022-form"]

@@ -6,4 +6,4 @@ input_kind = "computed"
 formula = "renta-2024-reduccion-art-84-conjunta"
 semantic_role = "irpf_reduccion_tributacion_conjunta_importe"
 legal_refs = ["ley-35-2006:art-84"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

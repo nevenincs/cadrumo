@@ -4,4 +4,4 @@ number = "1780"
 section = ["resultados", "anexo_a_res", "reserva_inversiones_baleares_res"]
 semantic_role = "irpf_anexo_a_rib_dotacion_importe"
 legal_refs = ["ley-31-2022:da-70"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

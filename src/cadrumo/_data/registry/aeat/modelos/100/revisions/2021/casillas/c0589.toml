@@ -4,4 +4,4 @@ number = "0589"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
 semantic_role = "irpf_deduccion_doble_imposicion_transparencia"
 legal_refs = ["ley-35-2006:art-80"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

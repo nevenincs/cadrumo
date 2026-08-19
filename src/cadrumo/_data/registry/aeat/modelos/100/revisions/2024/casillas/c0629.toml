@@ -6,5 +6,5 @@ data_type = "integer"
 semantic_role = "irpf_ascendiente_num_contribuyentes_derecho"
 continuidad_id = "irpf-ascendiente-num-contribuyentes-derecho"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
 constraints = { sign = "non_negative", max_value = "99", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"] }

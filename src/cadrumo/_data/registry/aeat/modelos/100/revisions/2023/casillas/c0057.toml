@@ -4,4 +4,4 @@ number = "0057"
 section = ["resultados", "rdto_trabajo_res"]
 semantic_role = "irpf_rendimiento_trabajo_copa_america_reduccion"
 legal_refs = ["ley-35-2006:art-17"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

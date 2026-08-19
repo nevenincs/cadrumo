@@ -7,4 +7,4 @@ formula = "renta-2020-capital-mobiliario-general-rendimiento-neto-reducido"
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_rendimiento_neto_reducido"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

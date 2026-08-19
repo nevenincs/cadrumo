@@ -7,4 +7,4 @@ formula = "renta-2021-atribucion-actividades-rendimiento-neto-computable"
 data_type = "decimal"
 semantic_role = "irpf_re_atrib_act_eco_rdto_neto_computable"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

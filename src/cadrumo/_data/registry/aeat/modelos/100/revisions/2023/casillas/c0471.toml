@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
 data_type = "nif"
 semantic_role = "irpf_discapacitado_nif"
 legal_refs = ["ley-35-2006:art-53"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

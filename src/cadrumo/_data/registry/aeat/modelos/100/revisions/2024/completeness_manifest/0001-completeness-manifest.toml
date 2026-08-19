@@ -114,5 +114,5 @@ legal_refs = [
     "rd-439-2007:art-90",
     "real-decreto-ley-7-2024:art-11",
 ]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
 

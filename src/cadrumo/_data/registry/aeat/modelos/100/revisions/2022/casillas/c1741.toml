@@ -4,4 +4,4 @@ number = "1741"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
 legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

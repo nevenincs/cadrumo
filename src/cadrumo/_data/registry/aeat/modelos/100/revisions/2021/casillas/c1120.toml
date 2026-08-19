@@ -4,4 +4,4 @@ number = "1120"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
 semantic_role = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

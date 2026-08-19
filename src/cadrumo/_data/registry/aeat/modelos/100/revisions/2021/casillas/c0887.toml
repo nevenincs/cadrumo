@@ -4,4 +4,4 @@ number = "0887"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_arrendamiento_vivienda"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

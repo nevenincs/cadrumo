@@ -5,7 +5,6 @@ source_refs = [
     "aeat-dr-100-2024-dictionary",
     "aeat-dr-100-2024-input-dictionary",
     "aeat-dr-100-2024-xsd",
-    "aeat-modelo-100-procedure",
     "aeat-renta-2024-manual-parte1",
     "boe-modelo-100-2024-form",
 ]

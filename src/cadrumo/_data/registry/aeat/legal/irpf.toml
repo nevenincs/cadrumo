@@ -1222,10 +1222,16 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23911"
 published_at = 2025-11-26
 effective_from = 2025-11-27
 effective_to = 2025-12-31
+# Retroactive reach, stated by the provision itself: it extends the deduction
+# "durante los periodos impositivos 2022, 2023, 2024 y 2025". The phrase is
+# already in required_text, so the corpus check substantiates this declaration
+# rather than the declaration merely asserting it.
+governs_periods_from = 2022-01-01
+governs_periods_to = 2025-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2025 tax period."
+notes = "Extends the Ley 35/2006 additional provision 57 La Palma article 68.4 deduction across the 2022, 2023, 2024 and 2025 tax periods."
 required_text = [
     "disposición adicional quincuagésima séptima",
     "períodos impositivos 2022, 2023, 2024 y 2025",

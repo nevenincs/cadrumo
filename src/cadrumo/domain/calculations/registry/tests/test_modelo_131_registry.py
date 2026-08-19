@@ -59,6 +59,17 @@ def _collect_legal_refs(value: object) -> set[LegalRefId]:
     return set()
 
 
+def _source_window_covers(source: Any, revision: Any) -> bool:
+    """Report whether ``source``'s applicability window overlaps ``revision``'s life."""
+    if source.applies_to is not None and source.applies_to < revision.valid_from:
+        return False
+    return not (
+        source.applies_from is not None
+        and revision.valid_to is not None
+        and source.applies_from > revision.valid_to
+    )
+
+
 def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
     return {str(item.id): tuple(item.legal_refs) for item in items}
 
@@ -93,8 +104,17 @@ def test_modelo_131_guidance_and_layout_sources_are_separated(
 
     for revision in modelo.revisions.values():
         assert _M131_LAYOUT_SOURCE in revision.source_refs
-        for source_ref in (_M131_PROCEDURE_SOURCE, _M131_INSTRUCTIONS_SOURCE):
-            assert source_ref in revision.source_refs
+        assert _M131_INSTRUCTIONS_SOURCE in revision.source_refs
+        # The sede procedure ficha is required only of the revisions it actually
+        # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
+        # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing
+        # it would claim grounding from a page that documents a later campaign --
+        # which `_check_revision_scoped_source_windows` refuses at snapshot build.
+        # Requiring it unconditionally made this test demand the refusal.
+        if _source_window_covers(procedure, revision):
+            assert _M131_PROCEDURE_SOURCE in revision.source_refs
+        else:
+            assert _M131_PROCEDURE_SOURCE not in revision.source_refs
         for parameter in revision.parameters:
             for citation in parameter.source_citations:
                 assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"

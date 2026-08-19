@@ -5,4 +5,4 @@ section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
 data_type = "nif"
 semantic_role = "irpf_vivienda_habitual_promotor_nif"
 legal_refs = ["ley-35-2006:dt-18"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

@@ -6,4 +6,4 @@ semantic_role = "irpf_re_tfi_suma_imputaciones"
 input_kind = "computed"
 formula = "renta-2020-transparencia-fiscal-suma"
 legal_refs = ["ley-35-2006:art-91-2015"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

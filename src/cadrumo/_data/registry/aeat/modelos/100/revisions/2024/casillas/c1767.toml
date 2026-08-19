@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_posterior"
 legal_refs = ["ley-35-2006:da-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

@@ -17,7 +17,6 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-131-2025",
-    "aeat-modelo-131-procedure",
     "aeat-modelo-131-instructions",
     "aeat-modelo-131-recuperacion-declaraciones",
     "aeat-renta-2025-manual-parte1",

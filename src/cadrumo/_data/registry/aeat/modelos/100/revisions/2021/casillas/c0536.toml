@@ -6,4 +6,4 @@ semantic_role = "irpf_escala_sobre_base_ahorro_estatal"
 input_kind = "computed"
 formula = "renta-2021-cuota-escala-estatal-sobre-base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-63"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

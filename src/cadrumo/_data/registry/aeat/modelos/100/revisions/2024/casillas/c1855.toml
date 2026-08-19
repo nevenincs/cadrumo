@@ -4,4 +4,4 @@ number = "1855"
 section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
 semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_aplicado"
 legal_refs = ["ley-35-2006:da-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

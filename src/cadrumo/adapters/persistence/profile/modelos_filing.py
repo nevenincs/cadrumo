@@ -48,6 +48,8 @@ from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from collections.abc import Callable
+
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
@@ -270,6 +272,29 @@ class ModeloRecordCatalogueRepository:
             catalogue: The :class:`ModeloRecordCatalogue` to encrypt and store.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
+
+    def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
+        """Apply ``mutation`` to the stored catalogue as one revision-guarded unit of work.
+
+        The catalogue is a SINGLETON row, so stamping one filing record rewrites
+        every other. Performed unguarded, a record another caller wrote in the
+        interim is discarded, and nothing reports it: the survivors are each
+        intact and the missing one leaves no hole.
+
+        The bucket-ownership check runs on the mutation's OWN result rather than
+        once beforehand, so a mutation introducing a foreign record is refused on
+        every attempt rather than only the first.
+
+        ``mutation`` is re-applied to the newly-current catalogue on a conflict,
+        so it MUST be a pure function of what it is handed.
+        """
+
+        def _guarded(current: ModeloRecordCatalogue) -> ModeloRecordCatalogue:
+            updated = mutation(current)
+            self._assert_records_belong_to_this_bucket(updated, boundary="save")
+            return updated
+
+        return self._storage.mutate(_guarded)
 
     def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.

@@ -191,18 +191,6 @@ casilla_id = "44"
 number = "44"
 
 [[revisions.2022.completeness_manifest.casillas]]
-casilla_id = "47"
-number = "47"
-
-[[revisions.2022.completeness_manifest.casillas]]
-casilla_id = "48"
-number = "48"
-
-# Régimen especial del criterio de caja informativa boxes (62/63 entregas
-# devengadas art. 75 LIVA base/cuota, 74/75 adquisiciones base/cuota) join the
-# calculation closure once their ledger_iva_aggregation criterio-caja bindings
-# landed (LIVA art. 163 decies-terdecies / quinquiesdecies).
-[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "62"
 number = "62"
 

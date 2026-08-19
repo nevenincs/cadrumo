@@ -6,4 +6,4 @@ semantic_role = "irpf_red_prevision_social_exceso_2016_2020"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "2021-only rolling 2016-2020 social-provision excess window; the label explicitly names the window and is not the 2020 2015-2019 slot."
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

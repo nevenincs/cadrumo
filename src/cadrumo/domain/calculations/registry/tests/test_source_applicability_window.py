@@ -19,10 +19,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
-from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from .._schema import LegalReference, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from .._snapshot import _SUBSTANTIVE_LAW_KINDS, build_snapshot, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
@@ -405,3 +406,89 @@ def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() ->
             applies_from=date(2024, 1, 1),
             applies_to=date(2024, 1, 22),
         )
+
+
+# A retroactive provision governs tax periods that closed before it existed, so
+# its citation defends a reach its in-force window does not describe.
+
+_RETRO_MODELO = "190"
+_RETRO_REVISION = "2024"
+_RETRO_FILING_YEAR = 2024
+_RETRO_PERIOD = "0A"
+_RETRO_LEGAL_ID = "real-decreto-ley-13-2025:art-2"
+
+
+def _rebuild_m190_with_legal_reach(**update: object) -> RegistrySnapshot:
+    """Rebuild the M190 2024 snapshot with the retroactive RDL's reach restaged."""
+    modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    reference = catalogues.legal[_RETRO_LEGAL_ID]
+    restaged = reference.model_copy(update=update)
+    catalogues = catalogues.model_copy(
+        update={"legal": {**catalogues.legal, _RETRO_LEGAL_ID: restaged}},
+    )
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=_RETRO_FILING_YEAR,
+        period=_RETRO_PERIOD,
+    )
+
+
+def test_a_declared_retroactive_provision_grounds_a_devengo_before_it_took_force() -> None:
+    """The shipped M190 2024 citation must survive, and not vacuously.
+
+    Both halves of the divergence are asserted: the RDL takes force after the
+    2024 devengo, and its declared reach covers it. If either stopped being true
+    the test would pass while proving nothing about the axis.
+    """
+    modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    revision = modelo.revisions[_RETRO_REVISION]
+    reference = catalogues.legal[_RETRO_LEGAL_ID]
+
+    assert revision.valid_to is not None
+    assert reference.kind in _SUBSTANTIVE_LAW_KINDS, "the devengo axis only applies to substantive law"
+    assert reference.effective_from > revision.valid_to, (
+        "precondition: the RDL must take force after the devengo it grounds"
+    )
+    assert reference.governs_periods_from is not None
+    assert reference.governs_periods_from <= revision.valid_to
+
+    snapshot = _committed_snapshot(_RETRO_MODELO, _RETRO_FILING_YEAR, _RETRO_PERIOD)
+
+    assert snapshot.revision.id == _RETRO_REVISION
+
+
+def test_the_same_provision_without_a_declared_reach_still_refuses() -> None:
+    """Reach is an explicit claim; withdrawing it restores the in-force test.
+
+    This is the anti-vacuity proof for the field: if the snapshot still built
+    with the declaration removed, the devengo gate would be passing for some
+    other reason and the declaration would be decorative.
+    """
+    with pytest.raises(RegistryValidationError, match=_RETRO_LEGAL_ID):
+        _rebuild_m190_with_legal_reach(governs_periods_from=None, governs_periods_to=None)
+
+
+def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> None:
+    """The field declares retroactive reach only.
+
+    A forward value would let a citation ground a period its norm never governed
+    -- the same failure the gate exists to catch, smuggled through the exemption.
+    """
+    _modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    reference = catalogues.legal[_RETRO_LEGAL_ID]
+    forward = reference.model_dump() | {"governs_periods_from": date(2026, 1, 1)}
+
+    with pytest.raises(ValidationError, match="RETROACTIVE reach only"):
+        LegalReference.model_validate(forward)
+
+
+def test_a_governed_period_end_without_a_start_is_refused() -> None:
+    """``governs_periods_to`` alone states a reach with no beginning."""
+    _modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    reference = catalogues.legal[_RETRO_LEGAL_ID]
+    dangling = reference.model_dump() | {"governs_periods_from": None}
+
+    with pytest.raises(ValidationError, match="governs_periods_to without governs_periods_from"):
+        LegalReference.model_validate(dangling)

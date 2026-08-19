@@ -633,17 +633,30 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
         return
+    if _headless_secret_channel_active():
+        # This is an explicit current-profile password authentication, not a
+        # provider or shared-master-key fallback for the session cache.
+        #
+        # Checked BEFORE the keyring branch below, and the order is the whole
+        # point. A host with no usable OS keychain cannot PERSIST a session, so
+        # every invocation there is its own process with no session to resume:
+        # `config login` succeeds and then says so ("la sesion no se puede
+        # guardar; este inicio de sesion solo vale para el comando actual").
+        # With the keyring refusal first, that host could never reach this
+        # branch, so the project's declared non-interactive channel authenticated
+        # nothing and no profile-scoped verb could run at all -- which is how a
+        # headless run of the calculate-to-export path was blocked outright.
+        # Reaching it first revives nothing: this is the operator's own current-
+        # profile password, the same factor a prompt would collect, not a
+        # provider or shared-master-key route and not a discarded receipt.
+        login_profile(name=bucket_id)
+        return
     if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
         # A real process-scoped login is possible only when the explicit
         # password path is invoked by the operator.  Never treat a broken
         # acceleration keychain as permission to revive a provider/master-key
         # route or discard its receipt evidence.
         raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
-    if _headless_secret_channel_active():
-        # This is an explicit current-profile password authentication, not a
-        # provider or shared-master-key fallback for the session cache.
-        login_profile(name=bucket_id)
-        return
     if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
         return
     # Session state is keyed by the opaque bucket UUID, but the recovery

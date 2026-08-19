@@ -12,7 +12,6 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-131-2019-2023-v101",
-    "aeat-modelo-131-procedure",
     "aeat-modelo-131-instructions",
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",

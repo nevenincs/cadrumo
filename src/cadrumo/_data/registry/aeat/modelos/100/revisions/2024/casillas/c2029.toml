@@ -7,4 +7,4 @@ semantic_role = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "2024 Madrid vivienda nacimiento/adopcion acquisition-year detail slot; 2025 reuses the row for municipio-riesgo vivienda detail."
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

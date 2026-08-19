@@ -7,4 +7,4 @@ semantic_role = "irpf_tipo_medio_gravamen_ahorro_autonomico"
 input_kind = "computed"
 formula = "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-63"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

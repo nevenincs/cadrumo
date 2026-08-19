@@ -6,7 +6,7 @@
 # surface; the drift re-verification test re-derives it.
 [revisions."2004-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-309-2023"
-legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".completeness_manifest.casillas]]

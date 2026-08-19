@@ -139,7 +139,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "real-decreto-ley-4-2024:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "real-decreto-ley-11-2022:art-18"]
 source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".export_layouts.records.fields]]
@@ -153,7 +153,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "real-decreto-ley-4-2024:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "real-decreto-ley-11-2022:art-18"]
 source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".export_layouts.records.fields]]

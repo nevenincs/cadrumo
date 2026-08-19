@@ -23,4 +23,4 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-77",
 ]
-source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form"]
