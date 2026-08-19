@@ -6342,3 +6342,64 @@ The collected slice also feeds the legal-window checks, so widening it could hav
 turned a silent omission into a spurious refusal. It did not: authority CLEAN,
 and the registry domain suite moved 196 -> **188 failed / 4825 passed** with no
 new failure kind.
+
+## Modelo 036 was being asked for a rung it never claimed
+
+The whole `test_censo_modelo_foundation` cluster -- 10 failures and 2 errors --
+traced to ONE blocker: `modelo 036 revision 2025-02-03-y-siguientes is
+'pending_review'; filing-grade snapshot requires a reviewed revision`.
+
+Stamping it would have been the wrong fix, and checking that first is what
+redirected the work. Modelo 036 declares `authority_grade = applicability` and
+carries NO export layout, so a filing-grade snapshot refuses on review status
+and, past that, on "declares no export layout, so no filing artifact can be
+produced". A censal alta/modificacion/baja is filed on AEAT's sede; this
+application produces no fichero for it and never will. **Every caller demanding
+the filing rung was asking for capability the modelo neither has nor claims.**
+
+### The production caller
+
+`_censo_modelos.py` called `authority.snapshot(...)` once per censal event kind,
+inside the function that returns the ownership/routing record. The question it
+asks is whether each event kind resolves to exactly one revision -- an
+applicability question feeding a routing record, never a filing artefact. It now
+uses `select_revision`, the sanctioned resolver.
+
+Proven to keep its teeth, which is the whole risk when a rung is lowered: the
+declared `alta` still resolves, while `99`, `0A` and `reactivacion` each still
+raise `NoRevisionForPeriodError`.
+
+### The accessor could not express the question
+
+`ValidatedRegistryAuthority.snapshot` took no `grade` and always built at FILING,
+so no caller could ask for a lower rung through the authority at all -- while the
+builder it delegates to has taken a grade all along. It now accepts one,
+defaulting to FILING so every existing caller is unchanged.
+
+**The rung is part of the cache key.** Without that, a snapshot built for one rung
+would be served to a caller asking for another, which is precisely the silent
+capability claim the grade exists to prevent.
+
+The test helpers `_committed_snapshot` and `registry_grounded_observations`
+already took a grade; the modelo 036 call sites simply never passed one.
+
+Cleared this tick: censo foundation **12 -> 0**, modelo 036 registry **2 -> 0**,
+`test_semantic_map_join` **8 -> 0** (int ordinals, then the modelo-200 projection
+masking), `test_corpus_round_trip_gate` **8 -> 0**.
+
+### Recorded, and this one IS a sanctioned reason
+
+`test_modelo_036_censal_continuity` (6) now gets past the grade and fails on a
+typed boundary refusing `period='alta'`: `RegistryModeloObservation.period` is
+`FilingPeriodCode`, which admits neither the administrative censo tokens nor the
+symbolic `EVENT-N` selector. That refusal is deliberate and documented at the
+validator -- "an administrative token names a registration event rather than a
+period", at a boundary whose "whole contract is exactly one filing period".
+
+The test asks to persist a censal REGISTRATION EVENT as a FILING observation.
+Resolving it means deciding whether censal events get their own observation type
+or period axis, and widening `FilingPeriodCode` would defeat the boundary that
+exists to keep registration events out of filing periods. That is filing-grade
+semantics I cannot ground from official sources -- AEAT does not say how this
+application should model its own observation records -- so it is recorded rather
+than forced.
