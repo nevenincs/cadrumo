@@ -230,7 +230,23 @@ class InvoiceCatalogueRepository:
         _log.debug("mutated invoice catalogue (%d invoices)", len(catalogue.invoices))
         return catalogue
 
-    def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[InvoiceCatalogue, str]:
+        """Return the catalogue and the revision id it was read at.
+
+        The read a guarded co-commit needs. Linking and reconciliation both
+        write this catalogue inside a batch with the transaction store, so
+        neither can use the self-committing :meth:`mutate`; without the revision
+        the batch rewrites the whole singleton row and drops an invoice another
+        caller added in between.
+        """
+        return self._storage.load_revisioned()
+
+    def to_secure_object_write(
+        self,
+        catalogue: InvoiceCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
@@ -240,11 +256,16 @@ class InvoiceCatalogueRepository:
 
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.
+            expected_revision_id: The revision :meth:`load_revisioned` reported
+                for the catalogue this one was derived from. This is a SINGLETON
+                row, so without it the write lands over any invoice another
+                caller committed since the read, and a dropped invoice
+                under-declares.
         """
         # The co-commit path is a WRITE like save(); leaving it unchecked would
         # leave the transaction/event route as the way a foreign row still gets in.
         self._assert_catalogue_bucket(catalogue, direction="saved through")
-        return self._storage.to_secure_object_write(catalogue)
+        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
 
 __all__ = [

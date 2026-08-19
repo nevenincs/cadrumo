@@ -125,15 +125,23 @@ def link_invoice_transaction_repositories(
     """
     invoices_repo = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    # The invoice catalogue is a SINGLETON row, so its write is revisioned: an
+    # unguarded one rewrites the whole catalogue over any invoice another caller
+    # added between this read and the batch. The transaction store writes a row
+    # per transaction, so its side carries no equivalent whole-collection risk.
+    invoice_catalogue, invoice_revision_id = invoices_repo.load_revisioned()
     result = link_invoice_transaction_catalogues(
-        invoices_repo.load(),
+        invoice_catalogue,
         transactions_repo.load(),
         invoice_id=invoice_id,
         transaction_id=transaction_id,
     )
     transactions_repo.save_with_secure_object_writes(
         result.transactions,
-        (invoices_repo.to_secure_object_write(result.invoices), *extra_writes),
+        (
+            invoices_repo.to_secure_object_write(result.invoices, expected_revision_id=invoice_revision_id),
+            *extra_writes,
+        ),
     )
     return result
 

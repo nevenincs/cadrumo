@@ -144,11 +144,30 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         for payload in payloads.values():
             self._model_type.model_validate_json(payload)
 
-    def to_secure_object_write(self, document: DocumentT) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[DocumentT, str]:
+        """Return the stored document and the revision id it was read at.
+
+        The public read for a caller composing a GUARDED co-commit: it cannot
+        use :meth:`mutate`, whose write commits on its own, but it needs the
+        same revision to carry on its write.
+        """
+        return self._load_with_revision()
+
+    def to_secure_object_write(
+        self,
+        document: DocumentT,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Prepare the encrypted-SQL upsert without committing it.
 
         Callers that need to co-commit this document with sibling secure objects
         pass the returned value into their existing ``save_many`` transaction.
+
+        ``expected_revision_id`` is the compare-and-swap half. These documents
+        are singletons, so a co-commit composed from an unguarded read writes
+        the whole document back and discards any entry another caller added in
+        between. Pass the revision :meth:`load_revisioned` reported.
         """
         return SecureObjectWrite(
             namespace=self._definition.namespace,
@@ -158,6 +177,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
             written_at=now(),
             payload=document.model_dump_json().encode(UTF_8_ENCODING),
             write_provenance=self._write_provenance,
+            expected_revision_id=expected_revision_id,
         )
 
     def save(self, document: DocumentT) -> None:

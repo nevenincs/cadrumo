@@ -97,11 +97,12 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/invoices/_linking.py",
         "link_invoice_transaction_repositories",
-    ): "invoice and transaction catalogues arrive as parameters; unclassified beyond that",
+    ): "the transaction store writes a row PER TRANSACTION rather than one singleton document, so its "
+    "batch carries no whole-collection risk; the singleton invoice catalogue beside it IS guarded",
     (
         "src/cadrumo/application/invoices/_reconciliation.py",
         "reconcile_invoice_repositories",
-    ): "invoice and transaction catalogues arrive as parameters; unclassified beyond that",
+    ): "per-transaction rows as above; the singleton invoice catalogue beside it IS guarded",
     (
         "src/cadrumo/application/ledger/_actions_common.py",
         "_save_transaction_catalogue_and_events",
@@ -113,15 +114,18 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/modelo/_amendment_actions.py",
         "_persist_amendment_side_effects",
-    ): "unclassified: not yet traced to a read site",
+    ): "all three catalogues -- calculation, filing and work-unit -- arrive as parameters, read by "
+    "amend_calculation_revision at the top of the same call; closing it means threading three revisions",
     (
         "src/cadrumo/application/modelo/_m036_lifecycle.py",
         "record_m036_declaration",
-    ): "unclassified: not yet traced to a read site",
+    ): "the declaration result is freshly constructed rather than derived from a read, so no revision "
+    "exists to assert; its event side goes through the guarded composer",
     (
         "src/cadrumo/application/modelo/_m145_communication_records.py",
         "_save_m145_record_with_event",
-    ): "unclassified: not yet traced to a read site",
+    ): "the communication record arrives as a parameter and is a per-record row rather than a catalogue; "
+    "its event side goes through the guarded composer",
     (
         "src/cadrumo/application/modelo/_reconcile.py",
         "_finalise_reconciliation",
@@ -129,7 +133,8 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/calculations/_iva_compensation_history.py",
         "persist_observation_envelope_and_iva_history",
-    ): "unclassified: not yet traced to a read site",
+    ): "the envelope arrives as a parameter and the history state is projected fresh from it, so neither "
+    "write derives from a read this function performed",
     (
         "src/cadrumo/domain/buckets/_event_repository.py",
         "bucket_event_history_write",
