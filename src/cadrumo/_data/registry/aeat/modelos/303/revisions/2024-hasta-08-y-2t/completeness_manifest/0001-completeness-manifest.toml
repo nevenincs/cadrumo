@@ -363,18 +363,6 @@ casilla_id = "155"
 number = "155"
 
 [[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
-casilla_id = "165"
-number = "165"
-
-[[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
-casilla_id = "166"
-number = "166"
-
-[[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
-casilla_id = "167"
-number = "167"
-
-[[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
 casilla_id = "iva.repercutido.reducido.transitorio"
 number = "iva.repercutido.reducido.transitorio"
 
@@ -384,10 +372,6 @@ number = "iva.repercutido.super-reducido.transitorio"
 
 # Recargo rungs that joined the calculation closure when total cuota devengada
 # was corrected to enumerate them, as AEAT's own printed formula for [27] does.
-[[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
-casilla_id = "170"
-number = "170"
-
 [[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
 casilla_id = "26"
 number = "26"

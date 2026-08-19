@@ -75,24 +75,6 @@ required_text = ["modelo 303"]
 casilla_id = "iva.repercutido.reducido.transitorio"
 
 [[revisions.2024-hasta-08-y-2t.formulas]]
-id = "modelo-303-dr303-167-projection"
-target_casilla_id = "167"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2024-hasta-08-y-2t.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2024-hasta-08-y-2t.formulas.expression]
-casilla_id = "iva.repercutido.super-reducido.transitorio"
-
-# Devengado inversión del sujeto pasivo, base imponible. Box 10 was previously
-# a bare manual field with no derivation -- its cuota sibling box 11 below was
-# already computed, an asymmetry that let a taxpayer's AIC base go
-# undeclared even when the ledger held the rows.
-[[revisions.2024-hasta-08-y-2t.formulas]]
 id = "modelo-303-dr303-10-projection"
 target_casilla_id = "10"
 rounding = "money-2"
