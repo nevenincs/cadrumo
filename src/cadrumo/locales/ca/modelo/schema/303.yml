@@ -651,395 +651,362 @@ modelo:
         official_name: null
         title: null
       revision:
-        2009-y-siguientes:
+        '2022':
           casilla:
             '01':
               help: null
-              label: IVA meritat, règim general tipus superreduït 4% - base imposable
+              label: null
             '02':
               help: null
-              label: IVA meritat, règim general tipus superreduït 4% - percentatge
-                del tipus
+              label: null
             '03':
               help: null
-              label: IVA meritat, règim general tipus superreduït 4% - quota
+              label: null
             '04':
               help: null
-              label: IVA meritat, règim general tipus reduït 10% - base imposable
+              label: null
             '05':
               help: null
-              label: IVA meritat, règim general tipus reduït 10% - percentatge del
-                tipus
+              label: null
             '06':
               help: null
-              label: IVA meritat, règim general tipus reduït 10% - quota
+              label: null
             '07':
               help: null
-              label: IVA meritat, règim general tipus general 21% - base imposable
+              label: null
             08:
               help: null
-              label: IVA meritat, règim general tipus general 21% - percentatge del
-                tipus
+              label: null
             09:
               help: null
-              label: IVA meritat, règim general tipus general 21% - quota
+              label: null
             '10':
               help: null
-              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
-                - base
+              label: null
             '108':
               help: null
-              label: Rectificativa - altres ajustos en supòsits determinats per discrepància
-                de criteri administratiu
+              label: null
             '109':
               help: null
-              label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
-                anteriors de l'exercici i període
+              label: null
             '11':
               help: null
-              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
-                - quota
+              label: null
             '111':
               help: null
-              label: Rectificativa - import de la rectificació
+              label: null
             '12':
               help: null
-              label: IVA meritat per altres operacions amb inversió del subjecte passiu
-                excloses les intracomunitàries - base
+              label: null
             '120':
               help: null
-              label: Informació addicional - operacions no subjectes per regles de
-                localització, exclosa la casella 123
+              label: null
             '122':
               help: null
-              label: Informació addicional - operacions subjectes a inversió del subjecte
-                passiu
+              label: null
             '123':
               help: null
-              label: Informació addicional - operacions no subjectes per localització
-                en règims especials de finestreta única
+              label: null
             '124':
               help: null
-              label: Informació addicional - operacions subjectes en règims especials
-                de finestreta única
+              label: null
             '13':
               help: null
-              label: IVA meritat per altres operacions amb inversió del subjecte passiu
-                excloses les intracomunitàries - quota
+              label: null
             '14':
               help: null
-              label: Modificació de bases i quotes d'IVA meritat - base imposable
+              label: null
             '15':
               help: null
-              label: Modificació de bases i quotes d'IVA meritat - quota
+              label: null
             '150':
               help: null
-              label: IVA meritat, règim general nou tipus tram 1 - base imposable
+              label: null
             '151':
               help: null
-              label: IVA meritat, règim general nou tipus tram 1 - percentatge del
-                tipus
+              label: null
             '152':
               help: null
-              label: IVA meritat, règim general nou tipus tram 1 - quota
+              label: null
             '153':
               help: null
-              label: IVA meritat, règim general nou tipus tram 2 - base imposable
+              label: null
             '154':
               help: null
-              label: IVA meritat, règim general nou tipus tram 2 - percentatge del
-                tipus
+              label: null
             '155':
               help: null
-              label: IVA meritat, règim general nou tipus tram 2 - quota
+              label: null
             '156':
               help: null
-              label: Recàrrec d'equivalència al 0,5% - base imposable
+              label: null
             '157':
               help: null
-              label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
+              label: null
             '158':
               help: null
-              label: Recàrrec d'equivalència al 0,5% - quota
+              label: null
             '16':
               help: null
-              label: Recàrrec d'equivalència al 1,0% - base imposable
+              label: null
             '165':
               help: null
-              label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
+              label: null
             '166':
               help: null
-              label: IVA meritat, règim general tipus 2% des de 2024 - percentatge
-                del tipus
+              label: null
             '167':
               help: null
-              label: IVA meritat, règim general tipus 2% des de 2024 - quota
+              label: null
             '168':
               help: null
-              label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
+              label: null
             '169':
               help: null
-              label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
-                del tipus
+              label: null
             '17':
               help: null
-              label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
+              label: null
             '170':
               help: null
-              label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
+              label: null
             '18':
               help: null
-              label: Recàrrec d'equivalència al 1,0% - quota
+              label: null
             '19':
               help: null
-              label: Recàrrec d'equivalència al 1,4% - base imposable
+              label: null
             '20':
               help: null
-              label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
+              label: null
             '21':
               help: null
-              label: Recàrrec d'equivalència al 1,4% - quota
+              label: null
             '22':
               help: null
-              label: Recàrrec d'equivalència al 5,2% - base imposable
+              label: null
             '23':
               help: null
-              label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
+              label: null
             '24':
               help: null
-              label: Recàrrec d'equivalència al 5,2% - quota
+              label: null
             '25':
               help: null
-              label: Modificació de bases i quotes del recàrrec d'equivalència - base
-                imposable
+              label: null
             '26':
               help: null
-              label: Modificació de bases i quotes del recàrrec d'equivalència - quota
+              label: null
             '27':
               help: null
-              label: Total quota meritada
+              label: null
             '28':
               help: null
-              label: IVA deduïble en operacions interiors corrents - base
+              label: null
             '29':
               help: null
-              label: IVA deduïble en operacions interiors corrents - quota
+              label: null
             '30':
               help: null
-              label: IVA deduïble en operacions interiors de béns d'inversió - base
+              label: null
             '31':
               help: null
-              label: IVA deduïble en operacions interiors de béns d'inversió - quota
+              label: null
             '32':
               help: null
-              label: IVA deduïble en importacions de béns corrents - base
+              label: null
             '33':
               help: null
-              label: IVA deduïble en importacions de béns corrents - quota
+              label: null
             '34':
               help: null
-              label: IVA deduïble en importacions de béns d'inversió - base
+              label: null
             '35':
               help: null
-              label: IVA deduïble en importacions de béns d'inversió - quota
+              label: null
             '36':
               help: null
-              label: IVA deduïble en adquisicions intracomunitàries corrents - base
+              label: null
             '37':
               help: null
-              label: IVA deduïble en adquisicions intracomunitàries corrents - quota
+              label: null
             '38':
               help: null
-              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
-                - base
+              label: null
             '39':
               help: null
-              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
-                - quota
+              label: null
             '40':
               help: null
-              label: Rectificació de deduccions - base
+              label: null
             '41':
               help: null
-              label: Rectificació de deduccions - quota
+              label: null
             '42':
               help: null
-              label: Compensacions del règim especial d'agricultura, ramaderia i pesca
-                - quota
+              label: null
             '43':
               help: null
-              label: Regularització de béns d'inversió - quota
+              label: null
             '44':
               help: null
-              label: Regularització de prorrata per percentatge definitiu - quota
+              label: null
             '45':
               help: null
-              label: Total a deduir - quota
+              label: null
             '47':
               help: null
-              label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
-                d'activitats
+              label: null
             '48':
               help: null
-              label: Règim simplificat, 4T - suma de quotes derivades del conjunt
-                d'activitats
+              label: null
             '49':
               help: null
-              label: Règim simplificat, 4T - suma d'ingressos a compte realitzats
-                en l'exercici
+              label: null
             '50':
               help: null
-              label: Règim simplificat, 4T - resultat ([48] - [49])
+              label: null
             '51':
               help: null
-              label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
-                de béns
+              label: null
             '52':
               help: null
-              label: Règim simplificat - quotes meritades per lliuraments d'actius
-                fixos
+              label: null
             '53':
               help: null
-              label: Règim simplificat - quotes meritades d'IVA meritat per inversió
-                del subjecte passiu
+              label: null
             '54':
               help: null
-              label: Règim simplificat - total quota resultant
+              label: null
             '55':
               help: null
-              label: Règim simplificat - IVA deduïble per adquisició o importació
-                d'actius fixos
+              label: null
             '56':
               help: null
-              label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
+              label: null
             '57':
               help: null
-              label: Règim simplificat - total IVA deduïble ([55] + [56])
+              label: null
             '58':
               help: null
-              label: Resultat del règim simplificat ([54] - [57])
+              label: null
             '59':
               help: null
-              label: Informació addicional - lliuraments intracomunitaris de béns
-                i serveis
+              label: null
             '60':
               help: null
-              label: Informació addicional - exportacions i operacions assimilades
+              label: null
             '62':
               help: null
-              label: Informació addicional - lliuraments de criteri de caixa meritats
-                art. 75 LIVA - base imposable
+              label: null
             '63':
               help: null
-              label: Informació addicional - lliuraments de criteri de caixa meritats
-                art. 75 LIVA - quota
+              label: null
             '64':
               help: null
-              label: Resultat - suma de resultats ([46] + [58] + [76])
+              label: null
             '65':
               help: null
-              label: Resultat - percentatge atribuïble a l'Administració de l'Estat
+              label: null
             '66':
               help: null
-              label: Resultat - import atribuïble a l'Administració de l'Estat
+              label: null
             '68':
               help: null
-              label: Resultat - resultat de regularització anual de tributació conjunta
+              label: null
             '70':
               help: null
-              label: Resultat - resultats a ingressar d'autoliquidacions anteriors
-                de l'exercici i període
+              label: null
             '71':
               help: null
-              label: Resultat final ([69] - [70] + [109])
+              label: null
             '74':
               help: null
-              label: Informació addicional - adquisicions de criteri de caixa - base
-                imposable
+              label: null
             '75':
               help: null
-              label: Informació addicional - adquisicions de criteri de caixa - quota
+              label: null
             '76':
               help: null
-              label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
+              label: null
             '77':
               help: null
-              label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Exercici fiscal de l'autoliquidació
+              label: null
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: Període trimestral
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: null
-              label: IVA autorepercutit deduïble en operacions interiors
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
               help: null
-              label: IVA autorepercutit meritat en operacions interiors
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
               help: null
-              label: IVA autorepercutit deduïble en adquisicions intracomunitàries
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
               help: null
-              label: IVA autorepercutit meritat en adquisicions intracomunitàries
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
-              label: Compensacions de períodes anteriors aplicades en aquest període
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: null
-              label: Saldo de compensació disponible al final del període
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
               help: null
-              label: Saldo a compensar generat en aquest període
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: null
-              label: Quotes a compensar pendents de períodes anteriors
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: null
-              label: Compensacions de períodes anteriors pendents per a períodes posteriors
+              label: null
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: Total quota d'IVA deduïble
+              label: null
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: Total quota d'IVA meritada
+              label: null
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: Percentatge de prorrata general
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
-              label: Volum anual d'operacions que originen dret a deducció
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: null
-              label: Volum anual total d'operacions
+              label: null
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: null
-              label: Regularització de béns d'inversió
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: null
-              label: Quota IVA repercutit al tipus general (21%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: Quota d'IVA repercutit al tipus reduït (10%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: Quota d'IVA repercutit al tipus superreduït (4%)
+              label: null
             x-d5r62bjiclpnar3kc5i6u:
               help: null
-              label: Resultat de l'autoliquidació
+              label: null
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: Resultat del règim general
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
               help: null
-              label: Quota d'IVA suportat deduïble en importacions de béns corrents
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: Quota IVA suportat en operacions interiors corrents
+              label: null
           field:
             label: null
         '2023':
@@ -1156,9 +1123,6 @@ modelo:
               help: null
               label: null
             '165':
-              help: null
-              label: null
-            '166':
               help: null
               label: null
             '167':
@@ -1648,9 +1612,6 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:

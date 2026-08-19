@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
-from dev.locales import LocaleManager
 
 from cadrumo.adapters.persistence.storage.errors import SecureStorageError
 from cadrumo.core import scan_directory
@@ -22,6 +21,7 @@ from cadrumo.tests import (
     repo_path,
     repo_relative,
 )
+from dev.locales import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -1,9 +1,9 @@
 """Locale f-string registrations cover every bounded domain enum member."""
 
 import pytest
-from dev.locales import get_registered_keys
 
 from cadrumo.domain.deadlines import FiscalResidency, LegalEntityForm
+from dev.locales import get_registered_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

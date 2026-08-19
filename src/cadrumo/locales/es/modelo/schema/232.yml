@@ -38,9 +38,6 @@ modelo:
             vinculada-1-razon-social:
               help: null
               label: null
-            vinculada-1-reservado-nombre:
-              help: null
-              label: null
             vinculada-1-tipo-operacion:
               help: null
               label: null
@@ -66,9 +63,6 @@ modelo:
               help: null
               label: null
             vinculada-2-razon-social:
-              help: null
-              label: null
-            vinculada-2-reservado-nombre:
               help: null
               label: null
             vinculada-2-tipo-operacion:
@@ -98,9 +92,6 @@ modelo:
             vinculada-3-razon-social:
               help: null
               label: null
-            vinculada-3-reservado-nombre:
-              help: null
-              label: null
             vinculada-3-tipo-operacion:
               help: null
               label: null
@@ -128,9 +119,6 @@ modelo:
             vinculada-4-razon-social:
               help: null
               label: null
-            vinculada-4-reservado-nombre:
-              help: null
-              label: null
             vinculada-4-tipo-operacion:
               help: null
               label: null
@@ -156,9 +144,6 @@ modelo:
               help: null
               label: null
             vinculada-5-razon-social:
-              help: null
-              label: null
-            vinculada-5-reservado-nombre:
               help: null
               label: null
             vinculada-5-tipo-operacion:
@@ -207,9 +192,6 @@ modelo:
             vinculada-1-razon-social:
               help: null
               label: 'Related party 1: Business name'
-            vinculada-1-reservado-nombre:
-              help: null
-              label: 'Related party 1: Reserved field'
             vinculada-1-tipo-operacion:
               help: null
               label: 'Related party 1: Type of transaction'
@@ -237,9 +219,6 @@ modelo:
             vinculada-2-razon-social:
               help: null
               label: 'Related party 2: Business name'
-            vinculada-2-reservado-nombre:
-              help: null
-              label: 'Related party 2: Reserved field'
             vinculada-2-tipo-operacion:
               help: null
               label: 'Related party 2: Type of transaction'
@@ -267,9 +246,6 @@ modelo:
             vinculada-3-razon-social:
               help: null
               label: 'Related party 3: Business name'
-            vinculada-3-reservado-nombre:
-              help: null
-              label: 'Related party 3: Reserved field'
             vinculada-3-tipo-operacion:
               help: null
               label: 'Related party 3: Type of transaction'
@@ -297,9 +273,6 @@ modelo:
             vinculada-4-razon-social:
               help: null
               label: 'Related party 4: Business name'
-            vinculada-4-reservado-nombre:
-              help: null
-              label: 'Related party 4: Reserved field'
             vinculada-4-tipo-operacion:
               help: null
               label: 'Related party 4: Type of transaction'
@@ -327,9 +300,6 @@ modelo:
             vinculada-5-razon-social:
               help: null
               label: 'Related party 5: Business name'
-            vinculada-5-reservado-nombre:
-              help: null
-              label: 'Related party 5: Reserved field'
             vinculada-5-tipo-operacion:
               help: null
               label: 'Related party 5: Type of transaction'

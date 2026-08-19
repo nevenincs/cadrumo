@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.i18n import tr
+from .. import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

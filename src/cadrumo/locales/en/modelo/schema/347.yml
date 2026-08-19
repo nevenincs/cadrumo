@@ -102,6 +102,10 @@ modelo:
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: null
               label: null
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
+              help: Nine-position numeric field. Telephone number of the contact person
+                named by the declarant.
+              label: Telephone of the contact person
             x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
               help: null
               label: null

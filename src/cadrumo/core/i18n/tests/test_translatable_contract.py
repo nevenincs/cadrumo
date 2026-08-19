@@ -46,12 +46,42 @@ def _target_names(target: ast.AST) -> list[str]:
     return []
 
 
-def _is_i18n_tr_import(module: str | None, alias: ast.alias) -> bool:
+def _resolved_import_target(path: Path, node: ast.ImportFrom) -> str | None:
+    """Return the dotted module a ``from ... import`` names, relative form included.
+
+    A relative import carries no module name for the bare ``from .. import tr``
+    spelling, so a name-only check cannot see it at all. Since relative
+    self-imports are the mandated spelling inside the package, resolving the
+    level against the importing file's own package is what keeps this contract
+    and the relative-import rule from contradicting each other.
+    """
+    if node.level == 0:
+        return node.module
+    parts = list(path.with_suffix("").parts)
+    if "cadrumo" not in parts:
+        return node.module
+    parts = parts[parts.index("cadrumo") :]
+    if parts[-1] == "__init__":
+        parts.pop()
+    else:
+        parts.pop()
+    if node.level > 1:
+        parts = parts[: len(parts) - (node.level - 1)]
+    if not parts:
+        return node.module
+    resolved = ".".join(parts)
+    return f"{resolved}.{node.module}" if node.module else resolved
+
+
+def _is_i18n_tr_import(path: Path, node: ast.ImportFrom, alias: ast.alias) -> bool:
     if alias.name != "tr":
         return False
     if alias.asname is not None:
         return False
-    return module is not None and (module == "_render" or module == "i18n" or module.endswith(".i18n"))
+    module = _resolved_import_target(path, node)
+    if module is None:
+        return False
+    return module in {"_render", "i18n"} or module.endswith((".i18n", ".i18n._render", "._render"))
 
 
 class _TranslatableContractVisitor(ast.NodeVisitor):
@@ -78,7 +108,7 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
                         _location(self.path, node, "imports Translatable without the required 'as tr' alias"),
                     )
                 continue
-            if bound_name == "tr" and not _is_i18n_tr_import(node.module, alias):
+            if bound_name == "tr" and not _is_i18n_tr_import(self.path, node, alias):
                 self.violations.append(_location(self.path, node, "binds reserved name 'tr' from a non-i18n import"))
         self.generic_visit(node)
 

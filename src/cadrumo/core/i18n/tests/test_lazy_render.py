@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.i18n import tr
-from cadrumo.core.i18n._lazy_catalogue import LazyLocaleCatalogue
-from cadrumo.core.i18n._render import _override_locales_root
-from cadrumo.core.i18n._routing import route_key_to_shard
+from .. import tr
+from .._lazy_catalogue import LazyLocaleCatalogue
+from .._render import _override_locales_root
+from .._routing import route_key_to_shard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

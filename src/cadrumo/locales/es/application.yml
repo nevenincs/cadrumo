@@ -78,7 +78,7 @@ application:
           Ejecute aeat config login para ese perfil y vuelva a intentarlo.
         revoke_requires_custody_session: La sesión de la AEAT del perfil '%{bucket_id}'
           NO se ha revocado y sigue activa. Está guardada cifrada dentro de ese perfil,
-          por lo que solo desbloquear ese perfil -con aeat config login- la revoca.
+          por lo que solo desbloquear ese perfil, con aeat config login, la revoca.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).

@@ -69,7 +69,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
 def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None, "the aeat console script must be installed for this test"
-    return subprocess.run(
+    return subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
         [aeat_exe, *args],
         cwd=Path.cwd(),
         env=env,

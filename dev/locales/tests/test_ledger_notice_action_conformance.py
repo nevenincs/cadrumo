@@ -10,7 +10,6 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from dev.locales import LocaleManager, LocaleNode
 
 from cadrumo.core import scan_directory
 from cadrumo.entrypoints.cli import (
@@ -33,6 +32,7 @@ from cadrumo.entrypoints.cli import (
     _ledger_rules_cli,
     _ledger_support,
 )
+from dev.locales import LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,7 +58,9 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
 _PACKAGE_ROOT = Path(inspect.getfile(_ledger)).parents[2]
-_LOCALES_DIR = _PACKAGE_ROOT / "src" / "cadrumo" / "locales"
+# ``_PACKAGE_ROOT`` already addresses ``src/cadrumo``; re-appending it doubled
+# the path, so every catalogue read here resolved to a file that cannot exist.
+_LOCALES_DIR = _PACKAGE_ROOT / "locales"
 _REGISTERED_LEDGER_LOCALE_KEYS: set[str] = set()
 """Catalogue leaves consumed somewhere the ``cli.ledger.`` constant scan cannot see.
 
@@ -214,7 +216,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     failures: list[str] = []
     for locale in ("ca", "en", "es", "hu"):
-        catalogue = manager.load_locale(_LOCALES_DIR / f"{locale}.yml")
+        catalogue = manager.load_locale(_LOCALES_DIR / locale)
         failures.extend(
             f"{locale}:{key}"
             for key, value in _iter_locale_leaves(catalogue)
@@ -354,7 +356,7 @@ def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     key_sets = {
         locale: {
             key
-            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_DIR / f"{locale}.yml"))
+            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_DIR / locale))
             if key.startswith("cli.ledger.")
         }
         for locale in ("ca", "en", "es", "hu")

@@ -16,7 +16,7 @@ from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
 from string import Formatter
-from typing import IO
+from typing import IO, TYPE_CHECKING
 
 import i18n
 import yaml
@@ -27,6 +27,9 @@ from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
+
+if TYPE_CHECKING:
+    from ._lazy_catalogue import LazyLocaleCatalogue
 
 _log = get_logger(__name__)
 _INITIALISED = False

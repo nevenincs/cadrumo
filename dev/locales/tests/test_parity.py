@@ -4,6 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
+
+from cadrumo.application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
+from cadrumo.core import scan_directory
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from cadrumo.tests.cli_runner import invoke_typer_app
 from dev.locales import (
     DOCS_SRC_DIR,
     HARNESS_SRC_DIR,
@@ -13,12 +18,9 @@ from dev.locales import (
     scan_namespace_markers,
     scan_source_tree,
 )
+from dev.locales._paths import LOCALES_DIR, SRC_DIR
 from dev.locales.cli import app
-
-from cadrumo.application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
-from cadrumo.core import scan_directory
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.tests.cli_runner import invoke_typer_app
+from dev.locales.manager import locale_catalogue_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -178,33 +180,42 @@ def _assert_command_family_catalogue_strings(
 
 @pytest.fixture(scope="module")
 def manager():
-    locales_dir = Path(__file__).resolve().parents[1] / "locales"
-    src_dir = locales_dir.parent
     # The documentation generators and the MCP harness both live outside the
     # package but render operator-facing prose from this same catalogue, so
     # the gate must see their keys or it reports every one as an extra key
     # with no codebase site.
-    return LocaleManager(src_dir, locales_dir, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+
+
+def _committed_catalogues(manager) -> dict[str, Path]:
+    """Return ``{locale_code: catalogue source}`` for every shipped language.
+
+    Resolved per language through the shared helper rather than by scanning
+    for ``*.yml``: a catalogue ships as a shard DIRECTORY or as a flat file,
+    and a non-recursive glob of the root sees neither once the tree is
+    sharded. A parity gate with no catalogues loaded compares nothing.
+    """
+    sources: dict[str, Path] = {}
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        code = str(language)
+        source = locale_catalogue_source(manager.locales_dir, code)
+        if source is not None:
+            sources[code] = source
+    return sources
 
 
 @pytest.fixture(scope="module")
 def locales_state(manager):
     codebase_keys = manager.get_codebase_keys()
-    files = list(scan_directory(manager.locales_dir, pattern="*.yml"))
-    locale_keys_map = {}
-
-    for f in files:
-        data = manager.load_locale(f)
-        locale_keys_map[f.name] = manager.get_yaml_keys(data)
-
-    return codebase_keys, locale_keys_map, files
+    sources = _committed_catalogues(manager)
+    locale_keys_map = {code: manager.get_yaml_keys(manager.load_locale(path)) for code, path in sources.items()}
+    return codebase_keys, locale_keys_map, sources
 
 
 def test_locale_integrity(manager):
     """Test 3: No duplicate keys, sections, or unparseable data."""
-    files = list(scan_directory(manager.locales_dir, pattern="*.yml"))
     errors = []
-    for f in files:
+    for f in _committed_catalogues(manager).values():
         try:
             # StrictUniqueKeyLoader refuses a duplicate key with LocaleError, which
             # is not a ValueError; any other malformed catalogue surfaces as a
@@ -225,7 +236,7 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """English copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(manager.locales_dir / "en.yml")
+    data = manager.load_locale(_committed_catalogues(manager)["en"])
 
     assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
         "The Google Sheet is not marked as owned by this Cadrumo profile."
@@ -283,7 +294,7 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """Spanish copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(manager.locales_dir / "es.yml")
+    data = manager.load_locale(_committed_catalogues(manager)["es"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
         "La carpeta vault de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
@@ -334,7 +345,7 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """Catalan copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(manager.locales_dir / "ca.yml")
+    data = manager.load_locale(_committed_catalogues(manager)["ca"])
 
     assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
         "El full de Google no està marcat com a propietat d'aquest perfil Cadrumo."
@@ -399,7 +410,7 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     manager: LocaleManager,
 ) -> None:
     """Hungarian copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(manager.locales_dir / "hu.yml")
+    data = manager.load_locale(_committed_catalogues(manager)["hu"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
         "A Google Drive vault mappa {vault_folder_name} az előző termékhez tartozik és nem használható; "
@@ -1108,10 +1119,10 @@ def test_codebase_namespaces_are_satisfied_by_locale_entries(locales_state, mana
 
 def test_inter_locale_parity(locales_state):
     """Test 2: Parity between localization files themselves."""
-    _, locale_keys_map, files = locales_state
-    assert len(files) > 1, "Not enough localization files to compare."
+    _, locale_keys_map, sources = locales_state
+    assert len(sources) > 1, "Not enough localization catalogues to compare."
 
-    reference_file = files[0].name
+    reference_file = next(iter(sorted(locale_keys_map)))
     reference_keys = locale_keys_map[reference_file]
 
     errors = []

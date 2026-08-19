@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import pytest
 
-from ..manager import LocaleManager, LocaleError
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -23,7 +23,10 @@ def test_sharded_load_locale_merges_all_shards() -> None:
 
         schema_dir = es_dir / "modelo" / "schema"
         schema_dir.mkdir(parents=True)
-        (schema_dir / "303.yml").write_text("modelo:\n  schema:\n    '303':\n      casilla:\n        '01':\n          label: 'IVA'\n", encoding="utf-8")
+        (schema_dir / "303.yml").write_text(
+            "modelo:\n  schema:\n    '303':\n      casilla:\n        '01':\n          label: 'IVA'\n",
+            encoding="utf-8",
+        )
 
         manager = LocaleManager(src_dir=tmp, locales_dir=locales_dir)
         loaded = manager.load_locale(es_dir)
@@ -74,7 +77,7 @@ def test_sharded_scaffold_partitions_keys() -> None:
         src_dir = tmp / "src"
         src_dir.mkdir()
         (src_dir / "main.py").write_text(
-            'from cadrumo.core.i18n import tr\n'
+            "from cadrumo.core.i18n import tr\n"
             'tr("cli.cmd.start")\n'
             'tr("modelo.schema.303.casilla.01.label")\n'
             'tr("other.unclassified.key")\n',
@@ -86,7 +89,9 @@ def test_sharded_scaffold_partitions_keys() -> None:
         es_dir.mkdir(parents=True)
 
         manager = LocaleManager(src_dir=src_dir, locales_dir=locales_dir)
-        manager._codebase_keys = frozenset({"cli.cmd.start", "modelo.schema.303.casilla.01.label", "other.unclassified.key"})
+        manager._codebase_keys = frozenset(
+            {"cli.cmd.start", "modelo.schema.303.casilla.01.label", "other.unclassified.key"},
+        )
         # Pre-seed values
         manager.set_locale_value("es", "cli.cmd.start", "Iniciar")
         manager.set_locale_value("es", "modelo.schema.303.casilla.01.label", "Base")

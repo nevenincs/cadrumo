@@ -37,18 +37,14 @@ from itertools import pairwise
 from pathlib import Path
 
 import pytest
-from dev.locales import LocaleManager
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.operator_surface.tests._contract_locale_fixture import pin_english_locale
+from dev.locales import LocaleManager
+from dev.locales.manager import locale_catalogue_source
 
 __all__ = ["pin_english_locale"]
 
-from cadrumo.core import BindingSourceKind
-from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
-from cadrumo.core.config import override_settings
-from cadrumo.core.errors import get_registered_error_code
-from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.application import operator_surface
 from cadrumo.application.operator_surface import (
     FamilyMountState,
@@ -67,7 +63,19 @@ from cadrumo.application.operator_surface import (
     resolve_source_kind_alias,
 )
 from cadrumo.application.operator_surface import _help as _help_module
-from cadrumo.application.operator_surface._models import HelpDocument, HelpEntry, HelpSection, LifecycleContract, RootLandingReport, RootSurface
+from cadrumo.application.operator_surface._models import (
+    HelpDocument,
+    HelpEntry,
+    HelpSection,
+    LifecycleContract,
+    RootLandingReport,
+    RootSurface,
+)
+from cadrumo.core import BindingSourceKind
+from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors import get_registered_error_code
+from cadrumo.core.external_constants import OutputLanguage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -459,7 +467,12 @@ def test_help_and_landing_locale_strings_stay_within_field_caps() -> None:
 
     violations: list[str] = []
     for locale in OutputLanguage:
-        catalogue = manager.load_locale(manager.locales_dir / f"{locale.value}.yml")
+        # A catalogue ships as a shard directory or a flat file; resolving the
+        # shape here rather than hardcoding one keeps this cap check from
+        # raising -- and a gate that raises is a gate that stopped checking.
+        source = locale_catalogue_source(manager.locales_dir, locale.value)
+        assert source is not None, f"no committed catalogue for {locale.value!r}; the cap check would be vacuous"
+        catalogue = manager.load_locale(source)
         for key, cap in capped_keys:
             value = _lookup_dotted(catalogue, key)
             if value is None:

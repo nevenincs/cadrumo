@@ -37,6 +37,7 @@ from ._render import (
     register_profile_language_resolver,
     tr,
 )
+from ._routing import route_key_to_shard
 from ._translatable import Translatable
 
 __all__ = [
@@ -55,5 +56,6 @@ __all__ = [
     "lookup_translation_entry",
     "output_language",
     "register_profile_language_resolver",
+    "route_key_to_shard",
     "tr",
 ]

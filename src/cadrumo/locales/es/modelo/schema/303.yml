@@ -701,393 +701,364 @@ modelo:
         official_name: Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.
         title: IVA. Autoliquidación (trimestral)
       revision:
-        2009-y-siguientes:
+        '2022':
           casilla:
             '01':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Base imponible
+              label: null
             '02':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje
+              label: null
             '03':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Cuota
+              label: null
             '04':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Base imponible
+              label: null
             '05':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Tipo porcentaje
+              label: null
             '06':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Cuota
+              label: null
             '07':
               help: null
-              label: IVA devengado RG tipo general 21pct - Base imponible
+              label: null
             08:
               help: null
-              label: IVA devengado RG tipo general 21pct - Tipo porcentaje
+              label: null
             09:
               help: null
-              label: IVA devengado RG tipo general 21pct - Cuota
+              label: null
             '10':
               help: null
-              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
-                - Base
+              label: null
             '108':
               help: null
-              label: Rectificativa - Otros ajustes determinados supuestos por discrepancia
-                criterio administrativo
+              label: null
             '109':
               help: null
-              label: Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones
-                del ejercicio y periodo
+              label: null
             '11':
               help: null
-              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
-                - Cuota
+              label: null
             '111':
               help: null
-              label: Rectificativa - Importe de la rectificacion
+              label: null
             '12':
               help: null
-              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
-                - Base
+              label: null
             '120':
               help: null
-              label: Informacion adicional - Ops no sujetas reglas localizacion (excl
-                casilla 123)
+              label: null
             '122':
               help: null
-              label: Informacion adicional - Ops sujetas inversion sujeto pasivo
+              label: null
             '123':
               help: null
-              label: Informacion adicional - Ops no sujetas localizacion regimenes
-                especiales ventanilla unica
+              label: null
             '124':
               help: null
-              label: Informacion adicional - Ops sujetas regimenes especiales ventanilla
-                unica
+              label: null
             '13':
               help: null
-              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
-                - Cuota
+              label: null
             '14':
               help: null
-              label: Modificacion bases y cuotas IVA devengado - Base imponible
+              label: null
             '15':
               help: null
-              label: Modificacion bases y cuotas IVA devengado - Cuota
+              label: null
             '150':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Base imponible
+              label: null
             '151':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje
+              label: null
             '152':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Cuota
+              label: null
             '153':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Base imponible
+              label: null
             '154':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje
+              label: null
             '155':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Cuota
+              label: null
             '156':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Base imponible
+              label: null
             '157':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Tipo porcentaje
+              label: null
             '158':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Cuota
+              label: null
             '16':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Base imponible
+              label: null
             '165':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Base imponible
+              label: null
             '166':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje
+              label: null
             '167':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Cuota
+              label: null
             '168':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Base imponible
+              label: null
             '169':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje
+              label: null
             '17':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Tipo porcentaje
+              label: null
             '170':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Cuota
+              label: null
             '18':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Cuota
+              label: null
             '19':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Base imponible
+              label: null
             '20':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Tipo porcentaje
+              label: null
             '21':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Cuota
+              label: null
             '22':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Base imponible
+              label: null
             '23':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Tipo porcentaje
+              label: null
             '24':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Cuota
+              label: null
             '25':
               help: null
-              label: Modificacion bases y cuotas recargo equivalencia - Base imponible
+              label: null
             '26':
               help: null
-              label: Modificacion bases y cuotas recargo equivalencia - Cuota
+              label: null
             '27':
               help: null
-              label: Total cuota devengada
+              label: null
             '28':
               help: null
-              label: IVA deducible ops interiores corrientes - Base
+              label: null
             '29':
               help: null
-              label: IVA deducible ops interiores corrientes - Cuota
+              label: null
             '30':
               help: null
-              label: IVA deducible ops interiores bienes inversion - Base
+              label: null
             '31':
               help: null
-              label: IVA deducible ops interiores bienes inversion - Cuota
+              label: null
             '32':
               help: null
-              label: IVA deducible importaciones bienes corrientes - Base
+              label: null
             '33':
               help: null
-              label: IVA deducible importaciones bienes corrientes - Cuota
+              label: null
             '34':
               help: null
-              label: IVA deducible importaciones bienes inversion - Base
+              label: null
             '35':
               help: null
-              label: IVA deducible importaciones bienes inversion - Cuota
+              label: null
             '36':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias corrientes - Base
+              label: null
             '37':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias corrientes - Cuota
+              label: null
             '38':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias bienes inversion
-                - Base
+              label: null
             '39':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias bienes inversion
-                - Cuota
+              label: null
             '40':
               help: null
-              label: Rectificacion deducciones - Base
+              label: null
             '41':
               help: null
-              label: Rectificacion deducciones - Cuota
+              label: null
             '42':
               help: null
-              label: Compensaciones regimen especial agricultura ganaderia y pesca
-                - Cuota
+              label: null
             '43':
               help: null
-              label: Regularizacion bienes de inversion - Cuota
+              label: null
             '44':
               help: null
-              label: Regularizacion prorrata por porcentaje definitivo - Cuota
+              label: null
             '45':
               help: null
-              label: Total a deducir - Cuota
+              label: null
             '47':
               help: null
-              label: RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades
+              label: null
             '48':
               help: null
-              label: RS - 4T - Suma cuotas derivadas regimen simplificado conjunto
-                actividades
+              label: null
             '49':
               help: null
-              label: RS - 4T - Suma ingresos a cuenta realizados en el ejercicio
+              label: null
             '50':
               help: null
-              label: RS - 4T - Resultado ([48]-[49])
+              label: null
             '51':
               help: null
-              label: RS - Cuotas devengadas adquisiciones intracomunitarias bienes
+              label: null
             '52':
               help: null
-              label: RS - Cuotas devengadas entregas activos fijos
+              label: null
             '53':
               help: null
-              label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
+              label: null
             '54':
               help: null
-              label: RS - Total cuota resultante
+              label: null
             '55':
               help: null
-              label: RS - IVA deducible adquisicion o importacion activos fijos
+              label: null
             '56':
               help: null
-              label: RS - IVA deducible regularizacion bienes inversion
+              label: null
             '57':
               help: null
-              label: RS - Total IVA deducible regimen simplificado ([55]+[56])
+              label: null
             '58':
               help: null
-              label: RS - Resultado regimen simplificado ([54]-[57])
+              label: null
             '59':
               help: null
-              label: Informacion adicional - Entregas intracomunitarias bienes y servicios
+              label: null
             '60':
               help: null
-              label: Informacion adicional - Exportaciones y operaciones asimiladas
+              label: null
             '62':
               help: null
-              label: Informacion adicional - Entregas criterio caja devengado art
-                75 LIVA - Base imponible
+              label: null
             '63':
               help: null
-              label: Informacion adicional - Entregas criterio caja devengado art
-                75 LIVA - Cuota
+              label: null
             '64':
               help: null
-              label: Resultado - Suma de resultados ([46]+[58]+[76])
+              label: null
             '65':
               help: null
-              label: Resultado - Porcentaje atribuible Administracion del Estado
+              label: null
             '66':
               help: null
-              label: Resultado - Importe atribuible Administracion del Estado
+              label: null
             '68':
               help: null
-              label: Resultado - Tributacion conjunta resultado regularizacion anual
+              label: null
             '70':
               help: null
-              label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
-                del ejercicio y periodo
+              label: null
             '71':
               help: null
-              label: Resultado final ([69]-[70]+[109])
+              label: null
             '74':
               help: null
-              label: Informacion adicional - Adquisiciones criterio caja - Base imponible
+              label: null
             '75':
               help: null
-              label: Informacion adicional - Adquisiciones criterio caja - Cuota
+              label: null
             '76':
               help: null
-              label: Resultado - Regularizacion cuotas art 80 cinco 5a LIVA
+              label: null
             '77':
               help: null
-              label: Resultado - IVA a la importacion liquidado por la Aduana pendiente
-                de ingreso
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Ejercicio al que se refiere la autoliquidacion
+              label: null
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: Periodo trimestral (1T / 2T / 3T / 4T)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: null
-              label: Cuota IVA deducible autorepercutida en operaciones interiores
-                con inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial
-                casilla 37)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
               help: null
-              label: Cuota IVA autorepercutida en operaciones interiores con inversion
-                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
-                (LIVA art 84.Uno.2)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
               help: null
-              label: Cuota IVA deducible autorepercutida en adquisiciones intracomunitarias
-                (LIVA art 13 + art 15 + art 84.Uno.2 + art 92; oficial casillas 36/37)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
               help: null
-              label: Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias
-                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
-              label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: null
-              label: Saldo de compensacion disponible para periodos posteriores
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
               help: null
-              label: Saldo a compensar generado en este periodo
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: null
-              label: Cuotas a compensar pendientes de periodos anteriores
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: null
-              label: Cuotas a compensar de periodos previos pendientes para periodos
-                posteriores
+              label: null
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: Total cuota IVA deducible (soportado en operaciones interiores
-                + autorepercutido deducible)
+              label: null
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
-                en adquisiciones intracomunitarias)
+              label: null
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: Prorrata general - porcentaje (volumen con derecho / volumen
-                total × 100)
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
-              label: Volumen anual de operaciones que originan derecho a deducción
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: null
-              label: Volumen anual total de operaciones
+              label: null
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: null
-              label: Regularización por bienes de inversión (LIVA arts. 107-110)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: null
-              label: Cuota IVA repercutido al tipo general (21%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: Cuota IVA repercutido al tipo reducido (10%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: Cuota IVA repercutido al tipo super-reducido (4%)
+              label: null
             x-d5r62bjiclpnar3kc5i6u:
               help: null
-              label: Resultado de la autoliquidacion
+              label: null
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: Resultado del regimen general (cuota devengada - cuota deducible)
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
               help: null
-              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
-                (LIVA art 17 + art 92; oficial casilla 33)
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: Cuota IVA soportado en operaciones interiores corrientes
+              label: null
           field:
-            label: Modelo 303 ejercicios 2009 y siguientes (Orden EHA/3786/2008, modificada
-              por sucesivas ordenes anuales)
+            label: null
         '2023':
           casilla:
             '01':
@@ -1202,9 +1173,6 @@ modelo:
               help: null
               label: null
             '165':
-              help: null
-              label: null
-            '166':
               help: null
               label: null
             '167':
@@ -1696,9 +1664,6 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
