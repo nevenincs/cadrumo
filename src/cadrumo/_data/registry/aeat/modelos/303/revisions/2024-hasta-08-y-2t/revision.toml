@@ -29,7 +29,12 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 valid_from = 2024-01-01
-valid_to = 2024-12-31
+# Narrowed from 2024-12-31. This revision declares periods 1T, 2T and 01..08
+# and cites `aeat-dr-303-2024-early` alone, whose own window closes 2024-08-31.
+# Spanning the whole year made ONE revision cover BOTH 2024 disenos, so a
+# September filing could resolve here and be rendered under the pre-mid-year
+# layout -- the span-relayout gate reports exactly that.
+valid_to = 2024-08-31
 orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
 source_refs = [

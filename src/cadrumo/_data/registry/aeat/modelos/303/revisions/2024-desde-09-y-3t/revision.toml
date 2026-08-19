@@ -28,7 +28,10 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-valid_from = 2024-01-01
+# Narrowed from 2024-01-01. This revision declares periods 3T, 4T and 09..12
+# and cites `aeat-dr-303-2024-late` alone. Its span now starts where its own
+# id, its period selector and its cited diseno all say it starts.
+valid_from = 2024-09-01
 valid_to = 2024-12-31
 orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
