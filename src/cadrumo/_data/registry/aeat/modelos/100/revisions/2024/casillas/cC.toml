@@ -1,0 +1,16 @@
+# Anexo A deduction column "C", which AEAT identifies by LETTER rather
+# than by number. Its identity and concept are the bundled dictionary"s own:
+# entry VHREHB carries casilla_id "C" and the label this casilla
+# records. The conformance comparison reported it as declared by the
+# dictionary and absent from the registry.
+
+[[revisions."2024".casillas]]
+id = "C"
+number = "C"
+section = ["anexo_a", "deducciones"]
+data_type = "money"
+semantic_role = "irpf_deduccion_vivienda_habitual_rehabilitacion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:dt-18"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

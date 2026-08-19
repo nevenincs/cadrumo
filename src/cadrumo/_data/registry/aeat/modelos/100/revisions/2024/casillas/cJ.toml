@@ -1,0 +1,16 @@
+# Anexo A deduction column "J", which AEAT identifies by LETTER rather
+# than by number. Its identity and concept are the bundled dictionary"s own:
+# entry FAUP carries casilla_id "J" and the label this casilla
+# records. The conformance comparison reported it as declared by the
+# dictionary and absent from the registry.
+
+[[revisions."2024".casillas]]
+id = "J"
+number = "J"
+section = ["anexo_a", "deducciones"]
+data_type = "money"
+semantic_role = "irpf_deduccion_donativos_fundaciones_utilidad_publica"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-19"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

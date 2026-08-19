@@ -5747,3 +5747,29 @@ required_text = [
     "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas",
     "tendrán derecho a una deducción en la cuota íntegra",
 ]
+
+[legal."ley-49-2002:art-19"]
+# The article that ESTABLISHES the IRPF donativos deduction, which modelo 100's
+# Anexo A boxes G, H, J and M are the bases of. Read from the bundled
+# consolidated law rather than a per-article extract: the whole-law file already
+# ships and carries exactly one `a19` block, so there is no historical version to
+# pick the wrong one of. Its heading reads "Articulo 19. Deduccion de la cuota
+# del Impuesto sobre la Renta de las Personas Fisicas".
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002.html#a19"
+document_id = "BOE-A-2002-25039"
+article = "19"
+required_text = [
+    "Artículo 19. Deducción de la cuota del Impuesto sobre la Renta de las Personas Físicas.",
+    "tendrán derecho a deducir de la cuota íntegra",
+    "donativos, donaciones y aportaciones con derecho a deducción",
+]
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a19"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
