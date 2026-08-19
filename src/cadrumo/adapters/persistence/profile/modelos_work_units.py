@@ -49,7 +49,10 @@ from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
@@ -196,6 +199,24 @@ class WorkUnitCatalogueRepository:
         """
         self._storage.save(catalogue)
         _LOGGER.info("saved work-unit catalogue with %d entr(y/ies)", len(catalogue))
+
+    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> WorkUnitCatalogue:
+        """Apply ``mutation`` to the stored catalogue as one revision-guarded unit of work.
+
+        The catalogue is a SINGLETON row, so touching one work unit rewrites all
+        of them. Performed unguarded, a work unit created or advanced by a
+        concurrent caller is discarded by whichever write lands second, and
+        nothing reports it: the surviving entries are individually intact and
+        the missing one leaves no hole.
+
+        ``mutation`` is re-applied to the newly-current catalogue on a conflict,
+        so it MUST be a pure function of the catalogue it is handed -- a
+        decision closed over from an earlier read would be replayed against a
+        catalogue it was never true of.
+        """
+        catalogue = self._storage.mutate(mutation)
+        _LOGGER.info("mutated work-unit catalogue with %d entr(y/ies)", len(catalogue))
+        return catalogue
 
     def to_secure_object_write(
         self,

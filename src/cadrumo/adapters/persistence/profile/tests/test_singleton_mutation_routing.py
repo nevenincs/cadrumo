@@ -50,6 +50,7 @@ import pytest
 from ..assets import AssetsLedgerRepository
 from ..inventory import InventoryLedgerRepository
 from ..invoices import InvoiceCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -79,6 +80,7 @@ _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
     ("InventoryLedgerRepository.remove", InventoryLedgerRepository.remove),
     ("InvoiceCatalogueRepository.mutate", InvoiceCatalogueRepository.mutate),
+    ("WorkUnitCatalogueRepository.mutate", WorkUnitCatalogueRepository.mutate),
 )
 _VERB_IDS = tuple(name for name, _fn in _GUARDED_VERBS)
 
