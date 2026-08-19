@@ -106,7 +106,7 @@ def _settings_with_store(tmp_path: Path) -> Settings:
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "state",
         cadrumo_secret_store_dir=tmp_path / "fallback-store",
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
     ) as settings:
         return settings
 

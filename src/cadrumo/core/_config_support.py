@@ -66,17 +66,22 @@ def assert_canonical_protected_resource(value: str, *, subject: str) -> str:
 
 
 class SecretStoreBackend(StrEnum):
-    """Supported backends for the master-key secret store.
+    """Whether at-rest material is protected by real custody or a published key.
 
     :class:`~core.config.Settings` exposes this closed set through
-    ``cadrumo_secret_store_backend`` so storage custody and operator setup share
-    one spelling for automatic, keyring, file-backed, and explicitly unsecured
-    secret storage.
+    ``cadrumo_secret_store_backend``. It is a two-state axis, not a choice
+    among storage mechanisms: there is exactly one secured route, the profile's
+    own password custody, and one deliberately unsecured route for testing and
+    tutorial scenarios.
+
+    The set previously also offered ``keyring`` and ``file``, naming a
+    keychain-backed and a passphrase-derived file-backed master-key provider.
+    Both providers were deleted in the per-profile custody cutover, and nothing
+    ever branched on either member, so the two spellings selected nothing while
+    reading as storage modes an operator could choose between.
     """
 
     AUTO = "auto"
-    KEYRING = "keyring"
-    FILE = "file"
     UNSECURED = "unsecured"
 
 

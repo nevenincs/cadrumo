@@ -54,7 +54,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
     setting_env = str.upper
     env.update(
         {
-            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
+            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.AUTO.value,
             setting_env("cadrumo_secret_passphrase"): (
                 base_settings.cadrumo_dev_test_database_password.get_secret_value()
             ),
@@ -122,7 +122,7 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
-    assert "CADRUMO_SECRET_STORE_BACKEND=file" in config.output
+    assert "CADRUMO_SECRET_STORE_DIR" in config.output
     assert "aeat config profile show [NAME]" in config.output
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
@@ -393,7 +393,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):

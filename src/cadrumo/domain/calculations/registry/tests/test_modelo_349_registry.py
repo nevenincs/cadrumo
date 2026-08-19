@@ -17,6 +17,7 @@ from .. import (
     InputKind,
     RegistrySnapshot,
     RegistryValidator,
+    derive_export_layouts_from_bindings,
     build_snapshot,
     parse_export_payload,
     resolve_export_layout,
@@ -408,7 +409,12 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
 
 def test_committed_modelo_349_export_records_match_fixed_width_contract() -> None:
     revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
+    # The DERIVED layout, not the raw one. `revision.export_layouts` holds only
+    # the INLINE fields; M349's declarante record takes positions 1..58 from
+    # bindings, so the raw record starts at offset 59 and the contiguity walk
+    # below cannot hold against it. The derived layout is what the renderer and
+    # the completeness gate consume, so it is the surface this contract governs.
+    layout = derive_export_layouts_from_bindings(revision)[0]
     casilla_ids = {casilla.id for casilla in revision.casillas}
     expected_record_type_literals = {
         "declarante": "1",
@@ -418,15 +424,20 @@ def test_committed_modelo_349_export_records_match_fixed_width_contract() -> Non
 
     for record in layout.records:
         record_type = record.record_type
-        first_field = record.fields[0]
+        # Ordered by offset: derivation appends the binding-derived fields after
+        # the inline ones, so tuple order is not wire order. Sorting reads the
+        # record as it is actually emitted, and hides nothing -- an overlap or a
+        # hole still breaks the cursor walk below.
+        fields = sorted(record.fields, key=lambda field: field.offset)
+        first_field = fields[0]
         assert first_field.offset == 1, record_type
         assert first_field.length == 1, record_type
         assert first_field.kind is CasillaFieldKind.LITERAL, record_type
         assert first_field.literal == expected_record_type_literals[record_type], record_type
-        total = sum(field.length or 0 for field in record.fields)
+        total = sum(field.length or 0 for field in fields)
         assert total == 500, f"record {record.record_type!r} totals {total} bytes; expected 500"
         cursor = 1
-        for field in record.fields:
+        for field in fields:
             assert field.offset == cursor, (
                 f"record {record.record_type!r} field {field.id!r} offset {field.offset} "
                 f"breaks contiguity (expected {cursor})"

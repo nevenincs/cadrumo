@@ -132,7 +132,7 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
     env.update(
         {
             setting_env("cadrumo_local_storage_root"): str(storage_root),
-            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
+            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.AUTO.value,
             setting_env(
                 "cadrumo_secret_passphrase"
             ): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
@@ -155,7 +155,7 @@ def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str)
 
     with override_settings(
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):

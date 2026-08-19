@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _profile_storage_env(tmp_path: Path) -> dict[str, str | None]:
     return {
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
-        "CADRUMO_SECRET_STORE_BACKEND": "file",
+        "CADRUMO_SECRET_STORE_BACKEND": "auto",
         "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         "CADRUMO_ACTIVE_PROFILE": None,

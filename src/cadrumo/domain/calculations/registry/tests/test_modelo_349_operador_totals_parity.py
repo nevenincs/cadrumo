@@ -196,16 +196,21 @@ def test_totals_parity_over_empty_observations_reports_full_shortfall() -> None:
 def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     """The DEFAULT tolerance is exact equality, and a genuine one-cent gap is caught by it.
 
-    Modelo 349's own revisions declare NO verification expectations at all
-    -- pinned against the live registry below so this proof cannot silently
-    drift -- so with no published contract there is no authority to widen the
-    comparison. A caller that resolves no explicit tolerance must not have a
-    one-cent gap silently absorbed by this function's own default. A prior
-    version of this default was a hardcoded cent that would have masked
-    exactly this gap.
+    A caller that resolves no explicit tolerance must not have a one-cent gap
+    silently absorbed by this function's own default. A prior version of that
+    default was a hardcoded cent, which would have masked exactly this gap.
+
+    This used to rest on modelo 349 declaring NO verification expectations, the
+    argument being that with no published contract there is no authority to
+    widen the comparison. The campaign has since authored
+    `modelo-349-recapitulativa-verification`, so that premise is simply false
+    now and the case failed on it rather than on the default. The replacement is
+    stronger rather than weaker: the published expectation declares
+    `tolerance = 0.00`, so the registry's own contract AGREES with exact
+    equality instead of merely being silent, and the default is pinned against a
+    positive statement.
     """
     from .....core.resources import bundled_path
-    from .....domain.calculations.registry import RegistryValidationError
     from .....domain.calculations.registry.tests import build_snapshot
 
     # Scoped to M349 alone rather than through ``resources().modelos.authority``,
@@ -214,15 +219,11 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "349")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="01")
-    assert not snapshot.revision.verification_expectations, (
-        "test precondition: modelo 349 must declare no verification expectations"
+    expectations = snapshot.revision.verification_expectations
+    assert expectations, "test precondition: modelo 349 must publish its verification expectation"
+    assert all(expectation.tolerance == Decimal("0.00") for expectation in expectations), (
+        "the published contract must declare exact equality, which is what this default mirrors"
     )
-    try:
-        snapshot.verification_policy()
-    except RegistryValidationError:
-        pass
-    else:
-        raise AssertionError("test precondition: verification_policy() must refuse an expectation-less revision")
 
     revision = _modelo_349_revision()
 

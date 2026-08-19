@@ -132,7 +132,7 @@ class TestCliFlag:
         result = invoke_cached_cli(
             ["app", "modelo", "work", "calculate", "--help"],
             env={
-                "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+                "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
                 "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
                 "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),

@@ -52,7 +52,7 @@ def _run_cadrumo(
         settings={
             "cadrumo_local_storage_root": storage_root,
             "cadrumo_secret_store_dir": storage_root / "fallback-store",
-            "cadrumo_secret_store_backend": "file",
+            "cadrumo_secret_store_backend": "auto",
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },

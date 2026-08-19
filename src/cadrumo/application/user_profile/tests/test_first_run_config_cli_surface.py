@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _env(tmp_path: Path) -> dict[str, str]:
     return {
-        "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+        "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
         "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),

@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _isolated_env(tmp_path: Path) -> dict[str, str | None]:
     return {
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-local"),
-        "CADRUMO_SECRET_STORE_BACKEND": "file",
+        "CADRUMO_SECRET_STORE_BACKEND": "auto",
         "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secret-store"),
         "CADRUMO_SECRET_PASSPHRASE": "profile-choice-help-passphrase",
         "CADRUMO_DATABASE_URL": None,
