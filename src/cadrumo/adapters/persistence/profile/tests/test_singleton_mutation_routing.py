@@ -49,6 +49,7 @@ import pytest
 
 from ..assets import AssetsLedgerRepository
 from ..inventory import InventoryLedgerRepository
+from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -65,11 +66,18 @@ _BYPASSING_WRITE_PATHS = (
     "to_secure_object_write(",
 )
 
+#: The guarded seam an APPLICATION service reaches, one layer above the
+#: repository's own. The invoice catalogue's creation service owns its
+#: read-modify-write rather than delegating to a repository verb, so its seam is
+#: the repository's ``mutate`` rather than the storage object's.
+_GUARDED_SERVICE_SEAM = ".mutate("
+
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
     ("AssetsLedgerRepository.add", AssetsLedgerRepository.add),
     ("InventoryLedgerRepository.create", InventoryLedgerRepository.create),
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
+    ("InvoiceCatalogueRepository.mutate", InvoiceCatalogueRepository.mutate),
 )
 _VERB_IDS = tuple(name for name, _fn in _GUARDED_VERBS)
 
@@ -102,6 +110,35 @@ def test_write_verb_carries_no_unguarded_write_path(name: str, verb: Callable[..
     assert not reintroduced, (
         f"{name} reaches storage directly via {reintroduced}; every write to a profile "
         f"singleton must go through {_GUARDED_SEAM} so it carries the revision it was read at"
+    )
+
+
+def test_the_invoice_creation_service_routes_through_the_repository_guard() -> None:
+    """The catalogue creation service must not rebuild and save the catalogue itself.
+
+    This service is the one singleton mutator that lives in the APPLICATION
+    layer rather than behind a repository verb, so the repository-seam gates
+    above cannot see it. It was the last unguarded singleton write: the
+    catalogue composes the enveloped persistence, which carried no guarded seam
+    until one was ported to it, and two operators creating different invoices
+    lost one silently.
+
+    Asserted on spelling, with the same limits the module docstring states.
+    ``test_invoices_concurrent_create`` is what measures the behaviour.
+    """
+    from .....application.invoices._creation import create_catalogue_invoice
+
+    source = inspect.getsource(create_catalogue_invoice)
+
+    assert _GUARDED_SERVICE_SEAM in source, (
+        "create_catalogue_invoice does not route through the repository's guarded mutate; "
+        "a service that loads, rebuilds and saves the catalogue itself drops a concurrently "
+        "created invoice, which under-declares"
+    )
+    reintroduced = [path for path in ("repo.save(", "repository.save(") if path in source]
+    assert not reintroduced, (
+        f"create_catalogue_invoice reaches storage directly via {reintroduced}; the guarded "
+        f"mutate is the only write path for a singleton catalogue"
     )
 
 

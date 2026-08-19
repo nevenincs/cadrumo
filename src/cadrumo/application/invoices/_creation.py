@@ -24,7 +24,7 @@ add->link gap without collapsing the two stores.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
@@ -465,6 +465,23 @@ def build_catalogue_invoice(
     return Invoice.model_validate(invoice_payload)
 
 
+def _save_through_the_protocol_without_a_guard(
+    repo: InvoiceCatalogueRepositoryProtocol,
+    mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue],
+) -> InvoiceCatalogue:
+    """Fall back to load-then-save for a repository that offers no guarded path.
+
+    The narrow domain protocol promises only ``exists``/``load``/``save``, and a
+    test double or an alternative implementation may provide exactly that. Such
+    a repository carries the lost-update exposure this fallback cannot close --
+    the production repository offers ``mutate`` and is what the service uses.
+    """
+    catalogue = repo.load()
+    updated = mutation(catalogue)
+    repo.save(updated)
+    return updated
+
+
 def create_catalogue_invoice(
     *,
     invoice: Invoice,
@@ -484,17 +501,29 @@ def create_catalogue_invoice(
     if bucket_id is None:
         raise InvoiceValidationError("a catalogue invoice must declare its bucket_id before persistence")
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    catalogue = repo.load()
-    if invoice.invoice_id in catalogue:
-        raise InvoiceValidationError(
-            "an invoice with the same identity already exists in the catalogue",
-            translated_message="application.invoices.creation.errors.duplicate_invoice",
-            context={"invoice_id": invoice.invoice_id},
-        )
-    updated = dict(catalogue.invoices)
-    updated[invoice.invoice_id] = invoice
-    new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
-    repo.save(new_catalogue)
+
+    def _add(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
+        """Rebuild the catalogue with this invoice, refusing an identity it already holds."""
+        if invoice.invoice_id in catalogue:
+            raise InvoiceValidationError(
+                "an invoice with the same identity already exists in the catalogue",
+                translated_message="application.invoices.creation.errors.duplicate_invoice",
+                context={"invoice_id": invoice.invoice_id},
+            )
+        updated = dict(catalogue.invoices)
+        updated[invoice.invoice_id] = invoice
+        return InvoiceCatalogue.model_validate({"invoices": updated})
+
+    # Guarded rather than load-then-save: the catalogue is one encrypted row, so
+    # two operators adding DIFFERENT invoices at once would both read the same
+    # catalogue and the later write would drop the earlier invoice. Nothing
+    # would report it -- the duplicate check above cannot see an invoice it
+    # never read -- and a dropped invoice under-declares. Re-running the
+    # duplicate check on each attempt is the point: it must be judged against
+    # the catalogue actually being written to, not the one first read.
+    new_catalogue = (
+        repo.mutate(_add) if hasattr(repo, "mutate") else _save_through_the_protocol_without_a_guard(repo, _add)
+    )
     # Emitted AFTER the save, so the audit trail never records a creation that
     # did not persist. The reverse order would leave an event pointing at an
     # invoice that is not there, which is worse than a missing event: it reads

@@ -43,11 +43,13 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ..storage import (
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
+    SecureObjectRevisionConflictError,
     SecureObjectWrite,
     secure_object_logical_path,
 )
@@ -182,6 +184,72 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             written_at=write.written_at,
             payload=write.payload,
         )
+
+    def _load_with_revision(self) -> tuple[DocumentT, str]:
+        """Return the stored document and the revision id it was read at.
+
+        An absent row reports :data:`ABSENT_SECURE_OBJECT_REVISION_ID`, the
+        sentinel the write funnel reads as "this row must not exist yet", so the
+        first writer of a singleton is guarded exactly like every later one.
+        """
+        document = self.load()
+        record = self._objects.load(
+            self.namespace,
+            self.object_key,
+            expected_class=self._definition.sensitivity,
+            max_supported_version=self._definition.schema_version,
+        )
+        if record is None:
+            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
+        return document, record.revision_id
+
+    def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
+        """Apply ``mutation`` to the stored document as one guarded unit of work.
+
+        These documents are SINGLETONS: every entry lives in one encrypted row,
+        so "add one entry" is really read-whole-document, rebuild, write whole
+        document. Performed unguarded, two callers adding DIFFERENT entries both
+        read the same document and the later write silently discards the
+        earlier caller's entry -- a lost update, and not a conflict any
+        uniqueness check would notice, because the two entries never met. On a
+        financial catalogue that is a dropped invoice, which under-declares.
+
+        The write carries the revision the document was READ at, so the
+        substrate refuses it if the row moved in between; the mutation is then
+        re-applied to the newly-current document. ``mutation`` is therefore
+        called once per attempt and MUST be a pure function of the document it
+        is handed -- it must not close over a value derived from an earlier
+        read, or the retry re-applies a stale decision.
+
+        Args:
+            mutation: Builds the next document from the current one. May raise
+                to refuse the mutation outright (a duplicate-identifier check,
+                for instance); the refusal propagates unretried, since a
+                conflict is what the retry exists for and a refusal is not one.
+            attempts: Maximum reads of the current document. Exceeding them
+                raises the substrate's conflict error rather than looping.
+
+        Returns:
+            The document as written.
+
+        Raises:
+            SecureObjectRevisionConflictError: Contention persisted across every
+                attempt.
+        """
+        last_conflict: SecureObjectRevisionConflictError | None = None
+        for _attempt in range(attempts):
+            current, revision_id = self._load_with_revision()
+            updated = mutation(current)
+            write = self.to_secure_object_write(updated).model_copy(
+                update={"expected_revision_id": revision_id},
+            )
+            try:
+                self._objects.save_many((write,))
+            except SecureObjectRevisionConflictError as exc:
+                last_conflict = exc
+                continue
+            return updated
+        raise last_conflict if last_conflict is not None else AssertionError("mutate exhausted without a conflict")
 
 
 __all__ = [
