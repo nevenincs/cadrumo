@@ -147,7 +147,23 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")
         return envelope.payload
 
-    def to_secure_object_write(self, document: DocumentT) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[DocumentT, str]:
+        """Return the stored document and the revision id it was read at.
+
+        The public read for a caller composing a GUARDED co-commit: it cannot
+        use :meth:`mutate`, whose write commits on its own, but it needs the
+        same revision to carry on its write. Absent rows report the
+        ``ABSENT_SECURE_OBJECT_REVISION_ID`` sentinel, so the first writer of a
+        singleton is guarded exactly like every later one.
+        """
+        return self._load_with_revision()
+
+    def to_secure_object_write(
+        self,
+        document: DocumentT,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Prepare the Envelope-wrapped encrypted-SQL upsert without committing it.
 
         Callers that need to co-commit this document with sibling secure
@@ -155,6 +171,16 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         transaction. The returned write carries the identical
         :class:`~adapters.persistence.storage.Envelope` bytes :meth:`save`
         would persist directly.
+
+        ``expected_revision_id`` is the compare-and-swap half, and without it a
+        co-commit carries the same lost update :meth:`mutate` exists to prevent:
+        these documents are SINGLETONS, so composing from an unguarded read
+        writes back the whole document and discards any entry another caller
+        added in between. Pass the revision :meth:`load_revisioned` reported and
+        re-run the composition if the substrate refuses the write. It stays
+        optional because a caller writing a document it did not derive from a
+        read has no revision to assert -- but a caller that DID read one and
+        omits it is choosing the silent discard.
         """
         from ..storage import Envelope
 
@@ -171,6 +197,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             schema_version=self._definition.schema_version,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            expected_revision_id=expected_revision_id,
         )
 
     def save(self, document: DocumentT) -> None:

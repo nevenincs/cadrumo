@@ -1,0 +1,1409 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-08"
+record_type = "714-08"
+order = 8
+encoding = "iso-8859-1"
+line_ending = "none"
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14"
+offset = 14
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.14-18.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1"
+offset = 19
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.19-80.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1"
+offset = 81
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.81-93.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94"
+offset = 94
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.94-98.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2"
+offset = 99
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.99-160.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2"
+offset = 161
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.161-173.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174"
+offset = 174
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.174-178.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3"
+offset = 179
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.179-240.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3"
+offset = 241
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.241-253.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1"
+offset = 267
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.267-271.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-1"
+offset = 272
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.272-333.bienes-y-derechos-p-opciones-contractuales-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-1"
+offset = 334
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.334-346.bienes-y-derechos-p-opciones-contractuales-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2"
+offset = 347
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.347-351.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-2"
+offset = 352
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.352-413.bienes-y-derechos-p-opciones-contractuales-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-2"
+offset = 414
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.414-426.bienes-y-derechos-p-opciones-contractuales-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3"
+offset = 427
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.427-431.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-3"
+offset = 432
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.432-493.bienes-y-derechos-p-opciones-contractuales-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - P. Opciones contractuales - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-3"
+offset = 494
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.494-506.bienes-y-derechos-p-opciones-contractuales-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1"
+offset = 520
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.520-520.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1"
+offset = 521
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.521-525.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1"
+offset = 526
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.526-587.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Nº de unidades 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1"
+offset = 588
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.588-600.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Valor (euros) 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1"
+offset = 601
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.601-613.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2"
+offset = 614
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.614-614.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2"
+offset = 615
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.615-619.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2"
+offset = 620
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.620-681.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Nº de unidades 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2"
+offset = 682
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.682-694.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Valor (euros) 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2"
+offset = 695
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.695-707.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3"
+offset = 708
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.708-708.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3"
+offset = 709
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.709-713.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3"
+offset = 714
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.714-775.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Nº de unidades 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3"
+offset = 776
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.776-788.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - Q. Saldos en monedas virtuales - Valor (euros) 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3"
+offset = 789
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.789-801.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1"
+offset = 815
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.815-815.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1"
+offset = 816
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.816-820.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1"
+offset = 821
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.821-882.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1"
+offset = 883
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.883-895.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2"
+offset = 896
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.896-896.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2"
+offset = 897
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.897-901.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2"
+offset = 902
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.902-963.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Valor  2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2"
+offset = 964
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.964-976.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3"
+offset = 977
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.977-977.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3"
+offset = 978
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.978-982.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3"
+offset = 983
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.983-1044.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Valor  3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3"
+offset = 1045
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1045-1057.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4"
+offset = 1058
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1058-1058.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4"
+offset = 1059
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1059-1063.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4"
+offset = 1064
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1064-1125.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Valor  4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4"
+offset = 1126
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1126-1138.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5"
+offset = 1139
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1139-1139.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5"
+offset = 1140
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1140-1144.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5"
+offset = 1145
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1145-1206.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Valor  5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5"
+offset = 1207
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1207-1219.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-1"
+offset = 1233
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1233-1237.deudas-deducibles-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1"
+offset = 1238
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1238-1257.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-1"
+offset = 1258
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1258-1258.deudas-deducibles-nif-otro-pais-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-1"
+offset = 1259
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1259-1320.deudas-deducibles-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-1"
+offset = 1321
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1321-1333.deudas-deducibles-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-2"
+offset = 1334
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1334-1338.deudas-deducibles-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2"
+offset = 1339
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1339-1358.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-2"
+offset = 1359
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1359-1359.deudas-deducibles-nif-otro-pais-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-2"
+offset = 1360
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1360-1421.deudas-deducibles-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-2"
+offset = 1422
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1422-1434.deudas-deducibles-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-3"
+offset = 1435
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1435-1439.deudas-deducibles-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3"
+offset = 1440
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1440-1459.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-3"
+offset = 1460
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1460-1460.deudas-deducibles-nif-otro-pais-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-3"
+offset = 1461
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1461-1522.deudas-deducibles-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-3"
+offset = 1523
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1523-1535.deudas-deducibles-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-4"
+offset = 1536
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1536-1540.deudas-deducibles-porcentaje-titularidad-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4"
+offset = 1541
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1541-1560.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-4"
+offset = 1561
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1561-1561.deudas-deducibles-nif-otro-pais-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-4"
+offset = 1562
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1562-1623.deudas-deducibles-descripcion-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-4"
+offset = 1624
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1624-1636.deudas-deducibles-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-5"
+offset = 1637
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1637-1641.deudas-deducibles-porcentaje-titularidad-5"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5"
+offset = 1642
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1642-1661.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-5"
+offset = 1662
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1662-1662.deudas-deducibles-nif-otro-pais-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-5"
+offset = 1663
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1663-1724.deudas-deducibles-descripcion-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-5"
+offset = 1725
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1725-1737.deudas-deducibles-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-6"
+offset = 1738
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1738-1742.deudas-deducibles-porcentaje-titularidad-6"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6"
+offset = 1743
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1743-1762.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-6"
+offset = 1763
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1763-1763.deudas-deducibles-nif-otro-pais-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-6"
+offset = 1764
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1764-1825.deudas-deducibles-descripcion-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-6"
+offset = 1826
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1826-1838.deudas-deducibles-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-7"
+offset = 1839
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1839-1843.deudas-deducibles-porcentaje-titularidad-7"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7"
+offset = 1844
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1844-1863.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-7"
+offset = 1864
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1864-1864.deudas-deducibles-nif-otro-pais-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-7"
+offset = 1865
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1865-1926.deudas-deducibles-descripcion-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-7"
+offset = 1927
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.1927-1939.deudas-deducibles-valor-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - % Titularidad 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-8"
+offset = 1940
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-08.1940-1944.deudas-deducibles-porcentaje-titularidad-8"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF/NIE persona o entidad acreedora 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8"
+offset = 1945
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-08.1945-1964.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - NIF otro país 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-8"
+offset = 1965
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-08.1965-1965.deudas-deducibles-nif-otro-pais-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Descripción 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-descripcion-8"
+offset = 1966
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-08.1966-2027.deudas-deducibles-descripcion-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (2) Deudas deducibles - Valor 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-08-declared-deudas-deducibles-valor-8"
+offset = 2028
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-08.2028-2040.deudas-deducibles-valor-8"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# 714-10: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

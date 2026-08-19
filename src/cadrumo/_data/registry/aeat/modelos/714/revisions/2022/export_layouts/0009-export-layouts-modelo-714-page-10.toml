@@ -1,0 +1,26 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-714-fichero-aeat"
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-714-page-10"
+record_type = "714-10"
+order = 10
+encoding = "iso-8859-1"
+line_ending = "none"
+
+# (6) Liquidación - Deducción impuestos extranjero - Tipo medio efectivo de gravamen [TM]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-10-declared-liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm"
+offset = 169
+length = 4
+kind = "binding"
+binding = "modelo-714-2022.714-10.169-172.liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

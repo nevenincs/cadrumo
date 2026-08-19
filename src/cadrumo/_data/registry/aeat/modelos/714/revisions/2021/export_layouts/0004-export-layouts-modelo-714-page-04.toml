@@ -1,0 +1,2594 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-04"
+record_type = "714-04"
+order = 4
+encoding = "iso-8859-1"
+line_ending = "none"
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-1"
+offset = 14
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.14-14.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-15"
+offset = 15
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.15-19.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-15"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-20"
+offset = 20
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.20-60.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-20"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-61"
+offset = 61
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.61-84.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-61"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-1"
+offset = 85
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.85-97.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-2"
+offset = 98
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.98-98.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-99"
+offset = 99
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.99-103.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-99"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-104"
+offset = 104
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.104-144.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-104"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-145"
+offset = 145
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.145-168.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-145"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-2"
+offset = 169
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.169-181.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-3"
+offset = 182
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.182-182.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-183"
+offset = 183
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.183-187.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-183"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-188"
+offset = 188
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.188-228.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-188"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-229"
+offset = 229
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.229-252.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-229"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-3"
+offset = 253
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.253-265.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-4"
+offset = 266
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.266-266.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-267"
+offset = 267
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.267-271.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-267"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-272"
+offset = 272
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.272-312.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-272"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-313"
+offset = 313
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.313-336.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-313"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-4"
+offset = 337
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.337-349.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-5"
+offset = 350
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.350-350.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-351"
+offset = 351
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.351-355.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-351"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-356"
+offset = 356
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.356-396.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-356"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-397"
+offset = 397
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.397-420.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-397"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-5"
+offset = 421
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.421-433.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-6"
+offset = 434
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.434-434.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-435"
+offset = 435
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.435-439.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-435"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-440"
+offset = 440
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.440-480.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-440"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-481"
+offset = 481
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.481-504.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-481"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-6"
+offset = 505
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.505-517.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-7"
+offset = 518
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.518-518.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-519"
+offset = 519
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.519-523.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-519"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-524"
+offset = 524
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.524-564.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-524"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-565"
+offset = 565
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.565-588.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-565"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-7"
+offset = 589
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.589-601.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-8"
+offset = 602
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.602-602.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-603"
+offset = 603
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.603-607.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-603"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-608"
+offset = 608
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.608-648.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-608"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-649"
+offset = 649
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.649-672.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-649"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-8"
+offset = 673
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.673-685.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-8"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-9"
+offset = 686
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.686-686.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-687"
+offset = 687
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.687-691.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-687"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-692"
+offset = 692
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.692-732.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-692"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-733"
+offset = 733
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.733-756.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-733"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-9"
+offset = 757
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.757-769.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-9"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Clave 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-10"
+offset = 770
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.770-770.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-clave-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - % Titularidad 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-771"
+offset = 771
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.771-775.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-771"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Entidad depósito 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-776"
+offset = 776
+length = 41
+kind = "binding"
+binding = "modelo-714-2021.714-04.776-816.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-776"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Nº cuenta/depósito 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-817"
+offset = 817
+length = 24
+kind = "binding"
+binding = "modelo-714-2021.714-04.817-840.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-817"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Valor 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-10"
+offset = 841
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.841-853.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-valor-10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-1"
+offset = 867
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.867-867.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-868"
+offset = 868
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.868-872.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-868"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-1"
+offset = 873
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.873-885.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-1"
+offset = 886
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.886-905.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-906"
+offset = 906
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.906-925.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-906"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-1"
+offset = 926
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.926-926.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-1"
+offset = 927
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.927-988.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-1"
+offset = 989
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.989-1001.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-2"
+offset = 1002
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1002-1002.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1003"
+offset = 1003
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1003-1007.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1003"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-2"
+offset = 1008
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1008-1020.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-2"
+offset = 1021
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1021-1040.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1041"
+offset = 1041
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1041-1060.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1041"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-2"
+offset = 1061
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1061-1061.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-2"
+offset = 1062
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1062-1123.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-2"
+offset = 1124
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1124-1136.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-3"
+offset = 1137
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1137-1137.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1138"
+offset = 1138
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1138-1142.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1138"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3"
+offset = 1143
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1143-1155.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-3"
+offset = 1156
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1156-1175.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1176"
+offset = 1176
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1176-1195.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1176"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-3"
+offset = 1196
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1196-1196.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-3"
+offset = 1197
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1197-1258.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-3"
+offset = 1259
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1259-1271.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-4"
+offset = 1272
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1272-1272.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1273"
+offset = 1273
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1273-1277.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1273"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-4"
+offset = 1278
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1278-1290.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-4"
+offset = 1291
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1291-1310.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1311"
+offset = 1311
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1311-1330.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1311"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-4"
+offset = 1331
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1331-1331.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-4"
+offset = 1332
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1332-1393.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-4"
+offset = 1394
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1394-1406.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-5"
+offset = 1407
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1407-1407.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1408"
+offset = 1408
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1408-1412.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1408"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-5"
+offset = 1413
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1413-1425.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-5"
+offset = 1426
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1426-1445.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1446"
+offset = 1446
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1446-1465.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1446"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-5"
+offset = 1466
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1466-1466.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-5"
+offset = 1467
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1467-1528.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-5"
+offset = 1529
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1529-1541.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-6"
+offset = 1542
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1542-1542.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1543"
+offset = 1543
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1543-1547.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1543"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-6"
+offset = 1548
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1548-1560.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-6"
+offset = 1561
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1561-1580.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1581"
+offset = 1581
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1581-1600.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1581"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-6"
+offset = 1601
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1601-1601.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-6"
+offset = 1602
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1602-1663.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-6"
+offset = 1664
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1664-1676.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-7"
+offset = 1677
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1677-1677.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1678"
+offset = 1678
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1678-1682.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1678"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-7"
+offset = 1683
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1683-1695.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-7"
+offset = 1696
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1696-1715.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1716"
+offset = 1716
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1716-1735.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1716"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-7"
+offset = 1736
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1736-1736.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-7"
+offset = 1737
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1737-1798.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 7
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-7"
+offset = 1799
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1799-1811.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-8"
+offset = 1812
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1812-1812.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1813"
+offset = 1813
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1813-1817.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1813"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-8"
+offset = 1818
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1818-1830.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-8"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-8"
+offset = 1831
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1831-1850.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1851"
+offset = 1851
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1851-1870.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1851"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-8"
+offset = 1871
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1871-1871.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-8"
+offset = 1872
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.1872-1933.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 8
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-8"
+offset = 1934
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1934-1946.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-8"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-9"
+offset = 1947
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.1947-1947.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1948"
+offset = 1948
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.1948-1952.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1948"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-9"
+offset = 1953
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.1953-1965.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-9"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-9"
+offset = 1966
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1966-1985.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1986"
+offset = 1986
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.1986-2005.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1986"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-9"
+offset = 2006
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2006-2006.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-9"
+offset = 2007
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2007-2068.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 9
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-9"
+offset = 2069
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2069-2081.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-9"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Clave 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-10"
+offset = 2082
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2082-2082.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - % Titularidad 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2083"
+offset = 2083
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2083-2087.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2083"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Nº Valores 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-10"
+offset = 2088
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2088-2100.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - ISIN 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-10"
+offset = 2101
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2101-2120.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF/NIE entidad emisora 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2121"
+offset = 2121
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2121-2140.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2121"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - NIF otro país 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-10"
+offset = 2141
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2141-2141.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-otro-pais-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Descripción 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-10"
+offset = 2142
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2142-2203.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Valor 10
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-10"
+offset = 2204
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2204-2216.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-valor-10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-1"
+offset = 2230
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2230-2230.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2231"
+offset = 2231
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2231-2235.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2231"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2236"
+offset = 2236
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2236-2248.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2236"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2249"
+offset = 2249
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2249-2268.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2249"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2269"
+offset = 2269
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2269-2269.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2269"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2270"
+offset = 2270
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2270-2331.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2270"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 1
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-1"
+offset = 2332
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2332-2344.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-2"
+offset = 2345
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2345-2345.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2346"
+offset = 2346
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2346-2350.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2346"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2351"
+offset = 2351
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2351-2363.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2351"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2364"
+offset = 2364
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2364-2383.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2364"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2384"
+offset = 2384
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2384-2384.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2384"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2385"
+offset = 2385
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2385-2446.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2385"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 2
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-2"
+offset = 2447
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2447-2459.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-3"
+offset = 2460
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2460-2460.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2461"
+offset = 2461
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2461-2465.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2461"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2466"
+offset = 2466
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2466-2478.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2466"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2479"
+offset = 2479
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2479-2498.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2479"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2499"
+offset = 2499
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2499-2499.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2499"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2500"
+offset = 2500
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2500-2561.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2500"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 3
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-3"
+offset = 2562
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2562-2574.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-4"
+offset = 2575
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2575-2575.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2576"
+offset = 2576
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2576-2580.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2576"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2581"
+offset = 2581
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2581-2593.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2581"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2594"
+offset = 2594
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2594-2613.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2594"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2614"
+offset = 2614
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2614-2614.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2614"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2615"
+offset = 2615
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2615-2676.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2615"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 4
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-4"
+offset = 2677
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2677-2689.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-5"
+offset = 2690
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2690-2690.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2691"
+offset = 2691
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2691-2695.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2691"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696"
+offset = 2696
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2696-2708.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2709"
+offset = 2709
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2709-2728.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2709"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2729"
+offset = 2729
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2729-2729.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2729"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2730"
+offset = 2730
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2730-2791.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2730"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-5"
+offset = 2792
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2792-2804.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-6"
+offset = 2805
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2805-2805.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2806"
+offset = 2806
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2806-2810.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2806"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811"
+offset = 2811
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2811-2823.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2824"
+offset = 2824
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2824-2843.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2824"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2844"
+offset = 2844
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2844-2844.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2844"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2845"
+offset = 2845
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2845-2906.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2845"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6"
+offset = 2907
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2907-2919.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# 714-05: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

@@ -1,0 +1,1304 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-714-fichero-aeat"
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-714-page-06"
+record_type = "714-06"
+order = 6
+encoding = "iso-8859-1"
+line_ending = "none"
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Clave 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-1"
+offset = 14
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.14-15.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Nº Valores 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16"
+offset = 16
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.16-28.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - ISIN 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-1"
+offset = 29
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.29-48.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF/NIE entidad emisora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-49"
+offset = 49
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.49-68.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-49"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF otro país 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-69"
+offset = 69
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.69-69.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-69"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Código país 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70"
+offset = 70
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-06.70-72.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Descripción 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-73"
+offset = 73
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.73-134.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-73"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación individual 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135"
+offset = 135
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.135-139.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación familiar 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140"
+offset = 140
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.140-144.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Valor 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-1"
+offset = 145
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.145-157.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Clave 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-2"
+offset = 158
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.158-159.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Nº Valores 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-160"
+offset = 160
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.160-172.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-160"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - ISIN 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-2"
+offset = 173
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.173-192.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF/NIE entidad emisora 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-193"
+offset = 193
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.193-212.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-193"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF otro país 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-213"
+offset = 213
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.213-213.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-213"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Código país 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-214"
+offset = 214
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-06.214-216.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-214"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Descripción 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-217"
+offset = 217
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.217-278.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-217"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación individual 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279"
+offset = 279
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.279-283.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación familiar 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284"
+offset = 284
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.284-288.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-2"
+offset = 289
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.289-301.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Clave 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-3"
+offset = 302
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.302-303.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Nº Valores 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-304"
+offset = 304
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.304-316.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-304"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - ISIN 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-3"
+offset = 317
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.317-336.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-isin-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF/NIE entidad emisora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-337"
+offset = 337
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.337-356.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-337"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - NIF otro país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-357"
+offset = 357
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.357-357.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-357"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Código país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-358"
+offset = 358
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-06.358-360.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-358"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Descripción 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-361"
+offset = 361
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.361-422.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-361"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación individual 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423"
+offset = 423
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.423-427.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - % participación familiar 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428"
+offset = 428
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.428-432.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-3"
+offset = 433
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.433-445.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-negociadas-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Clave 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-459"
+offset = 459
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.459-460.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-459"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Nº Valores 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-461"
+offset = 461
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.461-473.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-461"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF/NIE entidad emisora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-474"
+offset = 474
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.474-493.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-474"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF otro país 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-494"
+offset = 494
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.494-494.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-494"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Descripción 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-495"
+offset = 495
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.495-556.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-495"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación individual 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557"
+offset = 557
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.557-561.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación familiar 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-562"
+offset = 562
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.562-566.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-562"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Valor 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-567"
+offset = 567
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.567-579.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-567"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Clave 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-580"
+offset = 580
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.580-581.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-580"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Nº Valores 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-582"
+offset = 582
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.582-594.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-582"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF/NIE entidad emisora 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-595"
+offset = 595
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.595-614.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-595"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF otro país 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-615"
+offset = 615
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.615-615.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-615"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Descripción 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-616"
+offset = 616
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.616-677.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-616"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación individual 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678"
+offset = 678
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.678-682.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación familiar 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-683"
+offset = 683
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.683-687.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-683"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-688"
+offset = 688
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.688-700.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-688"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Clave 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-701"
+offset = 701
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.701-702.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-701"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Nº Valores 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-703"
+offset = 703
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.703-715.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-703"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF/NIE entidad emisora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-716"
+offset = 716
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-06.716-735.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-716"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - NIF otro país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-736"
+offset = 736
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.736-736.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-736"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Descripción 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-737"
+offset = 737
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.737-798.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-737"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación individual 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799"
+offset = 799
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.799-803.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - % participación familiar 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-804"
+offset = 804
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-06.804-808.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-804"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-809"
+offset = 809
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.809-821.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-809"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Entidad aseguradora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-1"
+offset = 835
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.835-896.bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor utilizado 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-utilizado-1"
+offset = 897
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.897-898.bienes-y-derechos-i-seguros-de-vida-valor-utilizado-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-1"
+offset = 899
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.899-911.bienes-y-derechos-i-seguros-de-vida-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Entidad aseguradora 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-2"
+offset = 912
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.912-973.bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor utilizado 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-utilizado-2"
+offset = 974
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.974-975.bienes-y-derechos-i-seguros-de-vida-valor-utilizado-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-2"
+offset = 976
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.976-988.bienes-y-derechos-i-seguros-de-vida-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Entidad aseguradora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-3"
+offset = 989
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.989-1050.bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor utilizado 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-utilizado-3"
+offset = 1051
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1051-1052.bienes-y-derechos-i-seguros-de-vida-valor-utilizado-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-3"
+offset = 1053
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1053-1065.bienes-y-derechos-i-seguros-de-vida-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Entidad aseguradora 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-4"
+offset = 1066
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-06.1066-1127.bienes-y-derechos-i-seguros-de-vida-entidad-aseguradora-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor utilizado 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-utilizado-4"
+offset = 1128
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1128-1129.bienes-y-derechos-i-seguros-de-vida-valor-utilizado-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - I. Seguros de vida - Valor 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-i-seguros-de-vida-valor-4"
+offset = 1130
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1130-1142.bienes-y-derechos-i-seguros-de-vida-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Persona o entidad pagadora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-1"
+offset = 1156
+length = 41
+kind = "binding"
+binding = "modelo-714-2025.714-06.1156-1196.bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Clave 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-1"
+offset = 1197
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.1197-1197.bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor utilizado 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-1"
+offset = 1198
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1198-1199.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor anualidad 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-1"
+offset = 1200
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1200-1212.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-1"
+offset = 1213
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1213-1225.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Persona o entidad pagadora 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-2"
+offset = 1226
+length = 41
+kind = "binding"
+binding = "modelo-714-2025.714-06.1226-1266.bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Clave 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-2"
+offset = 1267
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.1267-1267.bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor utilizado 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-2"
+offset = 1268
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1268-1269.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor anualidad 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-2"
+offset = 1270
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1270-1282.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-2"
+offset = 1283
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1283-1295.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Persona o entidad pagadora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-3"
+offset = 1296
+length = 41
+kind = "binding"
+binding = "modelo-714-2025.714-06.1296-1336.bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Clave 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-3"
+offset = 1337
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.1337-1337.bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor utilizado 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-3"
+offset = 1338
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1338-1339.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor anualidad 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-3"
+offset = 1340
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1340-1352.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-3"
+offset = 1353
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1353-1365.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Persona o entidad pagadora 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-4"
+offset = 1366
+length = 41
+kind = "binding"
+binding = "modelo-714-2025.714-06.1366-1406.bienes-y-derechos-j-rentas-temporales-y-vitalicias-persona-o-entidad-pagadora-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Clave 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-4"
+offset = 1407
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-06.1407-1407.bienes-y-derechos-j-rentas-temporales-y-vitalicias-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor utilizado 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-4"
+offset = 1408
+length = 2
+kind = "binding"
+binding = "modelo-714-2025.714-06.1408-1409.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-utilizado-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor anualidad 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-4"
+offset = 1410
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1410-1422.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-anualidad-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - J. Rentas temporales y vitalicias - Valor 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-06-declared-bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-4"
+offset = 1423
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-06.1423-1435.bienes-y-derechos-j-rentas-temporales-y-vitalicias-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# 714-07: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

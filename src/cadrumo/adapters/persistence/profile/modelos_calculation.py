@@ -275,7 +275,24 @@ class CalculationRevisionCatalogueRepository:
         """
         self._storage.save(catalogue)
 
-    def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+        """Return the catalogue and the revision id it was read at.
+
+        The read a guarded co-commit needs. A calculate run composes this
+        catalogue with the work-unit catalogue and the creation event in one
+        unit of work, so it cannot use a self-committing mutation, and without
+        the revision it would write back the whole catalogue and discard a
+        revision another run added in between. A dropped calculation revision
+        is a dropped tax computation.
+        """
+        return self._storage.load_revisioned()
+
+    def to_secure_object_write(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
@@ -284,13 +301,19 @@ class CalculationRevisionCatalogueRepository:
         classification that :meth:`save` would persist directly. It can be
         co-emitted with related secure objects (e.g. the participation index) in
         one :meth:`save_with_secure_object_writes` unit of work.
+
+        Pass ``expected_revision_id`` from :meth:`load_revisioned` whenever the
+        catalogue was DERIVED from a read; omitting it writes the whole
+        singleton row back unconditionally.
         """
-        return self._storage.to_secure_object_write(catalogue)
+        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
     def save_with_secure_object_writes(
         self,
         catalogue: CalculationRevisionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
@@ -304,8 +327,17 @@ class CalculationRevisionCatalogueRepository:
             extra_writes: Additional
                 :class:`~adapters.persistence.storage.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
+            expected_revision_id: The revision :meth:`load_revisioned` reported
+                for the catalogue this one was derived from. Atomicity is what
+                this method already gave; without the revision it still writes
+                the whole singleton row back, so a revision another calculate
+                run added between the read and this call is discarded -- and a
+                dropped calculation revision is a dropped tax computation. Omit
+                only when the catalogue was not derived from a read.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+        self._objects.save_many(
+            (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
+        )
 
 
 __all__ = [
