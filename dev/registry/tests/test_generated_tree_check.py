@@ -27,6 +27,7 @@ from ..pipeline._tree_check import (
 )
 from .test_export_tree import (
     _ISOLATED_TREE,
+    _real_authorities,
     _isolated_render_profile,
     _wire_evidence,
     _wire_profile,
@@ -84,20 +85,32 @@ def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None
     )
 
 
-def _profile() -> ExportTreeTransportProfile:
-    return ExportTreeTransportProfile(
-        modelo=_ISOLATED_TREE.modelo,
-        # The isolated tree is built from modelo 130's 2019 diseño, so the
-        # transport profile must name that epoch or the two disagree.
-        design_epoch="2019",
-        source_ref="aeat-dr-130-2019-v12",
-        source_sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
-        layout_id="generated-modelo-200-fichero",
-        format="fixed_width",
-        encoding=ExportEncoding.LATIN_1,
-        line_ending="crlf",
-        serializer_convention="rtoml-pretty-v1",
+def _rendered_record_fragments(export_root):
+    """The record fragments the renderer actually wrote, in file order.
+
+    These filenames were transcribed from the old synthetic tree
+    (`0001-record-generated-registro-tipo-1.toml`). The fixture now renders a
+    REAL tree, whose fragments are named after that modelo's own records, so a
+    transcribed name is a file that does not exist and the case dies on the
+    tamper rather than on the drift it is testing.
+    """
+    return sorted(
+        path
+        for path in export_root.iterdir()
+        if path.suffix == ".toml" and path.name != EXPORT_FRAGMENT_PROVENANCE_FILENAME
     )
+
+
+def _profile() -> ExportTreeTransportProfile:
+    """The isolated tree's own transport profile, derived rather than transcribed.
+
+    Every axis here -- modelo, design epoch, source ref, source digest, layout id
+    -- has to agree with the joined design the fixture actually builds. They were
+    transcribed by hand and went stale each time the fixture's target moved, so
+    they are read off `_ISOLATED_TREE` and the real intermediate instead.
+    """
+    _joined, _map, transport, _profile_obj, _evidence = _real_authorities(_ISOLATED_TREE)
+    return transport
 
 
 def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
@@ -163,7 +176,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
     elif defect == "render-profile":
         render_profile = render_profile.model_copy(update={"fragment_ids": ("digest-drift",)})
     elif defect == "output-byte":
-        output = target_export_root / "0001-record-generated-registro-tipo-1.toml"
+        output = _rendered_record_fragments(target_export_root)[0]
         output.write_bytes(output.read_bytes() + b"# drift\n")
     elif defect == "manifest-authority":
         manifest_path = target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -182,7 +195,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
             ),
         )
     elif defect == "missing-output":
-        (target_export_root / "0002-record-generated-registro-tipo-2.toml").unlink()
+        _rendered_record_fragments(target_export_root)[-1].unlink()
     elif defect == "extra-output":
         (target_export_root / "0003-unreviewed.toml").write_text("unreviewed = true\n", encoding="utf-8")
     elif defect == "obsolete-sibling":
