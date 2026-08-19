@@ -29,6 +29,11 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from ..pipeline import _export_tree
+from .test_generated_export_trees import (
+    _GeneratedTree,
+    _authorities as _enrolled_authorities,
+    _isolated_authority,
+)
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
@@ -479,57 +484,74 @@ source_refs = ["aeat-dr-130-2019-v12"]
 """
 
 
+
+def _real_authorities(tree: _GeneratedTree):
+    """Return the real (joined, semantic map, transport, render profile, evidence).
+
+    A thin adapter over the enrolled drift gate's own `_authorities`, so this
+    fixture and that gate cannot disagree about how a generated tree is built.
+    """
+    semantic_map, render_profile, joined, evidence, transport = _enrolled_authorities(tree)
+    return joined, semantic_map, transport, render_profile, evidence
+
+
+#: The enrolled generated tree this fixture materialises in isolation.
+#:
+#: It used to hand-assemble a synthetic modelo/revision and render a two-sheet
+#: toy layout into it. The export-completeness gate reads the REAL design named
+#: by the revision's `source_refs`, so that layout covered 3 of the 41 positions
+#: modelo 130's diseño requires and validation refused -- correctly. No synthetic
+#: layout can satisfy that gate against a real design, and no bundled design is
+#: small enough to be covered by a toy.
+#:
+#: Modelo 202's 2019 tree is used instead because it is ENROLLED in the
+#: generated-tree drift gate, so its real diseño and real semantic map are
+#: already proven to render a complete, valid tree. It is also the smallest
+#: enrolled candidate at 95 design fields across two records.
+_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P")
+
+
 def _write_isolated_generated_authority_tree(
     tmp_path: Path,
-    snapshot,
+    snapshot=None,
 ) -> tuple[GeneratedExportTreeValidationContext, JoinedRecordDesign, SemanticMap, RenderedExportTree, Path]:
-    """Materialise only fresh target material plus real catalogue authority.
+    """Materialise the target's real NON-export authority plus a freshly rendered export.
 
-    The fixture never copies an export directory.  It writes the target's
-    ``export/`` directory solely through the export-tree renderer, so generated-tree
-    validation cannot pass by loading an older fragment tree from the installed registry.
+    The export directory is never copied: it is written solely through the
+    export-tree renderer, so generated-tree validation cannot pass by loading an
+    older fragment tree. Everything else comes from the shipped registry through
+    the same two helpers the enrolled drift gate uses, so this fixture cannot
+    drift from what a real generated tree looks like.
+
+    ``snapshot`` is accepted and ignored: callers pass a revision inspection that
+    the real authorities now supersede.
     """
-    registry_root = tmp_path / "candidate" / "registry" / "aeat"
-    legal_dir = registry_root / "legal"
-    legal_dir.mkdir(parents=True)
-    copy2(bundled_path("registry", "aeat", "legal", "irpf.toml"), legal_dir / "irpf.toml")
+    registry_root = _isolated_authority(_ISOLATED_TREE, tmp_path / "candidate")
+    joined, semantic_map, transport, render_profile, render_evidence = _real_authorities(_ISOLATED_TREE)
 
-    revision_dir = registry_root / "modelos" / "130" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    (revision_dir.parent.parent / "manifest.toml").write_text(
-        _VALIDATION_MANIFEST,
-        encoding="utf-8",
-        newline="\n",
+    export_root = (
+        registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
     )
-    (revision_dir / "revision.toml").write_text(_VALIDATION_REVISION, encoding="utf-8", newline="\n")
-    for section, contents in (
-        ("application_links", _VALIDATION_APPLICATION_LINKS),
-        ("casillas", _VALIDATION_CASILLAS),
-        ("workbook_parity_refs", _VALIDATION_WORKBOOK_PARITY),
-    ):
-        fragment = revision_dir / section / "0001-generated.toml"
-        fragment.parent.mkdir()
-        fragment.write_text(contents, encoding="utf-8", newline="\n")
-
-    export_root = revision_dir / "export"
     assert not export_root.exists(), "the authority fixture must not copy legacy export fragments"
-    semantic_map = _semantic_map()
-    joined = _joined(snapshot)
     rendered = render_complete_export_tree(
         export_root,
-        revision_id="2025",
+        revision_id=_ISOLATED_TREE.revision,
         joined=joined,
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_evidence,
     )
     context = GeneratedExportTreeValidationContext(
         registry_root=registry_root,
         source_root=bundled_path(),
-        target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
-        filing_year=2025,
-        period="0A",
+        target=ExportFragmentTarget(
+            modelo=_ISOLATED_TREE.modelo,
+            revision_id=_ISOLATED_TREE.revision,
+            design_epoch=_ISOLATED_TREE.epoch,
+        ),
+        filing_year=_ISOLATED_TREE.filing_year,
+        period=_ISOLATED_TREE.period,
     )
     return context, joined, semantic_map, rendered, export_root
 
