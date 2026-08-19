@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:e60f2f65dbf5d62896d545ba953129639f363feefdb2be470800d8fe17b83926'
+body_hash: 'sha256:b9f90a7165a4e0dc15630b45d4c5eb36ea0285f7ad652c80a9106ec6a8e901aa'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1481,6 +1481,45 @@ made knowingly, and the safe direction is the one it chose.
 The JSON flag is ``--format json`` at the root, not a per-verb ``--json``.
 Every profile read verb answers "No such option: --json" to the first thing an
 operator tries. Not a defect, and not worth a second spelling.
+
+### Multi-profile isolation holds at the CLI, and driving it found a retry loop
+
+The multi-profile path was driven rather than reasoned about: create a second
+profile while the first is active, read the locked one, delete the non-active
+one, then attempt a restore over a live label. The isolation results are
+positive and worth recording as such, because the campaign has verified the
+primitives repeatedly without ever exercising their composition.
+
+Creating a second profile displaces the session and the new profile becomes
+active. Reading the now-locked profile returns `facts: null`,
+`setup_state: null` and `profile_record_present: false` while still reporting
+`registered_bucket: true` -- the bucket is known to exist, its contents are
+not readable without a session, which is exactly the structural isolation the
+resolver is supposed to give. Deleting the non-active profile succeeds and
+leaves the active one intact; deleting the ACTIVE profile is refused with an
+instructive message naming `aeat config logout`. Restoring a capsule over a
+live label refuses rather than overwriting, so the data-loss shape that was
+worth checking for is not there.
+
+The defect was in HOW that last refusal reported itself: `retryable: true`. It
+can never succeed -- the label is bound to a committed capsule and the
+identical command fails identically forever -- and on this CLI that field is
+not decoration. The stated operator is an autonomous agent, and `retryable` is
+the instruction it acts on, so the refusal was inviting a loop with no
+terminating condition.
+
+The cause is one error class covering two different conditions in the same
+function. "The captured witness no longer matches live state" is a
+compare-and-swap conflict that a re-read genuinely fixes and is correctly
+published retryable; the label collision inherited that answer. The split is a
+SUBCLASS so every existing handler that catches a custody conflict keeps
+catching this case, and only the published code and retryability change. The
+registry binds by exact qualname and demands an entry per class, which is what
+makes the narrower classification reachable without touching a caller.
+
+Both halves are pinned. Marking the whole family not-retryable would have
+satisfied the new assertion while stranding the case that only needed another
+attempt, so the parent's retryability is asserted too.
 
 ## Recommendations
 
