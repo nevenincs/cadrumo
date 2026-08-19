@@ -78,12 +78,10 @@ from ...domain.attachments import (
     add_attachment,
 )
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    emit_bucket_event,
 )
 from ._preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
@@ -441,36 +439,6 @@ def _save(settings: Settings, bucket_id: str, records: list[PurchaseInvoiceEvide
 _EVIDENCE_EVENT_PAYLOAD_VERSION = 1
 
 
-def _build_evidence_event(
-    *,
-    bucket_id: str,
-    event_type: BucketEventType,
-    evidence_id: str,
-    actor: str,
-    occurred_at: datetime,
-    payload: dict[str, str],
-) -> BucketEvent:
-    return BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
-            object_id=evidence_id,
-            payload=payload,
-        ),
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
-        object_id=evidence_id,
-        payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
-        payload=payload,
-    )
-
-
 def _emit_evidence_event(
     *,
     event_repository: BucketEventHistoryRepositoryProtocol,
@@ -481,15 +449,31 @@ def _emit_evidence_event(
     occurred_at: datetime,
     payload: dict[str, str],
 ) -> str:
-    event = _build_evidence_event(
+    """Record one evidence transition through the shared emission primitive.
+
+    This used to derive the id, build the event, append it and save the
+    catalogue itself -- the exact sequence :func:`emit_bucket_event` documents
+    as the one every emitting domain must share. Re-deriving it cost more than
+    duplication: the shared primitive appends through the catalogue's revision
+    guard, and a bare load-append-save does not, so two evidence attachments
+    landing together discarded one another's audit entry. Content-addressed
+    events make that loss invisible after the fact -- every survivor is intact
+    and the missing one leaves no gap -- so the trail still read as complete.
+
+    The only things this surface fixes are the object kind and the payload
+    version; everything else is the caller's.
+    """
+    event = emit_bucket_event(
+        repository=event_repository,
         bucket_id=bucket_id,
         event_type=event_type,
-        evidence_id=evidence_id,
-        actor=actor,
         occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+        object_id=evidence_id,
         payload=payload,
+        payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
     )
-    event_repository.save(append_bucket_event(event_repository.load(), event))
     return event.event_id
 
 

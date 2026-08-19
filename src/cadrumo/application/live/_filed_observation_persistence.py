@@ -52,11 +52,9 @@ from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    emit_bucket_event,
 )
 from ...domain.iva_compensation import iva_compensation_period_sort_key
 from ...domain.justificante import Justificante
@@ -508,30 +506,16 @@ def _emit_filed_justificante_evidence_event(
         "expediente_id": observation.expediente_id,
         "presented_at": observation.presented_at.isoformat(),
     }
-    repository = BucketEventHistoryRepository()
-    repository.save(
-        append_bucket_event(
-            repository.load(),
-            BucketEvent(
-                event_id=derive_bucket_event_id(
-                    bucket_id=bucket_id,
-                    event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
-                    occurred_at=occurred_at,
-                    actor="aeat-filed-history",
-                    object_type=BucketEventObjectType.FILING_RECORD,
-                    object_id=filing.filing_record_id,
-                    payload=event_payload,
-                ),
-                bucket_id=bucket_id,
-                event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
-                occurred_at=occurred_at,
-                actor="aeat-filed-history",
-                object_type=BucketEventObjectType.FILING_RECORD,
-                object_id=filing.filing_record_id,
-                payload_version=1,
-                payload=event_payload,
-            ),
-        ),
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
+        bucket_id=bucket_id,
+        event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
+        occurred_at=occurred_at,
+        actor="aeat-filed-history",
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=filing.filing_record_id,
+        payload=event_payload,
+        payload_version=1,
     )
 
 

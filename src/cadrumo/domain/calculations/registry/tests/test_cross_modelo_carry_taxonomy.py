@@ -295,4 +295,4 @@ def test_the_fan_in_row_is_recognised_by_its_grouping_axis() -> None:
         source_refs=("aeat-modelo-353-instructions",),
     )
 
-    assert _classify(binding, owning_modelo="353", revision_id="2008-y-siguientes") == _CROSS_MEMBER_FAN_IN
+    assert _classify(binding, owning_modelo="353", revision_id="2008-2025") == _CROSS_MEMBER_FAN_IN

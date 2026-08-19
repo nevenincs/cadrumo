@@ -33,7 +33,7 @@ never a hand-run of the registry formula under test), fed to the registry as
 do. ``base_amount`` is undisclosed by the manual and plays no role in the
 casillas graded here; it is set to zero rather than fabricated.
 
-Registry mapping (M353 2008-y-siguientes revision):
+Registry mapping (M353 2008-2025 revision):
 
     iva.cuota-devengada-total = repercutido.general (iva_amount=7.000) +
       repercutido.reducido (0) + repercutido.super-reducido (0) +

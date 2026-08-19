@@ -1492,7 +1492,7 @@ def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
     returns before this point, so a retry re-stamps no activation.
     """
     from ...core.config import override_settings
-    from ...domain.buckets import BucketEventObjectType, BucketEventType, append_bucket_event, build_bucket_event
+    from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
 
     # A CLI invocation may have resolved and pinned the previously active
     # profile before an interactive login selects this one.  The pointer and
@@ -1501,7 +1501,12 @@ def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
     # the inherited settings override can route the database to the previous
     # bucket and manufacture a route/session mismatch after valid credentials.
     with override_settings(cadrumo_active_profile=profile_id):
-        event = build_bucket_event(
+        # Through the shared emitter, not a bare load-append-save: the history is
+        # a singleton row, so an unguarded rewrite drops whatever another
+        # process committed in between -- and a lost activation entry leaves no
+        # gap to notice, because the surviving events are all internally intact.
+        emit_bucket_event(
+            repository=default_profile_bucket_event_history_repository(),
             bucket_id=profile_id,
             event_type=BucketEventType.PROFILE_ACTIVATED,
             occurred_at=occurred_at,
@@ -1511,8 +1516,6 @@ def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
             payload={"active_profile": resolve_active_bucket_id() or profile_id},
             payload_version=1,
         )
-        repository = default_profile_bucket_event_history_repository()
-        repository.save(append_bucket_event(repository.load(), event))
 
 
 def _mint_or_warn(

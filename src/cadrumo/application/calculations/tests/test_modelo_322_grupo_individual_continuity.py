@@ -18,7 +18,7 @@ from real IVA ledger observations. Both years are recorded through the
 :class:`EnrollmentRecorder` and cross-checked against the authorization
 manifest via :func:`assert_enrollment_matches_manifest`.
 
-The ``2008-y-siguientes`` revision is genuinely year-stable: it resolves
+The ``2008-2025`` revision is genuinely year-stable: it resolves
 for both 2025 and 2026 with identical structure and rates (the REGE
 individual form and the general/reduced/super-reduced rate set are
 unchanged across the two ejercicios), so the second year is a real
@@ -41,8 +41,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from ....core.resources import resources
+from ....domain.iva import IvaDeductionClassificationProvenance
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -86,6 +87,27 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         flow_direction=flow,
         base_amount=Decimal("1000.00"),
         iva_amount=iva,
+        # An INPUT fact must state how its deduction was classified: the model
+        # refuses a soportado or inversion-sujeto-pasivo line carrying neither a
+        # fact kind nor provenance, which is what keeps an undocumented deduction
+        # out of the ledger. Output lines must carry NEITHER, so this is supplied
+        # only for the input direction.
+        deduction_fact_kind=(
+            IvaDeductionFactKind.DOMESTIC_CURRENT
+            if flow
+            in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            else None
+        ),
+        deduction_provenance=(
+            IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="a" * 64,
+            )
+            if flow
+            in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            else None
+        ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
@@ -151,7 +173,7 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: 322 individual monthly REGE across two renta years.
 
     Drives the REAL 322 backend for December of both renta years (the
-    ``2008-y-siguientes`` revision resolves identically for each), records each
+    ``2008-2025`` revision resolves identically for each), records each
     through the :class:`EnrollmentRecorder` (calculation mode, evidence =
     produced-value count from a real engine run), and cross-checks the recorded
     distinct-year set against the authorization manifest claim. A single-year or
