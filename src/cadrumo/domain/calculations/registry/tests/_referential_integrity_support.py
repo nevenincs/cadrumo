@@ -10,7 +10,13 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core import CasillaId, TaxDomain, freeze_toml, validated_casilla_id
+from .....core import (
+    CasillaId,
+    RegistryAuthorityGrade,
+    TaxDomain,
+    freeze_toml,
+    validated_casilla_id,
+)
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import (
@@ -93,12 +99,18 @@ def _snapshot_for_revision(
     filing_year = selector.years[0] if selector.years else selector.year_from
     assert filing_year is not None
     period = selector.periods[0]
+    # APPLICABILITY grade, not the FILING default. These fixtures exist to
+    # exercise REFERENTIAL integrity -- dangling ids, bound casillas with no
+    # binding definition -- and carry no export layout, so a filing-grade
+    # snapshot refuses on the missing filing capability before any reference is
+    # ever checked. The integrity checks themselves are grade-independent.
     return build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=filing_year,
         period=period,
         revision_id=revision.id,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 
 
@@ -244,6 +256,13 @@ def _minimal_revision(
     app_links = application_links if application_links is not None else (_minimal_application_link("filing"),)
     return ModeloRevision(
         id="test-revision",
+        # These fixtures exercise REFERENTIAL integrity -- dangling casilla refs,
+        # bound casillas with no binding. Without a review stamp the revision
+        # defaults to pending_review, and a filing-grade snapshot refuses on that
+        # first, so the assertions the tests exist for never run.
+        review_status="agent_reviewed",
+        reviewed_by="codex test fixture",
+        reviewed_at=date(2026, 7, 1),
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
