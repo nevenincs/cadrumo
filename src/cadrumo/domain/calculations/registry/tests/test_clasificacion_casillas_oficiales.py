@@ -19,7 +19,25 @@ def test_m720_binding_derived_design_distinguishes_declared_binding_representati
     authority = bundled_authority()
     revision = authority.validate_modelo("720").revisions["2013-y-siguientes"]
 
-    assert all(not record.fields for layout in revision.export_layouts for record in layout.records)
+    # M720 declares no inline CASILLA-bearing field: every box it addresses is
+    # represented through a binding, which is what `clasificar_casillas_oficiales`
+    # is being asked to distinguish below.
+    #
+    # The records do each carry ONE inline field, and asserting `not record.fields`
+    # therefore fails. Those two fields are trailing FILLERS -- type-1 at 181..500
+    # and type-2 at 481..500 -- added so the emitted line reaches the 500 positions
+    # the diseño declares, instead of the 180 and 480 a purely binding-derived
+    # layout produced. Both cover exactly one design field, and the design itself
+    # classifies both as reserved/blank, so they pad reserved space and blank no
+    # data. They carry neither a casilla_id nor a literal, which is what the
+    # narrowed assertion pins: an inline field that DID name a casilla would still
+    # fail here, so this admits the filler without admitting inline representation.
+    inline = [record.fields for layout in revision.export_layouts for record in layout.records]
+    assert all(
+        field.casilla_id is None and field.literal is None
+        for fields in inline
+        for field in fields
+    ), "M720 must represent every casilla through a binding, never an inline export field"
 
     statuses = clasificar_casillas_oficiales(revision)
 
@@ -69,11 +87,46 @@ def test_m349_binding_derived_rows_address_casillas_without_export_refs() -> Non
     assert not country_code.export_refs
 
 
-def test_layoutless_revision_is_explicitly_undefined() -> None:
+def _layoutless_revisions() -> list[tuple[str, str]]:
+    """Every committed revision that declares no export layout at all."""
+    return sorted(
+        (str(modelo.id), revision_id)
+        for modelo in bundled_authority().modelos
+        for revision_id, revision in modelo.revisions.items()
+        if not revision.export_layouts
+    )
+
+
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _layoutless_revisions())
+def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id: str) -> None:
+    """A revision with no export layout classifies every casilla as UNDEFINED.
+
+    This pinned modelo 130 as its layoutless subject. The campaign then authored
+    130's export layout, so the subject stopped being layoutless and the case
+    failed on its own premise rather than on the classifier -- a decayed premise,
+    not a regression. The subject is now derived from the property it needs, so
+    a revision leaves this gate exactly when it gains a layout.
+    """
+    revision = bundled_authority().validate_modelo(modelo_id).revisions[revision_id]
+
+    statuses = clasificar_casillas_oficiales(revision)
+
+    assert statuses
+    assert set(statuses.values()) == {EstadoCasillaOficial.UNDEFINED}
+
+
+def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
+    """The contrapositive, which cannot go vacuous as the campaign authors layouts.
+
+    The layoutless population shrinks by design as this campaign proceeds and
+    would eventually empty, silently retiring the check above. This asserts the
+    other direction on a revision that HAS a layout, so classification stays
+    covered no matter how far the authoring gets.
+    """
     authority = bundled_authority()
     revision = authority.snapshot("130", filing_year=2026, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
 
     assert statuses
-    assert set(statuses.values()) == {EstadoCasillaOficial.UNDEFINED}
+    assert EstadoCasillaOficial.ADDRESSED in set(statuses.values())
