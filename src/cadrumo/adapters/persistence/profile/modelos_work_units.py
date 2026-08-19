@@ -240,10 +240,22 @@ class WorkUnitCatalogueRepository:
             return write.model_copy(update={"expected_revision_id": expected_revision_id})
         return write
 
+    def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
+        """Return the catalogue and the revision id it was read at.
+
+        The read a guarded co-commit needs. A lifecycle transition composes this
+        catalogue with the event that records it, so it cannot use the
+        self-committing :meth:`mutate`, and without the revision its batch
+        rewrites the whole singleton row over a unit another caller created.
+        """
+        return self._storage.load_revisioned()
+
     def save_with_secure_object_writes(
         self,
         catalogue: WorkUnitCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
@@ -260,8 +272,15 @@ class WorkUnitCatalogueRepository:
             extra_writes: Additional
                 :class:`~adapters.persistence.storage.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
+            expected_revision_id: The revision :meth:`load_revisioned` reported
+                for the catalogue this one was derived from. Atomicity is what
+                the batch already gave; the revision is what stops it writing
+                the whole singleton row back over a work unit another caller
+                created between the read and this call.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+        self._objects.save_many(
+            (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
+        )
 
 
 __all__ = [

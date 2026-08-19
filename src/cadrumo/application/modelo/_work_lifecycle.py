@@ -420,7 +420,11 @@ def create_work_unit(
     )
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    catalogue = repo.load()
+    # Revisioned: the catalogue is composed into the co-commit below with the
+    # creation event, so it cannot use a self-committing mutation, and an
+    # unguarded read would rewrite the singleton row over a work unit another
+    # caller created in between.
+    catalogue, catalogue_revision_id = repo.load_revisioned()
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -478,6 +482,7 @@ def create_work_unit(
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, unit),
         (_bucket_event_write(bv_repo, (created_event,)),),
+        expected_revision_id=catalogue_revision_id,
     )
     return unit
 

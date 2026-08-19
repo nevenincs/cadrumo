@@ -296,21 +296,42 @@ class ModeloRecordCatalogueRepository:
 
         return self._storage.mutate(_guarded)
 
-    def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
+    def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
+        """Return the filing catalogue and the revision id it was read at.
+
+        The read a guarded co-commit needs: a caller composing this catalogue
+        into a batch cannot use the self-committing :meth:`mutate`, and without
+        the revision its write puts the whole singleton row back over any
+        filing record another writer added in between.
+        """
+        return self._storage.load_revisioned()
+
+    def to_secure_object_write(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
         carries the same :class:`~adapters.persistence.storage.Envelope`
         and :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
+
+        Pass ``expected_revision_id`` from :meth:`load_revisioned` whenever the
+        catalogue was DERIVED from a read; omitting it rewrites the row
+        unconditionally.
         """
         self._assert_records_belong_to_this_bucket(catalogue, boundary="save")
-        return self._storage.to_secure_object_write(catalogue)
+        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
     def save_with_secure_object_writes(
         self,
         catalogue: ModeloRecordCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
@@ -319,8 +340,15 @@ class ModeloRecordCatalogueRepository:
             extra_writes: Additional
                 :class:`~adapters.persistence.storage.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
+            expected_revision_id: The revision :meth:`load_revisioned` reported
+                for the catalogue this one was derived from. Atomicity is what
+                this method already gave; the revision is what stops the batch
+                discarding a filing record another writer committed between the
+                read and this call.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+        self._objects.save_many(
+            (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
+        )
 
 
 __all__ = [

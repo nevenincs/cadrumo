@@ -533,7 +533,10 @@ def _build_prorrata_settlement_write(
     if values is None:
         return None
 
-    register = prorrata_register_repository.load()
+    # Revisioned: the write this returns joins the caller's co-commit batch, so
+    # it cannot self-commit, and an unguarded read would put the whole register
+    # back over a sector entry another writer added in between.
+    register, register_revision_id = prorrata_register_repository.load_revisioned()
     entry = _settled_prorrata_register_entry(
         work_unit=work_unit,
         register=register,
@@ -551,7 +554,8 @@ def _build_prorrata_settlement_write(
             entries=(*retained, entry),
             sector_definitions=register.sector_definitions,
             activity_rows=register.activity_rows,
-        )
+        ),
+        expected_revision_id=register_revision_id,
     )
 
 
