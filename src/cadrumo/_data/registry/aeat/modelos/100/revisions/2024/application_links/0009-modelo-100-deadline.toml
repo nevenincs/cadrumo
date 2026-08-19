@@ -8,6 +8,4 @@ legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
 ]
-source_refs = [
-    "boe-modelo-100-2024-form",
-]
+source_refs = ["boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]

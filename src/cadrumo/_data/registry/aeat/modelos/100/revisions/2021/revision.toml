@@ -1,4 +1,31 @@
 [revisions."2021"]
+# Prepared and reviewed by an agent against the bundled AEAT diseño de registros
+# dictionary and the ordenes this revision cites; NO human operator has
+# countersigned it, and 'agent_reviewed' plus this reviewer token record that
+# state honestly rather than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and the registry declares every casilla the bundled dictionary for this
+#     filing year NUMBERS: the dictionary-side population comparison reports no
+#     numbered box the registry lacks.
+#
+# This revision's export layout is an xml_dictionary carrying no fixed-width
+# records, so no record-to-design-sheet pairing exists to measure and none is
+# claimed. The opposite direction of the comparison -- registry casillas the
+# dictionary does not number -- is deliberately not a completeness signal: it
+# counts app-level inputs AEAT has no box for.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2021"
 valid_from = 2021-01-01
