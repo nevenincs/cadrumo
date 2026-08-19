@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import pytest
 
-# The bounded controls for this detector live in the dev harness tree; this
-# module holds only the expensive full-corpus proof and reuses their
-# discovery primitives. Both trees are repo-only scaffolding excluded from
-# the wheel, so the cross-tree import serves no installed consumer.
-from dev.tests.test_every_test_module_is_collectable import (
+# The bounded controls for this detector live beside it in the dev tree; this
+# module holds only the expensive full-corpus proof and reuses their discovery
+# primitives.
+from ..tests.test_every_test_module_is_collectable import (
     _MINIMUM_PLAUSIBLE_MODULE_COUNT,
     collection_report,
     discover_test_roots,

@@ -1,7 +1,7 @@
 """Bounded real-subprocess controls for the collectability detector.
 
 The expensive full-corpus collection proof lives in
-:mod:`cadrumo.tests.test_full_corpus_collectability_harness`, where the
+:mod:`dev.harness.test_full_corpus_collectability_harness`, where the
 dedicated outer-serial harness verdict runs it explicitly.  These controls
 remain in the routine unit lane: they use small malformed source trees to
 prove that the detector reports import failures, and they verify that source

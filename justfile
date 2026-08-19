@@ -453,7 +453,7 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # never restated, because a member list repeated at five call sites is five
 # chances to drift into a lane that silently nests a worker pool inside a pool.
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
-harness_full_corpus := "src/cadrumo/tests/test_full_corpus_collectability_harness.py"
+harness_full_corpus := "dev/harness/test_full_corpus_collectability_harness.py"
 harness_members := harness_worker_hook + " " + harness_full_corpus
 harness_exclusions := prepend("--ignore=", harness_members)
 

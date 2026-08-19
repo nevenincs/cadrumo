@@ -502,7 +502,7 @@ def test_the_harness_modules_are_excluded_by_the_integration_lanes_but_covered_b
     lanes = declared_lanes(_ROOT)
     targets = (
         "src/cadrumo/tests/test_worker_count_hook_harness.py",
-        "src/cadrumo/tests/test_full_corpus_collectability_harness.py",
+        "dev/harness/test_full_corpus_collectability_harness.py",
     )
 
     integration_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
