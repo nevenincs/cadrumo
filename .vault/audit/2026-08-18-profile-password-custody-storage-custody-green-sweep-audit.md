@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:5be6bbcf48f83fbd6433177ac06c2866384a4e070f64466356309eabad746330'
+body_hash: 'sha256:71bf65f384e9d11ac63afe336c5c3553ee216e634b3c4021d5d8a6d8921531c6'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -656,12 +656,48 @@ blind spot -- a thread cannot see another thread's binding -- and justifies it
 against the case it exists for, `os._exit` reaping from a watchdog thread.
 
 Cross-process coordination is where the defect was, and the throttle was the
-one found. Two things are NOT closed by this pass and should not be read as
-cleared: the canonical bucket locking that `_provider_enter`'s docstring
-attributes to "application mutation spans" was not exercised here, and no
-concurrent-access test drives two live processes against one profile. The
-throttle finding is evidence that cross-process shared state in this package
-deserves that treatment rather than evidence that the rest of it has had it.
+one found.
+
+CORRECTION to the sentence this entry first carried. It said no concurrent-access
+test drives two live processes against one profile. That was wrong about the
+bucket lockfile, which is covered thoroughly and cross-process:
+`storage/bucket/tests/test_lockfile.py` spawns real holders and asserts busy
+detection, eventual acquisition under wait, stale reclaim from a genuinely dead
+PID, and a child process failing to inherit its parent's local ownership. The
+gap was one layer over, and stating it too broadly would have sent the next
+reader to re-verify work already done.
+
+The real gap, now closed, was `profile_custody_root_lock`. It is the mutual
+exclusion behind EVERY custody pointer mutation -- the application pointer
+transaction and custody compare-and-swap take this exact identity -- and no
+test in the tree named it or its `profile_custody_local_lock` leaf. The primitive
+guarding the more dangerous mutation had none of the coverage its bucket sibling
+has, so its docstring's claim that "sibling processes retain kernel-enforced
+exclusion" was prose nothing executed.
+
+Four behaviours were probed empirically before anything was asserted, and all
+four held: a second process is refused while the lock is held; the lock is
+acquirable again once the holder is KILLED; the owning thread may re-enter; a
+sibling thread may not. The second is the one worth stating plainly, because it
+is the load-bearing difference from the bucket lockfile. This lock has no
+recorded PID, no liveness probe and no lazy takeover, so nothing in this
+codebase can reclaim it from a dead holder. Correctness rests entirely on the
+kernel dropping the exclusion when the process goes -- and had that ever
+regressed, one crashed login would wedge every custody mutation on the machine
+permanently while the exclusion test kept passing.
+
+`pid_is_alive` was audited alongside and needs no change. Every ambiguous branch
+resolves to "alive": permission denied, a foreign or protected process, a PID
+recycled onto something unqueryable. The Windows probe additionally goes through
+`OpenProcess` + `GetExitCodeProcess` rather than `os.kill(pid, 0)`, which reports
+terminated-but-cached PIDs as alive. The residual over-conservative case -- a
+process exiting with code 259, indistinguishable from `STILL_ACTIVE` -- fails
+towards never reclaiming, which is the safe direction for a lock.
+
+What remains genuinely unexercised, and should not be read as cleared: no test
+drives two live processes through a full concurrent `login` against one profile
+at the CLI level. The primitives beneath it are now covered on both sides; the
+composition of them is not.
 
 ## Recommendations
 
