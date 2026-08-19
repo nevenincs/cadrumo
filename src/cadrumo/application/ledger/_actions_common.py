@@ -869,17 +869,10 @@ def _append_bucket_event(*, repository: BucketEventHistoryRepositoryProtocol, ev
     """Append one event through the domain emitter rather than a local copy.
 
     These two helpers used to load, append and save the catalogue here. That is
-<<<<<<< Updated upstream
     exactly what the domain emitters do, and the copies drifted the moment those
     gained a revision guard: the history is a singleton row, so a local
     load-append-save discards an event a concurrent caller wrote, and the
     content-addressed survivors leave no gap to notice it happened.
-=======
-    what the domain emitters already do, and the copies drifted the moment those
-    gained a revision guard: the history is a singleton row, so a local
-    load-append-save discards an event a concurrent caller wrote, and the
-    content-addressed survivors leave no gap to notice.
->>>>>>> Stashed changes
     """
     emit_bucket_events(repository=repository, events=(event,))
 
