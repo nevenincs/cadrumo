@@ -23,6 +23,7 @@ from ....core.access_gate import (
 )
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
+from ....core import RegistryAuthorityGrade
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._identity import (
     FingerprintTuples,
@@ -34,7 +35,7 @@ from ._identity import (
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import build_validated_snapshot
+from ._snapshot import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._static_inspection import RegistryRevisionInspection
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
@@ -281,20 +282,35 @@ class ValidatedRegistryAuthority:
         period: str,
         on: date | None = None,
         revision_id: RevisionId | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        """Return a cached validated :class:`RegistrySnapshot` for one filing context."""
-        key = (modelo_id, filing_year, period, on, revision_id)
+        """Return a cached validated :class:`RegistrySnapshot` for one filing context.
+
+        ``grade`` names the rung of authority the CALLER needs and defaults to the
+        strictest one, so a caller that says nothing is unchanged. It exists because
+        this accessor had no way to ask for a lower rung: it always built at FILING,
+        so a modelo whose registry declares ``authority_grade = applicability`` --
+        modelo 036, whose censal alta/modificacion/baja is filed on AEAT's sede and
+        produces no fichero here -- refused every caller that only wanted to know
+        which revision governs an event kind.
+
+        The rung is part of the cache key. Without it a snapshot built for one rung
+        would be served to a caller asking for another, which is precisely the silent
+        capability claim the grade exists to prevent.
+        """
+        key = (modelo_id, filing_year, period, on, revision_id, grade)
         cached = self._snapshots.get(key)
         if cached is not None:
             return cached
         modelo = self.validate_modelo(modelo_id)
-        snapshot = build_validated_snapshot(
+        snapshot = _build_validated_snapshot(
             modelo,
             self.catalogues,
             filing_year=filing_year,
             period=period,
             on=on,
             revision_id=revision_id,
+            grade=grade,
         )
         self._snapshots[key] = snapshot
         return snapshot

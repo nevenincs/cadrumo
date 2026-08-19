@@ -45,6 +45,7 @@ from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
+from ....core import RegistryAuthorityGrade
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -101,6 +102,11 @@ def _alta_observation() -> RegistryModeloObservation:
             modelo=_MODELO,
             filing_year=_YEAR_N,
             period=_ALTA_PERIOD,
+            # APPLICABILITY grade. Modelo 036's registry declares that rung:
+            # a censal alta/modificacion/baja is filed on AEAT's sede and this
+            # application produces no fichero for it, so the FILING default asks
+            # for capability the modelo neither has nor claims.
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             casilla_values={
                 _EVENT_KIND_CASILLA: Decimal("1"),
                 _VIGENCIA_2025_CASILLA: _VIGENCIA,
