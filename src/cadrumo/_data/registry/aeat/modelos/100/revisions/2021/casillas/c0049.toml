@@ -6,4 +6,4 @@ data_type = "boolean"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_cesion_derechos_autor_anticipo_flag"
 continuidad_id = "irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag"
 legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

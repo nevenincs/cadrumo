@@ -5,4 +5,4 @@ section = ["resultados", "integracion_res", "rendimientos_mobiliario_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ahorro_imputado"
 continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro-imputado"
 legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

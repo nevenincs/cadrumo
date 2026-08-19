@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_descendiente_discapacidad_fecha_inicio"
 continuidad_id = "irpf-descendiente-discapacidad-fecha-inicio"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

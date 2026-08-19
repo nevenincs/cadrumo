@@ -4,4 +4,4 @@ number = "0450"
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ejercicios_anteriores"
 legal_refs = ["ley-35-2006:art-49"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

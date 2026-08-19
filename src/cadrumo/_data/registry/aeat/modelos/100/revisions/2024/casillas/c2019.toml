@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_deduccion_madrid_familia_numerosa_fecha_titulo"
 continuidad_id = "irpf-deduccion-madrid-familia-numerosa-fecha-titulo"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

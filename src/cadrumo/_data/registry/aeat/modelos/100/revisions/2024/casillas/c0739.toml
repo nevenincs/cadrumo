@@ -4,4 +4,4 @@ number = "0739"
 section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
 semantic_role = "irpf_anexo_a_ric_inversion_tipo_abd"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

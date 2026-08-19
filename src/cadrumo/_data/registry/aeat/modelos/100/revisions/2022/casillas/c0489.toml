@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "red_base_imponible", "red_deportistas"]
 semantic_role = "irpf_red_deportistas_aportaciones_contribuciones"
 continuidad_id = "irpf-red-deportistas-aportaciones-contribuciones"
 legal_refs = ["ley-35-2006:da-11"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

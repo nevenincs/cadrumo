@@ -4,4 +4,4 @@ number = "1934"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 semantic_role = "irpf_deduccion_vehiculo_cantidades_subvencionadas"
 legal_refs = ["ley-35-2006:da-58"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

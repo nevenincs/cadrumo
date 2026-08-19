@@ -6,4 +6,4 @@ semantic_role = "irpf_escala_sobre_minimo_ahorro_autonomico"
 input_kind = "computed"
 formula = "renta-2021-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
 legal_refs = ["ley-35-2006:art-74"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

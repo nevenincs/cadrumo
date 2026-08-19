@@ -5,7 +5,7 @@ from_revision = "2020"
 to_revision = "2024"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-1391-2021-2024-label-evolved"
@@ -14,7 +14,7 @@ from_revision = "2021"
 to_revision = "2024"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-1391-2022-2024-label-evolved"
@@ -23,7 +23,7 @@ from_revision = "2022"
 to_revision = "2024"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-1391-2023-2024-label-evolved"
@@ -32,4 +32,4 @@ from_revision = "2023"
 to_revision = "2024"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]

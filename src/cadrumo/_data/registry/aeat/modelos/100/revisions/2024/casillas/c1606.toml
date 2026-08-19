@@ -6,4 +6,4 @@ semantic_role = "irpf_re_atrib_suma_gp_no_transmision_ganancias"
 input_kind = "computed"
 formula = "renta-2024-atribucion-ganancias-no-transmision-base-general"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

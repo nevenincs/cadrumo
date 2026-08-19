@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "boolean"
 semantic_role = "irpf_re_atrib_entidad_nif_extranjero_flag"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

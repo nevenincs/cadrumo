@@ -4,4 +4,4 @@ number = "1147"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcf"]
 semantic_role = "irpf_anexo_b_importe_total_deduccion_por_tipo"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

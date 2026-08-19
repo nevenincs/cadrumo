@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_vehiculo_electrico_referencia_catastral"
 continuidad_id = "irpf-vehiculo-electrico-referencia-catastral"
 legal_refs = ["ley-35-2006:da-58"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

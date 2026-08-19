@@ -4,4 +4,4 @@ number = "0039"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_reduccion_seguros_antiguos"
 legal_refs = ["ley-35-2006:art-26"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

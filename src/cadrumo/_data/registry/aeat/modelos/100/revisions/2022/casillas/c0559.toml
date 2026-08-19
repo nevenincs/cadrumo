@@ -4,4 +4,4 @@ number = "0559"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_bienes_corporales_canarias_autonomica"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

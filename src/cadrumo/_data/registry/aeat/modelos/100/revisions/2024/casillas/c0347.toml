@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "gp_derechos", "entidad_derecho"]
 semantic_role = "irpf_ganancia_derechos_ganancia"
 continuidad_id = "irpf-ganancia-derechos-ganancia"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

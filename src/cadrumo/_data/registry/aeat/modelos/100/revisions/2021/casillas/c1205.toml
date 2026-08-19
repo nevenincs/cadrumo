@@ -5,4 +5,4 @@ data_type = "integer"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_municipio_pequeno_codigo_3"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

@@ -4,4 +4,4 @@ number = "1387"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 semantic_role = "irpf_anexo_c_base_liq_neg_pendiente_fin"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

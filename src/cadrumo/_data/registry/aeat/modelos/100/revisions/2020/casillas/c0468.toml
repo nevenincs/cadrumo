@@ -4,4 +4,4 @@ number = "0468"
 section = ["resultados", "red_base_imponible_res"]
 semantic_role = "irpf_reduccion_prevision_social_total"
 legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-52-2015"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

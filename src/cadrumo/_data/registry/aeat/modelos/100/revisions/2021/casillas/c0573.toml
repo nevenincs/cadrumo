@@ -4,4 +4,4 @@ number = "0573"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_deduccion_estatal"
 legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77", "rd-439-2007:art-59", "ley-58-2003:art-26"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

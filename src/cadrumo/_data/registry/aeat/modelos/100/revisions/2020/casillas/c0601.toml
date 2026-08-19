@@ -4,4 +4,4 @@ number = "0601"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_retencion_imputada_aie_ute"
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87-2007", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
 legal_refs = ["ley-35-2006:da-50"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

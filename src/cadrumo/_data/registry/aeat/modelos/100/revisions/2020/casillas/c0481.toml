@@ -5,4 +5,4 @@ section = ["resultados", "red_base_imponible_res"]
 semantic_role = "irpf_reduccion_patrimonio_protegido_total"
 continuidad_id = "irpf-reduccion-patrimonio-protegido-total"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

@@ -7,4 +7,4 @@ input_kind = "bound"
 binding = "renta-2024-modelo-123-retenciones-periodicas"
 alternate_bindings = ["renta-2024-modelo-193-retenciones-anuales"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-101", "rd-439-2007:art-90", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]

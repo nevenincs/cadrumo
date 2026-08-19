@@ -6,4 +6,4 @@ data_type = "year"
 semantic_role = "irpf_ganancia_inmueble_anio_imputacion_2"
 continuidad_id = "irpf-ganancia-inmueble-anio-imputacion-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

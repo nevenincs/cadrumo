@@ -6,4 +6,4 @@ data_type = "integer"
 semantic_role = "irpf_inmueble_dias_arrendamiento_negocio"
 continuidad_id = "irpf-inmueble-dias-arrendamiento-negocio"
 legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

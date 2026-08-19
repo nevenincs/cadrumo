@@ -4,4 +4,4 @@ number = "0493"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_reduccion_prevision_social_conyuge_aplicada"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

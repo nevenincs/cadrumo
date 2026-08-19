@@ -21,7 +21,6 @@ source_refs = [
     "aeat-renta-2024-manual-parte1",
     "aeat-renta-2024-manual-deducciones-autonomicas",
     "boe-modelo-100-2024-form",
-    "aeat-modelo-100-procedure",
 ]
 
 [revisions."2024".family_dispositions.projection_endpoints]
@@ -41,5 +40,4 @@ source_refs = [
     "aeat-renta-2024-manual-parte1",
     "aeat-renta-2024-manual-deducciones-autonomicas",
     "boe-modelo-100-2024-form",
-    "aeat-modelo-100-procedure",
 ]

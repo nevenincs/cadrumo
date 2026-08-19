@@ -5,4 +5,4 @@ section = ["resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_nueva_empresa_entidad_nif"
 legal_refs = ["ley-35-2006:art-68.1"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

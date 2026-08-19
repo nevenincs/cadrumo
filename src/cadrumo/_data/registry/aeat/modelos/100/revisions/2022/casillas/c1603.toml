@@ -7,4 +7,4 @@ formula = "renta-2022-atribucion-deuda-subordinada-preferentes-suma"
 data_type = "decimal"
 semantic_role = "irpf_re_atrib_suma_deuda_subordinada"
 legal_refs = ["ley-35-2006:art-86"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

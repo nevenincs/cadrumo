@@ -5,4 +5,4 @@ section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
 semantic_role = "irpf_anexo_c_exencion_reinversion_ganancia_exenta"
 continuidad_id = "irpf-anexo-c-exencion-reinversion-ganancia-exenta"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

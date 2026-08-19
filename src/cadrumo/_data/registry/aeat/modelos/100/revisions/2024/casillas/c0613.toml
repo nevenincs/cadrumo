@@ -6,4 +6,4 @@ number = "0613"
 section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
 semantic_role = "irpf_incremento_maternidad_guarderia"
 legal_refs = ["ley-35-2006:art-81"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

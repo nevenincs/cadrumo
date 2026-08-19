@@ -20,7 +20,6 @@ source_refs = [
     "aeat-dr-100-2023-xsd",
     "aeat-renta-2023-manual-parte1",
     "boe-modelo-100-2023-form",
-    "aeat-modelo-100-procedure",
 ]
 
 [revisions."2023".family_dispositions.projection_endpoints]
@@ -39,5 +38,4 @@ source_refs = [
     "aeat-dr-100-2023-xsd",
     "aeat-renta-2023-manual-parte1",
     "boe-modelo-100-2023-form",
-    "aeat-modelo-100-procedure",
 ]

@@ -19,7 +19,6 @@ source_refs = [
     "aeat-dr-100-2021-xsd",
     "aeat-renta-2021-manual-parte1",
     "boe-modelo-100-2021-form",
-    "aeat-modelo-100-procedure",
 ]
 
 [revisions."2021".family_dispositions.projection_endpoints]
@@ -38,5 +37,4 @@ source_refs = [
     "aeat-dr-100-2021-xsd",
     "aeat-renta-2021-manual-parte1",
     "boe-modelo-100-2021-form",
-    "aeat-modelo-100-procedure",
 ]

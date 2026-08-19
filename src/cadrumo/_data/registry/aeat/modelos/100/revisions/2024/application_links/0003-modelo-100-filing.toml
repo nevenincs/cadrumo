@@ -13,5 +13,4 @@ legal_refs = [
 source_refs = [
     "aeat-dr-100-2024-dictionary",
     "aeat-dr-100-2024-xsd",
-    "aeat-modelo-100-procedure",
 ]

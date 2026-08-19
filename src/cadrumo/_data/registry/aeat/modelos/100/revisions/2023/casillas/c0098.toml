@@ -6,4 +6,4 @@ data_type = "boolean"
 semantic_role = "irpf_inmueble_arrendatario3_nif_extranjero_flag"
 continuidad_id = "irpf-inmueble-arrendatario3-nif-extranjero-flag"
 legal_refs = ["ley-35-2006:art-22"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_re_iic_denominacion"
 continuidad_id = "irpf-re-iic-denominacion"
 legal_refs = ["ley-35-2006:art-95"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

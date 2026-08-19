@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta_sin_reduccion"
 continuidad_id = "irpf-ganancia-inmueble-no-exenta-sin-reduccion"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

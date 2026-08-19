@@ -4,4 +4,4 @@ number = "0044"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_dt4"]
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_dt4_seguros_vida_importe"
 legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

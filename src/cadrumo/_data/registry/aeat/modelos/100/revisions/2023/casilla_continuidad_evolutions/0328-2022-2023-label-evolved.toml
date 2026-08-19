@@ -5,7 +5,7 @@ from_revision = "2020"
 to_revision = "2023"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
 
 [[revisions."2023".casilla_continuidad_evolutions]]
 id = "m100-0328-2021-2023-label-evolved"
@@ -14,7 +14,7 @@ from_revision = "2021"
 to_revision = "2023"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
 
 [[revisions."2023".casilla_continuidad_evolutions]]
 id = "m100-0328-2022-2023-label-evolved"
@@ -23,4 +23,4 @@ from_revision = "2022"
 to_revision = "2023"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]

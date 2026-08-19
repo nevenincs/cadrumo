@@ -5,4 +5,4 @@ from_revision = "2024"
 to_revision = "2025"
 evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a"]
-source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions", "aeat-renta-2025-manual-parte1", "boe-modelo-131-2007-form"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions", "aeat-renta-2025-manual-parte1", "boe-modelo-131-2007-form"]

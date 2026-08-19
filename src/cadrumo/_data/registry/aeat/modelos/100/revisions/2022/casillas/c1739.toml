@@ -5,4 +5,4 @@ section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
 semantic_role = "irpf_anexo_c_gan_per_cuartas_aplicado"
 continuidad_id = "irpf-anexo-c-gan-per-cuartas-aplicado"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

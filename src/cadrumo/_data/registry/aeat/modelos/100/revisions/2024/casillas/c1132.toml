@@ -4,4 +4,4 @@ number = "1132"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enc"]
 semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

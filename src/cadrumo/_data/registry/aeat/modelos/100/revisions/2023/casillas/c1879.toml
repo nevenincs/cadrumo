@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomone
 semantic_role = "irpf_perdida_cripto_pendiente_resto"
 continuidad_id = "irpf-perdida-cripto-pendiente-resto"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

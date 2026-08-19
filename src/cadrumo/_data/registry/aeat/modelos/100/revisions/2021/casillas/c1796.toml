@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_compensacion_conyuges_bank_address"
 continuidad_id = "irpf-compensacion-conyuges-bank-address"
 legal_refs = ["ley-35-2006:art-97"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

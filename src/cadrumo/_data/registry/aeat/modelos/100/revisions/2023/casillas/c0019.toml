@@ -7,4 +7,4 @@ semantic_role = "irpf_rendimiento_trabajo_gasto_otros"
 input_kind = "computed"
 formula = "renta-2023-trabajo-otros-gastos"
 legal_refs = ["ley-35-2006:art-19"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

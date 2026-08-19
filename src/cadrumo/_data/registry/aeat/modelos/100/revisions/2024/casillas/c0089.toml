@@ -6,4 +6,4 @@ semantic_role = "irpf_rendimiento_capital_inmobiliario_renta_imputada"
 input_kind = "computed"
 formula = "renta-2024-inmobiliario-renta-imputada-art-85"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-85"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]

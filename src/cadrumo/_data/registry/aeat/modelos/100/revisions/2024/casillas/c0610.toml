@@ -7,4 +7,4 @@ semantic_role = "irpf_cuota_diferencial"
 input_kind = "computed"
 formula = "renta-2024-cuota-diferencial"
 legal_refs = ["ley-35-2006:art-79"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

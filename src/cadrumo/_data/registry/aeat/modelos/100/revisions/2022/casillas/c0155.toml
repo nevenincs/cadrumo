@@ -6,4 +6,4 @@ semantic_role = "irpf_rendimiento_capital_inmobiliario_suma_rentas_imputadas"
 input_kind = "computed"
 formula = "renta-2022-inmobiliario-suma-rentas-imputadas"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-85"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

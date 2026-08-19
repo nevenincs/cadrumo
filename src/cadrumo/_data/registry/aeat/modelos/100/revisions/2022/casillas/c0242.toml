@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_conyuge_discapacidad_fecha_inicio"
 continuidad_id = "irpf-conyuge-discapacidad-fecha-inicio"
 legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

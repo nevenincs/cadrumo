@@ -4,4 +4,4 @@ source_modelo = "100"
 treatment = "direct_annual_settlement"
 target_constructs = ["renta-2024-anexo-c-base-liquidable-negativa-general"]
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-renta-2024-manual-parte1", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-renta-2024-manual-parte1"]

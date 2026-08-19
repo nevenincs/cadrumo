@@ -13,7 +13,6 @@ source_refs = [
     "aeat-dr-100-2022-dictionary",
     "aeat-dr-100-2022-input-dictionary",
     "aeat-dr-100-2022-xsd",
-    "aeat-modelo-100-procedure",
     "aeat-renta-2022-manual-parte1",
     "boe-modelo-100-2022-form",
 ]

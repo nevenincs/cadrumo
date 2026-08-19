@@ -4,4 +4,4 @@ number = "0479"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
 semantic_role = "irpf_red_patrimonio_protegido_discapacidad_exceso"
 legal_refs = ["ley-35-2006:art-54"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

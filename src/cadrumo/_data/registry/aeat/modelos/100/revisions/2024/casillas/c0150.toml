@@ -7,4 +7,4 @@ formula = "renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-
 data_type = "money"
 semantic_role = "irpf_rendimiento_capital_inmobiliario_reduccion_arrendamiento_vivienda"
 legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

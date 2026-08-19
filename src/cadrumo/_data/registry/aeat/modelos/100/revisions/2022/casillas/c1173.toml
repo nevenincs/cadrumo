@@ -5,4 +5,4 @@ section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_donaciones_covid19"
 continuidad_id = "irpf-deduccion-c-valenciana-donaciones-covid19"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

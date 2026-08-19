@@ -14,7 +14,6 @@ source_refs = [
     "aeat-dr-100-2024-dictionary",
     "aeat-dr-100-2024-input-dictionary",
     "aeat-dr-100-2024-xsd",
-    "aeat-modelo-100-procedure",
 ]
 bindings = [
     "renta-2024-ledger-income-0171",

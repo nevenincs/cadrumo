@@ -4,4 +4,4 @@ number = "0439"
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_gyp_ahorro_pendiente"
 legal_refs = ["ley-35-2006:art-49"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

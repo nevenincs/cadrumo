@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c"]
 semantic_role = "irpf_retrib_especie_no_exenta_importe_integro_pendiente_imputacion"
 continuidad_id = "irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion"
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-42.3.f", "ley-35-2006:art-14.2.m"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

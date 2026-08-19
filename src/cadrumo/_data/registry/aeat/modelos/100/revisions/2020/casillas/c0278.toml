@@ -5,4 +5,4 @@ section = ["toma_datos_ampliada", "regimenes_especiales", "re_institu_inversion_
 semantic_role = "irpf_re_iic_imputacion_importe"
 continuidad_id = "irpf-re-iic-imputacion-importe"
 legal_refs = ["ley-35-2006:art-95"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

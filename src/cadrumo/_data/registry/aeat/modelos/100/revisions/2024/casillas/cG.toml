@@ -13,4 +13,4 @@ semantic_role = "irpf_deduccion_actividades_prioritarias_mecenazgo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-19"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

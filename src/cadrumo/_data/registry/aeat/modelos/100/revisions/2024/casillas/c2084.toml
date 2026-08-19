@@ -5,4 +5,4 @@ section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
 data_type = "text"
 semantic_role = "irpf_anexo_b_contribuyente_con_derecho_clave"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

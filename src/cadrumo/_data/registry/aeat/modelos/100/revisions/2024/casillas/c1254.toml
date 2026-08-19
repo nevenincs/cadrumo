@@ -4,4 +4,4 @@ number = "1254"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_general_res"]
 semantic_role = "irpf_anexo_c_saldo_neg_gyp_general_pendiente_inicio"
 legal_refs = ["ley-35-2006:art-48"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

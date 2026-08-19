@@ -6,4 +6,4 @@ semantic_role = "irpf_re_iic_suma_imputaciones"
 input_kind = "computed"
 formula = "renta-2023-iic-paraisos-fiscales-suma"
 legal_refs = ["ley-35-2006:art-95"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

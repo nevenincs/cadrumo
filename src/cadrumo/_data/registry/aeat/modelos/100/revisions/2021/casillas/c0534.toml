@@ -7,4 +7,4 @@ semantic_role = "irpf_tipo_medio_gravamen_base_liquidable_general_estatal"
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-63"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

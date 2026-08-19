@@ -4,4 +4,4 @@ number = "1229"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_inmueble_comprometido_reinvertir_vh"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

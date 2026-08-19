@@ -5,4 +5,4 @@ section = ["resultados", "reg_estima_obj_res"]
 semantic_role = "irpf_eo_reduccion_art_32_2_3"
 continuidad_id = "irpf-eo-reduccion-art-32-2-3"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

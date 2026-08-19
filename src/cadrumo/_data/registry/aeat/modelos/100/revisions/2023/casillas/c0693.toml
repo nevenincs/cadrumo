@@ -5,4 +5,4 @@ section = ["resultados", "compensacion_conyuges_res"]
 semantic_role = "irpf_compensacion_conyuges_ingresar_suspendido"
 continuidad_id = "irpf-compensacion-conyuges-ingresar-suspendido"
 legal_refs = ["ley-35-2006:art-97"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]

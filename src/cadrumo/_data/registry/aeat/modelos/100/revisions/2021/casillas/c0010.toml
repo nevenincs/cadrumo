@@ -4,4 +4,4 @@ number = "0010"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_aportacion_patrimonio_protegido"
 legal_refs = ["ley-35-2006:art-17"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

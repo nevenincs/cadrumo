@@ -105,4 +105,4 @@ legal_refs = [
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
 ]
-source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form"]

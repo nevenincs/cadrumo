@@ -6,4 +6,4 @@ data_type = "text"
 semantic_role = "irpf_deduccion_andalucia_empleada_hogar_ccc"
 continuidad_id = "irpf-deduccion-andalucia-empleada-hogar-ccc"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

@@ -6,4 +6,4 @@ data_type = "ratio"
 semantic_role = "irpf_anexo_a_prestamo_porcentaje_vivienda"
 continuidad_id = "irpf-anexo-a-prestamo-porcentaje-vivienda"
 legal_refs = ["ley-35-2006:dt-18"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

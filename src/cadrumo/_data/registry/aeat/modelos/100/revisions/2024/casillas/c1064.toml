@@ -6,4 +6,4 @@ section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_vivienda_codigo_municipio"
 continuidad_id = "irpf-deduccion-la-rioja-vivienda-codigo-municipio"
 legal_refs = ["ley-35-2006:art-77"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

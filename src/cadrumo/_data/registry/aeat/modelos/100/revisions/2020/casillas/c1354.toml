@@ -4,4 +4,4 @@ number = "1354"
 section = ["resultados", "anexo_c_res", "excesos_patrim_protegidos_res"]
 semantic_role = "irpf_anexo_c_exceso_patrim_protegido_aplicado"
 legal_refs = ["ley-35-2006:art-54"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]

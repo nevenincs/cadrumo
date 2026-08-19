@@ -7,4 +7,4 @@ formula = "renta-2021-saldo-neto-rendimientos-base-imponible-general"
 data_type = "decimal"
 semantic_role = "irpf_saldo_neto_rdtos_base_imponible_general"
 legal_refs = ["ley-35-2006:art-48"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
