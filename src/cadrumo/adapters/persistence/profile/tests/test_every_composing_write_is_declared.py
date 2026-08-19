@@ -89,7 +89,11 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/modelo/_revision_persistence.py",
         "persist_filed_revision",
-    ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded here",
+    ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded "
+    "here. Threading the other two is blocked on cost rather than capability: this function has 26 test "
+    "call sites, and the cheap way through -- an OPTIONAL revision defaulting to None -- would buy a "
+    "permanent green from this gate while guarding nothing, so it must be a required parameter or not "
+    "done at all",
     (
         "src/cadrumo/application/modelo/_external_import_actions.py",
         "import_external_filing_evidence",
@@ -198,16 +202,11 @@ def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
     and never a value.
     """
     source = (
-        "def persist(repository, entry):
-"
-        "    catalogue = repository.load()
-"
-        "    repository.save_with_secure_object_writes(
-"
-        "        upsert(catalogue, entry), (), expected_revision_id=None
-"
-        "    )
-"
+        "def persist(repository, entry):\n"
+        "    catalogue = repository.load()\n"
+        "    repository.save_with_secure_object_writes(\n"
+        "        upsert(catalogue, entry), (), expected_revision_id=None\n"
+        "    )\n"
     )
     tree = ast.parse(source)
     calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
@@ -220,10 +219,8 @@ def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
 def test_a_real_revision_counts_as_guarded() -> None:
     """ANTI-TAUTOLOGY: the check is not rejecting every revision."""
     source = (
-        "def persist(repository, entry, revision):
-"
-        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)
-"
+        "def persist(repository, entry, revision):\n"
+        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)\n"
     )
     tree = ast.parse(source)
     call = next(
