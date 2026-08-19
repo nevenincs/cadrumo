@@ -5938,3 +5938,114 @@ Modelo 390 selection: **29 failed / 179 passed -> 3 failed / 244 passed -> 0**.
   work, not a fold-in. Beside the narrowing, what the standing goal still asks
   for: a "full supported revision and modelo matrix" that includes 2015 and 2016
   if those years are in scope -- an operator call on the supported floor.
+
+## Modelo 303: the queue's six items were all verified done first
+
+Re-measured before starting: authority CLEAN, reviewer **0 ready / 0 abstaining**,
+and all six queue items green at **457 passed**. A peer had committed the previous
+tick's work, and each change was confirmed present in HEAD rather than assumed.
+With no queue item outstanding, the standing endpoint takes over, and modelo 303
+was the largest remaining block at 53 failures. Its deferral last tick -- another
+agent editing it -- no longer applied: the failing modules had not been touched in
+four hours and three days respectively.
+
+### An incomplete relocation that made a whole module die on its own path
+
+`dev/registry/tests/test_dp30302_field_matrix.py` loaded
+`dev/registry/dp30302_field_matrix.toml`. Git recorded the file as a PURE RENAME
+into `dev/registry/analysis/` -- `{ => analysis}`, zero content change, and the
+blob digests match -- but the path constant was left one directory up, so every
+case that loads the artefact died on "must be a real file" rather than on
+anything it asserts. 17 passed once repointed.
+
+### The 2022 epoch was authored without either of its two reviewed expectations
+
+The 2022 semantic map was authored 13 hours ago ("all 314 design fields
+resolved") and neither of the per-epoch expectation maps gained an entry, so
+every epoch-scoped case refused with "no reviewed expectation" / "no reviewed
+surface expectation". Both enrolled, from measurement:
+
+- **Census.** `fixed_anchor_count=314`, cross-checked against the design's own
+  parsed field count and against the figure the map's authoring recorded. The
+  simplified span is ONE contiguous range, 6..77, verified gap-free, so no
+  ordinal is carved out.
+- **Surface.** 2022's DP30303 markers sit one slot from 2023's -- complementaria
+  at ordinal 27 and no-activity at 29, against 29 and 28 -- and its DP30301
+  general-rate slot states no closed enumeration, measured through the same
+  rendered-field accessor the case reads.
+
+2022 precedes 2023, so it becomes the ROOT of the epoch chain and 2023 now names
+it as predecessor, which required the 2022 -> 2023 home diff: **82 introduced, 5
+retired**. Both halves are AEAT's own change, and the diff is coherent rather
+than merely mechanical:
+
+- the **rate-box relayout**: the fixed printed "Tipo %" boxes retire (02, 05 and
+  08 of the three general-regime devengado triplets, plus 20 and 23 of the
+  recargo rows) and a variable-rate base/tipo/cuota block arrives as 150 and
+  152-155, because a rate that moves mid-period cannot be printed on the form;
+  box 109 arrives with them;
+- the **Regimen Simplificado actividad modules** arrive on DP30302: 62 of the 82
+  introduced homes are simplified-regime projections.
+
+### The same absence explained four separate failures
+
+2022 declares **no pure-integer DP30302 slot at any width** -- every numeric slot
+on that sheet is money ("15 enteros y 2 decimales") -- because the pure-integer
+slots ARE those RS actividad modules. That single fact was behind the 21 + 5
+note-grammar failures, the missing `m303-domiciliacion` record (DP303DID also
+arrives in 2023), and the simplified-fact count gap. The note-grammar probes were
+parametrised over every epoch crossed with fixed widths 4 and 7, asking 2022 for
+slots its design has never had; `_integer_field_of_width`'s anti-vacuity guard
+correctly refused rather than passing on nothing. Both probes now derive their
+population from the designs -- coverage rose from 96 attempted cases to **160
+passing**, widths 2 and 3 included.
+
+### Two more inverted absence-assertions, and a real span defect
+
+- The 25 prorrata activity endpoints and the 23 exonerado endpoints were each
+  asserted to carry NO export refs, contradicting the same tests' own evidence:
+  both read their official sheet (DP30305, DP30304) from the REAL BINARY and
+  assert its numbered field set equals those endpoints. Every one now exports to
+  exactly one field on that sheet, and uniqueness is asserted alongside.
+- `_PROJECTION_KIND_COUNTS` pinned a 108-endpoint tally with two entries already
+  wrong. Measured across all six revisions, six of the seven kinds are INVARIANT;
+  only `m303_regimen_simplificado_fact` tracks the design epoch (38, 96, 100,
+  106, 108, 108). The invariant six stay pinned, the epoch-tracking one is
+  asserted present and its per-epoch figure left to the census, which states it
+  against that epoch's own map -- one number here could only be wrong for five of
+  the six revisions.
+- Endpoint grounding is now per FAMILY and the split follows projection kind 1:1
+  on every revision: the simplified-regime endpoints cite LIVA arts. 122 and 123,
+  which ESTABLISH the regimen, plus that year's modulos Orden. The blanket
+  procedural-pair assertion predated that and was the weaker claim.
+
+**A real span defect, not a test problem.** `303/2022` declared NO `valid_to` at
+all -- left over from the rename of `2009-2022` when the pre-window span was
+retired -- while its own `period_selector` stops at `year_to = 2022`. Every
+sibling declares one. That is not cosmetic: the revision-scoped source and legal
+window checks intersect against `valid_to`, so with it unset a source or
+provision opening after 2022 could never be flagged for this revision, and the
+revision also read as open-ended to the derived open-ended gate. Declared
+`valid_to = 2022-12-31`.
+
+Modelo 303: **53 failed / 387 passed -> 7 -> 0 outstanding in the modules worked.**
+
+### Recorded, not fixed: modelo 303's retired pre-window span
+
+Retiring the `2009-2022` span dropped filing years 2014-2021, and **eight bundled
+designs now have no revision citing them**: `aeat-dr-303-2014`, `2015-2016`,
+`2017`, `2018`, `2018-salvo-ultimo-periodo`, `2019-2020`,
+`2021-hasta-periodo-06` and `2021-desde-periodo-07`.
+
+This is unlike modelo 100's procedure-page gap, where nothing era-appropriate was
+bundled: here the material IS present, so the years are groundable. I did not
+revert it -- a peer retired the span deliberately in a named commit 25 hours ago,
+and reversing another agent's stated decision is not mine to make silently. The
+tests were aligned to the current floor, and the floor is now ASSERTED rather
+than merely assumed: a 2021 filing must raise `NoRevisionForPeriodError` instead
+of silently resolving under 2022's norms.
+
+Beside the narrowing, what the standing goal still asks for that it excludes: a
+"full supported revision and modelo matrix" covering 2014-2021 on the
+highest-volume modelo in the application. **Recommended as the next queue item**,
+since the designs are bundled and the work is therefore groundable.
