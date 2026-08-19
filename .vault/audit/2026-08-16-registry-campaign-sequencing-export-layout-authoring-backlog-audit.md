@@ -6512,3 +6512,40 @@ if that set ever empties.
 
 Proven to bite: a scratchpad plugin making modelo 036 resolve a calendar window
 fails it, where the untouched run passes.
+
+## A modelo 347 construct short by 34, and a test leaking into its siblings
+
+**Modelo 308 (5 -> 0).** Every case named revision `2022`. Modelo 308 declares
+exactly one revision, `2009-y-siguientes`, and git shows no `2022` directory has
+EVER existed under it -- so the cases died on the lookup rather than on anything
+they assert. The id is now a named constant so the next reader sees one place to
+correct.
+
+**Modelo 347's construct (5 -> 0).** It collected 10 of the revision's 44
+casillas; the contraparte detail block and the inmueble rows were authored later
+and never enrolled. Three other families were absent or short for the same
+reason: the verification expectation, the generated export layout, and the
+`modelo-347-export` application link. All completed, in the revision's own order.
+The construct's existing legal and source refs already covered every added
+member, so nothing was widened -- checked before writing, not after.
+
+### The module passed alone and failed in company
+
+The interesting failure: `test_modelo_347_registry` passed 15/15 by itself and
+failed 5 cases whenever the wider selection ran. That difference is the finding.
+
+`test_a_renamed_record_field_is_refused_not_silently_read_as_non_summary` renames
+`record` to `recrd` on the M347 summary binding through `object.__setattr__`, to
+prove the function validates rather than silently returning False. It did that to
+the SHARED, cached binding and never restored it, so every later test that loaded
+modelo 347 saw a selector carrying `recrd` and refused -- a corruption that reads
+as a defect in the modules downstream of it, not in the one that caused it.
+
+The mutation now goes to `shared.model_copy()`. The argument it stands on is
+untouched: `model_copy` does not revalidate, so the drifted shape still cannot
+come from the constructor, and the copy is a real already-validated instance.
+Verified both directions -- the case still passes, and the shared selector is
+byte-identical before and after it runs.
+
+Selection `-k "347 or 308"`: **7 failed / 38 passed -> 45 passed.** Authority
+CLEAN.
