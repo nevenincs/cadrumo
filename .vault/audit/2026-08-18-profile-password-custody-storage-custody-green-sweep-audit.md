@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:4647ab087899c4b5cbf3beb1a36b4d64721276b77a125241da215fa022953df4'
+body_hash: 'sha256:676a05e343ce885c4c59ee7daa1098ae9821ca35514c569bd7063f2cf121fc6e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1130,6 +1130,40 @@ side of the change, 387 passing before and 391 after -- the difference being
 these four tests. The guard was proven to bite by removing the parameter at the
 base from a plugin outside the repository, where only the discriminating case
 reds.
+
+### The lost-update class is now closed by a gate rather than by sweeping
+
+Four further batches carried the defect: the external-import path (composing
+BOTH the calculation and filing catalogues), work-unit creation, and the
+prorrata settlement write. As with the calculate path, three of the four
+repositories could not express the guard -- no `expected_revision_id` on their
+composing writes -- so the fix was a capability before it was a call site.
+
+The transferable part is how they were found, and it is the same lesson twice.
+A first detector looked only at the ROOT of the written expression and reported
+two sites. These paths write `upsert_x(catalogue, entry)` -- a call WRAPPING
+the loaded name -- so the root is a Call and the taint sits one level in.
+Widening the search to the whole expression surfaced the other two. That is
+precisely the failure this campaign already made with a line-oriented grep and
+then again with a syntactic gate: matching the shape a defect happened to take
+rather than the property it violates. The gate now carries the wrapped case as
+its anti-tautology control, because the narrow version of it looked green.
+
+A run-count nearly caused a second error worth recording. The affected
+selection reported 201 failures at HEAD and 205 with the change, which reads as
+four regressions. Diffing the SORTED failure sets showed them byte-identical at
+205 either side: the earlier 201 was run-to-run variance in a lane already red
+from the registry breakage documented above. In a tree with hundreds of
+unrelated failures, totals are not evidence -- only set differences are. Acting
+on the count would have meant hunting four regressions that did not exist.
+
+What the gate does NOT cover is stated in the gate itself rather than left to
+be discovered. It follows a catalogue only from a `load()` in the SAME
+function. A catalogue arriving as a PARAMETER carries no revision the callee
+can assert -- the work-unit catalogue in the calculate path is exactly that --
+and those sites remain unguarded and unreported. Closing them means threading
+the revision from whoever performed the read, which is a signature change
+through several callers rather than a local fix.
 
 ## Recommendations
 
