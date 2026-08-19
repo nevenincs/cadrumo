@@ -597,17 +597,11 @@ test-dev-tooling:
 # Its tests are `unit`-marked, so the marker expression below selects them --
 # checked rather than assumed, since a `docs`-only marker would have been
 # deselected here and still exited zero.
-# Declared once and consumed by both arms below. The bulk runs under xdist and
-# the isolation-sensitive `serial` tests run alone, the same split the product
-# integration lane makes -- and without this second arm those tests were
-# selected by no lane at all, which reads as coverage and is not.
-dev_ci_paths := "dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests"
-
 [doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
 [group('testing')]
 test-dev-ci:
-    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" {{dev_ci_paths}}
-    @uv run --no-sync pytest -q -n0 --timeout=900 -m "integration and serial" {{dev_ci_paths}}
+    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
+    @uv run --no-sync pytest -q -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
 # Run the four conformance gates that are correctly `integration`-marked
 # (each genuinely crosses architectural layers) but were reached by no
