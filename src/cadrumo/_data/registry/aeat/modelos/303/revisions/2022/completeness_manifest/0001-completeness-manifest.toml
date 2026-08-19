@@ -1,5 +1,5 @@
 [revisions.2022.completeness_manifest]
-source_ref = "aeat-dr-303-2025"
+source_ref = "aeat-dr-303-2022"
 legal_refs = [
     "ley-37-1992:art-102",
     "ley-37-1992:art-104",
@@ -38,7 +38,7 @@ legal_refs = [
     "rd-1624-1992:art-30",
     "rd-1624-1992:art-71",
 ]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 # Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
 # 59; exportaciones exentas, casilla 60) became computed projection targets when

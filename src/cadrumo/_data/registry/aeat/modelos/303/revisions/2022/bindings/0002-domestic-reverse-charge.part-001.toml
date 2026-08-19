@@ -12,7 +12,7 @@
 id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -33,7 +33,7 @@ op = "sum"
 id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 source = "ledger_iva_aggregation"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
