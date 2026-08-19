@@ -40,6 +40,10 @@ from .....application.live import (
     SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
+from .....application.modelo import (
+    RecipientFingerprintRegistryRepository,
+    RecipientReplayGuardRepository,
+)
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -192,6 +196,8 @@ __all__ = [
     "ModeloHistoryRepository",
     "ModeloRecordCatalogueRepository",
     "Path",
+    "RecipientFingerprintRegistryRepository",
+    "RecipientReplayGuardRepository",
     "RegistryModeloObservation",
     "RepairRemediationDecisionRepository",
     "SpendingCategory",

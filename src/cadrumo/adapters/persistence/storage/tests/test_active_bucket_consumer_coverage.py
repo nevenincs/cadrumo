@@ -62,6 +62,8 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/outbound/llm/_run_telemetry.py": "llm_run_telemetry",
     "src/cadrumo/application/auth/_diagnostics.py": "auth_diagnostics",
     "src/cadrumo/application/workflow/_persistence.py": "workflow_state",
+    "src/cadrumo/application/modelo/_review_package_recipient_registry.py": "review_recipient_registry",
+    "src/cadrumo/application/modelo/_review_package_recipient_replay_guard.py": "review_recipient_replay_guard",
 }
 
 #: Resolver consumers the refusal table does NOT reach, each with the reason.
@@ -78,12 +80,6 @@ _NOT_IN_THE_REFUSAL_TABLE: dict[str, str] = {
     ),
     "src/cadrumo/application/repair_integrity.py": (
         "a repair path deliberately reached when storage is already unhealthy"
-    ),
-    "src/cadrumo/application/modelo/_review_package_recipient_registry.py": (
-        "review-package recipients; no refusal case drives this store"
-    ),
-    "src/cadrumo/application/modelo/_review_package_recipient_replay_guard.py": (
-        "review-package replay guard; no refusal case drives this store"
     ),
     "src/cadrumo/application/user_profile/_custody_ports.py": (
         "custody boundary; its refusals are asserted by the custody suites rather than this table"

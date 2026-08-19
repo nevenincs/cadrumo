@@ -42,6 +42,8 @@ from ._runtime_attached_repositories_support import (
     ModeloHistoryRepository,
     ModeloRecordCatalogueRepository,
     Path,
+    RecipientFingerprintRegistryRepository,
+    RecipientReplayGuardRepository,
     RegistryModeloObservation,
     RepairRemediationDecisionRepository,
     SpendingCategory,
@@ -123,6 +125,8 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("llm_usage_load", lambda: UsageRecorder(root_dir=Path("runtime-usage")).load_records()),
     ("llm_run_telemetry", lambda: LLMRunTelemetryRecorder(root_dir=Path("runtime-telemetry")).load_records()),
     ("llm_consent_ledger", lambda: EvidenceConsentLedger().load_entries()),
+    ("review_recipient_registry", lambda: RecipientFingerprintRegistryRepository().load()),
+    ("review_recipient_replay_guard", lambda: RecipientReplayGuardRepository().load()),
     (
         "sede_artefact",
         lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(
