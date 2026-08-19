@@ -52,7 +52,7 @@ from .._schema import (
     WorkbookParityReference,
 )
 from .._schema_verification import VerificationExpectationDefinition
-from .._snapshot import build_validated_snapshot
+from .._snapshot import _build_validated_snapshot as build_snapshot_at_grade
 from .._validate_references import check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -104,7 +104,7 @@ def _snapshot_for_revision(
     # binding definition -- and carry no export layout, so a filing-grade
     # snapshot refuses on the missing filing capability before any reference is
     # ever checked. The integrity checks themselves are grade-independent.
-    return build_validated_snapshot(
+    return build_snapshot_at_grade(
         modelo,
         catalogues,
         filing_year=filing_year,
