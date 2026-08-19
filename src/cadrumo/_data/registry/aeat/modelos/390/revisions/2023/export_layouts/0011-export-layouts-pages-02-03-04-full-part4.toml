@@ -1,0 +1,130 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-04"
+record_type = "page_04"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Compensac. rég. especial agric./ganad./pesca - Base impon. [60]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-compensaciones-reagp-base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.compensaciones-reagp.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [61]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-compensaciones-reagp-cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Cuotas deducibles en virtud de resolución administrativa o sentencia firmes con tipos no vigentes - Base impon.  [660]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-resolucion-firme-tipos-no-vigentes-base"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Cuotas deducibles en virtud de resolución administrativa o sentencia firmes con tipos no vigentes - Cuota deduc. [661]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-resolucion-firme-tipos-no-vigentes-cuota"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones - Base imponible [639]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-rectificacion-base"
+offset = 81
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.rectificacion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones - Cuota [62]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-rectificacion-cuota"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.rectificacion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones intragrupo - Base impon. [651]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.rectificacion-intragrupo.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones intragrupo - Cuota [652]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.rectificacion-intragrupo.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

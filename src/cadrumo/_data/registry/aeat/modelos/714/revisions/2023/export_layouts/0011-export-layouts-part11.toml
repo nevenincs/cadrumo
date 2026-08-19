@@ -1,0 +1,458 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-714-page-10"
+record_type = "714-10"
+order = 10
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "10000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.cuota-integra"
+offset = 13
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-integra"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.irpf-bases-imponibles"
+offset = 26
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.irpf-bases-imponibles"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.dividendos-no-irpf"
+offset = 39
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.dividendos-no-irpf"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.base-ahorro-excluida"
+offset = 52
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.base-ahorro-excluida"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.limite-conjunto"
+offset = 65
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.limite-conjunto"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.irpf-cuotas-integras"
+offset = 78
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.irpf-cuotas-integras"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.irpf-cuotas-excluidas-base-ahorro"
+offset = 91
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.cuota-integra-susceptible-limitacion"
+offset = 104
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-integra-susceptible-limitacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.suma-cuotas-limite"
+offset = 117
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.suma-cuotas-limite"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.exceso-limite-conjunto"
+offset = 130
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.exceso-limite-conjunto"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.reduccion-limite-80"
+offset = 143
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.reduccion-limite-80"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.total-cuota-integra"
+offset = 156
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.total-cuota-integra"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-41"
+offset = 199
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-41"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-42"
+offset = 212
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-42"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-43"
+offset = 225
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-43"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-44"
+offset = 238
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-44"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.cuota-minorada"
+offset = 251
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-minorada"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-48"
+offset = 264
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-48"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-49"
+offset = 277
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-49"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-50"
+offset = 290
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-50"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.cuota-a-ingresar"
+offset = 303
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-a-ingresar"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-56"
+offset = 316
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-56"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-57"
+offset = 329
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-57"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-complementaria-slot"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-reserved-1"
+offset = 342
+length = 147
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-10-end"
+offset = 489
+length = 12
+kind = "literal"
+literal = "</T71410000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-a"
+offset = 173
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-a"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-declaracion-b"
+offset = 186
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-b"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

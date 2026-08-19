@@ -1,0 +1,367 @@
+[[revisions."2026-y-siguientes".export_layouts]]
+id = "modelo-322-2026-fichero-boe"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records]]
+id = "modelo-322-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c53"
+offset = 1259
+length = 17
+kind = "casilla"
+casilla_id = "53"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c54"
+offset = 1276
+length = 17
+kind = "casilla"
+casilla_id = "54"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c55"
+offset = 1293
+length = 17
+kind = "casilla"
+casilla_id = "55"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c56"
+offset = 1310
+length = 17
+kind = "casilla"
+casilla_id = "56"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c57"
+offset = 1327
+length = 17
+kind = "casilla"
+casilla_id = "57"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c58"
+offset = 1344
+length = 17
+kind = "casilla"
+casilla_id = "58"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c59"
+offset = 1361
+length = 17
+kind = "casilla"
+casilla_id = "59"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c60"
+offset = 1378
+length = 17
+kind = "casilla"
+casilla_id = "60"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c61"
+offset = 1395
+length = 17
+kind = "casilla"
+casilla_id = "61"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-2026-c62"
+offset = 1412
+length = 17
+kind = "casilla"
+casilla_id = "62"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-1429"
+offset = 1429
+length = 347
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-1776"
+offset = 1776
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-1789"
+offset = 1789
+length = 12
+kind = "literal"
+literal = "</T32201000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. N. Grupo.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-109"
+offset = 109
+length = 10
+kind = "casilla"
+casilla_id = "decl.grupo-numero"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Dominante / Dependiente. "Dominante=D, Dependiente=P o blanco".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-119"
+offset = 119
+length = 1
+kind = "casilla"
+casilla_id = "decl.grupo-rol"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. NIF de la entidad dominante.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-120"
+offset = 120
+length = 9
+kind = "casilla"
+casilla_id = "decl.entidad-dominante-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Tributacion exclusivamente foral: sujeto pasivo que tributa
+# exclusivamente a una Administracion tributaria Foral con IVA a la importacion
+# liquidado por la Aduana pendiente de ingreso. "X o blanco".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-129"
+offset = 129
+length = 1
+kind = "casilla"
+casilla_id = "decl.tributacion-exclusivamente-foral"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo acogido a la modalidad del regimen especial
+# regulada en el art. 163 sexies.Cinco LIVA. "Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-130"
+offset = 130
+length = 1
+kind = "casilla"
+casilla_id = "decl.regimen-163-sexies-cinco"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo inscrito en el Registro de devolucion mensual
+# (art. 30 RIVA). "Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-131"
+offset = 131
+length = 1
+kind = "casilla"
+casilla_id = "decl.redeme-inscrito"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo destinatario de operaciones acogidas al regimen
+# especial del criterio de caja. "Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-132"
+offset = 132
+length = 1
+kind = "casilla"
+casilla_id = "decl.destinatario-criterio-caja"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Aplicacion de la prorrata especial (art. 103.Dos.1 LIVA):
+# opcion por la aplicacion / revocacion de la opcion. "0, 1, 2 o 3".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-133"
+offset = 133
+length = 1
+kind = "casilla"
+casilla_id = "decl.prorrata-especial"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo exonerado de la Declaracion-resumen anual del
+# IVA, modelo 390. "0, Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-134"
+offset = 134
+length = 1
+kind = "casilla"
+casilla_id = "decl.exonerado-modelo-390"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo con volumen anual de operaciones distinto de
+# cero (art. 121 LIVA). "0, Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-135"
+offset = 135
+length = 1
+kind = "casilla"
+casilla_id = "decl.volumen-anual-no-cero"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo con derecho a deducir pago a cuenta de entregas
+# de gasolinas, gasoleos y biocarburantes posteriores a la ultimacion del regimen
+# de deposito distinto del aduanero. "0=Vacio, Si=1, No=2".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-322-page-01-136"
+offset = 136
+length = 1
+kind = "casilla"
+casilla_id = "decl.deduccion-pago-cuenta-gasolinas"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]

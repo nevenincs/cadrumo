@@ -1,0 +1,841 @@
+
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1111-1111.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-22"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-22", offset = 1111, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1112-1128.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-22"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-22", offset = 1112, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1129-1145.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-22"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-22", offset = 1129, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1146-1147.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-23"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-23", offset = 1146, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1148-1152.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-5", offset = 1148, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1153-1153.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-23"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-23", offset = 1153, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1154-1170.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-23"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-23", offset = 1154, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1171-1187.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-23"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-23", offset = 1171, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1188-1189.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-24"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-24", offset = 1188, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1190-1194.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-6", offset = 1190, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1195-1195.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-24"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-24", offset = 1195, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1196-1212.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-24"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-24", offset = 1196, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1213-1229.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-24"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-24", offset = 1213, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1230-1231.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-25"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-25", offset = 1230, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1232-1236.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-7", offset = 1232, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1237-1237.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-25"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-25", offset = 1237, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1238-1254.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-25"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-25", offset = 1238, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1255-1271.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-25"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-25", offset = 1255, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1272-1273.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-26"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-26", offset = 1272, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1274-1278.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-8"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-8", offset = 1274, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1279-1279.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-26"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-26", offset = 1279, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1280-1296.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-26"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-26", offset = 1280, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1297-1313.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-26"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-26", offset = 1297, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1314-1315.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-27"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-27", offset = 1314, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1316-1320.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-9"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-9", offset = 1316, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1321-1321.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-27"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-27", offset = 1321, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1322-1338.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-27"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-27", offset = 1322, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1339-1355.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-27"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-27", offset = 1339, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1356-1357.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-28"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-28", offset = 1356, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1358-1362.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-10"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-10", offset = 1358, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1363-1363.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-28"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-28", offset = 1363, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1364-1380.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-28"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-28", offset = 1364, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1381-1397.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-28"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-28", offset = 1381, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.10-11.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig", offset = 10, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.12-16.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo", offset = 12, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.17-17.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-2", offset = 17, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.18-34.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base", offset = 18, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.35-51.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota", offset = 35, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.52-53.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-2", offset = 52, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.54-58.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-3", offset = 54, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.59-59.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-4", offset = 59, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.60-76.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-2", offset = 60, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.77-93.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-2", offset = 77, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.94-95.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-3", offset = 94, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.96-100.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-5", offset = 96, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.101-101.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-6", offset = 101, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.102-118.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-3", offset = 102, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.119-135.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-3", offset = 119, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.136-137.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-4", offset = 136, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.138-142.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-7", offset = 138, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.143-143.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-8"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-8", offset = 143, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.144-160.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-4", offset = 144, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.161-177.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-4", offset = 161, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.178-179.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-5", offset = 178, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.180-184.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-9"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-9", offset = 180, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.185-185.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-10"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-10", offset = 185, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.186-202.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-5", offset = 186, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.203-219.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-5", offset = 203, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.220-221.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-6", offset = 220, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.222-226.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-11"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-11", offset = 222, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.227-227.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-12"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-12", offset = 227, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.228-244.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-6", offset = 228, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.245-261.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-6", offset = 245, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.262-263.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-7", offset = 262, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.264-268.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-13"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-13", offset = 264, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.269-269.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-14"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-14", offset = 269, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.270-286.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-7", offset = 270, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.287-303.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-7", offset = 287, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.304-305.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-8"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-8", offset = 304, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.306-310.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-15"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-15", offset = 306, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.311-311.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-16"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-16", offset = 311, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.312-328.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-8"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-8", offset = 312, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.329-345.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-8"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-8", offset = 329, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.346-347.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-9"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-9", offset = 346, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.348-352.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-17"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-17", offset = 348, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.353-353.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-18"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-18", offset = 353, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.354-370.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-9"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-9", offset = 354, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.371-387.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-9"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-9", offset = 371, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.388-389.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-10"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-10", offset = 388, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.390-394.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-19"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-19", offset = 390, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.395-395.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-20"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-20", offset = 395, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.396-412.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-10"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-10", offset = 396, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.413-429.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-10"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-10", offset = 413, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.430-431.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-11"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-11", offset = 430, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.432-436.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-21"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-21", offset = 432, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.437-437.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-22"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-22", offset = 437, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.438-454.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-11"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-11", offset = 438, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.455-471.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-11"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-11", offset = 455, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.472-473.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-12"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-12", offset = 472, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.474-478.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-23"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-23", offset = 474, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.479-479.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-24"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-24", offset = 479, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.480-496.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-12"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-12", offset = 480, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.497-513.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-12"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-12", offset = 497, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.514-515.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-13"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-13", offset = 514, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.516-520.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-25"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-25", offset = 516, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.521-521.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-26"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-26", offset = 521, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.522-538.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-13"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-13", offset = 522, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.539-555.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-13"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-13", offset = 539, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.556-557.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-14"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-14", offset = 556, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.558-562.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-27"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-27", offset = 558, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.563-563.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-28"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-28", offset = 563, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.564-580.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-14"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-14", offset = 564, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.581-597.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-14"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-14", offset = 581, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.598-599.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-15"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-15", offset = 598, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.600-604.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-29"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-29", offset = 600, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.605-605.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-30"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-30", offset = 605, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.606-622.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-15"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-15", offset = 606, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.623-639.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-15"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-15", offset = 623, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.640-641.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-16"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-16", offset = 640, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.642-646.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-31"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-31", offset = 642, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.647-647.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-32"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-32", offset = 647, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.648-664.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-16"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-16", offset = 648, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.665-681.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-16"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-16", offset = 665, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.682-683.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-17"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-17", offset = 682, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.684-688.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-33"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-33", offset = 684, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.689-689.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-34"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-34", offset = 689, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.690-706.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-17"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-17", offset = 690, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.707-723.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-17"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-17", offset = 707, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.724-725.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-18"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-18", offset = 724, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.726-730.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-35"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36905", field = "4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-35", offset = 726, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]

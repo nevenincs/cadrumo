@@ -1,0 +1,1197 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2024".export_layouts.records]]
+id = "modelo-714-page-07"
+record_type = "714-07"
+order = 7
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-14"
+offset = 14
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.14-14.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-14"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-15"
+offset = 15
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.15-19.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-15"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-20"
+offset = 20
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.20-39.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-20"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-40"
+offset = 40
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.40-101.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-40"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-102"
+offset = 102
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.102-114.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-102"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-115"
+offset = 115
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.115-115.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-115"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-116"
+offset = 116
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.116-120.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-116"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-121"
+offset = 121
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.121-140.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-121"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción  2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-141"
+offset = 141
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.141-202.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-141"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-203"
+offset = 203
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.203-215.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-203"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-216"
+offset = 216
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.216-216.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-216"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-217"
+offset = 217
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.217-221.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-217"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-222"
+offset = 222
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.222-241.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-222"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-242"
+offset = 242
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.242-303.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-242"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-304"
+offset = 304
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.304-316.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-304"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-317"
+offset = 317
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.317-317.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-317"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-318"
+offset = 318
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.318-322.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-318"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-323"
+offset = 323
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.323-342.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-323"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-343"
+offset = 343
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.343-404.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-343"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-405"
+offset = 405
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.405-417.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-405"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-418"
+offset = 418
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.418-418.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-418"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-419"
+offset = 419
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.419-423.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-419"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-424"
+offset = 424
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.424-443.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-424"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-444"
+offset = 444
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.444-505.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-444"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-506"
+offset = 506
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.506-518.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-506"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-519"
+offset = 519
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.519-519.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-519"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-520"
+offset = 520
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.520-524.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-520"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-525"
+offset = 525
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.525-544.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-525"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-545"
+offset = 545
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.545-606.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-545"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-607"
+offset = 607
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.607-619.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-607"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Clave 7
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-620"
+offset = 620
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.620-620.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-620"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - % Titularidad 7
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-621"
+offset = 621
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.621-625.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-621"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Matrícula 7
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-626"
+offset = 626
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.626-645.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-626"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Descripción 7
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-646"
+offset = 646
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.646-707.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-646"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Valor 7
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-708"
+offset = 708
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.708-720.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-708"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-1"
+offset = 734
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.734-734.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-1"
+offset = 735
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.735-739.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-1"
+offset = 740
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.740-801.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-1"
+offset = 802
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.802-814.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-1"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-2"
+offset = 815
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.815-815.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-2"
+offset = 816
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.816-820.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-2"
+offset = 821
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.821-882.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-2"
+offset = 883
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.883-895.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-2"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-3"
+offset = 896
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.896-896.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-3"
+offset = 897
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.897-901.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-3"
+offset = 902
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.902-963.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-3"
+offset = 964
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.964-976.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-4"
+offset = 977
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.977-977.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-4"
+offset = 978
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.978-982.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-4"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-4"
+offset = 983
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.983-1044.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 4
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-4"
+offset = 1045
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1045-1057.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-5"
+offset = 1058
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1058-1058.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-5"
+offset = 1059
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.1059-1063.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-5"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-5"
+offset = 1064
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.1064-1125.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 5
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-5"
+offset = 1126
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1126-1138.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Clave 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-6"
+offset = 1139
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1139-1139.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - % Titularidad 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-6"
+offset = 1140
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.1140-1144.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-porcentaje-titularidad-6"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Descripción 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-6"
+offset = 1145
+length = 62
+kind = "binding"
+binding = "modelo-714-2024.714-07.1145-1206.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-descripcion-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - L. Objetos de arte y antigüedades - Valor 6
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-6"
+offset = 1207
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1207-1219.bienes-y-derechos-l-objetos-de-arte-y-antiguedades-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Clave 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-1"
+offset = 1233
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1233-1233.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - % Usufructo/Derecho real 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1234"
+offset = 1234
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.1234-1238.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1234"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Referencia catastral 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1239"
+offset = 1239
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.1239-1258.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1239"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Situación 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-1"
+offset = 1259
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1259-1259.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-1"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor utilizado 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1260"
+offset = 1260
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1260-1260.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1260"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Descripción/Situación bien 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1261"
+offset = 1261
+length = 21
+kind = "binding"
+binding = "modelo-714-2024.714-07.1261-1281.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1261"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor del bien 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1282"
+offset = 1282
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1282-1294.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1282"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor del derecho 1
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1295"
+offset = 1295
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1295-1307.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1295"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Clave 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-2"
+offset = 1308
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1308-1308.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - % Usufructo/Derecho real 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1309"
+offset = 1309
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.1309-1313.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1309"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Referencia catastral 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1314"
+offset = 1314
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.1314-1333.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1314"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Situación 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-2"
+offset = 1334
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1334-1334.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-2"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor utilizado 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1335"
+offset = 1335
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1335-1335.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1335"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Descripción/Situación bien 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1336"
+offset = 1336
+length = 21
+kind = "binding"
+binding = "modelo-714-2024.714-07.1336-1356.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1336"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor del bien 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1357"
+offset = 1357
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1357-1369.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1357"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Valor del derecho 2
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1370"
+offset = 1370
+length = 13
+kind = "binding"
+binding = "modelo-714-2024.714-07.1370-1382.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1370"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Clave 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-3"
+offset = 1383
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1383-1383.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-clave-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - % Usufructo/Derecho real 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1384"
+offset = 1384
+length = 5
+kind = "binding"
+binding = "modelo-714-2024.714-07.1384-1388.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1384"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Referencia catastral 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1389"
+offset = 1389
+length = 20
+kind = "binding"
+binding = "modelo-714-2024.714-07.1389-1408.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1389"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+# (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Situación 3
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-07-declared-bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-3"
+offset = 1409
+length = 1
+kind = "binding"
+binding = "modelo-714-2024.714-07.1409-1409.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-habitual-situacion-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]

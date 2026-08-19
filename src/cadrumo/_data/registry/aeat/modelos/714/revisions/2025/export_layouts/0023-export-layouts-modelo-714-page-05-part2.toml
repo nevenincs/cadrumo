@@ -1,0 +1,1197 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2025".export_layouts.records]]
+id = "modelo-714-page-05"
+record_type = "714-05"
+order = 5
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1194"
+offset = 1194
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1194-1255.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1194"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-2"
+offset = 1256
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1256-1268.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-3"
+offset = 1269
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1269-1269.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1270"
+offset = 1270
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1270-1274.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1270"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1275"
+offset = 1275
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1275-1287.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1275"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-3"
+offset = 1288
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1288-1307.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1308"
+offset = 1308
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1308-1327.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1308"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1328"
+offset = 1328
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1328-1328.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1328"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Código país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1329"
+offset = 1329
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-05.1329-1331.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1329"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1332"
+offset = 1332
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1332-1393.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1332"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-3"
+offset = 1394
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1394-1406.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-4"
+offset = 1407
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1407-1407.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1408"
+offset = 1408
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1408-1412.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1408"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1413"
+offset = 1413
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1413-1425.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1413"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-4"
+offset = 1426
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1426-1445.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1446"
+offset = 1446
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1446-1465.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1446"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro país 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1466"
+offset = 1466
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1466-1466.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1466"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Código país 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1467"
+offset = 1467
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-05.1467-1469.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1467"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1470"
+offset = 1470
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1470-1531.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1470"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-4"
+offset = 1532
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1532-1544.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-5"
+offset = 1545
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1545-1545.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1546"
+offset = 1546
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1546-1550.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1546"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551"
+offset = 1551
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1551-1563.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-5"
+offset = 1564
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1564-1583.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1584"
+offset = 1584
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1584-1603.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1584"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro país 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1604"
+offset = 1604
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1604-1604.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1604"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Código país 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1605"
+offset = 1605
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-05.1605-1607.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1605"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1608"
+offset = 1608
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1608-1669.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1608"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 5
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-5"
+offset = 1670
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1670-1682.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-6"
+offset = 1683
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1683-1683.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1684"
+offset = 1684
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1684-1688.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1684"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1689"
+offset = 1689
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1689-1701.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1689"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-6"
+offset = 1702
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1702-1721.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1722"
+offset = 1722
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1722-1741.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1722"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro país 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1742"
+offset = 1742
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1742-1742.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1742"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Código país 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1743"
+offset = 1743
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-05.1743-1745.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1743"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1746"
+offset = 1746
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1746-1807.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1746"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-6"
+offset = 1808
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1808-1820.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Clave 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-7"
+offset = 1821
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1821-1821.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1822"
+offset = 1822
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1822-1826.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1822"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  Nº Valores 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1827"
+offset = 1827
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1827-1839.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1827"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. -  ISIN 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-7"
+offset = 1840
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1840-1859.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF/NIE entidad emisora 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1860"
+offset = 1860
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1860-1879.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1860"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - NIF otro país 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1880"
+offset = 1880
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1880-1880.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1880"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Código país 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1881"
+offset = 1881
+length = 3
+kind = "binding"
+binding = "modelo-714-2025.714-05.1881-1883.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1881"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Descripción 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1884"
+offset = 1884
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.1884-1945.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1884"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-7"
+offset = 1946
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1946-1958.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Clave 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1972"
+offset = 1972
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.1972-1972.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1972"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - % Titularidad 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1973"
+offset = 1973
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.1973-1977.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1973"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Nº Valores 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1978"
+offset = 1978
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.1978-1990.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1978"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF/NIE entidad emisora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1991"
+offset = 1991
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.1991-2010.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1991"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF otro país 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2011"
+offset = 2011
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2011-2011.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2011"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Descripción 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2012"
+offset = 2012
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.2012-2073.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2012"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Valor 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2074"
+offset = 2074
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2074-2086.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2074"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Clave 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2087"
+offset = 2087
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2087-2087.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2087"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - % Titularidad 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2088"
+offset = 2088
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.2088-2092.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2088"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Nº Valores 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2093"
+offset = 2093
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2093-2105.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2093"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF/NIE entidad emisora 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2106"
+offset = 2106
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.2106-2125.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2106"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF otro país 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2126"
+offset = 2126
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2126-2126.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2126"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Descripción 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2127"
+offset = 2127
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.2127-2188.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2127"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Valor 2
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2189"
+offset = 2189
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2189-2201.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2189"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Clave 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2202"
+offset = 2202
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2202-2202.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2202"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - % Titularidad 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2203"
+offset = 2203
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.2203-2207.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2203"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Nº Valores 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2208"
+offset = 2208
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2208-2220.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2208"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF/NIE entidad emisora 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2221"
+offset = 2221
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.2221-2240.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2221"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF otro país 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2241"
+offset = 2241
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2241-2241.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2241"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Descripción 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2242"
+offset = 2242
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.2242-2303.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2242"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Valor 3
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2304"
+offset = 2304
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2304-2316.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2304"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Clave 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2317"
+offset = 2317
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2317-2317.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2317"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - % Titularidad 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2318"
+offset = 2318
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.2318-2322.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2318"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Nº Valores 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2323"
+offset = 2323
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2323-2335.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2323"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF/NIE entidad emisora 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2336"
+offset = 2336
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.2336-2355.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2336"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - NIF otro país 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2356"
+offset = 2356
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2356-2356.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2356"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Descripción 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2357"
+offset = 2357
+length = 62
+kind = "binding"
+binding = "modelo-714-2025.714-05.2357-2418.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2357"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - Valor 4
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2419"
+offset = 2419
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2419-2431.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2419"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Clave 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2445"
+offset = 2445
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-05.2445-2445.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2445"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - % Titularidad 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2446"
+offset = 2446
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-05.2446-2450.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2446"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Nº Valores 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2451"
+offset = 2451
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-05.2451-2463.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2451"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - NIF/NIE entidad emisora 1
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2464"
+offset = 2464
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-05.2464-2483.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2464"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]

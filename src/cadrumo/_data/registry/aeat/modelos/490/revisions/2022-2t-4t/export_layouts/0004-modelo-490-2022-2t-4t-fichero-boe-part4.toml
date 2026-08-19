@@ -1,0 +1,1222 @@
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-2022-2t-4t-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records]]
+id = "modelo-490-490-02"
+record_type = "490-02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-per-67"
+offset = 874
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-per-67"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-per-88"
+offset = 879
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-per-88"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-per-109"
+offset = 884
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-per-109"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-con-reg-47"
+offset = 889
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-con-reg-47"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-con-reg-68"
+offset = 894
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-con-reg-68"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-con-reg-89"
+offset = 899
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-con-reg-89"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-comun-con-reg-110"
+offset = 904
+length = 5
+kind = "casilla"
+casilla_id = "terr-comun-con-reg-110"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-490-02-regularizacion-ejercicio-909"
+offset = 909
+length = 4
+kind = "casilla"
+casilla_id = "490-02-regularizacion-ejercicio-909"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-declarada-111"
+offset = 913
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-declarada-111"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-declarada-132"
+offset = 930
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-declarada-132"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-declarada-153"
+offset = 947
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-declarada-153"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-declarada-174"
+offset = 964
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-declarada-174"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-positiva-112"
+offset = 981
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-positiva-112"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-positiva-133"
+offset = 998
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-positiva-133"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-positiva-154"
+offset = 1015
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-positiva-154"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-positiva-175"
+offset = 1032
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-positiva-175"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-negativa-113"
+offset = 1049
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-negativa-113"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-negativa-134"
+offset = 1066
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-negativa-134"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-negativa-155"
+offset = 1083
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-negativa-155"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-negativa-176"
+offset = 1100
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-negativa-176"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-total-114"
+offset = 1117
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-total-114"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-total-135"
+offset = 1134
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-total-135"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-total-156"
+offset = 1151
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-total-156"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-base-total-177"
+offset = 1168
+length = 17
+kind = "casilla"
+casilla_id = "reg-base-total-177"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-tipo-115"
+offset = 1185
+length = 3
+kind = "casilla"
+casilla_id = "reg-tipo-115"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-tipo-136"
+offset = 1188
+length = 3
+kind = "casilla"
+casilla_id = "reg-tipo-136"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-tipo-157"
+offset = 1191
+length = 3
+kind = "casilla"
+casilla_id = "reg-tipo-157"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-tipo-178"
+offset = 1194
+length = 3
+kind = "casilla"
+casilla_id = "reg-tipo-178"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-positiva-116"
+offset = 1197
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-positiva-116"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-positiva-137"
+offset = 1214
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-positiva-137"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-positiva-158"
+offset = 1231
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-positiva-158"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-positiva-179"
+offset = 1248
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-positiva-179"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-negativa-117"
+offset = 1265
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-negativa-117"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-negativa-138"
+offset = 1282
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-negativa-138"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-negativa-159"
+offset = 1299
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-negativa-159"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-negativa-180"
+offset = 1316
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-negativa-180"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-total-118"
+offset = 1333
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-total-118"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-total-139"
+offset = 1350
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-total-139"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-total-160"
+offset = 1367
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-total-160"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-total-181"
+offset = 1384
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-total-181"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-estado-119"
+offset = 1401
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-estado-119"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-estado-140"
+offset = 1418
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-estado-140"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-estado-161"
+offset = 1435
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-estado-161"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-cuota-estado-182"
+offset = 1452
+length = 17
+kind = "casilla"
+casilla_id = "reg-cuota-estado-182"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-distribucion-120"
+offset = 1469
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-distribucion-120"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-distribucion-141"
+offset = 1486
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-distribucion-141"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-distribucion-162"
+offset = 1503
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-distribucion-162"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-distribucion-183"
+offset = 1520
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-distribucion-183"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-total-estado-121"
+offset = 1537
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-total-estado-121"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-total-estado-142"
+offset = 1554
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-total-estado-142"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-total-estado-163"
+offset = 1571
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-total-estado-163"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-reg-ajuste-total-estado-184"
+offset = 1588
+length = 17
+kind = "casilla"
+casilla_id = "reg-ajuste-total-estado-184"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-per-122"
+offset = 1605
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-per-122"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-per-143"
+offset = 1610
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-per-143"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-per-164"
+offset = 1615
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-per-164"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-per-185"
+offset = 1620
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-per-185"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-con-reg-123"
+offset = 1625
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-con-reg-123"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-con-reg-144"
+offset = 1630
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-con-reg-144"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-con-reg-165"
+offset = 1635
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-con-reg-165"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-alava-con-reg-186"
+offset = 1640
+length = 5
+kind = "casilla"
+casilla_id = "terr-alava-con-reg-186"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-per-124"
+offset = 1645
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-per-124"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-per-145"
+offset = 1650
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-per-145"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-per-166"
+offset = 1655
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-per-166"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-per-187"
+offset = 1660
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-per-187"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-125"
+offset = 1665
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-con-reg-125"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-146"
+offset = 1670
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-con-reg-146"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-167"
+offset = 1675
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-con-reg-167"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-188"
+offset = 1680
+length = 5
+kind = "casilla"
+casilla_id = "terr-guipuzcoa-con-reg-188"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-per-126"
+offset = 1685
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-per-126"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-per-147"
+offset = 1690
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-per-147"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-per-168"
+offset = 1695
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-per-168"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-per-189"
+offset = 1700
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-per-189"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-con-reg-127"
+offset = 1705
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-con-reg-127"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-con-reg-148"
+offset = 1710
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-con-reg-148"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-con-reg-169"
+offset = 1715
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-con-reg-169"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-2022-2t-terr-vizcaya-con-reg-190"
+offset = 1720
+length = 5
+kind = "casilla"
+casilla_id = "terr-vizcaya-con-reg-190"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1725"
+offset = 1725
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1730"
+offset = 1730
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1735"
+offset = 1735
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1740"
+offset = 1740
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1745"
+offset = 1745
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1750"
+offset = 1750
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
+id = "modelo-490-490-02-reservado-1755"
+offset = 1755
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]

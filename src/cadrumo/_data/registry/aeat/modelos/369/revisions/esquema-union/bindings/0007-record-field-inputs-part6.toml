@@ -1,0 +1,841 @@
+
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.937-953.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-112"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-112", offset = 937, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.954-955.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-113"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-113", offset = 954, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.956-970.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-114"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-114", offset = 956, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.971-972.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-115"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-115", offset = 971, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.973-977.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-116"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-116", offset = 973, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.978-978.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-117"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-117", offset = 978, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.979-995.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-118"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-118", offset = 979, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.996-1012.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-119"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-119", offset = 996, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1013-1014.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-120"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-120", offset = 1013, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1015-1029.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-121"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-121", offset = 1015, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1030-1031.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-122"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-122", offset = 1030, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1032-1036.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-123"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-123", offset = 1032, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1037-1037.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-124"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-124", offset = 1037, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1038-1054.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-125"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-125", offset = 1038, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1055-1071.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-126"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-126", offset = 1055, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1072-1073.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-127"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-127", offset = 1072, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1074-1088.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-128"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-128", offset = 1074, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1089-1090.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-129"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-129", offset = 1089, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1091-1095.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-130"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-130", offset = 1091, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1096-1096.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-131"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-131", offset = 1096, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1097-1113.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-132"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-132", offset = 1097, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1114-1130.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-133"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-133", offset = 1114, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1131-1132.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-134"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-134", offset = 1131, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1133-1147.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-135"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-135", offset = 1133, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1148-1149.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-136"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-136", offset = 1148, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1150-1154.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-137"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-137", offset = 1150, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1155-1155.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-138"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-138", offset = 1155, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1156-1172.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-139"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-139", offset = 1156, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1173-1189.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-140"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-140", offset = 1173, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1190-1191.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-141"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-141", offset = 1190, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1192-1206.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-142"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-142", offset = 1192, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1207-1208.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-143"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-143", offset = 1207, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1209-1213.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-144"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-144", offset = 1209, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1214-1214.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-145"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-145", offset = 1214, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1215-1231.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-146"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-146", offset = 1215, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1232-1248.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-147"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-147", offset = 1232, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1249-1250.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-148"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-148", offset = 1249, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1251-1265.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-149"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-149", offset = 1251, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1266-1267.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-150"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-150", offset = 1266, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1268-1272.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-151"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-151", offset = 1268, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1273-1273.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-152"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-152", offset = 1273, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1274-1290.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-153"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-153", offset = 1274, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1291-1307.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-154"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-154", offset = 1291, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1308-1309.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-155"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-155", offset = 1308, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1310-1324.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-156"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-156", offset = 1310, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1325-1326.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-157"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-157", offset = 1325, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1327-1331.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-158"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-158", offset = 1327, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1332-1332.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-159"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-159", offset = 1332, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1333-1349.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-160"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-160", offset = 1333, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1350-1366.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-161"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-161", offset = 1350, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1367-1368.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-162"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-162", offset = 1367, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1369-1383.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-163"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-163", offset = 1369, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1384-1385.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-164"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-164", offset = 1384, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1386-1390.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-165"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-165", offset = 1386, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1391-1391.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-166"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-166", offset = 1391, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1392-1408.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-167"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-167", offset = 1392, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1409-1425.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-168"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-168", offset = 1409, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1426-1427.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-169"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-169", offset = 1426, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1428-1442.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-170"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-170", offset = 1428, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1443-1444.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-171"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-171", offset = 1443, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1445-1449.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-172"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-172", offset = 1445, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1450-1450.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-173"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-173", offset = 1450, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1451-1467.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-174"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-174", offset = 1451, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1468-1484.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-175"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-175", offset = 1468, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1485-1486.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-176"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-176", offset = 1485, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1487-1501.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-177"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-177", offset = 1487, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1502-1503.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-178"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-178", offset = 1502, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1504-1508.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-179"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-179", offset = 1504, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1509-1509.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-180"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-180", offset = 1509, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1510-1526.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-181"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-181", offset = 1510, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1527-1543.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-182"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-182", offset = 1527, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1544-1545.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-183"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-183", offset = 1544, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1546-1560.76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint", offset = 1546, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1561-1562.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-184"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-184", offset = 1561, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1563-1567.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-185"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-185", offset = 1563, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1568-1568.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-186"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-186", offset = 1568, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1569-1585.76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint-2", offset = 1569, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1586-1602.76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "76-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distint-3", offset = 1586, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1603-1604.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-187"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-187", offset = 1603, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1605-1619.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-188"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-188", offset = 1605, length = 15, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1620-1621.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-189"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-189", offset = 1620, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1622-1626.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-190"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-190", offset = 1622, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1627-1627.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-191"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-191", offset = 1627, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1628-1644.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-192"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-192", offset = 1628, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.1645-1661.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-193"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36907", field = "6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-193", offset = 1645, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.10-11.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi", offset = 10, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.12-15.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer", offset = 12, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.16-16.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo", offset = 16, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.17-18.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri", offset = 17, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.19-35.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot", offset = 19, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.36-37.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-2", offset = 36, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.38-41.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-2", offset = 38, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.42-42.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-2", offset = 42, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.43-44.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-2", offset = 43, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.45-61.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-2"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-2", offset = 45, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.62-63.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-3", offset = 62, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.64-67.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-3", offset = 64, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.68-68.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-3", offset = 68, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.69-70.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-3", offset = 69, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.71-87.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-3"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-3", offset = 71, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.88-89.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-4", offset = 88, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.90-93.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-4", offset = 90, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.94-94.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-4", offset = 94, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.95-96.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-4", offset = 95, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.97-113.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-4"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-4", offset = 97, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.114-115.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-5", offset = 114, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.116-119.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-5", offset = 116, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.120-120.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-5", offset = 120, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.121-122.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-5", offset = 121, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.123-139.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-5"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-5", offset = 123, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.140-141.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-6", offset = 140, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.142-145.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-6", offset = 142, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.146-146.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-6", offset = 146, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.147-148.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-6", offset = 147, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.149-165.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-6"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-6", offset = 149, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.166-167.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-7", offset = 166, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.168-171.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-7", offset = 168, length = 4, data_type = "integer" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.172-172.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-7", offset = 172, length = 1, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.173-174.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-7", offset = 173, length = 2, data_type = "text" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fichero.175-191.7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-7"
+source = "manual_input"
+selector = { record = "modelo-369-union-t36908", field = "7-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-7", offset = 175, length = 17, data_type = "money" }
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
+source_refs = ["aeat-dr-369-2021"]

@@ -1,0 +1,178 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-714-page-03"
+record_type = "714-03"
+order = 3
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "03000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-declaracion-03"
+offset = 1096
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-declaracion-04"
+offset = 1793
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-complementaria-slot"
+offset = 12
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.12-12.indicador-de-pagina-complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-reserved-1"
+offset = 13
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-reserved-2"
+offset = 1806
+length = 183
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-end"
+offset = 1989
+length = 12
+kind = "literal"
+literal = "</T71403000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-bienes-c2-total"
+offset = 1083
+length = 13
+kind = "casilla"
+casilla_id = "bienes.c2-total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-bienes-c1-total"
+offset = 620
+length = 13
+kind = "casilla"
+casilla_id = "bienes.c1-total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]

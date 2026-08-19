@@ -1,0 +1,793 @@
+[[revisions."2010-y-siguientes".export_layouts]]
+id = "modelo-360-fichero-boe"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-360-page-01"
+record_type = "page_01"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-planta"
+offset = 1443
+length = 3
+kind = "casilla"
+casilla_id = "decl.representante.direccion.planta"
+# Direccion en Espana Planta.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-puerta"
+offset = 1446
+length = 3
+kind = "casilla"
+casilla_id = "decl.representante.direccion.puerta"
+# Direccion en Espana Puerta.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-complemento"
+offset = 1449
+length = 40
+kind = "casilla"
+casilla_id = "decl.representante.direccion.complemento"
+# Direccion en Espana Complemento domicilio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-localidad"
+offset = 1489
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.direccion.localidad"
+# Direccion en Espana Localidad / Poblacion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-codigo-postal"
+offset = 1519
+length = 5
+kind = "casilla"
+casilla_id = "decl.representante.direccion.codigo-postal"
+# Direccion en Espana Codigo postal.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-municipio"
+offset = 1524
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.direccion.municipio"
+# Direccion en Espana Nombre del municipio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-direccion-provincia"
+offset = 1554
+length = 2
+kind = "casilla"
+casilla_id = "decl.representante.direccion.provincia"
+# Direccion en Espana Provincia.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-extranjero-domicilio"
+offset = 1556
+length = 148
+kind = "casilla"
+casilla_id = "decl.representante.extranjero.domicilio"
+# Direccion en el extranjero Domicilio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-extranjero-poblacion"
+offset = 1704
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.extranjero.poblacion"
+# Direccion en el extranjero Poblacion / Ciudad.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-extranjero-codigo-postal"
+offset = 1734
+length = 10
+kind = "casilla"
+casilla_id = "decl.representante.extranjero.codigo-postal"
+# Direccion en el extranjero Codigo postal (ZIP).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-extranjero-region"
+offset = 1744
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.extranjero.region"
+# Direccion en el extranjero Provincia / Region / Estado.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-extranjero-pais"
+offset = 1774
+length = 2
+kind = "casilla"
+casilla_id = "decl.representante.extranjero.pais"
+# Direccion en el extranjero Pais ISO 3166-1.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-apartado-numero"
+offset = 1776
+length = 10
+kind = "casilla"
+casilla_id = "decl.representante.apartado.numero"
+# Apartado de correos en Espana Numero del apartado de correos.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-apartado-localidad"
+offset = 1786
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.apartado.localidad"
+# Apartado de correos en Espana Localidad / Poblacion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-apartado-codigo-postal"
+offset = 1816
+length = 5
+kind = "casilla"
+casilla_id = "decl.representante.apartado.codigo-postal"
+# Apartado de correos en Espana Codigo postal.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-apartado-municipio"
+offset = 1821
+length = 30
+kind = "casilla"
+casilla_id = "decl.representante.apartado.municipio"
+# Apartado de correos en Espana Nombre del municipio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-representante-apartado-provincia"
+offset = 1851
+length = 2
+kind = "casilla"
+casilla_id = "decl.representante.apartado.provincia"
+# Apartado de correos en Espana Provincia.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-importe-solicitado"
+offset = 1853
+length = 15
+kind = "casilla"
+casilla_id = "devolucion.importe-solicitado"
+# Design importe solicitado a devolver, 2 decimales.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-divisa"
+offset = 1868
+length = 3
+kind = "casilla"
+casilla_id = "devolucion.divisa"
+# Design divisa ISO 4217.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-numero-facturas"
+offset = 1871
+length = 5
+kind = "casilla"
+casilla_id = "devolucion.numero-facturas"
+# Design numero de facturas.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-numero-documentos-importacion"
+offset = 1876
+length = 5
+kind = "casilla"
+casilla_id = "devolucion.numero-documentos-importacion"
+# Design numero de documentos de importacion.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-periodo-fecha-inicio"
+offset = 1881
+length = 8
+kind = "casilla"
+casilla_id = "devolucion.periodo-fecha-inicio"
+# Design fecha de inicio del periodo ddmmaaaa.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-periodo-fecha-fin"
+offset = 1889
+length = 8
+kind = "casilla"
+casilla_id = "devolucion.periodo-fecha-fin"
+# Design fecha de fin del periodo ddmmaaaa.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-devolucion-declaracion-no-entrega-bienes"
+offset = 1902
+length = 1
+kind = "casilla"
+casilla_id = "devolucion.declaracion-no-entrega-bienes"
+# Design declaracion de no haber entregado bienes ni servicios 0/1.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-prorrata-ejercicio"
+offset = 1903
+length = 4
+kind = "casilla"
+casilla_id = "prorrata.ejercicio"
+# Design modificacion prorrata ano anterior, ejercicio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-prorrata-definitiva"
+offset = 1907
+length = 5
+kind = "casilla"
+casilla_id = "prorrata.definitiva"
+# Design prorrata definitiva, 2 decimales.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-bancario-titular"
+offset = 1912
+length = 25
+kind = "casilla"
+casilla_id = "decl.bancario-titular"
+# Design titular de la cuenta, nombre.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-bancario-calidad"
+offset = 1937
+length = 1
+kind = "casilla"
+casilla_id = "decl.bancario-calidad"
+# Design titular en calidad de 'A' solicitante / representante.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-bancario-iban"
+offset = 1938
+length = 34
+kind = "casilla"
+casilla_id = "decl.bancario-iban"
+# Design IBAN.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-bancario-bic"
+offset = 1972
+length = 11
+kind = "casilla"
+casilla_id = "decl.bancario-bic"
+# Design banco BIC.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-bancario-divisa"
+offset = 1983
+length = 3
+kind = "casilla"
+casilla_id = "decl.bancario-divisa"
+# Design divisa ISO 4217, por defecto EUR.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-1"
+offset = 1986
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-1"
+# Design anexo 1 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-1"
+offset = 2004
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-1"
+# Design anexo 1 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-2"
+offset = 2104
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-2"
+# Design anexo 2 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-2"
+offset = 2122
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-2"
+# Design anexo 2 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-3"
+offset = 2222
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-3"
+# Design anexo 3 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-3"
+offset = 2240
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-3"
+# Design anexo 3 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-4"
+offset = 2340
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-4"
+# Design anexo 4 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-4"
+offset = 2358
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-4"
+# Design anexo 4 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-5"
+offset = 2458
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-5"
+# Design anexo 5 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-5"
+offset = 2476
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-5"
+# Design anexo 5 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-6"
+offset = 2576
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-6"
+# Design anexo 6 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-6"
+offset = 2594
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-6"
+# Design anexo 6 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-7"
+offset = 2694
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-7"
+# Design anexo 7 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-7"
+offset = 2712
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-7"
+# Design anexo 7 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-8"
+offset = 2812
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-8"
+# Design anexo 8 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-8"
+offset = 2830
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-8"
+# Design anexo 8 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-9"
+offset = 2930
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-9"
+# Design anexo 9 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-9"
+offset = 2948
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-9"
+# Design anexo 9 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-registro-10"
+offset = 3048
+length = 16
+kind = "casilla"
+casilla_id = "decl.anexo-registro-10"
+# Design anexo 10 numero de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-anexo-descripcion-10"
+offset = 3066
+length = 40
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-10"
+# Design anexo 10 descripcion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-p1-fin-registro"
+offset = 3391
+length = 10
+kind = "literal"
+literal = "</T360010>"
+# Design Pág. 1 identificador de fin de registro '</T360010>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]

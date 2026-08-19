@@ -1,0 +1,239 @@
+[[revisions."2010-y-siguientes".export_layouts]]
+id = "modelo-360-fichero-boe"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-360-page-02"
+record_type = "page_02"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+required = false
+
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-base"
+offset = 5798
+length = 15
+kind = "casilla"
+casilla_id = "decl.op2-base"
+# Design operacion 2 base imponible.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-cuota"
+offset = 5813
+length = 15
+kind = "casilla"
+casilla_id = "decl.op2-cuota"
+# Design operacion 2 cuota IVA.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-prorrata"
+offset = 5828
+length = 5
+kind = "casilla"
+casilla_id = "decl.op2-prorrata"
+# Design operacion 2 prorrata %.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-importe"
+offset = 5833
+length = 15
+kind = "casilla"
+casilla_id = "decl.op2-importe"
+# Design operacion 2 importe solicitado a devolver.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-divisa"
+offset = 5848
+length = 3
+kind = "casilla"
+casilla_id = "decl.op2-divisa"
+# Design operacion 2 divisa ISO 4217.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-simplificada"
+offset = 5851
+length = 1
+kind = "casilla"
+casilla_id = "decl.op2-simplificada"
+# Design operacion 2 indicador de simplificada 0/1.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-pais-nvat"
+offset = 5852
+length = 2
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais-nvat"
+# Design operacion 2 proveedor pais emisor del NVAT ISO 3166-1.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-nvat"
+offset = 5854
+length = 15
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-nvat"
+# Design operacion 2 proveedor NVAT.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-pais-referencia"
+offset = 5869
+length = 2
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais-referencia"
+# Design operacion 2 proveedor pais emisor de la referencia fiscal.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-referencia-fiscal"
+offset = 5871
+length = 50
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-referencia-fiscal"
+# Design operacion 2 proveedor referencia fiscal.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-nombre"
+offset = 5921
+length = 125
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-nombre"
+# Design operacion 2 proveedor apellidos y nombre o denominacion social.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-direccion"
+offset = 6046
+length = 148
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-direccion"
+# Design operacion 2 proveedor direccion.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-telefono"
+offset = 6194
+length = 15
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-telefono"
+# Design operacion 2 proveedor telefono.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-decl-op2-proveedor-pais"
+offset = 6209
+length = 2
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais"
+# Design operacion 2 proveedor pais ISO 3166-1.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-360-p2-fin-registro"
+offset = 6391
+length = 10
+kind = "literal"
+literal = "</T360020>"
+# Design Pág. 2 identificador de fin de registro '</T360020>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+

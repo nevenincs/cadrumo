@@ -1,0 +1,480 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2025".export_layouts.records]]
+id = "modelo-714-page-03"
+record_type = "714-03"
+order = 3
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Situación 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-6"
+offset = 1521
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1521-1521.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-6"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valor utilizado 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-6"
+offset = 1522
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1522-1522.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Descripción 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-6"
+offset = 1523
+length = 29
+kind = "binding"
+binding = "modelo-714-2025.714-03.1523-1551.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valoración 6
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-6"
+offset = 1552
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-03.1552-1564.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Epígrafe IAE 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-7"
+offset = 1565
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1565-1569.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Clave 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-7"
+offset = 1570
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1570-1570.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - % Tit./Usu. 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu-7"
+offset = 1571
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1571-1575.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Naturaleza 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-7"
+offset = 1576
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1576-1576.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Referencia catastral 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1577"
+offset = 1577
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-03.1577-1596.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1577"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Situación 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-7"
+offset = 1597
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1597-1597.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-7"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valor utilizado 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-7"
+offset = 1598
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1598-1598.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Descripción 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-7"
+offset = 1599
+length = 29
+kind = "binding"
+binding = "modelo-714-2025.714-03.1599-1627.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valoración 7
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-7"
+offset = 1628
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-03.1628-1640.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Epígrafe IAE 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-8"
+offset = 1641
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1641-1645.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Clave 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-8"
+offset = 1646
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1646-1646.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - % Tit./Usu. 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu-8"
+offset = 1647
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1647-1651.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Naturaleza 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-8"
+offset = 1652
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1652-1652.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Referencia catastral 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1653"
+offset = 1653
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-03.1653-1672.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1653"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Situación 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-8"
+offset = 1673
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1673-1673.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-8"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valor utilizado 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-8"
+offset = 1674
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1674-1674.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Descripción 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-8"
+offset = 1675
+length = 29
+kind = "binding"
+binding = "modelo-714-2025.714-03.1675-1703.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valoración 8
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-8"
+offset = 1704
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-03.1704-1716.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-8"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Epígrafe IAE 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-9"
+offset = 1717
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1717-1721.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-epigrafe-iae-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Clave 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-9"
+offset = 1722
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1722-1722.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-clave-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - % Tit./Usu. 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu-9"
+offset = 1723
+length = 5
+kind = "binding"
+binding = "modelo-714-2025.714-03.1723-1727.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-porcentaje-tit-usu"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Naturaleza 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-9"
+offset = 1728
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1728-1728.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-naturaleza-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Referencia catastral 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1729"
+offset = 1729
+length = 20
+kind = "binding"
+binding = "modelo-714-2025.714-03.1729-1748.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1729"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Situación 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-9"
+offset = 1749
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1749-1749.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-situacion-9"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valor utilizado 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-9"
+offset = 1750
+length = 1
+kind = "binding"
+binding = "modelo-714-2025.714-03.1750-1750.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valor-utilizado-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Descripción 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-9"
+offset = 1751
+length = 29
+kind = "binding"
+binding = "modelo-714-2025.714-03.1751-1779.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-descripcion-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Valoración 9
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-page-03-declared-bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-9"
+offset = 1780
+length = 13
+kind = "binding"
+binding = "modelo-714-2025.714-03.1780-1792.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-valoracion-9"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+# 714-04: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

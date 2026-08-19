@@ -1,0 +1,26 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-714-envelope-footer"
+record_type = "envelope_footer"
+order = 12
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

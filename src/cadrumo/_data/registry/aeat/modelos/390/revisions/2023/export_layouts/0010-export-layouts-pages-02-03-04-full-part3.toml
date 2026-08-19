@@ -1,0 +1,130 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-03"
+record_type = "page_03"
+order = 3
+encoding = "latin-1"
+line_ending = "none"
+
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 5% - Base imponible [740]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-5-base"
+offset = 1407
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 5% - Cuota [741]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-5-cuota"
+offset = 1424
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 10% - Base imponible [635]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-10-base"
+offset = 1441
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 10% - Cuota [636]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-10-cuota"
+offset = 1458
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 21% - Base imponible [637]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-21-base"
+offset = 1475
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 21% - Cuota [638]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-tipo-21-cuota"
+offset = 1492
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Base imponible [597]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-total-base"
+offset = 1509
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.total.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Cuota [598]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-servicios-total-cuota"
+offset = 1526
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.total.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

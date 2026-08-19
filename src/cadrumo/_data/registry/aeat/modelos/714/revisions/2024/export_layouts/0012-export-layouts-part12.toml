@@ -1,0 +1,250 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records]]
+id = "modelo-714-page-ingreso-devolucion"
+record_type = "714-ID"
+order = 11
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "11000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-complementaria-slot"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-declaracion-23"
+offset = 13
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-23"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-patrimonio.base-imponible"
+offset = 26
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.base-imponible"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-patrimonio.base-liquidable"
+offset = 39
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.base-liquidable"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-patrimonio.cuota-integra"
+offset = 52
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-integra"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-patrimonio.cuota-a-ingresar"
+offset = 65
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.cuota-a-ingresar"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-declaracion-57"
+offset = 78
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-57"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-iban"
+offset = 105
+length = 34
+kind = "header"
+producer_key = "selected_account.iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-reserved-1"
+offset = 140
+length = 300
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-page-id-end"
+offset = 440
+length = 12
+kind = "literal"
+literal = "</T71411000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-importe"
+offset = 91
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-i"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-forma-de-pago"
+offset = 104
+length = 1
+kind = "casilla"
+casilla_id = "ingreso.forma-de-pago"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["0", "2", "3"]
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-negativa"
+offset = 139
+length = 1
+kind = "casilla"
+casilla_id = "declaracion-negativa"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2024"]

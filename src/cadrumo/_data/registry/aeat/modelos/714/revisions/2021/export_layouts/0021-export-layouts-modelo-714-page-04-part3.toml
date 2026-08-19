@@ -1,0 +1,225 @@
+[[revisions."2021".export_layouts]]
+id = "modelo-714-fichero-aeat"
+
+# 714-02: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.
+[[revisions."2021".export_layouts.records]]
+id = "modelo-714-page-04"
+record_type = "714-04"
+order = 4
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-5"
+offset = 2690
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2690-2690.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2691"
+offset = 2691
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2691-2695.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2691"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696"
+offset = 2696
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2696-2708.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2709"
+offset = 2709
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2709-2728.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2709"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2729"
+offset = 2729
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2729-2729.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2729"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2730"
+offset = 2730
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2730-2791.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2730"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 5
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-5"
+offset = 2792
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2792-2804.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Clave 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-6"
+offset = 2805
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2805-2805.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-clave-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- % Titularidad 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2806"
+offset = 2806
+length = 5
+kind = "binding"
+binding = "modelo-714-2021.714-04.2806-2810.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2806"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Nº Valores 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811"
+offset = 2811
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2811-2823.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF/NIE entidad emisora 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2824"
+offset = 2824
+length = 20
+kind = "binding"
+binding = "modelo-714-2021.714-04.2824-2843.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2824"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés... - NIF otro país 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2844"
+offset = 2844
+length = 1
+kind = "binding"
+binding = "modelo-714-2021.714-04.2844-2844.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2844"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Descripción 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2845"
+offset = 2845
+length = 62
+kind = "binding"
+binding = "modelo-714-2021.714-04.2845-2906.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2845"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Valor 6
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6"
+offset = 2907
+length = 13
+kind = "binding"
+binding = "modelo-714-2021.714-04.2907-2919.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+# 714-05: operator-declared positions the design prints and
+# this record did not author. Carried by per-slot manual_input bindings.

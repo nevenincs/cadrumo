@@ -1,0 +1,542 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-714-page-09"
+record_type = "714-09"
+order = 9
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "09000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-declaracion-23"
+offset = 273
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-23"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.base-imponible"
+offset = 299
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.base-imponible"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-declaracion-26"
+offset = 312
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-26"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-patrimonio.base-liquidable"
+offset = 325
+length = 13
+kind = "casilla"
+casilla_id = "patrimonio.base-liquidable"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-declaracion-28"
+offset = 403
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-28"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-complementaria-slot"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-reserved-1"
+offset = 416
+length = 173
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-page-09-end"
+offset = 589
+length = 12
+kind = "literal"
+literal = "</T71409000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-01"
+offset = 13
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-02"
+offset = 26
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-03"
+offset = 39
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-05"
+offset = 52
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-06"
+offset = 65
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-07"
+offset = 78
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-08"
+offset = 91
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-09"
+offset = 104
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-10"
+offset = 117
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-11"
+offset = 130
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-14"
+offset = 143
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-15"
+offset = 156
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-16"
+offset = 169
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-16"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-17"
+offset = 182
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-17"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-18"
+offset = 195
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-18"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-19"
+offset = 208
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-19"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-20"
+offset = 221
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-20"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-21"
+offset = 234
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-21"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-46"
+offset = 247
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-46"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-22"
+offset = 260
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-22"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-24"
+offset = 286
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-24"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-60"
+offset = 338
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-60"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-61"
+offset = 351
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-61"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-04"
+offset = 364
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-12"
+offset = 377
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-714-resumen-09-declaracion-13"
+offset = 390
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

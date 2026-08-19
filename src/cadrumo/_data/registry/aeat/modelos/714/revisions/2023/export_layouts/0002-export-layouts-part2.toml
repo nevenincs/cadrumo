@@ -1,0 +1,910 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-714-fichero-aeat"
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-714-page-01"
+record_type = "714-01"
+order = 1
+encoding = "iso-8859-1"
+line_ending = "none"
+
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "714"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-decl.ejercicio"
+offset = 103
+length = 4
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-decl.periodo"
+offset = 107
+length = 2
+kind = "casilla"
+casilla_id = "decl.periodo"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-15"
+offset = 122
+length = 5
+kind = "casilla"
+casilla_id = "identificacion-15"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-16"
+offset = 132
+length = 50
+kind = "casilla"
+casilla_id = "identificacion-16"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-17"
+offset = 182
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-17"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-18"
+offset = 185
+length = 5
+kind = "casilla"
+casilla_id = "identificacion-18"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-19"
+offset = 190
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-19"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-20"
+offset = 193
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-20"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-21"
+offset = 196
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-21"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-22"
+offset = 199
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-22"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-23"
+offset = 202
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-23"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-24"
+offset = 205
+length = 3
+kind = "casilla"
+casilla_id = "identificacion-24"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-25"
+offset = 208
+length = 40
+kind = "casilla"
+casilla_id = "identificacion-25"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-26"
+offset = 248
+length = 30
+kind = "casilla"
+casilla_id = "identificacion-26"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-27"
+offset = 278
+length = 5
+kind = "casilla"
+casilla_id = "identificacion-27"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-28"
+offset = 288
+length = 30
+kind = "casilla"
+casilla_id = "identificacion-28"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-29"
+offset = 320
+length = 20
+kind = "casilla"
+casilla_id = "identificacion-29"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-35"
+offset = 340
+length = 50
+kind = "casilla"
+casilla_id = "identificacion-35"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-36"
+offset = 390
+length = 40
+kind = "casilla"
+casilla_id = "identificacion-36"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-37"
+offset = 430
+length = 30
+kind = "casilla"
+casilla_id = "identificacion-37"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-39"
+offset = 560
+length = 10
+kind = "casilla"
+casilla_id = "identificacion-39"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-40"
+offset = 570
+length = 30
+kind = "casilla"
+casilla_id = "identificacion-40"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-41"
+offset = 600
+length = 30
+kind = "casilla"
+casilla_id = "identificacion-41"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-42"
+offset = 630
+length = 2
+kind = "casilla"
+casilla_id = "identificacion-42"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-1"
+offset = 663
+length = 1
+kind = "casilla"
+casilla_id = "identificacion-1"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-2"
+offset = 664
+length = 1
+kind = "casilla"
+casilla_id = "identificacion-2"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-3"
+offset = 665
+length = 2
+kind = "casilla"
+casilla_id = "identificacion-3"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-4"
+offset = 667
+length = 1
+kind = "casilla"
+casilla_id = "identificacion-4"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-8"
+offset = 702
+length = 2
+kind = "casilla"
+casilla_id = "identificacion-8"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-10"
+offset = 704
+length = 1
+kind = "casilla"
+casilla_id = "identificacion-10"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-12"
+offset = 816
+length = 1
+kind = "casilla"
+casilla_id = "identificacion-12"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-complementaria-slot"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-1"
+offset = 127
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-2"
+offset = 283
+length = 5
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-3"
+offset = 460
+length = 100
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-4"
+offset = 632
+length = 30
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-5"
+offset = 668
+length = 20
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-6"
+offset = 688
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-7"
+offset = 782
+length = 21
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-8"
+offset = 803
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-reserved-9"
+offset = 830
+length = 259
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-end"
+offset = 1089
+length = 12
+kind = "literal"
+literal = "</T71401000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-sujeto-pasivo-nif"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-page-01-sujeto-pasivo-nombre"
+offset = 23
+length = 80
+kind = "header"
+producer_key = "taxpayer.full_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-tipo-declaracion"
+offset = 13
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.tipo-declaracion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-sexo"
+offset = 109
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.sexo"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-estado-civil"
+offset = 110
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.estado-civil"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["1", "2", "3", "4"]
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-nacimiento"
+offset = 111
+length = 8
+kind = "casilla"
+casilla_id = "identificacion.fecha-nacimiento"
+data_type = "date"
+required = false
+padding = "none"
+justification = "none"
+date_format = "ddmmaaaa"
+value_policy = "ddmmyyyy"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-discapacidad-porcentaje"
+offset = 119
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.discapacidad-porcentaje"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "unsigned-integer"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-discapacidad-clase"
+offset = 121
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.discapacidad-clase"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["0", "1", "2"]
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-codigo-provincia"
+offset = 318
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.codigo-provincia"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "unsigned-integer"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-nacionalidad"
+offset = 662
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.nacionalidad"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["0", "1", "2"]
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-regimen-economico-matrimonio"
+offset = 701
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.regimen-economico-matrimonio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-representante-nif"
+offset = 705
+length = 9
+kind = "casilla"
+casilla_id = "identificacion.representante-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-representante-nombre"
+offset = 714
+length = 32
+kind = "casilla"
+casilla_id = "identificacion.representante-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-localidad"
+offset = 746
+length = 20
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-localidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-dia"
+offset = 766
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-dia"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "two-digit-day"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-mes"
+offset = 768
+length = 10
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-mes"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-anio"
+offset = 778
+length = 4
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-anio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "four-digit-year"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-714-identificacion-complementaria-cuotas-anteriores"
+offset = 817
+length = 13
+kind = "casilla"
+casilla_id = "identificacion.complementaria-cuotas-anteriores"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
