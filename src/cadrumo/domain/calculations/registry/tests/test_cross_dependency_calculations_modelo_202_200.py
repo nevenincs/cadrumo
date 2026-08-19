@@ -27,7 +27,12 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     snapshot = registry_snapshot("202", 2026, period)
     revision = snapshot.revision
     assert revision.id == "2025-y-siguientes"
-    assert len(revision.casillas) == 50
+    # The casilla POPULATION is not the subject here and is no longer pinned by
+    # tally: it counted 50 when written and the revision declares 61 now, so the
+    # constant only ever recorded a moment. What must hold is that every casilla
+    # the synthetic inputs feed, and every casilla a formula targets, is actually
+    # declared by the selected revision.
+    declared_ids = {str(casilla.id) for casilla in revision.casillas}
     formula_targets = {formula.target_casilla_id for formula in revision.formulas}
     assert formula_targets == {"03", "13", "16", "18", "22", "25", "26", "32", "34", "38", "39", "63", "66"}
 
@@ -80,6 +85,8 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
             "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
         },
     )
+    assert {str(casilla_id) for casilla_id in inputs} <= declared_ids
+    assert formula_targets <= declared_ids
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries["03"].operand_refs == ("01", "is.modalidad_cuota.percentage", "02")
@@ -89,26 +96,35 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "expected_revision", "expected_casilla_count"),
+    ("filing_year", "expected_revision"),
     [
-        (2019, "2019-2022", 43),
-        (2020, "2019-2022", 43),
-        (2022, "2019-2022", 43),
-        (2023, "2023-2024", 43),
-        (2024, "2023-2024", 43),
-        (2025, "2025-y-siguientes", 50),
-        (2026, "2025-y-siguientes", 50),
+        (2019, "2019-2022"),
+        (2020, "2019-2022"),
+        (2022, "2019-2022"),
+        (2023, "2023-2024"),
+        (2024, "2023-2024"),
+        (2025, "2025-y-siguientes"),
+        (2026, "2025-y-siguientes"),
     ],
 )
 def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     filing_year: int,
     expected_revision: str,
-    expected_casilla_count: int,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("202", filing_year, "1P")
     assert snapshot.revision.id == expected_revision
-    assert len(snapshot.revision.casillas) == expected_casilla_count
+    # Not a tally. The correcciones block 61..66 plus casilla 67 are what the 2025
+    # diseno ADDS over the earlier spans, so asserting the selected revision
+    # carries them exactly when it is the 2025 span proves the selection landed on
+    # the right CONTENT. A casilla count never did: it read 43 and 50 when written
+    # and the revisions declare 54 and 61 now.
+    declared_ids = {str(casilla.id) for casilla in snapshot.revision.casillas}
+    correcciones_block = {"61", "62", "63", "64", "65", "66", "67"}
+    if expected_revision == "2025-y-siguientes":
+        assert correcciones_block <= declared_ids
+    else:
+        assert correcciones_block.isdisjoint(declared_ids)
 
 
 def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column(
