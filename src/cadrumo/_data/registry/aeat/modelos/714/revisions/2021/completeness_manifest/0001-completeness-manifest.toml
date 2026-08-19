@@ -16,15 +16,7 @@
 
 [revisions."2021".completeness_manifest]
 source_ref = "aeat-modelo-714-procedure"
-legal_refs = [
-    "ley-19-1991:art-28",
-    "ley-19-1991:art-30",
-    "ley-19-1991:art-31",
-    "ley-35-2006:art-48",
-    "ley-35-2006:art-49",
-    "ley-35-2006:art-63",
-    "ley-35-2006:art-74",
-]
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-35-2006:art-48", "ley-35-2006:art-49", "ley-35-2006:art-63", "ley-35-2006:art-74", "orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".completeness_manifest.casillas]]

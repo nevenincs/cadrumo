@@ -14,51 +14,7 @@
 
 [revisions.2024-hasta-08-y-2t.completeness_manifest]
 source_ref = "aeat-dr-303-2024-early"
-legal_refs = [
-    "ley-12-2002:art-29",
-    "ley-37-1992:art-102",
-    "ley-37-1992:art-104",
-    "ley-37-1992:art-105",
-    "ley-37-1992:art-107",
-    "ley-37-1992:art-108",
-    "ley-37-1992:art-109",
-    "ley-37-1992:art-110",
-    "ley-37-1992:art-115",
-    "ley-37-1992:art-116",
-    "ley-37-1992:art-122",
-    "ley-37-1992:art-123",
-    "ley-37-1992:art-124",
-    "ley-37-1992:art-13",
-    "ley-37-1992:art-15",
-    "ley-37-1992:art-161",
-    "ley-37-1992:art-163-decies",
-    "ley-37-1992:art-163-duodecies",
-    "ley-37-1992:art-163-quinquiesdecies",
-    "ley-37-1992:art-163-terdecies",
-    "ley-37-1992:art-163-undecies",
-    "ley-37-1992:art-17",
-    "ley-37-1992:art-69",
-    "ley-37-1992:art-70",
-    "ley-37-1992:art-21",
-    "ley-37-1992:art-22",
-    "ley-37-1992:art-25",
-    "ley-37-1992:art-75",
-    "ley-37-1992:art-79",
-    "ley-37-1992:art-84",
-    "ley-37-1992:art-88",
-    "ley-37-1992:art-9",
-    "ley-37-1992:art-90",
-    "ley-37-1992:art-91",
-    "ley-37-1992:art-92",
-    "ley-37-1992:art-94",
-    "ley-37-1992:art-95",
-    "ley-37-1992:art-99",
-    "orden-eha-3786-2008:art-1",
-    "orden-hfp-1359-2023:art-4",
-    "rd-1624-1992:art-29",
-    "rd-1624-1992:art-30",
-    "rd-1624-1992:art-71",
-]
+legal_refs = ["ley-12-2002:art-29", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-161", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-quinquiesdecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-17", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-75", "ley-37-1992:art-79", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-9", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2024-hasta-08-y-2t.completeness_manifest.casillas]]
