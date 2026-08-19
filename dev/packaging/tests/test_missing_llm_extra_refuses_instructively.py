@@ -18,6 +18,9 @@ import textwrap
 from pathlib import Path
 
 import pytest
+
+from cadrumo import llm
+from cadrumo.core import LLM_EXTRA, scan_directory
 from dev.packaging._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -27,9 +30,6 @@ from dev.packaging._smoke_common import (
     isolated_product_env,
     venv_python_path,
 )
-
-from cadrumo import llm
-from cadrumo.core import LLM_EXTRA, scan_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter, pytest.mark.serial]
 
@@ -175,7 +175,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         )
         """,
     )
-    completed = subprocess.run(
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
         [str(python), "-c", code],
         cwd=work_dir,
         env=_isolated_environment(work_dir),

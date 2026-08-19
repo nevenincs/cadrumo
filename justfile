@@ -460,7 +460,7 @@ harness_exclusions := prepend("--ignore=", harness_members)
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rsf src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py dev/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short
 
 # The real-proof pass raises the per-test wall ceiling above the product suite's
 # 300 s ini default, for the reason `test-dev-ci` already states: this lane's
@@ -538,7 +538,7 @@ test-integration:
 # nowhere. Declare a new one in a recipe below; never inline paths into a
 # workflow, which puts the answer back in two places.
 #
-# `src/cadrumo/tests/test_lane_reachability.py` proves the union of these
+# `dev/tests/test_lane_reachability.py` proves the union of these
 # recipes covers every tracked `dev/**/test_*.py` -- both that a lane NAMES the
 # path and that its marker expression SELECTS the tests -- and fails when a new
 # test lands that no lane reaches.
@@ -554,7 +554,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/env/tests dev/identity/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -615,7 +615,7 @@ test-dev-ci:
 [doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
 [group('testing')]
 test-per-push-integration-gates:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a

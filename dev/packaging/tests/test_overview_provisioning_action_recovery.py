@@ -22,6 +22,10 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+
+from cadrumo.application.provisioning import ProvisioningPreconditionCondition
+from cadrumo.core import NoRecoveryOutcome
+from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from dev.packaging._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -32,10 +36,6 @@ from dev.packaging._smoke_common import (
     venv_cadrumo_path,
     venv_python_path,
 )
-
-from cadrumo.application.provisioning import ProvisioningPreconditionCondition
-from cadrumo.core import NoRecoveryOutcome
-from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -102,7 +102,11 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.application.provisioning import InstalledModel, probe_local_model_provisioning, probe_optional_extra
+        from cadrumo.application.provisioning import (
+            InstalledModel,
+            probe_local_model_provisioning,
+            probe_optional_extra,
+        )
         from cadrumo.core import LLM_EXTRA, optional_extra_available
         from cadrumo.core.config import load_settings, override_settings
         from cadrumo.core.json_contract import validate_registered_result
