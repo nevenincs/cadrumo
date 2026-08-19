@@ -6190,3 +6190,57 @@ sweep: closing it needs either a complete 41-field layout authored into the
 fixture or a purpose-built minimal design bundled as a test corpus artefact, and
 shipping a new corpus artefact is an operator call about what this repo
 distributes.
+
+## The generated-tree publication and check modules (31 -> 7)
+
+The six queue items re-measured green again (457 passed, 0 abstentions, authority
+CLEAN), so this tick continued on the standing endpoint with the largest
+remaining cluster.
+
+Both modules consume `_write_isolated_generated_authority_tree` from
+`test_export_tree`, which last tick moved to modelo 130 -- and they kept building
+their own paths, snapshot, design ref, design epoch and source digest for modelo
+200. The tree and the paths disagreed, so all 29 refused on
+"semantic map modelo '130' does not match target". Aligned: paths, fixture,
+`design_epoch` 2025 -> 2019, `source_ref`, and the design digest. A second
+synthetic revision also still declared no `authority_grade`; the first got one
+last tick and this one was missed.
+
+### A systemic drift that turned out not to exist
+
+Chasing the residue, the dev IR appeared to DROP a record from **51 of 103**
+bundled designs -- and every dropped sheet was the leading envelope record
+(`Pag. 0`, `100-00`, `DR 11500`, `DP200000`, `dr M202 (0)`). That is exactly the
+shape `modelo-export-mirrors-official-structure` warns about: the parser and the
+development intermediate holding two copies of the auxiliary-header contract and
+drifting over which modelos have one.
+
+**It is not drift.** The IR keeps envelope records in dedicated
+`variable_envelopes` and `auxiliary_envelope_headers` collections, declared
+disjoint from `sheets`; the comparison had read `ir.sheets` alone. Re-run against
+the full union, **0 of 103** designs omit a production record. Recorded because
+the false positive was well-formed and confident, and the control -- comparing
+against the right member of the set rather than the convenient one -- is the only
+thing that separated it from a real finding.
+
+### What the remaining 7 actually need
+
+All seven now fail on one refusal, and the gate states the requirement exactly:
+the fixture's synthetic layout "writes only 3 of the 41 positions its official
+record design requires (7.3% coverage)", naming every unwritten position and the
+design file. Modelo 130's design carries `DR 13000` (13 fields, the cabecera) and
+`DR 13001` (36 fields); the toy layout authors neither completely and authors no
+envelope record at all.
+
+**Recommendation: repoint the isolated-tree helper at modelo 202/2019**, whose
+real design and semantic map are already proven to render a complete tree by the
+enrolled drift gate, rather than hand-authoring ~49 synthetic fields that would
+drift from every real design the moment one changes.
+
+**Stated plainly: this reason is NOT one of the three sanctioned ones.** It is
+not an operator decision, not ungroundable tax semantics, and no other agent is
+in the file. It is a scope judgement: the helper is shared by three modules and
+about sixty currently-passing tests, and replacing its synthetic two-sheet toy
+with real loaded artefacts risks trading seven known failures for an unknown
+number. I am flagging that as a recommendation for the next tick rather than
+claiming an exemption for it.
