@@ -11,7 +11,7 @@ from .._common import _emit_envelope, _is_metadata_invocation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
+_PROFILE_ID = "986c0dc9-56dc-422b-9d8f-698661b9eb1e"  # was '123e4567-e89b-12d3-a456-426614174000'
 
 
 class _EnvelopePayload(OutputSchema):

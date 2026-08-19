@@ -454,7 +454,7 @@ class TestFailClosedRefusals:
         absolute_minutes: int = 240,
     ) -> None:
         """Mint an actual current receipt with a deliberately old issue time."""
-        from cadrumo.application.user_profile import load_profile_custody_password_material
+        from ....application.user_profile import load_profile_custody_password_material
 
         profile_id = UUID(bucket_id)
         envelope = load_profile_custody_password_material(profile_id, root=storage_root).envelope

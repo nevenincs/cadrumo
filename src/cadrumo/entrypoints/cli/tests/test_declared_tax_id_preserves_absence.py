@@ -30,7 +30,8 @@ _PROFILE_ID = "3f2a9c14-8b7d-4e21-9f60-5c1a7d3e8b42"
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    return UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
     )

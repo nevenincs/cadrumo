@@ -85,7 +85,8 @@ def _professional_services_invoice(
 
 def _seed_ready_profile(root: Path) -> None:
     seed_test_profile_record(
-        UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

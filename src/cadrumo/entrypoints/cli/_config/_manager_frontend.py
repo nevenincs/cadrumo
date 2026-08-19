@@ -430,20 +430,26 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
     """
     from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
     from ....application.user_profile import (
+        ProfileRecoveryEnrollment,
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
     from ....domain.user_profile import UserProfileFact
+
+    # The full-screen door shows the words itself, so the enrollment rides
+    # the attempt back to the screen; the screen owns the wipe.
+    captured: list[ProfileRecoveryEnrollment] = []
 
     try:
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
             facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+            recovery_handover=captured.append,
         )
     except ProfileRegistrationError as refusal:
         return _Attempt(refusal=str(refusal))
-    return _Attempt(outcome=outcome)
+    return _Attempt(outcome=outcome, enrollment=captured[0] if captured else None)
 
 
 def present_registration(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:

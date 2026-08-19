@@ -821,7 +821,8 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     verified_sources = {CENSO_SOURCE_TAG}
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
 
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
             UserProfileFact(

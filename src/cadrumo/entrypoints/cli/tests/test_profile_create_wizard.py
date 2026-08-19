@@ -30,6 +30,7 @@ from .. import _prefer_complete_verb_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
 def test_create_without_a_name_reaches_runtime_dispatch() -> None:
     """The registration TUI owns name collection for a naked create."""
     result = invoke_cached_cli(["config", "profile", "create"])

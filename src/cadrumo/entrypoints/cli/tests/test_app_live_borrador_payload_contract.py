@@ -15,7 +15,7 @@ from .._app_live_payloads import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "borrador-bucket"
+_BUCKET_ID = "f64de004-6f34-406e-8e02-58be01c6157c"  # was 'borrador-bucket'
 _SNAPSHOT_ID = "a" * 64
 
 
