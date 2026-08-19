@@ -31653,6 +31653,7 @@ modelo:
               help: Introduïu l'import total de la deducció.
               label: Import total de la deducció
             A:
+              help: null
               label: 'Inversió amb dret a deducció: adquisició i/o construcció de
                 l''habitatge habitual'
             ANOASDLG:
@@ -31665,12 +31666,14 @@ modelo:
               help: null
               label: null
             C:
+              help: null
               label: 'Inversió amb dret a deducció: rehabilitació o ampliació de l''habitatge
                 habitual'
             CONVASDLG:
               help: null
               label: null
             D:
+              help: null
               label: 'Base de la deducció (límit màxim: 100.000 euros): import total
                 de la deducció per inversions en empreses de nova o recent creació'
             DECFAL:
@@ -31704,11 +31707,13 @@ modelo:
               help: null
               label: null
             E:
+              help: null
               label: Quantitats satisfetes amb dret a deducció
             ECIVIL:
               help: null
               label: null
             F:
+              help: null
               label: Quantitats satisfetes amb dret a deducció
             FALLASDLG:
               help: null
@@ -31720,23 +31725,28 @@ modelo:
               help: null
               label: null
             G:
+              help: null
               label: 'Import amb dret a deducció (*): aportacions a activitats prioritàries
                 de mecenatge amb el límit del 15% de la base liquidable'
             H:
+              help: null
               label: 'Import amb dret a deducció (**): donatius a entitats regulades
                 per la Llei 49/2002, de 23 de desembre'
             HIJOSUE:
               help: null
               label: null
             I:
+              help: null
               label: 'Imports amb dret a deducció (*): inversions i despeses per a
                 la protecció i difusió del Patrimoni Històric Espanyol i de les ciutats,
                 conjunts i béns situats a Espanya declarats Patrimoni Mundial per
                 la UNESCO'
             J:
+              help: null
               label: 'Import amb dret a deducció (**): donatius a fundacions i associacions
                 d''utilitat pública no compreses en la Llei 49/2002, de 23 de desembre'
             M:
+              help: null
               label: 'Import amb dret a deducció (límit màxim 600 euros) (**): quotes
                 d''afiliació i aportacions a partits polítics, federacions, coalicions
                 o agrupacions electorals'
@@ -39312,6 +39322,7 @@ modelo:
               help: null
               label: Per malaltia celíaca diagnosticada
             A:
+              help: null
               label: 'Inversió amb dret a deducció: adquisició i/o construcció de
                 l''habitatge habitual'
             AJ:
@@ -39328,12 +39339,14 @@ modelo:
               help: null
               label: Ascendent cognoms i nom
             C:
+              help: null
               label: 'Inversió amb dret a deducció: rehabilitació o ampliació de l''habitatge
                 habitual'
             CONVASDLG:
               help: null
               label: Ascendent descendents convivents
             D:
+              help: null
               label: 'Base de la deducció (límit màxim: 100.000 euros): import total
                 de la deducció per inversions en empreses de nova o recent creació'
             DECFAL:
@@ -39367,11 +39380,13 @@ modelo:
               help: null
               label: Primer declarant cognoms i nom
             E:
+              help: null
               label: Quantitats satisfetes amb dret a deducció
             ECIVIL:
               help: null
               label: Primer declarant estat civil a 31/12/2025
             F:
+              help: null
               label: Quantitats satisfetes amb dret a deducció
             FALLASDLG:
               help: null
@@ -39383,23 +39398,28 @@ modelo:
               help: null
               label: Fill o descendent data de naixement
             G:
+              help: null
               label: 'Import amb dret a deducció (*): aportacions a activitats prioritàries
                 de mecenatge amb el límit del 15% de la base liquidable'
             H:
+              help: null
               label: 'Import amb dret a deducció (**): donatius a entitats regulades
                 per la Llei 49/2002, de 23 de desembre'
             HIJOSUE:
               help: null
               label: Fills o descendents UE o EEE
             I:
+              help: null
               label: 'Imports amb dret a deducció (*): inversions i despeses per a
                 la protecció i difusió del Patrimoni Històric Espanyol i de les ciutats,
                 conjunts i béns situats a Espanya declarats Patrimoni Mundial per
                 la UNESCO'
             J:
+              help: null
               label: 'Import amb dret a deducció (**): donatius a fundacions i associacions
                 d''utilitat pública no compreses en la Llei 49/2002, de 23 de desembre'
             M:
+              help: null
               label: 'Import amb dret a deducció (límit màxim 600 euros) (**): quotes
                 d''afiliació i aportacions a partits polítics, federacions, coalicions
                 o agrupacions electorals'

@@ -2071,6 +2071,12 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+      complete_setup:
+        already_complete: A profil már készként volt nyilvántartva; semmi nem került
+          mentésre.
+        completed: A profil készen áll a beadásra.
+        help: Nyilatkozat arról, hogy az aktív profil készen áll a beadásra.
+        incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítse meg az új profil jelszavát: '
       create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
         PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>

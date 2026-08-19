@@ -2092,6 +2092,11 @@ cli:
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
+      complete_setup:
+        already_complete: El perfil ya estaba declarado listo; no se ha escrito nada.
+        completed: Perfil declarado listo para presentar.
+        help: Declara que el perfil activo está listo para presentar.
+        incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_epilog: 'Perfil mínimo para autónomo: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames

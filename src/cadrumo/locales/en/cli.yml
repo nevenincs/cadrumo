@@ -1935,6 +1935,11 @@ cli:
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
+      complete_setup:
+        already_complete: The profile was already declared ready; nothing was written.
+        completed: Profile declared ready to file from.
+        help: Declare the active profile ready to file from.
+        incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
       create_epilog: 'Minimal freelancer profile: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
