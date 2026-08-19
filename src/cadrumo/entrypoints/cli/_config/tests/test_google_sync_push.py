@@ -32,6 +32,17 @@ from .._google_payloads import GoogleSyncProbeResult
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _row_in(repository: SecureObjectRepository, namespace: str):
+    """Return the seeded row for ``namespace``, not merely the first row stored.
+
+    The bucket carries more than a case seeds: the runtime profile fixture
+    writes a profile-fact row and a bucket-event row, and both are mirrorable,
+    so they are pushed as ciphertext alongside whatever the case saved. Taking
+    the first row therefore builds a manifest for somebody else's namespace.
+    """
+    return next(row for row in repository.iter_all_records_raw() if row.namespace == namespace)
+
+
 def test_google_sync_probe_payload_accepts_unknown_root_folder_presence() -> None:
     result = GoogleSyncProbeResult(
         profile="profile-id",
@@ -135,7 +146,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"partial-upload-plaintext",
         )
-        raw_row = next(repository.iter_all_records_raw())
+        raw_row = _row_in(repository, namespace)
         local_manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
         remote_manifest = local_manifest.model_copy(
             update={
@@ -158,7 +169,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
 
         assert result["failed_objects"] == []
         assert result["failed_manifests"] == []
-        assert result["manifest_pushed_by_namespace"] == {namespace: 1}
+        assert result["manifest_pushed_by_namespace"][namespace] == 1
         assert len(result["degraded_manifests"]) == 1
         assert result["degraded_manifests"][0][0] == namespace
         assert "partial_upload" in result["degraded_manifests"][0][1]
@@ -177,7 +188,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"partial-download-plaintext",
         )
-        raw_row = next(repository.iter_all_records_raw())
+        raw_row = _row_in(repository, namespace)
         manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         put_remote_mirror_namespace_manifest(provider, manifest)
@@ -192,7 +203,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
 
         assert result["failed_objects"] == []
         assert result["failed_manifests"] == []
-        assert result["manifest_pushed_by_namespace"] == {namespace: 1}
+        assert result["manifest_pushed_by_namespace"][namespace] == 1
         assert len(result["degraded_manifests"]) == 1
         assert result["degraded_manifests"][0][0] == namespace
         assert "partial_download" in result["degraded_manifests"][0][1]
@@ -211,7 +222,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"first-stale-plaintext",
         )
-        first_raw_row = next(repository.iter_all_records_raw())
+        first_raw_row = _row_in(repository, namespace)
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         first_hmac = remote_mirror_object_key_hmac(namespace, first_raw_row.object_key)
         provider.put(
@@ -232,7 +243,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
             written_at=datetime(2026, 5, 28, 12, 1, tzinfo=UTC),
             payload=b"second-stale-plaintext",
         )
-        latest_raw_row = next(repository.iter_all_records_raw())
+        latest_raw_row = _row_in(repository, namespace)
 
         result = _push_secure_object_mirror_rows(
             provider=provider,
@@ -246,7 +257,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
 
         assert result["failed_objects"] == []
         assert result["failed_manifests"] == []
-        assert result["manifest_pushed_by_namespace"] == {namespace: 1}
+        assert result["manifest_pushed_by_namespace"][namespace] == 1
         assert len(result["degraded_manifests"]) == 1
         assert result["degraded_manifests"][0][0] == namespace
         assert "stale_mirror" in result["degraded_manifests"][0][1]
@@ -266,7 +277,7 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"local-conflict-plaintext",
         )
-        raw_row = next(repository.iter_all_records_raw())
+        raw_row = _row_in(repository, namespace)
         local_manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
         local_entry = local_manifest.objects[0]
         remote_payload = b"remote-conflicting-ciphertext"
@@ -303,8 +314,14 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
         )
         persisted_payload, _ = provider.get(namespace, remote_entry.object_key_hmac)
 
-        assert result["pushed_by_namespace"] == {}
-        assert result["manifest_pushed_by_namespace"] == {}
+        # THIS namespace is the one the conflict must block. The bucket's other
+        # mirrorable rows -- the profile fact and bucket event the runtime
+        # fixture writes -- push normally, and a whole-bucket emptiness check
+        # would be asserting that a revision conflict in one namespace halts
+        # every other, which is the blast radius the per-namespace preflight
+        # exists to avoid.
+        assert namespace not in result["pushed_by_namespace"]
+        assert namespace not in result["manifest_pushed_by_namespace"]
         assert result["failed_objects"] == []
         assert len(result["failed_manifests"]) == 1
         assert result["failed_manifests"][0][0] == namespace
@@ -522,7 +539,10 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
                 written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
                 payload=payload,
             )
-        raw_rows = sorted(repository.iter_all_records_raw(), key=lambda row: row.row_id)
+        raw_rows = sorted(
+            (row for row in repository.iter_all_records_raw() if row.namespace == namespace),
+            key=lambda row: row.row_id,
+        )
         assert len(raw_rows) == 2
         second_row = raw_rows[-1]  # the row inserted second, by ascending row_id
 
@@ -546,8 +566,12 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         assert len(result["failed_objects"]) == 1
         assert result["failed_objects"][0][0] == namespace
         assert result["cleanup_failed_objects"] == []
-        assert result["manifest_pushed_by_namespace"] == {}
-        assert result["pushed_by_namespace"] == {}
+        # Scoped to the namespace whose upload failed: the rollback must undo
+        # THIS namespace's partial publication, not stop the bucket's other
+        # mirrorable rows -- the fixture's profile fact and bucket event --
+        # from completing their own.
+        assert namespace not in result["manifest_pushed_by_namespace"]
+        assert namespace not in result["pushed_by_namespace"]
 
         # The first row's object was genuinely uploaded, then rolled back. The
         # obstruction is cleared by now, so nothing stands at the second row's
@@ -572,4 +596,11 @@ def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_pa
         refusal = _google_refusal(raised.value)
 
         assert refusal.context is not None
-        assert refusal.context["detail"] == tr("cli.config.google.detail.sync_push_limit_requires_dry_run")
+        # The limit the operator actually passed is the context; the
+        # explanation is the typed translated_message. It used to be smuggled
+        # into the context as a rendered "detail" string, which the shared
+        # envelope contract does not carry -- reading it from there now finds
+        # nothing, while the refusal itself is as instructive as it ever was.
+        assert refusal.context["limit"] == "1"
+        assert refusal.translated_message == "cli.config.google.detail.sync_push_limit_requires_dry_run"
+        assert tr(refusal.translated_message) != refusal.translated_message
