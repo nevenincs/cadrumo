@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:04b0e5d219df7bf79c585b5329d0a57ac009c2cda25ab698f70464ecc896193f'
+body_hash: 'sha256:3513b435128de9a71b9750ac863a36fc12c1cbfc2219a6f0a0a7e2a447baea2e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -179,6 +179,31 @@ to parse; the fourth passed vacuously, asserting only a non-zero exit, which a
 missing command satisfies exactly as well as a real refusal would. That is the
 failure mode to watch for in a retirement: the negative case keeps passing and
 reports the retirement as covered.
+
+### Where the lanes finished, and what the residue actually is
+
+The profile, storage and config-CLI integration lane ends at 307 passing and 14
+failing, and every one of the fourteen is the session-resume family: the Windows
+credential store on this logon answers "a specified logon session does not
+exist", measured against the store directly rather than inferred from the
+failures. Nothing else in the lane is red. The unit lane ends at 1718 passing
+with five failures, all owned elsewhere -- a revision awaiting its review gate,
+the wizard's IVA-block question change, and the locale sweep's missing keys.
+
+Getting there turned up one pattern worth naming, because it accounted for most
+of the residue and none of it was environmental. A fixture or a case would
+assume a side effect of a door that has since been replaced: that creating a
+profile leaves a workflow-state row behind, that registering one leaves it
+unlocked, that a bucket holds only the row the case seeded. Each assumption was
+true before the custody cutover and silently false after it, and each failure
+read as a broken subject rather than a stale premise. The repair is always to
+state the premise explicitly -- save the row, log the profile in, scope to the
+namespace -- never to relax what the case asserts.
+
+Two cases were asserting fields that had been deliberately retired: a rendered
+"suggestion" string on the error document, and a pre-cutover exit code. A test
+for a retired surface cannot pass without reviving it, so it is not a gap being
+tracked, it is a permanent red that teaches readers to skip the module.
 
 ## Recommendations
 
