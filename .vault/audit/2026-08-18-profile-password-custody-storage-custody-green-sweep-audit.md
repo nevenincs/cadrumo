@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce3b03c3b6599da5816099b9d48c697bee3d730dc6cd5e771e967ccf5b50241a'
+body_hash: 'sha256:6dc013738b844c6e011a37481d90dc9b78329ed782ef6bf1423dc2561de6a7cd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1006,6 +1006,45 @@ before reaching the catalogue. The real concurrency here is cross-PROCESS. And
 the bare write is a single expression, so there is no seam to interleave from
 outside the way the earlier bucket-event and work-unit regressions did. A
 thread-raced test would have passed before the fix as well as after.
+
+### The co-commit class is buildable after all, and the ledger half is closed
+
+The co-commit retry design stood open through this campaign as owner-gated, on
+the reading that composing an event into another write's batch could not be made
+revision-guarded. That reading was wrong, and the correction matters because it
+was blocking the last known instance of the lost-update class.
+
+Every primitive it needs already existed. `load_revisioned()` returns the
+catalogue with the exact revision observed, and `to_secure_object_write()`
+already accepts `expected_revision_id` -- the same two calls `append_guarded`
+composes for the standalone path. The only missing piece was a retry that
+re-runs the COMPOSITION rather than a single write, and that is safe here for a
+reason worth stating: the domain catalogues the caller closes over are values
+computed before the call, not reads that could go stale inside it, so re-running
+the batch cannot resurrect a stale record.
+
+`_commit_with_guarded_events` in `application/ledger/_actions_common.py` now
+carries the read revision and re-composes on refusal, and when contention
+outlasts the attempts it RAISES. That is the deliberate direction: refusing
+beats the silent discard it replaces, on a trail whose losses are otherwise
+undetectable.
+
+Two things this pass establishes about testing this area, both transferable.
+The interleaving CAN be staged deterministically for a guarded composition,
+because the retry re-enters the window -- unlike the bare single-expression
+writes fixed in the previous entry, which had no seam. And that determinism is
+necessary rather than merely neater: worker threads do not inherit the
+active-session `ContextVar`, so a second writer cannot be driven in-process at
+all, and a thread-raced test here would be measuring nothing.
+
+Scope, stated so the green is not over-read. This closes the ledger's two batch
+writers. The same unguarded composition remains in
+`application/user_profile/_capsule_record.py`,
+`application/workflow/_persistence.py`,
+`application/modelo/_iva_wallet_seed.py` (two sites) and
+`application/modelo/_reconcile.py`. They are now a mechanical application of a
+seam that exists and is proven, not a design question -- the reason they are not
+done here is budget, not doubt.
 
 ## Recommendations
 
