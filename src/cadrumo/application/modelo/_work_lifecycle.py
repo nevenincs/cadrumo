@@ -670,7 +670,11 @@ def rename_work_unit(
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
-    catalogue: WorkUnitCatalogue = repo.load()
+    # Revisioned: the catalogue is composed into the co-commit below with the
+    # lifecycle event, so it cannot use a self-committing mutation, and an
+    # unguarded read rewrites the whole singleton row over a unit another
+    # caller created or changed in between.
+    catalogue, catalogue_revision_id = repo.load_revisioned()
     if existing.state is WorkUnitState.DESCARTADO:
         evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitMutationRefusedError(
@@ -707,6 +711,7 @@ def rename_work_unit(
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, renamed),
         (_bucket_event_write(bv_repo, (renamed_event,)),),
+        expected_revision_id=catalogue_revision_id,
     )
     return renamed
 
@@ -734,7 +739,11 @@ def discard_work_unit(
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
-    catalogue: WorkUnitCatalogue = repo.load()
+    # Revisioned: the catalogue is composed into the co-commit below with the
+    # lifecycle event, so it cannot use a self-committing mutation, and an
+    # unguarded read rewrites the whole singleton row over a unit another
+    # caller created or changed in between.
+    catalogue, catalogue_revision_id = repo.load_revisioned()
     if existing.state is WorkUnitState.DESCARTADO:
         evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitAlreadyDiscardedError(
@@ -776,5 +785,6 @@ def discard_work_unit(
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, discarded),
         (_bucket_event_write(bv_repo, (discarded_event,)),),
+        expected_revision_id=catalogue_revision_id,
     )
     return discarded

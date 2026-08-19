@@ -67,11 +67,22 @@ def _names_bound_to_a_plain_load(scope: ast.AST) -> set[str]:
     """
     names: set[str] = set()
     for node in ast.walk(scope):
-        if not isinstance(node, ast.Assign) or not _is_plain_load(node.value):
+        # Every binding form, not just the bare one. An annotated assignment
+        # (``catalogue: WorkUnitCatalogue = repo.load()``) is the shape two live
+        # defects used, and matching only ast.Assign made this scan report them
+        # as clean -- the same shape-not-property mistake this gate exists to
+        # stop being repeated.
+        if isinstance(node, ast.Assign) and _is_plain_load(node.value):
+            targets: tuple[ast.expr, ...] = tuple(node.targets)
+        elif isinstance(node, ast.AnnAssign | ast.NamedExpr) and _is_plain_load(node.value):
+            targets = (node.target,)
+        else:
             continue
-        for target in node.targets:
+        for target in targets:
             if isinstance(target, ast.Name):
                 names.add(target.id)
+            elif isinstance(target, ast.Tuple):
+                names.update(element.id for element in target.elts if isinstance(element, ast.Name))
     return names
 
 
@@ -132,6 +143,23 @@ def test_the_detector_recognises_a_wrapped_read() -> None:
     source = (
         "def persist(repository, entry):\n"
         "    catalogue = repository.load()\n"
+        "    repository.save_with_secure_object_writes(upsert(catalogue, entry), ())\n"
+    )
+
+    assert unguarded_compositions(ast.parse(source)) == 1
+
+
+def test_the_detector_recognises_an_annotated_binding() -> None:
+    """DISCRIMINATING: the binding form that hid two live defects.
+
+    ``catalogue: WorkUnitCatalogue = repo.load()`` is an ``AnnAssign``, not an
+    ``Assign``. Tracking only the latter reported ``rename_work_unit`` and
+    ``discard_work_unit`` as clean while both rewrote the whole catalogue over a
+    concurrent writer.
+    """
+    source = (
+        "def persist(repository, entry):\n"
+        "    catalogue: Catalogue = repository.load()\n"
         "    repository.save_with_secure_object_writes(upsert(catalogue, entry), ())\n"
     )
 
