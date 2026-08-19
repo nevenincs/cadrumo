@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:557d757bbde87d4885646930c4622a3ba72d0f1505890f3a0a3f4ee45defe549'
+body_hash: 'sha256:cfc1e67ca581f4f7d6f82a674f31373ae31e75d65f45e3fa26ac26c6bc98c187'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6433,3 +6433,46 @@ correcciones block from the 2025 revision at `build_snapshot` fails **5 of 12**
 cases, including both revision-selection cases, where the untouched run passes
 all 12. The old tally would only have noticed that mutation by coincidence -- if
 removing seven casillas happened to move the count off its constant.
+
+## The 353/322 ejercicio-2026 split, and a fixture predating a ledger rule (20 -> 0)
+
+Modelos 353 and 322 both split their single `2008-y-siguientes` revision at
+ejercicio 2026 into `2008-2025` plus `2026-y-siguientes`, and 18 cases across the
+two registry modules still named the retired id.
+
+**The blanket rename was NOT safe, and checking that first is the point.** Modelo
+**347** legitimately has its own `2008-y-siguientes` revision, and the id appears
+in 40-odd files. Classifying each file by which modelo it concerns separated them
+cleanly: six test modules own 353/322 references, the rest are 347's. The 353 and
+322 revision.toml files also mention the old id -- in the prose recording their
+own split -- and were correctly left alone.
+
+Two of the repointed cases then failed BECAUSE the rename was too broad, which is
+the useful half of the result:
+
+- The January-calendar cases read two windows from one revision. After the split
+  the 2026 window belongs to `2026-y-siguientes` and the 2025 one to `2008-2025`;
+  each is now read from the revision that OWNS it, which is only expressible now
+  that there are two.
+- `test_modelo_353_declares_322_group_settlement_treatment` pinned the literal
+  `aeat-dr-353-2026` while naming a revision. Both halves declare that
+  classification and differ ONLY in the diseño they cite, so it is parametrised
+  over both with the design ref supplied per revision -- coverage widened rather
+  than moved.
+
+### A fixture that predated the deduction-authority rule
+
+`test_modelo_322_grupo_individual_continuity` was failing on something unrelated,
+and proving that took a control rather than an assumption: stashing the rename
+and re-running showed the same two failures, so the rename neither caused nor
+fixed them.
+
+Its ledger fixture built a soportado line carrying neither `deduction_fact_kind`
+nor `deduction_provenance`, which `IvaLedgerObservation` refuses -- "input IVA
+facts require exact deduction authority" -- and that refusal is the thing keeping
+an undocumented deduction out of the ledger. The fixture now declares both, on
+the INPUT direction only, because the same validator refuses an output line that
+carries either. Shape copied from the sibling fixtures that already satisfy it
+rather than invented: `DOMESTIC_CURRENT` with `INVOICE_EVIDENCE` provenance.
+
+All six touched modules: **38 passed.** Authority CLEAN.
