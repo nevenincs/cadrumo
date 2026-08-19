@@ -79,6 +79,19 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
 review_status = "reviewed"
 
+[sources."boe-modelo-194-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-1999-22309-modelo-194-annex-text.txt"
+sha256 = "35b26f4445efd1857c97ed47d49a92b5626b285a907ffdaeca6e24113dcee269"
+bytes = 1370
+retrieved_at = 2026-08-19
+published_at = 1999-11-19
+applies_from = 1999-11-20
+source_url = "https://www.boe.es/datos/imagenes/disp/1999/277/22309_7966157_image71.png"
+review_status = "reviewed"
+
 [sources."boe-modelo-188-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

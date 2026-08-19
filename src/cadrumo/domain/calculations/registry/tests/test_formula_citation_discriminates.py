@@ -50,16 +50,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 #: that describes its numbered boxes, so no citable phrase can substantiate the
 #: formula. Remove the entry once such a source is bundled and cited.
 _NO_GUIDANCE_TIER_SOURCE_DESCRIBES_THE_BOXES: dict[tuple[str, str, str], str] = {
-    ("194", "2019-y-siguientes", "modelo-194-total"): (
-        "modelo-194-procedure.html is an AEAT landing page with no box "
-        "vocabulary, and the orden and record design are layout_authority tier "
-        "and cannot be cited by a formula. Modelos 187 and 188 carried identical "
-        "entries until their annexes were transcribed to boe-modelo-NNN-form-text "
-        "and their invented total formulas removed; 194 is the same shape "
-        "awaiting the same treatment"
-    ),
     ("296", "2024-y-siguientes", "modelo-296-total"): (
-        "same shape as 187: modelo-296-procedure.html carries no box vocabulary"
+        "modelo-296-procedure.html is an AEAT landing page with no box "
+        "vocabulary, and the orden and record design are layout_authority tier "
+        "and cannot be cited by a formula. Modelos 187, 188 and 194 carried "
+        "identical entries until each annex was read, transcribed to a "
+        "boe-modelo-NNN-form-text extract and cited; 296 is the last of the four "
+        "and its annex has not been read. Unlike those three its casillas do "
+        "carry export_refs into the record design, so its box set may well be "
+        "right where theirs was not -- that is unmeasured, not assumed"
     ),
 }
 

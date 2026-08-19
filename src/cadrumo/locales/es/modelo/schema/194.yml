@@ -12,15 +12,26 @@ modelo:
       revision:
         2019-y-siguientes:
           casilla:
+            '01':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es positiva.
+              label: Número total de perceptores con base positiva
+            '02':
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base positiva.
+              label: Base de retenciones e ingresos a cuenta
             '03':
-              help: null
-              label: Base retenciones e ingresos a cuenta
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las rentas declaradas.
+              label: Retenciones e ingresos a cuenta
             '04':
-              help: null
-              label: Retenciones e ingresos a cuenta declarados
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es negativa.
+              label: Número total de perceptores con base negativa
             '05':
-              help: null
-              label: Total retenciones del resumen anual
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base negativa.
+              label: Base de retenciones e ingresos a cuenta negativa
           construct:
             modelo-194-calculation-construct:
               field:
