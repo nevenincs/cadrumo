@@ -43,6 +43,10 @@ application_links = [
     "modelo-369-union-approval",
     "modelo-369-union-reconciliation",
     "modelo-369-union-workflow",
+    # The export application link, authored with this esquema's export
+    # layouts. The construct must close over every application link the
+    # revision declares, and this one was left out of the member list.
+    "modelo-369-union-export",
 ]
 filing_schedules = ["modelo-369-union-trimestral"]
 extraction_profiles = ["modelo-369-union-declaracion-pdf"]

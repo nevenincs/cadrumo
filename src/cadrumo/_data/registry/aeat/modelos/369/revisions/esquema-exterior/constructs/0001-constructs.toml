@@ -36,6 +36,10 @@ application_links = [
     "modelo-369-exterior-approval",
     "modelo-369-exterior-reconciliation",
     "modelo-369-exterior-workflow",
+    # The export application link, authored with this esquema's export
+    # layouts. The construct must close over every application link the
+    # revision declares, and this one was left out of the member list.
+    "modelo-369-exterior-export",
 ]
 filing_schedules = ["modelo-369-exterior-trimestral"]
 deadline_windows = [

@@ -37,6 +37,10 @@ application_links = [
     "modelo-369-importacion-approval",
     "modelo-369-importacion-reconciliation",
     "modelo-369-importacion-workflow",
+    # The export application link, authored with this esquema's export
+    # layouts. The construct must close over every application link the
+    # revision declares, and this one was left out of the member list.
+    "modelo-369-importacion-export",
 ]
 filing_schedules = ["modelo-369-importacion-mensual"]
 deadline_windows = [
