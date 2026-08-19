@@ -6049,3 +6049,36 @@ Beside the narrowing, what the standing goal still asks for that it excludes: a
 "full supported revision and modelo matrix" covering 2014-2021 on the
 highest-volume modelo in the application. **Recommended as the next queue item**,
 since the designs are bundled and the work is therefore groundable.
+
+### The period-support check is dead for any single-revision source modelo
+
+Chasing a mutation gate that stopped raising turned up a real over-abstention.
+`_resolve_coordinate_owners` (`_validate_relation_periods.py:273`) returns no
+failure whenever the source modelo contributes `len(candidates) <= 1`, on the
+reasoning that the sibling revision is ABSENT rather than the period unsupported
+-- generated-export-tree validation mandates a candidate registry pruned to
+exactly one revision, and refusing there would report the pruning.
+
+The count cannot tell those apart. A modelo that genuinely has ONE revision --
+modelo 115, for instance -- contributes one candidate in a COMPLETE tree too, so
+every relation sourced from it escapes the period-support check entirely. Proven
+both ways: the same mutation against modelo 390, whose relations source modelo
+303's six revisions, refuses exactly as intended
+(`derived source period '0A' is not supported by any selected source revision`).
+
+**Recorded, not fixed, and the reason is not "pre-existing".** The discriminator
+the function needs -- whether the tree it was handed is complete for the SOURCE
+modelo -- is not available at that call site, so closing this means threading a
+new signal through a shared validation authority. Flipping the condition to
+`== 0` instead would trade a silent gap for a FALSE REFUSAL in the export
+pipeline, which is the one caller the abstention was written for. That is a
+design change to a validation authority with a second consumer, not a fix to
+fold into a test sweep.
+
+The gate itself was not left asserting the unreachable. It mutated modelo 180
+(source 115, one revision) with the token `99`, which is doubly unreachable:
+`99` is not a valid period at all and the typed `RegistrySelectorPeriodCode`
+boundary refuses it outright -- it only survived here because `model_copy` skips
+validation. It now mutates a modelo-390 relation with `0A`, a token the GRAMMAR
+accepts and no 303 revision declares, which is the exact shape the refusal is
+for.
