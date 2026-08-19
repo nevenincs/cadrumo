@@ -58,8 +58,9 @@ errors:
       Comprueba que haya un almacén de credenciales instalado y activo.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
-      proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
+    auth_storage_master_key_unavailable: Esta sesión de perfil se reanudó y solo conserva
+      su clave de datos; el material de cifrado de claves está ligado al inicio de
+      sesión. Ejecuta `aeat config login` para volver a autenticarte.
     clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
       válida pero su letra de control no coincide con los dígitos. Revisa la última
       letra del documento e inténtalo de nuevo.

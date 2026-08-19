@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca6f2c799080cdfdca356b6d1c251c5e7bba2269f0f3107f8a26b3f76d343840'
+body_hash: 'sha256:94db200be22adf73c0f4d59952ac4342341d392ba74566183958e9c40a9b37a0'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -316,16 +316,39 @@ mechanical port that fitted the other singletons.
 ## Recommendations
 
 Treat the storage substrate package named for the retired shared-master-key
-model as the next scoped effort rather than an incidental cleanup. It now houses
-the LIVE per-profile session substrate -- bucket sessions, the login throttle,
-KDF parameters, idle timeout -- under a package name describing a model the
-cutover retired, and it still exports a provider protocol with roughly ten
-consumers outside the package plus an unsecured-provider implementation with
-about five. Some of that is genuine retired-provider residue; some is protective
-code that merely carries a legacy name, such as the refusal that stops a real
-profile being opened on an unsecured backend. Classifying those apart is the
-work, and a name-driven deletion would remove a safety guard. A rename is a
-relocation and must land atomically with every consumer.
+model as the next scoped effort rather than an incidental cleanup. It houses the
+LIVE per-profile session substrate -- bucket sessions, the login throttle, KDF
+parameters, idle timeout -- under a package name describing a model the cutover
+retired. The package NAME is the residue; most of its contents are not, and the
+refusal that stops a real profile being opened on an unsecured backend is live
+protective code a name-driven deletion would take with it.
+
+An earlier reading of this entry counted "roughly ten consumers" of the provider
+protocol outside the package and treated that as evidence it was live. A closer
+enumeration disproves it, and the correction is worth more than the original
+claim. Nearly every one of those is a TYPE ANNOTATION on an optional parameter
+production never passes: the stores and envelope helpers default it to None and
+fall through to the active bucket session's key. The only production code that
+passes a non-None provider is the rotation module -- which itself has no caller.
+So the protocol is not live code with ten consumers. It is an injection seam
+exercised by one callerless subsystem, and that optional override IS the
+retained provider-fallback the decision says to remove: a second key route
+standing beside the per-profile one, reachable by any future caller that passes
+an argument.
+
+That turns the removal from a judgement call into a sequence. The rotation
+module goes first, being the sole reason the protocol must still exist; its
+removal frees the optional override on the stores and the required parameter on
+the envelope helpers; the protocol and its single unsecured implementation then
+have no referent, along with the provider-session helpers that exist only to
+serve them; and the tax-id canary loses a provider parameter whose isinstance
+guard is already unreachable, since its one caller constructs the very class it
+tests for. The live substrate is renamed out of the package last -- doing that
+first would only move residue to a new address -- which is what the
+hard-cutover gate's four declared open violations already anticipate.
+
+Counting references is not measuring reach. A parameter nothing passes has
+consumers and no callers.
 
 Profile rename and profile duplicate are CLOSED as out of scope, not pending.
 They exist in neither backend nor CLI, and the operator ruled on them twice, on

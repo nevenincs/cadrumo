@@ -57,8 +57,9 @@ errors:
       Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
-      beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
+    auth_storage_master_key_unavailable: Ez a profilmunkamenet folytatásból indult,
+      és csak az adatkulcsát őrzi; a kulcstitkosítási anyag a bejelentkezéshez kötött.
+      Futtasd az `aeat config login` parancsot az újbóli hitelesítéshez.
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
       ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizze az okmány utolsó betűjét,
       és próbálja újra.

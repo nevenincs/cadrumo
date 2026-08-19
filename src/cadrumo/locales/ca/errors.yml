@@ -59,9 +59,9 @@ errors:
       disponible. Comprova que hi hagi un magatzem de credencials instal·lat i actiu.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
-    auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
-      proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
-      seguretat.
+    auth_storage_master_key_unavailable: Aquesta sessió de perfil s'ha reprès i només
+      conserva la seva clau de dades; el material de xifratge de claus està lligat
+      a l'inici de sessió. Executa `aeat config login` per tornar a autenticar-te.
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
       però la seva lletra de control no coincideix amb els dígits. Revisa l'última
       lletra del document i torna-ho a provar.
