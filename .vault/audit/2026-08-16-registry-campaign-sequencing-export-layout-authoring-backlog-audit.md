@@ -6112,3 +6112,81 @@ zero. The remaining failures are concentrated in surfaces this tick did not
 touch -- `test_export_tree` (27), `test_generated_tree_publication` (15),
 `test_generated_tree_check` (14), `test_semantic_map_join` (8), and the 353, 322,
 347 and informativa registries.
+
+## Two renderer defects behind a dev-fixture sweep
+
+The six queue items re-measured green again (457 passed, 0 abstentions, authority
+CLEAN), so this tick took the item left open last tick. "Fixture rewrite" was
+never one of the three sanctioned deferral reasons, and doing it turned up two
+real wire-correctness defects in the renderer that the fixture drift had been
+hiding.
+
+### The semantic-map validation fixture (7 -> 0)
+
+Four cases had nothing to do with projections -- the happy path, the
+unresolved-reference family, the anomaly-exception pin, the no-legacy-inference
+proof -- but ran against modelo 200, which has since gained **578** projection
+declarations that `validate_semantic_map` checks as a BIJECTION. A two-entry
+synthetic map cannot satisfy 578, so each refused on "omits target-revision
+projection declarations" before reaching the defect it planted.
+
+Repointed to modelo **130**: the same shape of authority (real revision, bundled
+diseño, casillas, bindings, resolvable refs) declaring zero projections, so the
+toy map satisfies the bijection trivially. The three projection-specific cases
+keep modelo 200 and 303 deliberately -- their subject IS the bijection -- and
+both halves were re-verified: the bijection still refuses where it should, and
+the four planted-defect cases still refuse against modelo 130, which is what
+keeps the happy path from going vacuous.
+
+### The export-tree fixture (27 -> 2), and what it was hiding
+
+Same repoint plus three of its own faults: int `ordinal`s where the anchor model
+requires the design's PRINTED string, an import of `_generated_tree_validation`
+that the authoring-tree deconflation renamed to `pipeline/_tree_validation`, and
+a hygiene gate scanning RAW SOURCE for forbidden tokens -- which read the
+renderer's own comment explaining why it refuses "a fuzzy match" as the defect
+that comment warns against. The gate now tokenises and drops comments and string
+literals; proven still to bite, since `shutil` and `read_text` survive
+tokenisation as code while prose does not.
+
+**Defect 1: an ambiguous constant rendered as its first alternative.**
+`_OFFICIAL_LABELLED_LITERAL_RE` matched `Constante "<T" o "ZZ"` and extracted
+`<T`, reading `o "ZZ"` as a descriptive label and discarding it. Wrong constant
+bytes on the wire, and invisible: the record is well formed and the wrong literal
+is the right width.
+
+Measured before narrowing: that grammar matches **nothing** in all 121 bundled
+designs. The modelo 296 cells it was written for -- `Constante «F» ANEXO «VALORES
+NEGOCIABLES...»` -- carry TYPOGRAPHIC quotes, which its straight-quote character
+class never admits. An explicit alternation refusal now precedes it, and
+discriminates exactly: the alternation refuses, `Constante "2"` and
+`Constante "F" ANEXO texto` do not.
+
+**Defect 2: prose read as a closed value set.**
+`_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE` is `^"\d+"[^"]*(?:"\d+"[^"]*)+$` --
+arbitrary text between quoted values -- so the sentence `"0000" only if the
+taxpayer elects "0050"` parsed as an enumeration and the renderer went on to
+constrain the slot to it.
+
+Narrowed on corpus evidence rather than judgement: across the 103 designs that
+load, the labelled form matches **221 cells in 28 distinct shapes**, and every
+one separates its values with a real delimiter -- a comma, a newline, a dash, or
+a Spanish connective. Two are RANGE forms (`"01".."12"` and `"01" a "52"`), which
+is why `..` and ` a ` are admitted. **All 28 stay admitted; the prose does not.**
+
+Both narrowings are in the RENDERER, so the proof that matters is the drift
+gate: **30/30 generated-tree gates pass**, meaning no real design reclassified.
+
+### Left open, with the reason
+
+Two cases -- `test_generated_tree_validation_requires_real_loader_and_authority_selection`
+and `..._refuses_wrong_period_and_provenance_drift` -- now fail on the
+export-completeness gate: the fixture's 3-field toy layout "writes only 3 of the
+41 positions its official record design requires". That gate reads the REAL
+design resolved from the catalogue by `source_ref`, so the toy layout cannot
+satisfy it against ANY bundled design -- under modelo 200 it would have demanded
+thousands rather than 41. This is not identity plumbing like the rest of the
+sweep: closing it needs either a complete 41-field layout authored into the
+fixture or a purpose-built minimal design bundled as a test corpus artefact, and
+shipping a new corpus artefact is an operator call about what this repo
+distributes.
