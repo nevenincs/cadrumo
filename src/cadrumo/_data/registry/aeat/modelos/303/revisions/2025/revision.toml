@@ -1,4 +1,4 @@
-[revisions.2025]
+[revisions."2025"]
 authority_grade = "filing"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
@@ -10,8 +10,11 @@ source_refs = [
     "boe-orden-hac-1347-2024-iva-authority",
     "boe-modelo-303-2008-form",
 ]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
-[revisions.2025.period_selector]
+[revisions."2025".period_selector]
 year_from = 2025
 year_to = 2025
 # Quarterly periods for standard autoliquidacion; monthly periods for
