@@ -41,6 +41,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
+    emit_bucket_events,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos import (
@@ -865,14 +866,20 @@ def _build_bucket_event(
 
 
 def _append_bucket_event(*, repository: BucketEventHistoryRepositoryProtocol, event: BucketEvent) -> None:
-    repository.save(append_bucket_event(repository.load(), event))
+    """Append one event through the domain emitter rather than a local copy.
+
+    These two helpers used to load, append and save the catalogue here. That is
+    exactly what the domain emitters do, and the copies drifted the moment those
+    gained a revision guard: the history is a singleton row, so a local
+    load-append-save discards an event a concurrent caller wrote, and the
+    content-addressed survivors leave no gap to notice it happened.
+    """
+    emit_bucket_events(repository=repository, events=(event,))
 
 
 def _append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
-    catalogue = repository.load()
-    for event in events:
-        catalogue = append_bucket_event(catalogue, event)
-    repository.save(catalogue)
+    """Append a batch through the domain emitter, for the reason above."""
+    emit_bucket_events(repository=repository, events=events)
 
 
 def _save_transaction_catalogue_and_events(
