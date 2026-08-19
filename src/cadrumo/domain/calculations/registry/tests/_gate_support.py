@@ -5,21 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from .....core import scan_directory
+from .....core.resources import bundled_path
+from .._loader import load_registry_tree
 from .._schema import RegistryCatalogues
+from .._snapshot import collect_snapshot_ref_ids
 
-_M130_LEGAL_REF_IDS = frozenset(
-    {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-99",
-        "orden-eha-672-2007:art-1",
-        "rd-439-2007:art-95",
-        "rd-439-2007:art-110",
-        "rd-439-2007:art-109",
-    },
-)
-_M130_SOURCE_REF_IDS = frozenset({"aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"})
 
 
 def fragment_declaring(directory: Path, anchor: str) -> Path:
@@ -63,9 +53,33 @@ def fragment_declaring(directory: Path, anchor: str) -> Path:
 
 
 def catalogues_for_m130_gate_tests(catalogues: RegistryCatalogues) -> RegistryCatalogues:
+    """Narrow ``catalogues`` to exactly the refs modelo 130 declares.
+
+    The modelo 130 gate tests validate against a NARROWED catalogue, so a rule
+    leaning on an unrelated entry is caught. The narrowing was a hand-listed set
+    of eight legal ids, and it went stale the moment modelo 130's applicability
+    rule began citing `trlirnr-rdleg-5-2004:art-2`: every case then failed on
+    "references unknown legal id", an artefact of the isolation rather than a
+    defect in what it validates.
+
+    Derived from the modelo's own declared refs instead. It stays a REAL
+    narrowing -- the walk collects only what this modelo cites, never the whole
+    catalogue -- and it cannot go stale, because a newly cited ref joins it the
+    same way the modelo declares it.
+    """
+    modelos, _full = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(item for item in modelos if str(item.id) == "130")
+    legal_ids: set[str] = {str(ref) for ref in modelo.legal_refs}
+    source_ids: set[str] = {str(ref) for ref in modelo.source_refs}
+    for revision in modelo.revisions.values():
+        revision_legal, revision_sources = collect_snapshot_ref_ids(modelo, revision)
+        legal_ids |= {str(ref) for ref in revision_legal}
+        source_ids |= {str(ref) for ref in revision_sources}
     return catalogues.model_copy(
         update={
-            "legal": {ref_id: catalogues.legal[ref_id] for ref_id in _M130_LEGAL_REF_IDS},
-            "sources": {ref_id: catalogues.sources[ref_id] for ref_id in _M130_SOURCE_REF_IDS},
+            "legal": {ref_id: catalogues.legal[ref_id] for ref_id in sorted(legal_ids) if ref_id in catalogues.legal},
+            "sources": {
+                ref_id: catalogues.sources[ref_id] for ref_id in sorted(source_ids) if ref_id in catalogues.sources
+            },
         },
     )

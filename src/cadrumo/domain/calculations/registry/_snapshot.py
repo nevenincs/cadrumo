@@ -758,6 +758,19 @@ def collect_snapshot_ref_ids(
         source_ids.update(evolution.source_refs)
     for predicate in revision.verification_predicates:
         legal_ids.update(predicate.legal_refs)
+    # Applicability rules ground WHO the modelo applies to, and they were the one
+    # grounded record kind this walk omitted. The snapshot still CARRIED the
+    # rules, so `snapshot.legal` could not resolve the article a rule cites:
+    # modelo 130's `m130-seed` names `trlirnr-rdleg-5-2004:art-2`, the provision
+    # deciding whether a non-resident files at all, and a consumer resolving that
+    # rule's grounding through the snapshot found a dangling id. Nineteen
+    # revisions across eight modelos were affected.
+    #
+    # Legal-only, beside the verification predicates: an applicability rule
+    # carries `legal_refs` and no `source_refs`, so it cannot join the flat
+    # grounded-record walk below.
+    for rule in revision.applicability:
+        legal_ids.update(rule.legal_refs)
     flat_records = (
         revision.casillas,
         revision.formulas,
