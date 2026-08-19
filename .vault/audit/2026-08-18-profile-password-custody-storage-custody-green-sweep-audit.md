@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:94db200be22adf73c0f4d59952ac4342341d392ba74566183958e9c40a9b37a0'
+body_hash: 'sha256:55d3ab88b6d9feca31e836dded2c7b082eeb3330f9f370f9dd5a7a75cd4c3800'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -312,6 +312,41 @@ This is the most safety-critical persistence in the application -- these
 revisions carry filing evidence and casilla provenance -- so it wants a
 deliberate decision about retry and derived-write rebuilding rather than the
 mechanical port that fitted the other singletons.
+
+### Cross-profile isolation is structural, and that is the finding
+
+The multiuser question splits in two, and only one half was a defect. The
+lost-update half was real and is fixed across the singleton catalogues. The
+ISOLATION half -- can one profile's session reach another profile's rows --
+turns out to be enforced by construction, and it is worth recording as a
+positive result because a surface reading of the code suggests otherwise.
+
+Fourteen production sites hand a caller-supplied bucket id to the bucket-scoped
+repository resolver. That looks like fourteen chances to read the wrong
+profile. It is not. Both resolvers funnel through one storage-runtime object
+whose repository accessor requires readiness and a current active session
+first, and readiness raises a route-mismatch the moment the requested bucket
+differs from the session's. A caller cannot obtain a repository for a profile
+the active session does not serve, no matter which id it passes, because the
+check sits at the single point every path crosses rather than in each caller.
+
+The one carve-out is narrow and safe: a synthetic session id used by test
+fixtures skips the mismatch comparison. It is a bare word, not a UUID, and
+every real profile id is a UUID, so it cannot collide with a real profile.
+
+The custody half of the same boundary is covered independently -- one profile's
+password envelope and one profile's recovery artifact each refuse to open
+another's capsule through the real unlock and restore authorities.
+
+What remains is coverage-shaped rather than security-shaped, and should not be
+described as a hole. A table of runtime repositories asserts each refuses both
+an absent session and a route mismatch, and that table is hand-maintained with
+no completeness gate: two profile-scoped stores, the LLM run telemetry and the
+LLM consent ledger, do not appear in it. They are protected anyway, because
+protection is structural -- they are untested, not unguarded. A completeness
+gate deriving the expected set from the resolver's consumers would close the
+difference between "we tested the ones we listed" and "we tested every one that
+exists".
 
 ## Recommendations
 
