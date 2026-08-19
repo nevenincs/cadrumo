@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:e6df5f0d4e753bfd17cadcf3a1c1be1765974b8e6131a258648c74f762a71862'
+body_hash: 'sha256:0198201a27509715a89f45da3a41ec604bde86c3639ee58e7961dff3a8fe9136'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5462,3 +5462,43 @@ different revision and a separate question rather than a residue of this one.
 written and did not touch 2024-hasta; waiting for them to stop, then applying
 their own template rather than inventing a different correction, is what made the
 second half safe to do. Their 2023 revision was the specification.
+
+### modelo 714's four remaining revisions verify and are stamped
+
+**Forty-nine revisions carry a stamp.** Modelo 714's 2022, 2023, 2024 and 2025
+joined its already-stamped 2021, and its own gate module goes to 24 passed with
+nothing failing -- sixteen of those had been the `pending_review` refusal.
+
+They were blocked by one over-tight character in a rule of mine. The
+page-numbered pairing matched the number ANCHORED at the end of a sheet identity,
+and modelo 714 names its sheets `714-04 Patrimonio` -- the number sits in the
+middle. Matching it as a bounded number anywhere in the identity, still requiring
+exactly one candidate so the bijection holds, reaches them.
+
+**The verification here is unusually strong and worth naming as a technique.**
+The pairing was printed and read before any stamp, as always, but modelo 714
+offers an independent check the earlier modelos did not: every record's LAYOUT
+field count equals its paired sheet's DESIGN field count, on all eleven records.
+
+```
+page-01  64 / 64      page-06   98 / 98
+page-02 132 / 132     page-07  125 / 125
+page-03 201 / 201     page-08  106 / 106
+page-04 193 / 193     page-09   38 / 38
+page-05 194 / 194     page-10   33 / 33
+                      ingreso-devolucion 17 / 17
+```
+
+A crossed pairing would have to match two sheets with identical field counts to
+survive that, and 04 against 05 -- the two the rule had to separate -- differ by
+exactly one field. Uncovered DATA is zero on every record.
+
+**Two things were left alone this tick, both for the stated reason.** Modelo 303
+was written to five times in the preceding quarter hour, so its 2022 manifest
+drift stays untouched; that drift is a different class from the one just closed
+-- boxes 47 and 48 ARE in the 2022 design and ARE declared, so it is a
+calculation-closure question rather than a design-absence one. And an authority
+load mid-tick briefly reported two failures that were clean on the next run: a
+peer was writing across `legal/`, modelo 190 and modelo 303 at that moment. A
+measurement taken while someone else is saving is not a finding, and re-running
+is what distinguishes them.
