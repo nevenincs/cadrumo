@@ -504,11 +504,24 @@ def _real_authorities(tree: _GeneratedTree):
 #: layout can satisfy that gate against a real design, and no bundled design is
 #: small enough to be covered by a toy.
 #:
-#: Modelo 202's 2019 tree is used instead because it is ENROLLED in the
-#: generated-tree drift gate, so its real diseño and real semantic map are
-#: already proven to render a complete, valid tree. It is also the smallest
-#: enrolled candidate at 95 design fields across two records.
-_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P")
+#: Modelo 184 is used instead because it is ENROLLED in the generated-tree drift
+#: gate, so its real diseño and real semantic map are already proven to render a
+#: complete, valid tree. It also carries NO supporting modelo and exactly ONE
+#: revision, so the isolated candidate needs neither a staged neighbour nor
+#: sibling pruning -- modelo 202, the first choice, folds in modelo 200 and the
+#: candidate root must contain exactly the target modelo.
+_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A")
+
+
+
+def _isolated_render_profile():
+    """The REAL render profile for the isolated tree, and its source evidence.
+
+    Validation checks the profile's design identity against the tree's, so the
+    synthetic wire profile cannot be passed alongside a real generated tree.
+    """
+    _joined, _map, _transport, render_profile, evidence = _real_authorities(_ISOLATED_TREE)
+    return render_profile, evidence
 
 
 def _write_isolated_generated_authority_tree(
@@ -570,15 +583,15 @@ def test_generated_tree_validation_requires_real_loader_and_authority_selection(
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
 
     assert validated.target == context.target
     assert validated.layout == rendered.layout
     assert validated.provenance_manifest == rendered.provenance_manifest
-    assert validated.snapshot.modelo.id == "130"
-    assert validated.snapshot.revision.id == "2025"
+    assert validated.snapshot.modelo.id == _ISOLATED_TREE.modelo
+    assert validated.snapshot.revision.id == _ISOLATED_TREE.revision
     assert validated.snapshot.revision.export_layouts == (rendered.layout,)
 
 
@@ -598,8 +611,8 @@ def test_generated_tree_validation_refuses_partial_or_non_generated_export_sibli
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
@@ -625,8 +638,8 @@ legal_refs = ["rd-439-2007:art-110"]
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
 
@@ -681,8 +694,8 @@ def test_generated_tree_validation_refuses_stale_sibling_provenance(m130_inspect
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
 
@@ -701,8 +714,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     with pytest.raises(RegistryValidationError, match="'303'"):
@@ -714,8 +727,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     with pytest.raises(RegistryValidationError, match="'2026'"):
@@ -727,16 +740,16 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     manifest_path = (
         context.registry_root
         / "modelos"
-        / "200"
+        / _ISOLATED_TREE.modelo
         / "revisions"
-        / "2025"
+        / _ISOLATED_TREE.revision
         / "export"
         / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     )
@@ -750,8 +763,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
 

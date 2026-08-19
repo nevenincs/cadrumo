@@ -26,6 +26,8 @@ from ..pipeline._tree_check import (
     check_generated_export_tree,
 )
 from .test_export_tree import (
+    _ISOLATED_TREE,
+    _isolated_render_profile,
     _wire_evidence,
     _wire_profile,
     _write_isolated_generated_authority_tree,
@@ -84,7 +86,7 @@ def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None
 
 def _profile() -> ExportTreeTransportProfile:
     return ExportTreeTransportProfile(
-        modelo="130",
+        modelo=_ISOLATED_TREE.modelo,
         # The isolated tree is built from modelo 130's 2019 diseño, so the
         # transport profile must name that epoch or the two disagree.
         design_epoch="2019",
@@ -108,8 +110,8 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_insp
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
 
     assert _tree_hashes(target_export_root) == before
@@ -118,7 +120,7 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_insp
     assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(
         checked.candidate.layout,
     )
-    candidate_export_root = context.validation.registry_root / "modelos" / "130" / "revisions" / "2025" / "export"
+    candidate_export_root = context.validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
     assert _tree_hashes(candidate_export_root) == before
 
 
@@ -201,7 +203,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
             semantic_map=semantic_map,
             transport_profile=profile,
             render_profile=render_profile,
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     _require_the_defect_was_reached(refusal.value, defect)
@@ -211,7 +213,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
 def test_check_refuses_candidate_reuse_without_changing_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A prior candidate output cannot become a check input or a silent green path."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
-    candidate_export_root = context.validation.registry_root / "modelos" / "130" / "revisions" / "2025" / "export"
+    candidate_export_root = context.validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
     candidate_export_root.mkdir()
     before = _tree_hashes(target_export_root)
 
@@ -221,8 +223,8 @@ def test_check_refuses_candidate_reuse_without_changing_published_hashes(m130_in
             joined=joined,
             semantic_map=semantic_map,
             transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     assert _tree_hashes(target_export_root) == before
@@ -236,7 +238,7 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspectio
     candidate_modelos_root.rename(redirected_modelos_root)
     candidate_modelos_root.symlink_to(redirected_modelos_root, target_is_directory=True)
     before = _tree_hashes(target_export_root)
-    redirected_export_root = redirected_modelos_root / "130" / "revisions" / "2025" / "export"
+    redirected_export_root = redirected_modelos_root / "130" / "revisions" / _ISOLATED_TREE.revision / "export"
 
     with pytest.raises(RegistryValidationError, match="candidate revision root must not be a link"):
         check_generated_export_tree(
@@ -244,8 +246,8 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspectio
             joined=joined,
             semantic_map=semantic_map,
             transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     assert not redirected_export_root.exists()
