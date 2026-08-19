@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:f0c66ada3c18575802799e8b36dfdbb1fa67dee2ca6ac33e6aee3e09c641cd51'
+body_hash: 'sha256:b395cf0b5b89113f7d5c0ff2d3de4961c1bb74dfdbe90419a9e65407ebc3e96d'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1200,6 +1200,51 @@ improvement; the set difference showed zero failures appearing that were not
 already present, and nothing was claimed about the other direction. The empty
 difference is the property that matters, and it is the only one this lane can
 support.
+
+### The fourth false green, and the decision to stop hunting shapes
+
+A fourth blind spot surfaced immediately after the third was fixed:
+`_build_participation_writes` reads `index =
+participation_index_repository.load(transaction_id)`, derives `updated =
+upsert_transaction_participation(index, participation)`, and writes `updated`.
+The detector taints names bound DIRECTLY from a load, so taint never reached
+the write through the intermediate. Green again.
+
+Four detectors, four live instances passed over:
+
+| detector | missed |
+|---|---|
+| line-oriented `grep` | calls spanning several lines |
+| `save(append_bucket_event(...))` syntactic match | appends bound to a variable first |
+| `ast.Assign` tracking | `catalogue: T = repo.load()` |
+| direct-binding taint | taint through an intermediate assignment |
+
+Each fix closed the instance in front of it and left the method intact, which
+is why the method is the finding. A detector that hunts a SHAPE can only cover
+the shapes already imagined, and this class kept producing new ones faster than
+the detector could learn them. Continuing would have meant a fifth pass with
+the same structure and the same expected outcome.
+
+So the approach changed. `test_every_composing_write_is_declared.py` does not
+search for the defect: it ENUMERATES every composing write outside the
+repository layer and requires each to pass `expected_revision_id` or be listed.
+Eighteen are listed. A nineteenth cannot appear silently regardless of what
+binding form it uses, because the thing being matched is now a call to a named
+method -- unambiguous -- rather than an inference about where its argument came
+from.
+
+The list is an inventory, not a clearance, and the module says so in its own
+docstring. It holds three genuinely different situations and only the first is
+closed: a document never read has no revision to assert; a document arriving as
+a PARAMETER has one that belongs to its caller; a per-record row is not a
+singleton and narrows the exposure to two writers touching the same record. Six
+entries read "unclassified: not yet traced to a read site". That is deliberate.
+Borrowing a plausible neighbouring reason would have made the inventory read as
+fully reviewed, and this campaign has already recorded what confident
+mis-classification costs.
+
+The residual exposure is therefore now VISIBLE rather than unknown, which is
+the honest description of what changed. It is not fixed.
 
 ## Recommendations
 
