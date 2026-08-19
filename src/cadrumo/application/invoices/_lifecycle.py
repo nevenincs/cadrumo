@@ -43,6 +43,7 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.iva import IvaCategory
+from ._catalogue_mutation import mutate_catalogue
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -124,18 +125,32 @@ def remove_catalogue_invoice(
     :class:`InvoiceCatalogueRepository`; no parallel write path is introduced.
     """
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    catalogue = repo.load()
-    invoice = resolve_catalogue_invoice(catalogue, invoice_id)
-    if invoice.linked_transaction_ids:
-        linked = ", ".join(invoice.linked_transaction_ids)
-        raise InvoiceValidationError(
-            translated_message="application.invoices.lifecycle.errors.remove_linked_invoice",
-            context={"invoice_id": invoice.invoice_id, "linked_transaction_ids": linked},
-        )
-    remaining = {key: value for key, value in catalogue.invoices.items() if key != invoice.invoice_id}
-    new_catalogue = InvoiceCatalogue.model_validate({"invoices": remaining})
-    repo.save(new_catalogue)
-    return CatalogueInvoiceRemoveResult(invoice=invoice, catalogue=new_catalogue)
+    resolved: list[Invoice] = []
+
+    def _remove(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
+        """Drop the resolved invoice, refusing one that still carries links."""
+        invoice = resolve_catalogue_invoice(catalogue, invoice_id)
+        if invoice.linked_transaction_ids:
+            linked = ", ".join(invoice.linked_transaction_ids)
+            raise InvoiceValidationError(
+                translated_message="application.invoices.lifecycle.errors.remove_linked_invoice",
+                context={"invoice_id": invoice.invoice_id, "linked_transaction_ids": linked},
+            )
+        resolved.clear()
+        resolved.append(invoice)
+        remaining = {key: value for key, value in catalogue.invoices.items() if key != invoice.invoice_id}
+        return InvoiceCatalogue.model_validate({"invoices": remaining})
+
+    # Guarded, because removing ONE invoice rewrites the whole singleton row: an
+    # invoice created while this removal was in flight would be discarded by it,
+    # silently and for an operator who was only deleting something else. The
+    # resolution and the linked-transaction refusal run inside the unit of work
+    # so a retry re-judges them against the catalogue the write lands on -- a
+    # prefix that was unambiguous a moment ago may not be after a concurrent
+    # create, and refusing then is correct where deleting the wrong invoice is
+    # not.
+    new_catalogue = mutate_catalogue(repo, _remove)
+    return CatalogueInvoiceRemoveResult(invoice=resolved[0], catalogue=new_catalogue)
 
 
 class CatalogueInvoicePatch(BaseModel):
@@ -236,29 +251,42 @@ def update_catalogue_invoice(
     from ._creation import emit_catalogue_invoice_event
 
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    catalogue = repo.load()
-    existing = resolve_catalogue_invoice(catalogue, invoice_id)
+    written: list[Invoice] = []
 
-    changes = patch.model_dump(exclude_unset=True, exclude_none=True)
-    if not changes:
-        raise InvoiceValidationError(
-            translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
-            context={"invoice_id": existing.invoice_id},
-        )
+    def _apply(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
+        """Re-resolve, re-patch and re-validate against the catalogue being written."""
+        existing = resolve_catalogue_invoice(catalogue, invoice_id)
 
-    payload = existing.model_dump()
-    payload.update(changes)
-    # Carried explicitly, not by accident: the links are why this aggregate is
-    # the reconciliation authority, and an update that dropped them would sever
-    # a bidirectional binding the operator never asked to break.
-    payload["linked_transaction_ids"] = existing.linked_transaction_ids
-    payload["updated_at"] = occurred_at or now()
-    corrected = Invoice.model_validate(payload)
+        changes = patch.model_dump(exclude_unset=True, exclude_none=True)
+        if not changes:
+            raise InvoiceValidationError(
+                translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
+                context={"invoice_id": existing.invoice_id},
+            )
 
-    updated = dict(catalogue.invoices)
-    updated[corrected.invoice_id] = corrected
-    new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
-    repo.save(new_catalogue)
+        payload = existing.model_dump()
+        payload.update(changes)
+        # Carried explicitly, not by accident: the links are why this aggregate
+        # is the reconciliation authority, and an update that dropped them would
+        # sever a bidirectional binding the operator never asked to break.
+        payload["linked_transaction_ids"] = existing.linked_transaction_ids
+        payload["updated_at"] = occurred_at or now()
+        corrected = Invoice.model_validate(payload)
+
+        written.clear()
+        written.append(corrected)
+        updated = dict(catalogue.invoices)
+        updated[corrected.invoice_id] = corrected
+        return InvoiceCatalogue.model_validate({"invoices": updated})
+
+    # Guarded: correcting one invoice rewrites the whole singleton row, so an
+    # invoice created in the interim would be discarded by the correction. The
+    # patch is re-applied to the CURRENT stored record on a retry rather than to
+    # the one first read, which matters because the correction is a merge onto
+    # stored values -- replaying a merge computed against a superseded record
+    # would silently revert whatever changed in between.
+    new_catalogue = mutate_catalogue(repo, _apply)
+    corrected = written[0]
     event_ids = emit_catalogue_invoice_event(
         invoice=corrected,
         bucket_id=bucket_id,
