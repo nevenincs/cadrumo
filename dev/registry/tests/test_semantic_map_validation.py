@@ -297,6 +297,8 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
     [
         (
             _entry(
+                legal_ref=_M130_LEGAL_REF,
+                source_ref=_M130_DESIGN_REF,
                 row=14,
                 ordinal=1,
                 field_id="generated.casilla.one",
@@ -307,6 +309,8 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
         ),
         (
             _entry(
+                legal_ref=_M130_LEGAL_REF,
+                source_ref=_M130_DESIGN_REF,
                 row=14,
                 ordinal=1,
                 field_id="generated.binding.one",
@@ -317,6 +321,8 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
         ),
         (
             _entry(
+                legal_ref=_M130_LEGAL_REF,
+                source_ref=_M130_DESIGN_REF,
                 row=14,
                 ordinal=1,
                 field_id="generated.literal.one",
@@ -327,6 +333,8 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
         ),
         (
             _entry(
+                legal_ref=_M130_LEGAL_REF,
+                source_ref=_M130_DESIGN_REF,
                 row=14,
                 ordinal=1,
                 field_id="generated.literal.one",
@@ -457,7 +465,7 @@ def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(m130_ins
         ),
     )
     exception = SemanticMapAnomalyException(
-        source_ref="aeat-dr-200-2025",
+        source_ref=_M130_DESIGN_REF,
         source_sha256=source_sha256,
         category="source_anomaly",
         reason="Official workbook records a reviewable source anomaly.",
