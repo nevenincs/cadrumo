@@ -106,15 +106,21 @@ def register_secure_object_schema_upgrader(
     applies that equality, so a forgotten re-stamp surfaces as a loud refusal on
     first read rather than an ambiguous payload reaching a tax calculation.
 
-    The obligation is currently assertable only vacuously: no hop is registered
-    while every namespace sits at its from-birth version, and fabricating an
-    old-shape payload to prove it would invent a shape nothing ever wrote, which
-    the pre-release compatibility regime forbids. The first real hop is
-    therefore the first executable proof, and the change that lands it owes
-    three things in the same commit: the upgrader, a committed pre-bump
-    serialized fixture, and a restorability test that loads those bytes through
-    the real production read path and asserts the inner version arrives at the
-    bumped value.
+    This paragraph used to say the obligation was assertable only vacuously
+    because no hop was registered. That is no longer true of this module: two
+    namespaces register a real one-hop upgrader at the bottom of this file,
+    landed alongside their own version bumps. The module docstring is the
+    accurate account of why they are there and of what the pre-release regime
+    does and does not require of them; a reader who trusted this paragraph
+    would conclude the registry was empty while importing it populated.
+
+    What still holds is what a FUTURE hop owes, and it is the part worth
+    keeping: the change that lands one owes three things in the same commit --
+    the upgrader, a committed pre-bump serialized fixture, and a restorability
+    test that loads those bytes through the real production read path and
+    asserts the inner version arrives at the bumped value. Fabricating an
+    old-shape payload for a hop nothing needs would invent a shape nothing ever
+    wrote, which the pre-release regime forbids.
 
     Raises:
         StorageValidationError: When an upgrader for the hop is already
