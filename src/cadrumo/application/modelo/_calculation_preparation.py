@@ -74,6 +74,11 @@ class PreparedCalculation:
     """
 
     work_units: WorkUnitCatalogue
+    #: The revision ``work_units`` was read at. Carried because the persistence
+    #: this feeds composes that catalogue into a co-commit, which cannot use a
+    #: self-committing mutation: without the revision its batch rewrites the
+    #: whole singleton row over a unit another caller created in between.
+    work_units_revision_id: str
     work_unit: WorkUnit
     snapshot: RegistrySnapshot
     casilla_inputs: Mapping[CasillaId, Decimal]
@@ -116,7 +121,7 @@ def prepare_calculation(
         :class:`RegistrySnapshot`, validated inputs, period date, and
         :class:`ResolvedCalculationChannels`.
     """
-    work_units = work_unit_repository.load()
+    work_units, work_units_revision_id = work_unit_repository.load_revisioned()
     work_unit = _load_work_unit_for_calculation(
         work_units,
         work_unit_id=work_unit_id,
@@ -200,6 +205,7 @@ def prepare_calculation(
     )
     return PreparedCalculation(
         work_units=work_units,
+        work_units_revision_id=work_units_revision_id,
         work_unit=work_unit,
         snapshot=snapshot,
         casilla_inputs=casilla_inputs,
