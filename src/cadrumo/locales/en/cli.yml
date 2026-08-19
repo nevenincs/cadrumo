@@ -646,6 +646,7 @@ cli:
           regularizacion_bienes_inversion: capital-goods adjustment
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
+          withholding296_perceptor: withholding-declaration perceptor
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
         relation_input_guidance: Some bindings below are fed by registry relations
@@ -1647,6 +1648,10 @@ cli:
           fields or has unexpected ones.
         secrets_stdin_too_large: The --secrets-stdin payload exceeds the maximum allowed
           size.
+      recovery_words_confirm: I have written it down
+      recovery_words_heading: Write down this recovery phrase
+      recovery_words_warning: It is shown only once. Anyone with this phrase can open
+        the profile without the passphrase.
       secrets_fd_help: File descriptor to read machine secrets from.
       secrets_stdin_help: Read the secrets as one bounded JSON object from standard
         input instead of prompting.
@@ -1841,6 +1846,9 @@ cli:
           this login.
         session_not_persisted: No usable OS keychain found, so the session cannot
           be saved; this login applies to the current command only.
+      passphrase_channel_absent: No passphrase channel is available. Run this verb
+        at a terminal, pass --secrets-stdin or --secrets-fd, or set CADRUMO_SECRET_PASSPHRASE
+        for an unattended run.
       passphrase_prompt: 'Profile passphrase: '
       refusal:
         abandoned: Login was cancelled; no profile was opened.
@@ -2118,69 +2126,6 @@ cli:
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
-        already_exists: A sandbox named %{label} already exists. Pick a different
-          name or discard the existing one first.
-        archive_active_profile: Sandbox %{name} is the active profile; switch to another
-          profile before archiving it.
-        archive_dry_run_help: Preview the archive without moving the sandbox out of
-          the live surface.
-        archive_help: Move a sandbox into reversible dormancy without erasing it.
-        archive_name_help: Sandbox name (without the prefix).
-        archive_requires_yes: Archiving a sandbox is a state transition. Re-run 'aeat
-          config profile sandbox archive %{name} --yes' to confirm.
-        archive_restorable_info: The sandbox %{name} is now dormant and can be restored.
-        archive_yes_help: Confirm the archive.
-        create_active_info: The sandbox is now the ACTIVE profile; every command runs
-          against it until you switch away or discard it.
-        create_from_profile_help: Seed the sandbox with an existing profile's facts
-          (read-only source).
-        create_help: Fork a new isolated sandbox bucket and activate it.
-        create_name_help: Sandbox name.
-        discard_active_profile: Sandbox %{name} is the active profile; switch to another
-          profile before discarding it.
-        discard_dry_run_help: Preview what the discard would remove without removing
-          anything.
-        discard_help: Permanently erase a sandbox bucket.
-        discard_name_help: Sandbox name (without the prefix).
-        discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
-          to discard a real profile.'
-        discard_requires_yes: Discarding a sandbox is destructive. Re-run 'aeat config
-          profile sandbox discard %{name} --yes' to confirm.
-        discard_yes_help: Confirm the destructive erase.
-        help: Run experiments in an isolated, discardable bucket that never touches
-          main profile state.
-        list_help: List every sandbox bucket.
-        merge_help: Promote a sandbox's ledger and/or modelo records into another
-          profile.
-        merge_into_help: Target profile name the sandbox's records are promoted into.
-        merge_name_help: Sandbox name (without the prefix).
-        merge_promoted_info: Promoted %{scope} from %{source} into %{target}.
-        merge_refused: Sandbox {name} cannot be merged into {into} because the merge
-          preconditions are not satisfied.
-        merge_requires_yes: Merging sandbox {name} into {into} with scope {scope}
-          changes state and requires explicit confirmation.
-        merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
-        merge_target_ambiguous: Profile {into} is ambiguous; identify the target by
-          its bucket ID.
-        merge_target_not_found: No live profile named {into} exists as a merge target.
-        merge_yes_help: Confirm promoting sandbox data.
-        prune_dry_run_help: Preview which sandboxes would be discarded without discarding
-          them.
-        prune_help: Discard every sandbox bucket at once.
-        prune_requires_yes: Pruning every sandbox is destructive. Re-run 'aeat config
-          profile sandbox prune --yes' to confirm.
-        prune_skipped_active_info: Skipped the active sandbox %{names}; switch to
-          another profile first to discard it.
-        prune_yes_help: Confirm discarding every sandbox.
-        restore_help: Bring an archived sandbox back to active status.
-        restore_name_help: Sandbox name (without the prefix).
-        restore_not_archived: '%{name} is not archived; there is nothing to restore.'
-        source_not_found: No live profile named %{name} to seed the sandbox from.
-        unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
-          list'' to see registered sandboxes.'
-        usage_help: Report the on-disk footprint of one sandbox, or every sandbox
-          at once.
-        usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
       sar_catalogue_info: 'This archive holds the personal-data categories listed
         in the data_categories field of this response. It is not everything held for
         the profile: the categories in excluded_data_categories stay in encrypted

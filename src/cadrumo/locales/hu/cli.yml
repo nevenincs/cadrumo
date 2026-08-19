@@ -697,6 +697,7 @@ cli:
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
           regularizacion_prorrata: prorrata-korrekció
           retencion: levonás
+          withholding296_perceptor: visszatartás-bevallás kedvezményezettje
         relation_input_channel: "%{binding_id}\ta(z) %{relation_id} reláció tölti\
           \ fel\thasználja: --relation %{relation_id}=VALUE"
         relation_input_guidance: Az alábbi kötések egy részét a registry-relációk
@@ -1754,6 +1755,10 @@ cli:
           mezők, vagy váratlanokat tartalmaz.
         secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
           maximális méretet.
+      recovery_words_confirm: Leírtam
+      recovery_words_heading: Írd le ezt a helyreállítási kifejezést
+      recovery_words_warning: Csak egyszer jelenik meg. Akinek megvan ez a kifejezés,
+        jelszó nélkül megnyithatja a profilt.
       secrets_fd_help: Fájlleíró a gépi titkok olvasásához.
       secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
         a szabványos bemenetről, kérdés helyett.
@@ -1972,6 +1977,9 @@ cli:
           a bejelentkezés előtt.
         session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
           nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
+      passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt a parancsot
+        terminálban, add meg a --secrets-stdin vagy --secrets-fd kapcsolót, vagy állítsd
+        be a CADRUMO_SECRET_PASSPHRASE változót a felügyelet nélküli futtatáshoz.
       passphrase_prompt: 'Profil jelszava: '
       refusal:
         abandoned: A bejelentkezés megszakadt; egyetlen profil sem nyílt meg.
@@ -2262,74 +2270,6 @@ cli:
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
-        already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
-          vagy előbb dobja el a meglévőt.
-        archive_active_profile: A(z) %{name} sandbox az aktív profil; válts másik
-          profilra, mielőtt archiválnád.
-        archive_dry_run_help: Előnézetet ad az archiválásról anélkül, hogy a sandboxot
-          eltávolítaná az aktív felületről.
-        archive_help: A sandboxot visszafordítható nyugalmi állapotba helyezi anélkül,
-          hogy törölné.
-        archive_name_help: A sandbox neve (előtag nélkül).
-        archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra:
-          ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
-        archive_restorable_info: A(z) %{name} sandbox most nyugalmi állapotban van,
-          és visszaállítható.
-        archive_yes_help: Megerősíti az archiválást.
-        create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
-          fut, amíg át nem vált vagy el nem dobja.
-        create_from_profile_help: A sandbox feltöltése egy meglévő profil adataival
-          (a forrás profilt csak olvassa).
-        create_help: Új, elkülönített sandbox létrehozása és aktiválása.
-        create_name_help: A sandbox neve.
-        discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
-          profilra, mielőtt eldobná.
-        discard_dry_run_help: Előnézet arról, hogy mit távolítana el a törlés, anélkül,
-          hogy bármit is eltávolítana.
-        discard_help: Egy sandbox véglegesen törlése.
-        discard_name_help: A sandbox neve (előtag nélkül).
-        discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
-          egy valódi profil eldobását.'
-        discard_requires_yes: 'A sandbox eldobása destruktív. Futtassa újra: ''aeat
-          config profile sandbox discard %{name} --yes'' a megerősítéshez.'
-        discard_yes_help: A destruktív törlés megerősítése.
-        help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
-          soha nem érinti a fő profil állapotát.
-        list_help: Minden sandbox listázása.
-        merge_help: A sandbox főkönyvi tételeinek és/vagy modell nyilvántartásainak
-          beemelése egy másik profilba.
-        merge_into_help: A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.
-        merge_name_help: A sandbox neve (előtag nélkül).
-        merge_promoted_info: '%{scope} beemelve innen: %{source}, ide: %{target}.'
-        merge_refused: A(z) {name} tesztkörnyezet nem egyesíthető a(z) {into} profillal,
-          mert az egyesítés előfeltételei nem teljesülnek.
-        merge_requires_yes: A(z) {name} tesztkörnyezet {into} profilba, {scope} hatókörrel
-          történő egyesítése állapotot módosít, ezért kifejezett megerősítést igényel.
-        merge_scope_help: 'A beemelendő adatkategória: ledger, modelo vagy all.'
-        merge_target_ambiguous: A(z) {into} profil nem egyértelmű; a célhelyet a tárolóazonosítójával
-          adja meg.
-        merge_target_not_found: Nincs {into} nevű aktív profil, amely egyesítési célként
-          használható.
-        merge_yes_help: A sandbox adatainak beemelését megerősíti.
-        prune_dry_run_help: Előnézet arról, mely sandboxokat törölne, anélkül, hogy
-          törölne őket.
-        prune_help: Az összes sandbox egyszerre törlése.
-        prune_requires_yes: 'Az összes sandbox törlése visszavonhatatlan. Futtasd
-          újra: ''aeat config profile sandbox prune --yes'' a megerősítéshez.'
-        prune_skipped_active_info: Kihagyva az aktív sandbox %{names}; a törléshez
-          válts másik profilra.
-        prune_yes_help: Az összes sandbox törlésének megerősítése.
-        restore_help: Visszaállít egy archivált sandboxot aktív állapotba.
-        restore_name_help: A sandbox neve (előtag nélkül).
-        restore_not_archived: A(z) %{name} nincs archiválva; nincs mit visszaállítani.
-        source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
-          lenne.
-        unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa a ''aeat config profile
-          sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
-        usage_help: Egy homokozó (sandbox) lemezterület-használatának jelentése, vagy
-          az összesé egyszerre.
-        usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
-          jelentéséhez.
       sar_catalogue_info: 'Ez az archívum a válasz data_categories mezőjében felsorolt
         személyesadat-kategóriákat tartalmazza. Nem tartalmaz mindent, amit a profilról
         tárolunk: az excluded_data_categories kategóriái titkosított tárolóban maradnak,
