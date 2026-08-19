@@ -46,6 +46,31 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     validated_casilla_id("iva.prorrata-porcentaje"),
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
+#: Modelo 390's four exact-year revisions. The revision-span split replaced the
+#: single open-ended `2010-y-siguientes` revision with one revision per design
+#: year, each claiming exactly one bundled diseño. Tests that assert a STRUCTURAL
+#: property parametrise over all four rather than pinning one, so a property that
+#: silently stops holding in a single year is caught.
+#: Page-04 offsets for the two Regimen General regularizacion boxes, per revision.
+#: The 2024 diseno inserted "Pag. 2 bis" and grew page 4 from 378 to 854
+#: positions, so both boxes moved. Read from each year's own diseno -- the 2022
+#: sheet prints the prorrata box at 166..182 and the 2024 sheet at 642..658 --
+#: rather than pinned to one era, which is what made these cases fail for 2022
+#: and 2023 after the revision-span split exposed them.
+_M390_PAGE_04_REGULARIZACION_OFFSETS: dict[str, dict[str, int]] = {
+    "2022": {"prorrata": 166, "bienes_inversion": 149},
+    "2023": {"prorrata": 166, "bienes_inversion": 149},
+    "2024": {"prorrata": 642, "bienes_inversion": 625},
+    "2025": {"prorrata": 642, "bienes_inversion": 625},
+}
+
+
+_M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
+
+#: The most recent revision, for assertions that genuinely address one subject.
+_M390_CURRENT_REVISION = "2025"
+
+
 _M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
 _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
 _M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
@@ -154,19 +179,39 @@ def test_modelo_390_metadata_matches_orden_eha_3111_2009() -> None:
     assert "aeat-dr-390-2025" in modelo.source_refs
 
 
-def test_modelo_390_revision_period_selector_starts_at_2010() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_revision_period_selector_claims_exactly_its_own_year(revision_id: str) -> None:
+    """Each revision claims exactly the one filing year it is named for.
+
+    This asserted a single open-ended span starting 2010-01-01. The
+    revision-span split replaced that with one revision per bundled diseño year,
+    so "starts at 2010" is no longer a property of any revision; what must hold
+    now is that each one claims its own year and nothing else, which is what
+    keeps a filing year from resolving under a neighbouring year's norms.
+    """
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
-    assert revision.valid_from == date(2010, 1, 1)
-    assert revision.period_selector.year_from == 2010
+    revision = modelo.revisions[revision_id]
+    year = int(revision_id)
+    assert revision.valid_from == date(year, 1, 1)
+    assert revision.valid_to == date(year, 12, 31)
+    assert revision.period_selector.years == (year,)
     assert revision.period_selector.periods == ("0A",)
     assert revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
 
 
 def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
-    for filing_year in (2020, 2021, 2022, 2023, 2024, 2025, 2026):
+    """Each published filing year resolves to the revision that claims that year.
+
+    This iterated 2020..2026 against a single open-ended revision. The
+    revision-span split replaced it with one revision per bundled diseño year,
+    so the published years are exactly those four: 2020 and 2021 have no
+    bundled 390 design behind a revision, and 2026's diseño is not published
+    yet. The resolved id is ASSERTED against the law-determined pick, never fed
+    into resolution.
+    """
+    for filing_year in (2022, 2023, 2024, 2025):
         snapshot = _committed_snapshot("390", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-        assert snapshot.revision.id == "2010-y-siguientes"
+        assert snapshot.revision.id == str(filing_year)
 
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
@@ -183,9 +228,10 @@ def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None
     assert catalogues.sources["boe-modelo-390-2009-form"].evidence_tier == "layout_authority"
 
 
-def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_extraction_profile_legal_refs_match_target_casillas(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     assert revision.extraction_profiles, revision.id
@@ -198,30 +244,30 @@ def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> Non
     assert set(profile.legal_refs) == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
 
 
-def test_modelo_390_january_30_deadline_matches_orden_eha_3111_2009_art_8() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_january_30_deadline_matches_orden_eha_3111_2009_art_8(revision_id: str) -> None:
     """Art 8: presentación en los treinta primeros días naturales del mes de enero siguiente."""
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
+    # One window per revision, for that revision's own filing year. This listed
+    # all seven windows 2020..2026 on a single open-ended revision; after the
+    # revision-span split each revision owns exactly its own, and 2020, 2021 and
+    # 2026 have no revision to carry one.
+    year = int(revision_id)
     windows = {w.id: w for w in revision.deadline_windows}
+    assert set(windows) == {f"modelo-390-{year}-0a"}
 
-    expected = {
-        "modelo-390-2020-0a": (date(2021, 1, 1), date(2021, 1, 30)),
-        "modelo-390-2021-0a": (date(2022, 1, 1), date(2022, 1, 30)),
-        "modelo-390-2022-0a": (date(2023, 1, 1), date(2023, 1, 30)),
-        "modelo-390-2023-0a": (date(2024, 1, 1), date(2024, 1, 30)),
-        "modelo-390-2024-0a": (date(2025, 1, 1), date(2025, 1, 30)),
-        "modelo-390-2025-0a": (date(2026, 1, 1), date(2026, 1, 30)),
-        "modelo-390-2026-0a": (date(2027, 1, 1), date(2027, 1, 30)),
-    }
-
-    for window_id, (opens, closes) in expected.items():
-        assert windows[window_id].opens_on == opens
-        assert windows[window_id].closes_on == closes
+    window = windows[f"modelo-390-{year}-0a"]
+    assert window.filing_year == year
+    # Art. 8: the thirty first natural days of the January FOLLOWING the ejercicio.
+    assert window.opens_on == date(year + 1, 1, 1)
+    assert window.closes_on == date(year + 1, 1, 30)
 
 
-def test_modelo_390_live_cross_references_are_read_only() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_live_cross_references_are_read_only(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-390-static-documentation"]
@@ -236,14 +282,19 @@ def test_modelo_390_live_cross_references_are_read_only() -> None:
     assert {"presentation", "signing", "amendment", "payment"}.issubset(forbidden)
 
 
-def test_modelo_390_construct_links_filing_workbook_parity() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_construct_links_filing_workbook_parity(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     construct = next(c for c in revision.constructs if c.id == _M390_CONSTRUCT_ID)
     assert "modelo-390-filing" in construct.application_links
     assert "modelo-390-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-390-anual",)
-    assert "modelo-390-dr-2025" in construct.workbook_parity_refs
+    # Each revision carries ITS OWN year's workbook parity ref. Pinning
+    # `modelo-390-dr-2025` asserted the newest revision's ref on all four, which
+    # is the same era-pinning that the revision-span split exposed elsewhere in
+    # this module.
+    assert f"modelo-390-dr-{revision_id}" in construct.workbook_parity_refs
     assert "ley-37-1992:art-161" in construct.legal_refs
     assert "ley-37-1992:art-104" in construct.legal_refs
     assert "ley-37-1992:art-105" in construct.legal_refs
@@ -251,9 +302,10 @@ def test_modelo_390_construct_links_filing_workbook_parity() -> None:
     assert "ley-37-1992:art-110" in construct.legal_refs
 
 
-def test_modelo_390_construct_requires_recargo_grounding() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_construct_requires_recargo_grounding(revision_id: str) -> None:
     modelo, catalogues = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     constructs = tuple(
         construct.model_copy(
             update={"legal_refs": tuple(ref for ref in construct.legal_refs if ref != "ley-37-1992:art-161")},
@@ -275,7 +327,8 @@ def test_modelo_390_construct_requires_recargo_grounding() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
-def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revision_id: str) -> None:
     """Modelo 390 declares the same IVA flow-direction binding pattern as
     Modelo 303 — the annual resumen aggregates the same flows over the
     full ejercicio rather than per quarter.
@@ -294,7 +347,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
     never recorded, which a rate-specific binding deliberately drops.
     """
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-390-iva-repercutido-general-cuota",
@@ -381,10 +434,11 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
     }
 
 
-def test_modelo_390_declares_annual_reconciliation_predicates() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_declares_annual_reconciliation_predicates(revision_id: str) -> None:
     """The annual result totals are blocked when they drift from the four 303s."""
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     casilla_ids = {casilla.id for casilla in revision.casillas}
     predicates = {predicate.predicate_id: predicate for predicate in revision.verification_predicates}
 
@@ -397,9 +451,10 @@ def test_modelo_390_declares_annual_reconciliation_predicates() -> None:
         assert set(str(ref) for ref in predicate.legal_refs) == legal_refs
 
 
-def test_modelo_390_declares_annual_compensation_result_fields() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     relations = {rel.id: rel for rel in revision.relations}
@@ -437,9 +492,10 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     assert requirement.dependency_treatment == "direct_annual_settlement"
 
 
-def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_declares_prorrata_regularizacion_annual_field(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     export_fields = {
@@ -452,7 +508,7 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
     assert casilla.binding is None
     assert "ley-37-1992:art-104" in casilla.legal_refs
     assert "ley-37-1992:art-105" in casilla.legal_refs
-    assert casilla.export_refs == ("modelo-390-page-04-casilla-522",)
+    assert casilla.export_refs == ("modelo-390-page-04-casilla-regularizacion-prorrata-definitiva",)
 
     binding = bindings["modelo-390-prorrata-regularizacion-anual"]
     assert binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
@@ -468,16 +524,17 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
     assert "ley-37-1992:art-104" in binding.legal_refs
     assert "ley-37-1992:art-105" in binding.legal_refs
 
-    field = export_fields["modelo-390-page-04-casilla-522"]
+    field = export_fields["modelo-390-page-04-casilla-regularizacion-prorrata-definitiva"]
     assert field.casilla_id == _M390_PRORRATA_REGULARIZACION_CASILLA
-    assert field.offset == 642
+    assert field.offset == _M390_PAGE_04_REGULARIZACION_OFFSETS[revision_id]["prorrata"]
     assert field.length == 17
     assert field.signed is True
 
 
-def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     export_fields = {
@@ -490,7 +547,7 @@ def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> N
     assert casilla.binding == "modelo-390-bienes-inversion-regularizacion-casilla-63"
     assert "ley-37-1992:art-107" in casilla.legal_refs
     assert "ley-37-1992:art-110" in casilla.legal_refs
-    assert casilla.export_refs == ("modelo-390-page-04-casilla-63",)
+    assert casilla.export_refs == ("modelo-390-page-04-casilla-regularizacion-bienes-inversion",)
     assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
 
     binding = bindings["modelo-390-bienes-inversion-regularizacion-casilla-63"]
@@ -504,23 +561,25 @@ def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> N
     assert "ley-37-1992:art-107" in binding.legal_refs
     assert "ley-37-1992:art-110" in binding.legal_refs
 
-    field = export_fields["modelo-390-page-04-casilla-63"]
+    field = export_fields["modelo-390-page-04-casilla-regularizacion-bienes-inversion"]
     assert field.casilla_id == _M390_BIENES_INVERSION_REGULARIZACION_CASILLA
-    assert field.offset == 625
+    assert field.offset == _M390_PAGE_04_REGULARIZACION_OFFSETS[revision_id]["bienes_inversion"]
     assert field.length == 17
     assert field.signed is True
 
 
-def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula(revision_id: str) -> None:
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     formula = next(item for item in revision.formulas if item.target_casilla_id == _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
 
     assert _M390_PRORRATA_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))
     assert _M390_BIENES_INVERSION_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))
 
 
-def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
+@pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
+def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(revision_id: str) -> None:
     from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
     from .. import (
         IvaLedgerObservation,
@@ -528,7 +587,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
     )
 
     modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     # Simulate annual aggregation across four quarters
     quarterly_iva_amounts = [Decimal("210"), Decimal("315"), Decimal("420"), Decimal("525")]
     observations = [
