@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:17fda54120f56ec605c29d0239c4d3f717f225e96d713d5e5bb82d4e725690c7'
+body_hash: 'sha256:708ee0acd96743e543c15c1927fa6dd5a249d25246f73d9cc2367ad55700efb0'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1392,6 +1392,48 @@ survive: blocked on cost, not capability, with the shortcut that must not be
 taken named explicitly. Deferring it is a budget decision. Taking the cheap
 route would have been a correctness one, and the inventory would have stopped
 showing it.
+
+### Driving the CLI surfaced what reading it had not
+
+The lost-update class had reached the point where every remaining site is
+enumerated, gated and budget-bound, so this pass switched to the other half of
+the brief -- operability -- and did it by DRIVING the CLI in an isolated
+storage root rather than reading the code. Two things came out of that which
+reading had not produced in many passes over the same tree.
+
+The smaller one: the JSON flag is `--format json` at the root, not a per-verb
+`--json`. Every profile read verb answers "No such option: --json". Not a
+defect, but it is the first thing an operator tries.
+
+The finding: a parse-time refusal reported `command: null` even when click had
+already resolved the command. The distinction matters and only half of it was
+honest. `aeat frobnicate` resolves nothing, and null is the truthful answer;
+`aeat config profile preflight --bogus` resolved the command and THEN rejected
+an option, with the resolution sitting on the exception's own context. The
+spine reported null while the answer was in hand.
+
+The existing resolver's docstring asserted "``None`` before any command
+resolves (an argv parse failure), so the spine's ``command`` field is honestly
+null there". That statement is true of the general case and was being applied
+to a case it does not cover -- which is the same shape as several findings
+already in this audit: a correct rule quoted about a situation it was not
+written for. The fix reads the exception's context when there is one and leaves
+null when there is not, with both directions pinned so that "always name
+something" cannot satisfy the gate.
+
+A separate investigation this pass produced NO defect, and that is worth
+recording so it is not repeated. Non-interactive profile creation enrols no
+recovery phrase, permanently -- and since the CLI contract states this CLI's
+operator is an autonomous agent, which never has a terminal, every
+agent-created profile is recovery-less by construction. That reads like a
+serious gap until the constraint is traced: `enroll_profile_recovery` documents
+that a committed capsule has no in-place installation path and that inventing
+one would mean a second writer into a published capsule, and the mnemonic is
+written only to the controlling terminal because writing it anywhere else would
+violate the secure-storage-only rule. The design is correct under this
+codebase's own rules, the warning notice reaches the operator in the envelope,
+and there is no fix available that does not break one of those rules. Recorded
+as a known operability limit rather than a defect.
 
 ## Recommendations
 
