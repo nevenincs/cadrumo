@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:55d3ab88b6d9feca31e836dded2c7b082eeb3330f9f370f9dd5a7a75cd4c3800'
+body_hash: 'sha256:a0c3ba6109944c2d733297e8d588d43421b6d749eee884b4ed1c0db64c104a52'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -347,6 +347,43 @@ protection is structural -- they are untested, not unguarded. A completeness
 gate deriving the expected set from the resolver's consumers would close the
 difference between "we tested the ones we listed" and "we tested every one that
 exists".
+
+### Two-catalogue writes: one was precedent, one is ordering, two remain open
+
+The reconciliation writer persisted the invoice and transaction catalogues with
+two independent saves. A crash between them rests one-sided -- an invoice citing
+a transaction that does not cite it back -- which is exactly what the link
+consistency check reports. That needed no new decision: the sibling LINKING
+writer already commits both in one batch and its docstring says why in those
+words. The path that establishes and removes those links simply had not
+followed. Worth separating from the genuinely open questions, because it looked
+like the same problem and was not one.
+
+The live evidence-stamp path carries a different shape. It writes the
+justificante, then the filing record that cites it, then the audit event, as
+three separate writes. The ORDER is load-bearing and was documented nowhere: the
+receipt lands before the record cites it, so a failure between them leaves an
+orphan receipt, which is harmless and re-runnable. Reversed, it leaves a filing
+record carrying live-capture evidence whose justificante does not load -- and
+that record CLEARS the cross-period clean-state gate's missing-justificante
+blocker on the strength of evidence that is not there. Correct today, silently
+fragile to anyone tidying the sequence, so the constraint is now stated at the
+write itself. Making the pair one unit of work would retire the dependency
+entirely and is the better end state; it restructures three writes across two
+early-return branches, so it is named rather than attempted here.
+
+That leaves the co-commit RETRY question genuinely open on four catalogues. It is
+not the atomicity question, which the composed write already answers. It is that
+a retry cannot re-apply a prepared write set when the sibling writes were derived
+inside the same span -- the participation index is derived FROM the revision
+being persisted -- so the derived writes must be rebuilt against whatever the
+retry actually read, or the index co-commits against a revision that lost.
+
+A note on this tree, since it bit twice in one session: a peer's broad commit
+swept an uncommitted working-tree edit of mine into their own commit. The code
+and its comment survived; the commit message explaining the hazard did not,
+which is why the reasoning is recorded here. In a shared worktree the durable
+place for a rationale is the source comment or this document, not the commit.
 
 ## Recommendations
 
