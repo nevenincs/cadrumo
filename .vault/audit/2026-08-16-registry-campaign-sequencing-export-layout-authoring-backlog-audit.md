@@ -5825,3 +5825,116 @@ after inline ones and tuple order is not wire order.
 
 **Reviewer state: 0 ready, 0 abstaining** -- every filing-grade revision with an
 export layout is now stamped. Items 1-4 plus 349: **230 passed**, authority CLEAN.
+
+## Queue items 5 and 6
+
+Both stated defects were already resolved at the data layer, and both modelos
+carried a ring of stale consumers behind them -- the same shape as items 1-4.
+
+- **369 (union, exterior, importacion)** -- all twelve records match their design
+  sheet's `declared_total` EXACTLY (1422, 763, 2947, 1423, 1211, 1687, 1687, 763,
+  5803, 1454, 763, 2947), with **zero** double-written positions, zero holes and
+  **0 unaddressed design DATA positions**. The one real gap was a construct that
+  did not close over its revision's members: each esquema's `-export` application
+  link, authored with the export layouts, was never enrolled. Fixed for all three.
+- **390 (2022, 2023, 2024, 2025)** -- **0 unaddressed design DATA positions** in
+  every revision. Every record's end matches its sheet exactly.
+
+### The page-05 divergence is AEAT's own change, not a gap
+
+2025's page-05 writes 187 fewer positions than 2024's against a sheet with the
+same declared total, which is exactly the shape a silent hole would have. It is
+not one. The two designs genuinely differ: the **2024** sheet prints the Regimen
+Simplificado *reduccion* fields at 223..239, 543..559 and 1205..1357, and the
+**2025** sheet marks those same positions "RESERVADO PARA LA A.E.A.T. (Dejar en
+blanco)". Each revision follows its own diseno; both are correct. Reading only
+one year's design would have produced a confident wrong answer in either
+direction.
+
+### Overlap is a second failure mode, and the gap measure cannot see it
+
+Coverage is set-based, so a position written TWICE looks identical to one written
+once. Modelo 349's declarante record summed to **587** across positions 1..500 --
+seven ranges double-written, every one a (real field, filler) pair left when the
+real fields were authored over reserved slots. Every record measured since checks
+BOTH directions. Recorded here because a "0 gaps" result reads as proof and is
+only half of one.
+
+### Ten more gates that had decayed, and two real data gaps
+
+The 390 sweep is the largest instance of the pattern: the revision-span split
+replaced one open-ended `2010-y-siguientes` revision with four exact-year
+revisions, and 17 consumers still named the retired id. Care was needed because
+modelo **360** legitimately has its own `2010-y-siguientes` revision, so a blind
+rename would have corrupted it.
+
+- `test_modelo_390_registry.py` -- 14 tests pinned the retired id. Now
+  parametrised over all four revisions, which promptly exposed three genuine
+  era-differences the single-subject form could never have shown: the deadline
+  window set (each revision owns exactly its own), the workbook parity ref (each
+  its own year's), and the page-04 regularizacion offsets, which MOVED when the
+  2024 diseno inserted "Pag. 2 bis" and grew page 4 from 378 to 854 positions
+  (prorrata at 166..182 in 2022, 642..658 in 2024 -- each matching its own
+  design). 14 failing -> **56 passing**.
+- `test_modelo_390_snapshot_builds_for_each_published_filing_year` iterated
+  2020..2026; the published years are exactly the four with a bundled diseno.
+- Two export-ref ids in 2024/2025 were the OUTLIERS, not the rule: casilla 522
+  and 63 were named numerically there while 2022/2023 -- and casilla 523 in all
+  four revisions -- use the semantic form. Normalised to the majority spelling.
+- `test_modelo_303_exonerado_390_endpoints.py` asserted the 23 exonerado
+  endpoints carry NO export refs, contradicting its own evidence: the same test
+  reads sheet DP30304 and asserts its numbered field set EQUALS those endpoints.
+  A box AEAT prints on the record design belongs in the fichero. Inverted to
+  assert each exports to exactly one DP30304 field, and its sibling's
+  "no parallel producers" claim now asserts export-axis UNIQUENESS rather than
+  the absence of export layouts.
+- `test_every_declared_base_casilla_is_bound_to_a_base_fact` required EVERY base
+  casilla to be bound, though its own rationale is about a bound base wired to a
+  cuota fact. Narrowed to bound bases -- and the narrowing is closed rather than
+  open: an unbound base that is NOT operator-manual still fails, so a box
+  something should produce and nothing does cannot slip through. All 99/101/127/127
+  unbound bases are manual, so nothing real was discarded.
+- `test_m390_preserves_canonical_casilla_and_calculation_identities_across_epochs`
+  asserted set EQUALITY across epochs, which forbids AEAT's own additions (325,
+  329, 393, 393 casillas). Two separate corrections were needed: casillas,
+  formulas and relations are asserted PRESERVED (subset -- measured, 0 dropped),
+  and bindings are compared with their embedded year token normalised, because
+  `modelo-390-2024.page_5....` cannot equal `modelo-390-2022.page_5....` and the
+  raw comparison reported all 175 page-scoped bindings as dropped every year. The
+  only genuine losses are the two **Lorca** reduccion slots (RD-ley 6/2011
+  earthquake relief) -- named and excused, because the 2025 diseno reserves their
+  exact positions.
+
+### A filing-grade guard that had to be narrowed, carefully
+
+`test_the_recargo_box_layer_does_not_export_yet` held a real line: an export ref
+on a box nothing populates renders an empty money field as `0,00`, turning a
+silence into a false nil for a filer who owes recargo. Three recargo cuota boxes
+now export.
+
+The guard is superseded rather than violated: **all six boxes now carry a ledger
+binding**, and the three that export do so to their own official positions on
+"Pag. 2 bis", the sheet the 2024 diseno added. Verified across all four revisions
+that NO exporting recargo box is unpopulated. The guard was narrowed to the
+hazard itself -- an exporting box with neither binding nor formula fails -- and
+proven to bite by stripping the binding from an exporting box via a scratchpad
+plugin: 19 passed clean, 1 failed with the probe.
+
+Modelo 390 selection: **29 failed / 179 passed -> 3 failed / 244 passed -> 0**.
+
+### Recorded, not fixed, with reasons
+
+- **`151/2025-y-siguientes` governs from 2023-01-01**, so its id misdescribes its
+  own window -- the confusion that produced one wrong test grounding this tick.
+  Recommend renaming to `2023-y-siguientes`. Not done here because the id is the
+  DIRECTORY NAME of a CLI-owned generated export tree that is currently green in
+  the drift gate: the rename is a publication event that must run through
+  `publish_validated_generated_export_tree`'s validate/journal/swap/verify cycle,
+  which is its own atomic step.
+- **`aeat-dr-390-2015` and `aeat-dr-390-2016` are declared and bundled but no
+  revision cites them.** Modelo 390 now covers filing years 2022-2025 only. This
+  is dormant authority and a candidate queue item; authoring two revisions of
+  ~325 casillas each, with bindings, formulas and export layouts, is its own
+  work, not a fold-in. Beside the narrowing, what the standing goal still asks
+  for: a "full supported revision and modelo matrix" that includes 2015 and 2016
+  if those years are in scope -- an operator call on the supported floor.
