@@ -1,0 +1,11 @@
+# The export consumer the revision's generated layout is reached through. A
+# revision declaring an export layout must name the surface that renders it, so
+# the layout and its consumer cannot drift apart.
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-296-2024-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]

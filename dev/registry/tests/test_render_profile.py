@@ -1124,8 +1124,11 @@ def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[objec
     """Return the eligible fields of one hash-verified design."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
     intermediate = load_record_design_intermediate(
-        bundled_path(), catalogues.sources,
-        source_ref=source_ref, filing_year=2025, design_epoch=epoch,
+        bundled_path(),
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=2025,
+        design_epoch=epoch,
     )
     fields = [field for sheet in intermediate.sheets for field in sheet.fields]
     return project_render_profile_eligibility(fields).all_fields
@@ -1139,36 +1142,63 @@ def test_a_pdf_design_numeric_anchor_is_eligible_for_a_reviewed_rule() -> None:
     canonicalises it to ``Numérico``. With no eligible field, an EMPTY render
     profile satisfied exhaustive coverage completely and the design generated
     with no declared numeric format, sign policy or decimal placement.
+
+    **19 became 22, and the three are real.** The parser learned to fold a
+    desglose AEAT prints WITHOUT dotted ordinals, and the export IR descends to
+    the leaves, so two of 347's printed parents dissolved into the rows they
+    subdivide: ``PERSONA CON QUIEN RELACIONARSE`` @59+49 into TELÉFONO @59+9 and
+    APELLIDOS Y NOMBRE @68+40, and ``IMPORTE PERCIBIDO EN METÁLICO`` @101+15 into
+    its printed ``Parte entera`` @101+13 and ``Parte decimal`` @114+2. Four
+    ordinal-less leaves replaced two ordinal-bearing parents, and every one of
+    them has an EMPTY naturaleza cell, which is the strongest case for a reviewed
+    rule there is. Moving the count to 22 records that the profile now governs
+    each leaf; leaving it at 19 would have asserted that three rows carrying no
+    stated wire fact need no reviewed rule.
     """
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
-    assert len(eligible) == 19
+    assert len(eligible) == 22
     assert all(field.source_cell is None for field in eligible), "modelo 347 is PDF-sourced"
 
 
 def test_pdf_prose_in_content_is_not_read_as_a_stated_wire_fact() -> None:
     """A PDF field's ``content`` is description, not a Contenido cell.
 
-    Every one of Modelo 347's numeric anchors carries non-blank content, and it
+    Modelo 347's ordinal-bearing numeric anchors carry non-blank content, and it
     reads like "Se consignará el número identificativo correspondiente a la
     declaración". Under the workbook rule that non-blank content meant the design
     had stated the wire fact, which is the wrong positive inference this test
     pins.
+
+    Scoped to the anchors that HAVE content, because the desglose leaves the
+    parser now descends to carry none: a folded sub-row inherits no Contenido
+    cell, so its content is empty and the prose that describes it lives on the
+    parent that no longer reaches here. An empty content field cannot state a
+    wire fact either, so those rows are eligible for the same reason -- but they
+    are not evidence for the inference this test exists to refuse, and asserting
+    over them would quietly turn the assertion vacuous the moment it flipped.
     """
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
-    assert eligible, "no eligible field to assert on"
-    assert all(field.content and field.content.strip() for field in eligible)
+    with_content = [field for field in eligible if field.content and field.content.strip()]
+    assert with_content, "no eligible field carrying content to assert on"
+    assert all(field.ordinal is not None for field in with_content), (
+        "every content-bearing eligible anchor should be one AEAT printed with an ordinal"
+    )
 
 
 @pytest.mark.parametrize(
     ("source_ref", "epoch", "catalogue"),
-    [("aeat-dr-232-2018", "2018", "is.toml"),
-     ("aeat-dr-210-2022", "2022", "irnr.toml"),
-     ("aeat-dr-303-2025", "2025", "iva.toml")],
+    [
+        ("aeat-dr-232-2018", "2018", "is.toml"),
+        ("aeat-dr-210-2022", "2022", "irnr.toml"),
+        ("aeat-dr-303-2025", "2025", "iva.toml"),
+    ],
 )
 def test_a_workbook_design_keeps_its_exact_previous_eligibility(
-    source_ref: str, epoch: str, catalogue: str,
+    source_ref: str,
+    epoch: str,
+    catalogue: str,
 ) -> None:
     """Widening to PDF sources must not move a workbook's eligible set at all.
 
@@ -1180,8 +1210,11 @@ def test_a_workbook_design_keeps_its_exact_previous_eligibility(
     """
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
     intermediate = load_record_design_intermediate(
-        bundled_path(), catalogues.sources,
-        source_ref=source_ref, filing_year=2025, design_epoch=epoch,
+        bundled_path(),
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=2025,
+        design_epoch=epoch,
     )
     fields = [field for sheet in intermediate.sheets for field in sheet.fields]
     original = {
@@ -1191,10 +1224,7 @@ def test_a_workbook_design_keeps_its_exact_previous_eligibility(
         and (field.content is None or not field.content.strip())
         and not _is_source_reserved_field(field)
     }
-    live = {
-        (field.record_identity, field.offset)
-        for field in project_render_profile_eligibility(fields).all_fields
-    }
+    live = {(field.record_identity, field.offset) for field in project_render_profile_eligibility(fields).all_fields}
 
     assert live == original
 

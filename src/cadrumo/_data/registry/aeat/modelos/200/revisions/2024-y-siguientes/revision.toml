@@ -1,4 +1,22 @@
 [revisions."2024-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseno de registros
+# (aeat-dr-200-2025) and the ordenes it cites; NO human operator has
+# countersigned it, and 'agent_reviewed' plus this reviewer token record that
+# state honestly rather than claiming the operator's own sign-off.
+#
+# What the review covered: every one of the 6,800 design fields was classified
+# and its kind justified -- casilla from the field's own printed token, literal
+# from its Constante cell, projection slot and member from the printed slot
+# token, filler where the design reserves the run -- and the thirteen repeated
+# blocks were each checked for exact geometry agreement against the projection
+# models. That check found and corrected a real modelling error, section G
+# conflating the secretario del consejo with the representantes legales.
+#
+# An operator re-stamping this to 'operator_reviewed' is what promotes the
+# revision to a countersigned filing grade.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 # valid_from tracks the ejercicio this revision computes (2024), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions) and its
@@ -116,3 +134,8 @@ source_refs = [
     "aeat-modelo-200-manual-2025",
     "boe-modelo-200-2025-form",
 ]
+
+[revisions."2024-y-siguientes".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 200's corpus carries its diseno de registro workbook, which describes the fichero layout rather than the labels the declaracion prints, and no declaracion specimen. The label dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a sweep for .properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."
+legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

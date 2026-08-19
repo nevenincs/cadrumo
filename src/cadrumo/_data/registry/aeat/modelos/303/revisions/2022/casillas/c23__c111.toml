@@ -339,9 +339,11 @@ section = ["iva", "regimen_simplificado"]
 data_type = "money"
 semantic_role = "dr303_47"
 continuidad_id = "dr303-47"
+# Operator input. The design defines this box as a SUM over the per-activity
+# regimen simplificado rows (A1..F3 / B1..M2), and those per-activity modulos
+# rows are not modelled in this registry, so the engine cannot derive it.
 required = false
-input_kind = "computed"
-formula = "modelo-303-2009-regimen-simplificado-c47-neutral"
+input_kind = "manual"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["m303-2022.dp30302.f078"]
@@ -353,9 +355,11 @@ section = ["iva", "regimen_simplificado"]
 data_type = "money"
 semantic_role = "dr303_48"
 continuidad_id = "dr303-48"
+# Operator input. The design defines this box as a SUM over the per-activity
+# regimen simplificado rows (A1..F3 / B1..M2), and those per-activity modulos
+# rows are not modelled in this registry, so the engine cannot derive it.
 required = false
-input_kind = "computed"
-formula = "modelo-303-2009-regimen-simplificado-c48-neutral"
+input_kind = "manual"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["m303-2022.dp30302.f079"]

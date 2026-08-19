@@ -1,6 +1,15 @@
 # Modelo 151 anexo casillas for the "transmisión de participaciones en
 # instituciones de inversión colectiva" detail block, derived row by row from
-# the bundled Diseño de Registros page M15107000 (aeat-dr-151-2023). `number`
+# the bundled Diseño de Registros page M15107000 (aeat-dr-151-2023), which is
+# THIS revision's own design.
+#
+# They were previously declared on the 2015-2022 revision, whose design is
+# aeat-dr-151-2015. Both designs carry a page M15107000, which is what made the
+# misplacement survive, but they are not the same page: the 2015 edition prints
+# 66 fields over 1600 positions and numbers its boxes 1-6 unpadded, while the
+# 2023 edition prints 43 over 500 and numbers them 01-05 plus 53. The numbers
+# below are the 2023 set, including 53, which the 2015 page does not carry at
+# all -- so these boxes could only ever have come from here. `number`
 # is the box number the design prints in square brackets; `segmento` is the
 # record page on which the box is defined. The page repeats each box up to
 # nine times (one column set per declared transaction); every repeat is the
@@ -11,7 +20,7 @@
 # is not yet grounded here -- data_type stays "text" pending that lookup
 # rather than inventing an enum.
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.tipo-renta"
 number = "01"
 segmento = "151-07"
@@ -23,7 +32,7 @@ legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.nif-entidad"
 number = "53"
 segmento = "151-07"
@@ -35,7 +44,7 @@ legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.ganancia-patrimonial"
 number = "02"
 segmento = "151-07"
@@ -48,7 +57,7 @@ source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction; the
 # RESTO overflow row also reprints this box rather than declaring a new one
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.retencion"
 number = "03"
 segmento = "151-07"
@@ -61,7 +70,7 @@ source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction; the
 # RESTO overflow row also reprints this box rather than declaring a new one
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-ganancias"
 number = "04"
 segmento = "151-07"
@@ -72,7 +81,7 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-dr-151-2023"]
 
-[[revisions."2015-2022".casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-retenciones"
 number = "05"
 segmento = "151-07"

@@ -1,4 +1,28 @@
 [revisions."2013-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement: every casilla legal_ref and
+# source_ref resolves to the legal catalogue; every cited source's corpus file is
+# present; every enrolled schema family resolves; and both records of the layout
+# now cover all 500 positions their diseño declares, with NO design data position
+# left unaddressed -- the tails that were previously unwritten are the BLANCOS
+# runs the design states, now emitted as filler so the record goes out at the
+# length AEAT reads.
+#
+# This revision's layout is BINDING-DERIVED rather than generated, so it carries
+# no fresh-render reproduction evidence and this stamp claims none. Its formulas
+# family is dispositioned inapplicable: the declaration reports holdings and
+# settles no tax, so there is no computed figure to check.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from = 2012, not the revision id's 2013, and not the
@@ -56,7 +80,7 @@ source_refs = [
 ]
 
 [revisions."2013-y-siguientes".family_dispositions.projection_endpoints]
-reason = "FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 720's own casillas can validate. Modelo 720 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+reason = "FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 720's own casillas can validate while the union carries no modelo-720 member. The union is no longer m303-only -- it has since gained modelo-200 members for that design's repeated detail rows -- which is why this reason is stated as a scoping rule rather than as a count of members or a single-modelo prefix, both of which go stale the moment another modelo is added. Modelo 720 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-bis",

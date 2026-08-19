@@ -35,7 +35,14 @@ from cadrumo.domain.calculations.registry import (
 )
 from cadrumo.domain.calculations.registry._loader import load_registry_tree
 
-from .._export_tree import (
+from ..analysis.m303_semantic_census import (
+    M303_SEMANTIC_CENSUS_EXPECTATIONS,
+    M303_VARIABLE_ENVELOPE_ANCHOR_COUNT,
+    census_m303_semantic_map,
+    pair_epoch_anchors,
+    resolve_semantic_home,
+)
+from ..pipeline._export_tree import (
     _DECIMAL_CONTENT_RE,
     _INTEGER_CONTENT_RE,
     _OFFICIAL_LITERAL_RE,
@@ -47,25 +54,18 @@ from .._export_tree import (
     _split_official_note_references,
     render_complete_export_tree,
 )
-from .._provenance_manifest import semantic_map_digest
-from .._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
-from .._render_profile import (
+from ..pipeline._provenance_manifest import semantic_map_digest
+from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline._render_profile import (
     RenderProfile,
     RenderProfileDesignIdentity,
     RenderProfileSourceEvidence,
     load_and_validate_render_profile,
     render_profile_digest,
 )
-from .._semantic_map import SemanticMap
-from .._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
-from .._semantic_map_loader import load_semantic_map
-from ..m303_semantic_census import (
-    M303_SEMANTIC_CENSUS_EXPECTATIONS,
-    M303_VARIABLE_ENVELOPE_ANCHOR_COUNT,
-    census_m303_semantic_map,
-    pair_epoch_anchors,
-    resolve_semantic_home,
-)
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline._semantic_map_loader import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

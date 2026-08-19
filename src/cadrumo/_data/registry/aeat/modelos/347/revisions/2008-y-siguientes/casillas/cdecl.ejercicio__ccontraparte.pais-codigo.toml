@@ -74,7 +74,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f018"]
+export_refs = ["m347-2025.declarado.f019"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q2"
 number = "contraparte.importe-Q2"
@@ -87,7 +87,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f020"]
+export_refs = ["m347-2025.declarado.f021"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q3"
 number = "contraparte.importe-Q3"
@@ -100,7 +100,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f022"]
+export_refs = ["m347-2025.declarado.f023"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q4"
 number = "contraparte.importe-Q4"
@@ -113,7 +113,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f024"]
+export_refs = ["m347-2025.declarado.f025"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
 number = "contraparte.pais-codigo"

@@ -1,0 +1,256 @@
+schema_version = 1
+fragment_id = "declarante"
+modelo = "296"
+design_epoch = "2024"
+source_ref = "aeat-dr-296-2024"
+source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f001"
+kind = "literal"
+literal = "1"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 81
+ordinal = "1"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f002"
+kind = "literal"
+literal = "296"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 84
+ordinal = "2"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f003"
+kind = "header"
+producer_key = "m296.dec.ejercicio"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 87
+ordinal = "3"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f004"
+kind = "header"
+producer_key = "m296.dec.nif_del_declarante"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 91
+ordinal = "4"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f005"
+kind = "header"
+producer_key = "m296.dec.apellidos_y_nombre_o_razon_social_del"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 102
+ordinal = "5"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f006"
+kind = "header"
+producer_key = "m296.dec.tipo_de_soporte"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 113
+ordinal = "6"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f007"
+kind = "header"
+producer_key = "m296.dec.telefono"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 121
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f008"
+kind = "header"
+producer_key = "m296.dec.apellidos_y_nombre"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 123
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f009"
+kind = "header"
+producer_key = "m296.dec.numero_identificativo_de_la_declaracio"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 128
+ordinal = "8"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f010"
+kind = "header"
+producer_key = "m296.dec.declaracion_complementaria_o_sustituti"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 136
+ordinal = "9"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f011"
+kind = "header"
+producer_key = "m296.dec.numero_identificativo_de_la_declaracio_2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 161
+ordinal = "10"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f012"
+kind = "header"
+producer_key = "m296.dec.numero_total_de_perceptores"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 171
+ordinal = "11"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f013"
+kind = "casilla"
+casilla_id = "03"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 177
+ordinal = "12"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f014"
+kind = "casilla"
+casilla_id = "04"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 210
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f015"
+kind = "casilla"
+casilla_id = "04"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 213
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f016"
+kind = "casilla"
+casilla_id = "05"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 230
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f017"
+kind = "casilla"
+casilla_id = "05"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 233
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f018"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 237
+ordinal = "15"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f019"
+kind = "header"
+producer_key = "m296.dec.n"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 240
+ordinal = "16"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f020"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 248
+ordinal = "17"
+record_identity = "PDF record design"
+
+[[entries]]
+export_field_id = "m296-2024.declarante.f021"
+kind = "header"
+producer_key = "m296.dec.sello_electronico"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 249
+ordinal = "18"
+record_identity = "PDF record design"

@@ -1,0 +1,75 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+# Modelo 308's design states the wire fact in its Contenido cell for every
+# numeric slot but two, and those two are the aeronave rows: AEAT prints their
+# naturaleza as Num and leaves the Contenido blank, so the representation has to
+# be reviewed rather than derived. Both are read from the printed description of
+# the field they govern.
+
+[design_identity]
+modelo = "308"
+design_epoch = "2019"
+source_ref = "aeat-dr-308-2019"
+source_sha256 = "85eb926a84d309684db271e42a85dc3375e8265b6026d918400e647c76f15981"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M30801"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "M30801"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m308-aeronave-ano-fabricacion-638"
+decision_statement = "The four figures of the aeronave's year of manufacture."
+justification = "The design names the field 'MTN - Aeronaves - Ano fabricacion' over a four-position Num slot, which admits no representation other than a four-digit year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M30801"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "M30801"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M30801"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "M30801"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m308-aeronave-peso-maximo-642"
+decision_statement = "Maximum take-off weight as an unsigned integer in ten positions."
+justification = "The design names the field 'MTN - Aeronaves - Peso maximo despegue' over a ten-position Num slot and states no decimal subdivision, unlike the eslora row beside it which prints its three-plus-two split explicitly."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M30801"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "M30801"

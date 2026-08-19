@@ -1,0 +1,24 @@
+# Under-declaration advisory (no-silent-under-declaration), keyed exactly as the
+# periodic sibling modelo 216 keys its own: a positive base subject to retencion
+# with nothing declared as retained is a real observation about the filing.
+#
+# This family was briefly dispositioned inapplicable on the premise that casilla
+# 03 mixes rentas sometidas a retencion with rentas lawfully NOT sometidas, which
+# would have made any antecedent fire on the exempt population. That premise was
+# wrong and the disposition is withdrawn. AEAT's own label for casilla 03 is
+# "Base retenciones e ingresos a cuenta" -- the base OF the retenciones, not a
+# mixed income total -- and the 2024 diseño prints the same words over the
+# corresponding perceptor field. Casilla 04 is "Retenciones e ingresos a cuenta
+# declarados". The antecedent is therefore already scoped to the sometidas side,
+# exactly as modelo 216's casilla 10 is.
+#
+# ADVISORY, not BLOCKING, and for modelo 216's stated reason: implies_nonzero
+# holds trivially when the antecedent is at or below zero, so a declarante with
+# no base in the year never fires it, and the operator files outside this
+# application, so an alert they can weigh is the safeguard available here.
+
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-296-retenciones-declaradas-cuando-base-positiva"
+expression = 'implies_nonzero(["03", "04"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]

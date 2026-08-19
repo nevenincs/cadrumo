@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f008"]
+export_refs = ["m347-2025.declarante.f009"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.complementaria-sustitutiva"
 number = "decl.complementaria-sustitutiva"
@@ -19,7 +19,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f009"]
+export_refs = ["m347-2025.declarante.f010"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.total-personas-entidades"
 number = "decl.total-personas-entidades"
@@ -30,7 +30,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f011"]
+export_refs = ["m347-2025.declarante.f012"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.importe-total-anual"
 number = "decl.importe-total-anual"
@@ -41,7 +41,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f012"]
+export_refs = ["m347-2025.declarante.f013"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.total-inmuebles"
 number = "decl.total-inmuebles"
@@ -52,7 +52,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f013"]
+export_refs = ["m347-2025.declarante.f014"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.importe-total-arrendamiento-locales"
 number = "decl.importe-total-arrendamiento-locales"
@@ -63,13 +63,24 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f014"]
+export_refs = ["m347-2025.declarante.f015"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.persona-relacion"
 number = "decl.persona-relacion"
 section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "persona_con_quien_relacionarse"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarante.f008"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "decl.persona-relacion-telefono"
+number = "decl.persona-relacion-telefono"
+section = ["declarante", "declarante"]
+data_type = "text"
+semantic_role = "persona_con_quien_relacionarse_telefono"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -85,7 +96,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarante.f016"]
+export_refs = ["m347-2025.declarante.f017"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.tipo-soporte"
 number = "decl.tipo-soporte"

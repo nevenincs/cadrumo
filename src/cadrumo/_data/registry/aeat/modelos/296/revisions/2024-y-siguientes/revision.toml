@@ -1,4 +1,26 @@
 [revisions."2024-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseno de registros
+# (aeat-dr-296-2024) and the ordenes it cites; NO human operator has
+# countersigned it, and 'agent_reviewed' plus this reviewer token record that
+# state honestly rather than claiming the operator's own sign-off.
+#
+# What the review covered: all 136 design fields across the five records, each
+# classified from the design's own text, and 69 reviewed numeric rules authored
+# from the wording of the field they govern -- this being a PDF design, which
+# carries no Contenido column for the generator to derive from.
+#
+# One binding deserves an operator's eye specifically. Casilla 05 is bound to
+# positions 175-189, RETENCIONES E INGRESOS A CUENTA INGRESADOS, on the reading
+# that the revision's own formula makes 05 = add(04), an identity that holds
+# exactly when the ingreso is not split with a Hacienda Foral -- the same
+# condition the design's AVISO gives for its foral Anexo. That is a tax
+# judgement, not a layout fact.
+#
+# An operator re-stamping this to 'operator_reviewed' is what promotes the
+# revision to a countersigned filing grade.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["0A"] }
@@ -18,3 +40,23 @@ source_refs = [
     "boe-modelo-296-form-layout",
     "aeat-dr-296-2024",
 ]
+
+[revisions."2024-y-siguientes".family_dispositions.parameters]
+reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 296 applies none, and the revision is small enough to say so exhaustively rather than in general: it declares THREE casillas and ONE formula. Casillas 03 and 04 are manual money inputs (the base and the retenciones e ingresos a cuenta of the annual summary) and casilla 05 is their computed total. The single formula, modelo-296-total, is an `add` whose only argument is casilla 04, and every parameter, binding, relation and literal slot on that expression tree is empty. The IRNR retencion rate is applied by the retenedor at payment time and reaches this annual summary as an already-withheld amount, exactly as it does on the periodic sibling modelo 216, so the rate is spent before this modelo sees the figure. The family is empty by the shape of this revision's own calculation rather than by omission."
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-296 member. It carries none. The union is not single-modelo -- it holds m303_ and m200_ members -- so this is stated as a scoping rule rather than as a member count or a prefix, both of which go stale the moment another modelo is added. Note this is INDEPENDENT of the export layout: an earlier reading held the family open because 296 has no layout yet and its design prints anexo bodies that look like repeated perceptor rows, but the union scoping refuses the declaration whether or not a layout exists, so the family cannot be populated today by any route. Should a modelo-296 member ever be added, this disposition must be revisited rather than inherited."
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2024-y-siguientes".family_dispositions.live_cross_references]
+reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for modelo 296: no adapter under adapters/outbound/aeat references it -- the only textual hits are byte-offset tuples in a sede test, not modelo references -- and the application never performs live AEAT submission in any case, per the standing prohibition on live filing. There is consequently no host to allow, no method to bound and no guard policy to name. Sibling modelo 210 disposes the family on exactly this ground. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited rather than inherited."
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2024-y-siguientes".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 296's corpus carries its diseno de registro (aeat-dr-296-2024), which is a wire-record description printing no form labels, and no label-printing specimen. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

@@ -52,6 +52,6 @@ application_links = [
     "modelo-190-workflow",
     "modelo-190-deadline",
 ]
-deadline_windows = ["modelo-190-2024-0a", "modelo-190-2025-0a"]
+deadline_windows = ["modelo-190-2024-0a"]
 filing_schedules = ["modelo-190-anual"]
 dependency_classifications = ["modelo-190-dep-111"]

@@ -808,7 +808,7 @@ continuidad_id = "dr303-18"
 required = false
 input_kind = "bound"
 binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
 export_refs = ["m303-2023.dp30301.f051"]
 

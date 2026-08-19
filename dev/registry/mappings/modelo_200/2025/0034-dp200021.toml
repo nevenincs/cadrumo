@@ -1,0 +1,880 @@
+schema_version = 1
+fragment_id = "dp200021"
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0002"
+kind = "literal"
+literal = "200"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0003"
+kind = "literal"
+literal = "21000"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0004"
+kind = "literal"
+literal = ">"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0005"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0006"
+kind = "casilla"
+casilla_id = "00987"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0007"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 1
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0008"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 1
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0009"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 2
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0010"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 2
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0011"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 3
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0012"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 3
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0013"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 4
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0014"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 4
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0015"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 5
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0016"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 5
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0017"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 6
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0018"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 6
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0019"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 7
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0020"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 7
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0021"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 8
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0022"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 8
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0023"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 9
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0024"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 9
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0025"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 10
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0026"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 10
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0027"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 11
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0028"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 11
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0029"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 12
+field = "nif_entidad_grupo"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0030"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_grupo_sociedad"
+slot = 12
+field = "codigo_pais"
+[entries.anchor]
+sheet = "DP200021"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0031"
+kind = "casilla"
+casilla_id = "01897"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0032"
+kind = "casilla"
+casilla_id = "01901"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0033"
+kind = "casilla"
+casilla_id = "00988"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0034"
+kind = "header"
+producer_key = "m200.no_residentes_mas_de_un_establecimiento_perm"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0035"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_establecimiento_permanente"
+slot = 1
+[entries.anchor]
+sheet = "DP200021"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0036"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_establecimiento_permanente"
+slot = 2
+[entries.anchor]
+sheet = "DP200021"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0037"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_establecimiento_permanente"
+slot = 3
+[entries.anchor]
+sheet = "DP200021"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0038"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_establecimiento_permanente"
+slot = 4
+[entries.anchor]
+sheet = "DP200021"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0039"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_incn_establecimiento_permanente"
+slot = 5
+[entries.anchor]
+sheet = "DP200021"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0040"
+kind = "casilla"
+casilla_id = "00989"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0041"
+kind = "header"
+producer_key = "m200.reg_entidades_navieras_en_funcion_del_tonela"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0042"
+kind = "casilla"
+casilla_id = "00630"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0043"
+kind = "casilla"
+casilla_id = "00631"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0044"
+kind = "casilla"
+casilla_id = "00632"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0045"
+kind = "casilla"
+casilla_id = "00579"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0046"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0047"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_2"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0048"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_3"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0049"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_4"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0050"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_5"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0051"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_6"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0052"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_7"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0053"
+kind = "header"
+producer_key = "m200.presentacion_de_documentacion_previa_en_la_s_8"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0054"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0055"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas_2"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0056"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas_3"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0057"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas_4"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0058"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas_5"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0059"
+kind = "header"
+producer_key = "m200.inversiones_en_producciones_cinematograficas_6"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0060"
+kind = "filler"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "DP200021"
+
+[[entries]]
+export_field_id = "m200-2025.dp200021.f0061"
+kind = "literal"
+literal = "</T20021000>"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200021"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "DP200021"

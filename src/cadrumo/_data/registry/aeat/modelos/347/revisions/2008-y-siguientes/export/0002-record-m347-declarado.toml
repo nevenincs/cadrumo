@@ -293,16 +293,15 @@ source_refs = ['aeat-dr-347-2025']
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
 id = 'm347-2025.declarado.f015'
 offset = 101
-length = 15
+length = 13
 kind = 'casilla'
 casilla_id = 'contraparte.importe-metalico'
-data_type = 'decimal'
+data_type = 'integer'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = 'integer-part'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -314,6 +313,27 @@ source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
 id = 'm347-2025.declarado.f016'
+offset = 114
+length = 2
+kind = 'casilla'
+casilla_id = 'contraparte.importe-metalico'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2025']
+
+[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+id = 'm347-2025.declarado.f017'
 offset = 116
 length = 16
 kind = 'casilla'
@@ -333,7 +353,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f017'
+id = 'm347-2025.declarado.f018'
 offset = 132
 length = 4
 kind = 'casilla'
@@ -354,7 +374,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f018'
+id = 'm347-2025.declarado.f019'
 offset = 136
 length = 16
 kind = 'casilla'
@@ -374,7 +394,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f019'
+id = 'm347-2025.declarado.f020'
 offset = 152
 length = 16
 kind = 'casilla'
@@ -394,7 +414,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f020'
+id = 'm347-2025.declarado.f021'
 offset = 168
 length = 16
 kind = 'casilla'
@@ -414,7 +434,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f021'
+id = 'm347-2025.declarado.f022'
 offset = 184
 length = 16
 kind = 'casilla'
@@ -434,7 +454,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f022'
+id = 'm347-2025.declarado.f023'
 offset = 200
 length = 16
 kind = 'casilla'
@@ -454,7 +474,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f023'
+id = 'm347-2025.declarado.f024'
 offset = 216
 length = 16
 kind = 'casilla'
@@ -474,7 +494,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f024'
+id = 'm347-2025.declarado.f025'
 offset = 232
 length = 16
 kind = 'casilla'
@@ -494,7 +514,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f025'
+id = 'm347-2025.declarado.f026'
 offset = 248
 length = 16
 kind = 'casilla'
@@ -514,7 +534,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f026'
+id = 'm347-2025.declarado.f027'
 offset = 264
 length = 17
 kind = 'casilla'
@@ -534,7 +554,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f027'
+id = 'm347-2025.declarado.f028'
 offset = 281
 length = 1
 kind = 'casilla'
@@ -554,7 +574,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f028'
+id = 'm347-2025.declarado.f029'
 offset = 282
 length = 1
 kind = 'casilla'
@@ -574,7 +594,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f029'
+id = 'm347-2025.declarado.f030'
 offset = 283
 length = 1
 kind = 'casilla'
@@ -594,7 +614,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f030'
+id = 'm347-2025.declarado.f031'
 offset = 284
 length = 16
 kind = 'casilla'
@@ -614,7 +634,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f031'
+id = 'm347-2025.declarado.f032'
 offset = 300
 length = 6
 kind = 'casilla'
@@ -635,7 +655,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2008-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f032'
+id = 'm347-2025.declarado.f033'
 offset = 306
 length = 195
 kind = 'filler'

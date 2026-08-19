@@ -1,0 +1,482 @@
+[[revisions.2024-y-siguientes.export_layouts]]
+id = 'generated-modelo-296-2024-y-siguientes-fichero'
+
+[[revisions.2024-y-siguientes.export_layouts.records]]
+id = 'm296-anexo-a-pagos'
+record_type = 'anexo-a-pagos'
+order = 3
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '296'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f003'
+offset = 5
+length = 4
+kind = 'header'
+producer_key = 'm296.ana.ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'm296.ana.nif_del_declarante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f005'
+offset = 18
+length = 9
+kind = 'header'
+producer_key = 'm296.ana.nif_del_perceptor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f006'
+offset = 27
+length = 9
+kind = 'header'
+producer_key = 'm296.ana.nif_del_representante_legal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f007'
+offset = 36
+length = 1
+kind = 'header'
+producer_key = 'm296.ana.f_j'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f008'
+offset = 37
+length = 40
+kind = 'header'
+producer_key = 'm296.ana.apellidos_y_nombre_razon_social_o_deno'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f009'
+offset = 77
+length = 8
+kind = 'header'
+producer_key = 'm296.ana.identificador_de_registro_o_numero_de'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f010'
+offset = 85
+length = 12
+kind = 'header'
+producer_key = 'm296.ana.codigo_isin'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f011'
+offset = 97
+length = 8
+kind = 'header'
+producer_key = 'm296.ana.fecha_de_devengo'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f012'
+offset = 105
+length = 1
+kind = 'header'
+producer_key = 'm296.ana.clave_de_personalidad_del_contribuyent'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f013'
+offset = 106
+length = 9
+kind = 'header'
+producer_key = 'm296.ana.nif_del_contribuyente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f014'
+offset = 115
+length = 20
+kind = 'header'
+producer_key = 'm296.ana.codigo_lei_del_contribuyente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f015'
+offset = 135
+length = 40
+kind = 'header'
+producer_key = 'm296.ana.apellidos_y_nombre_razon_social_o_deno_2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f016'
+offset = 175
+length = 13
+kind = 'header'
+producer_key = 'm296.ana.importe_del_pago_al_contribuyente'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f017'
+offset = 188
+length = 4
+kind = 'header'
+producer_key = 'm296.ana.porcentaje_de_retencion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f018'
+offset = 192
+length = 13
+kind = 'header'
+producer_key = 'm296.ana.retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f019'
+offset = 205
+length = 212
+kind = 'header'
+producer_key = 'm296.ana.direccion_del_contribuyente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f020'
+offset = 417
+length = 13
+kind = 'header'
+producer_key = 'm296.ana.numero_de_justificante_del_modelo_210'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f021'
+offset = 430
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f022'
+offset = 433
+length = 20
+kind = 'header'
+producer_key = 'm296.ana.nif_en_el_pais_de_residencia_fiscal_de'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f023'
+offset = 453
+length = 8
+kind = 'header'
+producer_key = 'm296.ana.fecha_de_nacimiento_del_contribuyente'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f024'
+offset = 461
+length = 35
+kind = 'header'
+producer_key = 'm296.ana.ciudad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f025'
+offset = 496
+length = 2
+kind = 'header'
+producer_key = 'm296.ana.codigo_pais'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f026'
+offset = 498
+length = 2
+kind = 'header'
+producer_key = 'm296.ana.pais_o_territorio_de_residencia_fiscal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm296-2024.anexo-a-pagos.f027'
+offset = 500
+length = 1
+kind = 'literal'
+literal = 'A'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-hac-56-2024:art-1',
+]
+source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -1,0 +1,1941 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "296"
+design_epoch = "2024"
+source_ref = "aeat-dr-296-2024"
+source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 81
+ordinal = "1"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-tipo-de-registro-1"
+decision_statement = "Constant '1' in 1 digit(s), stated by the design."
+justification = "Read from the design own text for this field: TIPO DE REGISTRO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 81
+ordinal = "1"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["296"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 84
+ordinal = "2"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-modelo-declaracion-2"
+decision_statement = "Constant '296' in 3 digit(s), stated by the design."
+justification = "Read from the design own text for this field: MODELO DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 84
+ordinal = "2"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 87
+ordinal = "3"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-5"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 87
+ordinal = "3"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 121
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-telefono-campo-numerico-de-nueve-59"
+decision_statement = "Digit string of 9 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: TELEFONO : Campo numerico de nueve"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 121
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 123
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-apellidos-y-nombre-se-consignara-e-68"
+decision_statement = "Alphanumeric text of 40 positions in an untyped slot."
+justification = "Read from the design own text for this field: APELLIDOS Y NOMBRE: Se consignara el"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 123
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 128
+ordinal = "8"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-numero-identificativo-de-la-declar-108"
+decision_statement = "Digit string of 13 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: NUMERO IDENTIFICATIVO DE LA DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 128
+ordinal = "8"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 161
+ordinal = "10"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-numero-identificativo-de-la-declar-123"
+decision_statement = "Digit string of 13 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 161
+ordinal = "10"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 171
+ordinal = "11"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-numero-total-de-perceptores-136"
+decision_statement = "Unsigned integer quantity in 9 positions."
+justification = "Read from the design own text for this field: NUMERO TOTAL DE PERCEPTORES"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 171
+ordinal = "11"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 210
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-entera-del-importe-de-las-re-160"
+decision_statement = "Integer part of a printed subdivided amount, 13 digits."
+justification = "Read from the design own text for this field: Parte entera del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 210
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 213
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-decimal-del-importe-de-las-r-173"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: Parte decimal del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 213
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 230
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-entera-del-importe-de-las-re-175"
+decision_statement = "Integer part of a printed subdivided amount, 13 digits."
+justification = "Read from the design own text for this field: Parte entera del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 230
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 233
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-decimal-del-importe-de-las-r-188"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: Parte decimal del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 233
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 272
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-tipo-de-registro-1"
+decision_statement = "Constant '2' in 1 digit(s), stated by the design."
+justification = "Read from the design own text for this field: TIPO DE REGISTRO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 272
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["296"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 275
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-modelo-declaracion-2"
+decision_statement = "Constant '296' in 3 digit(s), stated by the design."
+justification = "Read from the design own text for this field: MODELO DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 275
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 278
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-5"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 278
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 380
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-devengo-91"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE DEVENGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 380
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 447
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-subclave-102"
+decision_statement = "Printed code of 2 digit(s) selected from the design's own relation."
+justification = "Read from the design own text for this field: SUBCLAVE"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 447
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 580
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-117"
+decision_statement = "Integer part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: ENTERO . Numerico. Parte entera:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 580
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 583
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-119"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL . Numerico. Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 583
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 599
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-entera-del-importe-de-las-re-121"
+decision_statement = "Integer part of a printed subdivided amount, 11 digits."
+justification = "Read from the design own text for this field: Parte entera del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 599
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 602
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-decimal-del-importe-de-las-r-132"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: Parte decimal del importe de las retenciones"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 602
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 606
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-perceptor-mediador-134"
+decision_statement = "Printed code of 1 digit(s) selected from the design's own relation."
+justification = "Read from the design own text for this field: PERCEPTOR MEDIADOR"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 606
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 626
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-codigo-135"
+decision_statement = "Digit string of 1 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: CODIGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 626
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 669
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-declarante-pago-148"
+decision_statement = "Printed code of 1 digit(s) selected from the design's own relation."
+justification = "Read from the design own text for this field: DECLARANTE: PAGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 669
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 784
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-devengo-171"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO DEVENGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 784
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 795
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-inicio-del-prestamo-175"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE INICIO DEL PRESTAMO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 795
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 805
+ordinal = "27"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-vencimiento-del-prestamo-183"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE VENCIMIENTO DEL PRESTAMO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 805
+ordinal = "27"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 827
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-191"
+decision_statement = "Integer part of a printed subdivided amount, 10 digits."
+justification = "Read from the design own text for this field: ENTERO Numerico Parte entera:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 827
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 830
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-201"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL Numerico Parte decimal:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 830
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 845
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-203"
+decision_statement = "Integer part of a printed subdivided amount, 10 digits."
+justification = "Read from the design own text for this field: ENTERO Numerico Parte entera:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 845
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 848
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-213"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL Numerico Parte decimal:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 848
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 862
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-215"
+decision_statement = "Integer part of a printed subdivided amount, 10 digits."
+justification = "Read from the design own text for this field: ENTERO Numerico Parte entera:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 862
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 865
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-225"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL Numerico Parte decimal:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 865
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 903
+ordinal = "32"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ingresos-a-cuenta-repercutidos-389"
+decision_statement = "Unsigned integer quantity in 13 positions."
+justification = "Read from the design own text for this field: INGRESOS A CUENTA REPERCUTIDOS"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 903
+ordinal = "32"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 20
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 936
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-codigo-lei-del-perceptor-413"
+decision_statement = "Digit string of 20 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: CODIGO LEI DEL PERCEPTOR"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 936
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 954
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-nacimiento-453"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE NACIMIENTO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 954
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 971
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ciudad-35-posiciones-461"
+decision_statement = "Alphanumeric text of 35 positions in an untyped slot."
+justification = "Read from the design own text for this field: CIUDAD : 35 posiciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 971
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 975
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-codigo-pais-campo-alfabetico-de-2-496"
+decision_statement = "Digit string of 2 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: CODIGO PAIS: Campo alfabetico de 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 975
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1019
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-tipo-de-registro-1"
+decision_statement = "Constant '2' in 1 digit(s), stated by the design."
+justification = "Read from the design own text for this field: TIPO DE REGISTRO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1019
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["296"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1021
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-modelo-declaracion-2"
+decision_statement = "Constant '296' in 3 digit(s), stated by the design."
+justification = "Read from the design own text for this field: MODELO DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1021
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1023
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-5"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1023
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 65
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1070
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-retenciones-e-ingresos-a-cuenta-in-85"
+decision_statement = "Unsigned integer quantity in 65 positions."
+justification = "Read from the design own text for this field: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FOR"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1070
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1210
+ordinal = "1"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-tipo-de-registro-1"
+decision_statement = "Constant '2' in 1 digit(s), stated by the design."
+justification = "Read from the design own text for this field: TIPO DE REGISTRO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1210
+ordinal = "1"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["296"]
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1212
+ordinal = "2"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-modelo-de-declaracion-2"
+decision_statement = "Constant '296' in 3 digit(s), stated by the design."
+justification = "Read from the design own text for this field: MODELO DE DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1212
+ordinal = "2"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1214
+ordinal = "3"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-5"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1214
+ordinal = "3"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1275
+ordinal = "11"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-devengo-97"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE DEVENGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1275
+ordinal = "11"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1313
+ordinal = "16"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-importe-del-pago-al-contribuyente-175"
+decision_statement = "Unsigned integer quantity in 13 positions."
+justification = "Read from the design own text for this field: IMPORTE DEL PAGO AL CONTRIBUYENTE"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1313
+ordinal = "16"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1330
+ordinal = "17"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-porcentaje-de-retencion-188"
+decision_statement = "Percentage in 4 digits with two implied decimals."
+justification = "Read from the design own text for this field: PORCENTAJE DE RETENCION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1330
+ordinal = "17"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1340
+ordinal = "18"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-retenciones-192"
+decision_statement = "Unsigned integer quantity in 13 positions."
+justification = "Read from the design own text for this field: RETENCIONES"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1340
+ordinal = "18"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1386
+ordinal = "20"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-numero-de-justificante-del-modelo-417"
+decision_statement = "Digit string of 13 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: NUMERO DE JUSTIFICANTE DEL MODELO 210"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1386
+ordinal = "20"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1405
+ordinal = "23"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-nacimiento-del-contribuye-453"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE NACIMIENTO DEL CONTRIBUYENTE"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1405
+ordinal = "23"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1425
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ciudad-35-posiciones-461"
+decision_statement = "Alphanumeric text of 35 positions in an untyped slot."
+justification = "Read from the design own text for this field: CIUDAD : 35 posiciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1425
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1429
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-codigo-pais-campo-alfabetico-de-2-496"
+decision_statement = "Digit string of 2 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: CODIGO PAIS: Campo alfabetico de 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1429
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1454
+ordinal = "1"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-tipo-de-registro-1"
+decision_statement = "Constant '2' in 1 digit(s), stated by the design."
+justification = "Read from the design own text for this field: TIPO DE REGISTRO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1454
+ordinal = "1"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["296"]
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1456
+ordinal = "2"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-modelo-de-declaracion-2"
+decision_statement = "Constant '296' in 3 digit(s), stated by the design."
+justification = "Read from the design own text for this field: MODELO DE DECLARACION"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1456
+ordinal = "2"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1458
+ordinal = "3"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-ejercicio-5"
+decision_statement = "The four figures of the fiscal year."
+justification = "Read from the design own text for this field: EJERCICIO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1458
+ordinal = "3"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1561
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-entera-del-numero-de-titulos-217"
+decision_statement = "Integer part of a printed subdivided amount, 11 digits."
+justification = "Read from the design own text for this field: Parte entera del numero de titulos. Si no"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1561
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 6
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1563
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-decimal-del-numero-de-titulo-228"
+decision_statement = "Fractional part of a printed subdivided amount, 6 digits."
+justification = "Read from the design own text for this field: Parte decimal del numero de titulos. Si no"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1563
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1578
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-entera-del-numero-de-titulos-234"
+decision_statement = "Integer part of a printed subdivided amount, 11 digits."
+justification = "Read from the design own text for this field: Parte entera del numero de titulos. Si no"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1578
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 6
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1580
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-parte-decimal-del-numero-de-titulo-245"
+decision_statement = "Fractional part of a printed subdivided amount, 6 digits."
+justification = "Read from the design own text for this field: Parte decimal del numero de titulos. Si no"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1580
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1583
+ordinal = "17"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-pago-251"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE PAGO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1583
+ordinal = "17"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1598
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-se-259"
+decision_statement = "Integer part of a printed subdivided amount, 11 digits."
+justification = "Read from the design own text for this field: ENTERO . Numerico. Parte entera: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1598
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1601
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-se-270"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL . Numerico. Parte decimal. Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1601
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1609
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-se-272"
+decision_statement = "Integer part of a printed subdivided amount, 11 digits."
+justification = "Read from the design own text for this field: ENTERO . Numerico. Parte entera: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1609
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1612
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-se-283"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL . Numerico. Parte decimal. Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1612
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1622
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-entero-numerico-parte-entera-se-285"
+decision_statement = "Integer part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: ENTERO . Numerico. Parte entera: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1622
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1625
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-decimal-numerico-parte-decimal-287"
+decision_statement = "Fractional part of a printed subdivided amount, 2 digits."
+justification = "Read from the design own text for this field: DECIMAL . Numerico. Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1625
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1629
+ordinal = "21"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-numero-de-justificante-del-modelo-289"
+decision_statement = "Digit string of 13 positions carrying no arithmetic value."
+justification = "Read from the design own text for this field: NUMERO DE JUSTIFICANTE DEL MODELO 210"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1629
+ordinal = "21"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1646
+ordinal = "22"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m296-fecha-de-presentacion-del-modelo-2-302"
+decision_statement = "Date the design prints as aaaammdd."
+justification = "Read from the design own text for this field: FECHA DE PRESENTACION DEL MODELO 210"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
+source_row = 1646
+ordinal = "22"
+record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"

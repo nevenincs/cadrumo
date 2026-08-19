@@ -1,0 +1,21 @@
+# Modelo 296 binds exactly the obligation modelo 216 binds, one year at a time:
+# whoever satisfies rentas to contribuyentes del IRNR sin establecimiento
+# permanente and withholds on them files 216 period by period and summarises the
+# year on 296. The payer fact is therefore the SAME fact 216 requires,
+# pays_withheld_income, rather than a new one -- a second fact would let a filer
+# be obliged to the periodic self-assessment and not to its own annual resumen.
+#
+# cuota_bearing is false. Modelo 296 settles nothing: its three casillas are the
+# annual base, the annual retenciones e ingresos a cuenta, and their computed
+# total. Modelo 390, the annual IVA resumen standing in the same relation to
+# modelo 303, declares cuota_bearing = false for the same reason, while modelo
+# 216 declares it true because the periodic self-assessment does carry a cuota.
+
+[[revisions."2024-y-siguientes".applicability]]
+id = "m296-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_withheld_income"
+applicable_reason = "Modelo 296 (IRNR, resumen anual de retenciones e ingresos a cuenta): el declarante satisface rentas sujetas al Impuesto sobre la Renta de no Residentes obtenidas sin establecimiento permanente y resume anualmente las retenciones e ingresos a cuenta practicados sobre ellas y autoliquidados periodicamente en el modelo 216."
+not_applicable_reason = "Modelo 296 no aplica: el resumen anual de retenciones del IRNR solo corresponde a quien satisface rentas a contribuyentes sin establecimiento permanente sujetas a retencion o ingreso a cuenta y presenta las autoliquidaciones periodicas del modelo 216."
+cuota_bearing = false
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]

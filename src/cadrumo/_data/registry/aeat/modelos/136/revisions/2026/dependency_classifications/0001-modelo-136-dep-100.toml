@@ -1,0 +1,32 @@
+# The one modelo a reader would expect Modelo 136 to depend on is Modelo 100:
+# both concern a natural person's income for the year, and the premio is plainly
+# income. It is NOT a dependency, and LIRPF disposicion adicional 33 apartado 8
+# says so in both directions, verbatim in the bundled consolidated text:
+#
+#   "No se integrarán en la base imponible del Impuesto los premios previstos en
+#   esta disposición adicional. Las retenciones o ingresos a cuenta practicados
+#   conforme a lo previsto en la misma no minorarán la cuota líquida total del
+#   Impuesto."
+#
+# So no value flows either way: the premio does not enter the IRPF base, and the
+# retencion practised on it does not reduce the IRPF cuota liquida. The gravamen
+# especial is settled on its own autoliquidacion, and apartado 4 of the same
+# disposition fixes its own tipo, which this revision now holds as the parameter
+# irpf.lottery_prize_special_levy_rate rather than as a formula literal.
+#
+# treatment = "non_dependency" is the classification the registry provides for
+# exactly this: a source modelo considered and rejected, declared with no target
+# constructs and no relation refs, which registry validation requires of it.
+# Modelo 100 itself uses the same treatment to record that 200, 202, 232 and 720
+# are not dependencies of the renta return.
+#
+# The modelo the PAYER files to declare the retencion practised on the premio is
+# not classified here because this registry does not carry it; there is no
+# revision for a classification to name.
+
+[[revisions."2026".dependency_classifications]]
+id = "modelo-136-dep-100"
+source_modelo = "100"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:da-33"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]

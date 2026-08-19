@@ -1463,9 +1463,7 @@ def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
     expected: tuple[str, ...],
 ) -> None:
     """The dash-enumeration reader admits AEAT's label spellings, never a range."""
-    values = tuple(
-        match.group("value") for match in _export_tree._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
-    )
+    values = tuple(match.group("value") for match in _export_tree._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
 
     assert values == expected
 

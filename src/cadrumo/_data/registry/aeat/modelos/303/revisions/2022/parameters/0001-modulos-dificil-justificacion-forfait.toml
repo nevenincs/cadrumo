@@ -1,0 +1,32 @@
+# The universal statutory one-percent difficult-justification deduction, for the
+# filing periods this revision governs (2022 1T through 4T). Annual module
+# coefficients and cuota-minima percentages live only in the source-pinned M303
+# annual Orden projection, not here.
+#
+# GROUNDING: ley-37-1992:art-123 (LIVA art. 123) is the permanent statutory basis
+# and is not year-scoped. The annual Orden that fixes the 2022 modules is Orden
+# HFP/1335/2021, already declared among this revision's own source_refs, and its
+# bundled consolidated text carries the clause verbatim -- verified by reading
+# corpus/normatives/html/orden-hfp-1335-2021.html rather than by transcribing it
+# from a sibling revision.
+#
+# The RD-ley 20/2022 transitional reducido rate is deliberately NOT declared
+# here: it opens on 1 January 2023 and therefore governs no filing period of this
+# revision. It belongs to the 2023 and 2024-covering revisions, which declare it.
+
+[[revisions."2022".parameters]]
+id = "m303-modulos-iva-dificil-justificacion-forfait"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1335-2021-iva-authority"]
+
+[[revisions."2022".parameters.values]]
+value = "1"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "boe-orden-hfp-1335-2021-iva-authority"
+required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]

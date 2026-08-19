@@ -1,0 +1,79 @@
+schema_version = 1
+fragment_id = "width17-num-068-no-cumplimentar"
+singleton_rules = []
+
+# The six art. 11.12 LIS grid positions whose Contenido cell reads "No
+# cumplimentar". AEAT's instruction governs the VALUE -- the filer leaves them
+# empty -- not the wire SHAPE, which the design fixes at 17 characters of Num
+# exactly like every sibling amount in this grid, all already declared 15,2
+# unsigned by the fragments covering DP200026C. The governing evidence is the
+# same official workbook note, so this rule cites it rather than asserting a
+# second authority for the same fact.
+#
+# They are NOT filler. The completeness check counts all six as required
+# positions of the official design, so emitting them as filler would leave six
+# positions AEAT expects unwritten while the digest still validated -- a thin
+# file behind a valid digest, which is the exact failure that gate exists to
+# catch.
+
+[[width_17_rules]]
+rule_kind = "width_17_membership"
+aeat_type = "Num"
+integer_digits = 15
+decimal_digits = 2
+sign_policy = "unsigned"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 81
+source_cell = "A81"
+ordinal = 76
+record_identity = "DP200026C"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 82
+source_cell = "A82"
+ordinal = 77
+record_identity = "DP200026C"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 84
+source_cell = "A84"
+ordinal = 79
+record_identity = "DP200026C"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 85
+source_cell = "A85"
+ordinal = 80
+record_identity = "DP200026C"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 86
+source_cell = "A86"
+ordinal = 81
+record_identity = "DP200026C"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026C"
+source_row = 88
+source_cell = "A88"
+ordinal = 83
+record_identity = "DP200026C"
+
+[width_17_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "A121"
+expected_normalized_statement = "NOTA: Los importes son de 15 enteros (o N + 14) y 2 decimales"
+justification = "The official workbook note governs the reviewed width-17 amount membership; Num is unsigned, while N reserves its leading position for N on negatives and blank on nonnegative values."
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"

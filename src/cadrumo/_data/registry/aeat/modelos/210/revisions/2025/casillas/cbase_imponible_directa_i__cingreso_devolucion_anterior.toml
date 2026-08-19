@@ -1,9 +1,14 @@
 # Modelo 210 official diseño-de-registro numbered liquidación casillas [4]-[31].
 #
-# Authored from the bundled AEAT layout authority
-# `boe-modelo-210-diseno-registro-2011` (record identifier T21001, version 1.1,
-# 15/02/2012), page 2, "Determinación de la base imponible" (210 I/R/H/G) and
-# "Liquidación". The five existing base/rate/cuota casillas already carry their
+# Grounded in the bundled AEAT layout authority `aeat-dr-210-2022`, the diseño
+# governing devengos from 01/06/2022, section "Determinación de la base
+# imponible" (210 I/R/H/G) and "Liquidación". These casillas were originally
+# authored from the 2011 diseño (record identifier T21001, version 1.1,
+# 15/02/2012), whose applicability window closed on 2017-12-31 -- nine years
+# before this revision opens -- so citing it here made the revision cite a
+# superseded source. Every one of the 21 casillas re-grounded is addressed by
+# the export tree this revision renders from the 2022 diseño, which is what
+# establishes that the later design carries them. The five existing base/rate/cuota casillas already carry their
 # official numbers (rendimientos_integros=[5], gastos_deducibles=[7],
 # base_imponible=[8], tipo_gravamen=[21], cuota_integra=[22],
 # retencion_practicada=[29], cuota_diferencial=[31]); this fragment adds the
@@ -34,7 +39,7 @@ semantic_role_cardinality_reason = "Official 210 I direct-base slot with no sibl
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f082"]
 
 # --- Determinación de la base imponible: 210 R (rendimientos) ---
@@ -48,9 +53,9 @@ semantic_role = "irnr_exencion_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f084"]
-constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 # --- Determinación de la base imponible: 210 H (ganancias patrimoniales) ---
 
@@ -63,7 +68,7 @@ semantic_role = "irnr_ganancia_valor_transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f092"]
 
 [[revisions."2025".casillas]]
@@ -75,7 +80,7 @@ semantic_role = "irnr_ganancia_valor_adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f093"]
 
 [[revisions."2025".casillas]]
@@ -87,7 +92,7 @@ semantic_role = "irnr_ganancia_diferencia"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f094"]
 
 [[revisions."2025".casillas]]
@@ -99,7 +104,7 @@ semantic_role = "irnr_ganancia_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f095"]
 
 [[revisions."2025".casillas]]
@@ -111,7 +116,7 @@ semantic_role = "irnr_mejora_valor_transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f096"]
 
 [[revisions."2025".casillas]]
@@ -123,7 +128,7 @@ semantic_role = "irnr_mejora_valor_adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f097"]
 
 [[revisions."2025".casillas]]
@@ -135,7 +140,7 @@ semantic_role = "irnr_mejora_diferencia"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f098"]
 
 [[revisions."2025".casillas]]
@@ -147,7 +152,7 @@ semantic_role = "irnr_mejora_ganancia"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f099"]
 
 [[revisions."2025".casillas]]
@@ -160,7 +165,7 @@ required = false
 input_kind = "computed"
 formula = "m210-base-ganancias-h-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f100"]
 
 # --- Determinación de la base imponible: 210 G (direct) ---
@@ -176,7 +181,7 @@ semantic_role_cardinality_reason = "Official 210 G direct-base slot with no sibl
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f104"]
 
 # --- Liquidación ---
@@ -190,9 +195,9 @@ semantic_role = "irnr_exenciones_ley_irnr_indicador"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f105"]
-constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 [[revisions."2025".casillas]]
 id = "convenio_indicador"
@@ -203,9 +208,9 @@ semantic_role = "irnr_convenio_indicador"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f106"]
-constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 [[revisions."2025".casillas]]
 id = "deduccion_donativos"
@@ -216,9 +221,9 @@ semantic_role = "irnr_deduccion_donativos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f109"]
-constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 [[revisions."2025".casillas]]
 id = "cuota_ley_irnr"
@@ -230,7 +235,7 @@ required = false
 input_kind = "computed"
 formula = "m210-cuota-ley-irnr-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f110"]
 
 [[revisions."2025".casillas]]
@@ -242,9 +247,9 @@ semantic_role = "irnr_porcentaje_convenio"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f111"]
-constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 [[revisions."2025".casillas]]
 id = "limite_convenio"
@@ -255,9 +260,9 @@ semantic_role = "irnr_limite_convenio"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f112"]
-constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-210-diseno-registro-2011"] }
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2022"] }
 
 [[revisions."2025".casillas]]
 id = "reduccion_convenio"
@@ -269,7 +274,7 @@ required = false
 input_kind = "computed"
 formula = "m210-reduccion-convenio-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f113"]
 
 [[revisions."2025".casillas]]
@@ -282,7 +287,7 @@ required = false
 input_kind = "computed"
 formula = "m210-cuota-integra-reducida-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f114"]
 
 [[revisions."2025".casillas]]
@@ -294,5 +299,5 @@ semantic_role = "irnr_ingreso_devolucion_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 export_refs = ["m210-2022.pagina01.f116"]

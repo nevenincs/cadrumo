@@ -12,6 +12,26 @@ encoding = "iso-8859-1"
 line_ending = "crlf"
 binding_record = "type_1"
 
+# The diseño declares a 500-position record and states this tail explicitly as
+# a BLANCOS run. The emitted length is max(offset + length - 1) over the
+# record's fields, so without it this record went out 180 bytes long where
+# AEAT reads 500. Declared inline beside the binding-derived fields, which the
+# resolver keeps because it drops only declared fields that OVERLAP a derived
+# one; this tail overlaps nothing.
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-720-type-1-reserved-tail"
+offset = 181
+length = 320
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+
 [[revisions."2013-y-siguientes".export_layouts.records]]
 id = "modelo-720-type-2"
 record_type = "type_2"
@@ -20,4 +40,24 @@ encoding = "iso-8859-1"
 line_ending = "crlf"
 repeat = "binding_rows"
 binding_record = "type_2"
+
+# The diseño declares a 500-position record and states this tail explicitly as
+# a BLANCOS run. The emitted length is max(offset + length - 1) over the
+# record's fields, so without it this record went out 480 bytes long where
+# AEAT reads 500. Declared inline beside the binding-derived fields, which the
+# resolver keeps because it drops only declared fields that OVERLAP a derived
+# one; this tail overlaps nothing.
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-720-type-2-reserved-tail"
+offset = 481
+length = 20
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
 

@@ -246,6 +246,15 @@ class SingletonNumericRule(_StrictModel):
         "month_mm",
         "day_dd",
         "mistyped_alphanumeric_text",
+        #: One HALF of a quantity AEAT prints as a subdivided pair -- a printed
+        #: "Parte entera" row and a printed "Parte decimal" row that exactly tile
+        #: their parent. The export IR descends to those leaves, so the layout
+        #: carries two fields for one casilla, and each half states which part of
+        #: the value it writes. Reserved for parts of ONE quantity: where the
+        #: printed subdivision carries distinct FACTS, the registry gains a
+        #: casilla per fact instead.
+        "amount_integer_part",
+        "amount_fractional_digits",
     ]
     value_policy: RequiredExportValuePolicyValue
     integer_digits: int = Field(ge=0)
@@ -284,6 +293,8 @@ class SingletonNumericRule(_StrictModel):
             "month_mm": ExportValuePolicy.TWO_DIGIT_MONTH,
             "day_dd": ExportValuePolicy.TWO_DIGIT_DAY,
             "mistyped_alphanumeric_text": ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT,
+            "amount_integer_part": ExportValuePolicy.INTEGER_PART,
+            "amount_fractional_digits": ExportValuePolicy.FRACTIONAL_DIGITS,
         }[self.semantic_kind]
         if self.value_policy != required_policy:
             raise ValueError(f"{self.semantic_kind} requires value_policy {required_policy!r}")
@@ -294,6 +305,10 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires exactly 8 integer digits and 0 decimal digits")
         if self.semantic_kind == "integer" and (self.integer_digits <= 0 or self.decimal_digits != 0):
             raise ValueError("integer requires positive integer digits and 0 decimal digits")
+        if self.semantic_kind == "amount_integer_part" and (self.integer_digits <= 0 or self.decimal_digits != 0):
+            raise ValueError("amount_integer_part requires positive integer digits and 0 decimal digits")
+        if self.semantic_kind == "amount_fractional_digits" and (self.integer_digits != 0 or self.decimal_digits <= 0):
+            raise ValueError("amount_fractional_digits requires 0 integer digits and positive decimal digits")
         if self.semantic_kind in {"decimal", "percentage_decimal"} and (
             self.integer_digits <= 0 or self.decimal_digits <= 0
         ):
@@ -471,7 +486,15 @@ def load_render_profile_source_evidence(
     source_path: Path,
     profile: RenderProfile,
 ) -> RenderProfileSourceEvidence:
-    """Read every claimed official cell from the hash-verified binary itself."""
+    """Read every claimed official cell from the hash-verified binary itself.
+
+    A profile may rest entirely on reviewed policy decisions, which cite no
+    official cell: the design identity is still verified against the exact
+    binary, the coverage gate still demands one reviewed rule per eligible
+    anchor, and there is then no cell to read -- a PDF-sourced design has no
+    Contenido column at all. The workbook requirement applies only when a rule
+    DOES claim an official cell, because only a workbook can carry one.
+    """
     if not source_path.is_file() or is_link_like(source_path):
         raise RegistryValidationError(f"render profile source must be a regular file: {source_path}")
     actual_sha256 = sha256_file(source_path)
@@ -480,10 +503,6 @@ def load_render_profile_source_evidence(
             "render profile source binary SHA-256 does not match the exact design identity",
         )
     suffix = source_path.suffix.lower()
-    if suffix not in {".xlsx", ".xlsm", ".xls"}:
-        raise RegistryValidationError(
-            f"render profile source evidence requires a spreadsheet workbook: {source_path}",
-        )
 
     official_evidence = tuple(
         evidence
@@ -494,7 +513,11 @@ def load_render_profile_source_evidence(
         if isinstance(evidence, OfficialSourceEvidence)
     )
     if not official_evidence:
-        raise RegistryValidationError("render profile contains no official-source evidence to resolve")
+        return RenderProfileSourceEvidence(design_identity=profile.design_identity, entries=())
+    if suffix not in {".xlsx", ".xlsm", ".xls"}:
+        raise RegistryValidationError(
+            f"render profile source evidence requires a spreadsheet workbook: {source_path}",
+        )
     locators = tuple(dict.fromkeys((item.source_sheet, item.source_cell) for item in official_evidence))
     read_cell = _legacy_xls_cell_reader(source_path) if suffix == ".xls" else _ooxml_cell_reader(source_path)
     with read_cell as cell_value:
@@ -606,9 +629,7 @@ def validate_render_profile_authority(
         # representation. Refusing here would make that field eligible for a
         # rule the validator then rejects, which is the contradiction the
         # comment above warns about, one case further along.
-        if field.length == 17 or not (
-            _is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field)
-        ):
+        if field.length == 17 or not (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field)):
             raise RegistryValidationError(f"smaller singleton rule conflicts with official field at {rule.anchor!r}")
         # A digit budget is checked against the slot for every kind that HAS
         # one. The mistyped-alphanumeric kind has none by construction -- it
@@ -733,6 +754,29 @@ def _is_numeric_aeat_type(aeat_type: str) -> bool:
     return normalised in {"num", "n"} or normalised.startswith("numeric")
 
 
+#: A Contenido cell that instructs the FILER and states nothing about the wire.
+#: Modelo 200 prints "No cumplimentar" in six art. 11.12 LIS grid positions: the
+#: slot is a 17-character amount like every sibling in its grid, and the note
+#: withholds the VALUE rather than describing the representation.
+#:
+#: This is a third case the workbook branch above did not have. Its reasoning --
+#: a non-blank Contenido is the design stating the fact -- holds for a cell that
+#: DESCRIBES the slot and not for one that gives the filer an instruction. Read
+#: as a wire fact the phrase is unparseable, and the renderer refused on it; read
+#: as blank it becomes eligible for the reviewed rule the design's own note
+#: already governs.
+#:
+#: Deliberately an exact phrase set, not a keyword search: "no" and
+#: "cumplimentar" both appear inside legitimate descriptions of what a slot
+#: carries, and a loose rule would make real wire facts invisible to review.
+_FILING_INSTRUCTION_ONLY_CONTENTS: Final[frozenset[str]] = frozenset({"no cumplimentar"})
+
+
+def _is_filing_instruction_only(content: str) -> bool:
+    """Whether the Contenido cell instructs the filer instead of stating a wire fact."""
+    return content.strip().rstrip(".").casefold() in _FILING_INSTRUCTION_ONLY_CONTENTS
+
+
 def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
     """Whether the design left this field's wire fact unstated at its anchor.
 
@@ -755,7 +799,9 @@ def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
     """
     if field.source_cell is None:
         return True
-    return field.content is None or not field.content.strip()
+    if field.content is None or not field.content.strip():
+        return True
+    return _is_filing_instruction_only(field.content)
 
 
 def project_render_profile_eligibility(

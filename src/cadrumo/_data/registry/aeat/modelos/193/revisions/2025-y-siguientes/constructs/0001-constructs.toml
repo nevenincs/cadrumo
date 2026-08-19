@@ -30,6 +30,6 @@ application_links = [
     "modelo-193-reconciliation",
     "modelo-193-workflow",
 ]
-deadline_windows = ["modelo-193-2024-0a", "modelo-193-2025-0a"]
+deadline_windows = ["modelo-193-2025-0a"]
 filing_schedules = ["modelo-193-anual"]
 dependency_classifications = ["modelo-193-dep-123"]

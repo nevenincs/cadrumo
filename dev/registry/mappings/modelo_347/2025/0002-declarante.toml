@@ -81,17 +81,29 @@ record_identity = "Tipo 1 - Registro De Declarante"
 [[entries]]
 export_field_id = "m347-2025.declarante.f007"
 kind = "casilla"
+casilla_id = "decl.persona-relacion-telefono"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f008"
+kind = "casilla"
 casilla_id = "decl.persona-relacion"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
 sheet = "Tipo 1 - Registro De Declarante"
-source_row = 68
-ordinal = "7"
+source_row = 72
+ordinal_absent = true
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f008"
+export_field_id = "m347-2025.declarante.f009"
 kind = "casilla"
 casilla_id = "decl.numero-justificante"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -103,7 +115,7 @@ ordinal = "8"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f009"
+export_field_id = "m347-2025.declarante.f010"
 kind = "casilla"
 casilla_id = "decl.complementaria-sustitutiva"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -115,7 +127,7 @@ ordinal = "9"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f010"
+export_field_id = "m347-2025.declarante.f011"
 kind = "header"
 producer_key = "amendment_evidence.original_aeat_receipt"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -127,7 +139,7 @@ ordinal = "10"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f011"
+export_field_id = "m347-2025.declarante.f012"
 kind = "casilla"
 casilla_id = "decl.total-personas-entidades"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -139,7 +151,7 @@ ordinal = "11"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f012"
+export_field_id = "m347-2025.declarante.f013"
 kind = "casilla"
 casilla_id = "decl.importe-total-anual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -151,7 +163,7 @@ ordinal = "12"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f013"
+export_field_id = "m347-2025.declarante.f014"
 kind = "casilla"
 casilla_id = "decl.total-inmuebles"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -163,7 +175,7 @@ ordinal = "13"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f014"
+export_field_id = "m347-2025.declarante.f015"
 kind = "casilla"
 casilla_id = "decl.importe-total-arrendamiento-locales"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -175,7 +187,7 @@ ordinal = "14"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f015"
+export_field_id = "m347-2025.declarante.f016"
 kind = "filler"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
@@ -186,7 +198,7 @@ ordinal = "15"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f016"
+export_field_id = "m347-2025.declarante.f017"
 kind = "casilla"
 casilla_id = "decl.representante-legal-nif"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
@@ -198,7 +210,7 @@ ordinal = "16"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f017"
+export_field_id = "m347-2025.declarante.f018"
 kind = "filler"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
@@ -209,7 +221,7 @@ ordinal = "17"
 record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
-export_field_id = "m347-2025.declarante.f018"
+export_field_id = "m347-2025.declarante.f019"
 kind = "filler"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
