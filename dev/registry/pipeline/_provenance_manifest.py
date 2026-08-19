@@ -798,7 +798,6 @@ def _require_manifest_matches_current_authorities(
         raise RegistryValidationError("export provenance variable-envelope authority does not match generation")
 
 
-
 def _require_field_derivations_match_layout(
     field_derivations: tuple[ExportFieldDerivation, ...],
     loaded_layout: ExportLayoutDefinition,

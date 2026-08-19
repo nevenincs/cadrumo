@@ -1,0 +1,329 @@
+schema_version = 1
+fragment_id = "anexo-a-pagos"
+modelo = "296"
+design_epoch = "2024"
+source_ref = "aeat-dr-296-2024"
+source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1210
+ordinal = "1"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f002"
+kind = "literal"
+literal = "296"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1212
+ordinal = "2"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f003"
+kind = "header"
+producer_key = "m296.ana.ejercicio"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1214
+ordinal = "3"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f004"
+kind = "header"
+producer_key = "m296.ana.nif_del_declarante"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1218
+ordinal = "4"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f005"
+kind = "header"
+producer_key = "m296.ana.nif_del_perceptor"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1221
+ordinal = "5"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f006"
+kind = "header"
+producer_key = "m296.ana.nif_del_representante_legal"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1228
+ordinal = "6"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f007"
+kind = "header"
+producer_key = "m296.ana.f_j"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1236
+ordinal = "7"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f008"
+kind = "header"
+producer_key = "m296.ana.apellidos_y_nombre_razon_social_o_deno"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1243
+ordinal = "8"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f009"
+kind = "header"
+producer_key = "m296.ana.identificador_de_registro_o_numero_de"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1253
+ordinal = "9"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f010"
+kind = "header"
+producer_key = "m296.ana.codigo_isin"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1268
+ordinal = "10"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f011"
+kind = "header"
+producer_key = "m296.ana.fecha_de_devengo"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1275
+ordinal = "11"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f012"
+kind = "header"
+producer_key = "m296.ana.clave_de_personalidad_del_contribuyent"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1282
+ordinal = "12"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f013"
+kind = "header"
+producer_key = "m296.ana.nif_del_contribuyente"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1287
+ordinal = "13"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f014"
+kind = "header"
+producer_key = "m296.ana.codigo_lei_del_contribuyente"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1291
+ordinal = "14"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f015"
+kind = "header"
+producer_key = "m296.ana.apellidos_y_nombre_razon_social_o_deno_2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1299
+ordinal = "15"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f016"
+kind = "header"
+producer_key = "m296.ana.importe_del_pago_al_contribuyente"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1313
+ordinal = "16"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f017"
+kind = "header"
+producer_key = "m296.ana.porcentaje_de_retencion"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1330
+ordinal = "17"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f018"
+kind = "header"
+producer_key = "m296.ana.retenciones"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1340
+ordinal = "18"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f019"
+kind = "header"
+producer_key = "m296.ana.direccion_del_contribuyente"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1354
+ordinal = "19"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f020"
+kind = "header"
+producer_key = "m296.ana.numero_de_justificante_del_modelo_210"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1386
+ordinal = "20"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f021"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1398
+ordinal = "21"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f022"
+kind = "header"
+producer_key = "m296.ana.nif_en_el_pais_de_residencia_fiscal_de"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1400
+ordinal = "22"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f023"
+kind = "header"
+producer_key = "m296.ana.fecha_de_nacimiento_del_contribuyente"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1405
+ordinal = "23"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f024"
+kind = "header"
+producer_key = "m296.ana.ciudad"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1425
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f025"
+kind = "header"
+producer_key = "m296.ana.codigo_pais"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1429
+ordinal_absent = true
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f026"
+kind = "header"
+producer_key = "m296.ana.pais_o_territorio_de_residencia_fiscal"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1436
+ordinal = "25"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+
+[[entries]]
+export_field_id = "m296-2024.anexo-a-pagos.f027"
+kind = "literal"
+literal = "A"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
+source_row = 1443
+ordinal = "26"
+record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"

@@ -54,6 +54,7 @@ from ._render_profile import (
     Width17MembershipRule,
     _has_absent_naturaleza,
     _is_numeric_aeat_type,
+    _states_no_wire_fact,
     validate_render_profile,
 )
 from ._semantic_map import SemanticMap
@@ -104,8 +105,31 @@ _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 # pattern would go on to accept spellings AEAT has never written, and the reading
 # is proved anyway, because the declared 3 + 2 digits must equal the slot's own
 # 5 positions before the derivation is accepted.
+#: The cardinals AEAT actually SPELLS OUT in a numeric shape clause. Modelo 308
+#: writes `[quince enteros + dos decimales]` where 200, 322 and 151 write the
+#: same clause with digits. Named exactly, in the spirit of the `decmales` typo
+#: above: a general Spanish numeral parser would accept words no design writes,
+#: and the point is to read what AEAT wrote, not to be clever.
+#:
+#: A mis-read is caught immediately and cannot ship: the declared whole plus
+#: decimals is checked against the slot's own width by `_require_numeric_extent`
+#: at both use sites, so mapping a word to the wrong number refuses there.
+_SPANISH_CARDINALS: Final[dict[str, int]] = {
+    "dos": 2,
+    "tres": 3,
+    "quince": 15,
+}
+
+
+def _numeric_word_or_digits(value: str) -> int | None:
+    """Return the integer a shape clause names, whether written in digits or words."""
+    if value.isdigit():
+        return int(value)
+    return _SPANISH_CARDINALS.get(value.casefold())
+
+
 _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+)\s*(?:decimales?|decmales|dec\.?)"
+    r"^(?P<whole>\d+|[^\W\d_]+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+|[^\W\d_]+)\s*(?:decimales?|decmales|dec\.?)"
     r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
     re.IGNORECASE,
 )
@@ -174,6 +198,15 @@ _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
 _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"[^"]*(?:"\d+"[^"]*)+$',
 )
+#: The PARENTHESISED quoted spelling, which modelo 200 alone uses: `("0", "1")`,
+#: with a whitespace variant `( "0", "1")`. It is the same closed set the forms
+#: above express -- AEAT names every admissible value and no other -- so it is
+#: derived through the identical enumeration path rather than a second shape.
+#: The leading parenthesis is why the quoted-labelled rule above cannot see it:
+#: that one anchors on a value at position zero.
+_PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+    r'^\(\s*"\d+"(?:\s*,\s*"\d+")+\s*\)$',
+)
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
@@ -208,6 +241,8 @@ _SINGLETON_POLICY_SHAPES: Final[
     ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
     ExportValuePolicy.TWO_DIGIT_DAY: "integer",
     ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: "text",
+    ExportValuePolicy.INTEGER_PART: "integer",
+    ExportValuePolicy.FRACTIONAL_DIGITS: "integer",
 }
 #: Text naturalezas, in both vocabularies AEAT uses. A workbook prints the
 #: abbreviation; a PDF design prints the word, which the shipped parser
@@ -224,6 +259,17 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
+#: The same quoted constant FOLLOWED BY an explanatory clause. Modelo 296 writes
+#: `Constante "F" ANEXO "VALORES NEGOCIABLES..."` and then several lines saying
+#: when that sheet type is used, so the constant is stated exactly but the cell
+#: does not end there. Two checks below make reading past the literal safe: the
+#: extracted value must equal the map's declared literal byte for byte, and its
+#: encoded length must equal the official slot width. A mis-read prefix fails
+#: both, so this widens what can be PARSED without widening what is ACCEPTED.
+_OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\s+\S.*$",
+    re.IGNORECASE | re.DOTALL,
+)
 #: A record's own identifier is the one constant some designs print BARE. Modelo
 #: 353 writes `</T35301000>` in the Contenido cell with neither the `Constante`
 #: label nor quotes, where its own opening tag on the same sheet carries both;
@@ -232,6 +278,19 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: than relaxing the labelled-constant pattern, which would turn every unlabelled
 #: cell on every design into a mandated literal.
 _OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
+#: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
+#: `Constante 0A` for its periodo and `Constante </T20003000>` for two record
+#: closers, where the same design quotes every other constant. The `Constante`
+#: label is kept as the requirement -- that is what separates this from the
+#: unlabelled cell the pattern above deliberately refuses to treat as a literal;
+#: only the quotes are optional. Measured across all thirteen committed generated
+#: trees, this matches ZERO fields that the quoted and bare-tag patterns did not
+#: already match, so it widens what an author may declare without moving any
+#: published tree.
+_OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*constante\s+(?P<literal>[^\s'\"]+?)\.?\s*$",
+    re.IGNORECASE,
+)
 #: The quotation marks AEAT wraps a constant in. A workbook prints straight
 #: quotes; a PDF design prints guillemets, and typographic pairs appear in both
 #: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
@@ -375,7 +434,6 @@ def render_complete_export_tree(
         output_files=output_files,
         provenance_manifest=provenance_manifest,
     )
-
 
 
 def _validate_generated_projection_bijection(
@@ -623,12 +681,13 @@ def _normalise_field(
         # profile, which is the same rule the profile's own eligibility applies,
         # keyed on the same signal: a workbook anchor carries a ``source_cell``
         # and a PDF anchor does not.
-        states_wire_fact = (
-            parser_field.source_cell is not None
-            and parser_field.content is not None
-            and bool(parser_field.content.strip())
-        )
-        if not states_wire_fact:
+        # Asks the profile's OWN predicate rather than restating it. The two were
+        # separate copies of one rule and had already drifted: a Contenido cell
+        # reading "No cumplimentar" counts as stating no wire fact there, while
+        # here it counted as stating one, so the field was refused as ambiguous
+        # AND rejected by profile coverage as ineligible -- unreachable from
+        # either side.
+        if _states_no_wire_fact(parser_field):
             return _render_profile_numeric_derivation(
                 joined_field,
                 render_profile,
@@ -719,6 +778,10 @@ def _literal_derivation(
             official_literal = match.group("literal")
         elif _OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
             official_literal = folded_content
+        elif (unquoted := _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)) is not None:
+            official_literal = unquoted.group("literal")
+        elif (labelled := _OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)) is not None:
+            official_literal = labelled.group("literal")
         else:
             raise RegistryValidationError(
                 f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
@@ -836,9 +899,11 @@ def _numeric_derivation(
             derivation_code="numeric-ejercicio-aaaa-v1",
         )
     decimal_match = _DECIMAL_CONTENT_RE.fullmatch(normalised_content)
-    if decimal_match is not None:
-        whole = int(decimal_match.group("whole"))
-        decimals = int(decimal_match.group("decimals"))
+    whole_value = _numeric_word_or_digits(decimal_match.group("whole")) if decimal_match else None
+    decimals_value = _numeric_word_or_digits(decimal_match.group("decimals")) if decimal_match else None
+    if decimal_match is not None and whole_value is not None and decimals_value is not None:
+        whole = whole_value
+        decimals = decimals_value
         _require_numeric_extent(joined_field, expected_length=whole + decimals)
         return _schema_field(
             joined_field,
@@ -877,6 +942,7 @@ def _numeric_derivation(
         _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(normalised_content) is not None
+        or _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or len(labelled_values) > 1
     ):
         raw_values = (

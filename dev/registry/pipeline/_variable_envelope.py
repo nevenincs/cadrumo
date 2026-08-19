@@ -73,12 +73,8 @@ AUXILIARY_TO_PREFIX_ROLE: Final[dict[RecordDesignAuxiliaryEnvelopeHeaderRole, Fi
     RecordDesignAuxiliaryEnvelopeHeaderRole.BETWEEN_IDENTITIES_RESERVED: (
         FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER
     ),
-    RecordDesignAuxiliaryEnvelopeHeaderRole.SOFTWARE_DEVELOPER_TAX_ID: (
-        FilingEnvelopePrefixRole.DEVELOPER_TAX_ID
-    ),
-    RecordDesignAuxiliaryEnvelopeHeaderRole.POST_DEVELOPER_RESERVED: (
-        FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER
-    ),
+    RecordDesignAuxiliaryEnvelopeHeaderRole.SOFTWARE_DEVELOPER_TAX_ID: (FilingEnvelopePrefixRole.DEVELOPER_TAX_ID),
+    RecordDesignAuxiliaryEnvelopeHeaderRole.POST_DEVELOPER_RESERVED: (FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER),
     RecordDesignAuxiliaryEnvelopeHeaderRole.AUXILIARY_CLOSING_TAG: FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
 }
 

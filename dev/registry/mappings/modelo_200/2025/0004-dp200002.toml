@@ -1,0 +1,2268 @@
+schema_version = 1
+fragment_id = "dp200002"
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0002"
+kind = "literal"
+literal = "200"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0003"
+kind = "literal"
+literal = "02000"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0004"
+kind = "literal"
+literal = ">"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0005"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0006"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0007"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0008"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0009"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0010"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "domicilio_fiscal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0011"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 1
+field = "codigo_provincia"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0012"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0013"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0014"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0015"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0016"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "domicilio_fiscal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0017"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 2
+field = "codigo_provincia"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0018"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0019"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0020"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0021"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0022"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "domicilio_fiscal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0023"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 3
+field = "codigo_provincia"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0024"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0025"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0026"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0027"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0028"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "domicilio_fiscal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0029"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 4
+field = "codigo_provincia"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0030"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0031"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0032"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0033"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0034"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "domicilio_fiscal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0035"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_administrador"
+slot = 5
+field = "codigo_provincia"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0036"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0037"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "nombre_o_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0038"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0039"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0040"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "valor_nominal_total"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0041"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "valor_en_libros"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0042"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "ingresos_por_dividendos"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0043"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "correccion_valor_perdidas_ganancias"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0044"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "reversion_perdidas_deterioro_valores"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0045"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "eliminacion_deterioro_contable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0046"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "eliminacion_deterioro_valores_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0047"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "ajuste_valor_razonable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0048"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "efecto_correccion_valorativa_base_imponible"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0049"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "saldo_correcciones_fiscales_pendientes"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0050"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "capital"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0051"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "reservas_y_otras_partidas_fondos_propios"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0052"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "otras_partidas_patrimonio_neto"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0053"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 1
+field = "resultado_ultimo_ejercicio"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0054"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0055"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "nombre_o_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0056"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0057"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0058"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "valor_nominal_total"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0059"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "valor_en_libros"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0060"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "ingresos_por_dividendos"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0061"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "correccion_valor_perdidas_ganancias"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0062"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "reversion_perdidas_deterioro_valores"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0063"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "eliminacion_deterioro_contable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0064"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "eliminacion_deterioro_valores_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0065"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "ajuste_valor_razonable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0066"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "efecto_correccion_valorativa_base_imponible"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0067"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "saldo_correcciones_fiscales_pendientes"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0068"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "capital"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0069"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "reservas_y_otras_partidas_fondos_propios"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0070"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "otras_partidas_patrimonio_neto"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0071"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 2
+field = "resultado_ultimo_ejercicio"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 76
+source_cell = "A76"
+ordinal = "71"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0072"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0073"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "nombre_o_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0074"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 79
+source_cell = "A79"
+ordinal = "74"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0075"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 80
+source_cell = "A80"
+ordinal = "75"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0076"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "valor_nominal_total"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 81
+source_cell = "A81"
+ordinal = "76"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0077"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "valor_en_libros"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0078"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "ingresos_por_dividendos"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 83
+source_cell = "A83"
+ordinal = "78"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0079"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "correccion_valor_perdidas_ganancias"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0080"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "reversion_perdidas_deterioro_valores"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 85
+source_cell = "A85"
+ordinal = "80"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0081"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "eliminacion_deterioro_contable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 86
+source_cell = "A86"
+ordinal = "81"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0082"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "eliminacion_deterioro_valores_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 87
+source_cell = "A87"
+ordinal = "82"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0083"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "ajuste_valor_razonable"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 88
+source_cell = "A88"
+ordinal = "83"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0084"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "efecto_correccion_valorativa_base_imponible"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 89
+source_cell = "A89"
+ordinal = "84"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0085"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "saldo_correcciones_fiscales_pendientes"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 90
+source_cell = "A90"
+ordinal = "85"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0086"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "capital"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 91
+source_cell = "A91"
+ordinal = "86"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0087"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "reservas_y_otras_partidas_fondos_propios"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 92
+source_cell = "A92"
+ordinal = "87"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0088"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "otras_partidas_patrimonio_neto"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0089"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_directa"
+slot = 3
+field = "resultado_ultimo_ejercicio"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 94
+source_cell = "A94"
+ordinal = "89"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0090"
+kind = "casilla"
+casilla_id = "1501"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 95
+source_cell = "A95"
+ordinal = "90"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0091"
+kind = "casilla"
+casilla_id = "1502"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 96
+source_cell = "A96"
+ordinal = "91"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0092"
+kind = "casilla"
+casilla_id = "1503"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 97
+source_cell = "A97"
+ordinal = "92"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0093"
+kind = "casilla"
+casilla_id = "1504"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 98
+source_cell = "A98"
+ordinal = "93"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0094"
+kind = "casilla"
+casilla_id = "02376"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 99
+source_cell = "A99"
+ordinal = "94"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0095"
+kind = "casilla"
+casilla_id = "1506"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 100
+source_cell = "A100"
+ordinal = "95"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0096"
+kind = "casilla"
+casilla_id = "1809"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 101
+source_cell = "A101"
+ordinal = "96"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0097"
+kind = "casilla"
+casilla_id = "1810"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 102
+source_cell = "A102"
+ordinal = "97"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0098"
+kind = "casilla"
+casilla_id = "1507"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 103
+source_cell = "A103"
+ordinal = "98"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0099"
+kind = "casilla"
+casilla_id = "1508"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 104
+source_cell = "A104"
+ordinal = "99"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0100"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 105
+source_cell = "A105"
+ordinal = "100"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0101"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 106
+source_cell = "A106"
+ordinal = "101"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0102"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 107
+source_cell = "A107"
+ordinal = "102"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0103"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 108
+source_cell = "A108"
+ordinal = "103"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0104"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 109
+source_cell = "A109"
+ordinal = "104"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0105"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 110
+source_cell = "A110"
+ordinal = "105"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0106"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 1
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 111
+source_cell = "A111"
+ordinal = "106"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0107"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 112
+source_cell = "A112"
+ordinal = "107"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0108"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0109"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 114
+source_cell = "A114"
+ordinal = "109"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0110"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 115
+source_cell = "A115"
+ordinal = "110"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0111"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 116
+source_cell = "A116"
+ordinal = "111"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0112"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 117
+source_cell = "A117"
+ordinal = "112"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0113"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 2
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 118
+source_cell = "A118"
+ordinal = "113"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0114"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 119
+source_cell = "A119"
+ordinal = "114"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0115"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 120
+source_cell = "A120"
+ordinal = "115"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0116"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 121
+source_cell = "A121"
+ordinal = "116"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0117"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 122
+source_cell = "A122"
+ordinal = "117"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0118"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 123
+source_cell = "A123"
+ordinal = "118"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0119"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 124
+source_cell = "A124"
+ordinal = "119"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0120"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 3
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 125
+source_cell = "A125"
+ordinal = "120"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0121"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 126
+source_cell = "A126"
+ordinal = "121"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0122"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 127
+source_cell = "A127"
+ordinal = "122"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0123"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 128
+source_cell = "A128"
+ordinal = "123"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0124"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 129
+source_cell = "A129"
+ordinal = "124"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0125"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 130
+source_cell = "A130"
+ordinal = "125"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0126"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 131
+source_cell = "A131"
+ordinal = "126"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0127"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 132
+source_cell = "A132"
+ordinal = "127"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0128"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 133
+source_cell = "A133"
+ordinal = "128"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0129"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 134
+source_cell = "A134"
+ordinal = "129"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0130"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 135
+source_cell = "A135"
+ordinal = "130"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0131"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 136
+source_cell = "A136"
+ordinal = "131"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0132"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 137
+source_cell = "A137"
+ordinal = "132"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0133"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 138
+source_cell = "A138"
+ordinal = "133"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0134"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 139
+source_cell = "A139"
+ordinal = "134"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0135"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "nif"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 140
+source_cell = "A140"
+ordinal = "135"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0136"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "representante"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 141
+source_cell = "A141"
+ordinal = "136"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0137"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "forma_juridica"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 142
+source_cell = "A142"
+ordinal = "137"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0138"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "apellidos_nombre_razon_social"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 143
+source_cell = "A143"
+ordinal = "138"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0139"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "codigo_provincia_pais"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 144
+source_cell = "A144"
+ordinal = "139"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0140"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "nominal"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 145
+source_cell = "A145"
+ordinal = "140"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0141"
+kind = "projection"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "porcentaje_participacion"
+[entries.anchor]
+sheet = "DP200002"
+source_row = 146
+source_cell = "A146"
+ordinal = "141"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0142"
+kind = "header"
+producer_key = "m200.b_2_suma_de_porcentajes_de_participacion_de"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 147
+source_cell = "A147"
+ordinal = "142"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0143"
+kind = "header"
+producer_key = "m200.b_2_suma_de_porcentajes_de_participaciones_e"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 148
+source_cell = "A148"
+ordinal = "143"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0144"
+kind = "filler"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 149
+source_cell = "A149"
+ordinal = "144"
+record_identity = "DP200002"
+
+[[entries]]
+export_field_id = "m200-2025.dp200002.f0145"
+kind = "header"
+producer_key = "m200.identificador_de_fin_de_registro_3"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200002"
+source_row = 150
+source_cell = "A150"
+ordinal = "145"
+record_identity = "DP200002"

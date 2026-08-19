@@ -1,0 +1,149 @@
+schema_version = 1
+fragment_id = "perceptor-intereses"
+modelo = "296"
+design_epoch = "2024"
+source_ref = "aeat-dr-296-2024"
+source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1019
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f002"
+kind = "literal"
+literal = "296"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1021
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f003"
+kind = "header"
+producer_key = "m296.pin.ejercicio"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1023
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f004"
+kind = "header"
+producer_key = "m296.pin.nif_del_declarante"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1026
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f005"
+kind = "header"
+producer_key = "m296.pin.nif_del_perceptor"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1029
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f006"
+kind = "header"
+producer_key = "m296.pin.nif_del_representante_legal"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1037
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f007"
+kind = "header"
+producer_key = "m296.pin.f_j"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1045
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f008"
+kind = "header"
+producer_key = "m296.pin.apellidos_y_nombre_razon_social_o_deno"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1052
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f009"
+kind = "header"
+producer_key = "m296.pin.identificador_de_registro_o_numero_de"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1062
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f010"
+kind = "header"
+producer_key = "m296.pin.retenciones_e_ingresos_a_cuenta_ingres"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1070
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f011"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1199
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+
+[[entries]]
+export_field_id = "m296-2024.perceptor-intereses.f012"
+kind = "literal"
+literal = "F"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-296-2024"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
+source_row = 1200
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"

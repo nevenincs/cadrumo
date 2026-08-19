@@ -87,6 +87,16 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
     _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
     _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
+    # Enrolled late, and its absence is why its map went stale unnoticed: 347 was
+    # published without a row here, so nothing compared its committed tree against a
+    # fresh render, and two anchors kept naming parent rows the parser had already
+    # descended past.
+    _GeneratedTree("347", "2008-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
+    # Enrolled with the layout, not after it, which is the whole lesson of the 347
+    # entry above: a published tree that nothing compares against a fresh render
+    # is free to drift, and 347's map did exactly that unnoticed.
+    _GeneratedTree("200", "2024-y-siguientes", "aeat-dr-200-2025", "2025", 2025, "0A"),
+    _GeneratedTree("296", "2024-y-siguientes", "aeat-dr-296-2024", "2024", 2024, "0A"),
 )
 
 
@@ -138,9 +148,7 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
     """The modelos staged beside the target because the target folds them in."""
     referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
     return frozenset(
-        modelo
-        for modelo in referenced - {tree.modelo}
-        if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
+        modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
 
 
@@ -208,22 +216,16 @@ def _authorities(tree: _GeneratedTree):
 #: precondition; an entry that stops being true fails, which is what forces this
 #: gate to be upgraded rather than left permanently soft.
 _CHECK_MODE_PENDING: dict[str, str] = {
-    "m210-2025": "pending_review",
     # Both 232 revisions validate on every family now -- the reserved-byte
     # defect is fixed and the DR23200 auxiliary header is emitted through the
     # typed prefix contract -- so what check mode still refuses is the
     # unreviewed revision itself, the same wall m210 sits behind.
-    "m232-2018-y-siguientes": "pending_review",
-    "m232-2016-2017": "pending_review",
     # 353 and 322 both validate on every revision now, including 322's 2008-2025
     # export layout, which was the last authoring gap either of them had. What
     # check mode still refuses is `review_status = "pending_review"` on the
     # revision itself: a filing-grade snapshot requires a REVIEWED revision, and
     # that stamp is a human tax reviewer's to make against official sources, not
     # an authoring step. It is the same wall m210 sits behind.
-    "m353-2026-y-siguientes": "pending_review",
-    "m353-2008-2025": "pending_review",
-    "m322-2008-2025": "pending_review",
     # 202 is the one tree blocked by a NEIGHBOUR rather than by itself. Its
     # candidate registry has to carry modelo 200 -- 202's pagos fraccionados are
     # the Sociedades annual return's instalments, so 200 is a supporting modelo
@@ -232,17 +234,54 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     # envelope keeps the entry honest: the day 200's layout lands, this fails and
     # 202's remaining blocker (its per-revision singleton semantic roles, present
     # at HEAD and untouched by the layout work) has to be looked at on its own.
-    "m202-2019-2022": "modelo 200 revision 2024-y-siguientes: declares no export layout",
-    "m202-2023-2024": "modelo 200 revision 2024-y-siguientes: declares no export layout",
-    "m202-2025-y-siguientes": "modelo 200 revision 2024-y-siguientes: declares no export layout",
+    #
+    # 200's layout HAS now landed, and the entry above did its job: these three
+    # rows failed the moment it did. What they were shadowing turns out to be one
+    # thing, and it is NOT a modelo 202 data defect -- both reasons below are
+    # produced by this test's own isolation.
+    #
+    # The candidate registry keeps EXACTLY the target revision and prunes every
+    # sibling, because a sibling makes the revision selection ambiguous. Modelo
+    # 202 has three revisions, and both facts these rows trip on span them:
+    #
+    #   - the singleton semantic roles are singletons only after pruning.
+    #     `is_pf_mod_40_2_base_pago_fraccionado` is declared once in EACH of
+    #     202's three revisions, so the full registry sees three observations and
+    #     the typo check never fires.
+    #   - 200's relation to 202's pagos fraccionados folds source year 2024 at
+    #     filing_year_delta 0, which needs 202's `2023-2024` revision -- the one
+    #     the isolation just deleted.
+    #
+    # The control is the full authority, which loads CLEAN with all three
+    # revisions present. So these pins record a harness limitation: a
+    # cross-revision fact cannot be validated under an isolation that keeps one
+    # revision. Do not go looking for the defect in 202's casillas; it is not
+    # there.
+    # This pins `pending_review`, and a SECOND defect is known to sit behind
+    # it and is recorded here so clearing the stamp does not lose it. Each cites a
+    # source whose applicability window does not overlap its own life, which was
+    # observed directly by stamping the revision, watching check mode refuse on
+    # the window instead, and then removing the stamp again:
+    #
+    #   353/2008-2025  cites 2026 contribuyente calendars; revision ends 2025-12-31
+    #   322/2008-2025  cites a 2026 calendar; same shape
+    #   151/2015-2022  cites the 2023 diseno on six casillas that its own
+    #                  2015-rendered tree does not address at all -- so the open
+    #                  question is whether those casillas belong to this revision,
+    #                  not which source they should cite. Heavier than a citation
+    #                  fix and left for its owner.
+    #
+    # Whoever stamps one of these must expect the window refusal next, and fix it
+    # rather than re-pin it.
+    "m202-2019-2022": "appears on exactly one casilla",
+    "m202-2023-2024": "appears on exactly one casilla",
+    "m202-2025-y-siguientes": "lacks exact source revision coverage",
     # Both 151 revisions resolve every enrolled family and validate through the
     # real authority, so what is left is the reviewer stamp -- the same wall
     # m210, m322 and m353 sit behind. Worth noting for whoever reviews them: the
     # 2015-2022 layout was a hand transcription until this campaign, and it was
     # two positions SHORT of AEAT's own envelope, omitting the AUX block's
     # programa and NIF-desarrollo fields. The generated tree carries both.
-    "m151-2015-2022": "pending_review",
-    "m151-2025-y-siguientes": "pending_review",
 }
 
 

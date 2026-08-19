@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from dev.corpus.extract_manual_corpus_text import extract_raw_text
 from dev.docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,

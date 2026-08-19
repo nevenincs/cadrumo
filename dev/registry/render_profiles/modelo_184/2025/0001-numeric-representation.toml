@@ -301,8 +301,8 @@ record_identity = "PDF record design"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 13
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -329,10 +329,10 @@ record_identity = "PDF record design"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -589,8 +589,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
 integer_digits = 2
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -618,8 +618,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
 integer_digits = 2
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -647,8 +647,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 11
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -675,10 +675,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -703,8 +703,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 11
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -731,10 +731,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -759,8 +759,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -787,10 +787,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -815,8 +815,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 3
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -843,10 +843,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -871,8 +871,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 11
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -899,10 +899,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -927,8 +927,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -955,10 +955,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -983,8 +983,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1011,10 +1011,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1068,8 +1068,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1097,10 +1097,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1126,8 +1126,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1155,10 +1155,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1184,8 +1184,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1213,10 +1213,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1242,8 +1242,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1271,10 +1271,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1300,8 +1300,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1329,10 +1329,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1358,8 +1358,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1387,10 +1387,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1416,8 +1416,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1445,10 +1445,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1474,8 +1474,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1503,10 +1503,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1532,8 +1532,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1561,10 +1561,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1590,8 +1590,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 10
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1619,10 +1619,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1648,8 +1648,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1677,10 +1677,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1735,8 +1735,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 9
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1764,10 +1764,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1793,8 +1793,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 9
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1822,10 +1822,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1851,8 +1851,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 9
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1880,10 +1880,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1909,8 +1909,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1938,10 +1938,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -1967,8 +1967,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 9
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1996,10 +1996,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2025,8 +2025,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2054,10 +2054,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2083,8 +2083,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2112,10 +2112,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2141,8 +2141,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2170,10 +2170,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2199,8 +2199,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 6
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2228,10 +2228,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2257,8 +2257,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 7
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2286,10 +2286,10 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2518,8 +2518,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 3
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2546,10 +2546,10 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 4
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 4
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2603,8 +2603,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 9
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2631,10 +2631,10 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 
@@ -2804,8 +2804,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
 integer_digits = 11
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -2832,10 +2832,10 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "integer"
-value_policy = "unsigned-integer"
-integer_digits = 2
-decimal_digits = 0
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
 sign_policy = "unsigned"
 allowed_values = []
 

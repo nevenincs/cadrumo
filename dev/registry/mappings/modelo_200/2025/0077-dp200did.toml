@@ -1,0 +1,563 @@
+schema_version = 1
+fragment_id = "dp200did"
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0002"
+kind = "literal"
+literal = "200"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0003"
+kind = "literal"
+literal = "DID00"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0004"
+kind = "literal"
+literal = ">"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0005"
+kind = "filler"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0006"
+kind = "header"
+producer_key = "m200.cuenta_corriente_tributaria"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0007"
+kind = "header"
+producer_key = "m200.identificacion_ejercicio"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0008"
+kind = "header"
+producer_key = "m200.tipo_de_ejercicio"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0009"
+kind = "header"
+producer_key = "m200.periodo_impositivo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0010"
+kind = "header"
+producer_key = "m200.periodo_impositivo_inicio_dia"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0011"
+kind = "header"
+producer_key = "m200.periodo_impositivo_inicio_mes"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0012"
+kind = "header"
+producer_key = "m200.periodo_impositivo_inicio_ano"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0013"
+kind = "header"
+producer_key = "m200.periodo_impositivo_fin_dia"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0014"
+kind = "header"
+producer_key = "m200.periodo_impositivo_fin_mes"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0015"
+kind = "header"
+producer_key = "m200.periodo_impositivo_fin_ano"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0016"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0017"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0018"
+kind = "casilla"
+casilla_id = "DP200014:00552"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0019"
+kind = "casilla"
+casilla_id = "DP200014:00562"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0020"
+kind = "casilla"
+casilla_id = "01586"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0021"
+kind = "casilla"
+casilla_id = "00621"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0022"
+kind = "casilla"
+casilla_id = "02489"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0023"
+kind = "header"
+producer_key = "m200.renuncia_o_por_transferencia"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0024"
+kind = "header"
+producer_key = "m200.importe_a_devolver"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0025"
+kind = "casilla"
+casilla_id = "00866"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0026"
+kind = "header"
+producer_key = "m200.cuenta_bancaria_marca_sepa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0027"
+kind = "header"
+producer_key = "m200.numero_de_cuenta_iban"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0028"
+kind = "header"
+producer_key = "m200.cuenta_bancaria_codigo_swift_bic"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0029"
+kind = "header"
+producer_key = "m200.cuenta_bancaria_banco_bank_name"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0030"
+kind = "header"
+producer_key = "m200.direccion_del_banco_bank_address"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0031"
+kind = "header"
+producer_key = "m200.cuenta_bancaria_ciudad_city"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0032"
+kind = "header"
+producer_key = "m200.codigo_pais_country_code"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0033"
+kind = "header"
+producer_key = "m200.modalidad_de_ingreso_uno_de_los_siguientes_v"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0034"
+kind = "header"
+producer_key = "m200.importe_a_ingresar"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0035"
+kind = "header"
+producer_key = "m200.numero_de_cuenta_iban_2"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0036"
+kind = "header"
+producer_key = "m200.abono_compensacion_abono_por_conversion_de_a"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0037"
+kind = "header"
+producer_key = "m200.abono_compensacion_compensacion_por_conversi"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0038"
+kind = "casilla"
+casilla_id = "03318"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0039"
+kind = "casilla"
+casilla_id = "02490"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0040"
+kind = "casilla"
+casilla_id = "02493"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0041"
+kind = "header"
+producer_key = "m200.resultado_cero"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0042"
+kind = "filler"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "DP200DID"
+
+[[entries]]
+export_field_id = "m200-2025.dp200did.f0043"
+kind = "literal"
+literal = "</T200DID00>"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025"]
+[entries.anchor]
+sheet = "DP200DID"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "DP200DID"

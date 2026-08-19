@@ -319,34 +319,6 @@ record_identity = "Tipo 2 - Registro De Declarado"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "decimal"
-value_policy = "implied-decimal"
-integer_digits = 13
-decimal_digits = 2
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Tipo 2 - Registro De Declarado"
-source_row = 385
-ordinal = "15"
-record_identity = "Tipo 2 - Registro De Declarado"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m347-declarado-importe-metalico"
-decision_statement = "Fifteen digits as thirteen integer digits and two implied decimals, unsigned."
-justification = "The design states 'Se consignara sin signo y sin coma decimal' -- the sign policy and the implied decimal point are both stated by the source, and this rule agrees with it."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Tipo 2 - Registro De Declarado"
-source_row = 385
-ordinal = "15"
-record_identity = "Tipo 2 - Registro De Declarado"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "year_yyyy"
 value_policy = "four-digit-year"
 integer_digits = 4
@@ -539,3 +511,114 @@ sheet = "Tipo 2 - Registro De Inmueble"
 source_row = 876
 ordinal = "11"
 record_identity = "Tipo 2 - Registro De Inmueble"
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-decl-persona-relacion-telefono"
+decision_statement = "Nine digits of a telephone number, never an arithmetic quantity."
+justification = "AEAT prints this row as a subdivision of 'PERSONA CON QUIEN RELACIONARSE' and leaves its naturaleza cell EMPTY, so the wire fact has to come from a reviewed rule. The design's own prose supplies it: 'TELEFONO : Campo numerico de 9 posiciones.' A telephone number is a digit string: it is never signed, never scaled, and its leading zeros are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-decl-persona-relacion-nombre"
+decision_statement = "Forty positions of alphanumeric text; the slot carries a name, not a number."
+justification = "AEAT prints this row with an EMPTY naturaleza cell, and its own prose reads 'APELLIDOS Y NOMBRE: Se consignara el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo de la persona con quien relacionarse'. There is no numeric reading of a personal name to derive, so this states the real representation rather than inferring one from the width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 400
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-declarado-importe-metalico-entera"
+decision_statement = "Thirteen digits carrying the integer euros of a split amount."
+justification = "AEAT subdivides 'IMPORTE PERCIBIDO EN METALICO' into two printed rows and labels this one 'Parte entera del importe percibido en metalico, si no tiene contenido se consignara a ceros', so it carries the integer euros alone and the cents live in the row beside it. The parent states the convention for the pair: 'Se consignara sin signo y sin coma decimal'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 400
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 402
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-declarado-importe-metalico-decimal"
+decision_statement = "Two digits carrying the cents of a split amount."
+justification = "The sibling half of the same subdivision, labelled 'Parte decimal del importe percibido en metalico, si no tiene contenido se consignara a ceros'. Two positions of cents, unsigned, with the decimal point implied by the boundary between the two printed rows rather than written."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 402
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
