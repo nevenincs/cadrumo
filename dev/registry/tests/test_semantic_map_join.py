@@ -38,7 +38,7 @@ def _intermediate(snapshot) -> RecordDesignIntermediate:
                             "record_identity": "registro-tipo-1",
                             "source_row": 14,
                             "source_cell": "A14",
-                            "ordinal": 1,
+                            "ordinal": "1",
                             "offset": 1,
                             "length": 1,
                             "aeat_type": "AN",
@@ -49,7 +49,7 @@ def _intermediate(snapshot) -> RecordDesignIntermediate:
                             "record_identity": "registro-tipo-1",
                             "source_row": 15,
                             "source_cell": "A15",
-                            "ordinal": 2,
+                            "ordinal": "2",
                             "offset": 2,
                             "length": 1,
                             "aeat_type": "AN",
@@ -75,7 +75,11 @@ def _entry(
             "sheet": "Registro tipo 1",
             "source_row": row,
             "source_cell": source_cell if source_cell is not None else f"A{row}",
-            "ordinal": ordinal,
+            # Stringified: the anchor ordinal is the design's PRINTED ordinal,
+            # which the model requires as a string. Passing the int made every
+            # case here die on a ValidationError cascade rather than on the
+            # join behaviour it asserts.
+            "ordinal": str(ordinal),
             "record_identity": "registro-tipo-1",
         },
         "export_field_id": field_id,
