@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:d0ff418664754ddce7ad15aa42a7aee601ed14211dcf6453c7faf8b0ffdf20c8'
+body_hash: 'sha256:4647ab087899c4b5cbf3beb1a36b4d64721276b77a125241da215fa022953df4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1090,6 +1090,46 @@ rather than the shape keeps a second module adopting it reportable.
 
 Measured rather than asserted: the modelo/buckets selection moves from 147
 failed / 313 passed at HEAD to 144 / 316 -- three fixed, none introduced.
+
+### The lost-update class was never only about events: the calculate path could not express a guard
+
+FIXED, and this is the severe end of the class. Every earlier entry on this
+subject concerned the bucket event history. The same defect sat on the
+CALCULATION-REVISION catalogue, where the cost is different in kind: a lost
+audit entry costs a record of what happened, a lost calculation revision costs
+a tax computation.
+
+The calculate path in `application/modelo/_revision_persistence.py` composes
+that catalogue with the work-unit pointer and the creation event in one unit of
+work. It has to -- emitted separately, a failure leaves an advanced pointer
+standing over state that never committed -- so it cannot use the
+self-committing `mutate()`. It read the catalogue with a plain `load()`, and
+the batch then wrote the whole singleton row back, discarding any revision
+another calculate run persisted in between. Every surviving revision stays
+internally valid and the missing one leaves no hole.
+
+The root is worth separating from the instance. `to_secure_object_write` on the
+shared `ProfileEnvelopedModelSecurePersistence` primitive took NO
+`expected_revision_id` at all, so no repository composed on that base could
+carry a guard even if its author wanted one. The guarded co-commit was not
+being skipped; it was unavailable. `modelos_work_units` had grown its own
+parameter for exactly this need, which is the tell that the base was the gap
+rather than any one caller.
+
+Two limits recorded rather than implied. The work-unit catalogue in the same
+batch arrives as a PARAMETER, so that function cannot know its revision and it
+stays unguarded -- closing it means threading the revision down from the
+caller. And `expected_revision_id` is optional by necessity, since a caller
+persisting a catalogue it did not derive from a read has no revision to assert;
+that is also precisely the shape a later caller can slip back into without
+noticing, so a test pins the looseness as deliberate rather than leaving it to
+be rediscovered as a defect.
+
+Measured, not asserted: the calculate-path selection shows 148 failures either
+side of the change, 387 passing before and 391 after -- the difference being
+these four tests. The guard was proven to bite by removing the parameter at the
+base from a plugin outside the repository, where only the discriminating case
+reds.
 
 ## Recommendations
 
