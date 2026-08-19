@@ -259,9 +259,9 @@ def test_checked_in_exception_override_owners_cover_each_live_physical_observati
 def test_current_owner_gate_rejects_an_owner_stripped_of_its_evidence() -> None:
     """Mutating real checked-in ownership cannot conceal a missing-evidence defect.
 
-    The gate no longer asserts which plan Step owns an override -- reading that
-    meant citing a plan document, which `dev/` tooling must not do. The evidence
-    the tree can prove on its own still has to be there.
+    The gate no longer asserts external ownership metadata for an override --
+    reading that meant citing a development record, which this tooling must not
+    do. The evidence the tree can prove on its own still has to be there.
     """
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
     target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")

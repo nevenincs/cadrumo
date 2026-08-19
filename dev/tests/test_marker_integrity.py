@@ -256,6 +256,7 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
 )
 #: Test modules whose declared subject is the vault authoring pipeline itself.
 
+
 class _MarkerModuleInventory(NamedTuple):
     campaign_metadata_violations: list[str]
     process_symbol_metadata_violations: list[str]

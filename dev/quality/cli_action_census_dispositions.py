@@ -622,12 +622,12 @@ def validate_exception_override_owners(
 ) -> tuple[ExceptionOverrideObservation, ...]:
     """Fail on missing, stale, duplicate, or drifted override ownership.
 
-    Step ownership is deliberately NOT asserted here. Reading it meant citing a
-    plan document by path and shelling the vault CLI, which couples this gate to
-    the project's own development records -- the one direction the Code Stands
-    Alone mandate forbids. What survives is what this gate can prove from the
-    tree alone: the adjudicated role, the observation set, and the cooperative
-    MRO.
+    External ownership metadata is deliberately NOT asserted here. Reading it
+    meant addressing a development record by path and shelling its CLI, which
+    couples this gate to the project's own process history -- the one direction
+    the Code Stands Alone mandate forbids. What survives is what this gate can
+    prove from the tree alone: the adjudicated role, the observation set, and
+    the cooperative MRO.
     """
     observations = current_exception_override_observations(root=root)
     rows_by_key: dict[CandidateKey, list[CandidateDisposition]] = {}
