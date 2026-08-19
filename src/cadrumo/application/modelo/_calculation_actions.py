@@ -538,6 +538,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
+        work_units_revision_id=prepared.work_units_revision_id,
         ledger_filing_snapshot=_draft_ledger_anchor(
             work_unit=work_unit,
             source_transaction_ids=source_transaction_ids,

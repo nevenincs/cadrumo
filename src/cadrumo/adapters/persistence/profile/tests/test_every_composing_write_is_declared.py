@@ -39,6 +39,14 @@ was reviewed is worse than one that admits what it has not looked at.
 Repository modules are excluded structurally: a repository's own ``save`` and
 ``to_secure_object_write`` write the document handed to them, which is the API
 these call sites consume rather than an instance of the defect.
+
+ONE LIMIT THIS GATE CANNOT CLOSE. It rejects a literal
+``expected_revision_id=None``, because that satisfies a keyword check while
+guarding nothing and is the cheapest way to thread a revision into a function
+with many existing callers. It cannot judge a NAME that is None at runtime -- an
+optional parameter forwarded through -- so a site threading a revision must make
+its parameter REQUIRED. A defaulted one buys a permanent green from this gate
+and no protection at all.
 """
 
 from __future__ import annotations
@@ -80,12 +88,12 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (
         "src/cadrumo/application/modelo/_revision_persistence.py",
-        "persist_calculation_revision",
-    ): "the work-unit catalogue arrives as a parameter; its own calculation catalogue IS guarded here",
-    (
-        "src/cadrumo/application/modelo/_revision_persistence.py",
         "persist_filed_revision",
-    ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded here",
+    ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded "
+    "here. Threading the other two is blocked on cost rather than capability: this function has 26 test "
+    "call sites, and the cheap way through -- an OPTIONAL revision defaulting to None -- would buy a "
+    "permanent green from this gate while guarding nothing, so it must be a required parameter or not "
+    "done at all",
     (
         "src/cadrumo/application/modelo/_external_import_actions.py",
         "import_external_filing_evidence",
@@ -139,6 +147,28 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
 }
 
 
+def _asserts_a_revision(node: ast.Call) -> bool:
+    """Whether ``node`` passes a revision that could actually guard the write.
+
+    The keyword alone is not enough. ``expected_revision_id=None`` satisfies a
+    keyword check while guarding nothing, and that is a reachable shape rather
+    than a hypothetical: threading a revision into a function with many existing
+    callers is cheapest to do with an optional parameter defaulting to None, and
+    the call site then LOOKS guarded to a keyword matcher forever after.
+
+    A literal ``None`` is therefore rejected here. What cannot be judged
+    statically is a NAME that happens to be None at runtime -- an optional
+    parameter forwarded through -- so a site threading a revision must make the
+    parameter required rather than defaulted, and this gate cannot prove that it
+    did. That limit is stated in the module docstring rather than papered over.
+    """
+    for keyword in node.keywords:
+        if keyword.arg != "expected_revision_id":
+            continue
+        return not (isinstance(keyword.value, ast.Constant) and keyword.value.value is None)
+    return False
+
+
 def _bare_composing_sites() -> set[tuple[str, str]]:
     """Return every ``(module, function)`` composing a write with no revision."""
     found: set[tuple[str, str]] = set()
@@ -158,10 +188,48 @@ def _bare_composing_sites() -> set[tuple[str, str]]:
                     continue
                 if node.func.attr not in _COMPOSING_WRITES:
                     continue
-                if any(keyword.arg == "expected_revision_id" for keyword in node.keywords):
+                if _asserts_a_revision(node):
                     continue
                 found.add((relative, scope.name))
     return found
+
+
+def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
+    """DISCRIMINATING: the cheapest wrong way to thread a revision.
+
+    ``expected_revision_id=None`` passes a keyword check and guards nothing.
+    Without this, a site could be made permanently green by adding the keyword
+    and never a value.
+    """
+    source = (
+        "def persist(repository, entry):\n"
+        "    catalogue = repository.load()\n"
+        "    repository.save_with_secure_object_writes(\n"
+        "        upsert(catalogue, entry), (), expected_revision_id=None\n"
+        "    )\n"
+    )
+    tree = ast.parse(source)
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
+    composing = [n for n in calls if n.func.attr in _COMPOSING_WRITES]
+
+    assert composing, "fixture did not produce a composing write"
+    assert not _asserts_a_revision(composing[0])
+
+
+def test_a_real_revision_counts_as_guarded() -> None:
+    """ANTI-TAUTOLOGY: the check is not rejecting every revision."""
+    source = (
+        "def persist(repository, entry, revision):\n"
+        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)\n"
+    )
+    tree = ast.parse(source)
+    call = next(
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in _COMPOSING_WRITES
+    )
+
+    assert _asserts_a_revision(call)
 
 
 def test_every_composing_write_carries_a_revision_or_is_declared() -> None:
