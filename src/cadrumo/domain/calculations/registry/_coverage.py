@@ -297,11 +297,22 @@ class ConstructEvidenceLedger(CoverageModel):
     revision: str
     rows: tuple[ConstructEvidenceRow, ...]
     authority_scope: CoverageAuthorityScope = "filing"
+    authority_fallback_reason: str | None = Field(default=None, min_length=1, max_length=512)
 
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
         return self.authority_scope == "filing"
+
+    @property
+    def reviewed_but_not_filing_capable(self) -> bool:
+        """Whether a reviewed revision fell back because it cannot produce a filing.
+
+        Distinguishes a revision whose review passed but whose filing capability
+        refused from one nobody reviewed. Both read ``inspection_only`` scope, and
+        without this the two are indistinguishable.
+        """
+        return self.authority_fallback_reason is not None
 
     @model_validator(mode="after")
     def _rows_are_unique(self) -> ConstructEvidenceLedger:
@@ -485,19 +496,39 @@ def audit_registry_construct_evidence(
             )
             proof = _revision_filing_authority_proof(revision, inspection, catalogues.legal)
             if proof is not None:
-                snapshot = build_validated_snapshot(
-                    modelo,
-                    catalogues,
-                    filing_year=_representative_year(revision),
-                    period=revision.period_selector.periods[0],
-                    revision_id=revision.id,
-                )
-                ledgers.append(
-                    _build_construct_evidence_ledger(
-                        snapshot,
-                        authority_proof=proof,
-                    ),
-                )
+                try:
+                    snapshot = build_validated_snapshot(
+                        modelo,
+                        catalogues,
+                        filing_year=_representative_year(revision),
+                        period=revision.period_selector.periods[0],
+                        revision_id=revision.id,
+                    )
+                except RegistryValidationError as capability_refusal:
+                    # Reviewed, but not filing-CAPABLE -- exactly the condition the
+                    # sibling model-law audit above already catches and records.
+                    # This call site made the same request unguarded, so reviewing a
+                    # revision that declares no export layout aborted the whole
+                    # corpus audit with a filing-capability refusal. An
+                    # applicability-grade revision could therefore never be
+                    # reviewed: stamping it broke the registry load rather than
+                    # producing a ledger. Review state and filing capability are
+                    # different conditions, and the proof above tests only the
+                    # first.
+                    ledgers.append(
+                        _build_construct_evidence_ledger(
+                            inspection,
+                            authority_proof=None,
+                            fallback_reason=str(capability_refusal).splitlines()[0][:512],
+                        ),
+                    )
+                else:
+                    ledgers.append(
+                        _build_construct_evidence_ledger(
+                            snapshot,
+                            authority_proof=proof,
+                        ),
+                    )
             else:
                 ledgers.append(_build_construct_evidence_ledger(inspection, authority_proof=None))
     return RegistryConstructEvidenceAudit(ledgers=tuple(ledgers))
@@ -591,8 +622,14 @@ def _build_construct_evidence_ledger(
     authority: RegistrySnapshot | RegistryRevisionInspection,
     *,
     authority_proof: _AuthorityCheckProof | None,
+    fallback_reason: str | None = None,
 ) -> ConstructEvidenceLedger:
-    """Build construct rows, optionally under the private validated-audit proof."""
+    """Build construct rows, optionally under the private validated-audit proof.
+
+    ``fallback_reason`` is set only when a REVIEWED revision was demoted to
+    inspection scope because its filing capability refused, so the ledger keeps
+    that apart from a revision nobody reviewed.
+    """
     modelo_id, revision_id, revision, authority_scope = _construct_evidence_context(authority)
     rows: list[ConstructEvidenceRow] = []
     rows.extend(
@@ -643,6 +680,7 @@ def _build_construct_evidence_ledger(
         revision=revision_id,
         rows=tuple(rows),
         authority_scope=authority_scope,
+        authority_fallback_reason=fallback_reason,
     )
 
 
