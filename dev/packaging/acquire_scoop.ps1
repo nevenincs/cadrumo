@@ -6,7 +6,9 @@
     Post-publication reacquisition for post-release-distribution plan row P03.S16.
     Adds the published Scoop bucket, installs the app from it, verifies every
     installed cohort artifact digest against the promoted cohort, and repeats the
-    grounded installed CLI and MCP tax-work oracles. Reuses the disposable
+    grounded installed CLI tax-work oracle. The manifest is CLI-only by scope:
+    cadrumo-mcp ships in the sibling cadrumo-harness distribution, which Scoop
+    does not install. Reuses the disposable
     Windows-container orchestration pattern of smoke_scoop.ps1 (-Mode Container
     launches a throwaway ltsc2022 container that bootstraps Scoop and runs the
     Host implementation). Refuses instructively when the public bucket does not
@@ -239,12 +241,10 @@ function Invoke-InstalledOracle {
     param(
         [Parameter(Mandatory = $true)][string]$Prefix,
         [Parameter(Mandatory = $true)][string]$AeatCommand,
-        [Parameter(Mandatory = $true)][string]$McpCommand,
         [Parameter(Mandatory = $true)][string]$OutputDir
     )
     $python = (Resolve-Path (Join-Path $Prefix "venv\Scripts\python.exe")).Path
     $taxEvidence = Join-Path $OutputDir "tax-evidence.json"
-    $mcpEvidence = Join-Path $OutputDir "mcp-evidence.json"
     Push-Location $RepoRoot
     try {
         Invoke-Native -FilePath $python -ArgumentList @(
@@ -254,23 +254,15 @@ function Invoke-InstalledOracle {
             "--work-dir", (Join-Path $OutputDir "tax-work"),
             "--output", $taxEvidence
         ) -OutputPath (Join-Path $OutputDir "tax-oracle.log")
-        Invoke-Native -FilePath $python -ArgumentList @(
-            "-m", "dev.packaging.installed_mcp_oracle",
-            "--server", $McpCommand,
-            "--storage-root", (Join-Path $OutputDir "mcp-state"),
-            "--work-dir", (Join-Path $OutputDir "mcp-work"),
-            "--output", $mcpEvidence
-        ) -OutputPath (Join-Path $OutputDir "mcp-oracle.log")
     }
     finally {
         Pop-Location
     }
     $tax = Get-Content -LiteralPath $taxEvidence -Raw | ConvertFrom-Json
-    $mcp = Get-Content -LiteralPath $mcpEvidence -Raw | ConvertFrom-Json
-    if ($tax.target_value -ne "23000.00" -or $mcp.target_value -ne "23000.00") {
-        throw "installed Scoop oracle returned an unexpected tax value: cli=$($tax.target_value) mcp=$($mcp.target_value)"
+    if ($tax.target_value -ne "23000.00") {
+        throw "installed Scoop oracle returned an unexpected tax value: cli=$($tax.target_value)"
     }
-    return @{ tax_evidence = $taxEvidence; mcp_evidence = $mcpEvidence }
+    return @{ tax_evidence = $taxEvidence }
 }
 
 function Invoke-HostAcquisition {
@@ -317,28 +309,26 @@ function Invoke-HostAcquisition {
     }
     $prefix = (Resolve-Path ([string]$prefixOutput[0])).Path
     $aeat = Get-ScoopCommandPath -CommandName "aeat" -ScoopRoot $scoopRoot
-    $mcp = Get-ScoopCommandPath -CommandName "cadrumo-mcp" -ScoopRoot $scoopRoot
     Invoke-Native -FilePath $aeat -ArgumentList @("--version")
     $verifiedDigests = Assert-InstalledCohortDigests -Prefix $prefix -SourceCohort $resolvedCohort
-    $oracle = Invoke-InstalledOracle -Prefix $prefix -AeatCommand $aeat -McpCommand $mcp -OutputDir $runEvidence
-
+    $oracle = Invoke-InstalledOracle -Prefix $prefix -AeatCommand $aeat -OutputDir $runEvidence
+    $manifest = Get-Content -LiteralPath (Join-Path $resolvedCohort "python-cohort.json") -Raw | ConvertFrom-Json
     $evidence = [ordered]@{
-        schema             = "cadrumo.packaging.acquire-scoop.v1"
-        status             = "passed"
-        mode               = $ExecutionIdentity.mode
-        orchestration_nonce = $ExecutionIdentity.orchestration_nonce
-        runtime_identity   = $ExecutionIdentity.runtime_identity
-        container_identity_verified = $ExecutionIdentity.container_identity_verified
-        bucket_source      = $Source
-        bucket_name        = $Bucket
-        package            = $Package
-        installed_prefix   = $prefix
-        verified_digests   = $verifiedDigests
-        os                 = (Get-CimInstance Win32_OperatingSystem).Caption
-        scoop_version      = (@(& scoop --version) -join "`n").Trim()
-        tax_evidence       = $oracle.tax_evidence
-        mcp_evidence       = $oracle.mcp_evidence
-        completed_at       = [DateTimeOffset]::UtcNow.ToString("O")
+        schema = "cadrumo.packaging.acquire-scoop.v1"
+        status = "passed"
+        completed_at = [DateTimeOffset]::UtcNow.ToString("o")
+        bucket = "${Bucket}/${Package}"
+        platform = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
+        cohort = @{
+            source_commit = [string]$manifest.source_commit
+            version = [string]$manifest.version
+        }
+        verified_artifact_digests = $verifiedDigests
+        installed_prefix = $prefix
+        installed_tax_oracle = (Get-Content -LiteralPath $oracle.tax_evidence -Raw | ConvertFrom-Json)
+        # The Scoop manifest is CLI-only by scope; cadrumo-mcp ships in the
+        # sibling cadrumo-harness distribution, which the manifest does not install.
+        installed_mcp_oracle = $null
     }
     $evidence | ConvertTo-Json -Depth 20 |
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "acquire-scoop-evidence.json") -Encoding UTF8

@@ -50,7 +50,7 @@ _CANONICAL_DESCRIPTION = (
 )
 # Homebrew's `desc` is deliberately terse (style guide: <=80 chars, no period,
 # no article prefix); it is the canonical sentence's leading capability clause.
-_CANONICAL_HOMEBREW_DESC = "Deterministic Spanish tax calculation CLI and MCP server"
+_CANONICAL_HOMEBREW_DESC = "Deterministic Spanish tax calculation CLI"
 
 
 def _pyproject_description() -> str:

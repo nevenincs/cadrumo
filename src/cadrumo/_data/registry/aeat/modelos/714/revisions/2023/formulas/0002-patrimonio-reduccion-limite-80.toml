@@ -30,8 +30,8 @@ expression = { op = "percent", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31"]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-manual-patrimonio-2023"]
 
 [[revisions."2023".formulas.source_citations]]
-source_ref = "aeat-modelo-714-procedure"
+source_ref = "aeat-manual-patrimonio-2023"
 required_text = ["patrimonio neto"]

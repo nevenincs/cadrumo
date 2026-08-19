@@ -243,14 +243,17 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
         decoded = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, ValueError) as exc:
         raise ProfileCapsuleArchiveError("archive payload is not readable canonical JSON") from exc
-    if not isinstance(decoded, dict) or decoded.get("schema_version") != _PAYLOAD_SCHEMA_VERSION:
+    if not isinstance(decoded, dict):
+        raise ProfileCapsuleArchiveError("archive payload is not a canonical JSON object")
+    payload: dict[str, object] = decoded
+    if payload.get("schema_version") != _PAYLOAD_SCHEMA_VERSION:
         raise ProfileCapsuleArchiveError("archive payload does not declare the current layout")
-    if decoded.get("profile_id") != expected_bucket_id:
+    if payload.get("profile_id") != expected_bucket_id:
         raise ProfileCapsuleArchiveError("archive payload names a different profile than its header")
-    envelope = parse_profile_custody_envelope(_member(decoded, "password_envelope"))
-    sentinel = parse_profile_custody_sentinel(_member(decoded, "sentinel"))
-    database_bytes = _member(decoded, "database")
-    recovery = _decode_recovery_slot(_member(decoded, "recovery_slot"))
+    envelope = parse_profile_custody_envelope(_member(payload, "password_envelope"))
+    sentinel = parse_profile_custody_sentinel(_member(payload, "sentinel"))
+    database_bytes = _member(payload, "database")
+    recovery = _decode_recovery_slot(_member(payload, "recovery_slot"))
     if str(envelope.profile_id) != expected_bucket_id or sentinel.profile_id != envelope.profile_id:
         raise ProfileCapsuleArchiveError("archive members do not agree on one profile identity")
     return ProfileCapsuleSource(

@@ -55,10 +55,6 @@ number = "60"
 # ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
 # general 5.2%, reducido 1.4%, super-reducido 0.5%).
 [[revisions.2022.completeness_manifest.casillas]]
-casilla_id = "158"
-number = "158"
-
-[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "21"
 number = "21"
 

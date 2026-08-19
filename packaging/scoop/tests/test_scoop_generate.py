@@ -124,7 +124,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     )
 
 
-def test_generated_manifest_binds_exact_cohort_and_both_commands(
+def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     tmp_path: Path,
     built_cohort: BuiltCohort,
 ) -> None:
@@ -146,11 +146,13 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert architecture["url"] == [f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts]
     assert architecture["hash"] == [sha256_path(artifact) for artifact in artifacts]
     assert manifest["depends"] == ["python", "uv"]
-    assert manifest["bin"] == [["aeat.cmd", "aeat"], ["cadrumo-mcp.cmd", "cadrumo-mcp"]]
+    # The manifest is CLI-only: the agent-facing launcher ships in the separate
+    # cadrumo-harness distribution, so no cadrumo-mcp shim or wrapper is declared.
+    assert manifest["bin"] == [["aeat.cmd", "aeat"]]
     assert manifest["persist"] == ["state"]
 
     hooks = manifest["pre_install"]
-    assert len(hooks) == 7
+    assert len(hooks) == 6
     assert "Join-Path $dir 'state'" in hooks[0]
     assert "uv venv" in hooks[1]
     # The transitive dependency closure is pinned from the tested uv.lock: a
@@ -159,18 +161,21 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert "constraints.txt" in hooks[2]
     assert "==" in hooks[2]
     assert built_cohort.root.name in hooks[3]
-    assert "'[agent]'" in hooks[3]
+    # The retired cadrumo[agent] extra is gone: the cohort wheels install
+    # without any extra, and the launcher pin no longer rides the root wheel.
+    assert "[agent]" not in hooks[3]
     assert "--constraint (Join-Path $dir 'constraints.txt')" in hooks[3]
     assert built_cohort.manuals.name in hooks[3]
     assert built_cohort.official.name in hooks[3]
     assert "uv pip check" in hooks[4]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
-    for executable, hook in zip(("aeat", "cadrumo-mcp"), hooks[5:], strict=True):
-        assert ('if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"') in hook
-        assert f"venv\\Scripts\\{executable}.exe" in hook
-        assert "%*" in hook
-        assert f"Join-Path $dir '{executable}.cmd'" in hook
-        assert "-NoNewline -Encoding ascii" in hook
+    hook = hooks[5]
+    assert 'if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"' in hook
+    assert "venv\\Scripts\\aeat.exe" in hook
+    assert "%*" in hook
+    assert "Join-Path $dir 'aeat.cmd'" in hook
+    assert "-NoNewline -Encoding ascii" in hook
+    assert "cadrumo-mcp" not in json.dumps(manifest)
 
 
 def test_manifest_pins_transitive_closure_from_lock(

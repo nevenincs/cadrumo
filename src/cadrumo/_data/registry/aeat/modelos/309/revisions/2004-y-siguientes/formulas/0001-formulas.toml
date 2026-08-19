@@ -16,11 +16,11 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
+source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-309-procedure"
-required_text = ["modelo 309", "declaracion no periodica"]
+source_ref = "aeat-modelo-309-instructions"
+required_text = ["modelo 309", "autoliquidacion no periodica", "cuotas resultantes"]
 
 [[revisions."2004-y-siguientes".formulas]]
 id = "modelo-309-resultado"
@@ -32,10 +32,10 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
+source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-309-procedure"
+source_ref = "aeat-modelo-309-instructions"
 required_text = ["modelo 309", "cuota"]
 
 [[revisions."2004-y-siguientes".formulas]]
@@ -48,8 +48,8 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
+source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-309-procedure"
+source_ref = "aeat-modelo-309-instructions"
 required_text = ["modelo 309", "cuota"]

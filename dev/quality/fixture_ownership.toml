@@ -6566,31 +6566,6 @@ exact_body_group_id = ""
 exact_body_group_member_count = 1
 
 [[fixture]]
-id = "src/cadrumo/application/setup/tests/test_atomic_create_roundtrip.py:37:_cli_storage"
-effective_name = "_cli_storage"
-owner = "src/cadrumo/application/setup/tests/test_atomic_create_roundtrip.py:37:_cli_storage"
-disposition = "retained-current-owner"
-body_sha256 = "fff7e0fcb6eb4d1e1dd4c1ab1e7c7d7c0b44ab990d60735953cd52372978fd37"
-scope = "function"
-autouse = false
-constraints_sha256 = "b7bb9615fad385015d4bf8e3bcea0c89dd5d194d4dd5692bd704ac9b622380a5"
-owner_globals_sha256 = "c5aa56ff4cc7b33551b4557fcd18af0ef604be0a9c9e77b8f2b9a73fa3625c9d"
-import_count = 0
-imports_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-direct_consumer_count = 5
-direct_consumers_sha256 = "b875621adf97a6d6e4608df246ebb4eb7e3f515cd06c4aba2474140523b76fce"
-autouse_reach_count = 0
-autouse_reach_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-divergence_kind = ""
-divergence_evidence_sha256 = ""
-ownership_group_id = ""
-ownership_group_member_count = 1
-semantic_name_group_id = ""
-semantic_name_group_member_count = 1
-exact_body_group_id = ""
-exact_body_group_member_count = 1
-
-[[fixture]]
 id = "src/cadrumo/application/storage/sync_runs/tests/test_sync_run_record_store.py:66:active_profile"
 effective_name = "active_profile"
 owner = "src/cadrumo/application/storage/sync_runs/tests/test_sync_run_record_store.py:66:active_profile"

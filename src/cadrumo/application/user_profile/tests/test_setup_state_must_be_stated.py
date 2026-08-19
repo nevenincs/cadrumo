@@ -1,16 +1,21 @@
 """A persisted profile record may not claim completion by omission.
 
-``setup_state`` defaults to COMPLETE, and COMPLETE is the claim that nothing
-required is missing rather than a label for a record that stopped being
-edited. A record constructed without stating it therefore makes that claim by
-accident; persisting one makes the accident durable, and every downstream
-surface reading setup state then trusts it.
+COMPLETE is the claim that nothing required is missing, not a label for a
+record that stopped being edited. A record that never stated its setup state
+would make that claim by accident; persisting one makes the accident durable,
+and every downstream surface reading setup state then trusts it.
 
-The guard lives at the single write path rather than on the model, so these
-tests drive the real capsule writer against a real published profile. The two
-that matter are the mechanism proofs: that the discriminator is not defeated
-by the way records are actually rebuilt, and that a record read back from disk
-is never refused.
+The guard used to live at the single write path, catching a record that
+carried the defaulted value without having stated it. It now lives EARLIER and
+binds harder: ``setup_state`` is a required field, so an unstated record cannot
+be built through validation at all and no write path has to recognise one. The
+writer-side check was retired with that change rather than kept as a second
+answer to the same question, and the case that drove it was retired with it --
+a test whose guard no longer exists can only go green by resurrecting it.
+
+What remains is what still has a mechanism behind it: that the requirement is
+enforced at construction, that the statement survives the way records are
+actually rebuilt, and that a record read back from disk is never refused.
 """
 
 from __future__ import annotations
@@ -18,11 +23,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import login_profile, register_profile_with_credentials
-from .._capsule_record import ProfileRecordIntegrityError, ProfileRecordStore
+from .._capsule_record import ProfileRecordStore
 from .._profile_record_repository import require_profile_record_session
 
 if TYPE_CHECKING:
@@ -116,52 +122,9 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
 
     assert "setup_state" in carried.model_fields_set
 
-    omitted = UserProfileRecord(profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e")
-
-    assert "setup_state" not in omitted.model_fields_set
-    # Copying does not invent a statement that was never made, either -- the
-    # guard would be trivially bypassable if it did.
-    assert "setup_state" not in omitted.model_copy(update={"record_revision": 2}).model_fields_set
-
-
-def test_a_record_that_never_stated_its_setup_state_is_refused_at_the_writer(tmp_path: Path) -> None:
-    """The guard itself, driven through the real capsule writer.
-
-    The refused record carries the identical VALUE a stated one would -- the
-    default is COMPLETE -- so this proves the discriminator is the statement
-    and not the value, which is the whole point.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
-        store = _live_store(outcome.profile_id)
-        current = store.load().record
-
-        unstated = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
-            schema_id=current.schema_id,
-            schema_version=current.schema_version,
-            profile_id=current.profile_id,
-            facts=current.facts,
-            record_revision=current.record_revision + 1,
-            previous_record_digest=current.content_digest,
-            content_digest="",
-            created_at=current.created_at,
-            updated_at=current.updated_at,
-        )
-
-        assert unstated.setup_state is ProfileSetupState.COMPLETE
-        assert "setup_state" not in unstated.model_fields_set
-
-        from ....domain.buckets import BucketEventType
-        from .._capsule_record import ProfileRecordCommandEvent
-
-        with pytest.raises(ProfileRecordIntegrityError, match="state its setup state"):
-            store.replace(
-                replacement=unstated,
-                event=ProfileRecordCommandEvent(
-                    event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-                    occurred_at=unstated.updated_at.isoformat(),
-                ),
-                expected_revision=current.record_revision,
-                expected_content_digest=current.content_digest,
-            )
+    # The statement is now demanded a step EARLIER than the writer: the field
+    # is required, so an unstated record cannot be built through validation at
+    # all. That is the same guard enforced sooner, not a weaker one -- the
+    # writer backstop below still refuses a record that evades construction.
+    with pytest.raises(ValidationError):
+        UserProfileRecord(profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e")

@@ -2,10 +2,12 @@
 
 This post-publication check taps the public Homebrew tap, installs ``cadrumo``,
 proves the formula's declared source digests match the promoted cohort sdists,
-and repeats the grounded installed CLI and MCP tax-work oracles against the
-tap-installed commands. It refuses instructively when ``brew`` is unavailable or
-the public tap does not yet carry the formula (implements post-release-
-distribution plan row P03.S17).
+and repeats the grounded installed CLI tax-work oracle against the
+tap-installed command. The formula is CLI-only by scope: ``cadrumo-mcp`` ships
+in the sibling ``cadrumo-harness`` distribution, which Homebrew does not carry.
+It refuses instructively when ``brew`` is unavailable or the public tap does
+not yet carry the formula (implements post-release-distribution plan row
+P03.S17).
 """
 
 from __future__ import annotations
@@ -21,14 +23,15 @@ from typing import Any, Final
 from dev._paths import UTF_8
 
 from ._acquire_common import (
+    EXPECTED_ORACLE_TARGET_VALUE,
     AcquisitionError,
     require_command_succeeded,
-    run_installed_behavior_oracles,
 )
 from ._command import CommandResult, run_command
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
+from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = UTF_8
@@ -216,14 +219,17 @@ def run_homebrew_acquisition(
         raise AcquisitionError(f"brew --prefix failed for {qualified}: {prefix.stderr.strip()[:200]}")
     installed_prefix = Path(prefix.stdout.strip()).resolve(strict=True)
     aeat = (installed_prefix / "bin" / "aeat").resolve(strict=True)
-    mcp = (installed_prefix / "bin" / "cadrumo-mcp").resolve(strict=True)
-    tax_evidence, mcp_evidence = run_installed_behavior_oracles(
+    tax_evidence = run_installed_tax_oracle(
         cli=aeat,
-        mcp_server=mcp,
         storage_root=run_root / "oracle-state",
         work_dir=run_root / "oracle-work",
         timeout_seconds=timeout_seconds,
     )
+    if tax_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:
+        raise AcquisitionError(
+            f"installed CLI oracle target value drifted: expected {EXPECTED_ORACLE_TARGET_VALUE}, "
+            f"got {tax_evidence.target_value!r}",
+        )
 
     evidence = {
         "schema": "cadrumo.packaging.acquire-homebrew.v1",
@@ -236,7 +242,9 @@ def run_homebrew_acquisition(
         "verified_formula_digests": verified_digests,
         "installed_prefix": str(installed_prefix),
         "installed_tax_oracle": tax_evidence.to_jsonable(),
-        "installed_mcp_oracle": mcp_evidence.to_jsonable(),
+        # The formula ships the CLI distribution only; cadrumo-mcp lives in the
+        # sibling cadrumo-harness distribution, which Homebrew does not carry.
+        "installed_mcp_oracle": None,
     }
     evidence_path = run_root / "acquire-homebrew-evidence.json"
     evidence_path.write_text(
@@ -252,7 +260,6 @@ def run_homebrew_acquisition(
             row_id=row_id,
             cohort=release_cohort,
             tax_evidence=tax_evidence,
-            mcp_evidence=mcp_evidence,
             acquisition=AcquisitionIdentity(mechanism="brew", source=qualified),
             destination=DestinationIdentity(
                 kind="homebrew-cellar",

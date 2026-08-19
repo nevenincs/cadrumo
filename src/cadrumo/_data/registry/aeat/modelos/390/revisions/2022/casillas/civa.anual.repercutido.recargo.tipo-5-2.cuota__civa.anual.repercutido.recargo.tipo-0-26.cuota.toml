@@ -55,41 +55,6 @@ source_refs = ["aeat-dr-390-2022"]
 # Box [694] - "Recargo de equivalencia - Tipo 1% - Cuota". RDL 4/2024 art. 1.Dos
 # pairs it with the temporary 7,5 % rate. Vigencia: 1 oct - 31 dic 2024.
 [[revisions."2022".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-1.cuota"
-number = "694"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_recargo_equivalencia_tipo_1"
-continuidad_id = "iva-cuota-recargo-equivalencia-tipo-1"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 1 % rung is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
-
-# Box [666] - "Recargo de equivalencia - Tipo 0,62% - Cuota". RDL 4/2024 art.
-# 1.Uno pairs it with the temporary 5 % rate. Vigencia: 1 jul - 30 sep 2024.
-[[revisions."2022".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
-number = "666"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_recargo_equivalencia_tipo_0_62"
-continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 0,62 % rung is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
-
-# Box [36] - "Recargo de equivalencia - Tipo 0,5% - Cuota". LIVA art. 161.3,
-# paired with the art. 91.dos super-reduced 4 % rate. Vigencia: todo el
-# ejercicio.
-[[revisions."2022".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
 number = "36"
 section = ["iva", "anual", "devengado"]
@@ -106,17 +71,3 @@ source_refs = ["aeat-dr-390-2022"]
 
 # Box [692] - "Recargo de equivalencia - Tipo 0,26% - Cuota". RDL 4/2024 art.
 # 1.Dos pairs it with the temporary 2 % rate. Vigencia: 1 oct - 31 dic 2024.
-[[revisions."2022".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
-number = "692"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_recargo_equivalencia_tipo_0_26"
-continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-26"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 0,26 % rung is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]

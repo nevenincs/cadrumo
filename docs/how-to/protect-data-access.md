@@ -38,18 +38,22 @@ deletes nothing and can be previewed before it runs. See
 ## Store your recovery phrase safely
 
 Cadrumo shows a 24-word recovery phrase once, at the moment it creates a
-profile, on your terminal only. It is never written to a file, an export, or a
-log, and Cadrumo keeps no copy. Nobody can show it to you again.
+profile, on your terminal only - and only when you create the profile at a
+terminal. It is never written to a file, an export, or a log, and Cadrumo
+keeps no copy. Nobody can show it to you again.
 
 Write it down when it appears. Store it apart from your passphrase and apart
 from the computer holding the data - anyone who has the phrase can open the
 profile without the passphrase.
 
-You hold a recovery phrase only if you created the profile at a terminal. A
-profile created by a script or a scheduled job has no terminal to display the
-phrase on, so Cadrumo creates none and says so in that run's output. Recovery
-is installed only while the profile is being created, so a profile created
-without it cannot be given one later.
+Whether you hold a phrase depends on the door that created the profile. A
+profile created at a terminal receives the phrase there, once. A profile
+created by a script or a scheduled job has no terminal to display the phrase
+on, so Cadrumo creates none and says so in that run's output. The full-screen
+profile screen cannot display the phrase without corrupting its own display,
+so it creates none either and says so - check the creation output before you
+assume a profile is recoverable. Recovery is installed only while the profile
+is being created, so a profile created without it cannot be given one later.
 
 Keep the phrase even though you cannot yet use it on your own. The command that
 opens a profile from a recovery phrase is not available in this release. Until
@@ -116,7 +120,9 @@ Nothing in the profile is deleted. Log in again with
 Export every profile you want to keep before continuing. Reset permanently deletes
 every profile stored locally, related local authentication state, and the active
 profile selection. It doesn't delete exports stored elsewhere. You can't undo
-the reset.
+the reset. Deleting is also not a way to hide activity: any copies of your data
+that left the machine (exports, filings, backups) are outside Cadrumo's control
+and nothing in Cadrumo can retract them.
 
 ```{cli-sequence} protect-data-access-reset
 ```

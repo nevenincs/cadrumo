@@ -45,7 +45,7 @@ _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
     ),
     (
         BucketEventType.PROFILE_VALUES_UPDATED,
-        _AEAT_ROOT / "application" / "wizard" / "_persistence.py",
+        _AEAT_ROOT / "application" / "user_profile" / "_fact_write.py",
         # The needle names the EMISSION, not the bare symbol. The emitting
         # module also cross-links this member in prose, and a bare-symbol
         # needle is satisfied by that prose alone -- so reverting the stamp
@@ -90,8 +90,11 @@ a non-member raised — so every wizard fact write refused with an internal
 integrity error and NOTHING was recorded. Cataloguing those strings would have
 enshrined a surface verb in a slot that holds exactly one event per record
 revision and binds the row's lineage witness, which is the data-change slot.
-The wizard now emits this member and carries the surface in a ``door`` payload
-key, so the gap is closed by repair rather than by taxonomy growth.
+The profile-fact write door now emits this member and carries the surface in a
+``door`` payload key, so the gap is closed by repair rather than by taxonomy
+growth. That door was later relocated out of the wizard into
+``user_profile/_fact_write.py``, which is why the site above names that module
+rather than the wizard persistence adapter the defect was first found in.
 
 The mechanism stays for the next genuine gap: while this tuple is empty the
 loop below is vacuous by design, and the corpus floor is what keeps that

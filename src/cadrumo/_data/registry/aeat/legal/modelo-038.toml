@@ -59,7 +59,13 @@ review_status = "reviewed"
 # not re-fetched). applies_from/record_design_epoch deliberately left
 # undeclared: the file states no ejercicio or effective date of its own
 # ("actualizado 28/06/2024" is an update stamp, not a coverage start).
+# The bundled design is AEAT's dr038_2024.pdf. Orden HAC/646/2024, de 25 de junio,
+# approved the change, and AEAT states it applies for the first time to "la declaracion
+# correspondiente a junio de 2024, a presentar en julio de 2024" -- hence applies_from
+# 2024-06-01. Not inferred from the filename: the date is AEAT's own statement.
 [sources."enrolled-modelo-038-layout"]
+record_design_epoch = "2024"
+applies_from = 2024-06-01
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"

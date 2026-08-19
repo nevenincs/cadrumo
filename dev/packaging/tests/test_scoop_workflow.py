@@ -123,7 +123,9 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     assert "_command.py" in stage["run"]
     assert "constraint_effect.py" in stage["run"]
     assert "installed_tax_oracle.py" in stage["run"]
-    assert "installed_mcp_oracle.py" in stage["run"]
+    # The lane is CLI-only: the retired MCP oracle is not staged, so a
+    # reintroduced cadrumo-mcp leg has nothing to run on.
+    assert "installed_mcp_oracle.py" not in stage["run"]
     assert "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
     assert "-Mode Host" in smoke["run"]
     # Negative pins: a silent revert to the container lane would strand the row
@@ -150,10 +152,17 @@ def test_scoop_workflow_binds_the_smoke_evidence_before_minting_the_row() -> Non
     steps = _workflow()["jobs"]["cadrumo-scoop-acquisition"]["steps"]
     names = [step["name"] for step in steps]
     verify = next(step for step in steps if step["name"] == "Verify the smoke evidence binds to this run")
+    emit = next(step for step in steps if step["name"] == "Emit the sanctioned Scoop distribution-evidence record")
 
     assert names.index("Verify the smoke evidence binds to this run") < names.index(
         "Emit the sanctioned Scoop distribution-evidence record"
     )
+    # The CLI-only lane emits from the tax oracle JSON alone: the emitter runs
+    # without the mcp dependency and the record marks the MCP leg absent.
+    assert '--tax-evidence $tax' in emit["run"]
+    assert "mcp-evidence.json" not in emit["run"]
+    assert "--mcp-evidence" not in emit["run"]
+    assert "--with mcp" not in emit["run"]
     assert '$evidence.status -ne "passed"' in verify["run"]
     assert '$evidence.mode -ne "Host"' in verify["run"]
     assert "$evidence.container_identity_verified -ne $false" in verify["run"]

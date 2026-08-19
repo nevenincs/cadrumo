@@ -9,6 +9,7 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-309-2023",
+    "aeat-modelo-309-instructions",
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]

@@ -34,7 +34,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "orden-hfp-207-2022:art-4",
 ]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2021"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2021", "aeat-manual-patrimonio-2021"]
 casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",

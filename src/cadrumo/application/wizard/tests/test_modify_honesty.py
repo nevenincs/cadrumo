@@ -217,7 +217,7 @@ def test_edit_envelope_carries_descendants_via_door_notice(
     notice = codes[_MODIFY_DESCENDANTS_DOOR_CODE]
     assert notice["severity"] == NoticeSeverity.INFO.value
     assert notice["action"]["action"]["action_id"] == "operator.profile.descendiente"
-    assert notice["action"]["action"]["target_command_key"] == "config.profile.descendiente"
+    assert notice["action"]["action"]["target_command_key"] == "config.profile.descendiente.list"
 
 
 def test_create_envelope_omits_descendants_via_door_notice(
