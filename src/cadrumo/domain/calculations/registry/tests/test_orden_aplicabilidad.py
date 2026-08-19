@@ -362,58 +362,26 @@ def test_committed_registry_has_no_unstamped_revisions() -> None:
     assert not offenders, "Committed revisions without orden_aplicabilidad:\n  " + "\n  ".join(offenders)
 
 
-@pytest.mark.parametrize(
-    ("modelo_id", "revision_id"),
-    [
-        ("036", "2025-02-03-y-siguientes"),
-        ("100", "2020"),
-        ("100", "2021"),
-        ("100", "2022"),
-        ("100", "2023"),
-        ("100", "2024"),
-        ("100", "2025"),
-        ("111", "2019-y-siguientes"),
-        ("115", "2019-y-siguientes"),
-        ("123", "2019-2023"),
-        ("123", "2024-y-siguientes"),
-        ("130", "2019-y-siguientes"),
-        ("131", "2019-2023"),
-        ("131", "2024"),
-        ("131", "2025"),
-        ("131", "2026"),
-        ("151", "2015-y-siguientes"),
-        ("151", "2025-y-siguientes"),
-        ("180", "2019-2022"),
-        ("180", "2023-y-siguientes"),
-        ("184", "2015-y-siguientes"),
-        ("190", "2024"),
-        ("193", "2024"),
-        ("193", "2025-y-siguientes"),
-        ("200", "2024-y-siguientes"),
-        ("202", "2019-2022"),
-        ("202", "2023-2024"),
-        ("202", "2025-y-siguientes"),
-        ("210", "2025"),
-        ("232", "2016-2017"),
-        ("232", "2018-y-siguientes"),
-        ("303", "2023"),
-        ("303", "2022"),
-        ("322", "2008-y-siguientes"),
-        ("308", "2022"),
-        ("309", "2004-y-siguientes"),
-        ("347", "2008-y-siguientes"),
-        ("353", "2008-y-siguientes"),
-        ("360", "2010-y-siguientes"),
-        ("369", "esquema-exterior"),
-        ("369", "esquema-union"),
-        ("369", "esquema-importacion"),
-        ("390", "2010-y-siguientes"),
-        ("349", "2020-y-siguientes"),
-        ("714", "2021-y-siguientes"),
-        ("720", "2013-y-siguientes"),
-        ("840", "2003-y-siguientes"),
-    ],
-)
+def _every_committed_revision() -> list[tuple[str, str]]:
+    """Every (modelo, revision) pair the committed tree carries.
+
+    This was a hand-listed inventory of about forty-five pairs. It covered half
+    the tree, it silently stopped covering a revision the moment one was renamed
+    -- the 2015-y-siguientes -> 2015-2022 split of modelo 151 left a pair naming
+    a revision that no longer exists, and the case died on a lookup rather than
+    on the property -- and a newly authored revision was never added to it at
+    all. Deriving the population gates on the PROPERTY instead of on a tally, so
+    a new revision is covered the day it lands.
+    """
+    modelos, _catalogues = _committed_registry_tree()
+    return sorted(
+        (str(modelo.id), revision_id)
+        for modelo in modelos
+        for revision_id in modelo.revisions
+    )
+
+
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _every_committed_revision())
 def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Each backfilled revision declares a non-empty orden_aplicabilidad that resolves
     in the legal catalogue with corpus_ref and is present in legal_refs — the three

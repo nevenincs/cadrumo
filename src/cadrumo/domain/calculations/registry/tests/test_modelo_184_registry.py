@@ -45,10 +45,20 @@ def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
 
 
 def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
-    modelo, _ = _load_modelo_184()
+    modelo, catalogues = _load_modelo_184()
     revision = modelo.revisions["2015-y-siguientes"]
 
-    assert revision.valid_from == date(2015, 10, 30)
+    # `valid_from` is the revision's DEVENGO window start, canonicalised to the
+    # ejercicio start -- 87 of the tree's 95 revisions sit on January 1, and the
+    # eight that do not are genuine mid-year regime starts (the 369 OSS esquemas,
+    # 490's second quarter), never an orden's publication date. Asserting
+    # 2015-10-30 here conflated the two axes: that is when Orden HAP/2250/2015
+    # entered force, which is a fact about the ORDEN, and the window checks read
+    # `valid_from` as a devengo date.
+    assert revision.valid_from == date(2015, 1, 1)
+    # The orden's own effective date, asserted where it actually lives, so the
+    # fact this test used to cover is not dropped by moving it.
+    assert catalogues.legal["orden-hap-2250-2015:art-1"].effective_from == date(2015, 10, 30)
     assert revision.period_selector.year_from == 2015
     assert revision.period_selector.periods == ("0A",)
     assert revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
