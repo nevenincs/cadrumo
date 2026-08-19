@@ -224,6 +224,57 @@ class InventoryLedgerRepository:
 
         return self._storage.mutate(_insert)
 
+    def remove(self, actividad_id: str, *, year: int) -> InventoryLedger:
+        """Atomically drop the ledger for ``actividad_id`` and ``year``.
+
+        Args:
+            actividad_id: Activity whose ledger is removed.
+            year: Filing year of the ledger to remove.
+
+        Returns:
+            The :class:`InventoryLedger` that was removed.
+
+        The document is a singleton row, so removing one ledger rewrites the
+        whole document -- which means an unguarded removal discards a ledger
+        created for a DIFFERENT activity in the interim, losing an entire
+        activity's inventory for an operator who was deleting something else.
+
+        The absence check runs inside the guarded unit of work, so a retry
+        re-judges it against the newly-current document: a ledger removed by a
+        concurrent caller must refuse as absent rather than report a second
+        successful removal of something already gone.
+
+        Raises:
+            InventoryLedgerError: When no ledger exists for the pair.
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
+        """
+        removed: list[InventoryLedger] = []
+
+        def _drop(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            target = next(
+                (
+                    existing
+                    for existing in current.ledgers
+                    if existing.actividad_id == actividad_id and existing.year == year
+                ),
+                None,
+            )
+            if target is None:
+                raise InventoryLedgerError(
+                    f"no inventory ledger for {actividad_id!r} in {year}",
+                    context={"actividad_id": actividad_id, "year": year},
+                    translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_absent",
+                )
+            removed.clear()
+            removed.append(target)
+            return InventoryLedgerDocument(
+                ledgers=tuple(existing for existing in current.ledgers if existing is not target),
+            )
+
+        self._storage.mutate(_drop)
+        return removed[0]
+
     def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
         """Atomically append ``movement`` to the target activity-and-year ledger.
 

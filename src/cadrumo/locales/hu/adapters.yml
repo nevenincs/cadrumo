@@ -237,6 +237,7 @@ adapters:
             korrekciós nyilvántartásban.
       inventory:
         errors:
+          inventory_ledger_absent: Ez a készletnyilvántartás nem létezik.
           inventory_ledger_already_exists: Ez a készletnyilvántartás már létezik.
           inventory_ledger_not_found: A kért készletnyilvántartás nem található.
           load_inventory_ledger_failed: A titkosított készletnyilvántartás nem tölthető

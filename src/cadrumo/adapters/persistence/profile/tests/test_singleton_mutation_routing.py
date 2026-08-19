@@ -77,6 +77,7 @@ _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
     ("AssetsLedgerRepository.add", AssetsLedgerRepository.add),
     ("InventoryLedgerRepository.create", InventoryLedgerRepository.create),
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
+    ("InventoryLedgerRepository.remove", InventoryLedgerRepository.remove),
     ("InvoiceCatalogueRepository.mutate", InvoiceCatalogueRepository.mutate),
 )
 _VERB_IDS = tuple(name for name, _fn in _GUARDED_VERBS)

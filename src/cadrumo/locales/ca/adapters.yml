@@ -252,6 +252,7 @@ adapters:
             de regularització.
       inventory:
         errors:
+          inventory_ledger_absent: Aquest llibre d'inventari no existeix.
           inventory_ledger_already_exists: Aquest llibre d'inventari ja existeix.
           inventory_ledger_not_found: No s'ha trobat el llibre d'inventari sol·licitat.
           load_inventory_ledger_failed: No s'ha pogut carregar el llibre xifrat d'inventari.
