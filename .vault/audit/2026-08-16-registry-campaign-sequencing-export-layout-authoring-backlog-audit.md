@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:6bc0fabdd213976f8af63cc7c768271d0c434273e3628600a7a3323492bf288d'
+body_hash: 'sha256:37ad9fe96b6d6a1ea7559748f4d3d6cd859093303fd4c7a00ff0f01dbe03a3fe'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -5294,3 +5294,96 @@ revisions carry 192 of the 198 failures on its own gates, all of them the
 `pending_review` refusal, and the coverage method cannot reach an
 `xml_dictionary` layout that declares no records. Dictionary conformance can, and
 now has.
+
+### modelo 100's ten Anexo A deduction casillas are authored, and the divergence they caused is closed
+
+Step `P02.S21` is complete. The ten letter-identified Anexo A deduction columns
+now exist on both the 2024 and the 2025 revisions, and the measurement that found
+them confirms the fix:
+
+```
+                 before          after
+100/2024   missing 31, extra 10   missing 31, extra 0
+100/2025   missing 33, extra 10   missing 33, extra 0
+```
+
+`extra` is the dictionary-side half -- identities the bundled dictionary declares
+and the registry did not -- and it is now zero on both. The `missing` half is the
+opposite direction and untouched: registry casillas the dictionary does not
+carry, which is a separate question.
+
+**The blocker named last tick dissolved on inspection.** Three of the ten are
+donativos boxes needing `ley-49-2002:art-19`, which the catalogue lacked, and
+adding a legal entry looked like it required corpus acquisition. It did not: the
+whole consolidated law already ships as `ley-49-2002.html`, its `a19` block
+carries "Artículo 19. Deducción de la cuota del Impuesto sobre la Renta de las
+Personas Físicas", and the campaign's own rule prefers pointing at the bundled
+file over hand-authoring a duplicate extract.
+
+The version hazard was checked rather than assumed -- a consolidated payload can
+carry every historical version of an article, and taking the first would bundle
+repealed law. This file holds exactly ONE `a19` block, so the hazard does not
+arise here. The entry cites three phrases verified verbatim against the file, and
+`test_registry_legal_grounding` passes, which is the gate that reads
+`required_text` back out of the corpus.
+
+It is stamped `agent_reviewed` with a reviewer token, not `reviewed`: the
+catalogue rule forbids asserting an operator's sign-off, and the sibling entries
+of this same law use exactly that status.
+
+**No regression, and the control mattered.** Modelo 100's gates appeared to lose
+21 passes after the change. Running one affected module with the ten files moved
+aside gave an identical 19 failed / 1 passed, and re-running the ORIGINAL
+selection returned exactly the baseline 198 failed / 168 passed. The apparent
+drop was my own glob: the first run had included `test_dictionary*.py` and the
+second had not. A pass count is only comparable against the same selection.
+
+Every casilla's identity, concept and label come from the dictionary entry the
+registry already cites -- the letters are its own `casilla_id` values -- and each
+legal ref is the article establishing that deduction: DT 18 for the three
+vivienda habitual columns, DT 15 for alquiler, art. 68 for empresas de nueva
+creación, partidos políticos and bienes de interés cultural, and the new art. 19
+for the three donativos columns.
+
+### modelo 100's remaining divergence is fully explained, and none of it is a defect
+
+The `missing` half of the dictionary comparison -- 31 identities on the 2024
+revision and 33 on 2025 -- is now accounted for completely. Nothing in it needs
+authoring.
+
+```
+                          2024   2025
+keying mismatch             30     30
+app-level auxiliary input    1      3
+```
+
+**The 30 are a keying mismatch, not an absence.** The comparison measures registry
+casilla ids against the `casilla_id` values the dictionary parser returns, and
+259 of the dictionary's 2,527 entries carry no casilla_id at all. Where the
+registry names a casilla by the dictionary's FIELD id -- `ANOASDLG`,
+`APENOMDLG`, `DNIASDLG`, `DECFAL` and their siblings -- the dictionary does hold
+that field, it simply carries no box number for it, so the two vocabularies
+cannot meet however complete both are.
+
+**The four remainders are app inputs AEAT has no box for, and each was checked
+individually rather than counted.** Casillas `0058` and `0059` record the INSS
+maternity and paternity benefit as EXEMPT income; the dictionary contains neither
+"maternidad" nor "INSS" anywhere, which is what one expects of income that is not
+declared. `AJ` and `eo-agraria-reduccion-irregularidad-base` looked like the
+strongest candidates for a real gap, because the dictionary DOES carry those
+concepts -- `E5AG` at box 1551 for the agricultores jóvenes reduction and `E5AL`
+at box 1554 for the irregular-income reduction. But the registry declares 1551
+and 1554 as well: the pairs are not duplicates. `1551` is the AEAT box and `AJ`
+is its `_flag`; `1554` is the box and the other is its `_base`. They are the
+auxiliary inputs from which the box is computed.
+
+So modelo 100's conformance question closes: ten dictionary-declared boxes were
+genuinely missing and are now authored, and every remaining divergence is either
+a vocabulary difference or an app input with no AEAT counterpart.
+
+One design observation falls out, recorded rather than acted on. The registry has
+`internal_only` for a casilla deliberately absent from the AEAT structure, but
+its contract requires the casilla to be formula-derived. These four are
+`input_kind = manual`, so they cannot carry that marker, and nothing else
+distinguishes an app-level input from an AEAT box. That is why they surface in a
+conformance comparison at all.

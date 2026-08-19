@@ -4,7 +4,7 @@ tags:
   - '#registry-suite-red-at-head'
 date: '2026-08-13'
 modified: '2026-08-19'
-body_hash: 'sha256:7e76b3e9bb05183ce4febd783c01ea02a26d04453579f0cdeb920454d0065aab'
+body_hash: 'sha256:fde135d6edf56256add13ba21f8424cc0399523653adac3b9760aa459254ef7b'
 tier: L2
 related:
   - '[[2026-08-13-registry-suite-red-at-head-audit]]'
@@ -77,7 +77,7 @@ The M322, M353 and M390 manual worked examples fail at fixture construction, bef
 - [ ] `P02.S08` - Supply the renta-2024 maternidad profile binding to the registry-layer M100 harnesses from the production derivation authority, never a hand-picked literal; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S09` - Sweep the Justificante fixtures onto the constrained AeatCsv alias, coordinating with the canonical-identifiers owner before editing; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S10` - Add one regression driving a real 2024 2T negative settlement credit into the 3T return and asserting the resulting compensacion figure; `src/cadrumo/application/calculations/tests/`.
-- [ ] `P02.S21` - Author modelo 100's ten Anexo A deduction casillas that both bundled dictionaries declare and the registry omits: A/C/E vivienda habitual (LIRPF DT 18), D empresas nueva creacion and M partidos politicos and I bienes de interes cultural (art. 68), F alquiler (DT 15), G/H/J donativos which additionally need a ley-49-2002:art-19 legal entry the catalogue lacks; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/casillas,src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas`.
+- [x] `P02.S21` - Author modelo 100's ten Anexo A deduction casillas that both bundled dictionaries declare and the registry omits: A/C/E vivienda habitual (LIRPF DT 18), D empresas nueva creacion and M partidos politicos and I bienes de interes cultural (art. 68), F alquiler (DT 15), G/H/J donativos which additionally need a ley-49-2002:art-19 legal entry the catalogue lacks; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/casillas,src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas`.
 
 ### Phase `P03` - Close the registry-data defects
 
