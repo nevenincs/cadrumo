@@ -565,7 +565,16 @@ _IMPATRIADO_M151_ROUTE_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — impatriados opt into IRNR taxation.
     "rd-439-2007:art-115",  # RIRPF Art. 115 — duration of the special regime.
     "rd-439-2007:art-116",  # RIRPF Art. 116 — option exercise / start-date selector.
-    "orden-eha-2887-2008:modelo-151",  # Form order for the Modelo 151 declaration.
+    # Form orders for the Modelo 151 declaration, both eras. This was a single
+    # ref to `orden-eha-2887-2008:modelo-151`, which the registry retired as a
+    # stub whose document_id never resolved to real text; it grounded nothing and
+    # was absent from the legal catalogue, so this tuple carried a dangling id.
+    # The real instruments are bundled: Orden HAP/2783/2015 governs 2015-2022 and
+    # Orden HFP/1338/2023 governs ejercicio 2023 onward, per its own Disposicion
+    # Final Segunda(a). Both are cited because the route's grounding spans the
+    # whole regime rather than one filing year.
+    "orden-hap-2783-2015:art-1",
+    "orden-hfp-1338-2023:art-1",
 )
 """Legal refs grounding the Art. 93 Modelo 151 route and M100 suppression."""
 

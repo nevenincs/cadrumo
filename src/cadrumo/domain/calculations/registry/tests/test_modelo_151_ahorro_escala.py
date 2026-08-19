@@ -80,11 +80,25 @@ def test_escala_ahorro_declares_art_93_legal_refs() -> None:
 
 
 def test_escala_ahorro_absent_from_2015_revision() -> None:
-    """The savings escala is a 2025 amendment (Ley 7/2024); the 2015-2024
-    revision must NOT carry it, so a pre-2025 filing keeps the general-only
-    engine and never resolves an ungrounded savings bracket."""
+    """The pre-escala revision must NOT carry the savings escala, so a filing
+    for those years keeps the general-only engine and never resolves an
+    ungrounded savings bracket.
+
+    The cut-off is 2023, not 2025. The impatriado savings escala was introduced
+    by art. 63.3 of Ley 31/2022 with effect from 2023-01-01
+    (`ley-35-2006:art-93-ahorro-2023`, effective 2023-01-01..2024-12-31) and
+    RE-fixed for 2025 onward (`ley-35-2006:art-93-ahorro`, effective
+    2025-01-01). Reading the later redaction as the introduction is what put
+    "2025 amendment (Ley 7/2024)" here; the registry carries both refs, so the
+    revision governing 2023 onward SHOULD carry the escala.
+
+    The revision id also moved: the 2015-y-siguientes revision was split, and
+    the pre-escala half is `2015-2022`, which ends 2022-12-31 -- exactly the day
+    before the escala took effect.
+    """
     modelo, _ = _committed_modelo("151")
-    revision_2015 = modelo.revisions["2015-y-siguientes"]
+    revision_2015 = modelo.revisions["2015-2022"]
+    assert revision_2015.valid_to == date(2022, 12, 31)
     assert all(p.id != _PARAM_ID for p in revision_2015.parameters)
 
 

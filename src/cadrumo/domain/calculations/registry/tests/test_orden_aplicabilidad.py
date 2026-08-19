@@ -412,46 +412,28 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("modelo_id", "revision_id"),
-    [
-        ("036", "2025-02-03-y-siguientes"),
-        ("111", "2019-y-siguientes"),
-        ("115", "2019-y-siguientes"),
-        ("123", "2024-y-siguientes"),
-        ("130", "2019-y-siguientes"),
-        ("151", "2025-y-siguientes"),
-        ("180", "2023-y-siguientes"),
-        ("184", "2015-y-siguientes"),
-        ("190", "2025-y-siguientes"),
-        ("193", "2024"),
-        ("193", "2025-y-siguientes"),
-        ("200", "2024-y-siguientes"),
-        ("202", "2025-y-siguientes"),
-        ("210", "2025"),
-        ("232", "2018-y-siguientes"),
-        ("303", "2023"),
-        ("303", "2022"),
-        ("322", "2008-y-siguientes"),
-        ("308", "2022"),
-        ("309", "2004-y-siguientes"),
-        ("347", "2008-y-siguientes"),
-        ("353", "2008-y-siguientes"),
-        ("360", "2010-y-siguientes"),
-        ("369", "esquema-exterior"),
-        ("369", "esquema-union"),
-        ("369", "esquema-importacion"),
-        ("390", "2010-y-siguientes"),
-        ("349", "2020-y-siguientes"),
-        # 714/2021-y-siguientes deliberately dropped: the M714 edge
-        # enrollment window closed (valid_to=2025-12-31), so it is no
-        # longer open-ended. It still declares orden_aplicabilidad and is
-        # covered by test_backfilled_revision_has_valid_orden_aplicabilidad
-        # above, which asserts the connective gate regardless of window shape.
-        ("720", "2013-y-siguientes"),
-        ("840", "2003-y-siguientes"),
-    ],
-)
+def _every_open_ended_revision() -> list[tuple[str, str]]:
+    """Every committed revision that is genuinely open-ended (`valid_to is None`).
+
+    This was hand-listed, and the list decayed in BOTH directions: it named
+    revisions that had since been closed -- 193/2024, 303/2022, 303/2023,
+    210/2025 and 308/2022 all carry a `valid_to` now, so the case failed on its
+    own premise rather than on the property -- and it needed a curated comment
+    explaining why 714/2021-y-siguientes had been removed when its enrollment
+    window closed. Deriving the population from `valid_to is None` makes the
+    membership question answer itself: a revision that closes leaves this gate
+    automatically, and one that opens joins it.
+    """
+    modelos, _catalogues = _committed_registry_tree()
+    return sorted(
+        (str(modelo.id), revision_id)
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        if revision.valid_to is None
+    )
+
+
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _every_open_ended_revision())
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Every open-ended (*-y-siguientes / year_from with no valid_to) backfilled
     revision has orden_aplicabilidad declared — the open-ended applicability claim
