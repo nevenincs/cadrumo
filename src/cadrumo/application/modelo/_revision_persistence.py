@@ -238,6 +238,7 @@ def persist_calculation_revision(
     work_unit_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
+    work_units_revision_id: str,
     input_values_by_casilla_id: dict[CasillaId, str],
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
@@ -414,7 +415,10 @@ def persist_calculation_revision(
     calculation_repository.save_with_secure_object_writes(
         upsert_calculation_revision(revisions, revision),
         (
-            work_unit_repository.to_secure_object_write(advanced_work_units),
+            work_unit_repository.to_secure_object_write(
+                advanced_work_units,
+                expected_revision_id=work_units_revision_id,
+            ),
             modelo_bucket_event_write(bucket_event_repository, (created_event,)),
         ),
         expected_revision_id=revisions_revision_id,
