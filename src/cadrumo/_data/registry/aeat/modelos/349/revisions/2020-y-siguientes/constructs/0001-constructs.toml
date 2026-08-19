@@ -78,6 +78,18 @@ casilla_ids = [
     "rect.periodo-rectificado",
     "rect.base-rectificada",
     "rect.base-anterior",
+    # Declarante-header and sustituto casillas. The construct is required to
+    # collect EVERY casilla of the revision, and these seven were authored after
+    # the construct's member list was written. Their legal_refs and source_refs
+    # are already covered by the construct's own, so no grounding is widened by
+    # enrolling them.
+    "decl.numero-identificativo",
+    "decl.numero-identificativo-anterior",
+    "decl.complementaria-sustitutiva",
+    "decl.cambio-periodicidad",
+    "decl.nif-representante-legal",
+    "sustituto.nif",
+    "sustituto.apellidos-razon-social",
 ]
 workbook_parity_refs = ["modelo-349-dr-pdf-2020"]
 export_layouts = ["modelo-349-fichero-2020"]
