@@ -459,7 +459,11 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
     pytest.param(
         "193",
         2026,
-        "2024-y-siguientes",
+        # Modelo 193's open-ended revision is `2025-y-siguientes`; the former
+        # `2024-y-siguientes` was split into a closed `2024` plus this one, so
+        # filing year 2026 resolves here. This value is ASSERTED against the
+        # law-determined pick, never injected into resolution.
+        "2025-y-siguientes",
         _m193_relation_source_values,
         "modelo-193-123-perceptores-anual",
         frozenset({"modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"}),

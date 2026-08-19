@@ -35,7 +35,12 @@ from ..pipeline._record_design_ir import RecordDesignIntermediateField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_ARTEFACT_PATH = Path(__file__).resolve().parent.parent / "dp30302_field_matrix.toml"
+#: The matrix moved to `dev/registry/analysis/` alongside the module that reads
+#: it, in the dev-tooling relocation. Git recorded that as a pure rename -- the
+#: blob is byte-identical -- but this path was left pointing one directory up, so
+#: every case that loads the artefact died on "must be a real file" rather than
+#: on anything it asserts.
+_ARTEFACT_PATH = Path(__file__).resolve().parent.parent / "analysis" / "dp30302_field_matrix.toml"
 
 
 def _dp30302_sheets() -> dict[str, tuple[RecordDesignIntermediateField, ...]]:

@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
@@ -101,6 +101,11 @@ def _alta_observation() -> RegistryModeloObservation:
             modelo=_MODELO,
             filing_year=_YEAR_N,
             period=_ALTA_PERIOD,
+            # APPLICABILITY grade. Modelo 036's registry declares that rung:
+            # a censal alta/modificacion/baja is filed on AEAT's sede and this
+            # application produces no fichero for it, so the FILING default asks
+            # for capability the modelo neither has nor claims.
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             casilla_values={
                 _EVENT_KIND_CASILLA: Decimal("1"),
                 _VIGENCIA_2025_CASILLA: _VIGENCIA,

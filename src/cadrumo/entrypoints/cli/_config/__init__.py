@@ -431,9 +431,11 @@ def config_status(
 
 from ._capabilities_cli import register as _register_profile_capabilities
 from ._check_cli import register as _register_config_check
+from ._complete_setup_cli import register as _register_profile_complete_setup
 from ._provision_cli import register_provision_commands as _register_provision_commands
 
 _register_profile_capabilities(profile_app)
+_register_profile_complete_setup(profile_app)
 _register_config_check(app)
 _register_provision_commands(app)
 _register_profile_inspect_commands(

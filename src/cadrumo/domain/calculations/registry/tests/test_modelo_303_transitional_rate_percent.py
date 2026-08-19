@@ -103,7 +103,10 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
 @pytest.mark.parametrize(
     ("filing_year", "period", "expected_154", "expected_166"),
     [
-        (2023, "1T", "5.00", "0.00"),
+        # Casilla 166 does not exist in the 2023 revision: the transitional
+        # recargo boxes arrive with the 2024-late diseno, so `None` here means
+        # "this revision declares no such box" rather than "it computes zero".
+        (2023, "1T", "5.00", None),
         (2024, "3T", "5.00", "0.00"),
         (2024, "4T", "7.50", "2.00"),
         (2025, "1T", "0.00", "0.00"),
@@ -114,12 +117,17 @@ def test_transitional_rate_constant_follows_the_design_window(
     filing_year: int,
     period: str,
     expected_154: str,
-    expected_166: str,
+    expected_166: str | None,
 ) -> None:
     result = _calculate(filing_year=filing_year, period=period)
 
     assert str(result.values[_CASILLA_154]) == expected_154
-    assert str(result.values[_CASILLA_166]) == expected_166
+    if expected_166 is None:
+        # Asserted absent, not skipped: a revision that GAINS the box without
+        # this table being updated still fails here.
+        assert _CASILLA_166 not in result.values
+    else:
+        assert str(result.values[_CASILLA_166]) == expected_166
 
 
 def test_the_flip_lands_exactly_on_the_09_3t_to_10_4t_2024_boundary() -> None:

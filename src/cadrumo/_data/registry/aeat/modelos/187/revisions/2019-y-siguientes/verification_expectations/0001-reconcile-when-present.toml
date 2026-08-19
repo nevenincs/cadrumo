@@ -15,5 +15,5 @@ tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1608-2014:art-1"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]

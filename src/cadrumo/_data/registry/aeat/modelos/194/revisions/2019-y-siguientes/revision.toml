@@ -5,15 +5,15 @@
 authority_grade = "applicability"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["0A"] }
-orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
-legal_refs = ["orden-eha-3377-2011:art-1", "ley-35-2006:art-99", "rd-439-2007:art-108"]
+orden_aplicabilidad = ["orden-1999-11-18:apartado-cuarto"]
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-layout", "aeat-dr-194-2023", "aeat-dr-194-2024"]
 
 
 [revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 194 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
 legal_refs = [
-    "orden-eha-3377-2011:art-1",
+    "orden-1999-11-18:apartado-cuarto",
     "ley-35-2006:art-99",
     "rd-439-2007:art-108",
 ]

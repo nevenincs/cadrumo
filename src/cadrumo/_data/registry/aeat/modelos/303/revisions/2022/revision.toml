@@ -29,6 +29,14 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 valid_from = 2022-01-01
+# Declared explicitly, matching this revision's own period_selector year_to
+# and every sibling revision. It was absent -- left over from the rename of
+# the 2009-2022 revision to 2022 when the pre-window span was retired -- so
+# the revision defaulted to an OPEN-ENDED valid_to while its selector stops
+# at 2022. That gap is not cosmetic: the revision-scoped source and legal
+# window checks intersect against valid_to, so with it unset a source or
+# provision opening after 2022 could never be flagged for this revision.
+valid_to = 2022-12-31
 orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
 source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-orden-hfp-1335-2021-iva-authority", "boe-modelo-303-2008-form"]

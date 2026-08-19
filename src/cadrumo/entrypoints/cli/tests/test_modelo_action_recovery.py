@@ -32,7 +32,7 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             "CADRUMO_SECRET_STORE_DIR": str(secret_store_dir),
             "CADRUMO_SECRET_PASSPHRASE": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
@@ -259,7 +259,7 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
     ) as settings:

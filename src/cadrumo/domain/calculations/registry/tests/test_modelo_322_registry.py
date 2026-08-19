@@ -42,7 +42,7 @@ def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
 
 def test_modelo_322_revision_starts_at_2008() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     assert revision.valid_from == date(2008, 1, 1)
     assert revision.period_selector.year_from == 2008
     assert len(revision.period_selector.periods) == 12
@@ -59,21 +59,25 @@ def test_modelo_322_snapshot_builds_for_each_month() -> None:
             filing_year=2025,
             period=period,
         )
-        assert snapshot.revision.id == "2008-y-siguientes"
+        assert snapshot.revision.id == "2008-2025"
         assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
 def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
     """January 2026 closes on 2026-03-02 in the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
-    windows = {w.id: w for w in revision.deadline_windows}
+    # Each window is read from the revision that OWNS it. The former single span
+    # was split at ejercicio 2026, so the 2026 January window belongs to
+    # `2026-y-siguientes` while the 2025 one belongs to `2008-2025`; taking both
+    # from one revision only worked while there was only one.
+    windows = {w.id: w for w in modelo.revisions["2008-2025"].deadline_windows}
+    later_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
 
     jan_2025 = windows["modelo-322-2025-01"]
     assert jan_2025.opens_on == date(2025, 2, 1)
     assert jan_2025.closes_on == date(2025, 2, 28)
 
-    jan_2026 = windows["modelo-322-2026-01"]
+    jan_2026 = later_windows["modelo-322-2026-01"]
     assert jan_2026.opens_on == date(2026, 2, 1)
     assert jan_2026.closes_on == date(2026, 3, 2)
     assert "aeat-modelo-322-procedure" in jan_2026.source_refs
@@ -82,7 +86,7 @@ def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
 
 def test_modelo_322_other_months_close_within_30_days_of_following_month() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     windows = {w.id: w for w in revision.deadline_windows}
 
     jun_2025 = windows["modelo-322-2025-06"]
@@ -96,7 +100,7 @@ def test_modelo_322_other_months_close_within_30_days_of_following_month() -> No
 
 def test_modelo_322_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     filed_ref = cross_refs["modelo-322-filed-declarations-read"]
@@ -107,7 +111,7 @@ def test_modelo_322_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_322_filing_schedule_is_monthly() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-322-mensual")
     assert schedule.period_kind == "monthly"
     assert len(schedule.periods) == 12
@@ -115,7 +119,7 @@ def test_modelo_322_filing_schedule_is_monthly() -> None:
 
 def test_modelo_322_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
     assert "modelo-322-dr-2026" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-322-mensual",)
@@ -125,7 +129,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
     """Modelo 322 declares the same IVA flow-direction binding pattern as
     Modelo 303, scoped to the individual group entity."""
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
@@ -148,7 +152,7 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     )
 
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     observations = [
         IvaLedgerObservation(
             ledger_id="rep-1",

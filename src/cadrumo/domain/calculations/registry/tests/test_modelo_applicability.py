@@ -493,7 +493,11 @@ def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
     assert "Art. 93" in m100.reason
     assert "Modelo 151" in m100.reason
     assert "ley-35-2006:art-93" in m100.legal_refs
-    assert "orden-eha-2887-2008:modelo-151" in m100.legal_refs
+    # The retired `orden-eha-2887-2008:modelo-151` stub resolved to no text and
+    # was absent from the legal catalogue; the real, bundled form orders are
+    # asserted instead, which is what makes the subset check below meaningful.
+    assert "orden-hap-2783-2015:art-1" in m100.legal_refs
+    assert "orden-hfp-1338-2023:art-1" in m100.legal_refs
 
     assert m151.verdict is ApplicabilityVerdict.APPLICABLE
     assert m151.applicable is True

@@ -24,7 +24,13 @@ from ..pipeline._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ..pipeline._tree_validation import validate_generated_export_tree
-from .test_export_tree import _wire_evidence, _wire_profile, _write_isolated_generated_authority_tree
+from .test_export_tree import (
+    _ISOLATED_TREE,
+    _isolated_render_profile,
+    _wire_evidence,
+    _wire_profile,
+    _write_isolated_generated_authority_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,6 +41,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REVIEW_GATE_REFUSAL = "filing-grade snapshot requires operator_reviewed"
 
 
+# Modelo 130 throughout: `_write_isolated_generated_authority_tree` in
+# `test_export_tree` builds its isolated tree for modelo 130, because the
+# modelo 200 revision it used to target now declares 578 projection endpoints
+# that semantic-map validation checks as a bijection, which a synthetic map
+# cannot satisfy. These modules consume that helper, so their own paths and
+# snapshot must name the same modelo or the tree and the paths disagree.
 def _require_the_drift_was_reached(refusal: BaseException, drift: str) -> None:
     """Refuse a pass earned by the review gate rather than by the injected drift."""
     assert _REVIEW_GATE_REFUSAL not in str(refusal), (
@@ -69,13 +81,13 @@ def _publication_inputs(tmp_path: Path, snapshot, *, existing_export: bool, lega
         snapshot,
     )
     target_root = tmp_path / "publication-root" / "registry" / "aeat"
-    target_revision_root = target_root / "modelos" / "200" / "revisions" / "2025"
+    target_revision_root = target_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision
     target_revision_root.parent.mkdir(parents=True)
     prior = _write_isolated_generated_authority_tree(tmp_path / "prior-root", snapshot)
     prior_context = prior[0]
-    prior_model_root = prior_context.registry_root / "modelos" / "200"
-    os.replace(prior_model_root / "manifest.toml", target_root / "modelos" / "200" / "manifest.toml")
-    prior_revision_root = prior_model_root / "revisions" / "2025"
+    prior_model_root = prior_context.registry_root / "modelos" / _ISOLATED_TREE.modelo
+    os.replace(prior_model_root / "manifest.toml", target_root / "modelos" / _ISOLATED_TREE.modelo / "manifest.toml")
+    prior_revision_root = prior_model_root / "revisions" / _ISOLATED_TREE.revision
     os.replace(prior_revision_root, target_revision_root)
     if not existing_export:
         rmtree(target_revision_root / "export")
@@ -87,7 +99,9 @@ def _publication_inputs(tmp_path: Path, snapshot, *, existing_export: bool, lega
         target_root=target_root,
         target_export_root=target_revision_root / "export",
     )
-    candidate_export_root = validation.registry_root / "modelos" / "200" / "revisions" / "2025" / "export"
+    candidate_export_root = (
+        validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+    )
     return context, joined, semantic_map, rendered, candidate_export_root
 
 
@@ -102,14 +116,14 @@ def _stage_interrupted_verified_candidate(
 ) -> Path:
     backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
-        modelo="200",
-        revision_id="2025",
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
     )
     journal = _tree_publication._PublicationJournal(
         schema_version=1,
         state="backup_staged",
-        modelo="200",
-        revision_id="2025",
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
         candidate_export=str(candidate_export_root),
         backup_export=str(backup_export_root),
         candidate_manifest_sha256=_tree_publication._sha256(
@@ -124,11 +138,11 @@ def _stage_interrupted_verified_candidate(
     return backup_export_root
 
 
-def test_publication_replaces_only_export_and_removes_opaque_backup(m200_inspection_snapshot, tmp_path) -> None:
+def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspection_snapshot, tmp_path) -> None:
     """Revision authority survives byte-identically while export+manifest cut over together."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
         legacy_export=True,
     )
@@ -141,8 +155,8 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m200_inspect
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
 
     assert published.export_root == context.target_export_root
@@ -156,12 +170,12 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m200_inspect
 
 
 def test_publication_creates_missing_export_without_touching_revision_authority(
-    m200_inspection_snapshot, tmp_path
+    m130_inspection_snapshot, tmp_path
 ) -> None:
     """A revision can retain all non-export authority while gaining a generated export tree."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=False,
     )
     expected_export = _tree_bytes(candidate_export_root)
@@ -173,8 +187,8 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
 
     assert _tree_bytes(context.target_export_root) == expected_export
@@ -184,14 +198,14 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
 
 @pytest.mark.parametrize("defect", ("missing", "extra"))
 def test_publication_refuses_invalid_candidate_without_changing_live_export(
-    m200_inspection_snapshot,
+    m130_inspection_snapshot,
     tmp_path,
     defect: str,
 ) -> None:
     """The final validation gate leaves a live export byte-identical on incomplete or extra output."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     before = _tree_bytes(context.target_export_root)
@@ -207,8 +221,8 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -228,7 +242,7 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
     ),
 )
 def test_publication_refuses_coordinate_authority_and_output_mutations_before_cutover(
-    m200_inspection_snapshot,
+    m130_inspection_snapshot,
     tmp_path,
     defect: str,
     error: str,
@@ -236,7 +250,7 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
     """Every mutated candidate rejects as a whole while the live revision stays byte-identical."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     before_export = _tree_bytes(context.target_export_root)
@@ -296,8 +310,8 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before_export
@@ -307,12 +321,12 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
 
 
 def test_publication_restores_live_export_after_real_windows_locked_candidate_failure(
-    m200_inspection_snapshot, tmp_path
+    m130_inspection_snapshot, tmp_path
 ) -> None:
     """A real Windows handle blocks the second directory rename after backup staging."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     before = _tree_bytes(context.target_export_root)
@@ -325,8 +339,8 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -335,11 +349,11 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
     assert not _rollback_siblings(context.target_export_root)
 
 
-def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspection_snapshot, tmp_path) -> None:
+def test_publication_completes_a_real_interrupted_verified_candidate(m130_inspection_snapshot, tmp_path) -> None:
     """Journal recovery completes a candidate validation had already proved before a crash."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     validate_generated_export_tree(
@@ -347,8 +361,8 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspec
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
     expected_export = _tree_bytes(candidate_export_root)
     before_authority = _non_export_authority_bytes(context.target_export_root.parent)
@@ -359,8 +373,8 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspec
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
     )
 
     assert recovered.validated is None
@@ -372,13 +386,13 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspec
 
 @pytest.mark.parametrize("drift", ("profile", "evidence"))
 def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_mutation(
-    m200_inspection_snapshot,
+    m130_inspection_snapshot,
     tmp_path,
     drift: str,
 ) -> None:
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
@@ -420,15 +434,15 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
     assert journal_path.read_bytes() == journal_before
 
 
-def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m200_inspection_snapshot, tmp_path) -> None:
+def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m130_inspection_snapshot, tmp_path) -> None:
     """The loader accepts the generated tree while validation refuses a missing internal attestation."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=False,
     )
     loaded = load_modelo_directory(candidate_export_root.parent.parent.parent)
-    assert loaded.revisions["2025"].export_layouts == (rendered.layout,)
+    assert loaded.revisions[_ISOLATED_TREE.revision].export_layouts == (rendered.layout,)
     (candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
 
     with pytest.raises(RegistryValidationError, match="provenance manifest"):
@@ -437,16 +451,16 @@ def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m200_in
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
 
-def test_publication_refuses_stale_sibling_provenance_before_cutover(m200_inspection_snapshot, tmp_path) -> None:
+def test_publication_refuses_stale_sibling_provenance_before_cutover(m130_inspection_snapshot, tmp_path) -> None:
     """The old outside-export manifest surface cannot silently survive a generated target."""
     context, joined, semantic_map, rendered, _candidate_export_root = _publication_inputs(
         tmp_path,
-        m200_inspection_snapshot,
+        m130_inspection_snapshot,
         existing_export=True,
     )
     stale = context.target_export_root.parent / "export.provenance.json"
@@ -458,8 +472,8 @@ def test_publication_refuses_stale_sibling_provenance_before_cutover(m200_inspec
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=_isolated_render_profile()[0],
+            render_profile_source_evidence=_isolated_render_profile()[1],
         )
 
 

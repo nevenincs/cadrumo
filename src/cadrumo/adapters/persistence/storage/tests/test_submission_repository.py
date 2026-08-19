@@ -105,11 +105,11 @@ class TestSaveLoad:
     def test_save_persists_only_to_the_secure_database_object(self, repo: SubmissionRepository) -> None:
         """A saved filing never reaches the plaintext ``submissions`` directory.
 
-        :data:`StorageCategory.SUBMISSIONS` declares
-        ``adapters/persistence/storage/_rotation.py`` as its sole consumer,
-        and that module only walks the directory to re-encrypt any
-        ``.envelope.json`` files found there on master-key rotation -- it is
-        a sweep, not a writer. :class:`SubmissionRepository`'s own module
+        :data:`StorageCategory.SUBMISSIONS` now declares
+        no consumer at all. Its only one was the master-key rotation sweep,
+        deleted with the shared-master model it belonged to, and even then
+        that module only walked the directory looking for ``.envelope.json``
+        files to re-encrypt -- it was a sweep, never a writer. :class:`SubmissionRepository`'s own module
         docstring states "plaintext submission JSON or envelope file lands
         on disk" is what it avoids; this proves it, mirroring
         ``test_put_file_reads_source_but_persists_only_secure_database_object``

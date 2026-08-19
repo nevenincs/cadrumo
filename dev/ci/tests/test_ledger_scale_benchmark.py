@@ -86,6 +86,7 @@ from cadrumo.application.aggregation import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from cadrumo.application.aggregation.tests._iva_authority_support import aggregate_iva_ledger_observations
+from cadrumo.application.bienes_inversion import BienesInversionIvaRegister
 from cadrumo.application.calculations import CalculationObservationRepository
 from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation,
@@ -106,7 +107,7 @@ from cadrumo.domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile
@@ -325,6 +326,7 @@ def _seed_taxpayer_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),
             UserProfileFact(path="identity.name", value="Scale"),
@@ -640,11 +642,16 @@ def quarterly_iva_samples(scale_bucket: SecureObjectRepository) -> _QuarterlyIva
 
             wall_started = time.perf_counter()
             cpu_started = time.process_time()
+            # Injecting a transaction repository means the bienes-inversion
+            # authority must be injected too: the aggregation cannot derive it
+            # from a repository it did not construct.
             partitioned_result = aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=_BUCKET_ID,
                 period=period,
                 transaction_repository=tx_repo,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id=_BUCKET_ID,
             )
             partitioned_cpu_duration = time.process_time() - cpu_started
             partitioned_wall_duration = time.perf_counter() - wall_started

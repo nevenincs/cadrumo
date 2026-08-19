@@ -1,6 +1,6 @@
 [revisions."2019-y-siguientes".completeness_manifest]
 source_ref = "boe-modelo-188-form-layout"
-legal_refs = ["orden-eha-3377-2011:art-1", "ley-35-2006:art-99"]
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
 source_refs = ["boe-modelo-188-form-layout"]
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]

@@ -453,7 +453,7 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # never restated, because a member list repeated at five call sites is five
 # chances to drift into a lane that silently nests a worker pool inside a pool.
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
-harness_full_corpus := "src/cadrumo/tests/test_full_corpus_collectability_harness.py"
+harness_full_corpus := "dev/harness/test_full_corpus_collectability_harness.py"
 harness_members := harness_worker_hook + " " + harness_full_corpus
 harness_exclusions := prepend("--ignore=", harness_members)
 
@@ -601,6 +601,7 @@ test-dev-tooling:
 [group('testing')]
 test-dev-ci:
     @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
+    @uv run --no-sync pytest -q -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
 # Run the four conformance gates that are correctly `integration`-marked
 # (each genuinely crosses architectural layers) but were reached by no

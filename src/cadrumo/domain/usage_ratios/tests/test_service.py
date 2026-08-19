@@ -78,10 +78,11 @@ def test_save_persists_only_to_the_secure_database_object(
     taxonomy-declared location -- it would still pass even if
     ``save_usage_ratios`` wrote to :data:`StorageCategory.USAGE_RATIOS`'s
     real subpath, since that path is never checked. This test closes that
-    gap: :data:`StorageCategory.USAGE_RATIOS` declares
-    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
-    that module only walks the location to re-encrypt an ``.envelope.json``
-    file found there on master-key rotation -- it is a sweep, not a writer.
+    gap: :data:`StorageCategory.USAGE_RATIOS` now declares no consumer at
+    all. Its only one was the master-key rotation sweep, deleted with the
+    shared-master model it belonged to, and even then that module only walked
+    the location looking for an ``.envelope.json`` file to re-encrypt -- it
+    was a sweep, never a writer.
     The module docstring states "no plaintext profile JSON or envelope file
     lands on disk"; this proves it against the accessor-resolved path
     itself, so a future taxonomy subpath move is tracked automatically

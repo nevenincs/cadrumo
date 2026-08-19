@@ -6,7 +6,7 @@ data_type = "money"
 semantic_role = "capital_mobiliario_resumen_base"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-layout"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -17,7 +17,7 @@ data_type = "money"
 semantic_role = "capital_mobiliario_resumen_retenciones"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-layout"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -29,6 +29,6 @@ semantic_role = "capital_mobiliario_resumen_total"
 required = false
 input_kind = "computed"
 formula = "modelo-194-total"
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-layout"]
 

@@ -51,7 +51,7 @@ def _emit_ratios_event(
     """Append a ratios mutation event to the bucket-event-history catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
+    from ...domain.buckets import BucketEventObjectType, emit_bucket_event
 
     occurred_at = now()
     payload = {
@@ -60,7 +60,8 @@ def _emit_ratios_event(
         "new": "" if new is None else str(new),
     }
     actor = "operator"
-    event_id = derive_bucket_event_id(
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -68,24 +69,7 @@ def _emit_ratios_event(
         object_type=BucketEventObjectType.PROFILE,
         object_id=category,
         payload=payload,
-    )
-    repo = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
-    catalogue = repo.load()
-    repo.save(
-        append_bucket_event(
-            catalogue,
-            BucketEvent(
-                event_id=event_id,
-                bucket_id=bucket_id,
-                event_type=event_type,
-                occurred_at=occurred_at,
-                actor=actor,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=category,
-                payload=payload,
-                payload_version=1,
-            ),
-        ),
+        payload_version=1,
     )
 
 
@@ -97,42 +81,23 @@ def _emit_ratios_censo_override_warning(
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
+    from ...domain.buckets import BucketEventObjectType, emit_bucket_event
 
-    occurred_at = now()
-    payload = {
-        "category": warning.category.value,
-        "override_ratio": str(warning.override_ratio),
-        "censo_derived_ratio": str(warning.censo_derived_ratio),
-        "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
-    }
-    actor = "operator"
-    event_id = derive_bucket_event_id(
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
-        occurred_at=occurred_at,
-        actor=actor,
+        occurred_at=now(),
+        actor="operator",
         object_type=BucketEventObjectType.PROFILE,
         object_id=warning.category.value,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
-    catalogue = repo.load()
-    repo.save(
-        append_bucket_event(
-            catalogue,
-            BucketEvent(
-                event_id=event_id,
-                bucket_id=bucket_id,
-                event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
-                occurred_at=occurred_at,
-                actor=actor,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=warning.category.value,
-                payload=payload,
-                payload_version=1,
-            ),
-        ),
+        payload={
+            "category": warning.category.value,
+            "override_ratio": str(warning.override_ratio),
+            "censo_derived_ratio": str(warning.censo_derived_ratio),
+            "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
+        },
+        payload_version=1,
     )
 
 

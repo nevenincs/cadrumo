@@ -266,6 +266,26 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: extracted value must equal the map's declared literal byte for byte, and its
 #: encoded length must equal the official slot width. A mis-read prefix fails
 #: both, so this widens what can be PARSED without widening what is ACCEPTED.
+#: TWO quoted constants joined by an alternation connector, which states a CHOICE
+#: rather than one constant with a label. `Constante "<T" o "ZZ"` names two
+#: possible byte strings and the design does not say which applies, so the
+#: renderer cannot know what to write.
+#:
+#: This is checked BEFORE the labelled form below, which would otherwise read the
+#: first alternative as the constant and the rest as its label -- silently
+#: choosing `<T` and discarding `o "ZZ"`. Wrong constant bytes on the wire is the
+#: worst outcome available here, and it would be invisible: the emitted record is
+#: well formed and the wrong literal is the right width.
+#:
+#: The labelled form it guards is not weakened. Measured across all 121 bundled
+#: designs, `_OFFICIAL_LABELLED_LITERAL_RE` matches NOTHING: the modelo 296 cells
+#: it was written for -- `Constante «F» ANEXO «VALORES NEGOCIABLES...»` -- carry
+#: TYPOGRAPHIC quotes, which its straight-quote character class never admits.
+_OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
+    r"\s*(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote)\s*\.?\s*$",
+    re.IGNORECASE,
+)
 _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\s+\S.*$",
     re.IGNORECASE | re.DOTALL,
@@ -780,6 +800,11 @@ def _literal_derivation(
             official_literal = folded_content
         elif (unquoted := _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)) is not None:
             official_literal = unquoted.group("literal")
+        elif _OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
+            raise RegistryValidationError(
+                f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
+                f"content {official_content!r}: it states two alternative constants and not which one applies",
+            )
         elif (labelled := _OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)) is not None:
             official_literal = labelled.group("literal")
         else:
@@ -815,6 +840,31 @@ def _literal_derivation(
         export_record_id=export_record_id,
         derivation_code="literal-exact-v1",
     )
+
+
+#: What SEPARATES two quoted values in a labelled enumeration AEAT actually
+#: writes. `_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE` allows any non-quote text
+#: between values, so an ordinary SENTENCE containing two quoted numbers -- `"0000"
+#: only if the taxpayer elects "0050"` -- parsed as a closed value set and the
+#: renderer went on to constrain the slot to it. Prose is not a value set.
+#:
+#: Derived from the corpus rather than guessed: across the 103 bundled designs
+#: that load, the labelled form matches 221 cells in 28 distinct shapes, and
+#: every one of them separates its values with a delimiter -- a comma, a
+#: newline, a dash, or a Spanish connective. Two are RANGE forms (`"01".."12"`
+#: and `"01" a "52"`), which is why `..` and ` a ` are admitted. All 28 stay
+#: admitted under this rule and the prose above does not.
+_LABELLED_ENUMERATION_VALUE_DELIMITER_RE: Final[re.Pattern[str]] = re.compile(
+    r"[,;\n]|\s(?:o|\u00f3|u|y|e|a)\s|\s[-\u2013\u2014.]\s|\s\.-\s|\.\.",
+    re.IGNORECASE,
+)
+_QUOTED_NUMERIC_VALUE_RE: Final[re.Pattern[str]] = re.compile(r'"\d+"')
+
+
+def _labelled_enumeration_values_are_delimited(content: str) -> bool:
+    """Report whether every gap between quoted values carries a real delimiter."""
+    gaps = _QUOTED_NUMERIC_VALUE_RE.split(content)[1:-1]
+    return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
 
 
 def _numeric_derivation(
@@ -941,7 +991,10 @@ def _numeric_derivation(
     if (
         _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
-        or _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(normalised_content) is not None
+        or (
+            _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(normalised_content) is not None
+            and _labelled_enumeration_values_are_delimited(normalised_content)
+        )
         or _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or len(labelled_values) > 1
     ):

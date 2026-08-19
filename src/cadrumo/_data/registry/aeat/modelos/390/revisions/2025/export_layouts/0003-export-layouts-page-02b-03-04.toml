@@ -429,7 +429,7 @@ legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".export_layouts.records.fields]]
-id = "modelo-390-page-04-casilla-63"
+id = "modelo-390-page-04-casilla-regularizacion-bienes-inversion"
 offset = 625
 length = 17
 kind = "casilla"
@@ -443,7 +443,7 @@ legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".export_layouts.records.fields]]
-id = "modelo-390-page-04-casilla-522"
+id = "modelo-390-page-04-casilla-regularizacion-prorrata-definitiva"
 offset = 642
 length = 17
 kind = "casilla"

@@ -47,7 +47,9 @@ source_refs = [
     "enrolled-modelo-490-procedure",
     "aeat-dr-490-2021",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2022-1t".family_dispositions.casilla_continuidad_evolutions]
 reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2022-1t' of modelo 490 DOES have a strictly-earlier sibling, so a within-modelo continuity transition is structurally possible here and this family is NOT empty by construction. None is declared because no casilla-to-position mapping has been authored for the earlier era, so there is no pair of numbered casillas between which an evolution could be asserted. Declaring one would claim a continuity nobody has checked. This is an honest empty family on a stated reason, not a claim that the family cannot exist -- when the earlier era is transcribed, revisit it."

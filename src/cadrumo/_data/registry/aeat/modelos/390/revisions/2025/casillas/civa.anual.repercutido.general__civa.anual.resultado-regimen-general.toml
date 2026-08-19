@@ -81,7 +81,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
-export_refs = ["modelo-390-page-04-casilla-522"]
+export_refs = ["modelo-390-page-04-casilla-regularizacion-prorrata-definitiva"]
 
 [[revisions."2025".casillas]]
 id = "iva.anual.regularizacion-bienes-inversion"
@@ -95,7 +95,7 @@ input_kind = "bound"
 binding = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
-export_refs = ["modelo-390-page-04-casilla-63"]
+export_refs = ["modelo-390-page-04-casilla-regularizacion-bienes-inversion"]
 
 # Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
 # (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was

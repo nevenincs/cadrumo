@@ -43,7 +43,7 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
             {
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
-                "CADRUMO_SECRET_STORE_BACKEND": "file",
+                "CADRUMO_SECRET_STORE_BACKEND": "auto",
                 "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
                 "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "probe-blobs"),
                 "CADRUMO_LIVE_STATE_DIR": str(tmp_path / "probe-live-state"),

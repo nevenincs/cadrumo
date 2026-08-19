@@ -64,9 +64,7 @@ def _source_window_covers(source: Any, revision: Any) -> bool:
     if source.applies_to is not None and source.applies_to < revision.valid_from:
         return False
     return not (
-        source.applies_from is not None
-        and revision.valid_to is not None
-        and source.applies_from > revision.valid_to
+        source.applies_from is not None and revision.valid_to is not None and source.applies_from > revision.valid_to
     )
 
 

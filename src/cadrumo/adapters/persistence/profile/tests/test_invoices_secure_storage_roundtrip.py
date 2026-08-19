@@ -99,11 +99,11 @@ def test_invoice_catalogue_persists_only_to_the_secure_database_object(
 ) -> None:
     """A saved catalogue never reaches the plaintext ``financial/invoices`` directory.
 
-    :data:`StorageCategory.INVOICES` declares
-    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
-    that module only walks the directory to re-encrypt any
-    ``.envelope.json`` files found there on master-key rotation -- it is a
-    sweep, not a writer. :class:`InvoiceCatalogueRepository`'s own module
+    :data:`StorageCategory.INVOICES` now declares
+    no consumer at all. Its only one was the master-key rotation sweep,
+    deleted with the shared-master model it belonged to, and even then that
+    module only walked the directory looking for ``.envelope.json`` files to
+    re-encrypt -- it was a sweep, never a writer. :class:`InvoiceCatalogueRepository`'s own module
     docstring states "no plaintext invoice row, JSON catalogue, or
     envelope file lands on disk"; this proves it, mirroring
     ``test_put_file_reads_source_but_persists_only_secure_database_object``

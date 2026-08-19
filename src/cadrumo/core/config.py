@@ -262,10 +262,9 @@ class Settings(CadrumoLlmSettings):
     cadrumo_secret_store_backend: SecretStoreBackend = Field(
         default=SecretStoreBackend.AUTO,
         description=(
-            "Master-key backend for the secret store. "
-            "auto = OS keychain when available, encrypted file fallback otherwise. "
-            "keyring = OS keychain only (refuses to fall back). "
-            "file = encrypted file only (required for CI / headless). "
+            "Whether at-rest material is protected by real custody. "
+            "auto = the profile's own password custody, which is the only "
+            "secured route and needs no further configuration. "
             "unsecured = testing-only mode with a published deterministic "
             "key; requires cadrumo_allow_unencrypted=true and refuses real NIFs."
         ),

@@ -2071,6 +2071,12 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+      complete_setup:
+        already_complete: A profil már készként volt nyilvántartva; semmi nem került
+          mentésre.
+        completed: A profil készen áll a beadásra.
+        help: Nyilatkozat arról, hogy az aktív profil készen áll a beadásra.
+        incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítse meg az új profil jelszavát: '
       create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
         PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
@@ -3324,9 +3330,9 @@ cli:
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
         paragraph_storage_isolation: Elszigetelt üres állapothoz állítsa be ezeket
-          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
-          CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
-          szerint ezen tárhelygyökér alatt vannak.
+          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR
+          és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés szerint ezen tárhelygyökér
+          alatt vannak.
         passphrase_change: Az aktív profilt védő jelszó módosítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.

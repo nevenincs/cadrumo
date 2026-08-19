@@ -69,7 +69,7 @@ _SETTINGS_PREAMBLE = dedent(
         _env_file=None,
         cadrumo_local_storage_root=root,
         cadrumo_active_profile=None,
-        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_backend="auto",
         cadrumo_secret_store_dir=root.parent / "secrets",
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
@@ -189,7 +189,7 @@ def _child_env(root: Path) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             # Anchored on the root's parent, so the secret substrate stays a
             # sibling of the bucket tree rather than nesting inside it.
             **storage_env_overrides(root.parent, StorageCategory.SECRETS),

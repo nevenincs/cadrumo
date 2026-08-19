@@ -22,6 +22,7 @@ Submodules
    cadrumo.adapters.inbound.tui._manager_screen
    cadrumo.adapters.inbound.tui._modelo_work_review_screen
    cadrumo.adapters.inbound.tui._question_screen
+   cadrumo.adapters.inbound.tui._recovery_words_screen
    cadrumo.adapters.inbound.tui._registration_screen
    cadrumo.adapters.inbound.tui._review_screen
    cadrumo.adapters.inbound.tui._select

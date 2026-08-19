@@ -91,7 +91,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
             "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),
             "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
             "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "fallback-store"),
-            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_BACKEND": "auto",
         },
     )
     return env
@@ -150,7 +150,7 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage",
         cadrumo_secret_store_dir=tmp_path / "storage" / "fallback-store",
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_passphrase=passphrase,
         cadrumo_active_profile=None,
     ):

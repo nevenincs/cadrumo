@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
@@ -67,12 +68,16 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
     # the three censal event kinds the form supports. Snapshot.period
     # max_length=32 accommodates these descriptive names.
     for period in ("alta", "modificacion", "baja"):
-        snapshot = _committed_snapshot("036", 2025, period)
+        # APPLICABILITY grade: modelo 036's registry declares that rung, and a
+        # censal alta/modificacion/baja is filed on AEAT's sede -- this
+        # application produces no fichero for it, so a filing-grade snapshot
+        # asks for capability the modelo neither has nor claims.
+        snapshot = _committed_snapshot("036", 2025, period, RegistryAuthorityGrade.APPLICABILITY)
         assert snapshot.revision.id == "2025-02-03-y-siguientes"
 
 
 def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
-    snapshot = _committed_snapshot("036", 2025, "alta")
+    snapshot = _committed_snapshot("036", 2025, "alta", RegistryAuthorityGrade.APPLICABILITY)
     assert "rd-1065-2007:art-9" in snapshot.legal
     assert "rd-1065-2007:art-10" in snapshot.legal
     assert "rd-1065-2007:art-11" in snapshot.legal

@@ -27,7 +27,9 @@ source_refs = [
     "boe-modelo-280-2019-amendment-hac-1276",
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

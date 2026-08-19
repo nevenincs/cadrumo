@@ -49,7 +49,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import ClassVar, Final, Literal
 
 from pydantic import BaseModel
 
@@ -480,6 +480,12 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     )
 
 
+#: A thousands group is exactly three digits wide in both conventions this
+#: parser accepts, so a group of any other width is malformed rather than
+#: ambiguous.
+_THOUSANDS_GROUP_WIDTH: Final[int] = 3
+
+
 def parse_amount_value(
     value: object,
     *,
@@ -613,12 +619,51 @@ def _resolve_decimal_separator(
 
 
 def _normalise_amount_digits(sanitized: str, *, decimal_sep: str) -> str:
-    """Drop the thousands separator and rewrite the decimal separator as ``.``."""
+    """Drop the thousands separator and rewrite the decimal separator as ``.``.
+
+    A group being dropped as thousands separation MUST be exactly three digits
+    wide, and a malformed one refuses rather than being normalised away. This is
+    the same stance the scientific-notation guard above takes, for the same
+    reason: the drop is silent, so a wrong separator does not fail, it rewrites
+    the magnitude into a plausible wrong number that then feeds the ledger and
+    every modelo aggregation built on it.
+
+    Measured, and how this was found: a dot-decimal file read under a
+    comma-decimal dialect had every ``.`` stripped as grouping, so ``7.77``
+    became ``777`` and ``1210.00`` became ``121000`` -- a hundredfold
+    overstatement that imported clean and surfaced only much later, when an
+    unrelated reconciliation could not make base + IVA meet the gross. Neither
+    convention can produce a two-digit final group, so the shape is decidable
+    here without guessing which separator the file really meant.
+    """
     thousands_sep = "." if decimal_sep == "," else ","
+    _reject_malformed_thousands_groups(sanitized, thousands_sep=thousands_sep)
     normalized = sanitized.replace(thousands_sep, "")
     if decimal_sep != ".":
         normalized = normalized.replace(decimal_sep, ".")
     return normalized
+
+
+def _reject_malformed_thousands_groups(sanitized: str, *, thousands_sep: str) -> None:
+    """Refuse text whose ``thousands_sep`` groups are not three digits wide.
+
+    Only the digit runs BETWEEN separators are judged. The leading run is free
+    (``1.234`` is one thousand two hundred thirty-four), and a run followed by
+    the decimal separator is the integer part rather than a group.
+    """
+    if thousands_sep not in sanitized:
+        return
+    segments = sanitized.split(thousands_sep)
+    for segment in segments[1:]:
+        digits = segment.split(",")[0] if thousands_sep == "." else segment.split(".")[0]
+        if len(digits) != _THOUSANDS_GROUP_WIDTH or not digits.isdigit():
+            raise FinancialValidationError(
+                f"amount value {sanitized!r} groups digits as {digits!r} after the "
+                f"{thousands_sep!r} thousands separator, which is not a three-digit "
+                f"group: the separator is being read as grouping when the file may "
+                f"mean it as the decimal mark, and dropping it would silently change "
+                f"the magnitude",
+            )
 
 
 def synthesize_transaction_id(

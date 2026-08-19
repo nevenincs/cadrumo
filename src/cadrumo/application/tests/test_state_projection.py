@@ -79,7 +79,7 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
             override_settings(
                 cadrumo_local_storage_root=tmp_path,
                 cadrumo_active_profile=None,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
                 cadrumo_secret_passphrase=SecretStr(_OPERATOR_PASSPHRASE),
             ),
         )

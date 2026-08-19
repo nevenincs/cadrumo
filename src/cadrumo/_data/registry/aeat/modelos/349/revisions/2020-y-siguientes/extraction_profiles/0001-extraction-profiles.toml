@@ -35,6 +35,18 @@ target_casillas = [
     {casilla_id = "decl.importe-operaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+de\s+las\s+operaciones\s+intracomunitarias'},
     {casilla_id = "decl.numero-rectificaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+total\s+de\s+operadores\s+intracomunitarios\s+con\s+rectificaciones'},
     {casilla_id = "decl.importe-rectificaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+de\s+las\s+rectificaciones'},
+    # Declarante identification and obligation fields. This profile parses the
+    # SUBMITTED FIXED-WIDTH RECORD, so every declarante-section casilla is
+    # recoverable from it and the profile is required to target them all; these
+    # five were authored after the target list was written. They are located by
+    # their own record positions rather than by a printed label, which is what
+    # `numeric_casilla` means -- a label_pattern would be a PDF idiom borrowed
+    # into a record surface that prints no labels.
+    {casilla_id = "decl.numero-identificativo", match_strategy = "numeric_casilla", value_kind = "text"},
+    {casilla_id = "decl.numero-identificativo-anterior", match_strategy = "numeric_casilla", value_kind = "text"},
+    {casilla_id = "decl.complementaria-sustitutiva", match_strategy = "numeric_casilla", value_kind = "text"},
+    {casilla_id = "decl.cambio-periodicidad", match_strategy = "numeric_casilla", value_kind = "text"},
+    {casilla_id = "decl.nif-representante-legal", match_strategy = "numeric_casilla", value_kind = "text"},
 ]
 confidence = "strict"
 min_coverage = "1.0"

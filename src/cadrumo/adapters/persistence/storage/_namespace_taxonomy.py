@@ -98,8 +98,9 @@ class StoragePathAnchor(StrEnum):
     Measured fact, not a justification: ``STORAGE_ROOT`` is bound to
     ``cadrumo_local_storage_root``, and every production
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
-    construction at HEAD -- ``get_secret_store`` and
-    ``default_blob_store_roots`` -- passes ``root_dir`` the SAME value.
+    construction at HEAD -- ``get_secret_store``, now the only one, since
+    ``default_blob_store_roots`` went with the deleted master-key rotation
+    sweep -- passes ``root_dir`` the SAME value.
     ``BLOB_STORE_ROOT`` appears at six sites in this tree and every one but
     its own declaration here is a comparison against that fact; it is bound
     to no value of its own anywhere.

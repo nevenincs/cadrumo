@@ -1,4 +1,41 @@
 [revisions."2020-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 3 fixed-width records of the DERIVED layout were paired to their
+#     design sheet and cover it, with NO design DATA position left unaddressed.
+#
+# Two pairing facts are recorded here because an automated pairing pass abstains
+# on both, and the abstention was a measurement artefact rather than a defect:
+#
+#   - The rectificaciones record pairs to the sheet AEAT names "Tipo 2 - Registro
+#     De Retificaciones". That is AEAT's own spelling, missing the first "c", so a
+#     noun match between the record id and the sheet identity finds nothing.
+#   - The operador record emits 500 positions while its sheet's LAST LISTED
+#     position is 235. 235 is not the record length. The sibling Tipo 2
+#     rectificaciones sheet carries identical fields at 179..195 and 196..235 and
+#     then an explicit trailing block at 236..500; the operador sheet simply stops
+#     listing after its last data field. A fixed-width file interleaves tipo 1,
+#     tipo 2 operador and tipo 2 rectificaciones lines, and the other two records
+#     are 500, so a 235-position operador line would make the file unparseable.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2020-y-siguientes"
 valid_from = 2020-01-01

@@ -25,7 +25,9 @@ source_refs = [
     "boe-modelo-189-2025-values",
     "aeat-dr-189-2023",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

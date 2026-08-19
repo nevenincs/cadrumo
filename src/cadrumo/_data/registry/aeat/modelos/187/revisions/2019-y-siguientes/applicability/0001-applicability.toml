@@ -5,4 +5,4 @@ required_payer_fact = "pays_capital_income_with_retencion"
 applicable_reason = "Modelo 187 (acciones y participaciones de IIC, resumen anual de retenciones): el contribuyente satisface rentas o ganancias de IIC sujetas a retencion y presenta el resumen anual."
 not_applicable_reason = "Modelo 187 no aplica: solo corresponde a quien satisface rentas o ganancias de IIC sujetas a retencion."
 cuota_bearing = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hap-1608-2014:art-1"]

@@ -47,7 +47,9 @@ source_refs = [
     "enrolled-modelo-490-procedure",
     "aeat-dr-490-2021",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 
 [revisions."2021".family_dispositions.casilla_continuidad_evolutions]
 reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2021' of modelo 490 has no strictly-earlier sibling revision of this modelo (valid_from 2021-01-01 precedes every other declared revision of modelo 490), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."

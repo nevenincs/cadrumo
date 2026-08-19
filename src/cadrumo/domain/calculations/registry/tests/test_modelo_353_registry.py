@@ -41,7 +41,7 @@ def test_modelo_353_metadata_matches_orden_eha_3434_2007() -> None:
 
 def test_modelo_353_revision_is_monthly_from_2008() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     assert revision.valid_from == date(2008, 1, 1)
     assert len(revision.period_selector.periods) == 12
     assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
@@ -49,13 +49,17 @@ def test_modelo_353_revision_is_monthly_from_2008() -> None:
 
 def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
-    windows = {w.id: w for w in revision.deadline_windows}
+    # Each window is read from the revision that OWNS it. The former single
+    # span was split at ejercicio 2026, so the 2026 January window belongs to
+    # `2026-y-siguientes` while the 2025 one belongs to `2008-2025`; taking
+    # both from one revision only worked while there was only one.
+    windows = {w.id: w for w in modelo.revisions["2008-2025"].deadline_windows}
+    later_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
     jan_2025 = windows["modelo-353-2025-01"]
     assert jan_2025.opens_on == date(2025, 2, 1)
     assert jan_2025.closes_on == date(2025, 2, 28)
 
-    jan_2026 = windows["modelo-353-2026-01"]
+    jan_2026 = later_windows["modelo-353-2026-01"]
     assert jan_2026.opens_on == date(2026, 2, 1)
     assert jan_2026.closes_on == date(2026, 3, 2)
     assert jan_2026.payment_cutoff_on == date(2026, 2, 25)
@@ -66,7 +70,7 @@ def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
 
 def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     windows = {w.id: w for w in revision.deadline_windows}
     jun = windows["modelo-353-2025-06"]
     assert jun.opens_on == date(2025, 7, 1)
@@ -76,7 +80,7 @@ def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
 def test_modelo_353_snapshot_builds_per_month() -> None:
     modelo, catalogues = _load_modelo_353()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="06")
-    assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.id == "2008-2025"
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
     assert "orden-eha-3434-2007:art-2" in snapshot.legal
     assert "aeat-modelo-353-procedure" in snapshot.sources
@@ -85,7 +89,7 @@ def test_modelo_353_snapshot_builds_per_month() -> None:
 
 def test_modelo_353_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
     filed_ref = cross_refs["modelo-353-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
@@ -94,14 +98,14 @@ def test_modelo_353_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_353_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     construct = next(c for c in revision.constructs if c.id == "modelo-353-iva-grupo-agregado")
     assert "modelo-353-dr-2026" in construct.workbook_parity_refs
 
 
 def test_modelo_353_declares_iva_aggregation_bindings() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-353-iva-repercutido-general-cuota",
@@ -112,9 +116,17 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
     }
 
 
-def test_modelo_353_declares_322_group_settlement_treatment() -> None:
+# Both halves of the ejercicio-2026 split declare this classification, and they
+# differ only in which diseno they cite. Parametrising covers both and derives
+# the design ref, where pinning one revision plus a literal `aeat-dr-353-2026`
+# asserted the newer half's ref against whichever revision was named.
+@pytest.mark.parametrize(
+    ("revision_id", "design_ref"),
+    [("2008-2025", "aeat-dr-353-2021-2025"), ("2026-y-siguientes", "aeat-dr-353-2026")],
+)
+def test_modelo_353_declares_322_group_settlement_treatment(revision_id: str, design_ref: str) -> None:
     modelo, catalogues = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions[revision_id]
     classifications = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
@@ -134,7 +146,7 @@ def test_modelo_353_declares_322_group_settlement_treatment() -> None:
     }
     assert set(classification.source_refs) == {
         "aeat-modelo-322-procedure",
-        "aeat-dr-353-2026",
+        design_ref,
         "aeat-modelo-353-procedure",
         "boe-modelo-322-2007-form",
         "boe-modelo-353-2007-form",
@@ -165,7 +177,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
     )
 
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-y-siguientes"]
+    revision = modelo.revisions["2008-2025"]
     observations = [
         IvaLedgerObservation(
             ledger_id="agg-rep-1",

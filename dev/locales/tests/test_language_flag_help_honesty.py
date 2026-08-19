@@ -51,7 +51,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     env.update(
         {
-            "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+            "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),

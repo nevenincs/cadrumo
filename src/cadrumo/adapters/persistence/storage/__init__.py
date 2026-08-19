@@ -40,10 +40,10 @@ The public surface is grouped by contract:
     :func:`resolve_attachment_store`, the one place a caller holding an optional
   injected :class:`~domain.attachments.AttachmentStoreProtocol` turns it into a
   concrete :class:`AttachmentStore`.
-- Recovery and rotation — the low-level BIP-39 recovery helpers,
-  :class:`RotationPlanEntry`, :class:`RotationSummary`, and blob-store
-  rotation functions. The shared-master wrapping primitives are gone:
-  recovery is a per-profile custody operation.
+- Recovery — the low-level BIP-39 recovery helpers. The shared-master
+  wrapping primitives are gone, and so is the master-key rotation sweep that
+  re-wrapped every envelope between two providers: recovery and passphrase
+  rotation are both per-profile custody operations.
 - Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
   :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
   :func:`secure_object_logical_path` /
@@ -194,14 +194,6 @@ if TYPE_CHECKING:
         decode_mnemonic,
         encode_mnemonic,
         generate_recovery_key,
-    )
-    from ._rotation import (
-        RotationPlanEntry,
-        RotationSummary,
-        default_blob_store_roots,
-        default_rotation_plan,
-        rotate_blob_stores,
-        rotate_master_key,
     )
     from ._runtime_readiness import (
         StorageRuntimeReadiness,
@@ -511,8 +503,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RepositoryError": ".errors",
     "RetentionPolicy": "....core.classification",
     "RetentionPolicyError": ".errors",
-    "RotationPlanEntry": "._rotation",
-    "RotationSummary": "._rotation",
     "SECRET_INDEX_FILENAME": "._storage_path_definitions",
     "SECRET_RECORD_SCHEMA_VERSION": "._storage_path_definitions",
     "SECURE_OBJECT_CATALOGUE_KEY": "._namespace_registry",
@@ -580,10 +570,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "decode_mnemonic": "._recovery_key",
     "decode_profile_password": ".custody",
     "decrypt_record": ".crypto",
-    "default_blob_store_roots": "._rotation",
     "default_policy_for": "....core.classification",
     "default_policy_table": "....core.classification",
-    "default_rotation_plan": "._rotation",
     "default_rules": "....core.redaction",
     "default_rules_for": "....core.redaction",
     "default_rules_for_class": "....core.redaction",
@@ -616,8 +604,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "reencrypt_envelope_file": ".envelope",
     "refuse_unsecured_with_real_nif": ".master_key",
     "resolve_attachment_store": ".attachment",
-    "rotate_blob_stores": "._rotation",
-    "rotate_master_key": "._rotation",
     "safe_repository_id": "._path_safety",
     "safe_subpath": "._path_safety",
     "save_corpus_manifest": "....core.corpus_manifest",
@@ -834,8 +820,6 @@ __all__ = [
     "RepositoryError",
     "RetentionPolicy",
     "RetentionPolicyError",
-    "RotationPlanEntry",
-    "RotationSummary",
     "SecretAlreadyExistsError",
     "SecretNotFoundError",
     "SecretRecord",
@@ -881,10 +865,8 @@ __all__ = [
     "decode_mnemonic",
     "decode_profile_password",
     "decrypt_record",
-    "default_blob_store_roots",
     "default_policy_for",
     "default_policy_table",
-    "default_rotation_plan",
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
@@ -917,8 +899,6 @@ __all__ = [
     "reencrypt_envelope_file",
     "refuse_unsecured_with_real_nif",
     "resolve_attachment_store",
-    "rotate_blob_stores",
-    "rotate_master_key",
     "safe_repository_id",
     "safe_subpath",
     "save_corpus_manifest",

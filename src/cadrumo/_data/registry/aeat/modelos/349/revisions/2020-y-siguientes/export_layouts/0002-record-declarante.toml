@@ -227,74 +227,6 @@ legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-persona-relacion-filler"
-offset = 59
-length = 49
-kind = "filler"
-# Design campo 6, "PERSONA CON QUIEN RELACIONARSE", one alfanumerico campo of
-# 49 posiciones that AEAT subdivides into 59-67 TELEFONO and 68-107 APELLIDOS Y
-# NOMBRE. Cadrumo holds no contact-person fact for the presenting declarant --
-# no producer key carries a contact telephone or a contact name -- so both
-# subcampos are blank, and the slot is declared on the design's own campo
-# boundary rather than split. The wire bytes are unchanged: 49 blanks either
-# way.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-declaracion-id-filler"
-offset = 108
-length = 13
-kind = "filler"
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-complementaria-sustitutiva-filler"
-offset = 121
-length = 2
-kind = "filler"
-# Design campo 8, "DECLARACION COMPLEMENTARIA O SUSTITUTIVA", one alfabetico
-# campo of 2 posiciones subdivided into 121 COMPLEMENTARIA ("C") and 122
-# SUSTITUTIVA ("S"). Neither byte can be produced correctly today: the
-# amendment_evidence.is_complementaria producer is a boolean and a boolean
-# export field renders the canonical "X", not the "C" this design admits, and
-# there is no sustitutiva producer at all. A first presentation leaves both
-# blank, which is the design's own default ("en el caso excepcional de segunda
-# o posterior presentacion"). Declared on the design's own campo boundary; the
-# wire bytes are unchanged, 2 blanks either way.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "none"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-declaracion-anterior-id-filler"
-offset = 123
-length = 13
-kind = "filler"
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
 id = "modelo-349-decl-period-code"
 offset = 136
 length = 2
@@ -365,19 +297,6 @@ legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-indicador-cambio-filler"
-offset = 186
-length = 1
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "none"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
 id = "modelo-349-decl-blancos-187"
 offset = 187
 length = 204
@@ -386,19 +305,6 @@ data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
-signed = false
-legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
-
-[[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-representante-nif-filler"
-offset = 391
-length = 9
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "right"
 signed = false
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]

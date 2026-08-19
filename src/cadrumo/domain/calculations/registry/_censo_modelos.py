@@ -21,6 +21,7 @@ from ....core.logging import get_logger
 from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
+from ._temporal import select_revision
 
 CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
@@ -298,8 +299,23 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
     if event_kinds != CENSO_MODELO_EVENT_KINDS:
         raise RegistryValidationError("active censo modelo 036 event periods must come from the registry")
     for event_kind in event_kinds:
-        authority.snapshot(
-            _ACTIVE_CENSO_MODELO,
+        # Revision SELECTION, not a snapshot. The question here is whether each
+        # censal event kind resolves to exactly one revision -- an applicability
+        # question, feeding the ownership record this function returns, never a
+        # filing artefact.
+        #
+        # `authority.snapshot` takes no grade and always builds at the filing
+        # rung, so it demanded a REVIEWED revision and filing capability from
+        # modelo 036, whose registry declares `authority_grade = applicability`:
+        # a censal alta/modificacion/baja is filed on AEAT's sede, and this
+        # application never produces a fichero for it. The call therefore refused
+        # for a rung modelo 036 does not claim and is not meant to.
+        #
+        # `select_revision` is the sanctioned resolver and keeps the teeth: an
+        # event kind no revision declares still raises, which is the only thing
+        # this loop asserts.
+        select_revision(
+            definition,
             filing_year=_CENSO_FOUNDATION_YEAR,
             period=event_kind,
         )
