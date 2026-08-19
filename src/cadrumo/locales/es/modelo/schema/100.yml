@@ -33770,6 +33770,9 @@ modelo:
             '2148':
               help: null
               label: Importe total de la deducción
+            A:
+              label: 'Inversión con derecho a deducción: Adquisición y/o construcción
+                de la vivienda habitual'
             ANOASDLG:
               help: null
               label: Ascendiente fecha de nacimiento
@@ -33779,9 +33782,16 @@ modelo:
             APENOMDLG_ASC:
               help: null
               label: Ascendiente apellidos y nombre
+            C:
+              label: 'Inversión con derecho a deducción: Rehabilitación o ampliación
+                de la vivienda habitual'
             CONVASDLG:
               help: null
               label: Ascendiente convivencia con varios descendientes
+            D:
+              label: 'Base de la deducción (límite máximo: 100.000 euros): Importe
+                total de la deducción por inversiones en empresas de nueva o reciente
+                creación'
             DECFAL:
               help: null
               label: Primer declarante fecha de fallecimiento
@@ -33812,9 +33822,13 @@ modelo:
             DP_APENOM_D:
               help: null
               label: Primer declarante apellidos y nombre
+            E:
+              label: Cantidades satisfechas con derecho a deducción
             ECIVIL:
               help: null
               label: Primer declarante estado civil
+            F:
+              label: Cantidades satisfechas con derecho a deducción
             FALLASDLG:
               help: null
               label: Ascendiente fecha de fallecimiento
@@ -33824,9 +33838,28 @@ modelo:
             FNACDLG:
               help: null
               label: Hijo o descendiente fecha de nacimiento
+            G:
+              label: 'Importe con derecho a deducción (*): Aportaciones a actividades
+                prioritarias de mecenazgo con límite del 15% de la base liquidable'
+            H:
+              label: 'Importe con derecho a deducción (**): Donativos a entidades
+                reguladas en la Ley 49/2002 de 23 de diciembre'
             HIJOSUE:
               help: null
               label: Hijos o descendientes UE o EEE
+            I:
+              label: 'Importes con derecho a deducción (*): Inversiones y gastos para
+                la protección y difusión del Patrimonio Histórico Español y de las
+                ciudades, conjuntos y bienes situados en España declarados Patrimonio
+                Mundial por la UNESCO'
+            J:
+              label: 'Importe con derecho a deducción (**): Donativos a fundaciones
+                y asociaciones de utilidad pública no comprendidas en la Ley 49/2002
+                de 23 de Diciembre'
+            M:
+              label: 'Importe con derecho a deducción (limite máximo 600 euros )(**):
+                Cuotas de afiliación y aportaciones a partidos políticos, federaciones,
+                coaliciones o agrupaciones electorales'
             MINUSDLG:
               help: null
               label: Hijo o descendiente clave discapacidad
@@ -41448,6 +41481,9 @@ modelo:
             '2248':
               help: null
               label: Por enfermedad celíaca diagnosticada
+            A:
+              label: 'Inversión con derecho a deducción: Adquisición y/o construcción
+                de la vivienda habitual'
             AJ:
               help: null
               label: Reducción agricultores jóvenes (disposición adicional sexta de
@@ -41461,9 +41497,16 @@ modelo:
             APENOMDLG_ASC:
               help: null
               label: Ascendiente apellidos y nombre
+            C:
+              label: 'Inversión con derecho a deducción: Rehabilitación o ampliación
+                de la vivienda habitual'
             CONVASDLG:
               help: null
               label: Ascendiente descendientes convivientes
+            D:
+              label: 'Base de la deducción (límite máximo: 100.000 euros): Importe
+                total de la deducción por inversiones en empresas de nueva o reciente
+                creación'
             DECFAL:
               help: null
               label: Primer declarante fecha de fallecimiento
@@ -41494,9 +41537,13 @@ modelo:
             DP_APENOM_D:
               help: null
               label: Primer declarante apellidos y nombre
+            E:
+              label: Cantidades satisfechas con derecho a deducción
             ECIVIL:
               help: null
               label: Primer declarante estado civil a 31/12/2025
+            F:
+              label: Cantidades satisfechas con derecho a deducción
             FALLASDLG:
               help: null
               label: Ascendiente fecha de fallecimiento
@@ -41506,9 +41553,28 @@ modelo:
             FNACDLG:
               help: null
               label: Hijo o descendiente fecha de nacimiento
+            G:
+              label: 'Importe con derecho a deducción (*): Aportaciones a actividades
+                prioritarias de mecenazgo con límite del 15% de la base liquidable'
+            H:
+              label: 'Importe con derecho a deducción (**): Donativos a entidades
+                reguladas en la Ley 49/2002 de 23 de diciembre'
             HIJOSUE:
               help: null
               label: Hijos o descendientes UE o EEE
+            I:
+              label: 'Importes con derecho a deducción (*): Inversiones y gastos para
+                la protección y difusión del Patrimonio Histórico Español y de las
+                ciudades, conjuntos y bienes situados en España declarados Patrimonio
+                Mundial por la UNESCO'
+            J:
+              label: 'Importe con derecho a deducción (**): Donativos a fundaciones
+                y asociaciones de utilidad pública no comprendidas en la Ley 49/2002
+                de 23 de Diciembre'
+            M:
+              label: 'Importe con derecho a deducción (limite máximo 600 euros )(**):
+                Cuotas de afiliación y aportaciones a partidos políticos, federaciones,
+                coaliciones o agrupaciones electorales'
             MINUSDLG:
               help: null
               label: Hijo o descendiente clave discapacidad

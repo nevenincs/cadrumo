@@ -31642,6 +31642,9 @@ modelo:
             '2148':
               help: Adja meg a kedvezmény teljes összegét.
               label: A kedvezmény teljes összege
+            A:
+              label: 'Levonásra jogosító beruházás: az állandó lakóhely megszerzése
+                és/vagy építése'
             ANOASDLG:
               help: null
               label: null
@@ -31651,9 +31654,16 @@ modelo:
             APENOMDLG_ASC:
               help: null
               label: null
+            C:
+              label: 'Levonásra jogosító beruházás: az állandó lakóhely felújítása
+                vagy bővítése'
             CONVASDLG:
               help: null
               label: null
+            D:
+              label: 'A levonás alapja (felső határ: 100 000 euró): az új vagy nemrég
+                alapított vállalkozásokba történő beruházások utáni levonás teljes
+                összege'
             DECFAL:
               help: null
               label: null
@@ -31684,9 +31694,13 @@ modelo:
             DP_APENOM_D:
               help: null
               label: null
+            E:
+              label: Levonásra jogosító megfizetett összegek
             ECIVIL:
               help: null
               label: null
+            F:
+              label: Levonásra jogosító megfizetett összegek
             FALLASDLG:
               help: null
               label: null
@@ -31696,9 +31710,28 @@ modelo:
             FNACDLG:
               help: null
               label: null
+            G:
+              label: 'Levonásra jogosító összeg (*): kiemelt mecenatúra-tevékenységekhez
+                nyújtott hozzájárulások, az adóalap 15%-áig'
+            H:
+              label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
+                sz. törvény hatálya alá tartozó szervezeteknek nyújtott adományok'
             HIJOSUE:
               help: null
               label: null
+            I:
+              label: 'Levonásra jogosító összegek (*): a spanyol nemzeti örökség,
+                valamint a Spanyolországban található, az UNESCO által világörökséggé
+                nyilvánított városok, együttesek és javak védelmére és népszerűsítésére
+                fordított beruházások és kiadások'
+            J:
+              label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
+                sz. törvény hatálya alá nem tartozó alapítványoknak és közhasznú egyesületeknek
+                nyújtott adományok'
+            M:
+              label: 'Levonásra jogosító összeg (felső határ 600 euró) (**): politikai
+                pártok, szövetségek, koalíciók vagy választási csoportosulások részére
+                fizetett tagdíjak és hozzájárulások'
             MINUSDLG:
               help: null
               label: null
@@ -39354,6 +39387,9 @@ modelo:
             '2248':
               help: null
               label: Diagnosztizált lisztérzékenység után
+            A:
+              label: 'Levonásra jogosító beruházás: az állandó lakóhely megszerzése
+                és/vagy építése'
             AJ:
               help: null
               label: Fiatal gazdálkodók csökkentése (a törvény hatodik kiegészítő
@@ -39367,9 +39403,16 @@ modelo:
             APENOMDLG_ASC:
               help: null
               label: Felmenő családi és utóneve
+            C:
+              label: 'Levonásra jogosító beruházás: az állandó lakóhely felújítása
+                vagy bővítése'
             CONVASDLG:
               help: null
               label: Felmenővel együtt élő leszármazottak
+            D:
+              label: 'A levonás alapja (felső határ: 100 000 euró): az új vagy nemrég
+                alapított vállalkozásokba történő beruházások utáni levonás teljes
+                összege'
             DECFAL:
               help: null
               label: Első bevalló elhalálozási dátuma
@@ -39400,9 +39443,13 @@ modelo:
             DP_APENOM_D:
               help: null
               label: Első bevalló családi és utóneve
+            E:
+              label: Levonásra jogosító megfizetett összegek
             ECIVIL:
               help: null
               label: Első bevalló családi állapota 2025.12.31-én
+            F:
+              label: Levonásra jogosító megfizetett összegek
             FALLASDLG:
               help: null
               label: Felmenő elhalálozási dátuma
@@ -39412,9 +39459,28 @@ modelo:
             FNACDLG:
               help: null
               label: Gyermek vagy leszármazott születési dátuma
+            G:
+              label: 'Levonásra jogosító összeg (*): kiemelt mecenatúra-tevékenységekhez
+                nyújtott hozzájárulások, az adóalap 15%-áig'
+            H:
+              label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
+                sz. törvény hatálya alá tartozó szervezeteknek nyújtott adományok'
             HIJOSUE:
               help: null
               label: EU- vagy EGT-rezidens gyermekek vagy leszármazottak
+            I:
+              label: 'Levonásra jogosító összegek (*): a spanyol nemzeti örökség,
+                valamint a Spanyolországban található, az UNESCO által világörökséggé
+                nyilvánított városok, együttesek és javak védelmére és népszerűsítésére
+                fordított beruházások és kiadások'
+            J:
+              label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
+                sz. törvény hatálya alá nem tartozó alapítványoknak és közhasznú egyesületeknek
+                nyújtott adományok'
+            M:
+              label: 'Levonásra jogosító összeg (felső határ 600 euró) (**): politikai
+                pártok, szövetségek, koalíciók vagy választási csoportosulások részére
+                fizetett tagdíjak és hozzájárulások'
             MINUSDLG:
               help: null
               label: Gyermek vagy leszármazott fogyatékossági kódja
