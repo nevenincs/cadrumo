@@ -79,10 +79,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "_build_filed_participation_writes",
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
-        "_persist_verified_revision_evidence",
-    ): "the calculation catalogue arrives as a parameter read by its caller; closing it means threading the revision",
-    (
         "src/cadrumo/application/modelo/_revision_persistence.py",
         "persist_calculation_revision",
     ): "the work-unit catalogue arrives as a parameter; its own calculation catalogue IS guarded here",
