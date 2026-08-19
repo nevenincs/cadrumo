@@ -10,10 +10,12 @@ own contract, because the phrase it checks genuinely is in the file.
 
 Those four were corrected at MODELO level, and for a time this screen read zero
 because modelo-level citations were all it looked at. Three of them survived at
-REVISION level -- 187, 188 and 194 still cite the article approving 193 -- and
-became visible only once the input was widened to both surfaces. The screen
-prints its current counts and freezes no figure in this prose, so a reader is
-told what the catalogue says today rather than what it said at authoring.
+REVISION level -- 187, 188 and 194 each citing the article approving 193 -- and
+became visible only once the input was widened to both surfaces. Those three have
+since been re-pointed at their own approving ordenes, so the worklist now reads
+zero across both surfaces. The screen prints its current counts and freezes no
+figure in this prose, so a reader is told what the catalogue says today rather
+than what it said at authoring.
 
 This is the same tautology the grounding rule warns about, one level up. There
 the ``required_text`` was self-authored, so it validated internal consistency
@@ -32,11 +34,11 @@ pass that produced this screen.
 A SCREEN, not a gate. It was written as one because citations were known-wrong
 and a gate would have landed red on every peer for a defect they did not
 create; correcting them is legal-authority work, needing the right approving
-orden located in the bundled corpus. The worklist is NOT empty -- widening the
-input to revision-level citations surfaced three survivors -- so the stated
-condition for promoting this to a pytest gate is not met, and promoting it now
-would land red on peers for a defect none of them created. The detection is the
-hard part and it is done here.
+orden located in the bundled corpus. That condition has since been met: the
+worklist reads zero at both surfaces, and the ratchet now lives in
+``tests/test_legal_attribution_gate.py``, which calls the functions below rather
+than restating their rule. This module keeps its exit-0 reporting contract for
+interactive use -- enforcement is the gate's job, reporting is this one's.
 
 MEASURED LIMIT, and the widening that was rejected. This screen catches the
 APPROVAL shape only, and there is a real mis-attribution it does not see: modelo
