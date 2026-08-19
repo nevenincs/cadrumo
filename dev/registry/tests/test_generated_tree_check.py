@@ -34,6 +34,12 @@ from .test_export_tree import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+# Modelo 130 throughout: `_write_isolated_generated_authority_tree` in
+# `test_export_tree` builds its isolated tree for modelo 130, because the
+# modelo 200 revision it used to target now declares 578 projection endpoints
+# that semantic-map validation checks as a bijection, which a synthetic map
+# cannot satisfy. These modules consume that helper, so their own paths and
+# snapshot must name the same modelo or the tree and the paths disagree.
 def _tree_hashes(root: Path) -> dict[str, str]:
     """Observe existing target bytes using the production hashing utility."""
     return {
@@ -78,10 +84,12 @@ def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None
 
 def _profile() -> ExportTreeTransportProfile:
     return ExportTreeTransportProfile(
-        modelo="200",
-        design_epoch="2025",
-        source_ref="aeat-dr-200-2025",
-        source_sha256="a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+        modelo="130",
+        # The isolated tree is built from modelo 130's 2019 diseño, so the
+        # transport profile must name that epoch or the two disagree.
+        design_epoch="2019",
+        source_ref="aeat-dr-130-2019-v12",
+        source_sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
         layout_id="generated-modelo-200-fichero",
         format="fixed_width",
         encoding=ExportEncoding.LATIN_1,
@@ -90,9 +98,9 @@ def _profile() -> ExportTreeTransportProfile:
     )
 
 
-def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_inspection_snapshot, tmp_path) -> None:
+def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A real candidate must match every current target member without target mutation."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
     before = _tree_hashes(target_export_root)
 
     checked = check_generated_export_tree(
@@ -110,7 +118,7 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_insp
     assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(
         checked.candidate.layout,
     )
-    candidate_export_root = context.validation.registry_root / "modelos" / "200" / "revisions" / "2025" / "export"
+    candidate_export_root = context.validation.registry_root / "modelos" / "130" / "revisions" / "2025" / "export"
     assert _tree_hashes(candidate_export_root) == before
 
 
@@ -130,9 +138,9 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_insp
         "obsolete-direct-modelo",
     ),
 )
-def test_check_refuses_drift_without_changing_published_hashes(m200_inspection_snapshot, tmp_path, defect: str) -> None:
+def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_snapshot, tmp_path, defect: str) -> None:
     """Every authority or membership defect fails while target bytes remain exactly as supplied."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
     profile = _profile()
     render_profile = _wire_profile()
     if defect == "semantic-map":
@@ -179,7 +187,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_inspection_s
         (target_export_root.parent / "export.provenance.json").write_text("{}\n", encoding="utf-8")
     elif defect == "obsolete-direct-modelo":
         (context.target_registry_root / "modelos" / "200.toml").write_text(
-            '[modelo]\nid = "200"\n',
+            '[modelo]\nid = "130"\n',
             encoding="utf-8",
         )
     else:
@@ -200,10 +208,10 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_inspection_s
     assert _tree_hashes(target_export_root) == before
 
 
-def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_inspection_snapshot, tmp_path) -> None:
+def test_check_refuses_candidate_reuse_without_changing_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A prior candidate output cannot become a check input or a silent green path."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
-    candidate_export_root = context.validation.registry_root / "modelos" / "200" / "revisions" / "2025" / "export"
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
+    candidate_export_root = context.validation.registry_root / "modelos" / "130" / "revisions" / "2025" / "export"
     candidate_export_root.mkdir()
     before = _tree_hashes(target_export_root)
 
@@ -220,15 +228,15 @@ def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_in
     assert _tree_hashes(target_export_root) == before
 
 
-def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_inspection_snapshot, tmp_path) -> None:
+def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspection_snapshot, tmp_path) -> None:
     """A directory link cannot redirect candidate rendering before the validation boundary."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
     candidate_modelos_root = context.validation.registry_root / "modelos"
     redirected_modelos_root = tmp_path / "redirected-modelos"
     candidate_modelos_root.rename(redirected_modelos_root)
     candidate_modelos_root.symlink_to(redirected_modelos_root, target_is_directory=True)
     before = _tree_hashes(target_export_root)
-    redirected_export_root = redirected_modelos_root / "200" / "revisions" / "2025" / "export"
+    redirected_export_root = redirected_modelos_root / "130" / "revisions" / "2025" / "export"
 
     with pytest.raises(RegistryValidationError, match="candidate revision root must not be a link"):
         check_generated_export_tree(

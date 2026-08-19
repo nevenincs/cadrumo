@@ -430,6 +430,7 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 _VALIDATION_REVISION = """\
 [revisions."2025"]
+authority_grade = "applicability"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
