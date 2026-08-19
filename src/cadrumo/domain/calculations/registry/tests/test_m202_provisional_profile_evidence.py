@@ -15,7 +15,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M202_REVISION_ID = "2025-y-siguientes"
-_M202_PROFILE_ID = "modelo-202-declaracion-pdf"
+_M202_PROFILE_ID = "9f8cdb06-8956-4a23-8db4-e7a51efa2ada"  # was 'modelo-202-declaracion-pdf'
 _M202_TARGET_CASILLAS = ("01", "03", "04", "34")
 
 

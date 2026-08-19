@@ -22,6 +22,8 @@ from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
     BindingExportDataType,
+)
+from ._binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
 from ._errors import RegistryValidationError
@@ -87,8 +89,7 @@ def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> 
         selector = _gasto193_selector(binding)
     except ValueError as exc:
         return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{_Gasto193Selector.__name__}: {exc}",
+            f"binding {binding.id!r} (source={binding.source!r}) selector violates {_Gasto193Selector.__name__}: {exc}",
         ]
     try:
         op = binding_aggregation_op(binding)

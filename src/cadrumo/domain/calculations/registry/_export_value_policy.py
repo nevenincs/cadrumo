@@ -41,6 +41,18 @@ class ExportValuePolicy(StrEnum):
     #: recoverable from the design. This policy is how a REVIEWED profile states
     #: the real representation; it is never inferred from width or description.
     MISTYPED_ALPHANUMERIC_TEXT = "mistyped-alphanumeric-text"
+    #: AEAT prints some quantities as a parent row subdivided into a printed
+    #: "Parte entera" row and a printed "Parte decimal" row. The record-design
+    #: parser folds that subdivision on exact tiling and the export IR descends
+    #: to the LEAVES, so a layout necessarily carries two fields where the
+    #: declared value is one -- and the export path resolves values per CASILLA,
+    #: handing BOTH leaves the identical whole value. These two policies are how
+    #: each leaf states which part of that value it writes; the field's own
+    #: declared length fixes how many digits the part occupies. Neither part is
+    #: invertible alone, so parsing one retains the wire token rather than
+    #: presenting itself as a reconstructed quantity.
+    INTEGER_PART = "integer-part"
+    FRACTIONAL_DIGITS = "fractional-digits"
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,9 +106,9 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     if policy is None:
         return value
     if isinstance(value, ParsedExportPolicyWireValue):
-        if policy is not ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS or value.policy is not policy:
+        if policy not in _RETAINED_WIRE_POLICIES or value.policy is not policy:
             raise RegistryValidationError(
-                "parsed export wire values are admitted only for the matching non-invertible short-year policy",
+                "parsed export wire values are admitted only for the matching non-invertible policy",
             )
         validate_export_wire_value(policy, value.raw)
         return value.raw
@@ -104,6 +116,20 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     if projector is None:
         raise RegistryValidationError(f"unknown export value policy {policy!r}")
     return projector(value)
+
+
+def policy_defines_absent_slot(policy: ExportValuePolicy | None) -> bool:
+    """Whether ``policy`` assigns its OWN meaning to a slot carrying no value.
+
+    An unselected checkbox is not an absent number: its policy declares that the
+    empty slot means ``0``, so the value must reach the projector. Every other
+    policy leaves absence to the field's declared blank fill, which is what
+    AEAT's designs state ("los campos numericos que no tengan contenido se
+    rellenaran a ceros"). Named rather than inlined at the call site so the
+    exception stays one auditable list instead of a condition readers must
+    re-derive.
+    """
+    return policy in _POLICIES_DEFINING_ABSENCE
 
 
 def validate_export_wire_value(policy: ExportValuePolicy | None, raw: str) -> None:
@@ -128,7 +154,7 @@ def normalize_parsed_export_policy_value(
         ExportValuePolicy.TWO_DIGIT_DAY,
     }:
         return int(raw)
-    if policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS:
+    if policy in _RETAINED_WIRE_POLICIES:
         return ParsedExportPolicyWireValue(policy=policy, raw=raw)
     return parsed
 
@@ -187,6 +213,22 @@ def _project_unsigned_integer(value: object) -> Decimal:
     return number
 
 
+def _project_split_part(policy: ExportValuePolicy, value: object) -> Decimal:
+    """Admit the WHOLE quantity a split part is cut from, refusing a negative.
+
+    Both parts are handed the same value the casilla carries, so this projector
+    validates the quantity and leaves the cut to the codec, which is the only
+    layer that knows how many digits the part's own slot holds. The designs that
+    print these subdivisions state the sin-signo convention and print a separate
+    signo field where they want one, so a negative quantity is refused here
+    rather than silently rendered as its magnitude across the parts.
+    """
+    number = _strict_decimal(value, label=policy.value)
+    if number.is_signed():
+        raise RegistryValidationError(f"{policy.value} export value must be non-negative")
+    return number
+
+
 def _project_unsigned_decimal(value: object) -> Decimal:
     number = _strict_decimal(value, label="implied-decimal")
     if number.is_signed():
@@ -232,7 +274,14 @@ def _project_digit_identity(policy: ExportValuePolicy, value: object) -> str:
 def _project_full_year(value: object) -> str:
     if isinstance(value, bool):
         raise RegistryValidationError("four-digit-year export value must not be boolean")
-    if isinstance(value, int):
+    if type(value) is date:
+        # A date SPLIT across printed year/month/day slots reaches each slot as
+        # the whole date, exactly as a split amount reaches both of its halves.
+        # Taking the component the policy names is the same cut, and the exact
+        # type test mirrors the whole-date projectors so a datetime still
+        # refuses rather than silently dropping its time.
+        raw = f"{value.year:04d}"
+    elif isinstance(value, int):
         raw = str(value)
     elif isinstance(value, str):
         raw = value
@@ -245,7 +294,9 @@ def _project_full_year(value: object) -> str:
 def _project_calendar_part(value: object, *, label: str, minimum: int, maximum: int) -> str:
     if isinstance(value, bool):
         raise RegistryValidationError(f"two-digit-{label} export value must not be boolean")
-    if isinstance(value, int):
+    if type(value) is date:
+        number = value.month if label == "month" else value.day
+    elif isinstance(value, int):
         number = value
     elif isinstance(value, str) and 1 <= len(value) <= 2 and value.isascii() and value.isdigit():
         number = int(value)
@@ -354,7 +405,27 @@ _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
     ExportValuePolicy.TWO_DIGIT_MONTH: partial(_project_calendar_part, label="month", minimum=1, maximum=12),
     ExportValuePolicy.TWO_DIGIT_DAY: partial(_project_calendar_part, label="day", minimum=1, maximum=31),
     ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: _project_mistyped_alphanumeric_text,
+    ExportValuePolicy.INTEGER_PART: partial(_project_split_part, ExportValuePolicy.INTEGER_PART),
+    ExportValuePolicy.FRACTIONAL_DIGITS: partial(_project_split_part, ExportValuePolicy.FRACTIONAL_DIGITS),
 }
+
+#: Policies that give an EMPTY slot a meaning of their own, so absence must be
+#: projected rather than filled. Only the checkbox does: its unselected state is
+#: the declared ``0``, not a missing number.
+_POLICIES_DEFINING_ABSENCE: frozenset[ExportValuePolicy] = frozenset(
+    {ExportValuePolicy.SELECTED_1_UNSELECTED_0},
+)
+
+#: Policies whose wire token cannot be inverted to the semantic value it came
+#: from, so a parse retains the token itself. A split part carries only some of
+#: the quantity's digits; the short year discards the century.
+_RETAINED_WIRE_POLICIES: frozenset[ExportValuePolicy] = frozenset(
+    {
+        ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
+        ExportValuePolicy.INTEGER_PART,
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+    },
+)
 
 _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: _validate_selected_unselected,
@@ -366,6 +437,11 @@ _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
         label=ExportValuePolicy.ENUMERATED_DIGITS.value,
     ),
     ExportValuePolicy.DIGIT_STRING: partial(_require_ascii_digits, label=ExportValuePolicy.DIGIT_STRING.value),
+    ExportValuePolicy.INTEGER_PART: partial(_require_ascii_digits, label=ExportValuePolicy.INTEGER_PART.value),
+    ExportValuePolicy.FRACTIONAL_DIGITS: partial(
+        _require_ascii_digits,
+        label=ExportValuePolicy.FRACTIONAL_DIGITS.value,
+    ),
     ExportValuePolicy.IDENTIFIER_DIGITS: partial(
         _require_ascii_digits,
         label=ExportValuePolicy.IDENTIFIER_DIGITS.value,

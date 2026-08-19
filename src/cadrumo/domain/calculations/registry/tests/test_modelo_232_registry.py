@@ -34,7 +34,7 @@ def test_committed_modelo_232_validates_against_catalogues() -> None:
 
 
 def test_committed_modelo_232_resolves_revision_by_filing_year() -> None:
-    modelo, catalogues = _load_modelo_232()
+    modelo, _ = _load_modelo_232()
     cases = (
         (2016, "2016-2017"),
         (2017, "2016-2017"),
@@ -365,7 +365,9 @@ def _covered_slots(record: ExportRecordDefinition) -> tuple[tuple[int, int], ...
     )
 
 
-def _assert_slots_tile_contiguously(record: ExportRecordDefinition, section: tuple[int, int], revision: ModeloRevision) -> None:
+def _assert_slots_tile_contiguously(
+    record: ExportRecordDefinition, section: tuple[int, int], revision: ModeloRevision
+) -> None:
     """The record's bound and filler slots tile its official section with no gaps.
 
     The Administracion-reserved name slots are fillers by design, so the tiling
@@ -388,17 +390,13 @@ def _assert_slots_tile_contiguously(record: ExportRecordDefinition, section: tup
 def test_committed_modelo_232_section_3_4_bindings_cover_page_01_slots() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        _assert_slots_tile_contiguously(
-            _record_for(revision, "operaciones-vinculadas"), _SECTION_3_4_RANGE, revision
-        )
+        _assert_slots_tile_contiguously(_record_for(revision, "operaciones-vinculadas"), _SECTION_3_4_RANGE, revision)
 
 
 def test_committed_modelo_232_section_5_6_bindings_cover_page_02_slots() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        _assert_slots_tile_contiguously(
-            _record_for(revision, "paraisos-fiscales"), _SECTION_5_6_RANGE, revision
-        )
+        _assert_slots_tile_contiguously(_record_for(revision, "paraisos-fiscales"), _SECTION_5_6_RANGE, revision)
 
 
 def test_committed_modelo_232_construct_includes_layout_bindings() -> None:

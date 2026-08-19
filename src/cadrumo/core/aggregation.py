@@ -217,6 +217,7 @@ class RowSetGroupingKind(StrEnum):
     REFUND = "refund"
     DONATIVO = "donativo"
     GASTO193 = "gasto193"
+    WITHHOLDING296 = "withholding296"
 
 
 class BindingSourceKind(StrEnum):
@@ -362,6 +363,11 @@ class BindingSourceKind(StrEnum):
     # plus the annual gastos de administracion y deposito amount), the same
     # deferred Sheets-pull-only shape as the donativo family.
     GASTO193_CONTRIBUTOR = "gasto193_contributor"
+    # Modelo 296 perceptor rows (IRNR retenciones): its own clave
+    # vocabulary (numeric renta claves) cannot ride the shared
+    # withholding family's A-L set, so it declares its own detail-record
+    # source in the same deferred Sheets-pull-only shape.
+    WITHHOLDING296 = "withholding296"
 
 
 ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
@@ -373,6 +379,7 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
         BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
         BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
         BindingSourceKind.GASTO193_CONTRIBUTOR: RowSetGroupingKind.GASTO193,
+        BindingSourceKind.WITHHOLDING296: RowSetGroupingKind.WITHHOLDING296,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.

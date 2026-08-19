@@ -31,7 +31,7 @@ from .._event_repository import append_bucket_event
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET = "operator-a"
+_BUCKET = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
 _OBJECT_ID = "d" * 64
 _INSTANT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
 

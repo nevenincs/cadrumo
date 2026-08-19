@@ -31,7 +31,7 @@ from .._event import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET = "operator-a"
+_BUCKET = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
 _OBJECT_ID = "b" * 64
 _UTC_INSTANT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 4, 1, 10, 0, 0)  # the refused shape under test

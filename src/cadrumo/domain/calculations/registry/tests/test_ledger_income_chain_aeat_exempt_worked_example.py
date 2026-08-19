@@ -114,7 +114,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
-_BUCKET = "bucket-aeat-exempt-worked-example"
+_BUCKET = "26535a03-c534-45c1-88cd-f248184acf4f"  # was 'bucket-aeat-exempt-worked-example'
 
 # Every figure below is printed by the manual; see the module docstring for the
 # per-line anchors. Nothing here is computed by this module.

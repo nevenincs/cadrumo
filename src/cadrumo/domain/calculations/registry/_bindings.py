@@ -83,13 +83,6 @@ from ._detail_record_bindings import (
 from ._detail_record_bindings import (
     build_related_party_rows as _build_related_party_rows,
 )
-from ._gasto193_bindings import (
-    Gasto193Observation,
-    _Gasto193Selector,
-    resolve_gasto193_binding_row_values,
-    resolve_gasto193_binding_values,
-    validate_gasto193_binding_selector_shape,
-)
 from ._donativo_bindings import (
     DonativoDonorObservation,
     resolve_donativo_binding_row_values,
@@ -99,6 +92,13 @@ from ._donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
 from ._errors import RegistryValidationError
+from ._gasto193_bindings import (
+    Gasto193Observation,
+    _Gasto193Selector,
+    resolve_gasto193_binding_row_values,
+    resolve_gasto193_binding_values,
+    validate_gasto193_binding_selector_shape,
+)
 from ._ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
@@ -194,6 +194,12 @@ from ._retenciones_bindings import (
     validate_retenciones_aggregation_binding,
 )
 from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
+from ._withholding296_bindings import (
+    Withholding296Observation,
+    _Withholding296Selector,
+    resolve_withholding296_binding_row_values,
+    validate_withholding296_binding_selector_shape,
+)
 from ._withholding_bindings import (
     WithholdingClaveBreakdown,
     WithholdingObservation,
@@ -221,6 +227,7 @@ __all__ = [
     "CounterpartSourceKind",
     "DataBindingDefinition",
     "DonativoDonorObservation",
+    "Gasto193Observation",
     "ImpatriadoIncomeObservationProtocol",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
@@ -242,6 +249,7 @@ __all__ = [
     "RentaIncomeObservationProtocol",
     "UngroundedRentaIncome",
     "UnroutedLedgerQuantity",
+    "Withholding296Observation",
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
@@ -273,9 +281,9 @@ __all__ = [
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
     "resolve_donativo_binding_row_values",
+    "resolve_foreign_asset_binding_row_values",
     "resolve_gasto193_binding_row_values",
     "resolve_gasto193_binding_values",
-    "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_ledger_impatriado_income_aggregation_binding_values",
@@ -289,6 +297,7 @@ __all__ = [
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
     "resolve_retenciones_aggregation_binding_values",
+    "resolve_withholding296_binding_row_values",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "selector_model_for_source",
@@ -1392,6 +1401,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.REFUND_OPERATION: _RefundSelector,
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.GASTO193_CONTRIBUTOR: _Gasto193Selector,
+    BindingSourceKind.WITHHOLDING296: _Withholding296Selector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
@@ -1493,6 +1503,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.REFUND_OPERATION: validate_refund_binding,
     BindingSourceKind.DONATIVO_DONOR: validate_donativo_binding,
     BindingSourceKind.GASTO193_CONTRIBUTOR: validate_gasto193_binding_selector_shape,
+    BindingSourceKind.WITHHOLDING296: validate_withholding296_binding_selector_shape,
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
     BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),

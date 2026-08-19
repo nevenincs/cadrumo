@@ -2475,7 +2475,6 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     )
 
 
-
 def _unnamed_position_candidate(
     line: str,
     source_row: int,

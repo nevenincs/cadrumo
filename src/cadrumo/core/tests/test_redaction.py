@@ -25,7 +25,7 @@ from ..redaction import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
+_PROFILE_ID = "986c0dc9-56dc-422b-9d8f-698661b9eb1e"  # was '123e4567-e89b-12d3-a456-426614174000'
 # A UUID whose first segment (``1470176e`` = 7 digits + a letter) matches the
 # NIF pattern; the reveal opt-out must emit it verbatim, not NIF-hashed.
 _NIF_SHAPED_UUID = "1470176e-780c-46df-8b21-c6f540f142a0"

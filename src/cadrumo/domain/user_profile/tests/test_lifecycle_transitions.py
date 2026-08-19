@@ -24,8 +24,19 @@ def test_incomplete_record_is_explicitly_not_ready() -> None:
     assert record.setup_state is ProfileSetupState.INCOMPLETE
 
 
-def test_new_record_defaults_to_complete() -> None:
-    record = UserProfileRecord(profile_id=_PROFILE_ID)
+def test_a_record_must_declare_its_setup_state() -> None:
+    """Readiness is stated, never defaulted.
+
+    A default would let a record that never declared its readiness satisfy a
+    completeness gate on the model's opinion rather than the writer's, which
+    is the silent direction: an incomplete profile reading as complete.
+    """
+    with pytest.raises(ValidationError, match="setup_state"):
+        UserProfileRecord(profile_id=_PROFILE_ID)  # ty: ignore[missing-argument]  # reason: the omission IS the refusal under test
+
+
+def test_a_complete_record_states_it() -> None:
+    record = UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.COMPLETE)
     assert record.setup_state is ProfileSetupState.COMPLETE
 
 

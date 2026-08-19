@@ -473,7 +473,19 @@ def derive_calculation_completeness_casillas(
         if not multi_segment:
             ordered.append(DerivedDisenoCasilla(segmento=None, number=number, casilla_id=casilla.id))
             continue
-        if diseno_pairs is not None and segmento is not None and (segmento, number) not in diseno_pairs:
+        # An EMPTY pair set is no evidence, not evidence of absence. The pairs are
+        # built from the bracketed casilla tags a design prints, and a PDF design
+        # may print none at all: modelo 184's yields zero tags across all three of
+        # its sheets, so every declared casilla would refuse here for a reason the
+        # design never stated. Refusing from an empty set asserts absence out of
+        # ignorance, which is the same shape as a gate whose matcher cannot see
+        # the construct it governs. `None` already means "no design supplied";
+        # empty now joins it as "design supplied, said nothing on this axis".
+        #
+        # This does not soften the check where it has teeth: a design that prints
+        # tags for any sheet yields a non-empty set, and a casilla declared under
+        # a segment that set does not carry still refuses.
+        if diseno_pairs and segmento is not None and (segmento, number) not in diseno_pairs:
             raise RegistryValidationError(
                 f"calculation-completeness derivation: casilla {number!r} is "
                 f"declared under segmento {segmento!r} but the AEAT Diseño de "

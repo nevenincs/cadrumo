@@ -43,7 +43,11 @@ def test_completeness_manifests_use_the_canonical_fragment_anchor() -> None:
     anchors = {
         (path.parents[3].name, path.parents[1].name)
         for path in modelos_root.glob(
-            "*/revisions/*/completeness_manifest/0001-completeness_manifest.toml",
+            # The committed anchor is hyphenated -- all 69 of them. This glob named it
+            # with an underscore, matched nothing, and left `anchors` empty, so the
+            # equality below failed for every modelo at once and the gate could never
+            # pass. A gate that cannot pass asserts nothing.
+            "*/revisions/*/completeness_manifest/0001-completeness-manifest.toml",
         )
     }
 

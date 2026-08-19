@@ -276,6 +276,7 @@ def test_parse_fixed_width_decimal_invalid_raw_includes_field_id_in_error() -> N
     with pytest.raises(RegistryValidationError, match=r"casilla\.0501"):
         parse_fixed_width_export_field(field, "invalid")
 
+
 def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() -> None:
     """A declared page-zero header opens the payload ahead of the records.
 
@@ -284,6 +285,7 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     that follow must still match their own literals, and a payload shorter than
     the declared prefix cannot satisfy them.
     """
+    from .._export_parse import parse_export_payload
     from .._schema import (
         AuxiliaryEnvelopeHeaderDefinition,
         ExportLayoutDefinition,
@@ -291,7 +293,6 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
         FilingEnvelopePrefixFieldDeclaration,
         FilingEnvelopePrefixRole,
     )
-    from .._export_parse import parse_export_payload
 
     roles = tuple(
         role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
@@ -300,9 +301,7 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
         source_ref="aeat-dr-232-2018",
         source_sha256="a" * 64,
         record_identity="DR23200",
-        prefix_fields=tuple(
-            FilingEnvelopePrefixFieldDeclaration(role=role, length=1) for role in roles
-        ),
+        prefix_fields=tuple(FilingEnvelopePrefixFieldDeclaration(role=role, length=1) for role in roles),
         prefix_extent=13,
         product_identity_requirement="aeat-product-software-identity-v1",
     )

@@ -127,7 +127,10 @@ def test_default_repository_refuses_bucket_route_mismatch() -> None:
     # is rendered downstream -- so a prose match here was matching the key and
     # would pass equally on an absent session, which is a different refusal
     # with a different remedy. The code discriminates them; prose cannot.
-    for call in (lambda: save_usage_ratios(profile, bucket_id=_BUCKET_B_ID), lambda: load_usage_ratios(bucket_id=_BUCKET_B_ID)):
+    for call in (
+        lambda: save_usage_ratios(profile, bucket_id=_BUCKET_B_ID),
+        lambda: load_usage_ratios(bucket_id=_BUCKET_B_ID),
+    ):
         with pytest.raises(StorageValidationError) as raised:
             call()
         assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value

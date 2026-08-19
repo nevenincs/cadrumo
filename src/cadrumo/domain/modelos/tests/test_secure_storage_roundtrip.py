@@ -35,7 +35,7 @@ from .._work_unit import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET_ID = "modelo-runtime"
+_BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 # The registry definition is the sole authority for this namespace's identifier,
 # singleton object key, and envelope schema version; the probe reads it rather
 # than restating the values the repository under test writes at.

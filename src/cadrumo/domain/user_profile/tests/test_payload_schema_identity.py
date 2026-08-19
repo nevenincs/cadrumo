@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from .._loader import load_user_profile_schema
 from .._values import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     UserProfileSnapshot,
@@ -54,8 +55,8 @@ def _record(**overrides: object) -> UserProfileRecord:
     return UserProfileRecord.model_validate(
         {
             "profile_id": _PROFILE_ID,
-            "display_name": "schema-identity-operator",
             "facts": _facts(),
+            "setup_state": ProfileSetupState.COMPLETE,
             **overrides,
         },
     )

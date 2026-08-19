@@ -123,7 +123,8 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero(
 
 def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")),
@@ -156,7 +157,8 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
         UserProfileFact(path="identity.name", value="Ada", source="manual_cli"),
         UserProfileFact(path="identity.name", value="Babbage", source="modelo_036_import"),
     )
-    profile = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    profile = UserProfileRecord(
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
         created_at=created_at,

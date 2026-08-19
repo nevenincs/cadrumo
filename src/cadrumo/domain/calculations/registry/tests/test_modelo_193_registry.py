@@ -36,7 +36,11 @@ def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
     assert record_design.evidence_tier == "layout_authority"
     assert "2025" in record_design.source_url
     assert catalogues.sources["boe-modelo-193-2011-form"].evidence_tier == "layout_authority"
-    revision = modelo.revisions["2024-y-siguientes"]
+    # The revision whose workbook parity ref names the 2025 design, which is what
+    # the assertions below check. The id was stale -- modelo 193 declares "2024"
+    # and "2025-y-siguientes", never "2024-y-siguientes" -- so this raised a
+    # KeyError on the lookup and no assertion past this line had ever run.
+    revision = modelo.revisions["2025-y-siguientes"]
     assert revision.workbook_parity_refs[0].id == "modelo-193-dr-pdf-2025"
     assert revision.workbook_parity_refs[0].workbook_source == "aeat-dr-193-2025"
     for formula in revision.formulas:
@@ -102,15 +106,25 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
     assert catalogues.sources["boe-modelo-193-2011-form"].evidence_tier == "layout_authority"
 
     assert "modelo-193-deadline" in construct.application_links
-    assert construct.deadline_windows == ("modelo-193-2024-0a", "modelo-193-2025-0a")
+    # This revision owns the 2025 ejercicio, so it enumerates the 2025 window
+    # only. It previously listed the 2024 window too, and modelo 193's 2024
+    # revision listed the 2025 one -- each revision carried the other's window
+    # as well as its own. The authority collects deadline windows across ALL
+    # revisions of a modelo without deduplicating, so that duplication returned
+    # the same annual deadline twice to an operator asking for the year.
+    # A window belongs to the revision covering its PERIOD year, not its
+    # filing_year: "2025 0A" is filed in January 2026 and is still the 2025
+    # ejercicio.
+    assert construct.deadline_windows == ("modelo-193-2025-0a",)
     assert construct.filing_schedules == ("modelo-193-anual",)
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
     assert len(schedule.profile_conditions) == 1
     assert schedule.profile_conditions[0].field == "pays_capital_income_with_retencion"
 
+    # The 2024 window moved to the revision that owns the 2024 ejercicio; this
+    # snapshot is the 2025-y-siguientes revision and carries its own only.
     expected_windows = {
-        "modelo-193-2024-0a": (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
         "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
     }
     assert set(windows) == set(expected_windows)

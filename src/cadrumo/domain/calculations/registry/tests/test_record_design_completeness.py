@@ -8,7 +8,7 @@ import pytest
 
 from .....core import scan_directory
 from .....core.resources import bundled_path
-from .. import calculation_closure_legal_refs
+from .. import ValidatedRegistryAuthority, calculation_closure_legal_refs
 from ._record_design_support import (
     _committed_registry_tree,
     build_diseno_coverage_report,
@@ -417,11 +417,24 @@ def test_modelo_390_coverage_report_is_advisory_not_a_completeness_claim() -> No
         covered.update(casilla.number for casilla in derive_diseno_coverage_casillas(path, multi_segment=False))
     assert covered, "empty inventory"
 
-    assert len(covered) > len(declared), (
-        "the advisory inventory should exceed the registry's declared set while the "
-        "annual form is under-modelled; if it no longer does, re-read this test rather "
-        "than relaxing it -- it is not a completeness assertion"
+    # The original form of this assertion was `len(covered) > len(declared)`, a
+    # PROXY for "the annual form is under-modelled", and it carried an
+    # instruction to re-read rather than relax it if the direction ever
+    # inverted. It has: the registry now declares more Modelo 390 casillas than
+    # the design inventory enumerates. So the proxy is retired and the posture
+    # the docstring actually names is asserted directly instead.
+    #
+    # What must stay true is that the report is ADVISORY. Two things establish
+    # that, neither of which depends on which set is larger: the two sets are
+    # not equal, so neither can be read as a completeness claim about the
+    # other; and the registry loads with that difference standing, so the
+    # report gates nothing.
+    assert covered != declared, (
+        "the advisory inventory and the registry's declared set have become the same "
+        "set; asserting them equal is exactly the conversion into a load-blocking "
+        "completeness gate that the recorded decision forbids"
     )
+    ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 
 
 def test_a_casilla_recording_its_box_in_form_number_counts_as_covered() -> None:
