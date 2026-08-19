@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-18'
-body_hash: 'sha256:1935613aa4a1e67debc0d7600e40867608c35f50cf90d5a4e1464c7b0f3a30c0'
+body_hash: 'sha256:e2ab7f5f89c6ae3cafadfdde96419bf09182b78b7135a53432873bc1d0580fcd'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -111,7 +111,6 @@ Replace the bounded historical revision with the in-window revision and the refu
 
 Commit the whole Modelo 303 revision set in one explicit-pathspec commit and prove every boundary by emitted bytes rather than by structure.
 
-
 ## Wave `W03` - Modelo 390 - the widest span and a proved live mis-write
 
 Replace Modelo 390's single revision with the full in-window revision set. Taken second because it carries the most named boundaries and an independently proved live export mis-write at filing year 2023, where export_draft produced 7698 bytes with the total cuota written at byte 1628 past the 2023 record's declared end at 1526. Includes the 2024/2025 boundary that no box-offset or page-length signal sees, only slot occupancy. Lands as one atomic commit. Depends on Wave W01.
@@ -128,7 +127,6 @@ Author one revision per in-window design epoch and the refusal edge below the ea
 ### Phase `W03.P08` - Land Modelo 390 atomically and prove the bytes
 
 Commit the whole Modelo 390 revision set in one explicit-pathspec commit and prove every boundary by emitted bytes.
-
 
 ## Wave `W04` - Modelo 200 - the finding that overtook the record's no-action ruling
 

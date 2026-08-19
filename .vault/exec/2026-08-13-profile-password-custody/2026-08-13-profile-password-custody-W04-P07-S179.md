@@ -5,44 +5,11 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c5a66070d15297d2c077fe680ae0828b836c9926921ee94424141e32ef8751d'
+body_hash: 'sha256:64e6cce51a6858a65fed46720112a7d0c70aecc6fec14728824a5f1cba7b176b'
 step_id: 'S179'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S179 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Have Sol Medium give the profile-fact write door a surface-neutral name and settle its member vocabulary, since the shared writer and its door enumeration still carry the wizard's name while five of nine members and six of twelve call sites are not the wizard, and one member keeps an English stem beside its Spanish siblings, the rename being a cross-package relocation that also rewrites an emitted history value and therefore wanting its own deliberate change rather than riding a crash repair and ## Scope
-
-- `src/cadrumo/application/wizard/_persistence.py and src/cadrumo/entrypoints/cli/_config/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Have Sol Medium give the profile-fact write door a surface-neutral name and settle its member vocabulary, since the shared writer and its door enumeration still carry the wizard's name while five of nine members and six of twelve call sites are not the wizard, and one member keeps an English stem beside its Spanish siblings, the rename being a cross-package relocation that also rewrites an emitted history value and therefore wanting its own deliberate change rather than riding a crash repair
 

@@ -5,44 +5,11 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:e562bca31240e2cad989d1c9201a8952a64d7dface152341363200520ef82fd3'
+body_hash: 'sha256:618bb8f1433955cfb5492820891c7a786fbb37368f73ec242f46e2d1b5d0abb1'
 step_id: 'S103'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S103 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Have Sol Medium rule on the remaining sixty-odd test profile-seeding helpers spread across fourteen further names beyond the one already being converted, classifying each as drives-a-retired-path, already-canonical, or a genuinely different need that writes a domain record without a bucket or session, since the last class is not substitutable against the canonical registration door which publishes a capsule and must be documented as legitimate rather than collapsed and ## Scope
-
-- `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Have Sol Medium rule on the remaining sixty-odd test profile-seeding helpers spread across fourteen further names beyond the one already being converted, classifying each as drives-a-retired-path, already-canonical, or a genuinely different need that writes a domain record without a bucket or session, since the last class is not substitutable against the canonical registration door which publishes a capsule and must be documented as legitimate rather than collapsed
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 ## Outcome
 

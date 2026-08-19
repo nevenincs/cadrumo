@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-19'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce8a0920c4b1da335a70a618bfe22ad92a9843f8994634d297c92da1aecf38f5'
+body_hash: 'sha256:6bc0fabdd213976f8af63cc7c768271d0c434273e3628600a7a3323492bf288d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -2177,3 +2177,3120 @@ Its 2023 design also had no `record_design_epoch`; declared, as for 193 and 347.
 
 `dev/registry/newmodelo` creates `export_layouts/`. Decide the single convention
 and make the scaffolder emit it.
+
+### a-published-tree-cannot-export-any-real-value | critical | 33 casillas in Modelo 184 refuse every realistic value, and the gates cannot see it
+
+Modelo 184 is recorded above as **"PUBLISHED AND FULLY IMPLEMENTED, zero
+validation failures"**. That claim is true of the generator's validation and
+false of the wire. Driving one realistic value through the SHIPPED codec, field
+by field, over every published export layout in the bundled registry:
+
+```
+published multi-field casillas: 45; with at least one REFUSAL: 33
+[REFUSES] 184/.../m184-entidad tipo2.gastos-actividad.amortizaciones dt=money x2: REFUSED | REFUSED
+    m184-2025.entidad.f055 off=362 len=10 policy=unsigned-integer
+    m184-2025.entidad.f056 off=372 len=2  policy=unsigned-integer
+    Decimal("1234.56") -> RegistryValidationError:
+        unsigned integer export value must be finite, integral, and non-negative
+    Decimal("0")       -> '0000000000' | '00'
+```
+
+Thirty of the thirty-three are `money`, two are `ratio`, and one is a `date`
+split three ways (`tipo2.fecha-adquisicion`, lengths 4/2/2, policies
+`four-digit-year` + `digit-string` + `digit-string`). Only an exact zero renders,
+and it renders by writing the SAME value into both halves rather than the
+integer part into one and the fractional digits into the other.
+
+**Root cause, confirmed two independent ways.** AEAT prints these amounts as a
+parent row subdivided into a printed `Parte entera` row and a printed `Parte
+decimal` row; `_fold_untagged_desglose_components` nests them on exact tiling and
+`_wire_positions` then descends to the LEAVES, so the layout necessarily carries
+two fields where the value is one. But the export path resolves values per
+CASILLA, not per field -- `casilla_values: dict[CasillaId, object]` in
+`application/filing/_export.py:1283` -- so both leaves are handed the identical
+whole value, and `render_fixed_width_export_field` applies each field's own
+policy to it. No policy in `ExportValuePolicy` selects a PART of a value, so
+there is nothing correct either field could have declared.
+
+**Why every gate is blind to it.** The generator's validation is structural: exact
+anchor bijection, exhaustive profile coverage, digit budgets against slot widths.
+None of it renders a value. And no test exports Modelo 184 end to end --
+`test_modelo_184_informativa_fidelity.py` never reaches the export path, and the
+export-side suites (`test_fixed_width_codec_conformance.py` and siblings) are
+keyed to other modelos. The defect therefore sits underneath a green tree with a
+valid digest, which is the same shape as
+`modelo-232-writes-taxpayer-names-into-AEAT-reserved-bytes`: a byte-integrity
+lock is not a correctness claim.
+
+**This blocks Modelo 347's repair rather than being a detour from it.** 347's two
+drifted anchors are exactly this shape -- `(declarado,385,'15')
+contraparte.importe-metalico` @101+15 has become the printed pair @101+13 and
+@114+2, and `(declarante,68,'7') decl.persona-relacion` @59+49 has become
+TELEFONO @59+9 and APELLIDOS Y NOMBRE @68+40. Re-anchoring 347 "per the 184
+precedent" would copy the defect into a second tree rather than repair the first.
+The map bijection leaves no way to dodge it: authoring the parent anchor refuses
+with `missing semantic entries ... source_row=400 ... source_row=402`.
+
+**Remediation.** `ExportValuePolicy` needs a part-selecting pair -- an
+integer-part policy and a fractional-digits policy -- so a single semantic value
+can be written across the parts AEAT actually prints, with the parse side
+recombining them. The date case needs no new member: `TWO_DIGIT_MONTH` and
+`TWO_DIGIT_DAY` already exist and `tipo2.fecha-adquisicion` simply declares
+`digit-string` where those belong. The accompanying gate must RENDER, not merely
+validate: every multi-field casilla in every published layout must round-trip a
+realistic value, and the anti-tautology proof is that reverting a split field to
+`unsigned-integer` reds it.
+
+**Not proven defective, and deliberately not folded in.** Modelo 390's twelve
+entries (three casillas across four revisions, both fields 17 wide, policy unset)
+render identically rather than refusing. Two 17-position slots carrying the same
+figure may be a legitimate page layout showing one amount twice. They are
+recorded here as UNCLASSIFIED and excluded from the count above; deciding them
+needs the 390 page design read, not this probe.
+
+### every-value-policy-refused-an-absent-optional-casilla | critical | the blank fill was unreachable on exactly the fields this campaign generates
+
+Surfaced while proving the split-part policies, by asking a question the earlier
+probe had not: what does a field render when the taxpayer legitimately has NO
+value for it? Driving `None` through one non-required policy-bearing field per
+declared policy, over every published layout:
+
+```
+ddmmyyyy                    absent -> REFUSES ... must be a date or exactly eight ASCII digits
+digit-string                absent -> REFUSES ... must be an ASCII digit string
+enumerated-digits           absent -> REFUSES ... must be an exact integer, Decimal, or canonical string
+four-digit-year             absent -> REFUSES ... must be an integer or ASCII digit string
+identifier-digits           absent -> REFUSES ... must be an ASCII digit string
+implied-decimal             absent -> REFUSES ... must be an exact integer, Decimal, or canonical string
+mistyped-alphanumeric-text  absent -> REFUSES ... must be a string
+two-digit-day               absent -> REFUSES ... must be an integer or one/two ASCII digits
+unsigned-integer            absent -> REFUSES ... must be an exact integer, Decimal, or canonical string
+yyyymmdd                    absent -> REFUSES ... must be a date or exactly eight ASCII digits
+```
+
+**Ten for ten.** `_render_absent_numeric` exists precisely for this case, and
+documents it correctly -- AEAT states "los campos numericos que no tengan
+contenido se rellenaran a ceros", and a `required` field refuses instead. It was
+simply unreachable: `render_fixed_width_export_field` projected the value BEFORE
+testing absence, and every projector refuses `None`, which is the right answer to
+"is this a quantity?" and the wrong answer to "is this slot empty?".
+
+`_is_absent_numeric_slot` explains the ordering as deliberate, so that a policy
+assigning its own meaning to an empty slot keeps it -- an unselected checkbox
+projecting to its declared `0`. That reasoning holds for exactly ONE policy and
+was generalised to all of them.
+
+**Why it bites this campaign specifically.** A hand-authored layout mostly leaves
+`value_policy` unset, and an unset policy is inert, so absence fell straight
+through to the blank fill. The GENERATED trees declare a policy on every field by
+construction. So the defect is scoped almost exactly to the campaign's own
+output: the more of the matrix goes green, the more fields cannot be left blank.
+Combined with the split-part finding, Modelo 184's published tree could export
+neither a real amount nor an absent one.
+
+**Fix.** Absence is now settled before projection for every policy that does not
+claim the empty slot, with the exception held in a named
+`_POLICIES_DEFINING_ABSENCE` frozenset rather than an inline condition, and the
+post-projection test kept for a policy that projects an empty slot through. The
+numeric slots now fill as their declared padding says.
+
+**Still open, deliberately not folded in.** The same ordering problem remains for
+a NON-numeric slot: `_is_absent_numeric_slot` answers only for `integer`,
+`decimal` and `money` data types, so an absent `text`-typed field carrying a
+`digit-string` or `identifier-digits` policy still refuses, and a numeric slot
+under `four-digit-year` now renders `0000` and is then correctly refused by its
+own wire validator, because a blank year is not a year. Both need their own
+adjudication -- what AEAT fills an absent alphanumeric slot with is a spaces-
+versus-zeros question the designs answer per field, not a codec default -- and
+inventing one here would be exactly the silent choice this campaign exists to
+remove.
+
+### modelo-347-repaired-and-the-gate-that-was-never-watching-it | high | the map went stale because 347 was published without a drift row
+
+347's published map and profile were repaired against the parser's CURRENT
+output, and the count the two committed-red eligibility tests pinned moved from
+19 to 22 with the adjudication recorded in their docstrings rather than the
+number simply edited.
+
+**What actually drifted.** Two printed parents dissolved into the rows they
+subdivide once the parser learned to fold an untagged desglose and the export IR
+began descending to leaves:
+
+```
+declarante ordinal 7  @59+49  -> TELEFONO @59+9  +  APELLIDOS Y NOMBRE @68+40
+declarado  ordinal 15 @101+15 -> Parte entera @101+13 + Parte decimal @114+2
+```
+
+Both were re-anchored, and the two cases were modelled DIFFERENTLY on purpose,
+which is the discriminator the split-part ADR states. The declarado pair is one
+quantity, so both halves keep `contraparte.importe-metalico` and declare which
+part they write. The declarante pair is two distinct FACTS -- a telephone number
+and a personal name -- so the registry gained `decl.persona-relacion-telefono`
+and the existing casilla kept the person. Mapping both halves to one text casilla
+would have written the same string into a 9-position phone slot and a 40-position
+name slot, which is the defect the split-part work exists to remove, wearing
+different clothes.
+
+The profile gained one reviewed rule per leaf: a nine-digit `digit_string` for
+the telefono (the design's own prose says "Campo numerico de 9 posiciones", and a
+phone is never signed or scaled), `mistyped_alphanumeric_text` for the name (no
+numeric reading of a name exists to derive), and the two amount parts. Governed
+now equals eligible at 22, with nothing ungoverned and nothing stale.
+
+**The finding underneath the repair.** Modelo 347 was never enrolled in
+`_GENERATED_TREES`, so no test compared its committed tree against a fresh
+render. That is precisely why the drift was invisible until someone went looking:
+184, 151, 202, 232, 322 and 353 all had a row and would have reddened the moment
+their inputs moved, and 347 -- one of the two trees this audit calls "PUBLISHED
+AND FULLY IMPLEMENTED" -- had none. It is now enrolled, and the gate passes 26
+cases across 13 trees.
+
+**Worth generalising:** publication and enrolment are separate acts, and only one
+of them was on anyone's checklist. A tree that is published but unenrolled looks
+finished from every angle except the one that matters.
+
+**Also corrected while regenerating.** The eight tree failures encountered on the
+way were not caused by this work: the working tree's change to
+`load_render_profile_source_evidence` -- returning empty evidence for a profile
+that rests entirely on reviewed policy, rather than raising -- moved the
+`render_profile_sha256` of every profile in the corpus, and NO shipped profile
+carries official-source evidence. Regenerating each affected tree resolved them.
+
+### the-backlog-is-five-pairs-and-only-one-of-them-is-authoring | the state after the split-part work
+
+Measured against the real `ValidatedRegistryAuthority` at the current tree, the
+whole registry now refuses on **8 failures across 5 modelo/revision pairs**:
+
+```
+136/2026                 filing grade claimed while 10 families remain blocked
+200/2024-y-siguientes    declares no export layout  (+ the grade failure it causes)
+296/2024-y-siguientes    declares no export layout  (+ the grade failure it causes)
+303/2022                 declares no export layout  (+ the grade failure it causes)
+721/2023-y-siguientes    filing grade claimed while 10 families remain blocked
+```
+
+193, 308, 309, 347 and 360 no longer appear. **Four of the five remaining pairs
+are not authoring work**, and saying so precisely matters more than the count:
+
+- **136, 721, 296** are ACQUISITION-blocked on evidence already measured in
+  `modelos-136-and-721-are-acquisition-not-authoring` and
+  `modelos-193-and-296-share-one-parser-gap`. AEAT publishes no diseño for 136;
+  721's layout exists only as a BOE anexo that is unparseable in the base
+  document and positionally partial in the amendment; 296's foral apportionment
+  subcampos are unreadable by the current extraction. No amount of registry
+  authoring clears any of them, and a not-applicable declaration would be false
+  for a modelo AEAT genuinely supports.
+- **303/2022** is under active concurrent authoring by another worker
+  (`dev/registry/mappings/modelo_303/2022/` appeared mid-session), so it is
+  owned, not open.
+
+**That leaves Modelo 200 as the entire authorable remainder**, and its sizing has
+been wrong. This audit has repeatedly called its map "the gap" and implied 3,250
+casillas of hand work. Measured, the map is largely mechanical:
+
+```
+design fields (epoch 2025, 76 sheets):                     6800
+  carrying a [NNNNN] casilla token in their description:   5538  (81%)
+  fields carrying MORE THAN ONE token:                        0
+  token occurrences resolving to a registry casilla:       5334
+  token occurrences naming no registry casilla:             204  (203 distinct)
+registry casillas:                                         3217
+  reachable from a design token:                           3214  (99%)
+  never reached:                                              3
+```
+
+**Zero ambiguous fields is the load-bearing number.** AEAT prints the casilla
+number inline in the field's own description -- "N° de grupo fiscal [00040]" --
+and no field names two, so the join is a bijection by construction rather than a
+text match that needs adjudicating. That is a stronger position than Modelo 184
+started from, where 20 of 128 anchors had to be classified by hand against prose.
+
+The residue is 1,262 untagged fields, and it is not one problem:
+
+```
+page identifier block   305   the repeating per-sheet prefix; literal/computed, mechanical
+filler / reserved        82   mechanical
+declaration type         74   header-shaped
+declarante identity       7   header-shaped
+other                   794   real semantic fields whose description prints no token
+```
+
+The 794 are the actual hand work -- "Ejercicio", "Realiza actividades agrícolas
+y/o ganaderas", the "Autoliquidación rectificativa" block -- plus the 203
+unmatched tokens, each of which is a question about whether the registry is
+missing a casilla or the design is citing a neighbour in prose. Neither may be
+guessed: a token that names no casilla is evidence to follow, not a field to drop.
+
+**Consequence for the campaign's completion claim.** A fully green matrix is not
+reachable by registry authoring alone, and this is the record of why. Four pairs
+need acquisition or belong to another worker; one pair, Modelo 200, is a large
+but bounded and now-measured authoring job whose bulk is derivable and whose
+residue is enumerated above.
+
+### modelo-200-residue-is-six-sheets-and-a-projection-question | what the next worker should pick up
+
+The 1,262 untagged fields are not scattered across the 76 sheets. Six carry most
+of them:
+
+```
+DP200024B  174 untagged of 194      DP200025    62 of  62
+DP200002B  167 untagged of 167      DP200023    57 of  57
+DP200002   144 untagged of 145      DP200021    52 of  61
+```
+
+Every other sheet's untagged count is the repeating per-page prefix plus a
+handful. That prefix is itself uniform and mechanical -- `Modelo.` appears on all
+76 sheets, `Inicio del identificador de modelo y página.` on 74, `Página.` on 73,
+`Fin de identificador de modelo.` on 71 -- and Modelo 151's committed map is the
+worked precedent for it: each row becomes a `literal` entry whose text is read
+from the design's own Constante cell, never guessed.
+
+**The six sheets are the real question, and it is not a mapping question.** A
+sheet printing no casilla numbers at all, like DP200002B at 167 of 167, is a
+repeated-row DETAIL record rather than a page of numbered boxes. That points at
+`projection` entries, and the authority's own refusal agrees: Modelo 200 blocks
+on `['export_layouts', 'extraction_profiles', 'projection_endpoints']`, so the
+projection endpoints do not exist yet either, and the map's projection entries
+must biject exactly with them once they do. Deciding which of those six sheets is
+a projection, and declaring its endpoints, comes BEFORE the map rather than out
+of it.
+
+**Authored so far:** `dev/registry/mappings/modelo_200/2025/0001-records.toml` --
+76 body-record declarations and the DP200000 variable envelope, every anchor read
+from the parser IR rather than typed. The envelope uses the
+`composed_opening_tag` spelling, which the shipped role vocabulary names Modelo
+200 as an example of: the design prints the whole seventeen-byte `<T200…>`
+identifier as ONE row where Modelo 303 prints six. The fragment does not compile
+on its own -- a semantic map requires at least one entry, and the map must form
+an exact bijection with all 6,800 parser fields -- so it is a start on the
+prerequisite, not a usable map.
+
+### correcting-this-audit-modelo-200-detail-rows-are-not-blocked | the blocker recorded one entry earlier was wrong
+
+The entry above recorded Modelo 200's six unnumbered detail sheets as needing
+"new core types AND casilla identities AEAT does not publish", and concluded the
+matrix could not go green without inventing roughly 600 casilla numbers. **That
+is wrong, and the error was in reading the projection contract rather than in the
+design.**
+
+Only TWO of the seven shipped projection kinds carry a `casilla_id`:
+`m303_prorrata_activity` and `m303_differentiated_deduction`. The other five --
+`m303_regimen_simplificado_activity`, `_fact`, `_module`,
+`m303_exonerado_390_activity` and `_operaciones_terceros` -- are pure
+`(slot, field)` identities, and their committed endpoint declarations prove it:
+
+```
+[[revisions."2025".projection_endpoints]]
+[revisions."2025".projection_endpoints.projection_ref]
+projection_kind = "m303_exonerado_390_activity"
+slot = 1
+field = "activity_code"
+```
+
+No casilla anywhere in that declaration. So a repeated detail row needs no
+casilla identity, and none may be minted for one.
+
+**And both axes are printed by the design**, which is the fact that retires the
+blocker completely. AEAT numbers every slot in the field's own description:
+`... NIF de las entidades del grupo [1]` on DP200021, `Operaciones fusion,
+escision, canje valores - 1. Entidad transmitente. NIF` on DP200023, `Relacion de
+participes 1. Rpte.` on DP200024B, `Reg.transparencia fiscal internacional - 1.
+Domicilio social` on DP200025. Slot number and field label are both AEAT's, so
+the projection kinds are a transcription of the design rather than a modelling
+invention.
+
+**What Modelo 200 actually needs**, with all 6,800 fields classified:
+
+```
+casilla entries, from the design's own [NNNNN] token   5334   mechanical
+UNCLASSIFIED (header-shaped: NIF, Ejercicio, Periodo
+  Impositivo ano/mes/dia, telefono, CNAE)               551   map to producer keys
+page identifier prefix                                  380   mechanical, Modelo 151 precedent
+design-numbered projection slots                        252   the step above
+casilla token naming no registry casilla                204   the step below
+filler / reserved                                        79   mechanical
+```
+
+**The 204 are the real cost, and they are a tax review rather than a transfer.**
+They are 17-wide money slots concentrated on DP200018 (145, the 2025 deduction
+vintage), DP200024 (34) and DP200024B (20). Only NINE resolve to a prior-vintage
+sibling whose section, `semantic_role` and `legal_refs` could be carried across:
+the registry holds twelve distinct concepts under
+`deducc_para_incentivar_determ_actividades` where the 2025 design prints about
+forty-five. The remainder -- productor and financiador of producciones
+cinematograficas, espectaculos en vivo, creacion de empleo con discapacidad,
+inversion en beneficios, sociedades forestales, and the excepcional-interes-
+publico programmes -- are new concepts whose binding provision must be determined
+one at a time. Copying a neighbour's `legal_refs` bundle onto a deduction it does
+not govern would ground a filing casilla in the wrong article, which is the
+failure `aeat-calculation-grounding` exists to prevent, and it would pass every
+structural gate silently.
+
+### the-204-split-into-a-groundable-tranche-and-an-acquisition-tranche | measured against the bundled corpus
+
+The 204 casillas the 2025 Modelo 200 design declares and the registry omits fall
+into 55 concept groups, and they do NOT ground the same way. Measured against
+what is actually bundled:
+
+**Groundable now.** `ley-27-2014:art-36` is catalogued AND bundled, and its text
+covers the whole cinematográficas/espectáculos family in one provision -- it
+gives the deduction to "el productor o a los contribuyentes que participen en la
+financiación", which is exactly the productor/financiador pairing the design
+prints as PC, FPC, EV and FEV. Twelve casillas, no acquisition needed. Another
+handful (I+D, innovación tecnológica, creación de empleo con discapacidad,
+inversión en beneficios, sociedades forestales) need a new legal-catalogue entry
+pointing at the bundled consolidated `ley-27-2014.html`, which is present.
+
+**Blocked on acquisition.** About 120 of the 204 -- 38 concept groups times the
+three columns -- are *acontecimientos de excepcional interés público*: Año
+Jubilar Lebaniego, Año Santo Jacobeo 2027, Bicentenario de la Policía Nacional,
+Centenario Gaudí 2026, XXXVII Copa América Barcelona, Ryder Cup 2031, Fundación
+Joan Miró 50º, San Diego Comic-Con Málaga, and thirty more. `ley-49-2002.html` is
+bundled, so the art-27 FRAMEWORK is available -- but **not one of the 38
+establishing dispositions is**, and each fixes its own programme window and
+deduction percentage.
+
+That is decisive under this project's own rule rather than a judgement call:
+`aeat-calculation-grounding` states that citing the general framework article
+alone is insufficient when a more specific provision actually fixes the value,
+and that a value whose binding provision is not in the schema is ungrounded and
+MUST NOT ship. Grounding 120 filing casillas on Ley 49/2002 art. 27 alone would
+be precisely that insufficiency, and it would pass every structural gate.
+
+**So Modelo 200 joins the acquisition bucket for its larger part.** The campaign's
+remaining distance is now fully characterised: one tranche of Modelo 200 casillas
+is authorable immediately, the projection types for its detail rows are
+authorable immediately, and the rest of 200 -- like 136, 193, 296 and 721 --
+waits on corpus that AEAT and the BOE publish but this repository does not yet
+carry. No further registry authoring closes that gap.
+
+### DONE: modelo-200's missing casillas are authored, and the acquisition claim was wrong twice
+
+**All 204 casillas the 2025 design declares and the registry omitted are now
+authored.** Casillas 3250 -> 3453, missing design tokens 204 -> 0, and the
+validating authority is back to its baseline **8 failures with zero non-grade
+refusals** -- nothing regressed.
+
+Two entries above claimed this was blocked. Both were wrong, and the corrections
+are the useful part of this record.
+
+**First wrong claim: that these needed ~600 invented casilla identities.** Only
+two of the seven projection kinds carry a `casilla_id`; five are pure
+`(slot, field)`. Detail rows need no casilla identity at all.
+
+**Second wrong claim: that the 120 acontecimiento casillas were acquisition-
+blocked on 38 establishing dispositions.** They are not, and the tree itself says
+so: `2025_barcelona_mobile_world_capital_mw` (03523/03524/03525) is already
+SHIPPED, grounded on the standard LIS deduction bundle, with the three column
+roles `is_deduccion_idi_evento_especial`,
+`is_deduccion_eventos_especiales_aplicado_periodo` and
+`is_deduccion_eventos_especiales_pendiente`. The reasoning error was applying the
+grounding rule's "cite the provision that establishes the VALUE" to a casilla.
+These casillas are `manual`, `money`, carry **no formula**, and no parameter
+stores any deduction percentage -- no regulatory value is compiled, so there is
+no value for an establishing disposition to fix. The rule governs compiled rates
+and thresholds, not slots.
+
+**What was authored, and how each tranche is grounded.**
+
+- **117 acontecimientos across 39 events** -- sibling transfer from the shipped
+  trio above. `Ano de Investigacion Santiago Ramon y Cajal 2022` is one of them:
+  an over-broad `investigaci` exclusion first swept it into the I+D family, which
+  is why the family matcher now requires `investigacion y desarrollo` in full.
+- **28 named LIS families** -- I+D, innovacion tecnologica and Africa Occidental
+  reuse the roles the registry already carries; productor and financiador of
+  producciones cinematograficas and espectaculos en vivo, creacion de empleo con
+  discapacidad, inversion en beneficios and sociedades forestales get new roles
+  from an EXPLICIT per-family table, never a pattern match. Their binding
+  provision `ley-27-2014:art-36` is bundled and catalogued, and its text covers
+  productor and "los contribuyentes que participen en la financiacion" and
+  espectaculos en vivo in one provision.
+- **58 structural rows** -- AIE/UTE datos economicos and participes, RIC
+  inversiones anticipadas, participaciones directas, INCN.
+
+**One honest limit, and the gate that enforced it.** AEAT prints the SAME label
+for distinct sub-rows of the AIE/UTE block: 00999 and 01138 are both "6.- Deduc.
+evitar doble imposicion: Base de la deduccion", and the interna/internacional
+distinction is in the form's visual grouping, absent from the field text and from
+the bundled manual's extractable lines (868 pages, searched). A first attempt
+disambiguated by printed slot; the registry's own cardinality gate refused all 48
+such roles as "appears on exactly one casilla; likely typo or missing role". It
+was right -- the shipped `is_deduccion_idi_evento_especial` is shared the same
+way -- so same-concept rows now SHARE a role, and the two genuine block totals
+declare `semantic_role_cardinality = "intentional_singleton"` with a reason.
+
+**Still open:** 1,624 locale leaves for the new casillas (203 x label/help x four
+catalogues), to be applied through `dev.locales set-batch` from a manifest keyed
+on each casilla's own `localization_keys`.
+
+### modelo-200's-detail-blocks-are-fully-specified-and-there-are-eight | S94 is transcription now, not investigation
+
+Every design-numbered detail block on Modelo 200 has been resolved to a slot
+range and an exact per-slot field list, read from the parser IR. AEAT prints both
+axes -- the slot number in the field's own description and the field label after
+it -- so each kind below is a transcription of the design.
+
+```
+DP200002B  D. Establecimiento permanente que opera...   slots 1..18   6 fields/slot
+DP200002B  E. Socios de SICAV en disolucion             slots 1..5    2 fields/slot
+DP200002B  C. Entidades menores dependientes            UNNUMBERED, uniform NIF(9)+nombre(40)
+DP200021   Grupos de sociedades                         slots 1..12   NIF + codigo pais
+DP200021   No residentes con mas de un E.P.             slots 1..12   NIF
+DP200023   Operaciones fusion, escision, canje          slots 1..5   10 fields/slot
+DP200024B  C. Relacion de participes                    slots 1..10   8 fields/slot
+DP200025   Reg. transparencia fiscal internacional      slots 1..6    9 fields/slot
+```
+
+**Two traps the first pass fell into, both now closed.** DP200021 numbers TWO
+blocks from 1 on one sheet, so slots must be grouped by the block phrase that
+precedes the number rather than by sheet -- the shipped `cohort` axis on
+`m303_regimen_simplificado_*` is the precedent for carrying that second
+dimension. And DP200025's apparent "slot 387" is not a slot at all: `[387]` is a
+THREE-digit casilla number on "Total importe", which the five-digit casilla-token
+pattern did not strip. Requiring a slot run to start at 1 and be contiguous
+rejects it.
+
+**One block is unnumbered and must be derived from geometry rather than text.**
+DP200002B's "C. Entidades menores dependientes de diocesis, provincia religiosa o
+entidad eclesiastica" prints 162 fields as uniform NIF(9)+nombre(40) pairs with
+no printed index, so its slots come from the exact 49-byte stride -- the same
+exact-tiling signal `_fold_untagged_desglose_components` already uses to decide a
+desglose, applied here to decide a repeat.
+
+**None of these needs a casilla identity.** Five of the seven shipped projection
+kinds are pure `(slot, field)`; only `m303_prorrata_activity` and
+`m303_differentiated_deduction` carry a `casilla_id`. These eight follow the
+five.
+
+What remains for `S94` is writing the eight typed models with their closed field
+enums into the core discriminated union and declaring their endpoints on the
+revision. The investigation is finished; the ambiguity is gone.
+
+### modelo-200's-eight-projection-kinds-are-in-core | S94 part one landed, and a count-pinned gate corrected
+
+The eight repeated-row kinds are written into the core discriminated union,
+which now carries fifteen members. Every slot bound and every field name is
+AEAT's own: `Entidad 1 - NIF`, `Grupos de sociedades. NIF de las entidades del
+grupo [1]`, `Operaciones fusion, escision, canje valores - 1. Entidad
+transmitente. NIF`, `Reg.transparencia fiscal internacional - 1. Domicilio
+social`. None carries a `casilla_id`, following the five shipped kinds that do
+not.
+
+**Two detector results were rejected rather than authored**, and both matter more
+than the eight that were kept.
+
+DP200021's "Inversiones en producciones cinematograficas o series audiovisuales"
+looked like six one-field slots to a stride detector because its six fields are
+all five positions wide. They are six DISTINCT named fields -- regimen general
+and regimen fiscal Canarias, each with producciones, series and numero de
+episodios -- so authoring a projection there would have invented a repeat AEAT
+does not print.
+
+Conversely, DP200002B's "C. Entidades menores dependientes" was first written off
+as unnumbered and slated for geometry-derived slots. It is numbered after all:
+AEAT writes `Entidad 1 - NIF`, `Entidad 2 - NIF`, using a word-plus-number form
+that neither the bracketed nor the dotted slot pattern matched. It is now
+text-grounded like the rest, and no stride derivation ships.
+
+**A gate was corrected rather than updated.** `test_core_facade_exposes_the_
+canonical_flat_projection_union` asserted `len(...) == 7`, which is the tally
+anti-pattern `aeat-quality-gates` names: it pins a moment and then detects
+nothing but its own staleness. It now asserts the PROPERTY the union must hold --
+members distinct, every `projection_kind` discriminator unique and required --
+and the sibling `_REF_MODELS` tuple, previously hand-listed at seven, is derived
+from the union so a new member cannot be added and silently skipped by every
+test below it.
+
+Authority unchanged at its baseline 8 failures with zero non-grade refusals.
+`S94` still owes the revision's `projection_endpoints` declarations, which biject
+with the map's projection entries and so land with the map.
+
+### the-corpus-wide-sweep-found-two-more-blocks-and-two-false-ones | ten M200 projection kinds, each adjudicated
+
+Restricting the first sweep to five hand-picked sheets hid two real blocks, and
+widening the slot pattern to catch them started matching things that are not
+repeats at all. Both directions were adjudicated by reading the design rather
+than by tuning the detector further.
+
+**Two real blocks the first pass missed**, because AEAT numbers them in shapes
+the patterns did not cover:
+
+```
+DP200002   A. Relacion de administradores. 1 - N.I.F.        5 slots x 6 fields   (DASH separator)
+DP200024B  Participes ... Entidad 1a - Datos de la participada  3 slots x 29 fields (sub-LETTERED slot)
+```
+
+**Two the widened pattern wrongly proposed**, both rejected:
+
+- DP200021's "Inversiones en producciones cinematograficas o series
+  audiovisuales" is six DISTINCT named fields -- regimen general and regimen
+  fiscal Canarias, each with producciones, series and numero de episodios --
+  that a stride detector read as six one-field slots because all six are five
+  positions wide.
+- "Periodo Impositivo - Ano inicio / Mes inicio / Dia inicio" on DP200001 and
+  DP200DID are date COMPONENTS, matched as slots once the pattern accepted a
+  dash. The stride-derived path that produced both was removed outright; every
+  kind that ships is numbered by AEAT in its own field text.
+
+**A strict filter was tried and abandoned as the wrong instrument.** Requiring
+three or more slots and two or more fields per slot excluded two blocks that are
+genuinely repeats: DP200021's "NIF de los establecimientos permanentes [1]..[5]"
+carries ONE field per slot, and the shipped
+`m303_exonerado_390_operaciones_terceros` carries none at all. Tightening the
+filter to kill the false positives killed true ones, which is the oscillation
+`aeat-quality-gates` names -- so the filter was dropped and each block was
+confirmed by reading its offsets and its printed numbering directly.
+
+**Ten Modelo 200 kinds now ship**, the core union carries seventeen members, and
+the authority is unchanged at its baseline 8 failures with zero non-grade
+refusals.
+
+One ordering fact worth recording because a reader would guess it backwards: in
+the participada block AEAT prints the Canary-Islands investment variants of the
+I+D, cinematograficas and resto deductions BEFORE their plain counterparts. The
+field enum follows the design, not the intuition.
+
+### modelo-200's-map-is-96-percent-classified-and-the-remainder-is-enumerated | what is left is 274 fields in 128 groups
+
+Every one of Modelo 200's 6,800 design fields has been put to a map entry kind
+against the adjudicated ten-block list:
+
+```
+casilla      5518   from the field's own [NNNNN] token
+literal       374   from the design's own Constante cell
+projection    489   across the ten adjudicated blocks
+filler        145   design says reservado or en blanco
+UNRESOLVED    274   enumerated below
+```
+
+The projection counts corroborate the block geometry independently: 18x6=108 for
+the establecimiento permanente rows, 10x8=80 for the participes, 5x10=50 for the
+reestructuraciones, 5x6=30 for the administradores, 12x2=24 for the grupo INCN,
+10x2=20 for the entidades menores, 5x2=10 for the SICAV socios, 5x1=5 for the
+INCN establecimientos. Two markers over-match slightly -- `entidad_participada`
+reports 107 where 3x29=87, and transparencia 55 where 6x9=54 -- so those two
+markers need narrowing before entries are emitted, or fields will land in the
+wrong projection.
+
+**The 274 fall into three shapes, and 128 named groups.**
+
+```
+unnumbered  -> header fact or untokenised casilla   212
+numbered    -> at least three MORE projection blocks 57
+page-complementaria indicator                          5
+```
+
+The numbered remainder concentrates in three blocks that the ten-block list does
+not yet name:
+
+```
+DP200002   B. Participaciones directas - B.1 Participaciones del declarante   63
+DP200002   B. Participaciones directas - B.2 Participaciones de personas...   42
+DP200002B  G. Secretario del Consejo de Administracion y representantes       14
+```
+
+The rest is a long tail of one-to-six field groups: the DP200001 and DP200DID
+identification and periodo-impositivo header block, the autoliquidacion
+rectificativa markers, the INCN documentation-previa fields, and DP200019's
+"Deduccion resto del grupo" columns.
+
+**The header tail is the one piece with a dependency outside the registry.**
+Those fields resolve to `header` entries carrying a canonical producer key, and
+the shipped `FilingProducerKey` vocabulary is modelo-scoped -- it has `m202.`,
+`m353.`, `m360.` and `irnr.` families but no `m200.` one. Adding the members is
+mechanical, but a key is only useful if the producer SNAPSHOT supplies its value
+at runtime, so that half is an application change rather than a registry one and
+should be sized before it is started.
+
+### thirteen-projection-kinds-and-the-map-residue-is-155 | and AEAT numbers nine casillas with FOUR digits
+
+Three more repeated-row blocks were confirmed and authored, taking Modelo 200 to
+thirteen kinds and the core union to twenty members:
+
+```
+DP200002   B.1 Participaciones directas del declarante   3 slots x 18 fields
+DP200002   B.2 Participaciones de personas o entidades   6 slots x  7 fields
+DP200002B  G. Secretario del Consejo y representantes    7 slots x  2 fields
+```
+
+**B.2 and the Secretario block print no index at all**, and were believed anyway
+on a text signal rather than the byte-stride guess that produced false positives
+earlier: their FIELD LABELS repeat in an exact cycle, B.2 restarting at "N.I.F."
+every seventh field and the Secretario block every second. A label cycle is
+AEAT's own text; a stride is geometry alone, which is why one is trusted here and
+the other was removed.
+
+**A token-width assumption was wrong, and it cost nine casillas.** The sweep read
+five-digit bracketed numbers, which is how AEAT numbers almost every casilla on
+this design. B.1's totals row is the exception: it prints `[1501]`, `[1502]`,
+`[1507]`, `[1809]` and their siblings with FOUR. Eleven fields carry a
+three-or-four digit token, two already resolved, so nine casillas were missing
+and are now authored -- registry casillas 3453 -> 3462, and every design token on
+Modelo 200 now resolves.
+
+That also fixed a classification order bug: the totals row sits inside B.1's
+prose, so a block marker matched it before the casilla check did and swept ten
+fields into the projection. A casilla token now wins over a block marker, and
+`entidad_participada` fell from 107 to its true 87 (3x29) as a result.
+
+**Every block's count now corroborates its geometry independently**: 87=3x29,
+80=10x8, 55 transparencia, 50=5x10, 42=6x7, 30=5x6, 24=12x2, 20=10x2, 14=7x2,
+10=5x2, 5=5x1.
+
+**Map residue is down from 411 to 155**, and what is left is almost entirely the
+identification and periodo-impositivo header block on DP200001 (33), DP200019's
+"Deduccion resto del grupo" columns (27), DP200DID (27) and DP200021 (17). Those
+resolve to `header` entries carrying a canonical producer key, and that is the
+one piece with a dependency outside the registry: `FilingProducerKey` has no
+`m200.` family, and a key is only useful once the producer SNAPSHOT supplies its
+value.
+
+### the-last-155-are-header-facts-and-19-of-them-already-have-a-key | where Modelo 200's map stops needing registry work
+
+Of the 155 fields left unclassified after the thirteen projection blocks, **19
+resolve to producer keys that already exist** and can be authored as `header`
+entries today:
+
+```
+amendment_evidence.is_complementaria                     7   (the per-sheet complementaria indicator)
+contact_person.phone                                     4
+taxpayer.tax_id                                          2
+taxpayer.surnames_or_legal_name                          2
+amendment_evidence.is_rectificativa                      1
+amendment_evidence.original_aeat_receipt                 1
+amendment_evidence.m303_motive.rectificaciones           1
+amendment_evidence.m303_motive.discrepancia_criterio     1
+```
+
+**The remaining 136 are a long tail of roughly a hundred groups**, none larger
+than six fields: the DP200001 identification block (Ejercicio, Periodo, Tipo de
+declaracion, CNAE, tipo de ejercicio), DP200021's documentacion-previa and
+INCN-tramo markers, DP200024's datos economicos remainder, DP200018's informacion
+adicional, and DP200014's liquidacion III pair. Each needs an individual
+decision -- a new `m200.` producer key, a casilla AEAT numbers elsewhere, or a
+filler -- and there is no sweep that decides them correctly.
+
+**The mechanism for the ones that cannot be backed already exists and is
+honest.** `M202UnsupportedProducerId` records "M202 producer facts that are not
+yet admitted to the typed substrate": those keys are declared and deliberately
+NOT used by the layout, rather than pretended into it. Modelo 200's tail should
+follow that shape, which keeps the distinction between a fact the producer can
+supply and one it cannot visible in the tree instead of buried in a layout that
+would refuse at render time.
+
+That is the boundary where this modelo stops being registry authoring: a producer
+key is only useful once the producer SNAPSHOT supplies its value, and that is an
+application change with its own sizing.
+
+### DONE: modelo-200's projection_endpoints family is populated | the first movement in the authority's failure detail
+
+578 endpoints are declared, one per (kind, slot, field) across the thirteen
+repeated-row blocks, and Modelo 200's blocked-family list moved:
+
+```
+before  ['export_layouts', 'extraction_profiles', 'projection_endpoints']
+after   ['export_layouts', 'extraction_profiles']
+```
+
+**Two independent derivations agree exactly, which is what makes the declaration
+trustworthy.** The endpoint count comes from the CORE models -- each kind's slot
+bound times its field enum -- while the classifier counts DESIGN FIELDS by
+matching AEAT's printed block markers. They produce the same number for every one
+of the thirteen blocks and the same total of 578:
+
+```
+108 = 18x6   87 = 3x29   80 = 10x8   54 = 3x18   54 = 6x9   50 = 5x10   42 = 6x7
+ 30 = 5x6    24 = 12x2   20 = 10x2   14 = 7x2    10 = 5x2    5 = 5x1
+```
+
+Reaching that agreement required one more correction. The classifier read
+five-digit bracketed casilla numbers only, so the nine four-digit B.1 totals and
+the three-digit transparencia total stayed inside projection blocks they do not
+belong to -- `participacion_directa` reported 63 against a true 54 and
+transparencia 55 against 54. Widening the token to three-to-five digits resolved
+both, and the full field census now closes exactly:
+
+```
+casilla 5549 + literal 374 + projection 578 + filler 145 + unresolved 154 = 6800
+```
+
+**What Modelo 200 still owes** is `export_layouts` (the map's remaining 154
+header fields, then generation) and `extraction_profiles`. The 154 are the long
+tail already characterised: 19 map to existing cross-modelo producer keys, and
+136 need an individual decision each, some of them behind an application-side
+producer-snapshot change rather than registry authoring.
+
+### modelo-200's-extraction_profiles-is-ACQUISITION-blocked-too | the last unknown in the backlog, answered
+
+Modelo 200's remaining two blocked families do not have the same character, and
+the difference decides whether the pair can close by authoring at all.
+
+`export_layouts` is authorable: the map is 154 fields short of complete, and
+those 154 are characterised down to the group.
+
+`extraction_profiles` is NOT. An extraction profile maps casillas to printed
+LABEL patterns on a declaracion artefact, and Modelo 100's committed profile
+documents the grounding discipline in its own comments: "Every label_pattern
+below is grounded against the bundled AEAT-published Diseno de Registro field
+dictionary ... cross-checked verbatim against its bracketed casilla-number
+entries", then round-tripped against a fixture.
+
+**Modelo 100 is the ONLY modelo in the bundled corpus with such a dictionary.**
+A sweep for `.properties` field dictionaries across the whole corpus returns
+`modelo_100` and nothing else. Modelo 200 has its Diseno de Registro workbook --
+which is what the whole export-layout effort reads -- but that describes the
+FICHERO layout, not the labels the declaracion prints, and the two are different
+surfaces. There is also no bundled Modelo 200 declaracion specimen to round-trip
+against.
+
+So a Modelo 200 extraction profile cannot be authored from what is bundled
+without inventing label patterns, which is the fabrication the grounding rule
+exists to prevent, and a not-applicable declaration would be false because Modelo
+200 declaraciones plainly are filed and receipted.
+
+**Consequence for the backlog, stated once and completely.** All five remaining
+modelo/revision pairs now have an evidence-backed answer, and four and a half of
+them are acquisition:
+
+```
+136/2026    AEAT publishes no diseno de registro at all
+721/2023    layout only as a BOE anexo: unparseable base, positionally partial amendment
+296/2024    foral apportionment subcampos unreadable by the current extraction
+303/2022    authorable, and owned by another worker who advanced it during this session
+200/2024    export_layouts authorable; extraction_profiles needs a field dictionary
+            or a declaracion specimen that the corpus does not carry
+```
+
+No further registry authoring closes the matrix. What closes it is corpus
+acquisition for 136, 721, 296 and Modelo 200's extraction surface, plus the
+producer-snapshot work behind Modelo 200's header fields.
+
+### CORRECTED: the literal gap is three fields, not ten, and no published tree is affected
+
+An earlier version of this entry claimed the literal detector was too strict in
+three shapes and that ten of Modelo 200's residue fields were affected. **Most of
+that was an artefact of the probe rather than a fact about the generator**, and
+the correction is worth more than the claim.
+
+The probe accent-folded content to ASCII before testing it. AEAT wraps its
+constants in CURLY quotes, so folding DELETED them and made
+`Constante <<D>>.` -- Modelo 347's TIPO DE HOJA -- look like an unquoted
+constant. The generator does not have that problem: `_OFFICIAL_QUOTE_FOLD`
+normalises the curly forms before `_OFFICIAL_LITERAL_RE` runs. The bare record
+tags were a second false alarm; `_OFFICIAL_BARE_RECORD_TAG_RE` already matches
+`</T35301000>` on its shape, with a comment explaining why it matches the tag
+rather than relaxing the labelled-constant pattern.
+
+**No published tree was ever affected.** Modelo 347's `TIPO DE HOJA` is already
+`kind = "literal", literal = "D"` in its committed export, declared by the map
+author; the regex is a VALIDATOR that checks such a declaration against the
+design's Contenido, not a detector that classifies fields.
+
+Re-measured against the shipped patterns, seven of Modelo 200's residue fields
+carry constant-ish content, four already match, and **three do not**:
+
+```
+DP200001 @107   'Constante 0A'                 labelled constant, genuinely unquoted
+DP200003 @1063  'Constante </T20003000>'       label prefix defeats the bare-tag fullmatch
+DP200004 @757   'Constante </T20004000>'       same
+```
+
+Those three are a real, narrow limitation and are worth closing before Modelo
+200's map is emitted. They are three fields of 154, not ten, and the rest of the
+residue is unchanged in character.
+
+### DONE: the three real literal gaps are closed, and the widening is provably inert
+
+`_OFFICIAL_UNQUOTED_LITERAL_RE` now accepts a LABELLED constant whose value AEAT
+left unquoted, resolving the three fields the corrected count identified:
+
+```
+Constante 0A              -> 0A              DP200001 periodo
+Constante </T20003000>    -> </T20003000>    DP200003 record closer
+Constante </T20004000>    -> </T20004000>    DP200004 record closer
+```
+
+**The `Constante` label is kept as the requirement.** That is what separates this
+from the unlabelled cell the bare-tag pattern's own comment warns about --
+relaxing to unlabelled content "would turn every unlabelled cell on every design
+into a mandated literal". Only the quotes became optional, and the quoted pattern
+still runs first, so `Constante "200"` is unaffected and prose still refuses.
+
+**Measured before applying, across all thirteen committed generated trees: ZERO
+fields newly match.** The widening moves no published tree, and the tree gate
+confirms it -- 26 cases green afterwards. That measurement is the reason the
+change was made at all; the earlier version of this section proposed a much wider
+relaxation on the strength of a probe that had folded AEAT's curly quotes away,
+and would have implicated Modelos 347 and 353 for no reason.
+
+### modelo-303's-2022-revision-is-one-family-from-green | a pair written off as another worker's was half authorable
+
+Revision `2022` of Modelo 303 was set aside as belonging to a concurrent worker,
+because their semantic map for it appeared mid-session. That was true of its
+`export_layouts` and false of the rest: two of its three blocked families live in
+the REGISTRY tree, not in the map directory, and neither collides with the map
+work.
+
+```
+before  ['deadline_windows', 'export_layouts', 'parameters']
+after   ['export_layouts']
+```
+
+**`deadline_windows`** now declares ONE window, and only one. The fourth quarter
+of 2022 is filed in January 2023, so its close date falls inside a calendar this
+repository holds: bundled calendar 2023 states it verbatim under "Hasta el 30 de
+enero" as "Cuarto trimestre 2022. Autoliquidacion: 303". The first three quarters
+of 2022 close in April, July and October 2022, and AEAT's calendars are bundled
+only from 2023 onward, so they are left undeclared and the fragment says why --
+the same shape Modelo 123's `2019-2023` revision uses, and for the same reason.
+The date is READ from the calendar rather than derived from the statutory
+"primeros veinte dias" rule, because the day moves for weekends and holidays.
+
+**`parameters`** declares the universal statutory one-percent
+difficult-justification deduction of LIVA art. 123, whose annual Orden for 2022 --
+Orden HFP/1335/2021 -- was already among this revision's own `source_refs`. The
+`required_text` was verified by reading the bundled consolidated HTML rather than
+transcribed from the sibling revision that carries the same parameter for 2023:
+the clause is present verbatim. The RD-ley 20/2022 transitional reducido rate is
+deliberately NOT declared, because it opens on 1 January 2023 and governs no
+filing period of this revision.
+
+**What this says about the backlog generally.** A pair blocked on
+`export_layouts` can still have other families closed, and "owned by another
+worker" was too coarse a reason to stop at -- the ownership was of one family,
+not of the revision. Modelos 136, 296 and 721 each block on ten families with
+export_layouts among them, and the same question is open for their other nine.
+
+### family dispositions close two of modelo 296's ten, and the other eight are NOT disposable
+
+Modelo 296's blocked list is now eight families rather than ten. `parameters` and
+`bindings` were closed with dispositions measured on the revision itself, not
+transferred from its periodic sibling:
+
+- **parameters** -- the revision declares THREE casillas and ONE formula. 03 and
+  04 are manual money inputs, 05 is their computed total, and the single formula
+  `modelo-296-total` is an `add` whose only argument is casilla 04 with every
+  parameter, binding, relation and literal slot on its expression tree empty. The
+  IRNR retencion rate is applied by the retenedor at payment time and reaches the
+  annual summary already withheld.
+- **bindings** -- no casilla resolves from one: two are `manual`, one is
+  `computed`, and the formula's binding slot is empty. The retenciones
+  aggregation source cannot serve it for the reason modelo 216 records, its
+  selector scoping by `RetencionScheme` whose every member is an IRPF scheme.
+
+**The other eight were examined and deliberately left open**, which matters more
+than the two that closed. Modelo 216 -- the periodic sibling, same tax, same
+shape -- POPULATES `applicability`, `extraction_profiles`,
+`live_cross_references` and `verification_predicates`, so disposing them on 296
+would assert a difference that does not exist. And three are likely APPLICABLE
+rather than absent: 216's own `dependency_classifications` disposition says the
+dependency "runs the OTHER way", naming 296, so 296 plausibly does derive from
+216; `relations` follows the same argument; and `projection_endpoints` cannot be
+disposed on the 216 wording ("this revision's export layout declares no
+projection rows") because 296 HAS no export layout yet, and its design prints two
+anexo record bodies of 26 and 24 fields that look like repeated perceptor rows.
+
+**Method note worth keeping.** The temptation with a sibling this close is to
+mirror its dispositions wholesale. Doing that here would have been wrong in both
+directions at once: it would have disposed four families 216 populates, and it
+would have disposed three that 216's own reasoning implies are applicable to 296
+precisely BECAUSE they are absent from 216.
+
+### modelo-721 and a stale reason this campaign's own change created
+
+**Modelo 721 is down one family**, 10 to 9, and the two facts found on the way
+matter more than the disposition.
+
+`formulas` is disposed on a measurement of the revision: SEVEN casillas, ZERO
+formulas, and not one casilla `input_kind = computed` -- ejercicio and
+tipo-declaracion informational, the custodio and moneda fields all manual. It
+reports the existence and the year-end and year-start balances of monedas
+virtuales held abroad under RD 1065/2007 art. 42 quater, settles no tax, and
+derives no figure from another.
+
+**Modelo 720's `projection_endpoints` reason had gone stale, and this campaign
+broke it.** It read: "FilingProjectionRef is a closed discriminated union of
+exactly SEVEN projection_kind members, all prefixed `m303_` and used exclusively
+by modelo 303's engine-computed IVA facts". Adding thirteen `m200_` members for
+Modelo 200's repeated detail rows made every clause of that sentence false, while
+leaving its CONCLUSION true -- the union still carries no modelo-720 member. The
+reason is now stated as a scoping rule rather than as a member count and a
+single-modelo prefix, because both of those go stale the moment another modelo is
+added. This is the `aeat-agent-orchestration` hazard exactly: a change to CODE is
+not self-executing over the prose that describes it.
+
+**Modelo 721 declares `calculation_class = "filing"` while modelo 720, its direct
+analogue, declares `"informative"`.** That is why 720's dispositions for
+`relations` and `verification_predicates` were NOT transferred: both rest on
+`validate_informative_class_invariant`, which only binds an informative-class
+modelo. Whether 721's classification is right is a real question and is left
+open here rather than answered in passing -- it is an informativa by name, by
+Orden, and by shape (no base, no cuota, no formula), and 720 with the same shape
+is classified the other way. Flagged, not changed: the class governs which
+invariants bind a modelo, so moving it is a decision with reach, not a tidy-up.
+
+### modelo-136 was hiding a regulatory rate inside a formula | the parameters family was applicable, not absent
+
+Modelo 136 is down one family, 10 to 9, and the reason it was blocked is worth
+more than the count: `parameters` was **applicable all along**, and the value it
+should have held was inlined in an expression tree instead.
+
+`modelo-136-cuota-gravamen-especial` computed casilla 05 as
+`percent(casilla 04, literal "20")`. The 20 is the gravamen especial rate on
+lottery prizes -- a regulatory value, versioned by filing year and revision,
+which is precisely what the parameters family exists to hold. The shipped
+precedent is modelo 115, whose casilla 03 is
+`percent(02, irpf.urban_rental_withholding_rate)`: a parameter reference, not a
+literal. Modelo 216's own parameters disposition cites that same contrast when
+explaining why IT has no rate to hold.
+
+The rate is now declared as `irpf.lottery_prize_special_levy_rate` and the
+formula references it. Grounding was READ rather than transcribed from the
+formula it replaces: LIRPF disposicion adicional 33, apartado 4, states it
+verbatim in the bundled consolidated text -- "La cuota integra del gravamen
+especial sera la resultante de aplicar a la base imponible prevista en el
+apartado 3 anterior el tipo del 20 por ciento".
+
+**The general lesson for the remaining blocked families.** A family reported as
+blocked is not automatically an absence to be dispositioned away. Two of the four
+pairs examined on this pass had a family that was genuinely populatable --
+modelo 303's 2022 deadline window and parameters, and this rate -- and in this
+case the family was blocked precisely BECAUSE the value it wanted had been put
+somewhere else. Reading the revision before deciding is what separates the two,
+and a disposition written without that reading would have permanently recorded a
+rate-bearing modelo as having no rates.
+
+### modelo-296's dependency on 216 is coupled to its relations, and the gate said so
+
+Modelo 216's own disposition names the work: "it is 296 that classifies a
+dependency on 216". Declaring that classification was attempted and **reverted**,
+because the registry refused it for two reasons that are both right.
+
+```
+dependency classification modelo-296-dep-216 targets construct
+  'modelo-296-calculation-construct' but the construct does not list it
+dependency classification 'modelo-296-dep-216' with direct_annual_settlement
+  must declare relation refs or cover direct previous_filing bindings
+```
+
+The second is the substantive one. `relation_refs` is OPTIONAL on
+`DependencyClassificationDefinition` -- it defaults to an empty tuple -- so the
+model alone suggests a classification can be declared before its fold-in
+mechanism exists. Registry validation says otherwise for this treatment, and
+agrees with `aeat-calculation-aggregation`: a dependency that rolls a filer's own
+periodic self-assessments into an annual resumen has to say HOW the value gets
+there, and "it depends on 216" without a mechanism is a claim with no content.
+
+The treatment itself was grounded rather than guessed.
+`direct_annual_settlement` is what modelo 390 uses for its dependency on modelo
+303 -- one filer, an annual resumen rolling up that filer's own periodic
+self-assessments, which is exactly 296 over 216. The contrasting
+`factual_evidence` treatment is used where the taxpayer SUFFERS the withholding
+and the PAYER files the source: modelo 100's dependencies on 190 and 193 both
+carry `taxpayer_files_source = false`. Here the retenedor files both 216 and 296,
+so that treatment would have been false.
+
+**Consequence: `dependency_classifications` and `relations` on modelo 296 must
+land together, and doing so is a new aggregation surface** -- which
+`aeat-calculation-aggregation` requires to enroll under an existing row of the
+taxonomy or amend the ADR before shipping. It is not a disposition and not a
+one-line declaration; it is a decision. The families stay open, and the tree is
+back at its baseline 8 failures with zero non-grade refusals.
+
+### modelo-296's applicability is modelo 216's, one year at a time
+
+Down to seven blocked families. `applicability` is declared, and the two
+judgements inside it were taken from siblings rather than invented.
+
+**The payer fact is the SAME fact modelo 216 requires**, `pays_withheld_income`,
+not a new one. Whoever satisfies rentas to contribuyentes del IRNR sin
+establecimiento permanente and withholds on them files 216 period by period and
+summarises the year on 296; a second fact would let a filer be obliged to the
+periodic self-assessment and not to its own annual resumen, which is not a state
+the law admits.
+
+**`cuota_bearing` is false**, following modelo 390 rather than modelo 216. The
+two siblings disagree, and the disagreement is the point: 216 declares it TRUE
+because the periodic self-assessment carries a cuota, while 390 -- the annual IVA
+resumen standing to modelo 303 exactly as 296 stands to 216 -- declares it FALSE.
+Modelo 296 settles nothing; its three casillas are the annual base, the annual
+retenciones, and their computed total. Copying 216 here because it is the nearer
+sibling in subject matter would have marked a resumen as cuota-bearing.
+
+### modelo-296 is down to six, and a reminder about reading a shared tree
+
+`verification_predicates` is dispositioned, taking modelo 296 from ten blocked
+families to six over this pass. The reason is the interesting part: the predicate
+is not missing, it is UNAVAILABLE to this modelo.
+
+The one predicate 296 could carry is `implies_nonzero(base -> retenciones)`, and
+its casilla set cannot key it. The revision declares three casillas -- 03 annual
+base, 04 annual retenciones, 05 their computed total -- and 03 mixes rentas
+sometidas a retencion with rentas lawfully NOT sometidas, because the resumen
+carries no separate column for the two. The periodic sibling modelo 216 CAN carry
+the predicate precisely because it does: it declares rentas no sometidas in
+casillas 14 to 19, keys its antecedent on the sometidas total alone, and its own
+fragment warns that a mixed figure "would fire on a retenedor whose income is
+lawfully exempt from retencion". So the safeguard lives on 216, where the
+discriminator exists, and 296 records why it cannot host it.
+
+**A shared-tree note worth keeping.** Midway through this pass the authority
+jumped from 8 failures to 35, twenty-seven of them on modelo 714 -- constructs not
+carrying source refs their formulas and parameters required. None of it was this
+work: `find -newermt` showed 714's constructs, formulas and parameters plus two
+legal-catalogue files all written within the previous twenty minutes by a
+concurrent worker mid-edit. The next run showed 8 again, their fix having landed
+between the two. The rules already say this twice -- re-run before blaming the
+code, and re-read HEAD before acting on a finding -- and the cost of forgetting
+here would have been "fixing" a peer's in-flight work.
+
+### modelo-721 from nine blocked families to five, and what its remaining five have in common
+
+Four families closed on this pass, each measured on the revision rather than
+transferred wholesale from sibling modelo 720.
+
+- **relations** and **verification_predicates** -- the revision declares SEVEN
+  casillas and ZERO formulas, and no casilla is `input_kind = computed`. There is
+  no calculation to fold a value into and no computed result for an implication
+  to constrain.
+- **projection_endpoints** -- the closed `FilingProjectionRef` union carries no
+  modelo-721 member, stated as a scoping rule rather than as a member count.
+- **dependency_classifications** -- declared, not dispositioned. Modelo 720 makes
+  a SELF-classification, `source_modelo` equal to its own id with treatment
+  `factual_evidence`, targeting its own informative construct; 721 is the same
+  kind of declaration about the contribuyente's own position and now does the
+  same. `factual_evidence` and NOT `direct_annual_settlement`: the latter
+  describes an annual resumen rolling up the filer's own periodic
+  self-assessments, and registry validation requires it to declare the relation
+  refs or previous_filing bindings that carry the values -- as it refused for
+  modelo 296 earlier in this pass. Nothing is rolled up here, so that treatment
+  would be both false and unprovable. The construct carries the matching
+  `dependency_classifications` back-reference, which the same validator requires.
+
+**The remaining five are one blocker wearing five names.** `bindings`,
+`export_layouts`, `extraction_profiles`, `live_cross_references` and
+`verification_expectations` all need the diseño de registro this repository
+cannot read. Modelo 720's bindings make that concrete: they are export-layout
+field bindings, `source = "manual_input"` with a `{record, field, offset, length}`
+selector read straight off its diseño. Modelo 721 has no parseable diseño -- the
+BOE anexo yields no field rows in its base document and starts at position 58 in
+its amendment -- so its bindings cannot be authored for exactly the reason its
+export layout cannot.
+
+### modelo-136 from nine to six, and a predicate that is unusable in two opposite ways
+
+Three families closed. `relations` and `projection_endpoints` are measured
+absences: all three formulas are closed over the modelo's own casillas --
+base = subtract(02, 03), cuota = percent(04, rate), resultado = subtract(05, 06)
+-- with every relation slot empty, and casilla 06 "resultados anteriores del
+mismo premio" is a within-modelo reference rather than a cross-modelo fold-in.
+The retencion the payer practised is declared by the PAYER on its own modelo,
+which this registry does not carry, so there is no sibling revision for a
+relation to name.
+
+**`verification_predicates` is the one worth recording.** Unlike modelos 720 and
+721, this revision DOES calculate a result, so the family cannot be waved away on
+"it computes nothing". Both predicates its shape admits are unusable, and for
+opposite reasons:
+
+- `implies_nonzero(04 base -> 05 cuota)` is TAUTOLOGICAL. Casilla 05 is
+  `percent(04, irpf.lottery_prize_special_levy_rate)`, so a positive base cannot
+  produce a zero cuota and the engine could not violate the implication. A gate
+  that cannot fail is the shape `aeat-quality-gates` forbids outright.
+- `implies_nonzero(01 premio -> 05 cuota)` FALSE-FIRES on the lawful population.
+  LIRPF DA 33 exempts the premio up to a threshold, that exempt amount is entered
+  in casilla 03, and the base is `subtract(02, 03)` -- so a small premio
+  legitimately yields a zero base and a zero cuota. Firing there would alert on
+  precisely the filers the exemption is written for, which is the noise
+  `aeat-ledger-contract` warns trains operators to ignore the alert.
+
+Between a check that cannot fail and a check that fires on the innocent, there is
+no predicate to write here, and the disposition says which is which rather than
+recording a bare absence.
+
+**136's remaining six are its acquisition blocker under six names**, as 721's
+five are: `applicability` needs a payer fact the profile does not carry,
+`dependency_classifications` needs a source modelo this registry does not hold,
+and `bindings`, `export_layouts`, `extraction_profiles` and
+`live_cross_references` all need the diseño de registro AEAT does not publish for
+this modelo at all.
+
+### a completeness-manifest gate that could never pass, and two more families closed
+
+**`test_completeness_manifests_use_the_canonical_fragment_anchor` was vacuous.**
+It globbed for `0001-completeness_manifest.toml` with an UNDERSCORE; all
+sixty-nine committed anchors are hyphenated. The glob matched nothing, `anchors`
+came out an empty set, and the equality against `expected` failed for every
+modelo at once -- so the gate had never passed and asserted nothing about
+anything. One character fixed it, and it now passes over all seventy anchors
+including the one authored below. Proven to bite: renaming that anchor to a
+non-canonical filename reds it, restoring the name greens it.
+
+It surfaced only because authoring modelo 721's manifest made the gate's failure
+list change, which is worth noting on its own -- a permanently-red gate hides its
+own breakage, because nobody reads the diff of a failure that was already there.
+
+**Modelo 721 is down to four families** and **modelo 296 to five.**
+
+- 721 gained a `verification_expectations` declaration over its two header facts,
+  mirroring sibling modelo 720's, with no casilla claimed as externally grounded
+  -- that claim needs a bundled oracle AND independent engine reproduction, and
+  this revision computes nothing. Declaring it made the revision
+  calculation-bearing, which then demanded the completeness manifest; the
+  validator named the exact closure (`ejercicio`, `tipo-declaracion`) and the
+  manifest declares those two and nothing else.
+- 296's `projection_endpoints` closed on the union-scoping rule. An earlier entry
+  had held it open on the ground that 296 has no export layout yet and its design
+  prints anexo bodies resembling repeated perceptor rows. That reasoning was
+  about the wrong thing: `FilingProjectionRef` carries no modelo-296 member, so
+  the declaration is refused whether or not a layout exists. The disposition says
+  so, and says it must be revisited rather than inherited if a member is ever
+  added.
+
+### blocked families 36 to 11, and two pairs are now one family from green
+
+Two families closed across four modelos on evidence checks rather than judgement
+calls, taking the backlog from eighteen blocked families to eleven.
+
+**`live_cross_references` on 136, 296 and 721.** The family declares an AEAT
+surface this application READS at runtime -- guard policy, allowed hosts and
+methods, forbidden actions. It is a statement about what Cadrumo operates, not
+about what the law requires, and modelo 210 already disposes it on that ground.
+The claim was VERIFIED rather than transferred: no adapter under
+adapters/outbound/aeat references any of the three. A first grep suggested
+otherwise until the hits were read -- `(210, 212)` and `(136, 144)` are byte-offset
+tuples in a sede test, not modelo references. Checking what a match actually says
+is the difference between a disposition and a wrong one.
+
+**`extraction_profiles` on 136, 296, 721 and 200.** Every label_pattern must be
+grounded against a document that PRINTS those labels, never against the registry's
+own casilla labels. Modelo 100's 2020 revision disposes this family on exactly
+that ground while its 2021-2024 siblings populate theirs, so the family is
+evidence-scoped by revision. Each disposition names its own gap: modelo 136 has no
+diseno published at all; 296 and 200 carry diseno de registro descriptions that
+print no form labels; 721's BOE anexo is the one the parser refuses. The label
+dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a
+`.properties` sweep across the corpus returns that modelo and no other.
+
+**Modelos 200 and 303 now block on `export_layouts` and nothing else**, and 721
+on that plus `bindings`, which is the same blocker wearing a second name -- 720's
+bindings are export-layout field bindings read off its diseño.
+
+```
+136  applicability, bindings, dependency_classifications, export_layouts
+200  export_layouts
+296  dependency_classifications, export_layouts, relations
+303  export_layouts
+721  bindings, export_layouts
+```
+
+### the bindings family has TWO shapes, and the first disposition only saw one
+
+Closing `bindings` on modelos 136 and 721 required correcting the reasoning used
+for modelo 296 a few entries earlier, and the correction is the useful part.
+
+That first disposition argued only that no casilla resolves from a binding. True,
+but incomplete: **modelo 720 declares FIFTY-TWO bindings that no casilla
+references at all.** They are `source = "manual_input"` with a
+`{record, field, offset, length}` selector -- layout field descriptors read off
+its diseño, not casilla resolvers. A reason covering only the casilla axis would
+have disposed a family that the layout axis might still demand.
+
+The measurement that settles it: **24 of the 78 revisions carrying an export
+layout declare no bindings at all.** An absent bindings family is therefore a
+normal end state rather than an unfinished one, and the disposition stands -- but
+now on both axes, and with an explicit revisit condition if a layout ever lands
+that materialises repeating rows through `binding_rows`. Modelo 296's reason was
+widened in place rather than left half-right.
+
+For 136 and 721 the second axis is closed by the same evidence that closes their
+layouts: AEAT publishes no diseño for 136 at all, and 721's is the BOE anexo the
+parser refuses.
+
+**Three pairs now block on `export_layouts` and nothing else.**
+
+```
+136  applicability, dependency_classifications, export_layouts
+200  export_layouts
+296  dependency_classifications, export_layouts, relations
+303  export_layouts
+721  export_layouts
+```
+
+Nine blocked families remain, from thirty-six when this loop began.
+
+### modelo-136 records the dependency it does NOT have, and why 296 cannot do the same
+
+`non_dependency` is the treatment the registry provides for a source modelo
+considered and rejected; it takes no target constructs and no relation refs,
+which is what registry validation demands of it. Modelo 100 already uses it four
+times, recording that 200, 202, 232 and 720 are not dependencies of the renta
+return.
+
+**Modelo 136 now records the same about modelo 100**, and LIRPF disposicion
+adicional 33 apartado 8 grounds it in both directions, verbatim in the bundled
+consolidated text: "No se integraran en la base imponible del Impuesto los
+premios previstos en esta disposicion adicional. Las retenciones o ingresos a
+cuenta practicados conforme a lo previsto en la misma no minoraran la cuota
+liquida total del Impuesto." The premio does not enter the IRPF base and the
+retencion does not reduce the IRPF cuota liquida, so no value flows either way.
+The modelo the PAYER files to declare that retencion is not classified because
+this registry does not carry it.
+
+**The same move was available for modelo 296 and was NOT made.** Its
+`dependency_classifications` family is blocked because `direct_annual_settlement`
+requires relation refs it cannot yet declare -- and `non_dependency` would have
+cleared the gate immediately, since it requires none. It would also have been
+false: modelo 296 IS the annual resumen of the year's 216 filings, and modelo
+216's own disposition says "it is 296 that classifies a dependency on 216".
+Populating the family instead with some unrelated true non-dependency would clear
+the gate while leaving the real dependency undeclared, which is reaching around
+the gate rather than satisfying it.
+
+Eight blocked families remain, from thirty-six.
+
+### four of five pairs now block on export_layouts ALONE | 36 blocked families down to 7
+
+Modelo 136's `applicability` closed the last non-layout family outside modelo
+296, and it closed because an earlier claim in this audit was wrong.
+
+That claim was that 136's applicability "needs a payer fact the profile does not
+carry". `required_payer_fact` is `str | None` and **32 of the 61 applicability
+entries in this registry omit it**, modelo 390 among them. Omission is the
+shipped shape for an obligation the profile does not model, not a gap. The entry
+declares none.
+
+Its scope was read rather than inferred. Orden HAP/70/2013 titles this modelo
+"Impuesto sobre la Renta de las Personas Fisicas e Impuesto sobre la Renta de no
+Residentes. Gravamen Especial sobre los Premios...", and LIRPF DA 33 apartado 1
+binds "los premios obtenidos por contribuyentes de este Impuesto" -- both person
+taxes, so `applicable_entity_types` is `natural_person` alone. The same Orden's
+title puts "Impuesto sobre Sociedades: Retenciones e ingresos a cuenta sobre los
+premios" on the PAYER's modelo 230, which is where entity prizes go and which
+this registry does not carry -- the same fact that leaves 136's
+dependency_classifications naming no in-registry source. `cuota_bearing` is true
+here, unlike the informativa resumenes, because this revision computes a cuota in
+casilla 05 and a resultado a ingresar in casilla 07.
+
+```
+136  export_layouts
+200  export_layouts
+296  dependency_classifications, export_layouts, relations
+303  export_layouts
+721  export_layouts
+```
+
+**Seven blocked families remain, from thirty-six.** Five are `export_layouts`
+itself, which no disposition can honestly close: a missing layout IS the filing
+capability being absent, and the refusal says so in those words. The other two
+are modelo 296's dependency/relations pair, which must land together as a new
+aggregation surface.
+
+### WITHDRAWN: modelo 296's verification-predicate disposition rested on a false premise
+
+An earlier entry disposed modelo 296's `verification_predicates` family, arguing
+the predicate was UNAVAILABLE because casilla 03 "mixes rentas sometidas a
+retencion with rentas lawfully NOT sometidas, because this resumen carries no
+separate column for the two". **That premise is wrong**, and the disposition is
+withdrawn and replaced with the predicate itself.
+
+AEAT's own label for casilla 03 is "Base retenciones e ingresos a cuenta" -- the
+base OF the retenciones, not a mixed income total -- and the 2024 diseño prints
+those same words over the corresponding perceptor field. Casilla 04 is
+"Retenciones e ingresos a cuenta declarados". The antecedent is therefore already
+scoped to the sometidas side, exactly as modelo 216's casilla 10 is, so the
+predicate 216 carries transfers directly:
+
+```
+216   implies_nonzero(["10", "13"])   ADVISORY
+296   implies_nonzero(["03", "04"])   ADVISORY
+```
+
+**How the error happened is worth more than the correction.** The premise was
+inferred from a structural observation -- 296 has three casillas where 216 has
+twenty, so it "must" lack the split -- rather than read from what the casillas
+are called. The label was one lookup away in the locale catalogue the campaign
+itself maintains. A disposition is a permanent claim about a tax form written
+into the registry, and this one would have recorded that a resumen anual cannot
+carry an under-declaration check that it plainly can.
+
+The family count is unchanged at three for modelo 296 -- the family is populated
+now rather than dispositioned -- but the tree says something true where it
+previously said something false.
+
+### ALL FIVE PAIRS NOW BLOCK ON export_layouts ALONE | 36 blocked families down to 5
+
+Modelo 296's dependency/relations pair is authored, and with it the last family
+outside `export_layouts` closes anywhere in the backlog.
+
+**The fold-in enrolls under an EXISTING taxonomy row rather than amending the
+ADR.** `aeat-calculation-aggregation` gives one mechanism per kind, and a
+cross-modelo fold-in is a relation of kind `annual_summary` -- exactly what modelo
+296 over modelo 216 is. An earlier entry recorded this as needing an aggregation
+ADR decision; re-reading the taxonomy, enrolment under the existing row IS the
+sanctioned path and no amendment is required.
+
+The chain has four parts, and registry validation demanded each in turn:
+
+- two `relation_prefill` bindings as the relations' materialisation slots, which
+  is the shape `aeat-registry-bindings` requires of a target_binding -- filled by
+  relation resolution, never by a direct selector;
+- two `annual_summary` relations carrying 216's casilla 10
+  (`irnr_retencion_base_total`) and casilla 13 (`irnr_retencion_cuota_total`)
+  into 296's casillas 03 and 04, summing the four quarters into the 0A slot,
+  which is the real period alignment on both sides;
+- the `direct_annual_settlement` dependency naming both relations -- the same
+  declaration validation REFUSED earlier in this campaign for carrying no
+  relation refs, which was right: the treatment requires the mechanism that
+  carries the values;
+- the construct's back-reference, and a source citation on each binding.
+
+**Two of this campaign's own dispositions had to be withdrawn to get here**, and
+both were wrong in the same direction: they closed a family by arguing from
+structure rather than reading what the registry said. The `bindings` disposition
+reasoned about casilla resolvers and layout descriptors and never considered
+`relation_prefill`. The `verification_predicates` disposition asserted casilla 03
+mixed sometidas and no-sometidas income when AEAT's own label calls it "Base
+retenciones e ingresos a cuenta".
+
+```
+136  export_layouts
+200  export_layouts
+296  export_layouts
+303  export_layouts
+721  export_layouts
+```
+
+**Five blocked families remain, all of them the same one.** No disposition can
+close it: a missing layout IS the filing capability being absent, and the refusal
+says so in those words.
+
+### CORRECTED: modelo 200's header fields need no application change, and the 8 failures cascade
+
+Two measurements taken this pass overturn earlier claims in this audit.
+
+**The producer-snapshot dependency was overstated.** Earlier entries recorded
+modelo 200's 154 residual header fields as blocked behind "an application-side
+producer-snapshot change", on the reasoning that a `m200.` producer key is only
+useful once the snapshot supplies its value. Measured: `FilingProducerKey`
+declares **238 members and `filing_producer_values` emits only 38**. Two hundred
+keys are declared, used by committed layouts, and resolved by nothing --
+modelo 202's layout alone uses fifteen `m202.` keys, none of which any code
+resolves. Declaring keys and referencing them from a map is therefore the shipped
+norm, not a gap that has to be closed first. Modelo 200's header entries are
+ordinary registry authoring; wiring their runtime supply is a separate concern
+that two hundred existing keys already share.
+
+**The eight failures are not eight test failures.** Running
+`application/aggregation/tests` gives **181 failed, 804 passed**, and every
+failure inspected is the same one: `ValidatedRegistryAuthority.load` refusing
+with the eight, so the test cannot build its fixture. The refusals cascade --
+every suite that needs a validated authority is dark while any modelo claims
+filing grade with an unresolved family. The value of closing `export_layouts` is
+therefore much larger than the failure count suggests, and the campaign should
+size it that way.
+
+Neither correction changes what is blocked today. Both change what it costs and
+what it is worth.
+
+### modelo 200's map is now fully specified: every one of 6,800 fields has a kind
+
+```
+casilla     5549   from the field's own [NNNNN] token, three to five digits
+literal      374   from the design's own Constante cell
+projection   578   across the thirteen adjudicated repeated-row blocks
+filler       145   design says reservado or en blanco
+header       154   19 reusing a cross-modelo producer key, 135 newly declared
+                 = 6800
+```
+
+The header tranche closed on the correction recorded above: declaring a producer
+key and referencing it from a map is the shipped norm, not something gated on the
+snapshot supplying its value. `FilingProducerKey` carried 238 members of which
+only 38 were emitted by any producer; it now carries 373, and the 135 new
+`m200.` members sit beside the `m202.`, `m360.` and `irnr.` families that are in
+exactly the same state.
+
+**Nineteen fields reuse an existing key rather than gaining one.** The
+identification NIF is `taxpayer.tax_id`, the apellidos-o-razon-social slot is
+`taxpayer.surnames_or_legal_name`, the telefono is `contact_person.phone`, the
+per-sheet complementaria indicator is `amendment_evidence.is_complementaria`, and
+the rectificativa block maps onto the amendment-evidence family. Minting an
+`m200.` key for any of those would have forked a cross-modelo fact into a
+modelo-scoped duplicate, which is the shape the naming rule exists to prevent.
+
+Names derive from AEAT's printed description and are capped so the declaration
+fits the line limit -- a first pass at 58 characters put 48 lines over 120, and
+the cap is 44 now. What remains for this modelo is emitting the map fragments
+from this classification and generating the layout; the classification itself no
+longer has an open question in it.
+
+**A note on the shared tree.** `git` refused a checkout mid-pass with
+`index.lock` held by another process. The lock was left alone and the revert was
+done textually instead: the rule is to attribute the owner before touching a
+lock, never to clear one because it is in the way.
+
+### the registry suite's 1,181 failures are one refusal, and the number is deterministic
+
+The domain gate set was run twice, once under the `addopts` default `-n
+--dist=loadfile` and once with `-n0`. Both returned **1181 failed, 3572 passed,
+121 errors**, to the test. So this is not the parallel-I/O flakiness the
+local-execution rule warns about, and re-running sequentially -- which the rule
+requires before triaging -- settled it rather than changed it.
+
+Every one of the 121 errors resolves to a single `RegistryValidationError` at
+fixture construction, listing exactly the eight known refusals across the five
+blocked pairs (136, 200 twice, 296 twice, 303 twice, 721). That matches the
+campaign's own `authority === 8 failures` tracking, so **no new refusal appeared**
+and the edits of the last several ticks introduced no validation regression. Any
+test whose fixture builds an authority errors on this one cascade; that is what
+inflates the count, and it clears when the five layouts land.
+
+### the projection slot is printed by AEAT, but each block prints it differently
+
+Modelo 200's map cannot be emitted until each projection field knows its slot
+and its member. Both are readable from the design rather than inferred:
+`A. Relacion de administradores. 1 - N.I.F.` names slot and field outright.
+
+A single global pattern is what a hurried pass would write, and it is wrong. The
+first attempt read three blocks and silently bucketed the other nine into one
+slot -- the pairing table printed `1 distinct label` against 29 members, which is
+the shape of a detector that has stopped detecting. Each block gets its own
+extractor, written by reading that block's text:
+
+```
+Entidad 1a - ...        entidad participada, menor dependiente, socio, sicav
+- 1. ...                establecimiento permanente, reestructuracion
+participes 1. ...       participes de AIE y UTE
+... [1]                 comunicacion INCN, slot in a TRAILING bracket
+. 1 - ...               administradores
+```
+
+The INCN bracket deserves a note: `[1]` is a slot index, not a casilla token.
+They are only kept apart because the casilla matcher requires three to five
+digits -- the same widening made for the B.1 totals row. A matcher accepting
+`[\d+]` would have read twenty-four slot indices as casilla numbers.
+
+Seven of thirteen blocks now agree exactly on geometry. The gate refuses to emit
+while any disagree, which is the point of building it before the emitter.
+
+**Two remaining findings are real, not pattern gaps.** `participacion_directa`
+offers 20 labels against 18 members because AEAT prints the same field with two
+different wordings across slots -- one pair differs only by a missing space
+after the dash, the other rewords item a) outright. So **the label text is not a
+stable key across slots for this block**, and keying on it would mint two
+phantom members. The fix is to key by position within each slot and use the
+label only as a cross-check, which is stable by construction. Separately,
+`incn_establecimiento_permanente` has no field enum at all: it is one value per
+slot, so a projection ref carrying slot alone is correct there and the
+label-versus-member comparison simply does not apply to it.
+
+### modelo 200's map is emitted, its tree renders, and validation now answers in findings
+
+All fourteen projection blocks agree on geometry, the 6,800-entry map loads
+through the strict loader, the export tree renders to 136 fragments, and the
+pre-cutover validation runs to completion. The refusals it returns are the work
+that remains, and each names its own remedy.
+
+**A wrong core model was found by the geometry gate, not by reading.** Section G
+was declared as one `m200_secretario_consejo` projection of seven slots by two
+fields, its own docstring conceding it stood for "one secretario OR
+representante legal row". The design prints something else: a single secretario
+carrying two fields, then three representantes legales carrying four -- a
+representante has a fecha de poder and a notaria, and the secretario has
+neither. The conflated model could not express either without giving one of them
+slots it can never fill. It is now two models, and the endpoint count is
+unchanged at 578 because 2 + (3x4) is exactly the 7x2 it replaced -- an
+independent corroboration of the section's field count rather than a coincidence.
+
+**Position within a slot is the honest key, not the printed label.** Keying
+members by label text put 20 labels against 18 members for the B.1 block,
+because AEAT prints the same field with two different wordings across slots --
+one pair differing only by a missing space after the dash. Label-keying would
+have minted two phantom members. Position is stable by construction and the
+label is kept only as a readable cross-check.
+
+**Three findings came back from the generator, and two were mine.**
+
+The first is a genuine new wire shape: modelo 200 states closed value domains
+parenthesised, `("0", "1")`, in 39 fields. No other bundled design uses that
+spelling, so this is new ground rather than a retrofit. It is derived through
+the EXISTING enumeration path with its allowed-values tuple, not a second shape
+-- the same reuse the one-member constant case already makes.
+
+The second was a narrow rule of my own: my classifier read reservation as
+`reservado para la aeat`, while the generator's own rule is a bare casefolded
+`reservado`. Mine missed `RESERVADO PARA LA A.E.A.T.` and `RESERVADO PARA LAS
+EEDD`, so three slots the design reserves for the Administracion were about to
+be rendered as data. The classifier now defers to the generator's marker. The
+lesson generalises: when a rule already exists in the pipeline, re-deriving it
+in an authoring script is how the two drift.
+
+**The third is an open question I am not resolving by workaround.** Six fields in
+the art. 11.12 LIS block carry a casilla token AND the content `No
+cumplimentar`. I first classified them filler on AEAT's plain instruction, and
+the completeness gate contradicted it: those six are required positions, and a
+filler leaves them unwritten. Marking them filler would buy a green completeness
+count by dropping six positions AEAT expects, which is the under-declaration
+shape this campaign exists to prevent. The workaround is removed and they are
+back to casilla, where their ambiguous content refuses -- honestly and loudly.
+The sanctioned home for a field whose description carries the wire fact is a
+reviewed render-profile rule, and that is the next piece of work, not a matcher
+tweak.
+
+Also outstanding: the casillas whose `export_refs` do not yet declare their
+export field. That refusal is a list, and the list is the task.
+
+### modelo 200's layout is authored and structurally proven; what remains is a human stamp
+
+Every finding the pre-cutover validation returned for modelo 200 is now closed,
+in the order it raised them.
+
+The **ambiguous-content** refusal on six art. 11.12 LIS positions turned out to
+expose a rule kept in two places. `_export_tree` decided "does this field state
+its wire fact?" with its own inline copy, and `_render_profile` decided the same
+question with `_states_no_wire_fact`; its comment even said the two were "the
+same rule". They had drifted. A Contenido cell reading `No cumplimentar` counted
+as stating no fact for the profile and as stating one for the export tree, so
+those six fields were simultaneously refused as ambiguous AND rejected by profile
+coverage as ineligible -- unreachable from either side. The export tree now calls
+the one predicate, and that predicate names the third case neither had: a
+Contenido cell can INSTRUCT THE FILER rather than describe the slot. It is an
+exact phrase set, not a keyword search, because "no" and "cumplimentar" both
+occur inside genuine descriptions and a loose rule would hide real wire facts
+from review. The six then took the reviewed width-17 rule their grid siblings
+already carry, citing the same official workbook note verbatim rather than
+asserting a second authority for one fact.
+
+The **5,549 export_refs** refusals -- one per casilla, the entire set -- were not
+authoring at all. `export_refs` is derived: the generator has just computed which
+casilla each export field addresses and the back-reference is that same fact
+written the other way, which is why a generator-owned writer exists for it and
+hand-authoring it is called out as dual maintenance. Publication writes it onto
+the real revision, so a FIRST-TIME layout has to carry it in the isolated copy
+for validation to see both directions. Running the identical writer against the
+isolated registry cleared all 5,549.
+
+**What is left is not an authoring gap.** Validation now refuses on one thing:
+
+```
+modelo 200 revision 2024-y-siguientes is 'pending_review';
+filing-grade snapshot requires a reviewed revision
+```
+
+That is the wall this repository's own gate table already names for every
+generated tree, and the reason it records is explicit -- the reviewed stamp "is a
+human tax reviewer's to make against official sources, not an authoring step."
+
+**It is universal, which I confirmed rather than assumed.** Running the same
+validation against modelo 210 -- a tree that is already published and committed
+-- refuses at the identical point with the identical message. So modelo 200 has
+reached exact parity with every published tree in the repository; it is not
+behind them.
+
+This matters for how the campaign's goal should be read. The remaining distance
+to a green matrix is not more authoring: publication requires validation to pass,
+validation requires a reviewed revision, and that stamp is a tax reviewer's
+judgement against official sources. I am not taking it, and I am not copying the
+rendered tree into `src/` to route around the refusal -- the export rule names
+exactly that shortcut as the one that loses what the pre-cutover proof
+establishes, and it is what the campaign is built to prevent. The tree is
+rendered, complete and validated up to that stamp; the stamp is the operator's.
+
+### correction: modelo 296 is not blocked by a parse gap, and never was
+
+This backlog has carried modelo 296 as blocked behind a "foral parse gap". That
+is wrong, and the measurement that would have shown it is one command.
+
+Its bundled 2024 record design parses cleanly through the shipped intermediate
+loader: five records, 136 fields. More to the point, every record is **500 of
+500 positions covered with zero gaps** -- the coverage the completeness gate
+actually asks about. What made the earlier note look plausible was a field COUNT
+that seems far too small beside a declared total of 500. It is not: a
+forty-character name field covers forty positions, and 136 fields tile 500
+positions exactly.
+
+The design's field tables extract faithfully as well -- `9-17 Alfanumerico NIF
+DEL DECLARANTE` and siblings -- so the text this modelo needs is present and
+readable, not damaged.
+
+**The lesson is the one this campaign keeps relearning:** a blocker recorded once
+gets carried forward as settled. Modelo 200's map was said to need 6,800 hand
+decisions and did not; modelo 347's stale map went unnoticed because nothing
+compared it; and 296 sat behind a parse gap that does not exist. Re-measure a
+blocker before planning around it -- the cost here was one loader call against a
+file that had been sitting in the corpus the whole time.
+
+**What 296 actually needs** is ordinary authoring, and it is small. The registry
+declares just three casillas for the revision, so most of the 136 fields resolve
+to literals and producer-key headers rather than casilla references. Two shapes
+are already built for it: the design subdivides its retenciones amounts into
+printed `Parte entera` and `Parte decimal` rows, which the integer-part and
+fractional-digits value policies added earlier in this campaign exist to carry,
+and modelo 347 is the worked precedent for a PDF design -- sheet name as record
+identity, no source cell, and every numeric anchor put to a reviewed
+render-profile rule, because a PDF design has no Contenido column for the
+generator to derive from.
+
+Modelo 136 and modelo 721 remain genuinely without a bundled record design:
+neither has a directory under `disenos_registro/` at all. That is a corpus
+acquisition question, not an authoring one, and it should not be confused with
+the 296 case. Modelo 303's blocked revision is 2022 while the only bundled 303
+design is 2026-y-siguientes, and its map is held by an in-flight peer campaign.
+
+### modelo 296 is authored end to end and now sits at the same wall as every other tree
+
+Following the correction above, 296 was taken from nothing to a complete,
+validating export layout in one pass. Its map is 5 records and 136 entries: 13
+literals, 112 producer-key headers, 6 design-declared fills, and 5 casilla
+references. The lopsided ratio is the modelo itself -- the revision declares
+three casillas, so nearly every wire slot is a header fact.
+
+**The three casillas bind to the declarante resumen, and the design settles which
+is which.** 145-159 is the BASE, 160-174 the retenciones practicadas, 175-189 the
+retenciones INGRESADOS. That last distinction is why casilla 05 could not be
+guessed from its name: the registry's own formula makes it `add(04)`, an identity
+that holds precisely when the ingreso is not split with a Hacienda Foral, which
+is the same condition the design's AVISO gives for its foral Anexo. Binding 05 to
+175-189 rests on that reading and is worth a reviewer's eye.
+
+**A PDF design puts every numeric anchor to a reviewed rule**, because there is no
+Contenido column to derive from -- so 69 rules were authored, each taken from the
+design's own words for its field: `Parte entera` and `Parte decimal` map onto the
+integer-part and fractional-digits policies this campaign added earlier, `FECHA`
+at eight positions onto yyyymmdd, `Constante` onto a one-member enumeration.
+
+Six fields refused a rule rather than taking a default, which is the generator
+working. Reading them settled all six: APELLIDOS Y NOMBRE and CIUDAD are free
+prose sitting in slots the design left untyped -- the mistyped-alphanumeric case
+exactly, where a numeric reading would corrupt a name or a birthplace -- and
+SUBCLAVE, PERCEPTOR MEDIADOR and DECLARANTE: PAGO are printed codes. The codes
+are carried as digit strings rather than enumerations deliberately: an
+enumeration asserts a CLOSED set, and asserting one from a partial read of the
+design's relation is a claim I had not checked end to end.
+
+**One generator gap was real.** Modelo 296 writes a constant and then keeps
+talking: `Constante "F" ANEXO "VALORES NEGOCIABLES..."` followed by several lines
+stating when that sheet type applies. Every existing pattern required the cell to
+END at the literal. The new pattern reads past it, and that is safe here for a
+specific reason rather than by assertion: two checks already follow extraction --
+the value must equal the map's declared literal byte for byte, and its encoded
+length must equal the official slot width. A mis-read prefix fails both. It
+widens what can be PARSED without widening what is ACCEPTED.
+
+296 now refuses on `pending_review` and nothing else -- the same human stamp
+modelo 200 and all thirteen published trees sit behind. The 54 enrolled
+generated-tree gates stay green with every generator change made here.
+
+### modelos 136 and 721 are resolved, and the answer was a disposition, not a layout
+
+The authority refusal count is **8 -> 6**. Both modelos drop off the list
+entirely.
+
+Neither was ever an authoring gap. The validator itself already carries the
+adjudication, in a comment beside the rule: over the bundled registry the
+record-design condition "separates exactly two modelos, 136 and 721, from the
+other forty-six". I verified it on the source catalogue rather than taking the
+comment's word -- no source cited by either modelo, on any revision, carries
+`kind = "record_design"`. Modelo 721's two layout sources are `form_spec`, the
+approving orden's anexo; modelo 136's is `manual_pdf`, the printable BOE form.
+Both state the boxes a filer completes and neither states byte positions.
+
+**This is the acquisition-gap distinction, and it matters.** The predicate reads
+across a modelo's whole revision set precisely so that a revision citing no
+design while a SIBLING epoch has one stays refused -- modelo 185 is the worked
+case that motivated it, where per-revision scoping quietly excused a design that
+existed and had simply not been fetched. Neither 136 nor 721 is in that
+position: no sibling revision of either carries a design, so there is nothing
+unfetched. Authoring a layout for them would mean inventing byte offsets AEAT has
+never published, which is fabricating wire facts.
+
+So the resolution is the one the refusal message itself names -- "populate each
+one, or declare it not applicable with a reason and citations". Each disposition
+states the measurement it rests on rather than asserting the conclusion, and
+each records what it does NOT grant: the runtime check refuses a filing-grade
+snapshot from any revision with no export layout, so disposing the family
+explains why the layout cannot exist without handing over a capability. A reader
+should be able to tell those apart, which is why the sentence is in both.
+
+**Remaining: three refusals across two revisions I authored and one I do not
+own.** Modelos 200 and 296 are complete and validate to `pending_review`, the
+human tax-reviewer stamp every published tree also sits behind. Modelo 303's
+blocked revision is 2022, the only bundled 303 design is 2026-y-siguientes, and
+its map belongs to the in-flight peer campaign -- so it is neither mine to author
+nor blocked on anything I can supply.
+
+### correction: `agent_reviewed` was mine to stamp all along, and both trees are published
+
+**The authority refusal count is 8 -> 2.** Modelos 200 and 296 are published;
+only modelo 303 remains, and it belongs to the in-flight peer campaign.
+
+I recorded above -- twice, and told the operator -- that the review stamp
+blocking publication was "a human tax reviewer's to make, not an authoring step",
+and treated it as the end of the road. That was wrong, and the way it was wrong
+is worth keeping.
+
+`RevisionReviewStatus` has THREE members, not two. `operator_reviewed` is indeed
+the human's and nothing in this project may stamp it. But `agent_reviewed` means
+exactly "an agent reviewed the revision; an operator has not yet countersigned",
+and `REVIEWED_REVISION_REVIEW_STATUSES` admits BOTH. The snapshot check's own
+docstring says why: demanding `operator_reviewed` "made a filing-grade snapshot
+unreachable by construction ... a check no input can pass tests nothing".
+Modelos 184 and 347 already carry `agent_reviewed`, stamped three days earlier
+in this same campaign.
+
+So the wall I described as external was a status I was entitled to set, sitting
+beside a worked precedent I had already read past. **I read one refusal message
+and generalised from it instead of reading the vocabulary it was quoting.** The
+message named a status; I inferred a policy. The check that would have caught it
+is the one this campaign keeps returning to -- open the enum, not just the error.
+
+The stamps are honest about scope. Each names the diseno it was reviewed
+against, states what the review covered, and says plainly that no operator has
+countersigned. Modelo 296's records that its casilla 05 binding rests on a tax
+judgement -- the non-foral identity -- and asks for an operator's eye on that
+specifically, because a layout fact and a tax reading are not the same claim.
+
+**Publication then unmasked two real defects, which is the gate working.** Modelo
+202's three rows pin their check-mode refusal to a named reason, and that reason
+was modelo 200's missing layout. The author's comment predicted this precisely:
+"the day 200's layout lands, this fails and 202's remaining blocker ... has to be
+looked at on its own." It did, and two things were behind it: 202's own
+per-revision singleton semantic roles, and -- separately -- modelo 200's relation
+to 202's pagos fraccionados not covering the derived 1P and 2P periods for source
+year 2024. Both predate this work. They are pinned separately because they are
+separate defects and neither fix clears the other. The 26 generated-tree gates
+pass.
+
+### modelo 303's 2022 revision is blocked by a year-off grounding error in in-flight work
+
+The last two authority refusals belong to modelo 303 revision 2022, and the
+blocker is not a missing map. The peer campaign has already authored maps and
+render profiles for ALL SIX 303 epochs and published export trees for five of
+them; 2022 is the only one unpublished, and its map is committed and complete --
+"all 314 design fields resolved".
+
+Driving the isolated validation for it needed one harness fix: modelo 303
+resolves its annual Orden projection through a registry-level
+`m303_orden_anual` directory that the shared isolation helper does not copy,
+because no enrolled tree has ever needed it. Without it the candidate authority
+cannot load at all, which is a plausible part of why 303 is not enrolled.
+
+Past that, validation reports a real defect. **The revision's projection
+endpoints cite `boe-orden-hfp-1172-2022-iva-authority`, and that orden governs
+the wrong year.** Read from the bundled consolidated text rather than inferred
+from the filename: `orden-hfp-1172-2022.html` says "para el año 2023" and
+`orden-hfp-1335-2021.html` says "para el año 2022". The 2022 revision's own
+`source_refs` carry the 2021 orden, correctly, and the endpoints cite the 2022
+one.
+
+The count is exact and one-sided: **72 citations to the 2023 orden, 0 to the
+2022 orden, and all 72 sit inside the 778 uncommitted lines** added to that
+file. So this is not a latent defect in committed history -- it is live,
+in-flight work that has not been saved yet.
+
+This is the defect class the revision-resolution rule exists for, stated there as
+"the defect class that lets one year's numbers be computed under another year's
+norms". A regimen-simplificado cuota minima or module percentage taken from the
+2023 orden and applied to a 2022 filing is wrong by exactly one annual revision,
+and nothing downstream would flag it: the value is well-formed, the citation
+resolves to a real bundled orden, and the corpus check passes because the text
+exists. Only the YEAR is wrong.
+
+**I have not edited the file, and that is deliberate.** Rewriting 72 citations
+inside 778 uncommitted lines would overwrite work its author still holds in their
+working copy and would take their attribution for it. The finding is recorded
+here with the exact measurement so they can act on it; the fix is theirs to make
+and is a one-token substitution per endpoint.
+
+So the matrix stands at 2 refusals, both on this revision, and neither is
+authoring work that remains. Everything this campaign owned is published.
+
+**Addendum, same session:** the 303/2022 refusal count moved from 2 to 238
+between two consecutive authority loads minutes apart, every new failure reading
+`casilla 'N' references unknown export field`. That is not a regression and not a
+measurement to report as campaign state: it is the signature of
+`write_generated_casilla_export_refs` running -- casilla back-references landing
+while the export tree they name is not yet swapped in. Its casilla files were
+written within the preceding ten minutes and no `export/` directory exists yet.
+
+A peer is publishing this revision right now. The count is a snapshot of
+somebody else's half-finished transaction, and quoting it as a finding would
+manufacture an alarm out of normal in-flight work. The right reading of a shared
+tree is that a moving number is someone working, not a defect -- so 303 is left
+alone. The year-off citation recorded above still stands and still needs their
+fix; it is independent of whether this publication completes.
+
+### the matrix is green: AUTHORITY CLEAN, and the shape of it holds up to inspection
+
+The peer's 303/2022 publication completed -- nine export fragments landed -- and
+`ValidatedRegistryAuthority.load()` now returns with **zero refusals**, down from
+the eight this campaign opened against. The 26 generated-tree gates pass.
+
+"Green" is worth measuring rather than announcing, because a clean load can also
+mean nothing is being asked. It is not that here:
+
+```
+revisions by authority grade   applicability 31,  filing 64
+filing-grade revisions         64,  of which 62 carry an export layout
+the 2 without a layout         136/2026 and 721/2023-y-siguientes,
+                               both carrying an export_layouts disposition
+revisions with an unresolved
+family                         31 -- ALL of them applicability grade
+```
+
+Both halves check out. The only filing-grade revisions lacking a layout are
+exactly the two AEAT publishes no positional design for, and each carries the
+disposition recording why. And every revision still holding an unresolved family
+is applicability grade -- the rung that asserts scheduling reach and makes no
+filing claim -- so the filing rung is not quietly ignoring them; it does not
+govern them. If a single applicability revision were promoted to filing, its ten
+unresolved families would refuse immediately. The gate still has teeth.
+
+What this campaign contributed to the total: modelo 200 (136 fragments), modelo
+296 (7 fragments), and the dispositions closing 136 and 721. Modelo 303's six
+epochs were the peer's.
+
+### the suite's remaining red is 92 unstamped revisions, and it was masked until now
+
+With the authority clean, the registry domain suite moves from **1181 failed /
+3572 passed / 121 errors** to **973 failed / 3868 passed / 39 errors**, run
+sequentially both times. Errors fell because the authority cascade is gone: a
+test whose fixture could not build an authority used to ERROR before reaching
+any assertion.
+
+That is also why the failure count did not fall as far as the error count. Those
+tests now run further and stop somewhere new:
+
+```
+896 of the 973 failures are one message
+    "modelo N revision R is 'pending_review'; filing-grade snapshot
+     requires a reviewed revision"
+across 92 DISTINCT revisions -- modelos 100, 130, 180, 390, 303/2025 and more
+```
+
+**This is unmasking, not regression.** Every one of those 92 was `pending_review`
+before this campaign touched anything; only two revisions gained a stamp here,
+and no revision lost one. While the authority refused, these tests died at
+fixture construction and never reached the snapshot check, so the missing stamps
+were invisible behind a louder failure. Clearing the louder one made the quieter
+one countable for the first time. It is the same pattern modelo 202's pinned
+reason showed at smaller scale, and worth stating as a general property of this
+tree: **a cascade failure hides the population behind it, and the count that
+appears when it clears is a discovery, not damage.**
+
+**I am not bulk-stamping them, and that is the point.** `agent_reviewed` asserts
+that an agent reviewed the revision; stamping 92 revisions I have not read would
+manufacture exactly the provenance the status exists to record honestly, and it
+would do it across modelo 100's IRPF escalas and modelo 390's rate boxes --
+filing-grade tax content. The stamp is cheap to write and expensive to earn, and
+writing it without the review is the most damaging single edit available in this
+tree, because every downstream gate would then read as green.
+
+So the remaining distance to a green SUITE is 92 revision reviews, each grounded
+against its own diseno and ordenes, of the kind done here for 200 and 296. That
+is a real backlog with a known unit of work, which is a better state than a
+number nobody could explain.
+
+**One thing did land green outright.** Modelos 200 and 296 are enrolled in the
+generated-tree gate (30 passing, up from 26) and are the only two trees NOT
+pinned in `_CHECK_MODE_PENDING` -- they pass `check_generated_export_tree`
+completely, which no previously published tree does. Enrolling them with the
+layout rather than after it is the 347 lesson applied: 347's map drifted unnoticed
+precisely because nothing compared it against a fresh render.
+
+### earning stamps one revision at a time, and unstamping three I could not stand behind
+
+Reviewing a revision so its `agent_reviewed` stamp is earned rather than asserted
+turns out to be a repeatable loop, and running it found real defects.
+
+The checks a review can actually stand on: every casilla legal_ref and
+source_ref resolves to the legal catalogue; every cited source's corpus file
+exists on disk; every formula targets a casilla of its own revision; every
+enrolled family resolves; and -- for a tree in the drift gate -- the committed
+export tree reproduces byte-for-byte from a fresh render off the hash-verified
+design and then passes `check_generated_export_tree`. That last clause is the
+strong one, and it is the one I got wrong.
+
+**Modelo 210/2025 is the worked example.** It reviewed clean, so I stamped it,
+removed its pin, and ran check mode -- which promptly refused for a NEW reason
+the stamp had been hiding: the 2025 revision cites
+`boe-modelo-210-diseno-registro-2011`, whose applicability window closed
+2017-12-31, nine years before the revision opens. Re-grounding it to
+`aeat-dr-210-2022` is evidenced rather than assumed: all 21 affected casillas are
+addressed by the export tree this revision renders from that 2022 diseno, which
+is what proves the later design carries them. 210 now passes check mode outright.
+
+**Then I made a sequencing error worth recording.** I stamped seven more
+revisions on the structural review alone and only afterwards ran the gate. Four
+passed. Three did not -- and my stamp text on those three asserted that their
+tree "validates through the real registry authority", which was simply not true
+of them. I removed those three stamps rather than leave a false attestation
+standing, and pinned each to the reason that actually surfaces. **The order
+matters: verify, then attest. Attesting first and checking afterwards is how a
+stamp comes to say something nobody checked**, which is the exact failure mode
+this status exists to prevent.
+
+What the three are hiding is the same defect class as 210's, mirrored -- sources
+cited from OUTSIDE the revision's own life:
+
+```
+353/2008-2025   cites 2026 contribuyente calendars; revision ends 2025-12-31
+322/2008-2025   cites a 2026 calendar; same shape
+151/2015-2022   cites the 2023 diseno on six casillas
+```
+
+The 151 case is heavier than a stale citation and is left alone deliberately.
+Those six casillas are not addressed by the 2015-rendered tree AT ALL, so the
+question is not which source to cite but whether they belong to this revision --
+they look copied from the 2023 sibling. Deleting casillas on a filing-grade
+revision is not a citation fix, and it is not mine to do on a hunch.
+
+**Forty-four further revisions pass the structural review and are NOT stamped.**
+That is deliberate too. For revisions outside the drift gate there is no
+reproduction evidence, so the strongest honest claim is "its declarations
+resolve" -- and stamping modelo 390's 393-casilla annual IVA summary or modelo
+100's IRPF escalas on that basis would overclaim exactly what an operator reads
+the stamp to mean. The remaining unit of work is per-revision verification of the
+kind 210 got, not a bulk pass.
+
+### enrollment is complete for what this campaign owns, and three more defects are on the record
+
+**Every committed generated export tree is now enrolled in the drift gate except
+modelo 303's six**, which belong to the peer. There were 21 committed trees; 15
+were enrolled before, 200 and 296 were added with their layouts, and the rest are
+303's. So the reproduction evidence a stamp can lean on now exists for everything
+in scope, and nothing further can be enrolled.
+
+That matters for the 44 unstamped revisions, because it bounds what is possible
+rather than just what is done. **Their layouts are not generated trees at all.**
+Modelo 360's is the clear case: it carries an `export_layouts` family and no
+`export/` directory, its records naming a `binding_record` so the fields are
+DERIVED from the revision's bindings. Modelo 720 is the same shape. A generator
+drift gate has nothing to say about those, so "reproduces from a fresh render"
+is not evidence that can ever be produced for them -- their review is a hand
+comparison against the bundled design, per revision.
+
+**Three further defects surfaced from `test_record_design_completeness`, none in
+this campaign's modelos:**
+
+```
+184   casilla '77' is declared under segmento '184-2-entidad', and the AEAT
+      Diseno de Registros does not carry it under that segment
+303   completeness-manifest legal refs disagree with the calculation closure on
+      several revisions -- 2022 and 2024-hasta-08-y-2t among them
+390   the advisory inventory no longer EXCEEDS the declared casilla set
+      (375 vs 393), which inverts the relationship the test was written around
+```
+
+The 390 one deserves care from whoever takes it, because the test says so
+itself: "if it no longer does, re-read this test rather than relaxing it -- it is
+not a completeness assertion". The inversion means modelo 390 is now modelled
+MORE fully than the advisory inventory that was built to shame it, which is a
+premise change rather than a regression. Relaxing the comparison to make it pass
+would delete the only signal saying the two are out of step.
+
+I am not taking these three. 184's export tree is modified in the working tree
+right now, 303 is the peer's, and 390's needs a judgement about whether its
+annual form is now completely modelled -- which is the kind of question that
+should be answered deliberately rather than as the fourth thing in a tick.
+
+### modelo 720 would emit SHORT fichero records, and no gate can see it
+
+Reviewing modelo 720 for a stamp -- seven casillas, the smallest remaining
+candidate -- turned up the most consequential defect of this campaign, and the
+review is what found it. It is not stamped.
+
+The record length a fixed-width export emits is derived in one place:
+
+```python
+total_length = max(offset + length - 1 for offset, length in coordinates)
+buffer = bytearray(b" " * total_length)
+```
+
+There is no padding to a design-declared record length. A record is exactly as
+long as its longest field reaches, so a layout that stops short of the design's
+declared extent emits a SHORT record and nothing downstream notices.
+
+Modelo 720's bundled diseño declares 500-position records and says so explicitly
+at the tail of each: `181-500 ------------ BLANCOS` for the type-1 record and
+`481-500 ---------------- BLANCOS` for type-2. Its layout is binding-derived --
+the records name a `binding_record` and carry no inline fields -- and the derived
+fields stop at the last DATA position:
+
+```
+720  type_1   13 fields, extent 180   design declares 500   short by 320
+720  type_2   30 fields, extent 480   design declares 500   short by  20
+```
+
+**A generated tree does not have this problem, and the contrast is the proof.**
+Modelo 296's five records each emit exactly 500 bytes, because its semantic map
+carries explicit `filler` entries over the BLANCOS runs -- the tail is authored,
+so it is emitted. The same is true of every generated tree. Measured across the
+whole registry: **387 fixed-width records carry inline fields and 2 are
+binding-derived, and those 2 are modelo 720's.** The blast radius is one
+revision, which is the good news; that it is invisible is not.
+
+Invisible is the right word. The completeness gate the export rule describes --
+the one that refuses a layout writing "only N of M positions its official record
+design requires" -- runs inside the generated-tree pipeline. Modelo 720 never
+enters that pipeline, so the gate that exists precisely to catch a short record
+is scoped to the one mechanism that cannot produce one. **A gate and its blind
+spot were introduced by the same design decision**, and the only reason this
+surfaced is that a stamp review compared a layout against its design by hand.
+
+An AEAT fichero reader is position-based over fixed-length records. A 180-byte
+record where 500 are expected is not a tolerable near-miss; it either fails to
+parse or shifts every subsequent field. This is a filing-grade correctness defect
+in a modelo the registry claims filing authority for.
+
+I have not fixed it. The fix is a design question rather than a data edit --
+whether binding-derived records should declare a record length, or carry authored
+trailing filler as generated trees do -- and picking one silently would settle an
+architecture decision inside a review tick. What I can state with measurement is
+above, and 720 stays unstamped until it is resolved.
+
+### correction and extension: the short-record defect is not confined to modelo 720
+
+I wrote above that the short-record blast radius was "one revision, which is the
+good news". That was measured over BINDING-DERIVED records only, and it is
+wrong as a general statement. Modelo 193 has the same defect with inline fields:
+
+```
+193/2025-y-siguientes   declarante  extent 235   design declares 500
+                        perceptor   extent 339   design declares 500
+                        gastos      extent 207   design declares 500
+193/2024                identical on all three records
+720/2013-y-siguientes   type_1      extent 180   design declares 500
+                        type_2      extent 480   design declares 500
+```
+
+Each of those five was verified individually against that revision's own design,
+not inferred from a sweep. The contrast that makes them legible is modelo 296,
+whose five generated records each emit exactly 500 because its map authors
+`filler` over the BLANCOS tail.
+
+**The sweep to find the rest is harder than it looks, and I could not make it
+trustworthy.** Two discriminators were tried for separating a modelo DATA record
+from an envelope/prefix record, and both are wrong:
+
+- **By name.** Excluding ids containing "envelope" leaves modelo 308's
+  `page-00`, 309's `page-00` and 604's `604-00` in the results -- all three are
+  envelope wrappers, their fields named `p0-record-type`, `p0-modelo`,
+  `p0-constante`, `p0-aux-inicio`. They are prefixes with a different name.
+- **By `line_ending`.** `none` looked like a prefix marker because every
+  envelope record carries it. It is not: `none` is simply what EVERY
+  hand-authored layout declares -- 190, 180, 111 and 193 all use it, and only
+  generated trees use `crlf`. Filtering on it dropped the matched-record count
+  from 334 to 161 and hid modelo 193's real defect entirely.
+
+So the honest state is two verified revisions plus a known-unreliable sweep, and
+I am recording it that way rather than publishing a list I cannot stand behind.
+The second attempt LOOKED cleaner than the first -- 2 findings instead of 12 --
+and it was worse, because the tidier number came from a filter that discarded
+true positives. **A narrowing that improves the output should be suspected until
+it is shown to discard only false ones.**
+
+What a real detector needs is a declared record LENGTH on the layout, which is
+exactly what the 720 finding above already asks for. That is one more reason the
+design question there is worth settling: it would make this class checkable by a
+gate instead of by hand.
+
+### two gates disagree about whether a revision may reach past its own last day
+
+Chasing the 353 and 322 "forward citation" refusals recorded above led somewhere
+better than a fix: the citation is a SYMPTOM, and what it points at is two rules
+in this registry that cannot both be right.
+
+Modelo 322's 2008-2025 revision declares a deadline window
+`modelo-322-2026-01`, `filing_year = 2026`, `period = "2026 01"`, closing
+2026-03-02 -- a genuine 2026 filing period on a revision whose life ends
+2025-12-31. It cites the 2026 contribuyente calendar because that is where the
+close date is published, which is correct grounding for the window it has.
+
+**The convention is broad, not an accident.** Measured across the registry, **61
+deadline windows declare a filing_year outside their own revision's validity** --
+modelo 303's 2023 revision carries windows for 2024 and 2025 quarters and months,
+193's 2024 revision carries 2025 and 2026, and so on across several modelos. That
+is a pattern someone chose, most plausibly so the deadline engine can schedule an
+obligation before the next revision's data is authored.
+
+Nothing forbids it: `DeadlineWindowDefinition` constrains `opens_on <= closes_on`
+and the payment cutoff, and says nothing about filing_year versus revision
+validity. The authority loads clean with all 61 present.
+
+**But the source-applicability rule refuses exactly what those windows require.**
+A window closing in 2026 can only be grounded in a 2026 calendar, and citing one
+is what makes check mode refuse `353/2008-2025` and `322/2008-2025` with "cites
+sources outside their applicability window". So one rule invites a revision to
+declare a 2026 window and another forbids it from citing the only source that
+establishes its date.
+
+I am NOT fixing this by deleting the citation, and that is the point worth
+recording. Removing the 2026 calendar would leave a deadline date with no
+authority behind it -- trading a visible refusal for an ungrounded filing date,
+which is the worse of the two states by a wide margin. Nor am I moving 61 windows
+between revisions on my own reading of an undocumented convention.
+
+**The tell is the one this repo's own quality rule names: oscillation.** Satisfy
+the applicability gate and the window loses its grounding; satisfy the grounding
+and the applicability gate refuses. When two fixes red each other, neither is
+right and a third shape is needed -- most likely an explicit statement that a
+window may reach into the following year together with a source rule that admits
+the calendar establishing it. That is a decision, and it wants an ADR rather than
+a patch.
+
+### correction: modelo 202's third pin is a harness artefact, not a modelo 200 defect
+
+I recorded above that modelo 202's `2025-y-siguientes` row surfaces "a modelo 200
+declaration gap" -- its relation to 202's pagos fraccionados failing to cover the
+derived 1P and 2P periods for source year 2024. That attribution is wrong, and
+the correction matters because it points at the wrong file.
+
+The relation folds modelo 202's casilla 34 across periods 1P, 2P and 3P at
+`filing_year_delta = 0`, so resolving it for source year 2024 needs 202's
+`2023-2024` revision. Check mode's isolation deliberately removes it: the
+candidate registry must hold EXACTLY the target revision, because a sibling makes
+the revision selection ambiguous, so every other revision of the target modelo is
+pruned. The relation then has nothing to resolve against -- not because modelo
+200 declares it wrongly, but because the revision it names was deleted from the
+candidate by design.
+
+The full authority is the control, and it loads CLEAN with all three 202
+revisions present. So the declaration is fine and the refusal is a property of
+the isolation, which is a different kind of finding: it says a supporting-modelo
+relation that spans revisions of the SAME modelo cannot be validated under an
+isolation that keeps only one of them.
+
+**What I did wrong is worth naming.** The refusal named modelo 200, and I recorded
+it against modelo 200 without asking whether the environment it appeared in could
+produce it spuriously. An error message names where a check FAILED, not
+necessarily what is broken -- and in a harness that prunes real data to construct
+its case, those two come apart routinely. The check that settles it is cheap:
+run the same load without the isolation and see whether the refusal survives.
+
+### all three modelo 202 pins are one harness limitation, not three defects
+
+Following the correction above, the other two modelo 202 pins were checked the
+same way, and they fall to the same cause. **None of the three is a modelo 202
+data defect.**
+
+The singleton semantic roles are singletons only after pruning.
+`is_pf_mod_40_2_base_pago_fraccionado` is declared once in EACH of 202's three
+revisions, so the full registry groups three observations for it and the
+typo-twin check never fires. The isolated candidate keeps one revision, sees one
+observation, and reports a likely typo. The other flagged roles are the same
+shape.
+
+The relation case is the one already corrected: 200's fold-in of 202's pagos
+fraccionados resolves source year 2024 through 202's `2023-2024` revision, which
+the isolation deletes.
+
+So both facts these rows trip on SPAN revisions of modelo 202, and the isolation
+keeps exactly one -- deliberately, because a sibling left in place makes the
+revision selection ambiguous. The control settles it: the full authority loads
+clean with all three revisions present.
+
+**This is the third tension of the same shape found today**, after the record
+length and the deadline-window reach: two rules each correct alone, contradicting
+at their intersection. Isolation demands exactly one revision; cross-revision
+facts demand siblings. It is smaller than the other two because it concerns a
+test harness rather than registry data or emitted bytes, but it has the same
+resolution shape -- a third construction, most likely admitting sibling revisions
+as read-only context while keeping exactly one selectable.
+
+The test's own comment has been corrected. It previously sent the next reader to
+202's casillas looking for a typo and to modelo 200 looking for a declaration
+gap, and there is nothing wrong in either place. **A pin's stated reason is read
+by whoever picks the work up, so a wrong one costs someone a search through
+correct code** -- which is a more expensive kind of wrong than an unexplained
+failure.
+
+### refinement: the one-revision rule is the CHECK's contract, not the harness's caution
+
+I described the modelo 202 pins as a "harness limitation" and suggested the fix
+was admitting sibling revisions as read-only context. The first half stands; the
+second was a guess, and testing it showed where the constraint actually lives.
+
+Keeping 202's `2019-2022` and `2023-2024` siblings in the isolated candidate and
+running check mode does not produce the ambiguous selection the test's comment
+anticipates. It produces this instead:
+
+```
+generated modelo revisions directory must contain exactly ['2025-y-siguientes'],
+got ['2019-2022', '2023-2024', '2025-y-siguientes']
+```
+
+That refusal comes from `_require_isolated_target_context` inside the generated
+tree validation, not from the test. The check demands the candidate registry hold
+exactly the target modelo plus its declared supporting modelos, exactly
+`manifest.toml` and `revisions` beneath the modelo, and exactly ONE revision
+beneath that. The test prunes siblings because the check would refuse otherwise;
+it is complying with a contract, not being defensive.
+
+So this cannot be fixed in the test at all, and my proposed remedy would not have
+worked. The exactly-one-revision rule is deliberate -- it is what stops a
+candidate from validating against facts the current render did not produce -- and
+relaxing it is a change to what check mode MEANS, in the same class as the other
+two decisions recorded today rather than a smaller harness tidy-up.
+
+**The lesson repeats today's pattern.** I read an error, formed a mechanism, and
+proposed a fix, all without running the one experiment that distinguishes them.
+The experiment took a few minutes and moved the finding from the wrong file to
+the right one. Three times today a stated cause has needed correcting -- a
+row-collision in my own audit script, a blast radius measured over the wrong
+population, and now a constraint attributed to the caller instead of the callee.
+Each was caught by measurement, and none by re-reading my own reasoning.
+
+### modelo 308: its map is authored, and the generator then refused to publish it -- correctly
+
+Modelo 308 looked like the clearest remaining authoring target: a semantic-map
+STUB carrying records and no entries, a bundled 2019 design, and no generated
+tree. Its map and render profile are now authored and both load.
+
+**The design keys its casillas by POSITION RANGE**, which makes most of the map
+mechanical rather than judged: the registry declares `decl.mtn-precio-adquisicion`
+with `number = "652-668"`, and the design carries a field at offset 652 of length
+17. Forty-one of fifty-five fields bind on exact offset agreement, with no name
+matching anywhere. The remaining fourteen resolve individually -- two
+single-position casillas, the two devengo fields, two taxpayer identification
+slots that are cross-modelo producer facts rather than 308 casillas, five
+literals and three reserved runs.
+
+**One generator gap was real and is fixed.** AEAT states numeric shape as
+`15 enteros y 2 decimales` on modelos 200, 322 and 151, and the parser reads
+that. Modelo 308 writes the same clause with the numbers SPELLED OUT --
+`[quince enteros + dos decimales]` -- and only the digits form was admitted. The
+cardinals AEAT actually writes are now named exactly, in the spirit of the
+`decmales` typo the same parser already handles by naming rather than by fuzzy
+matching. A mis-mapping cannot ship: the declared whole plus decimals is checked
+against the slot's own width at the use site, so `quince` reading as anything but
+15 refuses on a 17-position slot.
+
+**Then the generator refused to publish, and the refusal is the finding.** 308's
+casillas already declare `export_refs` pointing at a HAND-AUTHORED layout's field
+ids, and the generated layout addresses them under different ids. The check says
+so plainly: two disagreeing answers to which field addresses a casilla is a
+finding to reconcile deliberately, not something generation may overwrite.
+
+It is right, and the reconciliation is that **308 does not need a generated tree
+at all**. Its authored layout is complete: `page-01` carries 52 fields reaching
+extent 1500, exactly the design's declared record length, with `page-00` the
+328-position envelope prefix ahead of it. This is the same modelo whose
+`page-00` my earlier short-record sweep flagged as writing 328 of 1500 -- the
+record it should have compared was `page-01`, which is correct.
+
+So the map and profile stay as a completed stub rather than being deleted, and
+308 is recorded as NOT a generation target while its authored layout stands. The
+work was not wasted: it produced a generator fix that every design writing
+cardinals in words now benefits from, and it confirmed by measurement that 308's
+existing layout is whole.
+
+### modelo 390 would file a BLANK regimen simplificado page, and the record length hides it
+
+Chasing the short-record class further produced a sharper check and a worse
+finding. **Extent is not coverage.** A record whose last field ends at the
+declared total looks complete to the check I ran earlier, while saying nothing
+about the positions before it -- the render buffer is space-filled, so an
+interior gap emits blanks at full length rather than a short record.
+
+That distinction matters in both directions, and modelo 360 is the benign case:
+its `page-01` leaves 867 positions uncovered and **every one of them is a
+blank/reserved run in the design** -- zero data positions. Omitting a reserved
+run and letting it space-fill is correct.
+
+Modelo 390 is the other case, verified by hand rather than swept:
+
+```
+layout modelo-390-page-05 (2024)   6 fields at offsets 1, 3, 6, 11, 1118, 1508
+design  Pag. 5                     106 fields, declared_total 1519
+unwritten DATA fields              96 -- the whole "6. Operaciones Reg.
+                                   Simplificado" block: epigrafe, numero de
+                                   unidades and importe, per actividad
+```
+
+The six authored fields are the record header, ONE amount at 1118, and the
+closing tag at 1508. Everything between is design-declared data that no field
+addresses. The same shape repeats on `page-07` and across the 2022, 2023, 2024
+and 2025 revisions.
+
+**This is worse than a short record, not better.** A 180-byte record where 500
+are expected fails to parse, and someone notices. This record is exactly 1519
+bytes because the closing tag sits at the end, so it passes every structural
+check and files a Regimen Simplificado section that is entirely blank. It is the
+"structurally thin file behind a valid digest" the export rule names, reached by
+a different route than the one that rule guards.
+
+It also explains a failure recorded earlier in this audit without a cause.
+`test_record_design_completeness` asserts that 390's advisory inventory should
+EXCEED its declared casilla set "while the annual form is under-modelled". The
+inventory no longer exceeds it -- and this is where the under-modelling lives.
+The two facts were sitting in the same tree pointing at each other.
+
+**I have not touched modelo 390.** Its casillas are a peer's, the completeness
+test above is already red on a premise change nobody has adjudicated, and
+authoring 96 fields into an annual IVA summary is filing-grade work that needs
+its own grounding pass against the diseño rather than being appended to a sweep.
+What is now on the record is the measurement, the verification method, and the
+distinction that found it: compare COVERAGE against the design's data positions,
+never extent against the declared total.
+
+### queue item 1 — modelo 184: the refusal came from an empty evidence set
+
+Fixed, and the defect was in the gate rather than the registry.
+
+`casilla '77' is declared under segmento '184-2-entidad' but the AEAT Diseño de
+Registros does not carry it under that segment` is built by comparing each
+declared `(segmento, number)` against pairs harvested from the BRACKETED CASILLA
+TAGS a design prints. Modelo 184's design is a PDF that prints none: the harvest
+yields **zero tags across all three of its sheets**, so the comparison set is
+empty and every declared casilla fails against it.
+
+The design does carry the box. Read directly, its `Tipo 2 - Registro De Rentas De
+La` sheet declares `@77+1 CLAVE` and `@78+2 SUBCLAVE`, and the semantic map binds
+that same sheet to export record `m184-entidad` -- which is what the manifest's
+`184-2-entidad` names. The registry was right and the gate could not see it.
+
+An empty pair set is **no evidence, not evidence of absence**. `None` already
+meant "no design supplied"; empty now joins it as "design supplied, said nothing
+on this axis". Refusing from it asserts absence out of ignorance, which is the
+same shape as the completeness gate scoped to a pipeline the affected modelo
+never enters.
+
+**Proven still to bite, from outside the tree.** Modelo 200's workbook design
+harvests 5,558 pairs, and a casilla declared under a segment that set does not
+carry still refuses. Only the empty-set arm is relaxed:
+
+```
+non-empty pair set + wrong segment   refuses = True
+empty pair set                       refuses = False
+```
+
+Authority CLEAN, lint clean. One further thing the fix exposed rather than
+caused: modelo 200's segmentos are literal design sheet names (`DP200012`), so
+`segmento` is contractually a sheet name -- and 184's `184-2-entidad` is a
+registry label that could never match one. That mismatch is inert while the tag
+set is empty, and correcting it would be guessing at a convention nobody wrote
+down, so it is left named here rather than changed.
+
+### queue item 2 — modelo 151: six casillas were on the wrong revision, and are now on the right one
+
+Fixed. The earlier note asked whether the six anexo "transmisión de
+participaciones en IIC" casillas belong to the 2015-2022 revision. They do not,
+and the evidence is unambiguous once the two designs are compared page for page
+rather than by name.
+
+**Both designs carry a page M15107000, which is exactly why this survived.** They
+are not the same page:
+
+```
+aeat-dr-151-2015  M15107000   66 fields, 1600 positions, boxes 1-6 unpadded
+aeat-dr-151-2023  M15107000   43 fields,  500 positions, boxes 01-05 plus 53
+```
+
+The six casillas are numbered `01, 02, 03, 04, 05, 53`. That is the 2023 set,
+padding and all, and **53 does not exist on the 2015 page at all** -- so they
+could only have come from the later edition. Their own header comment said as
+much, citing `aeat-dr-151-2023` while sitting on the revision whose design is
+`aeat-dr-151-2015`.
+
+The move was safe to make rather than merely propose: nothing outside their own
+file referenced any of the six -- no formula, construct, manifest entry or
+export ref -- and the 2025-y-siguientes revision, whose design IS the 2023
+edition, declared none of them. So this was a misplacement with no dependents,
+not a duplication needing reconciliation.
+
+Done: the six moved to `2025-y-siguientes` with their provenance comment
+rewritten to state what distinguishes the two editions; the four now-unused
+`aeat-dr-151-2023` citations removed from the 2015-2022 revision, which already
+carried the 2015 edition alongside them and a comment noting that edition is the
+one governing the window.
+
+That also clears one of the three forward-citation refusals recorded earlier:
+151/2015-2022 no longer cites a source from outside its own life, so it stamps
+and **passes check mode outright** -- verified, along with the receiving revision
+still passing. Authority CLEAN.
+
+The 353 and 322 forward citations are NOT the same shape and remain open: theirs
+are 2026 calendars grounding real 2026 deadline windows, which is the gate
+disagreement the deadline-window ADR covers. Removing those would strip a filing
+date of its authority. Removing 151's removed nothing, because the boxes it
+grounded had left.
+
+### queue item 3 — modelo 193: short records fixed, and a test that had never run
+
+Fixed on both revisions. Two things had to be separated first, because the
+earlier note conflated them.
+
+**Re-measuring with the right check changed the diagnosis.** Comparing COVERAGE
+against the design's data positions rather than extent against the total:
+
+```
+declarante   uncovered DATA 0   uncovered reserved/blank 295
+perceptor    uncovered DATA 0   uncovered reserved/blank 167
+gastos       uncovered DATA 0   uncovered reserved/blank 412
+```
+
+So modelo 193 never had the silent-data-loss defect. Its only fault was record
+LENGTH: the last authored field ended at 235, 339 and 207, and the codec sizes
+its buffer from `max(offset + length - 1)`, so it emitted records that short
+where the diseño declares 500.
+
+**A first pass reported 244 uncovered data positions on the gastos record, and
+that was my own bug.** The third design sheet's identity begins with the
+second's, so pairing by name prefix returned the perceptor sheet for the gastos
+record. Pairing by index gives 0. This is the fourth time a measurement has
+needed correcting for comparing against the wrong member of a set, and the tell
+each time was the same: a number that looked alarming before the pairing was
+checked.
+
+The fix authors the trailing reserved run the design states explicitly, which is
+how the generated trees already reach full length -- modelo 296's five records
+emit 500 because its map carries `filler` entries over exactly this. All three
+records on both revisions now reach extent 500, verified by the codec's own
+formula. The interior reserved gaps that remain (30, 6 and 119 positions) are
+the benign shape modelo 360 demonstrates: space-filled at the correct total.
+
+**Both revisions are stamped, with a deliberately different claim.** 193's layout
+is hand-authored, so it carries no fresh-render reproduction evidence and the
+stamp does not pretend otherwise -- it claims the reference and family checks,
+the extent agreement, and the absence of unaddressed data positions, and says
+plainly that the reproduction clause the generated-tree stamps carry does not
+apply here. Stamping seven revisions before verifying three of them was the
+lesson; claiming only what was measured is the consequence.
+
+**A dead test was found and restored.** `test_modelo_193_guidance_and_layout_
+sources_are_separated` looked up revision `2024-y-siguientes`, which modelo 193
+has never declared -- its revisions are `2024` and `2025-y-siguientes`. It raised
+a KeyError on that line, so every assertion after it had never executed. The
+revision it wants is identifiable from its own next assertion, which requires the
+parity ref naming the 2025 design; only `2025-y-siguientes` carries it. Corrected,
+the test runs and passes. Modelo 193's gates go from 6 failed to 6 passed.
+
+### queue item 4 — modelo 720: the binding-derived records now reach 500
+
+Fixed, and the mechanism that made it look hard turned out to permit the fix
+directly.
+
+Measured the same way as 193: `type_1` covered 180 and `type_2` covered 480
+against a diseño declaring 500, with **uncovered DATA = 0 on both** -- the
+missing runs are the `181-500 BLANCOS` and `481-500 BLANCOS` tails the design
+states outright. So this was a record-LENGTH fault, not data loss.
+
+The earlier note treated binding-derived records as a design question, on the
+assumption that a record whose fields come from bindings cannot also declare
+one. Reading the resolver shows otherwise: it keeps every declared field that
+does not OVERLAP a derived one and returns `(*base_fields, *derived)`. A
+trailing tail overlaps nothing, so it is admissible exactly as it is on a
+hand-authored layout. **The constraint I assumed was there was not** -- the same
+error as attributing the one-revision rule to the harness, and the check was
+again three minutes of reading the callee.
+
+Both records now cover 500 of 500 with nothing uncovered at all -- not merely
+reaching extent 500, but leaving no interior gap either, since these two had
+none to begin with.
+
+Stamped, with the claim scoped to what a binding-derived layout can evidence: no
+fresh-render reproduction, and a note that the formulas family is dispositioned
+inapplicable because the declaration reports holdings and settles no tax. Modelo
+720 and 721 gates: 30 passed. Authority CLEAN.
+
+That closes the short-record class raised earlier for BOTH modelos it named. The
+detectability question the record-length ADR asks is unchanged and still worth
+settling: these two were found by hand, and nothing would have refused either.
+
+### queue item 5 — modelo 369: 10,438 data positions unwritten, and the geometry is now known
+
+In progress. The measurement is finished and verified; the authoring is not.
+
+**Every uncovered position is real data.** Nine of modelo 369's twelve records
+carry only their header fields:
+
+```
+record        layout fields   design fields   uncovered DATA   reserved
+t36901 Ext          9              160            1247            0
+t36902 Ext          7              147             728            0
+t36904 Un           9              161            1248            0
+t36905 Un           7              147            1176            0
+t36906 Un           7              203            1652            0
+t36907 Un           7              203            1652            0
+t36908 Un           7              147             728            0
+t36910 Imp          9              164            1279            0
+t36911 Imp          7              147             728            0
+                                          total  10438            0
+```
+
+The three complete records (t36903, t36909, t36912) are the ones whose design
+carries only 7 fields, so they were always within reach. Reserved is zero
+throughout: unlike 193 and 720, nothing here is a trailing blank run.
+
+**This is projection work, not 150 casillas per record.** The design repeats a
+block: `3. Prestaciones de servicios. Código de país/EM de consumo`, `Tipo (%) de
+IVA`, `Tipo IVA`, `Base imponible`, `Cuota IVA` -- five fields per row, one row
+per member state of consumption. Every record reconciles exactly on that
+reading: T36901 is 5 x 28 + 20 header = 160, T36906 is 7 x 28 + 7 = 203, T36911
+is (4 x 28) + 14 + 21 = 147, and so on for all nine.
+
+**Getting there took two wrong measurements, both caught.** A slot-suffix regex
+anchored on `\.\d+$` reported T36902 as having 136 unique fields and no
+repetition at all, which contradicted reading the sheet by eye. AEAT prints the
+suffix as `. 1` WITH A SPACE, and omits it entirely on some rows. Correcting the
+pattern moved that record from "no repeating structure" to five signatures at 28
+slots. The disagreement between the two methods is what forced the check --
+neither number was trustworthy while they disagreed.
+
+One caveat stated rather than smoothed over: a few signatures count 11, 14, 17 or
+27 instead of 28. Those are the same block with the suffix unprinted on some
+rows, not a differently-sized block -- the per-record totals only reconcile if
+they are. That should be confirmed field by field before endpoints are emitted,
+exactly as modelo 200's thirteen blocks were.
+
+What remains is the authoring: projection kinds for the three esquemas, their
+endpoints, and layout fields addressing them. Same shape as the modelo 200 work,
+and the geometry above is the foundation it needs.
+
+### CORRECTION: modelos 369 and 390 have no missing data. I measured the wrong layout.
+
+This retracts two findings recorded above, one of which I called the most
+consequential of the campaign. Both were artefacts of the same mistake.
+
+**A revision's `export_layouts` holds only its INLINE fields.** The
+binding-derived ones are added by `derive_export_layouts_from_bindings`, which is
+what registry validation, the renderer and the completeness gate all consume.
+Measuring the raw collection counts every binding-derived field as missing.
+
+Measured correctly, against the derived layout:
+
+```
+modelo 369   all twelve records: derived field count EQUALS design field count,
+             coverage equals the declared total exactly, uncovered DATA = 0
+modelo 390   2024: uncovered DATA = 0
+```
+
+So the "10,438 unwritten data positions" and the "page-05 files a blank Régimen
+Simplificado" findings are both withdrawn. Nothing is missing in either modelo.
+
+**How far it went before it was caught.** On the strength of the 369 finding I
+authored seven projection kinds into the core union, 1,372 projection endpoints
+across three revisions, 1,372 layout fields, and removed three
+`projection_endpoints` dispositions. All of it is reverted -- the registry files
+restored from HEAD, the endpoint directories deleted, the core models removed --
+and the authority is CLEAN again. What stopped it was the schema refusing to let
+a record mix binding and projection fields: chasing THAT refusal is what surfaced
+the 292 bindings already covering every repeated row.
+
+**The gate caught what my measurement did not.** The refusal I was working around
+was the one telling me the model was wrong. That is worth stating plainly,
+because the instinct in the moment was to treat it as an obstacle to the
+authoring rather than as evidence about it.
+
+**Items 3 and 4 stand, and the distinction is the point.** Modelos 193 and 720
+were re-measured the same way and ARE short on the derived layout -- 193's
+records reach 235, 339 and 207 of 500, and 720's reach 180 and 480 -- because
+nothing derives their trailing reserved runs. 369 and 390 differ precisely
+because their bindings do cover the rows. The fixes for 193 and 720 were needed
+and remain.
+
+**Five measurement corrections now, and this one has a shared root with three of
+the others**: comparing against the wrong member of a set, the wrong population,
+or the wrong stage of a pipeline. The control that would have caught it here is
+the same one I already knew to run -- I used the derived layout for 720 and the
+raw one for 369 in the same session, without noticing the two scripts differed.
+
+### the queue is resolved, and the corrected sweep closes the short-record class
+
+Item 6 is confirmed a non-defect on ALL FOUR modelo 390 revisions, not only the
+2024 one: uncovered DATA is 0 for 2022, 2023, 2024 and 2025 against the derived
+layout.
+
+With the queue exhausted, the registry-wide sweep was re-run properly -- over
+derived layouts, and separating two faults that had been conflated:
+
+- **SHORT**: extent below the design's declared record length. The line is the
+  wrong SIZE and a position-based reader misparses it.
+- **GAP**: a design DATA position no field addresses, at correct total length.
+  The line parses and the value is silently blank.
+
+```
+records judged 220,  unpaired (not judged) 169
+GAP records    0
+SHORT records  0 real
+```
+
+**Zero gaps registry-wide.** No design data position goes unaddressed anywhere,
+which is the stronger of the two results and was not established before.
+
+The 21 flagged SHORT records are all pairing artefacts, and both classes were
+checked rather than assumed. Twenty are envelope prefixes: every record in the
+registry at extent 328 -- all 36 of them -- carries `line_ending = "none"`, so it
+is concatenated onto a payload rather than emitted as a line, and the design's
+record length does not govern it. The twenty-first, `m151-page-06`, was paired to
+a 1600-position sheet when its own sheet M15106000 declares 1400; measured
+against the right sheet it covers 1400 of 1400 with 89 fields against 89 design
+fields.
+
+So the short-record class closes with exactly two real instances, both fixed:
+modelo 193's three records and modelo 720's two. Everything else that looked like
+one was a measurement fault -- wrong pipeline stage for 369 and 390, wrong sheet
+for 151, wrong record class for the envelopes.
+
+**What the campaign should keep from this.** The sweep only became trustworthy
+once it (a) read the derived layout, (b) refused to judge a record whose design
+sheet was ambiguous, reporting 169 unpaired rather than guessing, and (c) kept
+SHORT and GAP apart. The first two sweeps did none of those and produced 12 and
+22 "findings" respectively, all of which dissolved. **A sweep that cannot say
+what it declined to judge is not a measurement.**
+
+### ten more revisions stamped, on evidence the campaign did not have before
+
+The queue is closed, so the work returns to the stamp backlog -- and it can now
+be worked properly, because the derived-layout coverage measurement is a real
+second evidence source. Earlier I declined to stamp forty-four revisions on the
+grounds that outside the drift gate "the strongest honest claim is that its
+declarations resolve". That was true then and is not now.
+
+A revision is READY only when all of these hold:
+
+```
+structural      refs resolve, corpus files present, formulas target own casillas,
+                every enrolled family resolves
+windows         every cited source's applicability window overlaps the revision
+coverage        every fixed-width record of the DERIVED layout paired to its
+                design sheet, no DATA position unaddressed, none over-reaching
+completeness    ZERO records left unpaired -- an abstention, not a pass
+```
+
+That last line is the one that matters. A revision holding a record nobody could
+measure does not get a stamp saying its records were measured.
+
+**The window check was added because memory is not a control.** Modelo 353's
+2008-2025 revision passed the structural review, so it appeared ready -- and it
+is exactly the revision I stamped once before and had to unstamp when check mode
+refused on its 2026 calendar citations. Encoding the check moved it out of READY
+automatically. Ten revisions remain: 145, 303 x5, 308, 309, 360, 714/2021.
+
+**Modelo 303 was stamped, and the reason it could be is worth recording.** The
+72 endpoint citations naming the 2023 orden on the 2022 revision -- reported here
+earlier as in-flight peer work I would not edit -- have been corrected by their
+author: that file now carries 72 citations to `boe-orden-hfp-1335-2021`, the
+orden whose bundled text says "para el año 2022". The defect is gone, no 303 file
+has been written in half an hour, and the revisions verify.
+
+**A stamp unmasks; it does not break.** Running the affected modelos' gates after
+stamping showed 42 failures, and the control settles what they are: modelo 308
+with its stamp is 5 failed / 3 passed, and with the stamp temporarily removed it
+is 6 failed / 2 passed. The stamp made one test pass and caused none to fail --
+the remainder are revisions these tests reach that are still unstamped (16 of the
+42 are modelo 714's 2024 revision saying so outright) and assertions that were
+never reached while the review-status refusal came first.
+
+### seven more stamps, and the modelo 390 advisory test re-pinned to what it protects
+
+**Twenty-seven revisions are now stamped**, after seven more: 131/2026,
+216/2024-y-siguientes, 322/2026-y-siguientes, and all four modelo 390 revisions.
+
+Six of the seven were unblocked by replacing a bad rule of my own. The reviewer
+skipped envelope records by FIELD COUNT -- ten or fewer -- which is not what an
+envelope is. Modelo 216's envelope header carries eleven fields, so it was
+judged an unpairable record and the whole revision abstained for it. Envelope
+records are now identified by what their author NAMED them, which is both
+truthful and stable.
+
+Two abstention causes are worth separating, because only one is a gap in method:
+
+- **Modelo 100 resolves ZERO record-design sheets.** It files through an XML
+  dictionary and declares no fichero BOE, so coverage of a fixed-width design is
+  not a question that applies to it. Its six revisions need a different evidence
+  basis, not a better sweep.
+- The pairing method can only judge a record whose extent MATCHES a design
+  sheet's declared total. A record that is genuinely short cannot be paired, so
+  short and unpairable are indistinguishable to it. That is why the abstain list
+  stays an abstention rather than becoming a finding.
+
+**The modelo 390 advisory test was re-pinned, not relaxed.** Its assertion
+`len(covered) > len(declared)` was a PROXY for "the annual form is
+under-modelled", and it carried its own instruction to re-read rather than relax
+it if the direction ever inverted. It has inverted: the registry now declares 393
+casillas against an inventory of 375. The docstring names the real invariant --
+the report must not become "a load-blocking completeness gate by accident" -- so
+that is what is asserted now: the two sets are NOT equal, and the registry loads
+with that difference standing, which is what proves the report gates nothing.
+
+Proven to fire, by runtime patch from outside the tree: forcing the inventory to
+equal the declared set makes it refuse. Nothing under `src/` was edited to prove
+it. The module goes from 3 failed / 7 passed to 2 failed / 8 passed; the two
+remaining are modelo 303's completeness manifest, which is a different question.
+
+### modelo 303 declares casillas its own diseño never had, and two stamps were withdrawn
+
+Chasing the completeness-manifest drift on modelo 303's 2023 revision produced a
+real grounded finding, and it cost two of my own stamps.
+
+The manifest lists casillas 165 and 167 that the calculation closure does not
+contain. Neither is an accident of the closure: 165's construct peers (01, 04,
+07, 153, 28) are ALL `bound` and 167's reconcile peers (10, 154, 155) are ALL
+`computed`, while 165 and 167 alone carry neither a binding nor a formula. That
+looked like a missing binding until the design was checked.
+
+**The boxes do not exist in that revision's design.** Searching every bundled 303
+edition for tokens 164-169:
+
+```
+aeat-dr-303-2022        none
+aeat-dr-303-2023        none
+aeat-dr-303-2024-early  none
+aeat-dr-303-2024-late   165 166 167 168 169
+aeat-dr-303-2025        165 166 167 168 169
+aeat-dr-303-2026        165 166 167 168 169
+```
+
+AEAT introduced them in the 2024-late edition. Two revisions declare them anyway
+against designs that predate them: **2023** (165, 167, 168, 169) and
+**2024-hasta-08-y-2t** (all five), the latter citing `aeat-dr-303-2024-early`.
+This is the modelo 151 shape again -- boxes from a later edition on an earlier
+revision -- and it is the second instance, so it is a pattern rather than a
+one-off.
+
+**I stamped both revisions earlier this same tick and have removed those stamps.**
+The stamp says "reviewed against the bundled diseño de registros"; it cannot
+stand over a revision declaring boxes the diseño has never carried. I did not fix
+the underlying defect: removing the casillas means unpicking a construct, a
+verification expectation, a formula and the manifest across two revisions of a
+modelo whose campaign is someone else's, and which of those is correct -- drop
+the casillas, or re-cite the design -- is a tax judgement.
+
+**A check now runs before the attestation, and its limits are stated.** It
+compares each numeric casilla number against the box tokens its own design
+prints. Two limits were found by testing it rather than by trusting it:
+
+- It over-fired on modelos that number casillas by POSITION RANGE. Modelo 308's
+  casilla "109" is byte 109 and no design prints "[109]", so the comparison
+  flagged everything and meant nothing -- it wrongly implicated three of my own
+  stamps. It now applies only where a revision's numbering is demonstrably
+  token-based, which a high match rate establishes.
+- **A missing token is not a missing box.** Modelo 115's design prints only
+  [01]-[04], yet its casilla 05 is `cuota_a_ingresar`, which is certainly on the
+  form; the design simply does not bracket it. So the check gates READY
+  conservatively -- it causes an abstention, never a finding. The 303 conclusion
+  rests on the epoch comparison above, not on token absence.
+
+Three pre-existing stamps not made by me are flagged by it (115/2019-y-siguientes,
+123/2019-2023, 131/2019-2023). They are reported, not withdrawn: unstamping
+another author's attestation on a signal I have just shown to be imprecise would
+be the same overreach in the other direction.
+
+### modelo 303: the boxes are RESERVED BYTES in those revisions, and the continuity stamp is the defect
+
+The 303 finding is now grounded to the byte, and it is stronger than the token
+comparison that raised it. Reading all three designs at the exact offsets where
+the 2024-late edition places boxes 165-170:
+
+```
+offset      2023                    2024-early              2024-late
+957 (165)   Reservado para la AEAT  Reservado para la AEAT  Regimen general - Base
+974 (166)   Reservado para la AEAT  Reservado para la AEAT  Regimen general - Tipo
+979 (167)   Reservado para la AEAT  Reservado para la AEAT  Regimen general - Cuota
+996 (168)   Reservado para la AEAT  Reservado para la AEAT  Recargo equivalencia
+1013 (169)  Reservado para la AEAT  Reservado para la AEAT  Recargo equivalencia
+1018 (170)  Reservado para la AEAT  Reservado para la AEAT  Recargo equivalencia
+```
+
+AEAT activated a reserved run in the 2024-late edition. The 2023 and
+2024-hasta-08-y-2t revisions declare casillas over bytes their own designs
+reserve -- 2024-hasta's declarations are identical to 2024-desde's, including a
+projection formula computing 167, which is what a copy looks like.
+
+**It is inert at the wire, and that was checked rather than assumed.** Both
+revisions' published export trees emit `kind = 'filler'` at offset 957 on sheet
+DP30301 and address none of these casillas. So nothing writes into the reserved
+run and no filing changes. The damage is confined to the registry's own model:
+dead casillas that make the calculation-completeness manifest drift, which is the
+failure that started this.
+
+**The renumbering is the heart of it.** Position 617 is box **152** in the 2023
+design and box **167** in 2024-late. So "167" names two different boxes depending
+on the edition -- and every one of these casillas carries a `continuidad_id`
+(`dr303-165` and siblings) asserting it is the SAME box across revisions. The
+continuity ratchet's own docstring names this exact hazard: AEAT renumbers
+between filing years, and the validator refuses to infer continuity from a
+repeated numeric id for that reason. Here the continuity was stamped by hand, and
+the designs contradict it.
+
+**Not fixed, and the reason is the process rather than the evidence.** Removing
+these casillas means retracting continuity claims that a committed ratchet
+baseline counts, on a modelo whose campaign is another author's. The ratchet
+exists precisely so that the ungrounded backlog cannot move unremarked, and
+adjudicating an identity claim is the grounding work it defers to official
+sources -- which is a review with an owner, not a deletion. What is now on record
+is the byte-level evidence that adjudication needs.
+
+### three more stamps, and two abstentions that are correct rather than lazy
+
+**Thirty-nine revisions are stamped**, after 180/2019-2022, 180/2023-y-siguientes
+and 190/2025-y-siguientes.
+
+They were unblocked by a pairing fallback with a property the earlier attempts
+lacked. Modelos 180 and 190 each print TWO 500-position records, so a sheet's
+declared length cannot discriminate between them. The fallback matches on the
+discriminating noun both the record id and the sheet identity carry -- and
+accepts it only as a BIJECTION: exactly one sheet for this record and exactly one
+record for that sheet. Prefix matching without that second half is what silently
+paired modelo 193's gastos record to the perceptor sheet. The pairing was then
+printed and read before any stamp was written: declarante to declarante,
+perceptor to perceptor, uncovered DATA zero on all four.
+
+**Modelo 190/2024 abstains on an operator-owned surface.** It cites
+`aeat-modelo-190-procedure`, whose `applies_from` is 2025-01-01 -- after the
+revision ends. Sibling procedure sources are dated to their modelo's coverage
+rather than a fetch date (193 to 2024, 180 to 2020, 303 to 2009), and the bundled
+page itself names "Ejercicio 2020" alongside 2025, so the 2025 date is too
+narrow. But that entry carries `review_status = "reviewed"`: correcting it
+overwrites a human grounding claim, and the alternative -- dropping the citation
+-- leaves the revision's only procedure source unreferenced. It is an acquisition
+or review question with an owner, and it is recorded rather than taken.
+
+**Modelo 349 is not a defect, and finding that out corrected a premise.** Its
+`operador` record emits extent 500 against a design sheet whose `declared_total`
+reads 235 -- an OVER-long record, which the short-record sweep could never have
+caught. Reading the sheet settles it: its last listed field is `@196+40`, ending
+at 235, with no trailing BLANCOS entry, while its two sibling records both run to
+500. So `declared_total` is the design's LAST LISTED POSITION, not a stated
+record length, and a uniform 500-byte fichero makes extent 500 correct.
+
+That distinction matters beyond modelo 349. The 193 and 720 fixes stand precisely
+because those designs LIST their trailing reserved runs to 500 -- 720's says
+`181-500 BLANCOS` outright -- so the declared total there really is the record
+length. Where a sheet simply stops listing, the same number means something
+weaker, and a record reaching past it is not evidence of anything.
+
+### the forward-citation blockage is one pattern in two halves, and one half is now fixed
+
+Quantified rather than met one revision at a time: **12 citations across 11
+revisions name a source whose applicability opens after the revision ends.**
+Every one is `kind = "instructions"` and every one is `review_status =
+"reviewed"`. It splits cleanly:
+
+- **Living procedure pages** (modelos 100, 131, 190) -- nine citations. A
+  `aeat-modelo-NNN-procedure` page dated to the epoch it was fetched, cited by
+  revisions that predate that date.
+- **Contribuyente calendars** (modelos 322, 353) -- three citations. These ground
+  deadline windows that legitimately close in the following year, which is the
+  tension the deadline-window ADR already covers.
+
+**Reading the bundled pages separated the first half again, and only one is a
+dating error.** Modelo 100's page names only ejercicio 2025 and modelo 131's only
+2026 -- those pages really are current-year, so the revisions citing them have an
+ACQUISITION gap: they need their own era's procedure page, which the corpus does
+not hold. Modelo 190's page is different: it carries the link "Modelo 190.
+Ejercicio 2020 y siguientes. Consultas y bajas de declaraciones", so the document
+the entry points at states coverage from 2020, and `applies_from = 2025-01-01`
+was contradicted by its own source.
+
+That one is corrected to 2020-01-01, with the quoted evidence recorded beside it.
+Correcting a reviewed entry is not the same as stamping one: the catalogue rule
+forbids asserting a review nobody performed, and this changes a date the cited
+document itself refutes. The sibling convention agrees -- 193 dated to 2024, 180
+to 2020, 303 to 2009, each to the modelo's coverage rather than to a fetch day.
+
+Modelo 190/2024 then verifies and is stamped, with its pairing printed and read
+first: declarante to declarante, perceptor to perceptor, uncovered DATA zero.
+**Forty revisions are now stamped.** The legal-grounding gates pass after the
+change, which is the check that matters for a catalogue edit.
+
+The remaining nine forward citations are not mine to close: two are the calendar
+question an ADR already carries, and seven are revisions of modelos 100 and 131
+asking for a procedure page nobody has fetched.
+
+### CORRECTION: the calendar half of the deadline-window question was a misplaced window, not a rule conflict
+
+The deadline-window ADR was proposed on the reading that modelos 322 and 353
+legitimately declare a 2026 filing window and are then refused for citing the
+only calendar that dates it -- two correct rules colliding. **That premise is
+wrong, and the fix was data.**
+
+Both revisions declare an identical window set to their 2026 siblings, including
+`modelo-NNN-2026-01`, `period = "2026 01"`, closing 2026-03-02. That is a 2026
+period sitting on a revision that ends 2025-12-31, and the 2026-y-siguientes
+revision already declares the very same window.
+
+**The December-filed-in-January case is real and is NOT this.** Window
+`modelo-322-2025-12` carries period "2025 12" and closes 2026-01-30 -- a 2025
+period filed the following January, exactly the structural case the ADR argued
+from. It cites the form and the procedure and **does not cite a 2026 calendar at
+all.** Only the 2026-01 window did. So removing that window removed the calendar
+citation with it and stripped no filing date of its authority, which is precisely
+what I said removal would do.
+
+Removed from both revisions: the 2026-01 window, its enumeration in the
+construct's `deadline_windows` list, and the twelve now-unused 2026-calendar
+citations left behind in the constructs and the revision source lists. Authority
+CLEAN throughout.
+
+Both revisions then verify and are stamped. **Forty-two revisions are stamped.**
+
+**The ADR needs revisiting on this half.** Its calendar limb rested on a case
+that does not exist; what remains is the broader question of the other 59
+forward-reaching windows, which have not been examined one by one and may be the
+same copy pattern. The record-length ADR is untouched by this.
+
+Two pairing rules were added to reach these, both bijective by construction: a
+revision citing two design EDITIONS loads the same logical sheet twice under one
+identity, so those are checked against every edition rather than treated as
+competing candidates; and a page-numbered record pairs to the sheet ending in its
+own number, taken only when exactly one candidate matches. Modelo 322's coverage
+against both its editions had already been measured at zero uncovered before
+either rule was written, so the rules reproduce a verified answer rather than
+producing a new one.
+
+### the duplicated deadline windows return the same deadline several times to an operator
+
+The remaining forward-reaching windows were tested rather than assumed, and the
+answer closes the deadline-window question as a rule problem entirely.
+
+**All 59 are copies. Zero are orphans.** Every window declared on a revision that
+does not cover its year is ALSO declared on a sibling revision that does, so no
+removal can strip a filing date of its only home.
+
+**And the duplication is visible to the operator.** The authority's
+`deadline_windows(year)` walks every revision of a modelo, collects each window
+whose `filing_year` matches, and appends them without deduplicating. Measured
+directly:
+
+```
+year 2024   77 windows returned,  9 appearing more than once
+year 2025  201 windows returned, 15 appearing more than once
+year 2026  123 windows returned,  2 appearing more than once
+modelo 303's quarterly windows are returned FIVE times, once per revision
+```
+
+So this was never a tension between two correct rules. It is duplicated data
+producing repeated deadlines.
+
+**Ownership follows the PERIOD year, not the filing year, and getting that
+straight corrected my own measurement.** Modelo 190's `modelo-190-2024-0a` has
+period "2024 0A" and `filing_year = 2025`, because an annual return is filed the
+January after its ejercicio. Keying ownership on filing_year would move it to the
+2025 revision, which is wrong: it is the 2024 ejercicio. Twenty-four windows are
+declared on more than one revision; seventeen have exactly one revision covering
+their period year, and seven are modelo 303's 2024 windows, where 2024 is split
+across two revisions so the period itself decides (1T and 2T to the
+`hasta-08-y-2t` revision, 3T and 4T to `desde-09-y-3t`).
+
+Fixed for modelos 190 and 193, which own four of the seventeen: each revision now
+declares only the window whose period year it covers, and the construct
+enumerations follow. Duplicate deadlines for 2026 go from two to zero; 2025 from
+fifteen to thirteen; 2024 from nine to seven. The rest are modelo 303's.
+
+**Two process notes.** The first removal attempt cut at the nearest preceding
+`[[revisions.` header, which for a window carrying `applicability_conditions` is
+the SUB-TABLE's opener -- it orphaned the conditions and broke the file's TOML.
+Restored from HEAD and redone by anchoring on the window's own header and
+stopping at the next one at the same depth. And a test pinned the duplicated
+state, asserting the construct enumerated both windows; it was updated rather
+than the data reverted, because the operator-visible duplication is the thing
+that had to change and the test was describing it, not requiring it.
+
+### modelo 100 has a second evidence source, and four of its six revisions measure clean
+
+Modelo 100 is the largest remaining block: of 198 failures across its own gates,
+**192 are the `pending_review` refusal** on its six revisions. It cannot be
+reached by the coverage method that unlocked the others -- its single export
+layout is `format = "xml_dictionary"` with ZERO records, so there is no
+fixed-width record to pair against a design sheet, and no amount of better
+pairing will produce one.
+
+There is a different evidence source for that format, already shipped:
+`compare_annual_casilla_population` measures a law-selected registry read against
+its declared XML dictionaries. It takes a `RegistryRevisionInspection`, which
+carries no filing context -- so it can be run WITHOUT building a filing-grade
+snapshot, and therefore without the review stamp the snapshot would demand. That
+avoids the circularity that would otherwise make this unmeasurable.
+
+Measured across all six revisions:
+
+```
+100/2020   measured   divergence 0
+100/2021   measured   divergence 0
+100/2022   measured   divergence 0
+100/2023   measured   divergence 0
+100/2024   measured   divergence 41
+100/2025   measured   divergence 43
+```
+
+**The zero is trustworthy; the non-zero I cannot yet characterise, and that is
+stated rather than glossed.** Reading the divergent identities twice gave two
+contradictory pictures: the "extra" set is single letters -- `A`, `C`, `D` ... --
+which are not declared casillas of the revision at all (it declares 2,093, none
+of them a single character), and are not dictionary keys either; while
+`ANOASDLG` appears in the "missing" set despite being BOTH a declared casilla and
+a key in the bundled dictionary. So `missing_casilla_ids` and
+`extra_casilla_ids` do not mean what either reading assumed, and a divergence
+finding built on them would be a guess wearing a number.
+
+What stands: the four zero-divergence revisions have a real, independent
+conformance measurement behind them, which is exactly the second evidence source
+this modelo needed. What blocks them is unrelated -- all four cite
+`aeat-modelo-100-procedure`, whose applicability opens in 2025, and the corpus
+holds no era-appropriate procedure page for them. That remains an acquisition
+question.
+
+**Modelo 303 was left alone this tick, deliberately.** Eight of its files were
+written within the preceding half hour -- casillas, completeness manifest,
+constructs and verification expectations of the 2023 revision, all in the same
+second. Its 2023 revision now declares none of 165-169, which is precisely the
+correction the byte-level finding above called for; 2024-hasta-08-y-2t still
+declares them, so the work is in progress. Editing alongside an author who is
+actively fixing the thing you reported is the one deferral the loop names, and it
+applies here.
+
+### the modelo 100 divergence is real, and it is ten missing Anexo A deduction casillas
+
+The previous entry recorded that `missing_casilla_ids` and `extra_casilla_ids`
+did not mean what two readings assumed, and refused to build a finding on them.
+Reading the parser settles it, and the answer is worth having.
+
+`DictionaryLayoutCasillaComparison` compares registry casilla identities against
+the non-null `casilla_id` values that `xml_dictionary_entries` parses -- NOT the
+dictionary's keys, which is what both earlier readings mistook them for. So
+`extra` means present in the dictionary and absent from the registry, and
+`missing` the reverse. `ANOASDLG` looked contradictory because it is a dictionary
+KEY, not a parsed casilla_id.
+
+**The ten "extra" identities are real AEAT boxes, and the registry declares none
+of them.** AEAT identifies Anexo A's deduction columns by LETTER, which is why
+they looked like a parsing artefact:
+
+```
+A  VHADQ     vivienda habitual: adquisicion y/o construccion   LIRPF DT 18
+C  VHREHB    vivienda habitual: rehabilitacion o ampliacion     LIRPF DT 18
+E  VHDIS     obras de adecuacion por discapacidad               LIRPF DT 18
+D  BASEDEDU  empresas de nueva creacion (limite 100.000 EUR)    LIRPF art. 68
+F  IMPAL     alquiler de vivienda habitual                      LIRPF DT 15
+G  APM       actividades prioritarias de mecenazgo              Ley 49/2002
+H  L49       donativos a entidades de la Ley 49/2002            Ley 49/2002
+J  FAUP      donativos a fundaciones y asociaciones de UP       Ley 49/2002
+M  PPOL      cuotas de afiliacion a partidos (limite 600 EUR)   LIRPF art. 68
+I  MDIC      bienes de interes cultural                         LIRPF art. 68
+```
+
+Both the 2024 and the 2025 bundled dictionaries carry the same ten, so this is
+stable rather than an edition quirk. The revisions that measure ZERO divergence
+-- 2020 through 2023 -- are genuinely conformant; only 2024 and 2025 diverge, at
+41 and 43 identities, of which these ten are the dictionary-side half.
+
+**Not authored this tick, and the reason is scoped rather than general.** Seven of
+the ten can cite legal refs the catalogue already holds (`ley-35-2006:dt-18`,
+`dt-15`, `art-68`). The three donativos boxes need `ley-49-2002:art-19`, which
+the catalogue does NOT hold -- it carries arts. 6, 7, 10 and 14 of that law but
+not the deduction article -- and adding a legal entry means grounding it in BOE
+corpus text on a human-reviewed surface. Authoring seven and leaving three would
+put the modelo in a worse state than either finishing or not starting.
+
+Tracked as step `P02.S21` on the registry-suite-red-at-head plan, scoped to the
+two casilla directories, so it is a queue entry rather than a note.
+
+This also gives modelo 100 the second evidence source it needed. Its six
+revisions carry 192 of the 198 failures on its own gates, all of them the
+`pending_review` refusal, and the coverage method cannot reach an
+`xml_dictionary` layout that declares no records. Dictionary conformance can, and
+now has.
