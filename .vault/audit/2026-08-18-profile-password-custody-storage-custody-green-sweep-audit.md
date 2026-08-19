@@ -385,6 +385,44 @@ and its comment survived; the commit message explaining the hazard did not,
 which is why the reasoning is recorded here. In a shared worktree the durable
 place for a rationale is the source comment or this document, not the commit.
 
+### The widest lost-update window, and an evidence claim not made
+
+The filed-evidence enrolment read the filing catalogue, parsed every
+justificante PDF in the observation, and wrote the catalogue once at the end.
+The read-to-write window therefore spanned N PDF parses -- by some distance the
+widest singleton write this campaign found -- and anything another caller wrote
+to that catalogue inside it was discarded.
+
+Parsing now happens first and the stamping inside one guarded unit of work,
+which is possible only because the stamping is a pure function of the parsed
+receipt and the catalogue it is handed: a retry re-stamps against the catalogue
+the write lands on without re-parsing a PDF. The accumulators clear per attempt
+so a retry cannot double-count what it reports. The receipt still lands before
+any record cites it, and that ordering is now stated at the write.
+
+The honest limit on the evidence, recorded because the commit message carrying
+it was lost. The change is green across its own coverage and both suites sit at
+their pre-existing baseline, but NO bespoke concurrency proof is claimed for this
+path. Reverting the verb to load-and-save does red existing cases, and the
+reaction could not be attributed to the lost-update property specifically. An
+unexplained red is not evidence for whatever one happens to be fixing, and
+treating it as such is how a suite comes to look like it proves more than it
+does. The guard's own behaviour is covered at the seam it shares with the
+invoice, inventory and work-unit paths.
+
+### Working in this tree costs rationale, twice over
+
+Two separate peer commits swept uncommitted working-tree edits of mine into
+their own, mid-iteration, while verification was still running. Both times the
+code and its source comments survived and the commit message did not -- and the
+commit message is where the caveats live.
+
+The practical consequence for anyone working here: the verification window
+between editing and committing is minutes long, and a broad commit landing
+inside it takes the change without its reasoning. Commit narrowly and early, and
+put anything that must survive into the source comment or this document rather
+than the commit message.
+
 ## Recommendations
 
 Treat the storage substrate package named for the retired shared-master-key
