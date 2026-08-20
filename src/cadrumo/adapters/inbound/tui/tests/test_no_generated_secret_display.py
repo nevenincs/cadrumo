@@ -38,8 +38,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 #: that either paints a minted secret or drives a terminal write out from under
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile", "create_recovery_code"),
-    ("cadrumo.application.user_profile", "rotate_recovery_code"),
+    ("cadrumo.application.user_profile", "create_profile_recovery_enrollment_material"),
+    ("cadrumo.application.user_profile", "enroll_profile_recovery"),
+    # The primitive beneath both, and a SECOND reachable path: it is exported from
+    # the storage facade in its own right, so a prohibition naming only
+    # application-layer callables could be walked around by importing this
+    # directly. The list this replaces did exactly that.
+    ("cadrumo.adapters.persistence.storage", "generate_recovery_key"),
 )
 
 #: The collecting counterparts. They are NOT prohibited — they take a mnemonic
@@ -47,8 +52,8 @@ _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
 #: gate cannot quietly become "no custody symbol is reachable", which would pass
 #: vacuously if the whole custody facade were renamed away.
 _COLLECTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile", "verify_recovery_code"),
-    ("cadrumo.application.user_profile", "recover_secret_store"),
+    ("cadrumo.application.user_profile", "prove_profile_recovery_artifact"),
+    ("cadrumo.application.user_profile", "restore_profile_from_recovery_artifact"),
 )
 
 _TUI_PACKAGE = Path(__file__).resolve().parent.parent
@@ -65,8 +70,8 @@ def _tui_modules() -> tuple[Path, ...]:
 def _imported_names(source: str) -> set[str]:
     """Return every name this module binds through an import, aliases resolved.
 
-    Both ``from X import create_recovery_code`` and
-    ``from X import create_recovery_code as _mint`` bind the minting callable,
+    Both ``from X import enroll_profile_recovery`` and
+    ``from X import enroll_profile_recovery as _mint`` bind the minting callable,
     so the ORIGINAL name is what is collected: aliasing must not launder the
     reach past this gate.
     """
@@ -116,12 +121,20 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         Without this, a scan that silently parsed nothing — a changed package
         layout, an empty glob — would report a clean tree and read as proof.
         """
-        source = "from cadrumo.application.user_profile import create_recovery_code\n"
-        assert "create_recovery_code" in _imported_names(source)
-        aliased = "from cadrumo.application.user_profile import create_recovery_code as _mint\n"
-        assert "create_recovery_code" in _imported_names(aliased)
-        attribute = "import cadrumo\ncadrumo.application.user_profile.rotate_recovery_code()\n"
-        assert "rotate_recovery_code" in _imported_names(attribute)
+        source = "from cadrumo.application.user_profile import enroll_profile_recovery\n"
+        assert "enroll_profile_recovery" in _imported_names(source)
+        aliased = "from cadrumo.application.user_profile import enroll_profile_recovery as _mint\n"
+        assert "enroll_profile_recovery" in _imported_names(aliased)
+        attribute = "import cadrumo\ncadrumo.adapters.persistence.storage.generate_recovery_key()\n"
+        assert "generate_recovery_key" in _imported_names(attribute)
+
+        # The control must exercise names the prohibition ACTUALLY carries.
+        # It once did not: the minting list was re-pointed at the live custody
+        # symbols while this control kept probing the retired ones, so it went on
+        # proving the parser works against names no rule named. A control
+        # decoupled from the rule it controls is decoration.
+        prohibited = {symbol for _module, symbol in _MINTING_CALLABLES}
+        assert {"enroll_profile_recovery", "generate_recovery_key"} <= prohibited
 
     def test_the_scan_reads_the_real_tui_corpus(self) -> None:
         """Scope control: the scan resolves and parses the ACTUAL package.

@@ -52,7 +52,9 @@ errors:
     auth_storage_bucket_recovery_verification: The recovery code entered is not valid.
       Re-type the 24 words exactly as they appear in the backup.
     auth_storage_keyring_unavailable: The operating-system keychain is unavailable.
-      Check that a credential store is installed and active.
+      Either no credential store is registered, or this logon session cannot hold
+      credentials, which is common on a network or service logon. Sign in interactively,
+      or check that a credential store is installed and active.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
     auth_storage_master_key_unavailable: This profile session was resumed and carries

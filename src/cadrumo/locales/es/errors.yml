@@ -55,7 +55,10 @@ errors:
       no es válido. Vuelve a escribir las 24 palabras exactamente como aparecen en
       la copia de seguridad.
     auth_storage_keyring_unavailable: El llavero del sistema operativo no está disponible.
-      Comprueba que haya un almacén de credenciales instalado y activo.
+      O no hay ningún almacén de credenciales registrado, o esta sesión de inicio
+      no puede guardar credenciales, algo habitual en sesiones de red o de servicio.
+      Inicia sesión de forma interactiva o comprueba que haya un almacén de credenciales
+      instalado y activo.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
     auth_storage_master_key_unavailable: Esta sesión de perfil se reanudó y solo conserva

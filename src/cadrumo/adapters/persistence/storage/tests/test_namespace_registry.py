@@ -764,7 +764,6 @@ _SECURE_OBJECT_METHODS = {
     "iter_namespace_decryptability",
     "iter_records_with_failures",
     "list_keys",
-    "list_object_keys",
     "list_records",
     "load",
     "peek_metadata",
@@ -956,3 +955,25 @@ def _is_namespace_target_name(name: str) -> bool:
 
 def _is_namespace_constant_name(name: str) -> bool:
     return name == "namespace" or "NAMESPACE" in name
+
+
+def test_every_pinned_secure_object_method_still_exists() -> None:
+    """Anchor the matcher's method set against the real repository.
+
+    The namespace checks below fire on calls to these method names. A name the
+    repository does not have can never match, so the entry contributes nothing
+    while reading as coverage -- and the same silence would follow a rename of
+    a method that IS checked today.
+
+    Found stale on its first run: ``list_object_keys`` was pinned and
+    :class:`SecureObjectRepository` has no such method.
+    """
+    from .. import SecureObjectRepository
+
+    missing = sorted(name for name in _SECURE_OBJECT_METHODS if not hasattr(SecureObjectRepository, name))
+
+    assert not missing, (
+        f"these pinned secure-object methods do not exist on the repository: {missing}. Re-point "
+        "each at its current name or drop it; a matcher keyed on a method nothing has checks "
+        "nothing while looking like it does."
+    )

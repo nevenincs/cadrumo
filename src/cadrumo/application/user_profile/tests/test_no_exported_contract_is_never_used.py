@@ -123,10 +123,14 @@ _EXPORTED_BUT_UNCONSTRUCTED: dict[str, str] = {
         "is prose rather than code -- recorded here rather than silently trusted."
     ),
     "register_imported_profile_bundle": (
-        "Documents itself as the sanctioned entry point for the operator-facing import verb. There "
-        "is no import verb: `aeat config profile` offers archive/restore over the capsule path, and "
-        "the portable-bundle subsystem beneath this function is reachable from no command at all. "
-        "Left standing because retiring a five-module subsystem is a decision, not a cleanup."
+        "Documents itself as the sanctioned entry point for the operator-facing import verb, and "
+        "there is no import verb. The EXPORT half of the same subsystem is live -- the TUI profile "
+        "manager exports through it and `aeat app maintenance reconcile` cleans up its crash "
+        "orphans -- so this is not dormant scaffolding around an unused feature. It is the missing "
+        "half of a working one: the product writes passphrase-encrypted bundles and nothing in it "
+        "reads them back, which the symbols show plainly (encrypt_* is live, decrypt_* is not). "
+        "Kept because deleting it would remove the only code that could make those exports "
+        "restorable."
     ),
 }
 
