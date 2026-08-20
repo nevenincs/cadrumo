@@ -53,6 +53,7 @@ from ...adapters.persistence.storage.bucket import (
 )
 from ...core import PRODUCT_IDENTITY
 from ...core.errors import CadrumoError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
@@ -240,7 +241,7 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
     import json
 
     try:
-        decoded = json.loads(payload.decode("utf-8"))
+        decoded = json.loads(payload.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, ValueError) as exc:
         raise ProfileCapsuleArchiveError("archive payload is not readable canonical JSON") from exc
     if not isinstance(decoded, dict):

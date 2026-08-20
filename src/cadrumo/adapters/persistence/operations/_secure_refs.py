@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel, ValidationError
 
 from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
 from ....core.time import validate_utc_aware
@@ -61,7 +62,7 @@ class OperationSecureReferenceRepository:
             exclude_defaults=False,
             exclude_none=False,
             exclude_unset=False,
-        ).encode("utf-8")
+        ).encode(UTF_8_ENCODING)
 
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
         """Encrypt ``operand`` under its exact typed-content digest."""

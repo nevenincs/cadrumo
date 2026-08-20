@@ -13,6 +13,7 @@ from typing import cast
 from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
+from .....core.external_constants import UTF_8_ENCODING
 from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 from ._kdf_attestation import kdf_worker_ready_attestation
@@ -82,7 +83,7 @@ def _worker_fds(args: argparse.Namespace) -> tuple[int, int]:
 
 
 def _parse_request(value: bytes) -> dict[str, object]:
-    payload = json.loads(value.decode("utf-8"))
+    payload = json.loads(value.decode(UTF_8_ENCODING))
     if not isinstance(payload, dict):
         raise ValueError("profile KDF request is invalid")
     record = cast(dict[str, object], payload)

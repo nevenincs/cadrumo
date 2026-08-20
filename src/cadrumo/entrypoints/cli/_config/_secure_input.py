@@ -363,7 +363,7 @@ def write_to_controlling_terminal(text: str) -> None:
         # newline="" keeps the device's own line discipline: the console is a
         # DEVICE, not a tracked artefact, and forcing LF degrades Windows
         # console rendering.
-        with open(device, "w", encoding="utf-8", newline="") as terminal:
+        with open(device, "w", encoding=UTF_8_ENCODING, newline="") as terminal:
             terminal.write(text)
             terminal.write("\n")
             terminal.flush()

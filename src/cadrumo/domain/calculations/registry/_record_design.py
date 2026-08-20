@@ -432,6 +432,80 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
+#: The two halves of a row whose columns were emitted out of order. The first
+#: line carries LENGTH, TYPE and the description; the second carries the ORDINAL
+#: and POSITION, optionally followed by the casilla reference that belongs to
+#: the description's tail.
+_REVERSED_ROW_TAIL_RE = re.compile(
+    r"^\s*(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<description>\S.*)$",
+    re.IGNORECASE,
+)
+_REVERSED_ROW_HEAD_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*(?P<tail>\[[^\]]*\]\s*)?$",
+)
+
+
+def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Reassemble a row whose PDF columns were emitted in the wrong order.
+
+    Modelo 200's older editions emit some rows as two lines with the columns
+    swapped -- ``17 Num Ret. e ingr. a cuenta ... `` followed by ``30 419
+    [596]`` -- where AEAT's row is ``30 419 17 Num Ret. e ingr. a cuenta ...
+    [596]``. Every one of those positions is otherwise unread, and they are the
+    bulk of modelo 200's reported damage: 592 such pairs across six editions.
+
+    Neither half is a row on its own, and that is the evidence. The first line
+    has a length and a naturaleza but declares no position, so it can state
+    nothing about the record's extent; the second names an ordinal and a
+    position but no width. Only together do they make a field, and each supplies
+    exactly the columns the other lacks -- nothing here is inferred from
+    neighbouring rows or from a sequence.
+
+    A wrong pairing cannot pass quietly: it would place a field at a position
+    some other row already covers, and :func:`contiguity_failure` refuses
+    partial overlap and any extent past the declared total. The join is
+    therefore checked by the same arithmetic that reports the holes it closes.
+    """
+    # A design may emit the SAME row both split and intact. Joining the split
+    # copy would then declare a position the intact row already declares --
+    # harmless to contiguity, which permits containment, and therefore silent:
+    # modelo 200's 2012-2014 editions each gained twelve duplicate importe
+    # fields that way, in records that had no holes at all. So the intact rows
+    # are collected first and a pair claiming one of their (ordinal, position)
+    # identities is left alone.
+    claimed = {
+        (parsed.ordinal, parsed.offset)
+        for number, candidate in enumerate(lines, start=1)
+        if (parsed := _parse_pdf_row(candidate, number)) is not None and parsed.ordinal is not None
+    }
+    joined: list[str] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if index + 1 < len(lines):
+            tail = _REVERSED_ROW_TAIL_RE.match(line)
+            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1])
+            if (
+                tail is not None
+                and head is not None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and (head.group("ordinal"), int(head.group("offset"))) not in claimed
+            ):
+                casilla = (head.group("tail") or "").strip()
+                description = tail.group("description").rstrip()
+                joined.append(
+                    f"{head.group('ordinal')} {head.group('offset')} "
+                    f"{tail.group('length')} {tail.group('type')} "
+                    f"{description}{' ' + casilla if casilla else ''}",
+                )
+                index += 2
+                continue
+        joined.append(line)
+        index += 1
+    return tuple(joined)
+
+
 #: A row whose ordinal and position are emitted twice before the rest of the
 #: row: ``99 1592 99 1592 17 Num ...``. The repeat is the evidence -- the line
 #: states the same two numbers twice, so dropping the first pair asserts nothing
@@ -558,7 +632,7 @@ def _extract_record_design_pdf_stream(
     if not any(line.strip() for line in lines):
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
-        return _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+        return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
     except ValueError as pdfium_exc:
         text_fallback_error = pdfium_exc
         try:
@@ -591,6 +665,81 @@ def _extract_record_design_pdf_stream(
                 skipped=tuple(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
             )
         raise
+
+
+def _read_with_reversed_column_repair(
+    lines: tuple[str, ...],
+    *,
+    source_label: str,
+    corrections: _CorrectionIndex,
+) -> RecordDesignExtraction:
+    """Read the design, retrying with the reversed-column repair only where it can help.
+
+    The repair reassembles a row whose PDF columns were emitted out of order. It
+    recovers a great deal -- roughly 8,800 positions across modelo 200's three
+    oldest editions -- but a design may emit the SAME row both split and intact,
+    and a line-level view cannot tell those apart. Applied unconditionally it
+    added twelve duplicate importe fields to each of modelo 200's 2012-2014
+    editions, which had no unread positions at all, and contiguity permits that
+    as containment, so it would have been silent.
+
+    So the decision is made at DESIGN level, on two exact quantities rather than
+    on a judgement about any line. A design that reports nothing skipped has
+    nothing for this repair to recover and is never offered one -- its first
+    read is what it returns, so a clean design cannot be perturbed. Where
+    something IS skipped, the repaired read is kept only if it skips no more
+    sheets and leaves strictly fewer positions uncovered -- counted across every
+    record the lines produce, including the ones that stay reported, because
+    that is where this repair does its work.
+    """
+    first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+    if not first.skipped:
+        return first
+    repaired_lines = _collapse_stuttered_row_prefix(
+        _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(lines)),
+    )
+    try:
+        repaired = _extract_pdf_lines(repaired_lines, source_label=source_label, corrections=corrections)
+    except ValueError:
+        return first
+    if len(repaired.skipped) > len(first.skipped):
+        return first
+    before = _unread_positions_over_lines(lines, source_label=source_label, corrections=corrections)
+    after = _unread_positions_over_lines(repaired_lines, source_label=source_label, corrections=corrections)
+    return repaired if after < before else first
+
+
+def _unread_positions_over_lines(
+    lines: tuple[str, ...],
+    *,
+    source_label: str,
+    corrections: _CorrectionIndex,
+) -> int:
+    """Positions no row covers, counted over EVERY record these lines produce.
+
+    Deliberately measured on the parse state rather than on the finished
+    extraction, and that is the whole reason this function exists. A record
+    whose rows do not tile its extent is reported instead of handed over, so it
+    is absent from ``sheets`` -- and the reversed-column repair recovers rows
+    precisely inside such records, which stay incomplete for other reasons.
+    Every quantity the extraction exposes is therefore identical either side of
+    the repair while thousands of positions differ, which is what made two
+    earlier decision rules read as "no improvement" and leave the repair dead.
+    """
+    state = _PdfParseState(source_label=source_label, corrections=corrections)
+    for number, line in enumerate(lines, start=1):
+        state.feed(line, number)
+    state._close_current_body()
+    total = 0
+    for result in state.results:
+        sheet = result.sheet
+        if sheet.total_positions is None or not sheet.fields:
+            continue
+        covered: set[int] = set()
+        for parsed_field in sheet.fields:
+            covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+        total += len(set(range(1, sheet.total_positions + 1)) - covered)
+    return total
 
 
 def _extract_sheet(worksheet: Worksheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:

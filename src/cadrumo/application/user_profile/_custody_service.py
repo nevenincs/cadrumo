@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import custody
 from ...core import BucketPointer
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import effective_storage_root
 from ._custody_hold import ProfileCustodyHoldAuthority
 from ._custody_pointer import ProfileCustodyPointerSnapshot
@@ -412,7 +413,9 @@ class _ProfileCustodyTransactionCapability:
         else:
             raise ProfileCustodyTransactionConflictError("verified create stage disappeared before publication")
         current = ProfileCustodyPointerSnapshot.capture(self._root)
-        replacement = BucketPointer(bucket_id=str(journal.profile_id), schema_version=1).to_toml().encode("utf-8")
+        replacement = (
+            BucketPointer(bucket_id=str(journal.profile_id), schema_version=1).to_toml().encode(UTF_8_ENCODING)
+        )
         if current == journal.pointer_before:
             self._retire_displaced_profile_session(journal)
             compare_and_swap_profile_pointer(
@@ -491,7 +494,7 @@ class _ProfileCustodyTransactionCapability:
         if captured is None:
             return None
         try:
-            pointer = BucketPointer.from_toml(captured.decode("utf-8"))
+            pointer = BucketPointer.from_toml(captured.decode(UTF_8_ENCODING))
         except (UnicodeDecodeError, ValidationError, ValueError) as exc:
             raise ProfileCustodyTransactionConflictError("captured active profile pointer is not canonical") from exc
         return pointer.bucket_id
