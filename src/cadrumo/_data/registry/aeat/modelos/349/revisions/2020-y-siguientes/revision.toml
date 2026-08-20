@@ -60,7 +60,9 @@ source_refs = [
 
 
 [revisions."2020-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2020-y-siguientes' of modelo 349 has no strictly-earlier sibling revision of this modelo (valid_from 2020-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2020-y-siguientes' of modelo 349 has no strictly-earlier sibling revision of this modelo (valid_from 2020-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
@@ -74,7 +76,9 @@ source_refs = [
 ]
 
 [revisions."2020-y-siguientes".family_dispositions.projection_endpoints]
-reason = "FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 349's own casillas can validate. Modelo 349 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+reason = """
+FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 349's own casillas can validate. Modelo 349 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism \
+that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."""
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
@@ -88,7 +92,9 @@ source_refs = [
 ]
 
 [revisions."2020-y-siguientes".family_dispositions.relations]
-reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 34 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 34 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",

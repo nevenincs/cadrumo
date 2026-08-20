@@ -84,7 +84,9 @@ source_refs = [
 ]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2012-01-31-y-siguientes' of modelo 145 has no strictly-earlier sibling revision of this modelo (valid_from 2012-01-31 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2012-01-31-y-siguientes' of modelo 145 has no strictly-earlier sibling revision of this modelo (valid_from 2012-01-31 precedes every other declared revision), so it cannot be the landing point of any within-modelo \
+continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "rd-439-2007:art-88",
     "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
@@ -114,7 +116,9 @@ source_refs = [
 ]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-145-dr-v20-fixed-width) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-145-dr-v20-fixed-width) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
 legal_refs = [
     "rd-439-2007:art-88",
     "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
@@ -134,7 +138,9 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-modelo-145-procedure"]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.bindings]
-reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every one of this revision's 56 casillas is input_kind = manual, so none demands a binding and none could sensibly have one: the values are the perceptor's own civil status, disability, dependants, mortgage and residence circumstances, known to that person and entered by them, not aggregated from this application's ledger the way a retenciones or IVA figure is. The family is empty by the nature of what this form carries."
+reason = """
+A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every one of this revision's 56 casillas is input_kind = manual, so none demands a binding and none could sensibly have one: the values are the perceptor's own civil status, disability, dependants, mortgage and residence circumstances, known to that person and entered by them, not aggregated from this application's ledger the way a retenciones or IVA figure is. The family is empty by the nature of \
+what this form carries."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure"]
 
@@ -144,12 +150,16 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-modelo-145-procedure"]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.verification_expectations]
-reason = "A verification expectation reconciles a FILED return against this application's engine. There is nothing to reconcile against. Modelo 145 is not filed with AEAT at all. RD 439/2007 art. 88.1 states where it goes: 'Los contribuyentes deberan comunicar al pagador la situacion personal y familiar ... quedando obligado asimismo el pagador a conservar la comunicacion debidamente firmada.' The perceptor hands it to whoever pays them and the payer keeps it; AEAT receives nothing. With no AEAT-filed document there is no filed-versus-engine comparison for this family to describe, which is a different ground from the zero-formula informativas (modelos 182, 184, 232, 347, 720) that DO carry expectations: those are filed with AEAT and their figures can be checked against a justificante."
+reason = """
+A verification expectation reconciles a FILED return against this application's engine. There is nothing to reconcile against. Modelo 145 is not filed with AEAT at all. RD 439/2007 art. 88.1 states where it goes: 'Los contribuyentes deberan comunicar al pagador la situacion personal y familiar ... quedando obligado asimismo el pagador a conservar la comunicacion debidamente firmada.' The perceptor hands it to whoever pays them and the payer keeps it; AEAT receives nothing. With no AEAT-filed \
+document there is no filed-versus-engine comparison for this family to describe, which is a different ground from the zero-formula informativas (modelos 182, 184, 232, 347, 720) that DO carry expectations: those are filed with AEAT and their figures can be checked against a justificante."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure"]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.verification_predicates]
-reason = "A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 145 calculates nothing: zero formulas, no computed casilla, no base and no cuota, and cuota_bearing is false on its own applicability. It is a declaration of personal circumstances, not of amounts. The under-declaration risk these guard is real but lives on the PAGADOR's side, where those circumstances become a tipo de retencion and then appear on modelos 111 and 190."
+reason = """
+A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 145 calculates nothing: zero formulas, no computed casilla, no base and no cuota, and cuota_bearing is false on its own applicability. It is a declaration of personal circumstances, not of amounts. The under-declaration risk these guard is real but lives on the PAGADOR's side, where those circumstances become a tipo de retencion and then appear \
+on modelos 111 and 190."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure"]
 
@@ -159,11 +169,15 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-modelo-145-procedure"]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.live_cross_references]
-reason = "A live cross-reference declares a guarded AEAT surface this revision reads. Modelo 145 has none, because it never reaches AEAT. Modelo 145 is not filed with AEAT at all. RD 439/2007 art. 88.1 states where it goes: 'Los contribuyentes deberan comunicar al pagador la situacion personal y familiar ... quedando obligado asimismo el pagador a conservar la comunicacion debidamente firmada.' The perceptor hands it to whoever pays them and the payer keeps it; AEAT receives nothing. There is consequently no filed-declarations surface to read back and no static AEAT publication for the form itself beyond the procedure page already carried in source_refs. The family is empty by where this document lives, not by omission."
+reason = """
+A live cross-reference declares a guarded AEAT surface this revision reads. Modelo 145 has none, because it never reaches AEAT. Modelo 145 is not filed with AEAT at all. RD 439/2007 art. 88.1 states where it goes: 'Los contribuyentes deberan comunicar al pagador la situacion personal y familiar ... quedando obligado asimismo el pagador a conservar la comunicacion debidamente firmada.' The perceptor hands it to whoever pays them and the payer keeps it; AEAT receives nothing. There is consequently \
+no filed-declarations surface to read back and no static AEAT publication for the form itself beyond the procedure page already carried in source_refs. The family is empty by where this document lives, not by omission."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure"]
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.extraction_profiles]
-reason = "An extraction profile names an AEAT artefact this application ingests -- a declaracion, borrador or justificante PDF, or an official workbook -- and the parser that reads it. Modelo 145 has no such artefact, because it never reaches AEAT: RD 439/2007 art. 88.1 directs the comunicacion to the pagador, who keeps the signed original, and the Administracion tributaria is granted accessibility only. Nothing is presented, so nothing is filed back, and the modelo's only official artefact is the record design (aeat-dr-145-v20), which the export family already consumes. The application builds its own workbook and fichero from the casillas; it extracts nothing, and no inbound parser for a 145 artefact exists to name. Empty by where this document lives, not by omission."
+reason = """
+An extraction profile names an AEAT artefact this application ingests -- a declaracion, borrador or justificante PDF, or an official workbook -- and the parser that reads it. Modelo 145 has no such artefact, because it never reaches AEAT: RD 439/2007 art. 88.1 directs the comunicacion to the pagador, who keeps the signed original, and the Administracion tributaria is granted accessibility only. Nothing is presented, so nothing is filed back, and the modelo's only official artefact is the record \
+design (aeat-dr-145-v20), which the export family already consumes. The application builds its own workbook and fichero from the casillas; it extracts nothing, and no inbound parser for a 145 artefact exists to name. Empty by where this document lives, not by omission."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure", "aeat-dr-145-v20"]

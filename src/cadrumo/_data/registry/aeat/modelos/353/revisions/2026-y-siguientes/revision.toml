@@ -44,7 +44,9 @@ source_refs = [
 
 
 [revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "This revision has a strictly-earlier sibling (2008-2025), and that sibling now declares the same numbered boxes [01], [02], [03], [04], [05], [08] and [09] this one does -- its own diseno prints them, so they were mirrored onto it when its export layout was authored. Those seven DO continue across the split, and [10] is genuinely new here. What blocks declaring them is the type, not the facts: every evolution names a continuidad_id, and no continuidad chain is declared for modelo 353 -- nor for any modelo in this registry, where every casilla_continuidad_evolutions family is a disposition and not one evolution has ever been authored. An entry here could name no chain. A deferral with a named unblocker, NOT a claim that nothing evolved: authoring 353's chains, then the seven unchanged evolutions and the absence of a predecessor for [10], is the work this stands in for."
+reason = """
+This revision has a strictly-earlier sibling (2008-2025), and that sibling now declares the same numbered boxes [01], [02], [03], [04], [05], [08] and [09] this one does -- its own diseno prints them, so they were mirrored onto it when its export layout was authored. Those seven DO continue across the split, and [10] is genuinely new here. What blocks declaring them is the type, not the facts: every evolution names a continuidad_id, and no continuidad chain is declared for modelo 353 -- nor for \
+any modelo in this registry, where every casilla_continuidad_evolutions family is a disposition and not one evolution has ever been authored. An entry here could name no chain. A deferral with a named unblocker, NOT a claim that nothing evolved: authoring 353's chains, then the seven unchanged evolutions and the absence of a predecessor for [10], is the work this stands in for."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
@@ -59,7 +61,9 @@ source_refs = [
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 [revisions."2026-y-siguientes".family_dispositions.relations]
-reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 3 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 3 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
@@ -74,7 +78,9 @@ source_refs = [
 ]
 
 [revisions."2026-y-siguientes".family_dispositions.parameters]
-reason = "A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one multiplies by a rate. The regime of LIVA art. 163 sexies fixes WHO aggregates, not at what rate, so there is no versioned regulatory number for this revision to carry. A future edition that introduced one -- a group-level limit, say -- would author it here, and this declaration is what that change would replace."
+reason = """
+A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one \
+multiplies by a rate. The regime of LIVA art. 163 sexies fixes WHO aggregates, not at what rate, so there is no versioned regulatory number for this revision to carry. A future edition that introduced one -- a group-level limit, say -- would author it here, and this declaration is what that change would replace."""
 legal_refs = [
     "ley-37-1992:art-163-sexies",
     "orden-eha-3434-2007:art-2",
@@ -100,7 +106,9 @@ source_refs = [
 ]
 
 [revisions."2026-y-siguientes".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose \
+consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",

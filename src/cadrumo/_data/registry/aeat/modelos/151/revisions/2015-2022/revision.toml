@@ -52,7 +52,9 @@ source_refs = [
 
 
 [revisions."2015-2022".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2015-2022' of modelo 151 has no strictly-earlier sibling revision of this modelo (valid_from 2015-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2015-2022' of modelo 151 has no strictly-earlier sibling revision of this modelo (valid_from 2015-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; \
+the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-35-2006:art-93",
     "rd-439-2007:art-113",
@@ -64,7 +66,9 @@ source_refs = [
 ]
 
 [revisions."2015-2022".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2015-2022-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2015-2022-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "ley-35-2006:art-93",
     "rd-439-2007:art-113",
@@ -77,7 +81,9 @@ source_refs = [
 ]
 
 [revisions."2015-2022".family_dispositions.relations]
-reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 1 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 1 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "ley-35-2006:art-93",
     "rd-439-2007:art-113",
@@ -90,21 +96,29 @@ source_refs = [
 ]
 
 [revisions."2015-2022".family_dispositions.deadline_windows]
-reason = "DEFERRED, not inapplicable: this modelo has a real filing window every year it covers. Orden HAP/2783/2015 art. 3.1 fixes it by REMISSION -- the plazo 'sera el mismo que se apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF' -- so the orden that governs this revision states no date of its own, and each year's concrete opens_on/closes_on is a separate factual claim about that year's Renta campaign orden. Those ordenes are not bundled for 2015-2022, and modelo 100's own declared windows begin at 2020, so five of this revision's eight years have no in-repository authority at all. A window written from memory is a filing-grade harm, so none is written. Bundling each ejercicio's Renta campaign orden, or extending modelo 100's windows back to 2015 and carrying them across under art. 3.1, is the change that makes this family authorable."
+reason = """
+DEFERRED, not inapplicable: this modelo has a real filing window every year it covers. Orden HAP/2783/2015 art. 3.1 fixes it by REMISSION -- the plazo 'sera el mismo que se apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF' -- so the orden that governs this revision states no date of its own, and each year's concrete opens_on/closes_on is a separate factual claim about that year's Renta campaign orden. Those ordenes are not bundled for 2015-2022, and modelo 100's own \
+declared windows begin at 2020, so five of this revision's eight years have no in-repository authority at all. A window written from memory is a filing-grade harm, so none is written. Bundling each ejercicio's Renta campaign orden, or extending modelo 100's windows back to 2015 and carrying them across under art. 3.1, is the change that makes this family authorable."""
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-3"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
 [revisions."2015-2022".family_dispositions.dependency_classifications]
-reason = "A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relations and target constructs that carry the fold-in. This revision declares no relations -- see the relations disposition on this same revision -- so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the cuota diferencial, but they reach this modelo as its own declared casilla inputs on pagina 08 rather than as a cross-modelo carry from the retenedor's return. Declaring a relation from the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relations and target constructs that carry the fold-in. This revision declares no relations -- see the relations disposition on this same revision -- so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the cuota diferencial, but they reach this modelo as its own \
+declared casilla inputs on pagina 08 rather than as a cross-modelo carry from the retenedor's return. Declaring a relation from the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."""
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-2"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2015"]
 
 [revisions."2015-2022".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would \
+mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."""
 legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2015"]
 
 [revisions."2015-2022".family_dispositions.live_cross_references]
-reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
+bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."""
 legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-modelo-151-procedure"]

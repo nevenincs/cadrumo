@@ -47,7 +47,9 @@ source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout", "aeat-
 
 
 [revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2024-y-siguientes' of modelo 216 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2024-y-siguientes' of modelo 216 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-3290-2008:art-1",
     "orden-eha-3290-2008:art-1",
@@ -61,7 +63,9 @@ source_refs = [
 ]
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-216-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-216-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
+the same revision."""
 legal_refs = [
     "orden-eha-3290-2008:art-1",
     "orden-eha-3290-2008:art-1",
@@ -75,22 +79,31 @@ source_refs = [
 ]
 
 [revisions."2024-y-siguientes".family_dispositions.parameters]
-reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 216 applies none. Measured on the revision itself, all six of its formulas are pure aggregation: casillas 07, 10 and 13 add the dividendos and resto columns of the rentas sometidas block, 16 and 19 do the same for the rentas no sometidas block, and 21 subtracts the prior-autoliquidacion result from the retenciones total. The IRNR retencion rate is applied by the retenedor at payment time and arrives here as an already-withheld amount in casillas 11 and 12, so the rate is spent before this modelo sees the figure. Contrast modelo 115, which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Modelo 216 has no such value to hold, and the family is empty by the shape of its own calculation rather than by omission."
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 216 applies none. Measured on the revision itself, all six of its formulas are pure aggregation: casillas 07, 10 and 13 add the dividendos and resto columns of the rentas sometidas block, 16 and 19 do the same for the rentas no sometidas block, and 21 subtracts the prior-autoliquidacion result from the retenciones total. The IRNR retencion rate is applied by the retenedor at \
+payment time and arrives here as an already-withheld amount in casillas 11 and 12, so the rate is spent before this modelo sees the figure. Contrast modelo 115, which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Modelo 216 has no such value to hold, and the family is empty by the shape of its own calculation rather than by omission."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [revisions."2024-y-siguientes".family_dispositions.dependency_classifications]
-reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 216 derives from none. It reports the retenciones the retenedor itself practised on rentas satisfied to contribuyentes del IRNR sin establecimiento permanente in the period, from its own records rather than folded in from another return. The dependency in this family runs the OTHER way: modelo 296 is the annual resumen that summarises the 216 filings of the year, so it is 296 that classifies a dependency on 216. Nothing upstream of 216 exists to classify, so the family is inapplicable by this modelo's position in the chain rather than merely unpopulated."
+reason = """
+A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 216 derives from none. It reports the retenciones the retenedor itself practised on rentas satisfied to contribuyentes del IRNR sin establecimiento permanente in the period, from its own records rather than folded in from another return. The dependency in this family runs the OTHER way: modelo 296 is the annual resumen that summarises the 216 filings of the year, so it is 296 that classifies a \
+dependency on 216. Nothing upstream of 216 exists to classify, so the family is inapplicable by this modelo's position in the chain rather than merely unpopulated."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [revisions."2024-y-siguientes".family_dispositions.relations]
-reason = "A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 216 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its six formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 296 runs in the opposite direction and is that modelo's to declare. The family is empty by the shape of this modelo's calculation rather than by omission."
+reason = """
+A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 216 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its six formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 296 runs in the opposite direction and is that \
+modelo's to declare. The family is empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
 [revisions."2024-y-siguientes".family_dispositions.bindings]
-reason = "A binding resolves a casilla value from a declared source, and none this registry offers can serve modelo 216. The sibling retenciones autoliquidaciones bind through source = 'retenciones_aggregation', whose selector scopes by RetencionScheme -- and every member of that enum is an IRPF scheme (rendimientos_trabajo, actividades_economicas, premios, arrendamiento_urbano, intereses, dividendos, otros_capital_mobiliario). None is IRNR. This modelo declares retenciones on rentas satisfied to contribuyentes sin establecimiento permanente under TRLIRNR art. 24, so any existing scheme would aggregate RESIDENT IRPF withholding into a non-resident return. The dividendos member is the easiest such mistake: 216 splits dividendos from resto as the IRPF capital schemes do, but it serves resident recipients (modelo 123). Every input casilla here is manual, and only a BOUND casilla requires a binding. The family is empty because the store models no IRNR scheme; adding one is a core change no fragment can assert."
+reason = """
+A binding resolves a casilla value from a declared source, and none this registry offers can serve modelo 216. The sibling retenciones autoliquidaciones bind through source = 'retenciones_aggregation', whose selector scopes by RetencionScheme -- and every member of that enum is an IRPF scheme (rendimientos_trabajo, actividades_economicas, premios, arrendamiento_urbano, intereses, dividendos, otros_capital_mobiliario). None is IRNR. This modelo declares retenciones on rentas satisfied to \
+contribuyentes sin establecimiento permanente under TRLIRNR art. 24, so any existing scheme would aggregate RESIDENT IRPF withholding into a non-resident return. The dividendos member is the easiest such mistake: 216 splits dividendos from resto as the IRPF capital schemes do, but it serves resident recipients (modelo 123). Every input casilla here is manual, and only a BOUND casilla requires a binding. The family is empty because the store models no IRNR scheme; adding one is a core change no \
+fragment can assert."""
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-24",
     "orden-eha-3290-2008:art-1",

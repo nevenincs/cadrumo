@@ -59,7 +59,9 @@ source_refs = [
 
 
 [revisions."2008-2025".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2008-2025' of modelo 353 has no strictly-earlier sibling revision of this modelo (valid_from 2008-01-01 precedes every other declared revision of this modelo; its sibling 2026-y-siguientes starts strictly later), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2008-2025' of modelo 353 has no strictly-earlier sibling revision of this modelo (valid_from 2008-01-01 precedes every other declared revision of this modelo; its sibling 2026-y-siguientes starts strictly later), so it \
+cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
@@ -72,7 +74,9 @@ source_refs = [
 ]
 
 [revisions."2008-2025".family_dispositions.relations]
-reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 8 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 8 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
@@ -85,7 +89,9 @@ source_refs = [
 ]
 
 [revisions."2008-2025".family_dispositions.parameters]
-reason = "A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one multiplies by a rate. The regime of LIVA art. 163 sexies fixes WHO aggregates, not at what rate, so there is no versioned regulatory number for this revision to carry."
+reason = """
+A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one \
+multiplies by a rate. The regime of LIVA art. 163 sexies fixes WHO aggregates, not at what rate, so there is no versioned regulatory number for this revision to carry."""
 legal_refs = [
     "ley-37-1992:art-163-sexies",
     "orden-eha-3434-2007:art-2",
@@ -111,7 +117,9 @@ source_refs = [
 ]
 
 [revisions."2008-2025".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose \
+consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."""
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",

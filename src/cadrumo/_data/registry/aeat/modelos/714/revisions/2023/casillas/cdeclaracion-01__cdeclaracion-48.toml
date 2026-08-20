@@ -1,0 +1,640 @@
+
+# Modelo 714 casillas for ejercicio 2023, derived row by row from the
+# bundled Diseno de Registros (02-714-ejercicio-2023.xls). The `number` is the box number
+# the design prints in square brackets; `segmento` is the record page on which
+# the box is defined. Boxes reprinted on the resumen or ingreso pages are the
+# same box carried forward, not a second casilla.
+#
+# Two independent box-number series share this form: the identification page's
+# domicilio and modalidad boxes, and the declaration's [01]-[63]. They collide
+# on 15-28 and 35-42, which is why every casilla here declares a segmento.
+
+[[revisions."2023".casillas]]
+id = "declaracion-01"
+number = "01"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-01", "modelo-714-resumen-09-declaracion-01"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-02"
+number = "02"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-02", "modelo-714-resumen-09-declaracion-02"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-03"
+number = "03"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-03", "modelo-714-resumen-09-declaracion-03"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-04"
+number = "04"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-04", "modelo-714-resumen-09-declaracion-04"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-05"
+number = "05"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-05", "modelo-714-resumen-09-declaracion-05"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-06"
+number = "06"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-06", "modelo-714-resumen-09-declaracion-06"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-07"
+number = "07"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-07", "modelo-714-resumen-09-declaracion-07"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-08"
+number = "08"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-08", "modelo-714-resumen-09-declaracion-08"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-09"
+number = "09"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-09", "modelo-714-resumen-09-declaracion-09"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-10"
+number = "10"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-10", "modelo-714-resumen-09-declaracion-10"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-11"
+number = "11"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-11", "modelo-714-resumen-09-declaracion-11"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-12"
+number = "12"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-12", "modelo-714-resumen-09-declaracion-12"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-13"
+number = "13"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-13", "modelo-714-resumen-09-declaracion-13"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-14"
+number = "14"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-14", "modelo-714-resumen-09-declaracion-14"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-15"
+number = "15"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-15", "modelo-714-resumen-09-declaracion-15"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-16"
+number = "16"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-16", "modelo-714-resumen-09-declaracion-16"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-17"
+number = "17"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-17", "modelo-714-resumen-09-declaracion-17"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-18"
+number = "18"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-18", "modelo-714-resumen-09-declaracion-18"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-19"
+number = "19"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-19", "modelo-714-resumen-09-declaracion-19"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-20"
+number = "20"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-20", "modelo-714-resumen-09-declaracion-20"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-21"
+number = "21"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-21", "modelo-714-resumen-09-declaracion-21"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-22"
+number = "22"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-22", "modelo-714-resumen-09-declaracion-22"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-23"
+number = "23"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-23", "modelo-714-ingreso-devolucion-declaracion-23"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-Ingreso
+
+[[revisions."2023".casillas]]
+id = "declaracion-24"
+number = "24"
+segmento = "714-08"
+section = ["deudas-deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-24", "modelo-714-resumen-09-declaracion-24"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "patrimonio.base-imponible"
+number = "25"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+semantic_role = "patrimonio_base_imponible"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.base-imponible", "modelo-714-ingreso-devolucion-patrimonio.base-imponible"]
+legal_refs = ["orden-hac-265-2024:art-4", "ley-19-1991:art-28", "ley-19-1991:art-4-9"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+# also printed on 714-Ingreso
+
+
+[[revisions."2023".casillas]]
+id = "declaracion-26"
+number = "26"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-26"]
+legal_refs = ["ley-19-1991:art-28", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "patrimonio.base-liquidable"
+number = "27"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+semantic_role = "patrimonio_base_liquidable"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.base-liquidable", "modelo-714-ingreso-devolucion-patrimonio.base-liquidable"]
+legal_refs = ["ley-19-1991:art-28", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+# also printed on 714-Ingreso
+
+
+[[revisions."2023".casillas]]
+id = "declaracion-28"
+number = "28"
+segmento = "714-09"
+section = ["patrimonio-exento-con-progresividad"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-28"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "patrimonio.cuota-integra"
+number = "29"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_integra"
+required = false
+input_kind = "computed"
+formula = "patrimonio-cuota-integra-escala-estatal"
+export_refs = ["modelo-714-patrimonio.cuota-integra", "modelo-714-ingreso-devolucion-patrimonio.cuota-integra"]
+legal_refs = ["ley-19-1991:art-30", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+# also printed on 714-Ingreso
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.irpf-bases-imponibles"
+number = "30"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_irpf_bases_imponibles"
+required = false
+input_kind = "computed"
+formula = "patrimonio-irpf-bases-imponibles-m100"
+export_refs = ["modelo-714-patrimonio.irpf-bases-imponibles"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4", "ley-35-2006:art-48", "ley-35-2006:art-49"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.dividendos-no-irpf"
+number = "31"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_dividendos_no_irpf"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.dividendos-no-irpf"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.base-ahorro-excluida"
+number = "32"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_base_ahorro_excluida"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.base-ahorro-excluida"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.limite-conjunto"
+number = "33"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_limite_conjunto"
+required = false
+input_kind = "computed"
+formula = "patrimonio-limite-conjunto-art31"
+export_refs = ["modelo-714-patrimonio.limite-conjunto"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.irpf-cuotas-integras"
+number = "34"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_irpf_cuotas_integras"
+required = false
+input_kind = "computed"
+formula = "patrimonio-irpf-cuotas-integras-m100"
+export_refs = ["modelo-714-patrimonio.irpf-cuotas-integras"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4", "ley-35-2006:art-63", "ley-35-2006:art-74"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+number = "35"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_irpf_cuotas_excluidas_base_ahorro"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.irpf-cuotas-excluidas-base-ahorro"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.cuota-integra-susceptible-limitacion"
+number = "36"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_integra_susceptible_limitacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.cuota-integra-susceptible-limitacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.suma-cuotas-limite"
+number = "37"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_suma_cuotas_limite"
+required = false
+input_kind = "computed"
+formula = "patrimonio-suma-cuotas-limite-art31"
+export_refs = ["modelo-714-patrimonio.suma-cuotas-limite"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.exceso-limite-conjunto"
+number = "38"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_exceso_limite_conjunto"
+required = false
+input_kind = "computed"
+formula = "patrimonio-exceso-limite-conjunto-art31"
+export_refs = ["modelo-714-patrimonio.exceso-limite-conjunto"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.reduccion-limite-80"
+number = "39"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_reduccion_limite_ochenta"
+required = false
+input_kind = "computed"
+formula = "patrimonio-reduccion-limite-80-suelo"
+export_refs = ["modelo-714-patrimonio.reduccion-limite-80"]
+legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "patrimonio.total-cuota-integra"
+number = "40"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_total_cuota_integra"
+required = false
+input_kind = "computed"
+formula = "patrimonio-total-cuota-integra-art31"
+export_refs = ["modelo-714-patrimonio.total-cuota-integra"]
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "declaracion-41"
+number = "41"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-41"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "declaracion-42"
+number = "42"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-42"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "declaracion-43"
+number = "43"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-43"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "declaracion-44"
+number = "44"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-44"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "patrimonio.cuota-minorada"
+number = "45"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_minorada"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-patrimonio.cuota-minorada"]
+legal_refs = ["orden-hac-265-2024:art-4", "ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+
+[[revisions."2023".casillas]]
+id = "declaracion-46"
+number = "46"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-46", "modelo-714-resumen-09-declaracion-46"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+# also printed on 714-09
+
+[[revisions."2023".casillas]]
+id = "declaracion-48"
+number = "48"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-48"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

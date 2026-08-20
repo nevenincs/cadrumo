@@ -26,7 +26,9 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 
 [revisions."2019-2022".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2022' of modelo 202 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2022' of modelo 202 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; \
+the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-27-2014:art-40",
     "ley-27-2014:art-29",
@@ -48,11 +50,15 @@ legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
 
 [revisions."2019-2022".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels \
+a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
 
 [revisions."2019-2022".family_dispositions.deadline_windows]
-reason = "The pagos fraccionados of LIS art. 40.3 open on the 1st and run to the 20th of April, October and December, and AEAT publishes the exact close for each year in its Calendario del Contribuyente because the day moves for weekends and holidays. Those calendars are bundled for 2023 onward, but the close date sits under a 'Hasta el N' heading that this pass could not read back from the PDF reliably, and a filing deadline written from memory rather than from the source is a filing-grade harm. The windows are REAL and this family is deliberately empty rather than guessed: extracting the headings from the bundled calendars is the named unblocker, and for 2019-2022 it additionally requires bundling those years' calendars, which are not present."
+reason = """
+The pagos fraccionados of LIS art. 40.3 open on the 1st and run to the 20th of April, October and December, and AEAT publishes the exact close for each year in its Calendario del Contribuyente because the day moves for weekends and holidays. Those calendars are bundled for 2023 onward, but the close date sits under a 'Hasta el N' heading that this pass could not read back from the PDF reliably, and a filing deadline written from memory rather than from the source is a filing-grade harm. The \
+windows are REAL and this family is deliberately empty rather than guessed: extracting the headings from the bundled calendars is the named unblocker, and for 2019-2022 it additionally requires bundling those years' calendars, which are not present."""
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]

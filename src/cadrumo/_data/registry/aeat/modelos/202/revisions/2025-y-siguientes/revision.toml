@@ -30,7 +30,9 @@ legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025"]
 
 [revisions."2025-y-siguientes".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels \
+a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025"]
 
