@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#registry-temporal-coverage'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-20'
+modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:c431d6adddabbab50c88835e31bc5ebee9569a2bd18b0e298ab81bf56c54c568'
+body_hash: 'sha256:a61ddba065337aacab54b287b443a5f27828b8155e02d8ab476cee2a8e9f3dad'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit]]'
   - '[[2026-08-15-registry-temporal-coverage-structural-decisions-audit]]'
   - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'
+  - '[[2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit` - `registry-temporal-coverage` audit: `schema family coverage census and the three grounded discriminators`
 - `2026-08-15-registry-temporal-coverage-structural-decisions-audit` - `registry-temporal-coverage` audit: `structural decisions`
 - `2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit` - `registry-temporal-coverage` audit: `designless modelo adjudication`
+- `2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit` - `registry-temporal-coverage` audit: `casilla provenance corrections and the measured review blockers`
 
 ### exec
 
