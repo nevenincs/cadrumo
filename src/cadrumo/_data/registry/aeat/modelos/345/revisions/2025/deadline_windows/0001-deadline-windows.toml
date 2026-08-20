@@ -4,7 +4,7 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-hfp-823-2022:art-4"]
 source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-base-order"]
 

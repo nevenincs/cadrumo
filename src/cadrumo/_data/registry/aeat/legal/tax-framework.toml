@@ -362,6 +362,19 @@ applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026.html"
 review_status = "reviewed"
 
+[sources."aeat-calendario-contribuyente-2026-hasta-2-febrero"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-hasta-2-febrero.html"
+sha256 = "1995b87ccfe80c79ba2b6ebc393fc7b609237fe138a7fa8205b00db698a77b36"
+bytes = 12966
+retrieved_at = 2026-08-20
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/febrero/hasta-2-febrero.html"
+review_status = "reviewed"
+
 [sources."aeat-calendario-contribuyente-2026-hasta-2-marzo"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
