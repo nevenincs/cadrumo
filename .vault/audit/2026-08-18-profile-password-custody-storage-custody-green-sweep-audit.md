@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:cf0ddd4b33a0333356e9d9b8dfe47af7bba64340940f754af368691165c66a28'
+body_hash: 'sha256:e411ba8b7229129183ac9bc29b8a313756d436944b319274fe4cb8729d9ec8b9'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2112,3 +2112,42 @@ opposite — wire the bundle path to an `import`/`export` verb pair, or retire i
 let the capsule path stand as the single portability mechanism. Recorded for a
 ruling; the unused entry point is enumerated in the gate meanwhile so it cannot fade
 back into looking ordinary.
+
+### CORRECTED: the bundle subsystem is live; only its IMPORT half is dead
+
+The section above — "Two parallel profile-portability mechanisms, one of them
+unreachable" — is **wrong in its central claim** and is corrected here rather than
+edited away, because how it went wrong is the more useful record.
+
+The bundle subsystem IS operator-reachable, by two surfaces the search missed:
+
+* the **TUI profile manager's export action** (`_run_export` in
+  `entrypoints/cli/_config/_manager_actions.py`) calls `export_profile_bundle`,
+  hardcoding encrypted transport; and
+* **`aeat app maintenance reconcile`** is a live CLI verb calling
+  `reconcile_prepared_exports` to clean up export operations a crash left staged.
+
+The whole export chain is live: `export_profile_bundle` → `prepare_profile_export` +
+`publish_prepared_export` → `serialize_profile_bundle` →
+`encrypt_profile_bundle_for_passphrase`.
+
+**Why the search said otherwise, twice.** First, reachability was checked by listing
+`aeat config profile` verbs and grepping `_config/` — so a TUI action and a verb under
+a different command group were both invisible, and "no verb here" was generalised to
+"no verb anywhere". Second, when re-measuring per symbol, the encryption entry point
+looked dead too: its only live call site is a **function-local deferred import**
+inside `_render_export_payload`, and a `grep | head -2` showed that module's own
+docstring lines and cut the real call off. A partial measurement was twice read as a
+complete one.
+
+**What is genuinely dead is the import half, and it is a sharper finding than the
+one it replaces.** `deserialize_profile_bundle`, `register_imported_profile_bundle`,
+`decrypt_profile_bundle_with_passphrase` and `validate_bundle_payload` have no caller
+on any path. So the product **writes passphrase-encrypted profile bundles that nothing
+in it can read back**: the operator is handed an export, the decrypt function exists,
+and no surface reaches it. The asymmetry is visible in the symbols themselves —
+`encrypt_*` is live, `decrypt_*` is not.
+
+That is a missing import verb, not a subsystem to retire. Deleting the export half
+would remove a working operator capability, and deleting the import half would remove
+the only code that could ever make those exports restorable.
