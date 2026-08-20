@@ -2478,6 +2478,9 @@ cli:
   help:
     invalid_value: Invalid value
     invalid_value_for: Invalid value for %{parameter}
+    missing_argument: Missing argument
+    missing_option: Missing option
+    missing_parameter: Missing parameter
     not_valid_integer: is not a valid integer.
     panel:
       arguments: Arguments

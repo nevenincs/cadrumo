@@ -69,7 +69,7 @@ if TYPE_CHECKING:
 
     from ._custody_ports import ProfileCustodyRecoveryEnvelopePort
 
-_PAYLOAD_SCHEMA_VERSION: Final[int] = 1
+_CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION: Final[int] = 1
 
 RECOVERY_SLOT_BYTES: Final[int] = 4096
 """Constant width of the recovery slot, enrolled or not.
@@ -213,7 +213,7 @@ def _encode_payload(source: ProfileCapsuleSource) -> bytes:
     """Serialise one capsule source into the archive's invariant layout."""
     return bounded_canonical_json_bytes(
         {
-            "schema_version": _PAYLOAD_SCHEMA_VERSION,
+            "schema_version": _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION,
             "profile_id": str(source.password_envelope.profile_id),
             "password_envelope": b64encode(source.password_envelope.canonical_json_bytes()).decode("ascii"),
             "sentinel": b64encode(source.sentinel.canonical_json_bytes()).decode("ascii"),
@@ -246,7 +246,7 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
     if not isinstance(decoded, dict):
         raise ProfileCapsuleArchiveError("archive payload is not a canonical JSON object")
     payload: dict[str, object] = decoded
-    if payload.get("schema_version") != _PAYLOAD_SCHEMA_VERSION:
+    if payload.get("schema_version") != _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION:
         raise ProfileCapsuleArchiveError("archive payload does not declare the current layout")
     if payload.get("profile_id") != expected_bucket_id:
         raise ProfileCapsuleArchiveError("archive payload names a different profile than its header")

@@ -25,6 +25,7 @@ RESULT_SCHEMA_MODULES: tuple[str, ...] = (
     "cadrumo.entrypoints.cli._config._censo_payloads",
     "cadrumo.entrypoints.cli._config._check_payloads",
     "cadrumo.entrypoints.cli._config._collab_payloads",
+    "cadrumo.entrypoints.cli._config._complete_setup_payloads",
     "cadrumo.entrypoints.cli._config._google_credential_source_payloads",
     "cadrumo.entrypoints.cli._config._google_payloads",
     "cadrumo.entrypoints.cli._config._provision_payloads",

@@ -179,6 +179,14 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # into total loss. Optional to CREATE is not the same as discardable once
     # created.
     "profile_capsule_recovery_envelope": PersistedFormatClass.DURABLE,
+    # The capsule ARCHIVE's payload grammar, distinct from the archive container
+    # it travels in: the container's version proves the file's framing parses, and
+    # this one decides whether the password envelope, sentinel and recovery slot
+    # inside it can still be located. The read path refuses outright on a version
+    # it does not recognise, so an unreadable payload is not a degraded restore --
+    # it is a backup that no longer restores anything, which is the one job an
+    # exported capsule archive exists to do.
+    "profile_capsule_archive_payload": PersistedFormatClass.DURABLE,
     # The encrypted profile record: the taxpayer's own facts. Its version is a
     # SEPARATE durability axis from the secure object that carries it -- the
     # envelope governs how the bytes decrypt, this governs whether the record

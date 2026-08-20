@@ -150,6 +150,7 @@ def test_a_completed_handover_receipt_is_retired_by_the_next_login_after_a_point
             _close_live_login()
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_registration_displaced_profile_keeps_no_resumable_material_after_the_next_login(
     tmp_path: Path,
 ) -> None:
@@ -235,6 +236,7 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
             _close_live_login()
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_retired_profile(
     tmp_path: Path,
 ) -> None:

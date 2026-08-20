@@ -1105,30 +1105,6 @@ def profile_custody_record_session_material(
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
 
 
-def profile_bucket_session_open(
-    *,
-    bucket_id: str,
-    kek: bytes,
-    dek: bytes,
-    idle_minutes: int,
-    absolute_minutes: int,
-    opened_at: datetime,
-    unsecured_backend: bool,
-    storage_root: Path,
-) -> ProfileBucketSessionPort:
-    """Open an authenticated bucket session through the custody substrate."""
-    return master_key.BucketSession.open(
-        bucket_id=bucket_id,
-        kek=kek,
-        dek=dek,
-        idle_minutes=idle_minutes,
-        absolute_minutes=absolute_minutes,
-        opened_at=opened_at,
-        unsecured_backend=unsecured_backend,
-        storage_root=storage_root,
-    )
-
-
 def profile_bucket_session_open_resumed(
     *,
     bucket_id: str,
@@ -1170,13 +1146,6 @@ def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
 def profile_close_bucket_session() -> None:
     """Close and clear the current live bucket session."""
     master_key.close_active_bucket_session()
-
-
-def profile_refuse_unsecured_bucket_with_real_profile(session: ProfileBucketSessionPort) -> None:
-    """Apply the real-profile refusal to an unsecured session."""
-    master_key.refuse_unsecured_bucket_with_real_profile(
-        _substrate_handle(session, master_key.BucketSession, "bucket session")
-    )
 
 
 def profile_zeroise(buffer: object) -> None:
@@ -1449,7 +1418,6 @@ __all__ = [
     "parse_profile_custody_sentinel",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
-    "profile_bucket_session_open",
     "profile_bucket_session_open_resumed",
     "profile_close_bucket_session",
     "profile_current_bucket_session",
@@ -1467,7 +1435,6 @@ __all__ = [
     "profile_is_persisted_session",
     "profile_mint_session",
     "profile_record_login_failure",
-    "profile_refuse_unsecured_bucket_with_real_profile",
     "profile_reset_login_throttle",
     "profile_resume_session",
     "profile_session_path",

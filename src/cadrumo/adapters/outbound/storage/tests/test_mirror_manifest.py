@@ -86,22 +86,28 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
         assert reloaded.latest_revision_written_at == latest_entry.revision_written_at
 
 
+# Each case needs its OWN bucket identity, and a profile identity is a canonical
+# UUIDv4 -- a descriptive slug is refused at provisioning, and a derived uuid5 is
+# refused for its version. So they are fixed literals, one per case.
 @pytest.mark.parametrize(
-    ("namespace_key", "plaintext"),
+    ("namespace_key", "plaintext", "bucket_id"),
     (
         pytest.param(
             "google_oauth_client",
             b"oauth client secret that must never reach the remote mirror",
+            "0f5cf7d0-9f8e-4b17-9a3d-6c1f2e8a4b71",
             id="oauth-client",
         ),
         pytest.param(
             "google_oauth_token",
             b"oauth refresh token that must never reach the remote mirror",
+            "1b6da8e1-3c2f-4d5a-8e7b-9f0a1c2d3e4f",
             id="oauth-token",
         ),
         pytest.param(
             "google_oauth_metadata",
             b"operator metadata that must never reach the remote mirror",
+            "2c7eb9f2-4d3a-4e6b-9f8c-0a1b2c3d4e5f",
             id="oauth-metadata",
         ),
     ),
@@ -110,12 +116,10 @@ def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
     tmp_path: Path,
     namespace_key: str,
     plaintext: bytes,
+    bucket_id: str,
 ) -> None:
     case_root = tmp_path / namespace_key
-    with isolated_runtime_profile(
-        tmp_path=case_root,
-        bucket_id=f"remote-mirror-opaque-{namespace_key}",
-    ) as profile:
+    with isolated_runtime_profile(tmp_path=case_root, bucket_id=bucket_id) as profile:
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
         namespace = namespace_definition.namespace
@@ -128,7 +132,11 @@ def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
             written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
             payload=plaintext,
         )
-        raw_row = next(repo.iter_all_records_raw())
+        # Select by namespace rather than taking the first raw row: the runtime
+        # profile fixture writes its own profile-value and bucket-event rows
+        # before this one, and the manifest builder discards foreign rows, so
+        # a positional pick yields an empty manifest that reaches no subject.
+        raw_row = next(row for row in repo.iter_all_records_raw() if row.namespace == namespace)
         manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
         entry = manifest.objects[0]
         mirror_provider = LocalFileSystemProvider(case_root / "mirror")
@@ -485,8 +493,18 @@ def _single_object_manifest_with_payload(tmp_path: Path) -> tuple[RemoteMirrorNa
             written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
             payload=b"single-plaintext-payload",
         )
-        raw_row = next(repo.iter_all_records_raw())
-        return build_remote_mirror_namespace_manifest(namespace, (raw_row,)), raw_row.payload
+        # Select by namespace rather than taking the first raw row: the runtime
+        # profile fixture writes its own profile-value and bucket-event rows
+        # before this one, and the manifest builder discards foreign rows, so
+        # a positional pick yields an empty manifest that reaches no subject.
+        raw_row = next(row for row in repo.iter_all_records_raw() if row.namespace == namespace)
+        manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
+        # An empty manifest is the failure this helper must never hand out. A
+        # count comparison over zero objects, a drift check with nothing to
+        # drift, a duplicate-key check with no key -- each passes vacuously and
+        # reads as coverage. Only the tests that INDEX an object noticed.
+        assert manifest.objects, "fixture built a manifest with no objects; no test below reaches its subject"
+        return manifest, raw_row.payload
 
 
 def _rewrite_local_provider_sidecar(

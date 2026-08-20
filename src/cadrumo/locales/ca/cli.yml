@@ -2656,6 +2656,9 @@ cli:
   help:
     invalid_value: Valor no vàlid
     invalid_value_for: Valor no vàlid per a %{parameter}
+    missing_argument: Falta l'argument
+    missing_option: Falta l'opció
+    missing_parameter: Falta el paràmetre
     not_valid_integer: no és un enter vàlid.
     panel:
       arguments: Arguments

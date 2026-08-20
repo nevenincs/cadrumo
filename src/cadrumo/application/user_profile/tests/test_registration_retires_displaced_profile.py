@@ -140,6 +140,7 @@ def _attempt_registration_in_separate_process(storage_root: Path, label: str, pa
             child.join(timeout=30)
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_login(
     tmp_path: Path,
 ) -> None:
@@ -170,6 +171,7 @@ def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_log
         )
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_the_displaced_profile_is_resumable_until_the_registration_displaces_it(
     tmp_path: Path,
 ) -> None:
@@ -215,6 +217,7 @@ def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
         assert opened["bucket_id"] == first["profile_id"]
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
     tmp_path: Path,
 ) -> None:
@@ -239,6 +242,7 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
         assert probe["dek_length"] == 32
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_words(
     tmp_path: Path,
 ) -> None:

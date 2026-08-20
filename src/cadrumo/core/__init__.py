@@ -92,6 +92,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ._action_argument_resolution import ActionArgumentResolution
+    from ._address_components import (
+        FOREIGN_ADDRESS_COMPONENTS,
+        FOREIGN_ADDRESS_INFIX,
+        SPANISH_ADDRESS_COMPONENTS,
+        SPANISH_ADDRESS_INFIXES,
+    )
     from ._aeat_csv import (
         AEAT_CSV_MAX_LENGTH,
         AEAT_CSV_MIN_LENGTH,
