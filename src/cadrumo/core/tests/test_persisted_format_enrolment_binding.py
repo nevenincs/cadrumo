@@ -52,6 +52,7 @@ VERSIONED_FORMAT_IMPLEMENTATIONS: Final[Mapping[str, str]] = {
     "profile_capsule_password_envelope": "PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION",
     "profile_capsule_commit": "PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION",
     "profile_capsule_recovery_envelope": "PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION",
+    "profile_capsule_archive_payload": "CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION",
     "profile_session": "PROFILE_SESSION_SCHEMA_VERSION",
     # These three were first recorded below as carrying no version constant.
     # They do. The gate caught its own author's error on its first run, which is

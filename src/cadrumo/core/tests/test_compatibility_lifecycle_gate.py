@@ -192,6 +192,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
             (
                 "bucket_database_file",
                 "operation_journal",
+                "profile_capsule_archive_payload",
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
@@ -205,6 +206,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
             (
                 "bucket_database_file",
                 "operation_journal",
+                "profile_capsule_archive_payload",
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
@@ -219,6 +221,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
                 "bucket_database_file",
                 "bundle",
                 "operation_journal",
+                "profile_capsule_archive_payload",
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
