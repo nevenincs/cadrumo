@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:c7d5af1a2d7b2c6b82b5b8802f3e936c3af2eef1be0db143f11381b12d3d2d4a'
+body_hash: 'sha256:cce70c69d305e073be80e80c01af18f1e373c586d311427c9dbe42fd087e3153'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2244,3 +2244,39 @@ Anchored, and proven by renaming a target in the tuple. Stated as a general shap
 this tree: **a gate keyed on a name needs two companions, not one** — a bite-proof that
 the detector fires, and an anchor that the named subject still exists. The first proves
 the instrument works; only the second proves it is still pointed at anything.
+
+### Sweeping the domain for name-keyed gates: two more stale pins
+
+The two-companions shape was applied as a sweep rather than left as advice. Every
+module-level constant in the domain's tests holding identifier-shaped strings was
+checked against a definition index built from the whole `src/` tree.
+
+Most hits were noise and correctly so — the large sets in
+`test_runtime_attached_repositories_part1.py` and `test_active_bucket_consumer_coverage.py`
+hold registry namespace **keys**, which are data resolved through
+`STORAGE_NAMESPACE_REGISTRY`, not Python symbols. A definition index cannot see them and
+should not.
+
+Two genuine stale pins surfaced:
+
+* **`test_ephemeral_key_hygiene.py`** pinned both `FiledDeclaracionObservationStore`
+  and an English `FiledDeclarationObservationStore`. Only the Spanish-stem class exists,
+  and the English spelling is one `aeat-naming` forbids ever creating — so the entry
+  pinned a class that could not appear, in a set whose whole job is naming the
+  constructors the hygiene rule covers.
+* **`test_namespace_registry.py`** pinned `list_object_keys`, which
+  `SecureObjectRepository` does not have.
+
+Neither broke anything today, and that is the point worth recording: **a pin that
+matches nothing is silent by construction**. The failure it enables is a future one —
+rename a SQL-backed repository or a checked method and it drops out of its rule with
+every assertion still green, so the rename looks free precisely because the gate stopped
+watching. Both sets now carry anchors, proven by reintroducing each stale pin.
+
+One further stale entry was found and deliberately LEFT: `object_repository` in
+`_INJECTION_KEYWORDS`. That set is an **exemption** list — a constructor call carrying
+one of those keywords is excused from the hygiene rule — so a name nothing accepts
+exempts nothing, and its staleness fails safe rather than open. Anchoring keyword names
+would also bind the list to today's parameter spellings, which is a different and weaker
+claim than "this class exists". Recorded rather than fixed, so its absence from the
+anchors is a decision instead of an oversight.
