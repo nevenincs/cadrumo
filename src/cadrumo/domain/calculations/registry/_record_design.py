@@ -432,6 +432,55 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
+#: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
+#: the next line. AEAT does this often enough to matter: modelo 202 writes
+#: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
+#: protegida ..." underneath.
+_BARE_COMPACT_PDF_ROW_RE = re.compile(
+    r"^\s*\d+\s+\d+\s+\d+\s+(?:An|Num|N|A)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Reattach a description AEAT wrapped onto the line after its row.
+
+    Done as a pre-pass rather than by loosening the row pattern, and the
+    difference is not cosmetic. Admitting a description-less row creates a field
+    that may never receive one -- the continuation handler only fills the field
+    still under construction, so anything that intervenes leaves it empty and a
+    later validator refuses the whole design. Three modelo 200 editions failed
+    exactly that way when the pattern was loosened. Joining first means every
+    row still reaches the parser complete, and no invariant downstream changes.
+
+    The line consumed must not itself look like a row, a page heading or a
+    record heading: those carry their own meaning and absorbing one would lose a
+    field or a record boundary. A row whose next line offers nothing usable is
+    left exactly as it was, to be reported as the hole it is.
+    """
+    joined: list[str] = []
+    absorbed = False
+    for index, line in enumerate(lines):
+        if absorbed:
+            absorbed = False
+            continue
+        if _BARE_COMPACT_PDF_ROW_RE.match(line) and index + 1 < len(lines):
+            candidate = lines[index + 1]
+            cleaned = _clean_pdf_line(candidate)
+            if (
+                candidate.strip()
+                and _parse_pdf_row(candidate, index + 2) is None
+                and _pdf_page_name(cleaned) is None
+                and _pdf_record_heading_name(cleaned) is None
+                and _pdf_candidate_record_name(cleaned) is None
+            ):
+                joined.append(f"{line.rstrip()} {candidate.strip()}")
+                absorbed = True
+                continue
+        joined.append(line)
+    return tuple(joined)
+
+
 @lru_cache(maxsize=256)
 def _extract_record_design_pdf_cached(
     path: str,
@@ -474,6 +523,7 @@ def _extract_record_design_pdf_stream(
     lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     if _uses_page_record_layout(lines):
         lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
+    lines = _join_wrapped_row_descriptions(lines)
     if not any(line.strip() for line in lines):
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
@@ -1576,8 +1626,29 @@ def _positive_integer_after(values: tuple[object, ...], label_index: int) -> int
     return None
 
 
+#: The space between LENGTH and TYPE is optional because the PDF text layer
+#: loses it: modelo 100's 2009 through 2011 editions all write
+#: ``5 9 1A Indicador de pagina complementaria`` for a row that is length 1,
+#: type A. Requiring the space dropped the row and reported the byte it
+#: declares -- position 9 -- as a hole in a record that was otherwise whole.
+#:
+#: The split stays unambiguous because length is digits and type is a closed
+#: alternation, so ``1A`` can only be 1 + A. Measured over every bundled PDF
+#: before allowing it, this admits three lines in three designs, all the same
+#: genuine row.
+#: ``Tit`` is a naturaleza in its own right, not a typo. Modelo 100 uses it
+#: for the one-byte code naming WHICH titular an entry belongs to, and the
+#: rows say so themselves: every occurrence ends its description in
+#: "... - Titular" or "... - Contribuyente". Across the six bundled editions
+#: that use it there are 454 such rows and every one declares length 1, which
+#: is what a holder code is.
+#:
+#: Leaving it unrecognised dropped all 454, and because they sit BETWEEN
+#: read rows the loss showed up as scattered single-byte holes -- 12, 192,
+#: 372, 581 in one record alone -- which reads like corpus damage rather
+#: than one missing token.
 _COMPACT_PDF_ROW_RE = re.compile(
-    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+(?P<type>An|Num|N|A)\s+(?P<text>.+)$",
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*(?P<type>An|Num|Tit|N|A)\s+(?P<text>.+)$",
     re.IGNORECASE,
 )
 #: A PDF row declaring the physical end of record. Its DESCRIPTION half composes

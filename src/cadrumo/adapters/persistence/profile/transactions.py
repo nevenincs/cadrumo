@@ -106,7 +106,6 @@ from ..storage import (
     SecureObjectRowIdentityError,
 )
 from ..storage.sql import TransactionDateIndexRow
-from ..storage.sql.session import session_scope
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -903,7 +902,7 @@ class TransactionCatalogueRepository:
 
     def _all_date_index_rows(self) -> dict[str, _IndexedTransactionDates]:
         """Return every ``{transaction_id: routing dates}`` this bucket's date index records."""
-        with session_scope(self._objects.engine) as session:
+        with self._objects.guarded_session_scope() as session:
             rows = session.execute(
                 select(
                     TransactionDateIndexRow.transaction_id,
@@ -946,7 +945,7 @@ class TransactionCatalogueRepository:
         so :meth:`load_for_date_range` can tell a genuinely stale/missing
         index apart from a real empty result).
         """
-        with session_scope(self._objects.engine) as session:
+        with self._objects.guarded_session_scope() as session:
             any_row = session.execute(
                 select(TransactionDateIndexRow.id).where(TransactionDateIndexRow.bucket_id == self._bucket_id).limit(1),
             ).first()
@@ -988,7 +987,7 @@ class TransactionCatalogueRepository:
             for transaction_id, transaction in catalogue.transactions.items()
         }
 
-        with session_scope(self._objects.engine) as session:
+        with self._objects.guarded_session_scope() as session:
             existing_rows = session.execute(
                 select(
                     TransactionDateIndexRow.id,

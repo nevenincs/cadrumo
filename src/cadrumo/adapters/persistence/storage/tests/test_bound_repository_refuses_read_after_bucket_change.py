@@ -69,8 +69,10 @@ def test_a_bound_repository_refuses_to_read_once_the_session_serves_another_buck
     settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"):
-        with activate_session(_session(_BUCKET_A_ID)):
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        activate_session(_session(_BUCKET_A_ID)),
+    ):
             repository = inspect_storage_runtime(settings, now=_NOW).secure_object_repository()
             repository.save(
                 namespace=namespace,
