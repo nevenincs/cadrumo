@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:d48818be0453a0e8a12593aae0afa288b382890c0a8b5b99d34f8d9ec81dfc98'
+body_hash: 'sha256:d461ca9f92075545b3b70df8fa8637d0cb73c501605024567d4de1c2ed5ef203'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1558,7 +1558,49 @@ join by inheriting a neighbour's answer unexamined. The duplicate-label code is
 asserted ABSENT from the retryable set, so the specific distinction that
 motivated all of this cannot quietly collapse back.
 
-### A gate the codebase believed it had: nothing checked that live commands are risk-assessed
+### CORRECTED: the risk-assessment gate exists, is wired, and is RED
+
+The entry below is WRONG in its central claim and is kept, corrected here,
+because the error is more instructive than the finding was.
+
+I reported that nothing checked whether live commands carry a risk assessment,
+and froze the 26 undeclared commands as an accepted debt register. The gate
+exists: `src/cadrumo-harness/.../mcp/tests/test_risk_table_parity.py`. It
+covers exactly the same surface -- the MCP-exposed and CLI-exposable command
+sets are identical, 291 each, verified rather than assumed -- and `testpaths`
+in pyproject includes `src/cadrumo-harness`, so a bare pytest run collects it.
+It is currently FAILING, on precisely the 26 commands I found.
+
+So the substance was right and the diagnosis was inverted. The 26 are a real
+gap, confirmed independently by the repository's own gate. What was wrong is
+that nobody had built a check -- somebody had, it has been red, and the
+campaign's prescribed lanes simply do not run it.
+
+My register was worse than redundant. It asserted those 26 are acceptable known
+debt while the real gate asserts the set must be EMPTY, and mine sat in the
+lanes people run while the red one does not. A green weaker claim standing
+beside a red stronger one is how the red stops being believed. It has been
+reverted.
+
+Two process lessons, both already visible earlier in this campaign and both
+missed again:
+
+* The prescribed lanes are not the tree. This is the second time a real red was
+  invisible to them -- `adapters/persistence/profile` was the first -- and the
+  second time the fix was to run the full surface rather than the given
+  selection.
+* A dangling-citation sweep is only as wide as its file enumeration. The
+  citation in `_risk_table.py` names `test_risk_table_parity.py` correctly; my
+  scan reported it absent because the enumeration excluded the harness
+  distribution. The technique found a real dangling reference elsewhere and
+  manufactured a false one here, which is exactly the failure mode this
+  campaign has recorded for every other detector it wrote.
+
+The 26 declarations still belong to the owners of the live, ledger, provision
+and config surfaces. That part of the reasoning stands, and is now backed by a
+red gate rather than a new one.
+
+### SUPERSEDED, kept for the correction above: a gate the codebase believed it had
 
 The "never file" rule is enforced by a live-write block that fires from the
 declared `COMMAND_RISK` table. A command in a mutating family with NO declared
