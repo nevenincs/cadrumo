@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:5296547253d7623f620e3dd1e359aa49833080c3ecd476bdc524bec563aa1544'
+body_hash: 'sha256:cf0ddd4b33a0333356e9d9b8dfe47af7bba64340940f754af368691165c66a28'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2056,3 +2056,59 @@ so an unreadable one is a backup that no longer restores anything.
 Renamed to `CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION` — the discovery helper keys
 constants by bare name with the underscore stripped, so a generic
 `PAYLOAD_SCHEMA_VERSION` would have collided with any other module's.
+
+### Six exported contracts that nothing ever constructed
+
+A sweep of the `user_profile` boundary's `__all__` against every identifier LOADED in
+production found six pydantic contracts referenced nowhere — not by the CLI, not by
+another layer, not by a test, not even by the module declaring them:
+`RegisterProfileCommand`, `CompleteSetupCommand`, `EditProfileFieldCommand`,
+`EditProfileSectionCommand`, `ProfileLifecycleResult`, `ProfileSnapshotRequest`.
+
+**They did not look dead, and that is the finding.** This project's own records
+describe CLI verbs "routed through `EditProfileSectionCommand`" and a
+`complete_setup` service arm. Reading the intent alone would have concluded the
+wiring was live. It was checked instead: both behaviours DO exist —
+`config profile complete-setup` and `capabilities show/set` are live verbs — and
+neither goes through these types. The behaviour shipped through repository methods
+taking plain arguments, and the command-object layer was left standing.
+
+So a name being load-bearing in the project's *records* is not evidence it is
+load-bearing in the *tree*, which is the same lesson the orchestration rule states
+about ADR amendments not being self-executing.
+
+Deleted, with a gate that catches the class: each exported name must be LOADED
+somewhere. A class statement plus an `__all__` entry is a definition, not a use, and
+that asymmetry is the entire detector — a definition-counts-as-use version would
+certify exactly the defect it exists to catch, which is asserted directly.
+
+Thirteen further exports are used only *within* their defining module. Those are
+over-exported, not dead, and are deliberately NOT failed on: conflating a facade
+-narrowing judgement with a dead contract would bury the real finding among harmless
+ones.
+
+### Two parallel profile-portability mechanisms, one of them unreachable
+
+Following `register_imported_profile_bundle` — which documents itself as "the
+sanctioned entry point for the operator-facing import verb" — turned up something
+larger than a stray export.
+
+`aeat config profile` offers `archive` and `restore`, and both resolve to the
+**capsule** path (`export_profile_capsule_archive`, `inspect_profile_capsule_archive`,
+`read_profile_capsule_archive`). There is **no import verb at all**.
+
+Beneath the unused function sits a second, complete portability subsystem — five
+modules (`_bundle.py`, `_bundle_encryption.py`, `_bundle_export.py`,
+`_bundle_export_contracts.py`, `_bundle_export_operation.py`) carrying passphrase
+encryption, prepared exports, payload validation and import registration. Not one of
+its symbols is referenced by any command. Its only entrypoint-layer reference is a
+CLI *test* calling `prepare_profile_export` directly — coverage of a subsystem no
+operator can reach.
+
+This is the shape `aeat-architecture-boundaries` forbids: two mechanisms for one
+concept, with canonicality implicit rather than declared. It was NOT deleted here.
+Retiring five modules is a decision rather than a cleanup, and the honest options are
+opposite — wire the bundle path to an `import`/`export` verb pair, or retire it and
+let the capsule path stand as the single portability mechanism. Recorded for a
+ruling; the unused entry point is enumerated in the gate meanwhile so it cannot fade
+back into looking ordinary.
