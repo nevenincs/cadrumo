@@ -9,7 +9,7 @@ modelo:
           casilla:
             aportaciones-ejercicio:
               help: null
-              label: null
+              label: Contributions made during the year
             base-retencion-practicada:
               help: null
               label: Base of the withholding applied
@@ -18,34 +18,34 @@ modelo:
               label: Withholding base
             clave-alta:
               help: null
-              label: null
+              label: Registration key
             declaracion-complementaria-sustitutiva:
               help: null
               label: Supplementary or replacement return
             declarado-nif:
               help: null
-              label: null
+              label: Reported person's tax identification number (NIF)
             declarado-nombre:
               help: null
-              label: null
+              label: Surname and forename of the reported person
             declarante-nif:
               help: null
-              label: null
+              label: Declarant's tax identification number (NIF)
             declarante-razon-social:
               help: null
               label: Business name of the filer
             ejercicio-declaracion:
               help: null
-              label: null
+              label: Reporting year
             extincion-plan:
               help: null
-              label: null
+              label: Termination of the Long-Term Savings Plan
             fecha-apertura:
               help: null
               label: Opening date
             fecha-extincion:
               help: null
-              label: null
+              label: Termination date
             identificador-producto:
               help: null
               label: Identifier of the contracted product
@@ -66,19 +66,19 @@ modelo:
               label: Contact person
             rendimientos-negativos-acumulados:
               help: null
-              label: null
+              label: Accumulated negative returns
             rendimientos-negativos-ejercicio:
               help: null
-              label: null
+              label: Negative returns obtained during the year
             rendimientos-negativos-imputables:
               help: null
               label: Attributable negative returns
             rendimientos-positivos-acumulados:
               help: null
-              label: null
+              label: Accumulated positive returns
             rendimientos-positivos-ejercicio:
               help: null
-              label: null
+              label: Positive returns obtained during the year
             representante-legal-nif:
               help: null
               label: Tax ID of the legal representative

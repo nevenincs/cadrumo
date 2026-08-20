@@ -9,40 +9,44 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Base for withholdings and payments on account
             '02':
               help: null
-              label: null
+              label: Withholdings and payments on account
             '03':
               help: null
-              label: null
+              label: 'Accrual adjustment: base for withholdings and payments on account'
             '04':
               help: null
-              label: null
+              label: 'Accrual adjustment: withholdings and payments on account'
             '05':
               help: null
-              label: null
+              label: Income from earlier years
             '06':
               help: null
-              label: null
+              label: Adjustment
             '07':
               help: null
-              label: null
+              label: 'Accrual adjustment: additional base for withholdings and payments
+                on account'
             08:
               help: null
-              label: null
+              label: 'Accrual adjustment: additional withholdings and payments on
+                account'
             09:
               help: null
-              label: null
+              label: Additional income from earlier years
             '10':
               help: null
-              label: null
+              label: 'Total settlement: sum of withholdings, payments on account and
+                any adjustment'
             '11':
               help: null
-              label: null
+              label: Amounts payable from earlier returns for the same item, year
+                and period
             '12':
               help: null
-              label: null
+              label: Amount payable
           construct:
             modelo-126-calculation-construct:
               field:
