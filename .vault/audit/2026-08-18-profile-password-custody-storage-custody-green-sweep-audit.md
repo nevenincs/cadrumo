@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:f726eed4185f26763e099ead0a971e4ec2ce757cc3afbba0e1baf184bd73e19a'
+body_hash: 'sha256:66f6e5948fc6281e6635deada86f75e98256acc2fd6607477b5c57b588785ebb'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1791,6 +1791,48 @@ The general form, now demonstrated three ways in this campaign: reds are
 invisible when they are outside the lanes you run, when they are inside them
 but constant, and when a gate cites a neighbour that nobody follows. All three
 produce the same feeling of a clean tree.
+
+### The prescribed-lane packages are clean, and the last standing red rests on a phantom boundary
+
+With the CLI package green, the other two prescribed-lane packages were run
+UNFILTERED to see what the marker selection hides. The answer is: almost
+nothing, and the exception is precise.
+
+`adapters/persistence/storage` contributes ZERO failures once `os_keychain` is
+excluded -- every one of its ten unfiltered failures is a keychain-marked test.
+`application/user_profile` hides exactly two extra behind the filter, both
+`@pytest.mark.os_keychain` and both failing with WinError 1312. So the storage
+domain's own test surface is as clean as this host permits, which is a result
+worth recording rather than assuming.
+
+That left one question: the fourteen. They fail for keychain reasons yet carry
+NO `os_keychain` marker, which looked like a straightforward marker gap --
+until the marker's own declaration was read. It says cases provable WITHOUT
+custody stay in the default lanes, and directs the reader to "the boundary the
+user_profile tests conftest draws".
+
+There is no such conftest. None under `user_profile`, none anywhere mentioning
+`os_keychain`, and no prose drawing that boundary in the tree or the vault. The
+rule for deciding which keychain-dependent cases belong in the default lanes
+has been uncitable for as long as the citation has stood.
+
+So the fourteen cannot be classified from the tree. They may be intended to
+prove something without custody and be failing to, or they may simply be
+unmarked. Marking them would make this campaign's lane green immediately, which
+is exactly why it would be the wrong move: it is the same shape as inventing a
+risk assessment to clear a gate, and it would silently answer a question the
+codebase no longer knows the answer to.
+
+The marker description now states the situation instead of pointing at a
+phantom, names the four affected modules, and says not to mark or unmark them
+on a guess.
+
+This is the fourth dangling citation this campaign has found, after the risk
+table, `test_rejects_the_removed_manifest_recovery_mirror`, and the
+contract-drift gate handing a direction to tests that did not hold it. The
+common shape is worth stating once more: prose that delegates authority to
+another artefact ages differently from the artefact, and nothing in the build
+notices when the target goes.
 
 ## Recommendations
 
