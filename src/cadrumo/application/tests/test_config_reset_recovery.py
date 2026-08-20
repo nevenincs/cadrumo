@@ -250,7 +250,6 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     from .._config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,
-        ConfigResetPauseReason,
         ConfigResetTargetPhase,
     )
     from .._config_reset_repository import ConfigResetJournalRepository

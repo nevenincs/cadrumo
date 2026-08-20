@@ -41,7 +41,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELOS = [
     (
         "490",
-        "2021-y-siguientes",
         "orden-hac-590-2021:art-1",
         "orden-hac-590-2021:art-3",
         "BOE-A-2021-9721",
@@ -50,7 +49,6 @@ _MODELOS = [
     ),
     (
         "604",
-        "2021-y-siguientes",
         "orden-hac-510-2021:art-1",
         "orden-hac-510-2021:art-3",
         "BOE-A-2021-8878",
@@ -59,7 +57,6 @@ _MODELOS = [
     ),
     (
         "763",
-        "2011-y-siguientes",
         "orden-eha-1881-2011:art-1",
         "orden-eha-1881-2011:art-4",
         "BOE-A-2011-11704",
@@ -69,11 +66,20 @@ _MODELOS = [
 ]
 
 
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
+@pytest.mark.parametrize("mid,approval,plazo,doc,domain,windows", _MODELOS)
 def test_committed_definition_legal_authority_and_deadline_windows(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
+    mid: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
 ) -> None:
-    """Each new-tax autoliquidacion validates and cites its plazo on every window."""
+    """Each new-tax autoliquidacion validates and cites its plazo on every window.
+
+    Counted across the modelo's revisions rather than inside one named revision.
+    This test used to pin a revision id, and both pinned ids stopped existing
+    when modelo 490 and modelo 604 had their spans split -- the windows did not
+    move or change, but the lookup raised ``KeyError`` and the modelo went
+    unchecked. The orden fixes how many filing windows the tax has; which
+    revision declares them is a registry-shape decision that a split may
+    legitimately change, so the count is asserted where it is stable.
+    """
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
@@ -84,6 +90,6 @@ def test_committed_definition_legal_authority_and_deadline_windows(
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-    dw = modelo.revisions[rev].deadline_windows
-    assert len(dw) == windows
-    assert all(plazo in w.legal_refs for w in dw)
+    declared = [window for revision in modelo.revisions.values() for window in revision.deadline_windows]
+    assert len(declared) == windows
+    assert all(plazo in window.legal_refs for window in declared)

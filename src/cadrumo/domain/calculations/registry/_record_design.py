@@ -1624,8 +1624,19 @@ _COMPACT_PDF_CRLF_ROW_RE = re.compile(
 #: ONE design newly match, both of them ``BLANCOS`` fill in Modelo 185, whose
 #: two sheets were each skipped for the resulting hole and left that design
 #: yielding nothing at all.
+#: A design may letter a field row as an item of a lettered group before
+#: giving its position: modelo 604's English ATF design writes
+#: ``A. 325 Alphabetic CORRECTION.`` and ``A. 350-367 Numeric CORRECTED TAX``
+#: for the two rows of its correction block, while every other row in that
+#: record opens with the position. Requiring the position first dropped both,
+#: leaving a one-byte hole at 325 that read as a dropped row.
+#:
+#: The marker is admitted, NOT the looseness it could imply: the naturaleza
+#: guard still decides, so a prose line opening ``A. 15 personas`` is rejected
+#: exactly as ``15 personas`` is. Measured over every bundled PDF before
+#: allowing it, this admits two lines in one design and nothing else.
 _NARRATIVE_PDF_ROW_RE = re.compile(
-    r"^\s*(?P<start>\d+)(?:\s*[-\u2013]\s*(?P<end>\d+))?\s+"
+    r"^\s*(?:[^\W\d_]{1,2}\.\s+)?(?P<start>\d+)(?:\s*[-\u2013]\s*(?P<end>\d+))?\s+"
     r"(?P<type>[^\W\d_]+|[-\u2013_]+(?!\s*\d))\s*"
     r"(?P<text>.*)$",
     re.IGNORECASE,
