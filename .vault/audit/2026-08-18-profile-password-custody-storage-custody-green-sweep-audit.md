@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3d68859c68a823b52d5933c262a7a027b805b058db3157d8ac76f3bc69f3664'
+body_hash: 'sha256:406ab4cc29600e9cb1ec3cef603b44270b857582b0dad3c2e951fbf57126cde4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2776,3 +2776,42 @@ which landed them inside `TYPE_CHECKING` blocks and mid-way through parenthesise
 imports — 21 syntax errors across five files. Re-done by parsing each module and
 inserting after the last MODULE-LEVEL import node, verified by re-parsing. A textual
 heuristic about Python structure is a guess; the AST is the structure.
+
+### Every exemption list in the domain, and whether it can go stale
+
+The pre-authorisation finding generalises, so it was swept rather than left as a lesson:
+**17 exemption-shaped constants** across the domain's test modules (storage, user_profile,
+persistence/profile, cli/_config), each checked for whether anything asserts its entries
+still apply.
+
+Eleven carry a staleness assertion. The six that do not were read individually, and none
+is a defect:
+
+* `_SNAPSHOT_EXCLUDED_FROM_SWEEP` excludes `schema_id` and `created_at` from a
+  defaultable-field sweep, and each cites a dedicated case that carries its proof — both
+  cited cases were confirmed to still exist, which is the failure mode the encoding gate's
+  own history records (a comment justifying itself by citing a test a later sweep deleted).
+* `_UNDECLARED_CENSO_PATH` claims `censo.filed_on` is not schema-declared. If it ever
+  became declared the refusal would not fire and the assertion would red — the premise is
+  self-protecting rather than silently invertible.
+* `_UNDECLARED_FACTS` uses an obviously synthetic path nothing would ever declare.
+* `_EXPECTED_STORE_CLASSES`, `_LITERAL_EXPECTED_VERSION` and `_DECLARED_CLASS` are pinned
+  literals, not exemptions.
+
+The classification-triad module deserves its own note, because it had already reached
+this campaign's central insight independently and wrote it down: its expected set is
+deliberately NOT derived from the production constant ("this literal is what makes a
+widening fail rather than propagate"), and its foreign-class list is named one by one
+rather than as a complement, because deriving it "meant admitting a class to the closed
+set did not fail the two refusal tests — it deleted their cases, so the assertions
+stopped existing rather than stopping passing." That is the vacuous-pass failure exactly,
+found and fixed by someone else before this sweep arrived.
+
+Production exemptions were checked too: the storage taxonomy's eleven `dormant_reason`
+markers are gated by `test_every_dormant_member_states_a_reason_and_really_is_dormant`,
+which refutes a dormancy claim from any module that references the member.
+
+**Conclusion: no defect this pass.** The domain's exemption lists are, with the single
+encoding ratchet fixed last pass, uniformly protected against outliving their reasons.
+Recorded so the sweep is not repeated — the inventory is the durable artefact here, not
+a fix.
