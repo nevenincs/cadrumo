@@ -2655,6 +2655,9 @@ cli:
   help:
     invalid_value: Érvénytelen érték
     invalid_value_for: 'Érvénytelen érték ehhez: %{parameter}'
+    missing_argument: Hiányzó argumentum
+    missing_option: Hiányzó kapcsoló
+    missing_parameter: Hiányzó paraméter
     not_valid_integer: nem érvényes egész szám.
     panel:
       arguments: Argumentumok
