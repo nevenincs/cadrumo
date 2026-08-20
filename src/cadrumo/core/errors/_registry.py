@@ -92,6 +92,26 @@ class ErrorCode(BaseModel):
     category: ErrorCategory
     message_key: str
     retryable: bool
+    """Whether repeating the IDENTICAL call may succeed with nothing else changed.
+
+    True means time alone, or another party finishing, can make the same
+    request work: a held lock, a network failure, a rate limit, a
+    compare-and-swap conflict, a login throttle. False means the call cannot
+    succeed until something else changes -- a different argument, an operator
+    action, a state that only another command can create.
+
+    This is not decoration. The operator of this CLI is an autonomous agent,
+    and this field is the instruction it acts on, so "retryable" on a
+    permanently-failing call is an invitation to loop with no terminating
+    condition. The field carried no stated meaning for a long time, and a
+    refusal for a profile label already bound to a committed capsule inherited
+    ``True`` from a sibling condition that genuinely was a stale-witness
+    conflict; the identical restore could never have succeeded.
+
+    "Retryable after the operator fixes something" is FALSE by this definition.
+    The agent cannot distinguish it from the transient case, and telling it to
+    retry is what produces the loop.
+    """
     runbook_id: str | None
 
 
