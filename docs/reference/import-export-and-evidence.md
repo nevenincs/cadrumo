@@ -137,10 +137,14 @@ profile storage moved to the sealed capsule.
 
 The profile manager can still write a portable bundle: run `aeat config profile
 edit` with no other arguments to open it, then choose the export action. Do not
-use it for transfer or backup yet. Nothing in this version reads such a bundle
-back, because the import half was withdrawn alongside the command-line verbs, so
-a bundle written today cannot be restored by this version. Treat the file as
-opaque until an import surface returns.
+use it to move a profile between machines or storage roots. Nothing in this
+version reads such a bundle back, because the import half was withdrawn
+alongside the command-line verbs, so a bundle written today cannot be loaded by
+this version. Treat the file as opaque until an import surface returns.
+
+This is a portability gap, not a recovery one. Backup and recovery are
+unaffected and run through `aeat config profile archive export` and
+`aeat config profile restore`, which operate on the sealed profile capsule.
 
 The sealed custody archive is not a substitute: it is an encrypted full-custody
 transport for recovery, not a structured, readable copy of one profile's
