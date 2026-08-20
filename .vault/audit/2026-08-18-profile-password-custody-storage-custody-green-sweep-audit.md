@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:cce70c69d305e073be80e80c01af18f1e373c586d311427c9dbe42fd087e3153'
+body_hash: 'sha256:a82d5e86b8e56ffb90e29602e1054fdf9926ff7fb34f819174c4f1a3a3f73ecf'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2280,3 +2280,37 @@ exempts nothing, and its staleness fails safe rather than open. Anchoring keywor
 would also bind the list to today's parameter spellings, which is a different and weaker
 claim than "this class exists". Recorded rather than fixed, so its absence from the
 anchors is a decision instead of an oversight.
+
+### The custody commands the MCP console could not classify
+
+`test_risk_table_parity.py` has been red on 26 exposed commands carrying no row in
+`COMMAND_RISK`. That table is what the MCP console reads to decide its human-in-the-loop
+confirmation tier, so an unclassified command is one an autonomous caller cannot reason
+about. Both of the gate's failures share this single cause — including
+`test_no_exposed_command_declares_an_aeat_live_write`, which reports the unassessed set
+rather than an actual live-write declaration. **No command declares a live write.**
+
+Five of the 26 are custody or storage and are now declared. `config.provision.*` looked
+like ours by prefix and is not: it provisions local *inference models*, which is why it
+was checked rather than claimed. The remaining 21 belong to the live-AEAT, ledger and
+modelo surfaces.
+
+Each row was read from the implementation, because the name is not the evidence:
+
+* **`config.passphrase.change` — destructive.** It re-wraps the existing data key rather
+  than re-keying, so no record is re-encrypted and any recovery artifact keeps working.
+  Declared destructive anyway: the wrapper the OLD password opened is irreversibly
+  overwritten, and a credential rotation is precisely the class of change an autonomous
+  caller must not auto-approve.
+* **`config.profile.restore` — NOT destructive**, and this is the one that needed
+  checking, since "restore a backup over a profile" sounds destructive by default. A
+  name already bound to a committed capsule is refused permanently, so the only state it
+  can overwrite is a publication interrupted part-way — which is repair, and the reason
+  the verb exists. It cannot silently replace a live profile with an older backup.
+* `config.profile.archive.export` refuses a destination that already exists;
+  `archive.inspect` reads only the plaintext header; `complete_setup` is a lifecycle
+  transition.
+
+The gate stays red on the other 21, which is the honest state: those are their owners'
+declarations to make, and a risk posture assigned by copying a neighbour is worse than
+an absent one.
