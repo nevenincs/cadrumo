@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a9f5b269d0714d726a373cb7e3f91d9d7f86c9f7f43848f470f942b23077fd1'
+body_hash: 'sha256:348ff0a1c8e8349fb3d702e1bae97b3098a95ba0cfc35590e85bcd7d66db9932'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -80,6 +80,9 @@ asks whether a tree is right for the REST of its revision's span. Not remediated
 
 ### m188-m194-plazo-correct-but-unlocatable | medium | A filing deadline whose value is right and whose establishing provision is not any of five candidates
 
+**RESOLVED by operator ruling; the finding is kept because the search results save the
+next reader five dead ends.**
+
 Modelos 188 and 194 declare a 1-31 January window. Five instruments were checked and
 none establishes it:
 
@@ -95,21 +98,29 @@ none establishes it:
 
 BOE's own amendment analysis settles why: the "SE MODIFICA" list on each consolidated
 page names only anexos (`el anexo V` for the m188 orden; `el anexo X` and `lo indicado`
-for m194's). **No plazo article of either orden was ever amended.** AEAT's Calendario
-del Contribuyente nevertheless publishes "Hasta el 31 de enero" for modelos 180, 188,
-190, 193, 193-S, 194, 196 and 270.
+for m194's). **No plazo article of either orden was ever amended.**
 
-So the declared window is a CONSERVATIVE SUBSET of the legal telematic window -- it
-closes 31 January where the cited orden allows until 20 February -- and matches AEAT's
-published operational calendar. Deliberately unchanged: widening to 20 February would
-be legally grounded but would tell an operator they have three weeks more than AEAT
-publishes, and re-grounding onto the Calendario would ground a filing DEADLINE in a
-guidance page. This needs an operator ruling, not an agent edit.
+**THE RULING: ground it in AEAT-emitted information, and keep the ranges uniform within
+a regime.** The authority for the window is the Calendario del Contribuyente, now
+bundled as `aeat-calendario-contribuyente-2026-hasta-2-febrero` and cited on both
+windows. The value is unchanged, because it was already correct.
 
-The contrast explains why modelo 187 could be stamped and its two siblings could not:
-m187's approving orden is from 2014 and restates the window in modern form ("entre el
-1 y el 31 de enero de cada año"), so its plazo is grounded. Identical casilla work,
-different grounding outcome, visible only by reading each orden's plazo article.
+The same pass settled the storage convention the whole tree now follows: **a window
+stores the NOMINAL statutory range and `shift_deadline` produces the operational date**.
+That is verified against AEAT's own calendar in both directions -- its "Hasta el 2 de
+febrero" page lists 180, 182, 187, 188, 190, 193, 194, 196, 270, 296 and 345, and
+nominal 2026-01-31 yields 2026-02-02 (`sabado`) for every one; its "Hasta el 31 de
+enero" page lists only modelo 369, and that one yields 2026-01-31
+(`modelo_exception`), because M369 is the sole member of `MODELOS_WITHOUT_SHIFT`. The
+registry's exception list and AEAT's calendar agree without either being derived from
+the other.
+
+Modelo 345 was the last window still storing a pre-shifted date (`2026-02-02`, AEAT's
+shifted date copied into the data) against its own Orden HFP/823/2022 art. 4 -- "entre
+el 1 y el 31 de enero de cada año". Corrected. A sweep over every filing-year-2025
+annual window closing in January or February 2026 now shows none storing a shifted
+date.
+
 
 ### stub-population-is-not-one-class | medium | Six revisions treated as interchangeable 2-casilla stubs differ on the axis that decides reviewability
 
@@ -151,9 +162,14 @@ first one's comment already said, recording the reason on a new
 
 ## Recommendations
 
-- **Operator ruling needed** on the m188/m194 window: keep 1-31 January and accept
-  AEAT's Calendario as its authority, or widen to the cited orden's 20 February. Do not
-  leave it citing a provision that states neither.
+- ~~Operator ruling needed on the m188/m194 window.~~ **Ruled and implemented:** store
+  the nominal statutory range, let `shift_deadline` produce the operational date, and
+  ground a window whose orden does not state its plazo in AEAT's own Calendario del
+  Contribuyente. See the plazo finding above.
+- **A deadline window must never store a shifted date.** Storing AEAT's published
+  operational date instead of the statutory one silently drops the shift REASON the
+  operator is entitled to -- the calendar then shows a date that moved without saying
+  it moved. Three modelos had done it (200, 220, 345); all are corrected.
 - **Pin each generated tree to a design epoch that covers its revision span**, or split
   the revision per edition. The check gate cannot see the mismatch today.
 - **Do not let the pending-review population be cleared by stamping to green tests.**
@@ -164,3 +180,4 @@ first one's comment already said, recording the reason on a new
   report.** `dev.registry.conformance report` is a screen: it stayed green at 95
   revision rows through four commits while eight tests pinning the deleted formulas
   were red.
+
