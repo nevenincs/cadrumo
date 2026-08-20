@@ -62,7 +62,7 @@ from .._detail_record_bindings import (
     _RelatedPartyRowField,
 )
 from .._donativo_bindings import _DonativoRowField
-from .._errors import NoRevisionForPeriodError
+from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._invoice_bindings import _InvoiceRowField
 from .._withholding_bindings import _WithholdingRowField
 
@@ -118,9 +118,50 @@ def _has_export_layout(modelo: Modelo) -> bool:
             # the probe itself is broken, and a broad except would let this gate
             # report "no layout" for a modelo it simply failed to load.
             continue
+        except RegistryValidationError:
+            # A filing-grade snapshot refuses for two reasons that BOTH mean this
+            # modelo writes no artefact today: the revision declares no export
+            # layout, or it is still `pending_review` and so cannot reach filing
+            # grade at all. Either way a dropped column has nothing to vanish
+            # from, which is precisely the state this gate treats as latent.
+            #
+            # This branch is not cosmetic. The review-status refusal was added to
+            # snapshot building after this probe was written, and without it the
+            # refusal propagates: measured, the probe RAISED for ten
+            # registry-present modelos -- 165, 181, 182, 220, 270, 721 and 840 on
+            # review status, 187, 188 and 194 on the missing layout -- so
+            # `donativo_donor` failed here reporting that M182 "now HAS an export
+            # layout" when M182 has none, authored or derived from its five
+            # bindings. The probe could not answer for exactly the modelos most
+            # likely to be missing a column.
+            continue
         if revision.export_layouts:
             return True
     return False
+
+
+def test_the_probe_answers_for_a_modelo_whose_snapshot_refuses() -> None:
+    """A refusing snapshot must yield "exports nothing", never propagate.
+
+    The probe asks one question -- does this modelo write an artefact a dropped
+    column could vanish from -- and a filing-grade snapshot refuses for two
+    reasons that both answer it NO: no export layout, or a `pending_review`
+    revision that cannot reach filing grade. Letting either escape turns the
+    answer into a crash for exactly the modelos most likely to be missing a
+    column, and the assertion message then reports the opposite of the truth
+    ("now HAS an export layout" for a modelo that has none).
+
+    Anti-vacuity: the modelos below are asserted to be genuinely refusing, so
+    this cannot pass because the probe stopped being exercised.
+    """
+    refusing = [Modelo.M182, Modelo.M187]
+
+    for modelo in refusing:
+        with pytest.raises(RegistryValidationError):
+            resources().modelos.authority.snapshot(modelo.value, filing_year=2025, period="0A")
+        assert _has_export_layout(modelo) is False, (
+            f"{modelo.value}: a refusing snapshot must read as 'exports nothing'"
+        )
 
 
 def test_the_families_are_all_reachable_and_carry_both_halves() -> None:
