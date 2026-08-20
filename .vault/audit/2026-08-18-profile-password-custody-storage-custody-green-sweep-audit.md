@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:a82d5e86b8e56ffb90e29602e1054fdf9926ff7fb34f819174c4f1a3a3f73ecf'
+body_hash: 'sha256:a5cc9f85b84eff5929a2329b1611a95fbb8c25f199ba52dca688ab51c6c49a13'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2314,3 +2314,41 @@ Each row was read from the implementation, because the name is not the evidence:
 The gate stays red on the other 21, which is the honest state: those are their owners'
 declarations to make, and a risk posture assigned by copying a neighbour is worse than
 an absent one.
+
+### The custody lock ORDER was declared in a docstring and enforced nowhere
+
+`profile_custody_transaction_lock` carries the invariant in one line — "acquire root
+then profile lock, the only accepted custody lock order" — and nothing checked it.
+
+This is the worst-shaped concurrency defect to leave unguarded. Two processes taking the
+same pair in opposite orders deadlock, **neither of them individually doing anything
+wrong**, so there is no single bad call site to find in review. It needs two operators,
+real contention and unlucky timing, which makes it close to unreproducible once shipped
+and structurally invisible to every single-process test. Nothing in the type system
+separates the two locks either: the root lock IS a `profile_custody_local_lock`, over
+`.profile-custody-root.lock`, so a future caller can take them the other way round with
+no signal at all.
+
+**The tree already complies, and that was measured rather than assumed.** The custody
+suites were run under a tracker loaded from outside the repo that wrapped the real
+primitive and recorded every acquisition: 583 tests, **95 real acquisitions, 17 of them
+the root lock, 61 nested — every nesting root-first**. The acquisition COUNT is as
+load-bearing as the verdict here: a tracker that observed nothing would have reported
+"no inversion" just as cheerfully, which is the vacuous-pass shape this campaign has now
+hit four times.
+
+Now enforced by a test, proven by inverting the real acquisition order in
+`_custody_repository.py`.
+
+**A methodological finding from writing it.** The first version of the test reported an
+inversion that did not exist. It patched the primitive on the `custody` facade, but
+`profile_custody_root_lock` reaches the primitive through its **own module global** —
+so the root acquisition was never observed and the profile lock looked like the first
+one taken. Patching at `_filesystem`, where both resolve, gives the true order.
+
+The lesson generalises past locks: **when instrumenting a function to observe calls,
+patch where the callee is RESOLVED, not where the caller is declared.** A facade
+attribute and a module global are two different bindings of one function, and an
+observer attached to the wrong one produces a confident, precisely-wrong measurement.
+That is the same root cause as the earlier bundle-subsystem misreading, where a
+function-local deferred import hid the only live call site.
