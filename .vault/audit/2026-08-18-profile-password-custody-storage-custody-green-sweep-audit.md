@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:6260963bea11b8fe39d25eef8617ed156a6819e1c6a387970775cd75ebf85158'
+body_hash: 'sha256:17b39c2f84f9c53dcd02b36f285653299edbde73d559f1a8b04ec92f6ee5f8ca'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2698,3 +2698,41 @@ It confirms this campaign's finding in its own words — "the profile manager wr
 bundles nothing in the product reads back" — and assigns restoring export/import to
 `2026-08-13-profile-portability-successor-adr`, not here. The open item this campaign was
 carrying is therefore closed: ruled, deferred deliberately, and owned elsewhere.
+
+### The exemption that switches the cross-bucket guard off
+
+Following the raw-engine thread to its neighbours: `secure_object_repository_for_bucket`
+attaches a repository to an ARBITRARY bucket id, and the runtime guard that would refuse
+a bucket the active session does not serve carries an exemption —
+
+```
+if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(...)
+```
+
+`_SYNTHETIC_SESSION_BUCKET_IDS` is `frozenset({"ephemeral"})`, used at two sites, and its
+only effect is to SKIP the cross-bucket check. So any session whose bucket id is
+`"ephemeral"` can attach a repository to **every** bucket.
+
+The only producer of such a session is `EphemeralMasterKeyProvider`, which lives in
+`src/cadrumo/tests/` — and that package **ships inside the wheel**. Nothing structural
+stopped a production module importing it and acquiring exactly that exemption. A scan
+confirmed no production module does, and that nothing prevented it.
+
+Now gated. The gate anchors its own argument against the live set — asserting `"ephemeral"`
+is still a member — so it cannot end up defending a hazard that has moved elsewhere.
+
+**A production module WAS reaching test support**, found by the same scan:
+`application/calculations/_multi_year.py` imports `isolated_runtime_profile`. It holds a
+multi-year observation TEST SCAFFOLD — a `tmp_path` parameter, a throwaway profile, bare
+`assert` statements — that came to rest in a production package. Recorded rather than
+fixed: the remedy is a relocation into the owning `tests/` directory, which is atomic and
+belongs to the calculations campaign. The bare asserts are the quieter half of the same
+problem — assertions vanish under `python -O`, so a shipped path relying on one has a
+guard in development and none in an optimised wheel.
+
+**The detector was wrong first, and was corrected before landing.** It counted
+`conftest.py` files as production modules, which is backwards: importing test support is
+conftest's job. Eight false positives, all of them fixtures doing exactly what fixtures
+do. The shipped `non_test_package_python_files()` helper yields conftest, which is
+reasonable for most gates and wrong for this one — a reminder that a shared discovery
+helper encodes someone else's question, not necessarily yours.
