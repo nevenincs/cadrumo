@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4c1b106e992b6771d165600d877c2fc5b466c2c17385f58a9749b41cd08ce8a'
+body_hash: 'sha256:6e0893831cc8aad5eff73e4c9fd1f3de16e5c1415563d04b77033b95c4f824cf'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2396,3 +2396,50 @@ every custody error code returned "all 71 missing" — the field does not exist 
 which was the console's cp1252 encoding failing on Hungarian characters, not a missing
 key; writing through UTF-8 showed the string present. Neither is a defect in the tree;
 both are defects in how it was being looked at.
+
+### A repair verb that deletes was declared as safe as one that archives
+
+`config.repair.reset_progress` deletes the saved workflow-state envelope outright — a
+fingerprint survives for audit, the state does not, and there is no re-import path. It
+carried a bare `CommandRiskDeclaration()`, contradicting the same table's own recorded
+precedent for `app.maintenance.reconcile`: *an unrecoverable local delete is declared
+destructive regardless of the recovery intent behind it.*
+
+Its neighbour `config.repair.quarantine` reads alike from the name and is correctly NOT
+destructive, which is what makes the pair worth pinning rather than describing:
+quarantine **copies** every undecryptable row, ciphertext intact, into a
+`secure_objects_quarantine` archive table an operator can restore from. Delete versus
+archive is the whole distinction, and nothing held it.
+
+**The `--yes` flag both verbs require is not the same protection.** It gates a human at
+a terminal. This table gates whether an *autonomous* caller is asked at all, and a
+required flag is something such a caller supplies itself. A command whose only guard is
+a flag has no guard against the operator this CLI was built for.
+
+Both halves are now pinned and each was proven to red independently — asserting only the
+destructive half would be satisfied by declaring every repair verb destructive, which
+buries the real one in noise and trains operators to approve without reading.
+
+Found by sweeping the table for bare rows whose key names a deleting verb. That is a
+review heuristic for *finding candidates to judge*, never the rule — leaf-name matching
+is precisely the approach this table was built to replace. The other two hits were
+checked and are correct: `config.reset.status` is read-only, and `config.reset.start` /
+`resume` already carry `destructive=True`.
+
+### Independent corroboration of the bundle-portability gap
+
+Running the operator-surface contract test surfaced the same gap from another direction:
+four commands have registered result schemas and **no raw Click surface at all** —
+`config.profile.export`, `config.profile.import`, `config.profile.subject_access_request`
+and `config.profile.rename`. `_bootstrap_exempt.py` additionally declares a
+bootstrap exemption for `config profile export`, a verb that does not exist.
+
+So the profile export/import surface was designed down to its JSON envelopes and
+bootstrap policy, and the verbs were never mounted. That is the same finding as the dead
+bundle-import half, reached without going near the bundle modules.
+
+**Left untouched deliberately.** The registrations date to the package-root rename, and
+the most recent commit on that file is a peer *mounting profile verbs* (archive/restore
+landed; these four did not). This is in-flight work by another owner, not residue to
+clear, and the honest move is to hand the evidence to the pending ruling rather than
+delete a peer's scaffolding or mount verbs nobody asked for.
