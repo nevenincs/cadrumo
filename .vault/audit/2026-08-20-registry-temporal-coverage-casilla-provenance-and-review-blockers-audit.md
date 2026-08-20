@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:348ff0a1c8e8349fb3d702e1bae97b3098a95ba0cfc35590e85bcd7d66db9932'
+body_hash: 'sha256:54bd8363386a0237e44e4601343319069f6a286917d54540877e487061fac795'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -121,7 +121,6 @@ el 1 y el 31 de enero de cada año". Corrected. A sweep over every filing-year-2
 annual window closing in January or February 2026 now shows none storing a shifted
 date.
 
-
 ### stub-population-is-not-one-class | medium | Six revisions treated as interchangeable 2-casilla stubs differ on the axis that decides reviewability
 
 Measured with `build_diseno_coverage_report(..., multi_segment=False)`:
@@ -180,4 +179,3 @@ first one's comment already said, recording the reason on a new
   report.** `dev.registry.conformance report` is a screen: it stayed green at 95
   revision rows through four commits while eight tests pinning the deleted formulas
   were red.
-
