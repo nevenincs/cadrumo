@@ -494,7 +494,6 @@ if TYPE_CHECKING:
         profile_bind_bucket_session as profile_bind_bucket_session,
     )
     from ._custody_ports import (
-        profile_bucket_session_open as profile_bucket_session_open,
     )
     from ._custody_ports import (
         profile_bucket_session_open_resumed as profile_bucket_session_open_resumed,
@@ -548,7 +547,6 @@ if TYPE_CHECKING:
         profile_record_login_failure as profile_record_login_failure,
     )
     from ._custody_ports import (
-        profile_refuse_unsecured_bucket_with_real_profile as profile_refuse_unsecured_bucket_with_real_profile,
     )
     from ._custody_ports import (
         profile_reset_login_throttle as profile_reset_login_throttle,
@@ -889,7 +887,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "parse_profile_custody_recovery_envelope": "._custody_ports",
     "parse_profile_custody_sentinel": "._custody_ports",
     "profile_advance_session_idle_deadline": "._custody_ports",
-    "profile_bucket_session_open": "._custody_ports",
     "profile_custody_record_session_material": "._custody_ports",
     "profile_custody_secure_object_key_digest": "._custody_ports",
     "profile_custody_secure_object_namespace": "._custody_ports",
@@ -901,7 +898,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_is_password_authentication_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
     "profile_mint_session": "._custody_ports",
-    "profile_refuse_unsecured_bucket_with_real_profile": "._custody_ports",
     "profile_reset_login_throttle": "._custody_ports",
     "profile_resume_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
