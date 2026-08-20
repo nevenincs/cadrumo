@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:bb91754a5386debef35208b9fc5f1fdbb42f6685749dff35e1b7601f3bf44c94'
+body_hash: 'sha256:04b026726f59ee7cfe90302c959b8ce79278c7636afb9ee78519d478498b3a97'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6755,3 +6755,101 @@ the committed filenames and re-running.
 that both size dimensions are green tree-wide, nothing is relying on that seam
 -- but nothing is exempted by it either, and a future reader should not assume
 otherwise.
+
+## Tick: the design-coverage gate could not report, and the records it could not name
+
+Queue items 1-6 re-measured green in both lanes. Authority CLEAN; the 30
+generated-tree gates re-confirmed at 30 passed.
+
+### A worklist gate that errored instead of reporting
+
+`test_every_bundled_design_is_read_or_reported` is a deliberately-red WORKLIST:
+it names every bundled AEAT design the parser cannot fully read, and goes green
+when the parser reads them all. All four of its tests were failing, and not for
+the reason the module intends -- `_outcomes()` raised `AttributeError` before
+producing anything.
+
+`_describe_correction` handled two correction kinds and fell through to the
+header-cell shape for anything else. A third kind,
+`RecordDesignSinglePositionCorrection`, has no `header_row`, so the fallthrough
+raised. Its own docstring still said "The two kinds". Every test in the module
+routes through `_outcomes()`, so one unhandled shape took out the entire gate --
+and the failure looked like four unrelated broken tests rather than one missing
+branch.
+
+The same bug sat in the grounding test's assertion MESSAGES, which interpolate
+`correction.source_row` -- a field only the field-type kind has. Those are
+evaluated only when the assertion fails, so that gate would have crashed
+precisely when it had something to report. Both now go through a kind-agnostic
+`_correction_locus`, and an unknown kind raises with a message naming the gap
+rather than degrading to a bare sheet name.
+
+`RecordDesignSinglePositionCorrection` was not exported from the package facade,
+though it is a member of the already-public `RecordDesignCorrection` union.
+Promoted it -- a consumer handling the union needs every member, and promotion
+is a precondition of the consuming change rather than a follow-up.
+
+**The gate can now report: 218 bundled designs -- 186 complete, 8 corrected, 24
+partial, and ZERO refusals.** That last number is the one nobody could see
+before: there is no design the parser outright rejects. The whole remaining
+worklist is partial reads.
+
+### The records AEAT never names
+
+With the worklist legible, one class dominated: **213 of 302 skips were
+"unidentified record body"** -- the parser detects a record boundary by geometry
+(a position restarting at 1) but cannot name the record, so it reports it unread
+rather than merging it into its neighbour.
+
+Modelo 200's 2010 orden edition is the worked case, and it is stark: **zero
+sheets read, forty-four skips.** Reading AEAT's own text showed why. That design
+heads no record with a title. Its records are separated only by a running page
+header, and each record states its identity INSIDE its body -- as the
+`Constante "006"` of the field at positions 6-8, and again as the `</T200006>`
+closing identifier AEAT requires as the record's last field. Both are declared
+required CONTENT, so reading them is recovery, not guesswork.
+
+The first attempt matched the Spanish label `Página`, and it barely fired. The
+reason is the finding: **these PDFs' text layer does not decode intact** -- the
+label arrives as `P?gina`. A reader keyed on the word works on the editions that
+decode cleanly and fails on exactly the ones that need it. AEAT fixes the
+geometry instead: the modelo constant at 3-5, the page constant at 6-8
+immediately after it. Requiring BOTH is what makes it safe, since a lone
+three-digit constant elsewhere in a body cannot satisfy it.
+
+**Unidentified bodies: 213 -> 66.** 147 record bodies went from anonymous to
+named.
+
+### What that did NOT do, stated plainly
+
+The total skip count did not move: 302 before, 292 after. Most recovered bodies
+immediately fail the contiguity check, so they moved from "we cannot name this"
+to "this is Pág. 8 and it has holes at 1855-1859". That is progress in KIND
+rather than in count -- an anonymous body is unactionable, a named one with a
+stated hole is a specific parser gap someone can fix -- but it would be
+misreporting to call it a shrinking worklist. Sheets genuinely read rose only
+2986 -> 2996.
+
+Dropped rows are now the dominant remaining class, and they cluster: six designs
+across modelos 100 and 200 stop at exactly position 337, and all four modelo 349
+records lose exactly 18-57. Those are single gaps shared across designs, not
+twenty-four separate defects.
+
+### Verified against
+
+The control is a full parse of all 218 bundled designs before and after,
+comparing per-design sheet names, field counts and skips: **zero designs lost a
+sheet, zero previously-read sheet names vanished, zero new errors.** The change
+is strictly additive.
+
+`test_every_bundled_design_is_read_or_reported`: **4 failed -> 1 failed**, the
+survivor being the worklist test that is meant to be red. The 109 record-design
+tests pass. Registry domain suite **112 -> 109 failed / 4901 passed**.
+
+A new `test_record_design_identity_recovery` pins the behaviour, including the
+two properties that keep recovery from becoming invention: a body declaring
+neither identity stays anonymous, and two bodies claiming one page BOTH stay
+anonymous rather than one absorbing the other. Proved from a plugin outside the
+repo -- recovery rewired to invent `Pág. 1` for everything reds five of the six.
+The sixth is the collision test, which asserts anonymity and so correctly passes
+when everything collides.
