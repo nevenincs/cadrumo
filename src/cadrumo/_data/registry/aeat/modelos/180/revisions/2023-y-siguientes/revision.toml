@@ -54,7 +54,9 @@ source_refs = [
 ]
 
 [revisions."2023-y-siguientes".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-180-fichero-boe-2023) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-180-fichero-boe-2023) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
+the same revision."""
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-100",
@@ -74,6 +76,8 @@ source_refs = [
 ]
 
 [revisions."2023-y-siguientes".family_dispositions.parameters]
-reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 180 applies none. Measured on the revision itself, both of its formulas are op = 'copy' over a relation: decl.base-total copies modelo-180-rel-115-base-anual and decl.retenciones-total copies modelo-180-rel-115-retenciones-anual. A copy applies nothing to what it carries. The retencion rate governing these figures was applied by the retenedor at payment time and consumed by the quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate) -- that is where this registry holds the rate, and modelo 180 receives the already-withheld annual totals. Empty by the shape of this modelo's calculation rather than by omission."
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 180 applies none. Measured on the revision itself, both of its formulas are op = 'copy' over a relation: decl.base-total copies modelo-180-rel-115-base-anual and decl.retenciones-total copies modelo-180-rel-115-retenciones-anual. A copy applies nothing to what it carries. The retencion rate governing these figures was applied by the retenedor at payment time and consumed by the \
+quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate) -- that is where this registry holds the rate, and modelo 180 receives the already-withheld annual totals. Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hfp-1284-2023:art-7", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]

@@ -49,7 +49,9 @@ source_refs = [
 ]
 
 [revisions."2021".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2021-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2021-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
 legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",

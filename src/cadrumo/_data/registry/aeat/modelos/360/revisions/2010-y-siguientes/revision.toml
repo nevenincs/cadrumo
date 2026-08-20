@@ -46,7 +46,9 @@ source_refs = [
 
 
 [revisions."2010-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2010-y-siguientes' of modelo 360 has no strictly-earlier sibling revision of this modelo (valid_from 2010-04-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2010-y-siguientes' of modelo 360 has no strictly-earlier sibling revision of this modelo (valid_from 2010-04-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-37-1992:art-117-bis",
     "orden-eha-789-2010:art-1",
@@ -59,17 +61,23 @@ source_refs = [
 ]
 
 [revisions."2010-y-siguientes".family_dispositions.projection_endpoints]
-reason = "A projection endpoint's projection_ref accepts only FilingProjectionRef, which is a CLOSED discriminated union in cadrumo.core whose every member is an m303_ engine-computed IVA fact. No declaration naming this modelo's own rows can validate against it, so the family is empty by construction rather than by omission -- the same structural reading modelo 131 already records for its own repeating rows. This modelo's repetition is served by the other mechanism: its repeated detail rows materialise from BINDING values, which is what an authored ExportRecordDefinition expresses with repeat == \"binding_rows\". Modelo 360 declares exactly that family of row bindings -- modelo-360-refund-row-supplier-nif, -member-state, -operation-kind, -operation-date and -amount -- one per refund line of the solicitud de devolucion, so the rows come from binding values and never from a projection endpoint."
+reason = """
+A projection endpoint's projection_ref accepts only FilingProjectionRef, which is a CLOSED discriminated union in cadrumo.core whose every member is an m303_ engine-computed IVA fact. No declaration naming this modelo's own rows can validate against it, so the family is empty by construction rather than by omission -- the same structural reading modelo 131 already records for its own repeating rows. This modelo's repetition is served by the other mechanism: its repeated detail rows materialise \
+from BINDING values, which is what an authored ExportRecordDefinition expresses with repeat == \"binding_rows\". Modelo 360 declares exactly that family of row bindings -- modelo-360-refund-row-supplier-nif, -member-state, -operation-kind, -operation-date and -amount -- one per refund line of the solicitud de devolucion, so the rows come from binding values and never from a projection endpoint."""
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 [revisions."2010-y-siguientes".family_dispositions.relations]
-reason = "Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A relation is a cross-MODELO fold-in this modelo consumes from another modelo's calculation. This request consumes none: the amount claimed is the input VAT on the listed invoices, evidenced by those invoices, and no other modelo of this taxpayer produces it. The refund rows arrive through the modelo-360-refund-row bindings, which are data inputs rather than a fold-in."
+reason = """
+Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A relation is a cross-MODELO fold-in this modelo consumes from another modelo's calculation. This request consumes none: the amount claimed is the input VAT on the listed invoices, evidenced by those invoices, and no other modelo of \
+this taxpayer produces it. The refund rows arrive through the modelo-360-refund-row bindings, which are data inputs rather than a fold-in."""
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 [revisions."2010-y-siguientes".family_dispositions.dependency_classifications]
-reason = "Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A dependency classification declares a source modelo this one depends on in an earlier or enclosing period. A non-established claimant files no Spanish periodic IVA self-assessment -- that is precisely why the refund is claimed through this procedure rather than deducted on a Modelo 303 -- so there is no source modelo in this taxpayer's own filing chain for the clean-state gate to reason about."
+reason = """
+Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A dependency classification declares a source modelo this one depends on in an earlier or enclosing period. A non-established claimant files no Spanish periodic IVA self-assessment -- that is precisely why the refund is claimed \
+through this procedure rather than deducted on a Modelo 303 -- so there is no source modelo in this taxpayer's own filing chain for the clean-state gate to reason about."""
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 

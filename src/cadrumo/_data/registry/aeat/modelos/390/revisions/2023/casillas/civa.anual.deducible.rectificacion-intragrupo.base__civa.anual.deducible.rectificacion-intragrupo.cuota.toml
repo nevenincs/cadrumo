@@ -1,0 +1,63 @@
+
+
+# Box [651] - '5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones intragrupo - Base impon. [651]' (offset 115, length 17).
+[[revisions."2023".casillas]]
+id = "iva.anual.deducible.rectificacion-intragrupo.base"
+number = "651"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_rectificacion_intragrupo_base"
+continuidad_id = "iva-deducible-rectificacion-intragrupo-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+export_refs = ["modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-base"]
+
+# Box [652] - '5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones intragrupo - Cuota [652]' (offset 132, length 17).
+[[revisions."2023".casillas]]
+id = "iva.anual.deducible.rectificacion-intragrupo.cuota"
+number = "652"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_rectificacion_intragrupo_cuota"
+continuidad_id = "iva-deducible-rectificacion-intragrupo-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+export_refs = ["modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-cuota"]
+
+# NOT WRITTEN -- proof failed, reported rather than assumed:
+#   Pág. 2 @1237+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - 
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0% - Base imponi
+#   Pág. 2 @1254+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - 
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0% - Cuota [664]
+#   Pág. 2 @1271+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - 
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - Base impo
+#   Pág. 2 @1305+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - 
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,62% - Base imp
+#   Pág. 2 @1322+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - 
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,62% - Cuota [6
+#   Pág. 2 @1339+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% -
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - Base impo
+#   Pág. 2 @1373+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Base i
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - Base impo
+#   Pág. 2 @1407+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acree
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Base imp
+#   Pág. 2 @1424+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acree
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Cuota [4
+#   Pág. 2 @1441+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Total cuotas IVA y recargo equivalenci
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Base imponible 
+#   Pág. 2 @1458+17: 2022 writes no casilla here
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Cuota [44]
+#   Pág. 2 @1475+17: 2022 writes no casilla here
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - B
+#   Pág. 2 @1492+17: 2022 writes no casilla here
+#     5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - C
+#   Pág. 3 @149+17: 2022 casilla 'iva.anual.soportado.interiores.base' is derived (formula/binding)
+#     5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. corrientes bienes y servic. - Base im

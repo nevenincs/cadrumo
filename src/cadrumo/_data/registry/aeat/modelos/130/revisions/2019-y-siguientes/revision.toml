@@ -10,7 +10,9 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 
 [revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 130 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 130 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "rd-439-2007:art-110",
     "orden-eha-672-2007:art-1",
@@ -23,7 +25,9 @@ source_refs = [
 ]
 
 [revisions."2019-y-siguientes".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-130-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-130-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the \
+same revision."""
 legal_refs = [
     "rd-439-2007:art-110",
     "orden-eha-672-2007:art-1",
@@ -36,7 +40,9 @@ source_refs = [
 ]
 
 [revisions."2019-y-siguientes".family_dispositions.relations]
-reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 8 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 8 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
 legal_refs = [
     "rd-439-2007:art-110",
     "orden-eha-672-2007:art-1",

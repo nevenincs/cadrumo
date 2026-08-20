@@ -59,7 +59,9 @@ source_refs = [
 
 
 [revisions."2020".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2020' of modelo 100 has no strictly-earlier sibling revision of this modelo (valid_from 2020-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2020' of modelo 100 has no strictly-earlier sibling revision of this modelo (valid_from 2020-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the \
+casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",
@@ -86,7 +88,9 @@ source_refs = [
 ]
 
 [revisions."2020".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2020-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2020-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
 legal_refs = [
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",
@@ -113,7 +117,9 @@ source_refs = [
 ]
 
 [revisions."2020".family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. No such document is bundled for modelo 100: its corpus carries the disenos de registro (wire-record descriptions that print no form labels) and no label-printing form specimen. Authoring patterns anyway would mean inventing the labels a real modelo 100 declaracion prints, which the grounding rule forbids. Bundling a filed or AEAT-published modelo 100 specimen is the change that makes this family authorable."
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. No such document is bundled for modelo 100: its corpus carries the disenos de registro (wire-record descriptions that print no form labels) and no label-printing form specimen. Authoring patterns anyway would mean inventing the labels a real modelo 100 declaracion prints, which \
+the grounding rule forbids. Bundling a filed or AEAT-published modelo 100 specimen is the change that makes this family authorable."""
 legal_refs = [
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",

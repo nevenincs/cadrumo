@@ -1,0 +1,205 @@
+
+
+[[revisions."2023".casillas]]
+id = "identificacion.estado-civil"
+number = "estado-civil"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-estado-civil"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.fecha-nacimiento"
+number = "fecha-nacimiento"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-fecha-nacimiento"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.discapacidad-porcentaje"
+number = "discapacidad-porcentaje"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-discapacidad-porcentaje"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.discapacidad-clase"
+number = "discapacidad-clase"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-discapacidad-clase"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.codigo-provincia"
+number = "codigo-provincia"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-codigo-provincia"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.nacionalidad"
+number = "nacionalidad"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-nacionalidad"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.regimen-economico-matrimonio"
+number = "regimen-economico-matrimonio"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-regimen-economico-matrimonio"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.representante-nif"
+number = "representante-nif"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-representante-nif"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.representante-nombre"
+number = "representante-nombre"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-representante-nombre"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.fecha-declaracion-localidad"
+number = "fecha-declaracion-localidad"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-fecha-declaracion-localidad"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.fecha-declaracion-dia"
+number = "fecha-declaracion-dia"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-fecha-declaracion-dia"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.fecha-declaracion-mes"
+number = "fecha-declaracion-mes"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-fecha-declaracion-mes"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.fecha-declaracion-anio"
+number = "fecha-declaracion-anio"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "year"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-fecha-declaracion-anio"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "identificacion.complementaria-cuotas-anteriores"
+number = "complementaria-cuotas-anteriores"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-identificacion-complementaria-cuotas-anteriores"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "decl.idioma"
+number = "idioma"
+segmento = "714-00"
+section = ["declarante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-decl-idioma"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "bienes.c1-total"
+number = "a"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-bienes-c1-total"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "bienes.c2-total"
+number = "b"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-bienes-c2-total"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

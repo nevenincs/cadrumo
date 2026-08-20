@@ -17,7 +17,9 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 
 [revisions."2019-2023".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2023' of modelo 123 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2023' of modelo 123 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; \
+the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-35-2006:art-25",
     "ley-35-2006:art-99",
@@ -35,7 +37,9 @@ source_refs = [
 ]
 
 [revisions."2019-2023".family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-123-2019-2023-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-123-2019-2023-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
 legal_refs = [
     "ley-35-2006:art-25",
     "ley-35-2006:art-99",
@@ -53,21 +57,29 @@ source_refs = [
 ]
 
 [revisions."2019-2023".family_dispositions.parameters]
-reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 123 applies none: every formula it declares is pure aggregation over already-withheld amounts, summing the per-block retencion casillas and subtracting the prior autoliquidacion. The retencion rate on rendimientos del capital mobiliario was applied by the retenedor at payment time and arrives here as a figure, so the rate is spent before this modelo sees it. Contrast modelo 115, which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 123 applies none: every formula it declares is pure aggregation over already-withheld amounts, summing the per-block retencion casillas and subtracting the prior autoliquidacion. The retencion rate on rendimientos del capital mobiliario was applied by the retenedor at payment time and arrives here as a figure, so the rate is spent before this modelo sees it. Contrast modelo 115, \
+which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 
 [revisions."2019-2023".family_dispositions.bindings]
-reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every input casilla of this revision is input_kind = manual, so none demands a binding. The retenciones sobre rendimientos del capital mobiliario this modelo declares are not aggregated from this application's ledger the way the modelo 115 arrendamiento figures are: the sibling retenciones_aggregation source scopes by RetencionScheme, and while that enum does carry capital members (intereses, dividendos, otros_capital_mobiliario), binding them here is a modelling change to how this modelo sources its figures, not a fragment this family can assert on its own. Empty as this revision is currently modelled."
+reason = """
+A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every input casilla of this revision is input_kind = manual, so none demands a binding. The retenciones sobre rendimientos del capital mobiliario this modelo declares are not aggregated from this application's ledger the way the modelo 115 arrendamiento figures are: the sibling retenciones_aggregation source scopes by RetencionScheme, and while that enum does carry capital members (intereses, \
+dividendos, otros_capital_mobiliario), binding them here is a modelling change to how this modelo sources its figures, not a fragment this family can assert on its own. Empty as this revision is currently modelled."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 
 [revisions."2019-2023".family_dispositions.dependency_classifications]
-reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 123 derives from none. It reports the retenciones the retenedor itself practised on rendimientos del capital mobiliario in the period, from its own payment records rather than folded in from another return. The dependency runs the OTHER way: modelo 193 is the annual resumen that summarises the 123 filings of the year, so it is 193 that classifies a dependency on 123. Nothing upstream of 123 exists to classify, so the family is inapplicable by this modelo's position in the chain."
+reason = """
+A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 123 derives from none. It reports the retenciones the retenedor itself practised on rendimientos del capital mobiliario in the period, from its own payment records rather than folded in from another return. The dependency runs the OTHER way: modelo 193 is the annual resumen that summarises the 123 filings of the year, so it is 193 that classifies a dependency on 123. Nothing upstream of 123 \
+exists to classify, so the family is inapplicable by this modelo's position in the chain."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 
 [revisions."2019-2023".family_dispositions.relations]
-reason = "A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 123 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 193 runs in the opposite direction and is that modelo's to declare."
+reason = """
+A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 123 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 193 runs in the opposite direction and is that modelo's \
+to declare."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]

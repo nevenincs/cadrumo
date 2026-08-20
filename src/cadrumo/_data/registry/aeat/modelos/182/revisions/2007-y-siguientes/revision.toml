@@ -26,7 +26,9 @@ source_refs = [
 
 
 [revisions."2007-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2007-y-siguientes' of modelo 182 has no strictly-earlier sibling revision of this modelo (valid_from 2007-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2007-y-siguientes' of modelo 182 has no strictly-earlier sibling revision of this modelo (valid_from 2007-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-3021-2007:art-1",
     "orden-eha-3021-2007:art-5",

@@ -13,7 +13,9 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 
 [revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 126 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 126 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-35-2006:art-25",
     "ley-35-2006:art-99",

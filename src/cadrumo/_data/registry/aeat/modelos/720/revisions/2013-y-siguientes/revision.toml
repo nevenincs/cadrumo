@@ -62,7 +62,9 @@ source_refs = [
 ]
 
 [revisions."2013-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2013-y-siguientes' of modelo 720 has no strictly-earlier sibling revision of this modelo (valid_from 2012-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2013-y-siguientes' of modelo 720 has no strictly-earlier sibling revision of this modelo (valid_from 2012-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-bis",
@@ -80,7 +82,9 @@ source_refs = [
 ]
 
 [revisions."2013-y-siguientes".family_dispositions.projection_endpoints]
-reason = "FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 720's own casillas can validate while the union carries no modelo-720 member. The union is no longer m303-only -- it has since gained modelo-200 members for that design's repeated detail rows -- which is why this reason is stated as a scoping rule rather than as a count of members or a single-modelo prefix, both of which go stale the moment another modelo is added. Modelo 720 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+reason = """
+FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 720's own casillas can validate while the union carries no modelo-720 member. The union is no longer m303-only -- it has since gained modelo-200 members for that design's repeated detail rows -- which is why this reason is stated as a scoping rule rather \
+than as a count of members or a single-modelo prefix, both of which go stale the moment another modelo is added. Modelo 720 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."""
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-bis",
@@ -116,7 +120,9 @@ source_refs = [
 ]
 
 [revisions."2013-y-siguientes".family_dispositions.verification_predicates]
-reason = "A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 720 calculates nothing: it declares calculation_class = \"informative\", its formulas family is already dispositioned inapplicable on the same ground, and measured on the revision itself its seven casillas declare zero formula_ids, none is input_kind computed, and there is no base and no cuota casilla. The declaration reports the existence and valuation of bienes y derechos situados en el extranjero under RD 1065/2007 arts. 42 bis, 42 ter and 54 bis; it settles no tax, so there is no computed result for an implication to constrain. The under-declaration risk this family exists to catch is real but lives elsewhere: an unreported foreign asset surfaces on the taxpayer's OWN IRPF or IS return as a ganancia patrimonial no justificada, which is where a predicate could bind a base to a cuota."
+reason = """
+A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 720 calculates nothing: it declares calculation_class = \"informative\", its formulas family is already dispositioned inapplicable on the same ground, and measured on the revision itself its seven casillas declare zero formula_ids, none is input_kind computed, and there is no base and no cuota casilla. The declaration reports the existence and \
+valuation of bienes y derechos situados en el extranjero under RD 1065/2007 arts. 42 bis, 42 ter and 54 bis; it settles no tax, so there is no computed result for an implication to constrain. The under-declaration risk this family exists to catch is real but lives elsewhere: an unreported foreign asset surfaces on the taxpayer's OWN IRPF or IS return as a ganancia patrimonial no justificada, which is where a predicate could bind a base to a cuota."""
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-bis",
