@@ -9,91 +9,109 @@ modelo:
           casilla:
             x-chim6r1ecdgnasr15koj2c0:
               help: null
-              label: null
+              label: Application for a Tax Identification Number (NIF)
             x-chim6r1ecdgnasr15koj2c8:
               help: null
-              label: null
+              label: Registration in the census of entrepreneurs, professionals and
+                withholders
             x-chim6r1ecdgnasr15koj4c0:
               help: null
-              label: null
+              label: Application for a definitive NIF when holding a provisional one
             x-chim6r1ecdgnasr15koj4c8:
               help: null
-              label: null
+              label: Application for a new NIF accreditation card
             x-chim6r1ecdgnasr15koj4cg:
               help: null
-              label: null
+              label: Change of tax domicile (pages 2A, 2B and 2C)
             x-chim6r1ecdgnasr15koj4co:
               help: null
-              label: null
+              label: Change of registered office or administrative management address
+                (pages 2A and 2B)
             x-chim6r1ecdgnasr15koj4d0:
               help: null
-              label: null
+              label: Change or removal of the address for notification purposes (pages
+                2A, 2B and 2C)
             x-chim6r1ecdgnasr15koj4d8:
               help: null
-              label: null
+              label: Change of other identifying data or domain (pages 2A, 2B and
+                2C)
             x-chim6r1ecdgnasr15koj4dg:
               help: null
-              label: null
+              label: Change of representative data (page 3)
             x-chim6r1ecdgnasr15koj4do:
               help: null
-              label: null
+              label: Change of data on economic activities and premises (page 4)
             x-chim6r1ecdgnasr15koj4e0:
               help: null
-              label: null
+              label: Change of Large Enterprise status, or Public Administration with
+                a budget above 6,000,000 euros (page 5)
             x-chim6r1ecdgnasr15koj4e8:
               help: null
-              label: null
+              label: Application to join or leave the monthly refund register (page
+                5)
             x-chim6r1ecdgnasr15koj6c0:
               help: null
-              label: null
+              label: Application to join or leave the register of intra-Community
+                operators (page 5)
             x-chim6r1ecdgnasr15koj6c8:
               help: null
-              label: null
+              label: Change of Value Added Tax data (page 5)
             x-chim6r1ecdgnasr15koj6cg:
               help: null
-              label: null
+              label: Change of Personal Income Tax data (page 6)
             x-chim6r1ecdgnasr15koj6co:
               help: null
-              label: null
+              label: Change of Corporate Income Tax data (page 6)
             x-chim6r1ecdgnasr15koj6d0:
               help: null
-              label: null
+              label: Change of Non-Resident Income Tax data for permanent establishments,
+                or for income-attribution entities formed abroad with a presence in
+                Spanish territory (page 6)
             x-chim6r1ecdgnasr15koj6d8:
               help: null
-              label: null
+              label: Election of, or withdrawal from, the special tax regime under
+                Title II of Law 49/2002 (page 6)
             x-chim6r1ecdgnasr15koj6dg:
               help: null
-              label: null
+              label: Change of data on withholdings and payments on account (page
+                7)
             x-chim6r1ecdgnasr15koj6do:
               help: null
-              label: null
+              label: Change of data on other taxes (page 7)
             x-chim6r1ecdgnasr15koj6e0:
               help: null
-              label: null
+              label: Change of data on special intra-Community trade regimes (page
+                7)
             x-chim6r1ecdgnasr15koj6e8:
               help: null
-              label: null
+              label: Change of data on the list of partners, members or participants
+                (page 8)
             x-chim6r1ecdgnasr15koj8c0:
               help: null
-              label: null
+              label: Ceasing all business and/or professional activities (legal persons
+                and entities, without liquidation; inactive entities)
             x-chim6r1ecdgnasr15koj8cg:
               help: null
-              label: null
+              label: Change or removal of telephone numbers and electronic addresses
+                for receiving notices from the AEAT, TEA and DGT (pages 2A, 2B and
+                2C)
             x-chim6r1ecdgnasr15koj8co:
               help: null
-              label: null
+              label: Notification of election of, or withdrawal from, keeping the
+                VAT record books through the AEAT electronic office (page 5)
             x-chim6r1ecdgnasr15koj8d0:
               help: null
-              label: null
+              label: Application for NIF reinstatement
             x-chim6r1ecdgnasr15koj8d8:
               help: null
-              label: null
+              label: Change of data on beneficial owners (page 10)
             x-chim6r1ecdgnasr15koj8dg:
               help: null
-              label: null
+              label: Change relating to entities in liquidation
             x-chim6r1ecdgnasr15kojac0:
               help: null
-              label: null
+              label: Deregistration from the census of entrepreneurs, professionals
+                and withholders
             x-chim6r1eclr6arjk5llmirj4:
               help: null
               label: Census return type
