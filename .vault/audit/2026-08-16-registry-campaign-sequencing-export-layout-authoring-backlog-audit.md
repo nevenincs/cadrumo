@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6549b29526c5003e6893cefc662fcd2ce1400953192e52719eb4b2833a90d2b'
+body_hash: 'sha256:daaf795c21b73be6e66ec30cc7564d5928379fc0b78e60692d4b6fa3f714080f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7041,3 +7041,75 @@ Dropped rows remain, now a shorter and better-separated list: modelo 131's
 180's visual charts are the recorded case where AEAT draws no box and the orden
 text, not the diagram, is the only honest source. Modelo 200's casillas
 1501-1508 still carry no locale label.
+
+## Tick: a description on the wrong line, and a fix that had to be undone first
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates confirmed at 30
+passed at tick start.
+
+### Modelo 202's missing byte was a line break
+
+Three modelo 202 designs reported a single dropped position -- byte 80 or 81.
+AEAT's line is `15 80 1 Num`, complete in its four tokens, with the description
+"Datos adicionales (3) - Cooperativa fiscalmente protegida ..." on the line
+BELOW. The row pattern requires a description on the same line, so the row was
+never seen and the position it declares was reported as a hole. The corpus was
+fine; the reader was reading one line at a time.
+
+Measured the population before changing anything: rows of that exact shape
+appear across modelo 200, modelo 100 and modelo 202, and every sampled one is a
+genuine field row whose text wrapped. It also explains holes I had not yet
+looked at, including several modelo 100 runs.
+
+### The first fix was wrong, and the corpus control is what said so
+
+The obvious change is to let the row match with no description and rely on the
+continuation handler to fill it in. I made that change, and the control refused
+it: **errors 0 -> 3.** Three modelo 200 editions went from partly-read to hard
+ERROR with `PDF row N missing description`.
+
+The reason is worth keeping. The continuation handler only fills the field still
+under construction, so anything intervening between the row and its text leaves
+the field permanently empty, and a later validator refuses the whole design. The
+loosened pattern did not create a small inaccuracy; it created fields that could
+never be completed, and it traded a reported hole for a design that would not
+load at all.
+
+So I reverted it and joined the lines in a PRE-PASS instead. Every row still
+reaches the parser complete, and no downstream invariant moves. The line being
+absorbed must not itself be a row, a page heading or a record heading --
+swallowing one would lose a field or a record boundary, which is worse than the
+hole being repaired. All three guards are pinned, and a greedy join reds exactly
+those three while leaving the capability tests green.
+
+This is the second time this campaign that the honest fix was the less obvious
+one, and both times the full-corpus control is what distinguished them. A
+single-case check would have shown modelo 202 repaired by either version.
+
+### Verified against
+
+Running corpus control over all 218 designs:
+
+| | tick start | after |
+|---|---|---|
+| sheets read | 3007 | **3029** |
+| skipped | 281 | **259** |
+| complete | 195 | **198** |
+| errors | 0 | **0** |
+
+Zero designs lost a sheet. Three modelo 200 editions (2012, 2013, 2014) crossed
+from partial to complete -- the same three the loosened pattern had broken --
+and because the generator consumes designs through `require_complete()`, that
+makes them new generator inputs. Modelo 200 IS an enrolled generated tree, so
+unlike the modelo 604 case last tick this is not a structural non-event; the
+gates are the check that decides it.
+
+`test_record_design_wrapped_description`: 8 passed. Disabling the join reds the
+capability plus all three corpus cases; a greedy join reds the three guards.
+Both probes run from a plugin outside the repo.
+
+### Still open
+
+Modelo 131's 13-byte runs remain unexamined. Modelo 349 and 180's visual charts
+remain the recorded case where AEAT draws no box at all. Modelo 200's casillas
+1501-1508 still carry no locale label in any of the four catalogues.
