@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:488f00b0d5c2e77d04e29c937500a7cab1f654b3c18ddab624cdc6fdf41fb2a2'
+body_hash: 'sha256:c7d5af1a2d7b2c6b82b5b8802f3e936c3af2eef1be0db143f11381b12d3d2d4a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2227,3 +2227,20 @@ against names no rule named. It now asserts that the names it exercises are memb
 **a positive control must be derived from, or checked against, the rule it controls**;
 one that hardcodes its own example degrades into testing the instrument instead of the
 guarantee.
+
+### The same latent gap in a sibling gate, closed
+
+Acting on the lesson rather than only recording it: the domain was swept for other
+gates keyed on names. `custody/tests/test_kdf_worker_import_graph.py` forbids the KDF
+child process from importing the heavy persistence graph, pinning seven module paths.
+
+All seven still resolve, so it had not lost its subject — but it carried **no anchor**.
+A module path that no longer exists is trivially absent from any child's module table,
+so a rename would retire the rule silently and green. Its existing bite-proof could not
+have caught that either: the proof imports `sqlalchemy`, a third-party name that will
+not move, so all five first-party paths could be renamed with the proof still passing.
+
+Anchored, and proven by renaming a target in the tuple. Stated as a general shape for
+this tree: **a gate keyed on a name needs two companions, not one** — a bite-proof that
+the detector fires, and an anchor that the named subject still exists. The first proves
+the instrument works; only the second proves it is still pointed at anything.
