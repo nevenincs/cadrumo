@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:df1e38fc8db55cd6b966538aa4e407b96c05b7b63b5383cc5028e3a292acc60b'
+body_hash: 'sha256:488f00b0d5c2e77d04e29c937500a7cab1f654b3c18ddab624cdc6fdf41fb2a2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2188,3 +2188,42 @@ teardown ordering, not the property under test, decides the result. This is the
 concurrency-shaped sibling of the vacuous-fixture finding recorded earlier: in both
 cases the test passed while never reaching its subject, and only deliberately breaking
 the production code exposed it.
+
+### A live security gate had silently lost its subject
+
+`adapters/inbound/tui/tests/test_no_generated_secret_display.py` forbids any TUI module
+from reaching a callable that MINTS recovery words. The reasoning is sound and still
+applies: the candidate mnemonic is displayed once on the controlling terminal and
+cannot be shown again, and a framework compositor retains, repaints and exports what
+it renders — so minting stays CLI-only.
+
+**All four symbols it pinned had been removed from the tree** — not renamed, gone:
+`create_recovery_code`, `rotate_recovery_code`, `verify_recovery_code`,
+`recover_secret_store`. The prohibition was asserting that no TUI module imports names
+that exist nowhere. Structurally green, guarding nothing.
+
+The only reason this was visible at all is that the gate carries an **anchor test**
+whose stated purpose is to red when a pinned symbol stops resolving — "a gate that pins
+symbol names passes trivially once those symbols are renamed". It did exactly that.
+That anchor is the pattern worth copying: any gate keyed on a *name* needs a companion
+that fails when the name stops existing, or retiring the subject silently retires the
+rule.
+
+The guarded property is unchanged and live. Custody still mints a **24-word BIP-39
+mnemonic**, now via `create_profile_recovery_enrollment_material` and
+`enroll_profile_recovery` (whose `ProfileRecoveryEnrollment` result carries the secret
+in a wipeable container). Both are now pinned.
+
+`generate_recovery_key` is pinned alongside them, and that is a genuine widening rather
+than bookkeeping: it is the primitive beneath both AND is exported from the storage
+facade in its own right, so a prohibition naming only application-layer callables could
+always have been walked around by importing the primitive directly. The list this
+replaces did exactly that.
+
+**A second-order finding: the positive control had decoupled from the rule.** It kept
+probing the retired names, so it went on proving the AST parser can spot an import —
+against names no rule named. It now asserts that the names it exercises are members of
+`_MINTING_CALLABLES`, so control and prohibition cannot drift apart again. Generalised:
+**a positive control must be derived from, or checked against, the rule it controls**;
+one that hardcodes its own example degrades into testing the instrument instead of the
+guarantee.
