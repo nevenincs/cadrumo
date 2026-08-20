@@ -126,8 +126,23 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.google.sync.calc.verify": CommandRiskDeclaration(),
     "config.google.sync.probe": CommandRiskDeclaration(),
     "config.google.sync.push": CommandRiskDeclaration(),
+    # Rotation re-wraps the existing data key under a new password rather than
+    # re-keying: no record is re-encrypted and any recovery artifact keeps
+    # working. It is declared destructive anyway, because the wrapper the OLD
+    # password opened is irreversibly overwritten -- an operator who mistypes
+    # the new value has lost their normal route in, and this is precisely the
+    # class of change an autonomous caller must not auto-approve.
+    "config.passphrase.change": CommandRiskDeclaration(destructive=True),
+    # Writes a NEW sealed archive and refuses a destination that already
+    # exists, so it overwrites nothing; the capsule it reads is untouched.
+    "config.profile.archive.export": CommandRiskDeclaration(),
+    # Reads the archive's plaintext header, which is all it discloses unkeyed.
+    "config.profile.archive.inspect": CommandRiskDeclaration(),
     "config.profile.capabilities.set": CommandRiskDeclaration(),
     "config.profile.capabilities.show": CommandRiskDeclaration(),
+    # A lifecycle state transition, SETUP_INCOMPLETE -> ACTIVE. Nothing is
+    # removed and the record it stamps is the one it read.
+    "config.profile.complete_setup": CommandRiskDeclaration(),
     # Reads an operator-supplied censal artefact and, under `--apply`, enrolls
     # its facts through the single cotejo apply authority. Preview is the
     # default posture and the write updates profile fields in place, the same
@@ -158,6 +173,12 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.edit": CommandRiskDeclaration(),
     "config.profile.list": CommandRiskDeclaration(),
     "config.profile.preflight": CommandRiskDeclaration(),
+    # Publishes a capsule an operator already holds back into the storage
+    # root. NOT destructive: a name already bound to a committed capsule is
+    # refused permanently, so the only state it can overwrite is a publication
+    # that was interrupted part-way -- which is repair, and the reason the verb
+    # exists. It cannot silently replace a live profile with an older backup.
+    "config.profile.restore": CommandRiskDeclaration(),
     "config.profile.show": CommandRiskDeclaration(),
     "config.profile.status": CommandRiskDeclaration(),
     "config.profile.validate": CommandRiskDeclaration(),
