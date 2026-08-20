@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec92aeada3c5776301cd3a70c27a76dcbe061449ae3cb4c373af6e335cfa5b35'
+body_hash: 'sha256:d7f2c56f0b8c4d5f7247f4cd3e545de812fd4bd5d48c52fdddb6fd48c80658f5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1925,3 +1925,35 @@ record rather than a field update. Duplication is the larger of the two, needing
 a new identity, a new data-encryption key and a full re-encryption, because the
 key is per-profile and its rotation is unsupported -- which puts it outside what
 the accepted custody roll-up decided.
+
+### The remote-mirror manifest fixtures never reached their subject
+
+`src/cadrumo/adapters/outbound/storage/tests/test_mirror_manifest.py` built every
+manifest from `next(repo.iter_all_records_raw())` — the FIRST raw secure-object
+row — on the assumption it was the row the fixture had just saved. It is not: the
+runtime profile fixture writes a `cadrumo.application.user_profile.value` row and a
+`cadrumo.domain.buckets.event_history` row before it, and
+`build_remote_mirror_namespace_manifest` (`_mirror_manifest.py:49`) discards rows
+outside the target namespace. Every manifest came out with zero objects.
+
+What makes this worth recording is not the eleven red tests. It is which eleven.
+Only the cases that INDEXED an object (`manifest.objects[0]`, `original["objects"][0]`)
+failed, with an `IndexError` far from the cause. The cases that compared an
+`object_count`, checked ciphertext or metadata drift, or asserted key uniqueness had
+nothing to count, drift or repeat — they passed, and had been reporting coverage of
+the remote-mirror confidentiality surface while exercising an empty document.
+
+Three further cases were provisioning under a descriptive slug
+(`remote-mirror-opaque-<key>`) rather than a canonical identity, refused by
+`canonical_profile_bucket_id`, which requires a UUID **version 4** specifically — so a
+derived `uuid5` is refused too and the identities have to be fixed literals.
+
+Fixed by selecting the saved row by namespace, giving each parametrised case its own
+v4 identity, and asserting in the shared helper that the manifest it hands out is
+non-empty. The guard was proven to bite by restoring the positional pick.
+
+**The generalisable tell:** a fixture that selects POSITIONALLY out of a shared store
+is only correct while nothing else writes to that store, and a consumer that FILTERS
+turns the resulting mis-selection into silence rather than an error. Positional
+selection plus downstream filtering is a false-green generator; select by the property
+the test means, and make the helper refuse to return an empty subject.
