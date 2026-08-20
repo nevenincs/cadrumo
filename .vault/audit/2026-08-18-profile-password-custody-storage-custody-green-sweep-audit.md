@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7f2c56f0b8c4d5f7247f4cd3e545de812fd4bd5d48c52fdddb6fd48c80658f5'
+body_hash: 'sha256:6cb22bba518d3132e24a6581657c3ff6b5cc64b74a5f6a08400825bc31b98d10'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1957,3 +1957,53 @@ is only correct while nothing else writes to that store, and a consumer that FIL
 turns the resulting mis-selection into silence rather than an error. Positional
 selection plus downstream filtering is a false-green generator; select by the property
 the test means, and make the helper refuse to return an empty subject.
+
+### Classifying the master-key surface: not residue
+
+The campaign brief flagged `adapters/persistence/storage/master_key/` as a package
+named for the retired shared-master-key model, still exporting `MasterKeyProvider`
+and `UnsecuredMasterKeyProvider`, and asked that genuine residue be separated from
+protective code carrying a legacy name before anything was deleted. The answer is
+that there is no retired-provider residue in it.
+
+The module defines exactly five things and all five are live. `MasterKeyProvider` is
+a `runtime_checkable` **Protocol** — the structural interface every at-rest crypto
+consumer accepts — not an abandoned implementation. `UnsecuredMasterKeyProvider` is a
+concrete class, so the three `isinstance` guards against it are nominal rather than
+structural, which is the correct and fail-closed reading. `_provider_enter` refuses
+outright for any provider that is not the unsecured one, and the two
+`refuse_unsecured_*` functions are the NIF canary. The name is accurate: "master key"
+here is the per-bucket KEK. What was retired is the *shared* master key across
+profiles, and none of that survives here.
+
+The `~10` and `~5` external consumers in the brief resolve to production sites all
+inside `adapters/persistence/storage` itself, plus that package's own tests.
+
+**What was dead:** two application-layer custody ports —
+`profile_bucket_session_open` and `profile_refuse_unsecured_bucket_with_real_profile`
+— exported through two facades with no caller in `src`, `dev`, the harness or any
+test. Every live hit resolves to the `_resumed` variant. Deleted.
+
+Deleting a *safety* wrapper needs the stronger argument, and it holds: the underlying
+guard runs at the one production site that opens an unsecured session, and the
+application layer cannot produce one, because `BucketSession.open_resumed` hardcodes
+`unsecured_backend=False` — a resumed session comes from per-profile password
+custody, which the unsecured backend never participates in.
+
+### A fail-open safety obligation was held by a docstring
+
+`refuse_unsecured_bucket_with_real_profile` does **not** test
+`session.unsecured_backend`. It trusts its caller, and its docstring carries the
+obligation in prose: every path that opens a session outside `_provider_enter` "must
+run exactly this guard rather than re-deriving it."
+
+Prose is the wrong holder for this one. Forgetting the call is silent, and what it
+admits is a real taxpayer's records written under a **published deterministic key**.
+Today `src/` has exactly one such site and it does call the guard, so this was a
+latent obligation rather than a live hole — but nothing stopped the second site.
+
+Now gated: `test_every_unsecured_session_open_runs_the_canary.py` enumerates every
+production `BucketSession.open(...)` and requires the enclosing function to run the
+canary, carries an anti-vacuity assertion (an empty enumeration would pass every
+other assertion in the file), and was proven to bite by removing the real call from
+`_provider_enter` and observing it named that exact site.
