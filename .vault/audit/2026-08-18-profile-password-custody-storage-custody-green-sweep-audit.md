@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:f57497134876dbd731b23b2424d4dabe6308d189e046a58ebce01ae9e2ec5eec'
+body_hash: 'sha256:cb589d1b2ac9b7cb6b224f282c9fb12909b3b2fa714c0c03ccfaa06c5e77544a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2564,3 +2564,38 @@ Shipping either would have replaced a correct hand-list with a detector that mis
 of three real consumers: a false green, which is the exact defect class this campaign has
 spent its iterations removing. The hand-enumeration stands, and this note is the reason
 not to re-attempt the automation without a sounder signal.
+
+### The bound-repository guard was tested in every direction except the leaking one
+
+`test_runtime.py` proves a repository pinned to one bucket refuses once the active
+session moves to another — for a write, a raw-key write, a quarantine, and a diagnostics
+pass. **Read was absent from that set**, and read is the only one of the five where a
+regression leaks rather than loses.
+
+The two failure shapes are not comparable. A write that escapes the guard puts a row in
+the wrong bucket: wrong, loud, and eventually visible as data that does not belong. A
+read that escapes hands one profile's decrypted records to an operator who believes they
+are in another — into whatever payload, log line or export that operator is composing —
+and nothing about the returned value announces which profile produced it.
+
+Measured first: the read **is** refused today, with `SESSION_CHANGED`, because a single
+shared method checks the pinned bucket on every operation. That is the argument for
+pinning it, not against — the sharing is what makes the protection invisible at the call
+site, and reads are the hot path most likely to be "optimised" past a check that reads
+as redundant.
+
+Now covered, and proven by clearing the repository's pinned bucket id from an
+out-of-repo plugin so no tracked file was mutated: the read then succeeds under the other
+bucket's session. Its anti-tautology sibling — the same repository reading its OWN bucket
+and asserting the exact payload — keeps passing under that same break, so the refusal is
+attributable to the bucket change rather than to a read that had stopped working for any
+other reason.
+
+**Generalisable:** when a guard is proven across several operations, list the operations
+it was proven on and ask which one fails toward disclosure. A set of sibling tests that
+looks exhaustive is not, and the missing member tends to be the read — writes are what
+authors think to test, because a bad write is the failure they can picture.
+
+Two fail-closed behaviours were confirmed along the way and are recorded so they are not
+re-probed: a singleton namespace refuses any object key but its declared one
+(`object_key_grammar_mismatch`), and an unregistered namespace refuses outright.
