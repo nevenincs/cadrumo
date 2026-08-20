@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e7251df6456910db037ad32f5c1c11da206602671228991da1d6282ea1e9492'
+body_hash: 'sha256:0c5950eb67f662d6862496fb0ff71b5708439e721e6b5e9a6a0b8f7016602f63'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7626,3 +7626,139 @@ Ten partial designs remain. Modelo 200's 2010 and 2011 editions still carry 14
 and 15 holed records. The recorded cases are unchanged: modelo 390's composite
 five-digit page token, modelo 349 and 180's visual charts, modelo 100's lone
 glued byte, modelo 131's spilled-column byte.
+
+## Tick: the last split shapes, and three that are not worth a rule
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's per-record guard confirmed at 30 passed.
+
+### Measured before building, and mostly declined
+
+Modelo 200's 2010 edition was down to 14 holed records, so the remaining shapes
+could be counted rather than guessed at. Three were measured and NOT acted on:
+
+- an offset-and-length stutter (`137 1777 15 1777 15 AnC ...`) -- **one line in
+  the whole corpus**;
+- a type glued to the complementaria marker (`15 AnC`) -- **two lines**, and
+  both sit in text the PDF layer mangled beyond use (`A i t ? ? i UTES M d l d
+  i f i? R l i? d i 18 NIF`), so recovering them would produce a field with a
+  garbage description;
+- a row that lost BOTH its ordinal and its position, leaving `1 An C Indicador
+  de pagina complementaria` -- five records, one byte each.
+
+The third is the interesting refusal. Its position is derivable, since the
+previous row ends at 9 and the hole is exactly 10 -- but nothing in the line
+constrains it. The glued split works because the token `23` must equal ordinal
+2 followed by position 3; here there is no token to check against, so supplying
+both numbers would be sequence inference with no verification. Recorded.
+
+Two parser rules for three lines, one of them producing garbage, is machinery
+for nearly nothing. The measurement is what made that judgement possible.
+
+### The shape that was worth it
+
+The remaining 17-runs are the familiar split with description text bled onto the
+head's own line: `79 1236 (2 a 6) [021]` beneath its length-and-type half.
+
+A head pattern loose enough to allow trailing text matches prose beginning with
+two numbers, so it is admitted only under the over-determination the
+glued-ordinal split already uses: ordinal 79 must follow 78, AND position 1236
+must be exactly where the previous row's 1219 plus 17 ends. All three remaining
+instances satisfy both. A head that does not continue is refused, and that
+refusal is pinned.
+
+### Verified against
+
+| | tick start | after |
+|---|---|---|
+| skipped records | 55 | **53** |
+| sheets read | 3233 | **3235** |
+| fields read | 274396 | **274514** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; zero already-complete designs changed.
+
+`test_record_design_reversed_columns`: 10 passed. Removing the continuity
+constraint reds exactly the refusal case and nothing else.
+
+### Still open
+
+Ten partial designs, and the remaining modelo 200 cases now each need the join
+verified against the record's ACTUAL coverage rather than against line shape --
+which the line pre-pass cannot see. Landing those means moving the join into the
+parse state, where coverage is known. That is the next structural step rather
+than another pattern.
+
+The recorded cases are unchanged: modelo 390's composite five-digit page token,
+modelo 349 and 180's visual charts, modelo 100's lone glued byte, modelo 131's
+spilled-column byte, and now modelo 200's five rows that lost both numbers.
+
+## Tick: the mirror case, and a test that tested nothing
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's bled-head admission confirmed at 30 passed.
+
+### Reopening the row that lost both its numbers
+
+Last tick I recorded the case where a row keeps its length, naturaleza and
+description but loses its position outright -- `17 N Sociedades de garantia
+reciproca - ...` with the `6 11` above it swallowed by a page break. The stated
+reason was that supplying the position would be sequence inference with no
+verification.
+
+That reason was incomplete, and re-measuring showed why. There are THREE facts
+available, not one: the position follows where the previous row ends, the length
+is the one AEAT printed on the fragment, and -- the part I had missed -- that
+length lands exactly in a hole no read row claims. The third is verification, and
+the parser already performs it.
+
+`fill_unread_gaps` has always admitted the MIRROR of this case: a row that kept
+its position and lost its naturaleza, accepted only when its span overlaps
+nothing read. The case I had recorded is the same shape reflected, and it is
+admitted by the same containment test rather than by a new rule. Staged during
+the repair pass, positioned from the previous row, discarded on any overlap.
+
+That is the difference between the two refusals. Modelo 100's lone `59 1A`
+stands where no read row precedes it and no hole confirms it; this one is
+bracketed on both sides.
+
+### What it recovered
+
+| | tick start | after |
+|---|---|---|
+| skipped records | 53 | **36** |
+| sheets read | 3235 | **3252** |
+| fields read | 274514 | **276077** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Modelo 200's 2010 and 2011 editions each dropped from 14 and 15 holed records to
+5. Zero designs lost a sheet; zero already-complete designs changed.
+
+### A test that passed for the wrong reason
+
+The containment test I first wrote put the intact row BEFORE the fragment. The
+fragment was then positioned at 28 rather than 11, so it never collided with
+anything and the assertion held no matter what the parser did. The probe caught
+it: removing the containment check entirely left all four tests green.
+
+Reordering the two lines so the fragment is staged first -- taking 11-27, the
+span the intact row then claims -- makes it bite. It is worth recording because
+the test LOOKED correct: it named the right property, asserted the right thing,
+and was vacuous because of line order alone. Only the disproving probe
+distinguished them.
+
+### Verified against
+
+The corpus control above. `test_record_design_headless_tail`: 4 passed.
+Removing the containment check reds the overlap case; disabling the staging reds
+the two capability cases. Neither probe touches a tracked file.
+
+### Still open
+
+Thirty-six skipped records across ten designs, down from 302 when this line of
+work began. Modelo 200's two 2010 editions hold 5 each. The recorded cases stand:
+modelo 390's composite five-digit page token, modelo 349 and 180's visual charts
+where AEAT draws no box, modelo 100's lone glued byte, modelo 131's
+spilled-column byte.
