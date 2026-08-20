@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e0893831cc8aad5eff73e4c9fd1f3de16e5c1415563d04b77033b95c4f824cf'
+body_hash: 'sha256:1eb28079cdec921e8444d6c9f720861973c0b77af547ce38f2584a1c9cfcc6f7'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2443,3 +2443,48 @@ the most recent commit on that file is a peer *mounting profile verbs* (archive/
 landed; these four did not). This is in-flight work by another owner, not residue to
 clear, and the honest move is to hand the evidence to the pending ruling rather than
 delete a peer's scaffolding or mount verbs nobody asked for.
+
+### The write guard's verb catalogue: a fail-OPEN surface with no anchor
+
+`PROFILE_BOUND_WRITE_VERB_PATHS` is what the storage write guard matches an invocation
+against before permitting a bucket-scoped mutation, and it matches by **verb-path
+string**. That makes its staleness mode the dangerous one: an unmatched verb is answered
+`NON_PROFILE_BOUND_VERB`, so the write proceeds **unguarded**. The guard fails OPEN. A
+stale entry here is worse than a stale entry anywhere else this campaign has swept,
+where the cost was merely a rule that stopped covering something.
+
+It has already happened once, and the catalogue records it in its own comments: the
+payable/collectible invoice verbs collapsed into a single `invoice` family discriminated
+by `--kind`, the catalogue kept the pre-collapse spellings, and every invoice mutation
+fell out of the guard until someone noticed by hand.
+
+Nothing prevented a repeat. A rename lands in the CLI, the catalogue keeps the old
+spelling, every test stays green — because *"this verb was not guarded"* and *"this verb
+does not exist"* produce the same observable nothing.
+
+**All 98 entries resolve today**, measured against the live tree before the gate was
+written. Now gated: every entry must name a path in the REAL materialised Click tree —
+not a schema projection or a manifest, since a projection can agree with the catalogue
+while both disagree with what an operator can actually type. Both vacuity directions are
+asserted separately, because an empty walk and an emptied catalogue each satisfy the
+main assertion perfectly. Proven by re-staging the recorded incident.
+
+This completes the name-keyed sweep's most important case. The earlier passes covered
+test-side constants, where staleness costs coverage; this is the production-side
+instance, where staleness costs the guard itself.
+
+### Two axes checked and found already sound
+
+Recorded so they are not re-derived. **Batch atomicity** is properly covered:
+`test_apply_batch_is_atomic_on_failure` drives a real `SecureObjectRevisionConflictError`
+inside the unit of work and asserts all three rollback directions — sibling upsert,
+deletion, and the conflicting upsert itself. **Integrity and quarantine** are covered
+too: quarantine moves exactly the rows the probes flag, preserves the probed bytes, and
+a clean bucket reports clean across every surface.
+
+**The over-export measurement was re-run and the earlier "13" is wrong** — it is 30+
+names exported from the `user_profile` facade with no consumer outside the package.
+Deliberately NOT swept this iteration: a peer is actively mounting profile CLI verbs in
+this exact package, and a 30-name facade change is precisely the broad edit that
+collides with in-flight work. It also removes no code — it narrows a surface — so the
+cost of deferring is low and the cost of colliding is not.
