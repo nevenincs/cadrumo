@@ -445,6 +445,45 @@ _REVERSED_ROW_HEAD_RE = re.compile(
 )
 
 
+def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[str, int]]]:
+    """For each line, the row identities its OWN record already states intact.
+
+    Scoped per record, and that scoping is the whole point. The duplicate guard
+    exists to stop a split row being joined when the design also emits it whole,
+    which is a statement about one record -- but every record restarts at
+    ordinal 1 position 1, so low identities recur throughout a design. Measured
+    on modelo 200's 2010 edition, ``(30, 419)`` is stated intact by 28 different
+    records and ``(7, 28)`` by 34. A design-wide guard therefore refused almost
+    every legitimate join, and did so silently, because a refused join is
+    indistinguishable from no join at all.
+
+    Record boundaries come from the same geometry the parser uses: a row
+    declaring position 1 begins a record, because a fixed-width record is
+    contiguous from its first byte.
+    """
+    boundaries: list[int] = []
+    identities: list[set[tuple[str, int]]] = []
+    current: set[tuple[str, int]] = set()
+    for number, line in enumerate(lines, start=1):
+        parsed = _parse_pdf_row(line, number)
+        if parsed is not None and parsed.offset == 1 and current:
+            identities.append(current)
+            boundaries.append(number - 1)
+            current = set()
+        if parsed is not None and parsed.ordinal is not None:
+            current.add((parsed.ordinal, parsed.offset))
+    identities.append(current)
+
+    frozen = [frozenset(entry) for entry in identities]
+    per_line: list[frozenset[tuple[str, int]]] = []
+    segment = 0
+    for index in range(len(lines)):
+        while segment < len(boundaries) and index >= boundaries[segment]:
+            segment += 1
+        per_line.append(frozen[segment])
+    return per_line
+
+
 def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Reassemble a row whose PDF columns were emitted in the wrong order.
 
@@ -473,11 +512,7 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     # fields that way, in records that had no holes at all. So the intact rows
     # are collected first and a pair claiming one of their (ordinal, position)
     # identities is left alone.
-    claimed = {
-        (parsed.ordinal, parsed.offset)
-        for number, candidate in enumerate(lines, start=1)
-        if (parsed := _parse_pdf_row(candidate, number)) is not None and parsed.ordinal is not None
-    }
+    claimed = _row_identities_by_record(lines)
     joined: list[str] = []
     index = 0
     while index < len(lines):
@@ -496,7 +531,7 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
                 and forward_tail is not None
                 and _parse_pdf_row(line, index + 1) is None
                 and _parse_pdf_row(lines[index + 1], index + 2) is None
-                and (forward_head.group("ordinal"), int(forward_head.group("offset"))) not in claimed
+                and (forward_head.group("ordinal"), int(forward_head.group("offset"))) not in claimed[index]
             ):
                 casilla = (forward_head.group("tail") or "").strip()
                 description = forward_tail.group("description").rstrip()
@@ -514,7 +549,7 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
                 and head is not None
                 and _parse_pdf_row(line, index + 1) is None
                 and _parse_pdf_row(lines[index + 1], index + 2) is None
-                and (head.group("ordinal"), int(head.group("offset"))) not in claimed
+                and (head.group("ordinal"), int(head.group("offset"))) not in claimed[index]
             ):
                 casilla = (head.group("tail") or "").strip()
                 description = tail.group("description").rstrip()

@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._record_design import _rejoin_reversed_column_rows
+from .._record_design import _rejoin_reversed_column_rows, _row_identities_by_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,3 +75,47 @@ def test_ordinary_lines_are_untouched() -> None:
     lines = ("28 385 17 N Cuota liquida positiva [592]", "alguna prosa cualquiera")
 
     assert _rejoin_reversed_column_rows(lines) == lines
+
+
+def test_the_duplicate_guard_is_scoped_to_the_record_that_states_the_row() -> None:
+    """A row identity in ANOTHER record must not block a join in this one.
+
+    Every record restarts at ordinal 1, position 1, so low identities recur all
+    through a design: measured on modelo 200's 2010 edition, ``(30, 419)`` is
+    stated intact by 28 different records. A design-wide guard therefore refused
+    almost every legitimate join, and refused them silently, because a refused
+    join looks exactly like no join at all.
+    """
+    lines = (
+        "1 1 2 An Inicio del primer registro",
+        "30 419 17 N Fila intacta del PRIMER registro",
+        "1 1 2 An Inicio del segundo registro",
+        "17 Num Mitad partida del SEGUNDO registro",
+        "30 419 [596]",
+    )
+
+    joined = _rejoin_reversed_column_rows(lines)
+
+    assert joined[-1] == "30 419 17 Num Mitad partida del SEGUNDO registro [596]"
+    assert len(joined) == len(lines) - 1
+
+
+def test_an_identity_the_same_record_states_intact_still_blocks_the_join() -> None:
+    lines = (
+        "1 1 2 An Inicio del registro",
+        "30 419 17 N Fila intacta de ESTE registro",
+        "17 Num Mitad partida del MISMO registro",
+        "30 419",
+    )
+
+    assert _rejoin_reversed_column_rows(lines) == lines
+
+
+def test_record_identities_are_partitioned_at_each_position_one_row() -> None:
+    identities = _row_identities_by_record(
+        ("1 1 2 An Primero", "5 10 1 An Otro", "1 1 2 An Segundo", "9 40 3 Num Tercero"),
+    )
+
+    assert ("5", 10) in identities[0]
+    assert ("5", 10) not in identities[-1]
+    assert ("9", 40) in identities[-1]
