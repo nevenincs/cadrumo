@@ -6,6 +6,15 @@ modelo:
         title: null
       revision:
         2003-2025:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Exercici fiscal al qual es refereix la declaració, amb quatre
+                xifres.
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: 'Caràcter de la declaració: originària, substitutiva d''una altra
+                presentada abans, o complementària que afegeix dades omeses.'
+              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: null
         2025-y-siguientes:

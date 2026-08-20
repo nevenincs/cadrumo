@@ -9,37 +9,46 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Kollektív befektetési formák részvényeinek és részesedéseinek
+                átruházásából vagy visszaváltásából származó kedvezményezettek száma
             '02':
               help: null
-              label: null
+              label: Kollektív befektetési formák részvényeinek és részesedéseinek
+                átruházásából vagy visszaváltásából származó levonások és előlegfizetések
+                alapja
             '03':
               help: null
-              label: null
+              label: Kollektív befektetési formák részvényeinek és részesedéseinek
+                átruházásából vagy visszaváltásából származó levonások és előlegfizetések
             '04':
               help: null
-              label: null
+              label: Jegyzési jogok átruházásából származó kedvezményezettek száma
             '05':
               help: null
-              label: null
+              label: Jegyzési jogok átruházásából származó levonások és előlegfizetések
+                alapja
             '06':
               help: null
-              label: null
+              label: Jegyzési jogok átruházásából származó levonások és előlegfizetések
             '07':
               help: null
-              label: null
+              label: A 35/2006. sz. törvény tizenkilencedik kiegészítő rendelkezése
+                szerinti előlegfizetés alapja
             08:
               help: null
-              label: null
+              label: A 35/2006. sz. törvény tizenkilencedik kiegészítő rendelkezése
+                szerinti előlegfizetés
             09:
               help: null
-              label: null
+              label: 'Teljes elszámolás: a levonások, előlegfizetések és az esetleges
+                korrekció összege'
             '10':
               help: null
-              label: null
+              label: Ugyanazon jogcímen, évre és időszakra vonatkozó korábbi bevallásokból
+                fizetendő összegek
             '11':
               help: null
-              label: null
+              label: Fizetendő összeg
           construct:
             modelo-117-total-liquidacion-calculation:
               field:
