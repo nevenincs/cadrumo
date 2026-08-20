@@ -445,6 +445,28 @@ _REVERSED_ROW_HEAD_RE = re.compile(
 )
 
 
+#: A head half carrying description text after its position: ``79 1236 (2 a 6)
+#: [021]``. Admitted only under the continuity constraint below, never on the
+#: pattern alone -- prose beginning with two numbers is common.
+_REVERSED_ROW_HEAD_WITH_TAIL_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<trailing>\S.*)$",
+)
+
+
+def _continues(previous: _PdfRow | None, ordinal: str, offset: int) -> bool:
+    """Whether this ordinal and position resume exactly where ``previous`` ended.
+
+    The same over-determination the glued-ordinal split relies on: the ordinal
+    must follow by one AND the position must resume at the previous row's end.
+    Two independent facts, from a row already read, that must agree -- which is
+    what lets a head half be admitted when description text has bled onto its
+    line and the pattern alone would match prose.
+    """
+    if previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
+        return False
+    return ordinal == str(int(previous.ordinal) + 1) and offset == previous.offset + previous.length
+
+
 def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[str, int]]]:
     """For each line, the row identities its OWN record already states intact.
 
@@ -515,8 +537,12 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     claimed = _row_identities_by_record(lines)
     joined: list[str] = []
     index = 0
+    previous_row: _PdfRow | None = None
     while index < len(lines):
         line = lines[index]
+        parsed_here = _parse_pdf_row(line, index + 1)
+        if parsed_here is not None:
+            previous_row = parsed_here
         if index + 1 < len(lines):
             # The two halves arrive in either order. Swapped -- length, type and
             # description first -- is how modelo 200's 2010 editions emit some
@@ -542,7 +568,27 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
                 )
                 index += 2
                 continue
+            # The head may carry description text bled onto its line. That
+            # pattern alone matches prose, so it is admitted only when the
+            # ordinal and position resume exactly where the last read row ended.
             tail = _REVERSED_ROW_TAIL_RE.match(line)
+            bled = _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(lines[index + 1])
+            if (
+                tail is not None
+                and bled is not None
+                and _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) is None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and _continues(previous_row, bled.group("ordinal"), int(bled.group("offset")))
+                and (bled.group("ordinal"), int(bled.group("offset"))) not in claimed[index]
+            ):
+                joined.append(
+                    f"{bled.group('ordinal')} {bled.group('offset')} "
+                    f"{tail.group('length')} {tail.group('type')} "
+                    f"{tail.group('description').rstrip()} {bled.group('trailing').strip()}",
+                )
+                index += 2
+                continue
             head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1])
             if (
                 tail is not None
@@ -2116,6 +2162,10 @@ class _PdfSheetDraft:
     #: design read only BECAUSE of a declaration is never reported as one AEAT
     #: published cleanly.
     applied_corrections: list[RecordDesignSinglePositionCorrection] = field(default_factory=list)
+    #: Rows carrying a length, a naturaleza and a description but NO position,
+    #: paired with the position the row before them implies. The mirror image of
+    #: ``unnamed_candidates``, and admitted by the same containment test.
+    headless_candidates: list[_PdfRow] = field(default_factory=list)
 
     def has_started(self) -> bool:
         """Whether any field of this record body has been seen yet."""
@@ -2158,13 +2208,14 @@ class _PdfSheetDraft:
         ``413-432 CODIGO LEI DEL PERCEPTOR`` with no naturaleza while its
         neighbour ``433-452 Alfanumerico NIF EN EL PAIS...`` carries one.
         """
-        if not self.unnamed_candidates or not self.fields:
+        staged = [*self.unnamed_candidates, *self.headless_candidates]
+        if not staged or not self.fields:
             return
         claimed: set[int] = set()
         for read in self.fields:
             claimed.update(range(read.offset, read.offset + read.length))
         admitted: list[RecordDesignField] = []
-        for candidate in self.unnamed_candidates:
+        for candidate in staged:
             span = range(candidate.offset, candidate.offset + candidate.length)
             if claimed.isdisjoint(span):
                 admitted.append(
@@ -2622,6 +2673,7 @@ class _PdfParseState:
         if self._consume_field_row(line, row_number):
             return
         self._stage_unnamed_position_candidate(line, row_number)
+        self._stage_headless_tail(line, row_number)
         self._consume_field_continuation(line)
 
     def _stage_unnamed_position_candidate(self, line: str, row_number: int) -> None:
@@ -2650,6 +2702,45 @@ class _PdfParseState:
         declared = self.corrections.single_position_corrections.get((self.current.name, candidate.offset))
         if declared is not None and candidate.length == 1:
             self.current.applied_corrections.append(declared)
+
+
+    def _stage_headless_tail(self, line: str, row_number: int) -> None:
+        """Hold a row that kept its length and naturaleza but lost its position.
+
+        A page break can swallow a row's position half outright, leaving only
+        ``17 N Sociedades de garantia reciproca - ...`` with the ``6 11`` above
+        it gone. The position is not guessed from that line: it is taken from
+        where the previous row ENDS, and the candidate is then subject to the
+        same containment test every staged candidate faces -- admitted only if
+        the span it would occupy is one no read row claims.
+
+        That test is what makes this a reading. Three independent facts must
+        agree before such a row appears: the position follows the previous row,
+        the length is the one AEAT printed, and the span is exactly a hole. A
+        fragment that would overlap anything already read is discarded, so a
+        wrapped description restating a field's width can never be admitted.
+        """
+        if self.current is None or not self.repair_glued_rows:
+            return
+        match = _REVERSED_ROW_TAIL_RE.match(line)
+        if match is None or _parse_pdf_row(line, row_number) is not None:
+            return
+        previous = self._last_seen_field()
+        if previous is None:
+            return
+        naturaleza = _naturaleza_or_none(match.group("type"))
+        if naturaleza is None and match.group("type") not in {"An", "Num", "N", "A", "Tit"}:
+            return
+        self.current.headless_candidates.append(
+            _PdfRow(
+                source_row=row_number,
+                ordinal=None,
+                offset=previous.offset + previous.length,
+                length=int(match.group("length")),
+                type_code=match.group("type"),
+                description=match.group("description").strip(),
+            ),
+        )
 
     def _last_seen_field(self) -> _PdfFieldDraft | RecordDesignField | None:
         """The most recent field of the body under construction, finished or not."""

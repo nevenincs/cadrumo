@@ -119,3 +119,35 @@ def test_record_identities_are_partitioned_at_each_position_one_row() -> None:
     assert ("5", 10) in identities[0]
     assert ("5", 10) not in identities[-1]
     assert ("9", 40) in identities[-1]
+
+
+def test_a_head_carrying_bled_description_text_joins_when_it_continues() -> None:
+    """The last shapes in modelo 200 leak description onto the head's own line.
+
+    ``79 1236 (2 a 6) [021]`` is the position half of a row whose description
+    fragment landed beside it. The pattern alone would match prose beginning
+    with two numbers, so it is admitted only under the same over-determination
+    the glued-ordinal split uses: ordinal 79 follows 78, and position 1236 is
+    exactly where the previous row's 1219 plus 17 ends.
+    """
+    lines = (
+        "78 1219 17 Num Reg.reserva inversiones Canarias - Inv.anticipadas",
+        "17 Num Reg.reserva inversiones Canarias - futuras dotaciones",
+        "79 1236 (2 a 6) [021]",
+    )
+
+    joined = _rejoin_reversed_column_rows(lines)
+
+    assert joined[-1].startswith("79 1236 17 Num ")
+    assert len(joined) == len(lines) - 1
+
+
+def test_a_bled_head_that_does_not_continue_is_refused() -> None:
+    """Without continuity there is nothing separating this from prose."""
+    lines = (
+        "78 1219 17 Num Algo",
+        "17 Num Otra cosa",
+        "90 5000 prosa cualquiera que empieza con numeros",
+    )
+
+    assert _rejoin_reversed_column_rows(lines) == lines
