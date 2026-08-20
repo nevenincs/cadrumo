@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb589d1b2ac9b7cb6b224f282c9fb12909b3b2fa714c0c03ccfaa06c5e77544a'
+body_hash: 'sha256:0b8199a3b898cab0bb29fd3adc10cd8d4e2b953543f59638cc461602be5fd116'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2599,3 +2599,50 @@ authors think to test, because a bad write is the failure they can picture.
 Two fail-closed behaviours were confirmed along the way and are recorded so they are not
 re-probed: a singleton namespace refuses any object key but its declared one
 (`object_key_grammar_mismatch`), and an unregistered namespace refuses outright.
+
+### Guard coverage measured completely, and one latent ordering dependency
+
+Applying the disclosure-direction heuristic one level deeper than last time: rather than
+asking which *test* was missing, asking which repository *operations* actually reach the
+session guard at all. That is answerable completely rather than heuristically — the
+class's methods are enumerable — so an AST pass walked `SecureObjectRepository`
+transitively for `_check_session_freshness`.
+
+**23 of 25 public methods reach it.** The two that do not are `engine` and
+`namespace_registry`, which are accessors rather than data operations. So the guard has
+no gap among the operations themselves.
+
+The accessors are the more interesting half, because a public `engine` hands out a door
+past the guard. Three sites take it: `_all_date_index_rows`, `_date_index_candidate_ids`
+and `_sync_date_index` in `adapters/persistence/profile/transactions.py`, each opening a
+raw `session_scope(self._objects.engine)`.
+
+**No live exposure — every path reaches a guarded call first.** All three are preceded by
+`self._load_index_ids()` or `self.load()`, both of which route through the guarded
+`_objects.load`. Recorded because the protection is INCIDENTAL: it lives in call
+ordering, not in the raw reads, and nothing states or enforces it. A new entry point that
+reaches one of these three first would read after a session seal or idle expiry with
+nothing to stop it. Closing it properly needs a public guarded session-scope accessor on
+the repository — a cross-package private call is not available and would breach the
+facade rule — which is a design change rather than a gate, and not warranted while every
+caller is covered.
+
+### Two designs read before being "fixed", both sanctioned
+
+The plaintext date index looked like a `sensitive-financial-data-secure-storage-only`
+violation: a plaintext table of transaction ids and dates inside the bucket database,
+where `aeat-ledger-contract` names "writing a plaintext index outside the encrypted
+repository" as bad. It is not a violation. The ORM class states the decision explicitly —
+plaintext by design, `SensitivityClass.CACHE`, only non-sensitive routing keys, and
+correctness never depending on it, with a full encrypted scan as the fallback.
+
+Its stated prohibition — *"No amount, counterparty, description, NIF, or other financial
+content may ever be added to this table"* — then looked like a prose-held obligation on a
+plaintext surface. It is not that either:
+`test_date_index_table_carries_only_non_sensitive_routing_columns` reflects the LIVE
+table through SQLAlchemy inspection, precisely so a widened schema fails even when the
+docstring is not updated, and asserts exact column-set equality.
+
+Both were checked rather than assumed, and both would have produced a confident wrong
+"finding" on a first reading. That is the method rule earning its place twice in one
+pass: read the design before gating it.
