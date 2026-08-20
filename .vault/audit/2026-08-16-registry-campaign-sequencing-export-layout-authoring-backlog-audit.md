@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:daaf795c21b73be6e66ec30cc7564d5928379fc0b78e60692d4b6fa3f714080f'
+body_hash: 'sha256:58c2b7f040c46136b87ddab9e6ab0801fb362b9f4deb93755534accc38cf29ac'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7113,3 +7113,156 @@ Both probes run from a plugin outside the repo.
 Modelo 131's 13-byte runs remain unexamined. Modelo 349 and 180's visual charts
 remain the recorded case where AEAT draws no box at all. Modelo 200's casillas
 1501-1508 still carry no locale label in any of the four catalogues.
+
+## Tick: two unknown tokens, 454 rows, and one byte that stays unread
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates confirmed at 30
+passed at tick start.
+
+### The holes were tokens, not damage
+
+The worklist's dominant class was position holes in modelos 100 and 200 -- 181
+records, mostly scattered single bytes like `12, 192, 372, 581`. Scattered
+single-byte holes read like corpus damage. They were two unknown tokens.
+
+**`Tit` is a naturaleza.** Modelo 100 uses it in the Tipo column for the
+one-byte code naming WHICH titular an entry belongs to, and the rows say so
+themselves: every occurrence ends its description in "... - Titular" or
+"... - Contribuyente". Across the six bundled editions that use it there are
+**454 such rows and every one declares length 1**, which is what a holder code
+is. That uniformity is the corroboration -- a prose line cannot accidentally
+have this shape 454 times and always length 1. Leaving it unrecognised dropped
+all 454, and because they sit BETWEEN read rows the loss surfaced as scattered
+holes rather than as one missing token.
+
+**`1A` is a lost space.** The PDF text layer drops the gap between length and
+type, so modelo 100's 2009 to 2011 editions write `5 9 1A Indicador de pagina
+complementaria` for a row that is length 1, type A. The split is unambiguous
+because length is digits and type is a closed alternation, so `1A` can only be
+1 + A. Three lines in three designs, all the same genuine row.
+
+Both populations were measured across every bundled PDF BEFORE being admitted,
+which is the check that makes them readings rather than guesses.
+
+### The byte that stays unread, and why that is the honest answer
+
+Modelo 100's 2012, 2013 and 2014 editions write the SAME row as `59 1A ...` --
+both spaces lost, so ordinal 5 and position 9 are glued into `59` as well.
+
+`1A` splits on its own evidence. `59` does not: it is equally readable as
+ordinal 59, and only the surrounding sequence -- the previous row being ordinal
+4 at position 8 -- would say otherwise. That is inference from context rather
+than reading a declared value.
+
+The declared-correction sidecar cannot express it either, and for a related
+reason worth recording: a single-position correction attaches to a line that
+presents a position CANDIDATE, and this line presents none, because its first
+token is not a bare position. So the sanctioned escape hatch does not reach this
+shape.
+
+One byte per edition therefore stays unread and stays REPORTED. That limit is
+now a test with its reason attached rather than an absence someone later reads
+as coverage -- and it is written so that anyone who does ground a fix sees the
+expectation fail and knows to delete it.
+
+### Verified against
+
+Running corpus control over all 218 designs:
+
+| | tick start | after |
+|---|---|---|
+| sheets read | 3029 | **3088** |
+| skipped | 259 | **200** |
+| complete | 198 | 198 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet, and -- the check that matters for tree drift --
+**zero designs that were already complete changed at all**, so no generator
+input moved and no enrolled tree is exposed. Nothing became newly complete
+either, so this tick carries less blast radius than the last two.
+
+`test_record_design_naturaleza_tokens`: 10 passed. Withdrawing `Tit` reds seven
+of them; re-requiring the space before the type reds four. The two changes are
+independent and each is pinned on its own.
+
+### Still open
+
+Modelo 349 and 180's visual charts remain the recorded case where AEAT draws no
+box at all. Modelo 131's 13-byte runs are the last unexamined dropped-row class.
+Modelo 200's casillas 1501-1508 had no locale label; a peer has begun
+translating modelo 036's censo labels, so that surface is being worked.
+
+## Tick: punctuation, a stutter, and the prefix deliberately left alone
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates confirmed at 30
+passed at tick start.
+
+### Modelo 131's whole reported damage was one period
+
+All three modelo 131 designs reported a dropped 13-byte run -- 464-476, 477-489
+and 503-515. Each is the same single row, and each lost it to abbreviation
+punctuation: AEAT writes `52 464 13 An. Complementaria (7) - Numero de
+Justificante anterior`, with a period after the type.
+
+The narrative recogniser has ALWAYS accepted that -- `_naturaleza_or_none`
+strips " ." before matching -- so the compact path was simply out of step with
+the recogniser sitting beside it in the same module. Three lines in three
+designs, and two of the three editions now read whole.
+
+### A row that says its position twice
+
+Modelo 200's 2010 and 2011 editions emit nine rows as `99 1592 99 1592 17 Num
+...`, the ordinal and position repeated before the rest. Every one of those
+positions was otherwise unread. Dropping the first pair asserts nothing the line
+does not already state twice about itself, so the repeat IS the evidence.
+
+That recovers **293 unread positions** -- 164 in the 2011 edition, 129 in 2010.
+Sheet and skip counts do not move, because those records carry other holes and
+stay reported; the gain is content read inside records that remain incomplete.
+Worth stating plainly, since a table of sheet counts would show this change as
+doing nothing.
+
+### The prefix left alone, and why that is not the same problem
+
+A row can also arrive behind genuine leading text, where a wrapped description
+spills onto its line. Modelo 131's remaining byte is exactly that:
+`Domiciliacion 48 465 1 Num Ingreso (4) - Forma de pago`.
+
+I measured whether a general leading-prefix rule was safe, and it is not. Across
+the bundled corpus, 16 lines carry a complete row behind leading text, and they
+are not one population: some are the self-evidencing stutter, but others are
+wrapped description tails whose trailing tokens may or may not be a row --
+`valorativas - Saldo de correcciones fiscales (art 12` is the shape, and prose
+of that kind carries number sequences freely. Nothing in the line separates the
+two, so a general rule would invent positions from prose in exactly the way this
+reader refuses to.
+
+So the back-reference case is taken and the prefix case is not, and both halves
+are pinned -- including a near-miss where the second position differs by one,
+which must NOT collapse.
+
+### Verified against
+
+Running corpus control over all 218 designs:
+
+| | tick start | after |
+|---|---|---|
+| sheets read | 3088 | **3090** |
+| skipped | 200 | **198** |
+| complete | 198 | **200** |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet and **zero already-complete designs changed**, so no
+generator input moved. The two newly-complete designs are modelo 131 editions,
+and modelo 131 is not among the 30 enrolled trees.
+
+`test_record_design_row_punctuation`: 7 passed. Re-requiring no period reds
+three; widening the stutter to any prefix reds the two guards.
+
+### Still open
+
+Modelo 349 and 180's visual charts remain the recorded case where AEAT draws no
+box. Modelo 100's 2012-2014 editions keep their one doubly-glued byte, recorded
+last tick with its reason. Modelo 131's 2009-2014 edition keeps one byte behind
+a spilled column value -- the prefix case above. Modelo 200's casillas
+1501-1508 still carry no locale label.
