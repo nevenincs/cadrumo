@@ -38,6 +38,21 @@ def test_the_two_halves_of_a_swapped_row_are_reassembled() -> None:
     assert joined == ("30 419 17 Num Ret. e ingr. a cuenta participaciones I.I.C. [596]",)
 
 
+def test_the_two_halves_are_reassembled_in_natural_order_too() -> None:
+    """The row may simply break after its position, with no column swap at all.
+
+    Modelo 200's 2010 editions do this roughly 1,500 times: a page break lands
+    mid-row and leaves ``7 28`` above ``17 Num Deducc...``. It is the same row
+    split over two lines as the swapped case, so it is read the same way -- and
+    refused the same way when either half stands on its own.
+    """
+    joined = _rejoin_reversed_column_rows(
+        ("7 28", "17 Num Deducc para incentivar determinadas actividades"),
+    )
+
+    assert joined == ("7 28 17 Num Deducc para incentivar determinadas actividades",)
+
+
 def test_a_head_half_that_is_already_a_whole_row_is_left_alone() -> None:
     """The second line here needs no help; absorbing the first would duplicate it."""
     lines = ("17 N Sociedades de garantia reciproca - Cuenta", "30 419 17 N Sociedades de garantia reciproca")

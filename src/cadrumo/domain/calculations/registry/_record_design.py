@@ -483,6 +483,30 @@ def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     while index < len(lines):
         line = lines[index]
         if index + 1 < len(lines):
+            # The two halves arrive in either order. Swapped -- length, type and
+            # description first -- is how modelo 200's 2010 editions emit some
+            # rows; in natural order the row simply breaks after its position,
+            # leaving ``7 28`` above ``17 Num Deducc...``. Both are one row split
+            # over two lines, and neither half is a row alone, so the same
+            # evidence and the same duplicate guard apply to each.
+            forward_head = _REVERSED_ROW_HEAD_RE.match(line)
+            forward_tail = _REVERSED_ROW_TAIL_RE.match(lines[index + 1])
+            if (
+                forward_head is not None
+                and forward_tail is not None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and (forward_head.group("ordinal"), int(forward_head.group("offset"))) not in claimed
+            ):
+                casilla = (forward_head.group("tail") or "").strip()
+                description = forward_tail.group("description").rstrip()
+                joined.append(
+                    f"{forward_head.group('ordinal')} {forward_head.group('offset')} "
+                    f"{forward_tail.group('length')} {forward_tail.group('type')} "
+                    f"{description}{' ' + casilla if casilla else ''}",
+                )
+                index += 2
+                continue
             tail = _REVERSED_ROW_TAIL_RE.match(line)
             head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1])
             if (
@@ -699,13 +723,23 @@ def _read_with_reversed_column_repair(
         _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(lines)),
     )
     try:
-        repaired = _extract_pdf_lines(repaired_lines, source_label=source_label, corrections=corrections)
+        repaired = _extract_pdf_lines(
+            repaired_lines,
+            source_label=source_label,
+            corrections=corrections,
+            repair_glued_rows=True,
+        )
     except ValueError:
         return first
     if len(repaired.skipped) > len(first.skipped):
         return first
     before = _unread_positions_over_lines(lines, source_label=source_label, corrections=corrections)
-    after = _unread_positions_over_lines(repaired_lines, source_label=source_label, corrections=corrections)
+    after = _unread_positions_over_lines(
+        repaired_lines,
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=True,
+    )
     return repaired if after < before else first
 
 
@@ -714,6 +748,7 @@ def _unread_positions_over_lines(
     *,
     source_label: str,
     corrections: _CorrectionIndex,
+    repair_glued_rows: bool = False,
 ) -> int:
     """Positions no row covers, counted over EVERY record these lines produce.
 
@@ -726,7 +761,11 @@ def _unread_positions_over_lines(
     the repair while thousands of positions differ, which is what made two
     earlier decision rules read as "no improvement" and leave the repair dead.
     """
-    state = _PdfParseState(source_label=source_label, corrections=corrections)
+    state = _PdfParseState(
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=repair_glued_rows,
+    )
     for number, line in enumerate(lines, start=1):
         state.feed(line, number)
     state._close_current_body()
@@ -2440,11 +2479,19 @@ class _PdfParseState:
         "in_table",
         "pending_name",
         "pending_record_name",
+        "repair_glued_rows",
         "results",
         "source_label",
     )
 
-    def __init__(self, *, source_label: str, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> None:
+    def __init__(
+        self,
+        *,
+        source_label: str,
+        corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+        repair_glued_rows: bool = False,
+    ) -> None:
+        self.repair_glued_rows = repair_glued_rows
         self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
         self.in_table: bool = False
@@ -2569,6 +2616,14 @@ class _PdfParseState:
         if declared is not None and candidate.length == 1:
             self.current.applied_corrections.append(declared)
 
+    def _last_seen_field(self) -> _PdfFieldDraft | RecordDesignField | None:
+        """The most recent field of the body under construction, finished or not."""
+        if self.current is None:
+            return None
+        if self.current.current is not None:
+            return self.current.current
+        return self.current.fields[-1] if self.current.fields else None
+
     def _close_current_body(self) -> None:
         if self.current is None:
             return
@@ -2655,6 +2710,8 @@ class _PdfParseState:
 
     def _consume_field_row(self, line: str, row_number: int) -> bool:
         row = _parse_pdf_row(line, row_number)
+        if row is None and self.repair_glued_rows:
+            row = _split_glued_ordinal_position(line, row_number, previous=self._last_seen_field())
         if row is None:
             return False
         if self.current is None:
@@ -2694,8 +2751,13 @@ def _extract_pdf_lines(
     *,
     source_label: str,
     corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    repair_glued_rows: bool = False,
 ) -> RecordDesignExtraction:
-    state = _PdfParseState(source_label=source_label, corrections=corrections)
+    state = _PdfParseState(
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=repair_glued_rows,
+    )
     for row_number, raw_line in enumerate(lines, start=1):
         state.feed(_clean_pdf_line(raw_line), row_number)
     return state.finalise()
@@ -2916,6 +2978,63 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         length=end - start + 1,
         type_code=naturaleza,
         description=narrative.group("text").strip(),
+    )
+
+
+#: A row whose ORDINAL and POSITION were run together by the PDF text layer:
+#: ``23 3 Num Modelo. OBLIGATORIO Constante "200"`` is ordinal 2 at position 3,
+#: not ordinal 23. Three leading tokens where a row has four.
+_GLUED_ORDINAL_POSITION_ROW_RE = re.compile(
+    r"^\s*(?P<glued>\d{2,})\s+(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<text>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _split_glued_ordinal_position(
+    line: str,
+    row_number: int,
+    *,
+    previous: _PdfFieldDraft | RecordDesignField | None,
+) -> _PdfRow | None:
+    """Recover a row whose ordinal and position were run together.
+
+    Modelo 200's older editions lose the space after the ordinal for the three
+    identifier rows of most records, writing ``23 3 Num``, ``36 3 An`` and
+    ``49 1 An`` where AEAT declares ordinals 2, 3 and 4 at positions 3, 6 and 9.
+    Thirty-two of the forty holed records in the 2010 edition report the
+    resulting ``3-9`` gap, and it is the single most common hole shape in the
+    corpus.
+
+    A split is admitted ONLY when it is over-determined. ``23`` is read as
+    ordinal 2 and position 3 only if BOTH the ordinal continues the previous
+    row's ordinal by one AND the position resumes exactly where the previous row
+    ended -- two independent facts that must agree, from a row already read
+    rather than from a guess about this one. Any other split, or either
+    constraint failing, returns ``None`` and the gap stays reported.
+
+    This is why the shape was recorded and left alone when it was first met on
+    modelo 100: there the glued row sits alone, with no read row before it to
+    close the constraint, and ``59`` is as readable as ordinal 59. Nothing about
+    the token changed -- what changed is that here the surrounding rows pin it.
+    """
+    if previous is None:
+        return None
+    match = _GLUED_ORDINAL_POSITION_ROW_RE.match(line)
+    if match is None or _parse_pdf_row(line, row_number) is not None:
+        return None
+    glued = match.group("glued")
+    expected_ordinal = None if previous.ordinal is None or not previous.ordinal.isdigit() else int(previous.ordinal) + 1
+    expected_offset = previous.offset + previous.length
+    if expected_ordinal is None or glued != f"{expected_ordinal}{expected_offset}":
+        return None
+    naturaleza = _naturaleza_or_none(match.group("type")) or match.group("type")
+    return _PdfRow(
+        source_row=row_number,
+        ordinal=str(expected_ordinal),
+        offset=expected_offset,
+        length=int(match.group("length")),
+        type_code=match.group("type"),
+        description=match.group("text").strip(),
     )
 
 
