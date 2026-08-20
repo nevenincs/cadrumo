@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:8184c5a872354de9f6cd9971d2374769257e2341c54e63a4af6609125b254d27'
+body_hash: 'sha256:f726eed4185f26763e099ead0a971e4ec2ce757cc3afbba0e1baf184bd73e19a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1757,6 +1757,40 @@ lesson is the same one this campaign keeps relearning from the other direction
 -- read the neighbouring gate before changing the shape it is built around.
 Here the neighbour was right and the instinct was wrong, which is the more
 uncomfortable version.
+
+### The CLI package is green, and all five of its standing reds were real
+
+The last of them: a date-binding guidance test asserting the English string
+"active profile" while the shipped default output language is Spanish, so it
+compared against "en el perfil activo" and failed for the CATALOGUE rather than
+for the guidance it was written to check.
+
+Pinned to English for the call rather than weakened to locale-neutral tokens.
+That choice is the substance: "points at the active profile" is precisely what
+separates correct guidance from guidance that merely mentions something, and no
+locale-neutral token available would have told those apart. Weakening it would
+have produced a green test that no longer distinguished the two states -- the
+outcome this campaign has spent several entries learning to recognise. Proven
+still to bite by substituting guidance that suggests `--binding KEY=VALUE` for a
+profile-resident value, which is the defect it exists for.
+
+The package now reports 991 passing and none failing. It reported "5 failed" on
+every run this campaign made.
+
+What those five turned out to be is the point worth keeping. Two were a
+schema-owning module never declared in the canonical surface, so
+complete-setup's result schema went unregistered. Two were three framework
+localisation keys cited by production and shipped in no catalogue, so every
+"Missing option '--to'" reached the operator in English whatever language they
+had chosen. One was this test. None was environmental, none was another
+campaign's, and none needed more than a few lines. They sat unread for the
+entire campaign because the total never moved, and an unchanging red count is
+the easiest thing in a test report to stop seeing.
+
+The general form, now demonstrated three ways in this campaign: reds are
+invisible when they are outside the lanes you run, when they are inside them
+but constant, and when a gate cites a neighbour that nobody follows. All three
+produce the same feeling of a clean tree.
 
 ## Recommendations
 
