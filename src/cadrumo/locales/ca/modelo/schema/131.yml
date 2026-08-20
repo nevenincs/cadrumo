@@ -190,7 +190,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: null
+              label: Total
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -344,7 +344,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: null
+              label: Total
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -498,7 +498,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: null
+              label: Total
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors

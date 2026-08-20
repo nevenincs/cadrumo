@@ -164,7 +164,7 @@ modelo:
               label: Modalitat de renda o rendiment
             x-e1in4opedpkmc:
               help: null
-              label: null
+              label: NIF del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: null
               label: NIF del representant legal del perceptor
@@ -271,7 +271,7 @@ modelo:
               label: Modalitat de renda o rendiment
             x-e1in4opedpkmc:
               help: null
-              label: null
+              label: NIF del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: null
               label: NIF del representant legal del perceptor
