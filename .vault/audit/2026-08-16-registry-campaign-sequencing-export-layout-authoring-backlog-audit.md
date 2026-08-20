@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:bead38add1b5fb364dd0794ee19f886613be9ab0f6cba022edd7188d44486727'
+body_hash: 'sha256:bb91754a5386debef35208b9fc5f1fdbb42f6685749dff35e1b7601f3bf44c94'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6656,3 +6656,102 @@ Still red in the cluster, and now the honest next items:
   worth knowing before anyone concludes some file is already exempted. Nothing
   is.
 - The validator-module and workbook-parity complexity baselines are untouched.
+
+## Tick: the width dimension, mixed line endings, and two ratchets that measured nothing
+
+Queue items 1-6 re-measured green this tick in BOTH lanes -- 32 passed in the
+unit lane, 3 in the integration lane that the default selection deselects.
+Checking only the default lane would have reported those three as covered when
+they had not run.
+
+### Width: 249 lines over the baseline, wrapped without changing a value
+
+The remaining reviewability dimension was line width: 249 lines over the
+520-char baseline, 166 over the 600-char hard cap, in 93 files. Almost all are
+authored prose (`reason = "..."`), which is why this was not a mechanical
+sweep: a `"""` block changes the parsed string unless every wrapped line ends
+in a backslash continuation.
+
+The control is therefore parse-level, not textual: each file is `tomllib`-parsed
+before and after and the two dicts compared, and the transform REFUSES to write
+any file whose parsed value moved. **246 lines wrapped in 93 files, 0 refused.**
+Width over 520: **249 -> 0**.
+
+### The file that would not wrap, and what it exposed
+
+Three lines in `349/revisions/2020-y-siguientes/revision.toml` kept failing to
+wrap while the same transform worked on that file standalone. The cause was not
+the transform's matching at all: the file has **mixed line endings** -- 52 bare
+LFs alongside CRLF -- so splitting on `\r\n` glued real lines into a 2,934-char
+blob no assignment pattern could match, and the file fell through as untouched.
+
+Measured the corpus rather than fixing the one file: **128 files carried mixed
+endings.** `.gitattributes` declares `* text=auto eol=lf`, so LF is canonical
+and git normalises on commit -- which is exactly why this had gone unnoticed.
+The committed content was always fine; only the working tree was inconsistent,
+and it broke tooling that reads bytes rather than universal newlines.
+
+**The 714 casillas ones were mine**, from last tick: the chunker split on `\n`
+and left a trailing `\r` on every original line while writing its own inserted
+lines with bare LF. Normalised all 128 to LF under the same parse-equality
+control. Mixed-ending files: **128 -> 0**.
+
+### A ratchet pointing at a module that had moved
+
+`test_registry_workbook_parity_module_does_not_grow_past_reviewed_baseline`
+raised `FileNotFoundError` on every run: it measured
+`registry/_workbook_parity.py`, which no longer exists. It had not been deleted
+-- it moved to `dev/registry/parity/_workbook_parity.py` in the dev-harness
+split. I checked that before acting, because "delete the dead gate" and
+"re-point the live gate" are different changes and the first would have thrown
+away real coverage.
+
+The ratchet moved with the module, to a new
+`dev/registry/tests/test_dev_module_reviewability.py`. Deliberately NOT into
+`test_workbook_parity.py` beside it: that module drives LibreOffice and is
+marked `external_tool`, so the default lane holds it out, and a line-count
+ratchet parked there would have looked enrolled while never running. Pinned at
+the module's exact current 1,398 lines (it shrank by 18 in the move).
+
+Proved it bites from outside the repo -- a pytest plugin on `PYTHONPATH`, no
+tracked file touched -- in both directions: a module over baseline reds, and a
+module that has vanished reds rather than erroring silently.
+
+### The ratchet that was quietly handing back budget
+
+`_VALIDATOR_MODULE_LINE_BASELINES` pinned six modules; eleven were over their
+ceiling. The interesting half was the opposite direction:
+`_validate_verification_predicates.py` is pinned at 494 and is **335 lines** --
+**159 lines of ceiling nothing was defending.** Two more carried smaller slack.
+This is precisely the failure the mapping's own comment describes, and it had
+happened to the very module that comment holds up as the largest -- which it is
+no longer. `_validate_export_layout_coverage.py` at 1,063 is.
+
+Before enrolling anything I measured what each module is MADE of, because the
+gate's comment warns the line-count proxy inverts on comment-only growth. It
+does invert here: `_validate_export_exemption.py` is 50% explanation and
+`_validate_export_layout_coverage.py` is 53% -- 573 of its 1,063 lines explain
+rather than execute. Cutting those to satisfy a line count would make the
+registry harder to review, not easier. Enrolled all fourteen at their exact
+current lengths -- eight new entrants, three raises, three tightened DOWN --
+with no per-entry prose, because the mapping's own instruction is that
+reasoning belongs in the commit rather than accumulating there.
+
+Added the reciprocal rule the comment was missing: re-pin on the way down too.
+
+Proved this ratchet bites at pinned-plus-one, again from a plugin outside the
+repo.
+
+`test_registry_reviewability`: **4 failed -> 3 passed.** Authority CLEAN.
+
+### Still open, and whose it is
+
+Unchanged from last tick and still not mine to invent: modelo 200's unpadded
+casillas `1501`-`1508` have no label in any of the four locale catalogues, which
+reds two `test_casilla_order_invariance` cases. Proved pre-existing by restoring
+the committed filenames and re-running.
+
+`_max_toml_lines(size)` still ignores its argument and returns the constant. Now
+that both size dimensions are green tree-wide, nothing is relying on that seam
+-- but nothing is exempted by it either, and a future reader should not assume
+otherwise.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:fde183443941279a4820924f2976066aa6d2946a92b2a1af8dbd3f9b869a8d48'
+body_hash: 'sha256:4f734fadaef08865e06549ac8b0173826e3b51969ff53264437dfdfe4cf6e33e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -159,7 +159,6 @@ first one's comment already said, recording the reason on a new
 `authority_fallback_reason` so "reviewed but cannot file" stays distinguishable from
 "nobody reviewed it".
 
-
 ### m182-models-a-fraction-of-the-donor-row | high | Modelo 182 can represent 5 of 18 declarable donor fields, and the omissions move a taxpayer's deduction in both directions
 
 Modelo 182 `2007-y-siguientes` had never been examined by this campaign. It is not a
@@ -200,7 +199,6 @@ fail-closed state of an UNREVIEWED revision. Stamping would flip all ten to
 `inherited` without verifying anything. A gap count that a stamp erases is not evidence
 for stamping, and is not evidence against it either; the substantive field coverage
 above is what decides.
-
 
 ## Recommendations
 
