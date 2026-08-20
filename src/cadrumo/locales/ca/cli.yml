@@ -1749,16 +1749,20 @@ cli:
           interactiu; utilitza --secrets-stdin.
         secrets_channel_conflict: No es pot especificar --secrets-stdin i --secrets-fd
           alhora.
+        secrets_fd_invalid_json: 'El contingut de --secrets-fd no és un objecte JSON
+          vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
+        secrets_fd_missing_fields: 'A l''objecte de --secrets-fd li falten camps obligatoris
+          o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
         secrets_fd_reserved_stream: El descriptor de fitxer no pot ser l'entrada,
           sortida ni el flux d'error estàndard.
         secrets_fd_too_large: El contingut del secret de màquina des del descriptor
           de fitxer supera la mida màxima.
         secrets_fd_unreadable: Error en llegir secrets de màquina des del descriptor
           de fitxer.
-        secrets_stdin_invalid_json: El contingut de --secrets-stdin no és un objecte
-          JSON vàlid.
-        secrets_stdin_missing_fields: A l'objecte de --secrets-stdin li falten camps
-          obligatoris o en té d'inesperats.
+        secrets_stdin_invalid_json: 'El contingut de --secrets-stdin no és un objecte
+          JSON vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
+        secrets_stdin_missing_fields: 'A l''objecte de --secrets-stdin li falten camps
+          obligatoris o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
         secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
           permesa.
       recovery_words_confirm: Ja l'he anotada

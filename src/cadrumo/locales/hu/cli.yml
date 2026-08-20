@@ -1745,14 +1745,21 @@ cli:
           használja a --secrets-stdin kapcsolót.
         secrets_channel_conflict: A --secrets-stdin és a --secrets-fd nem adható meg
           egyszerre.
+        secrets_fd_invalid_json: 'A --secrets-fd tartalma nem érvényes JSON objektum.
+          Küldjön egy objektumot ezekkel a kulcsokkal: {expected_fields}.'
+        secrets_fd_missing_fields: 'A --secrets-fd objektumból hiányoznak kötelező
+          mezők, vagy váratlanokat tartalmaz. Pontosan ezeket a kulcsokat küldje:
+          {expected_fields}.'
         secrets_fd_reserved_stream: A fájlleíró nem lehet a standard bemenet, kimenet
           vagy hibacsatorna.
         secrets_fd_too_large: A fájlleíróból kapott gépi titok mérete meghaladja a
           maximális méretet.
         secrets_fd_unreadable: Nem sikerült kiolvasni a gépi titkokat a fájlleíróból.
-        secrets_stdin_invalid_json: A --secrets-stdin tartalma nem érvényes JSON objektum.
-        secrets_stdin_missing_fields: A --secrets-stdin objektumból hiányoznak kötelező
-          mezők, vagy váratlanokat tartalmaz.
+        secrets_stdin_invalid_json: 'A --secrets-stdin tartalma nem érvényes JSON
+          objektum. Küldjön egy objektumot ezekkel a kulcsokkal: {expected_fields}.'
+        secrets_stdin_missing_fields: 'A --secrets-stdin objektumból hiányoznak kötelező
+          mezők, vagy váratlanokat tartalmaz. Pontosan ezeket a kulcsokat küldje:
+          {expected_fields}.'
         secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
           maximális méretet.
       recovery_words_confirm: Leírtam

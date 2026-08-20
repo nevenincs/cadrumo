@@ -17,16 +17,12 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .._formula_runtime import calculate_registry_snapshot
 from .._validate import RegistryValidator
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -44,20 +40,46 @@ def test_modelo_187_188_194_validators_accept_committed_definitions(modelo_id: s
 
 
 @pytest.mark.parametrize("modelo_id", _MODELOS)
-def test_modelo_187_188_194_formulas_are_owned_by_constructs(modelo_id: str) -> None:
+def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
+    """These hoja-resumen forms compute nothing, so no formula may be declared.
+
+    **Correcting what this module asserted.** It required a
+    ``modelo-NNN-total`` owned by a construct, and a companion test asserted
+    "casilla 05 equals casilla 04 per each AEAT form's own printed total row".
+    Reading the printed annexes disproved that appeal:
+
+    * Orden HAP/1608/2014 ANEXO I numbers modelo 187 boxes 01 to 04 and prints
+      NO box 05 at all; box 03 is "importe total de las enajenaciones", not a
+      base.
+    * The 1999 ordenes' ANEXO IV (188) and ANEXO VIII (194) number 01 to 05 in
+      two rows split by sign of the base, where 03 is the retenciones and 05 is
+      the NEGATIVE-base figure -- an input, not a total of anything.
+
+    So the "total" was an identity ``add`` over one casilla, writing to a box
+    that either did not exist or held a different declared figure. Every box on
+    these three sheets is operator input; the formulas were deleted and the
+    absence is the contract now.
+    """
     modelo, _ = _committed_modelo(modelo_id)
     revision = modelo.revisions["2019-y-siguientes"]
-    owned = set().union(*(set(construct.formulas) for construct in revision.constructs))
-    assert f"modelo-{modelo_id}-total" in owned
 
-
-@pytest.mark.parametrize("modelo_id", _MODELOS)
-def test_modelo_187_188_194_totals_copy_source_casilla(modelo_id: str) -> None:
-    """Casilla 05 equals casilla 04 per each AEAT form's own printed total row."""
-    snapshot = _committed_snapshot(modelo_id, 2019, "0A")
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={_SOURCE_CASILLA: Decimal("500.00")},
-        date_context={"filing_period": date(2019, 12, 31)},
+    assert revision.formulas == (), (
+        f"modelo {modelo_id} declares {len(revision.formulas)} formula(s); its printed "
+        "hoja-resumen computes none of its boxes"
     )
-    assert result.values[_TARGET_CASILLA] == Decimal("500.00")
+    assert not any(construct.formulas for construct in revision.constructs)
+
+
+@pytest.mark.parametrize(
+    ("modelo_id", "expected"),
+    [("187", ("01", "02", "03", "04")), ("188", ("01", "02", "03", "04", "05")), ("194", ("01", "02", "03", "04", "05"))],
+)
+def test_modelo_187_188_194_casilla_set_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
+    """The declared casillas are the boxes the approving orden's annex prints."""
+    modelo, _ = _committed_modelo(modelo_id)
+    revision = modelo.revisions["2019-y-siguientes"]
+
+    assert tuple(str(casilla.id) for casilla in revision.casillas) == expected
+    assert all(casilla.input_kind.value == "manual" for casilla in revision.casillas), (
+        "every box on these hoja-resumen forms is declarante input"
+    )

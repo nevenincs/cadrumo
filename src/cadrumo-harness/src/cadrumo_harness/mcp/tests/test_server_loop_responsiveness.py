@@ -163,7 +163,7 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
     """
     with temporary_env(
         CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
-        CADRUMO_SECRET_STORE_BACKEND="file",  # noqa: S106 - env var name, not a credential
+        CADRUMO_SECRET_STORE_BACKEND="auto",  # noqa: S106 - env var name, not a credential
         CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
         CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
     ):

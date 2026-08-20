@@ -30,6 +30,7 @@ from ._custody_repository import (
 from ._custody_transactions import (
     CUSTODY_RECEIPT_SCHEMA_VERSION,
     ProfileCustodyDeleteConfirmation,
+    ProfileCustodyDuplicateLabelError,
     ProfileCustodyInventoryWitness,
     ProfileCustodyOwnerReceipt,
     ProfileCustodyTransactionConflictError,
@@ -242,7 +243,7 @@ class _ProfileCustodyTransactionCapability:
                     "committed profile capsule has no valid label projection"
                 ) from exc
             if existing_label.label.casefold() == label.casefold():
-                raise ProfileCustodyTransactionConflictError("profile label is already bound to a committed capsule")
+                raise ProfileCustodyDuplicateLabelError("profile label is already bound to a committed capsule")
 
     def _refuse_duplicate_label_publication_under_root_lock(
         self,

@@ -1767,16 +1767,21 @@ cli:
           interactiva; usa --secrets-stdin.
         secrets_channel_conflict: No se puede especificar --secrets-stdin y --secrets-fd
           a la vez.
+        secrets_fd_invalid_json: 'El contenido de --secrets-fd no es un objeto JSON
+          válido. Envíe un objeto con estas claves: {expected_fields}.'
+        secrets_fd_missing_fields: 'Al objeto de --secrets-fd le faltan campos obligatorios
+          o tiene campos inesperados. Envíe exactamente estas claves: {expected_fields}.'
         secrets_fd_reserved_stream: El descriptor de archivo no puede ser la entrada,
           salida ni el flujo de error estándar.
         secrets_fd_too_large: El contenido del secreto de máquina desde el descriptor
           de archivo excede el tamaño máximo.
         secrets_fd_unreadable: Error al leer secretos de máquina desde el descriptor
           de archivo.
-        secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
-          JSON válido.
-        secrets_stdin_missing_fields: Al objeto de --secrets-stdin le faltan campos
-          obligatorios o tiene campos inesperados.
+        secrets_stdin_invalid_json: 'El contenido de --secrets-stdin no es un objeto
+          JSON válido. Envíe un objeto con estas claves: {expected_fields}.'
+        secrets_stdin_missing_fields: 'Al objeto de --secrets-stdin le faltan campos
+          obligatorios o tiene campos inesperados. Envíe exactamente estas claves:
+          {expected_fields}.'
         secrets_stdin_too_large: El contenido de --secrets-stdin supera el tamaño
           máximo permitido.
       recovery_words_confirm: Ya la he anotado
