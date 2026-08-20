@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:406ab4cc29600e9cb1ec3cef603b44270b857582b0dad3c2e951fbf57126cde4'
+body_hash: 'sha256:6cd9ace73ccf18654066af01119863af9ab66e4244113f98b932af593c73b04f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2815,3 +2815,33 @@ which refutes a dormancy claim from any module that references the member.
 encoding ratchet fixed last pass, uniformly protected against outliving their reasons.
 Recorded so the sweep is not repeated — the inventory is the durable artefact here, not
 a fix.
+
+### The reader accepted unboundedly more than the writer can emit
+
+`read_sealed_archive` opens the archive `r:gz` and called `read()` on the payload member
+with no ceiling. The bytes on disk therefore bound nothing: a member declaring an
+enormous size whose compressed form is tiny is handed over in full. The path in is
+`config profile restore`, which takes a path — an archive can be corrupted in place, or
+handed to an operator by someone other than whoever wrote it — so this was an
+operator-supplied memory-exhaustion surface.
+
+**A cap existed and guarded the other direction.** `_MAX_PAYLOAD_BYTES` bounds the WRITE
+path that serialises a capsule INTO an archive. Nothing bounded the read. That asymmetry
+is what makes the fix free rather than a judgement call: the ceiling is set to the
+writer's own cap, so no archive this product produced can exceed it and refusing above it
+rejects nothing legitimate. A parity test holds the two equal, because the quieter failure
+is a bound drifting BELOW the writer's cap — surfacing much later as an operator unable to
+restore a real backup.
+
+**An assertion was written and then removed rather than shipped.** It claimed a forged
+`member.size` could smuggle a large payload past a size check. Running it showed the
+opposite: `tarfile` limits `extractfile` to the declared size, so a forged SMALL size
+truncates and is not a bypass at all. The ceiling's real subject is the opposite shape —
+a huge declared size with a tiny compressed form. Shipping the original would have left a
+test whose name asserted a threat that does not exist, and a docstring teaching the next
+reader something false about the format. The corrected docstring states what the bound is
+actually for.
+
+That is the third time in this campaign a plausible threat model survived until it was
+executed. The pattern is stable enough to state: **an assertion about a library's
+behaviour is a hypothesis until the library runs it.**
