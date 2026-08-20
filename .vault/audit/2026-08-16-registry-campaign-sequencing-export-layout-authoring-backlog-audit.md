@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9a814cffc34d1ae21648089ec5958e2da123f5213223c545d57a09b49665038'
+body_hash: 'sha256:30557616bf7a6fb60f44eb79d76e4a391414f02f8199a0bef622841652947ff3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7333,3 +7333,81 @@ editions, which carry about forty holed records each and are now by far the
 largest single block, and modelo 390's 2015 design with seven unidentified
 bodies. Modelo 100's 2014 edition also keeps one unnamed body the narrow-page
 widening did not reach.
+
+## Tick: the reversed-column row, and three decision rules before one that worked
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start.
+
+Took the largest remaining block: modelo 200's three oldest editions, about
+forty holed records each.
+
+### The shape
+
+The hole runs cluster on multiples of 17, which is modelo 200's importe width
+(15 enteros + 2 decimales), so whole amount rows were being dropped. The cause
+is a PDF column scramble: some rows are emitted as TWO lines with the columns
+swapped -- `17 Num Ret. e ingr. a cuenta ...` followed by `30 419 [596]`, where
+AEAT's row is `30 419 17 Num Ret. e ingr. a cuenta ... [596]`. Neither half is a
+row alone; each supplies exactly the columns the other lacks. 592 such pairs
+across six editions.
+
+### Three decision rules that did not work, and why each failed differently
+
+**Unconditional join.** Recovered ~8,800 positions and perturbed three designs
+that were already complete: modelo 200's 2012-2014 editions each gained twelve
+DUPLICATE importe fields, because a design may emit the same row both split and
+intact and a line-level view cannot tell those apart. Contiguity permits
+duplication as containment, so it was silent. The corpus control caught it --
+"already-complete designs whose sheets changed" is the line that matters, and it
+listed three.
+
+**A duplicate guard on (ordinal, position).** Cut the joins from 318 to 91 but
+the three designs still changed: the duplicated rows carry a different ordinal,
+so the identity guard could not see them.
+
+**A design-level retry keyed on the extraction.** Correct in shape -- offer the
+repair only where something is skipped, keep it only if it improves -- but both
+quantities I tried were structurally blind. A record with holes is REPORTED
+rather than handed over, so it is absent from `sheets`; the repair recovers rows
+precisely inside such records, so sheet counts, skip counts and field totals are
+identical either side of it while thousands of positions differ. The repair
+became dead code that never fired, which is worse than not having it.
+
+**Counting over the parse state.** The decision now measures uncovered positions
+across every record the lines produce, including the ones that stay reported.
+That is the only surface where this repair is visible at all.
+
+### What it does, and what it does not
+
+Kept for modelo 200's 2010 edition (17,171 -> 16,031 uncovered) and its 2011
+edition (22,378 -> 21,362): **2,156 positions recovered**. Declined for the
+2010 orden edition, which it does not improve, and for every clean design, whose
+first read is what it returns.
+
+Stated plainly because a table would hide it: **nothing changes at the
+extraction surface.** Sheets, skips, completeness and errors are identical
+across all 218 designs, and no already-complete design changed. The gain is a
+smaller and more accurate worklist inside records that remain incomplete -- not
+new content for any consumer.
+
+And it does NOT fix the case that started this. Record 419-435 is still
+reported, because in that record the second fragment is itself a complete row,
+so the duplicate guard correctly declines. The motivating example turned out to
+be the shape the guard exists to refuse.
+
+### Verified against
+
+Corpus control over all 218 designs: sheets 3145, skipped 143, complete 208,
+errors 0 -- every one unchanged, zero designs lost a sheet, zero already-complete
+designs changed. `test_record_design_reversed_columns`: 4 passed; disabling the
+rejoin reds the capability, dropping the duplicate guard reds the guard, and
+neither probe touches a tracked file.
+
+### Still open
+
+Modelo 200's three oldest editions remain the largest block: ~40 holed records
+each, now with slightly smaller reported holes. Modelo 390's 2015 design has
+seven unidentified bodies. The recorded cases stand: modelo 349 and 180's visual
+charts, modelo 100's doubly-glued byte, modelo 131's spilled-column byte, and
+modelo 200's casillas 1501-1508 without locale labels.
