@@ -2475,62 +2475,113 @@ class _PdfSheetResult:
 #: belongs to: ``</T200001>`` closes page 1 of modelo 200. AEAT writes it as the
 #: last field of every page record in the designs that head their records with
 #: nothing a heading recogniser can see.
-_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{2,3})>")
+_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{2,5})>")
 #: The same fact stated at the TOP of the record, as the contenido of its
 #: ``Página`` row: ``3 6 3 An Página. OBLIGATORIO Constante "001"``.
-_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{2,3})"')
+_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{2,5})"')
+
+
+#: The widths AEAT writes a página constant in, observed across the bundled
+#: corpus: two digits (modelo 763), three (modelo 200), five (modelo 390's
+#: composite). Four is deliberately absent -- that is an ejercicio.
+_PAGE_CONSTANT_WIDTHS: Final[frozenset[int]] = frozenset({2, 3, 5})
+
+
+def _page_number_from_token(token: str) -> int:
+    """The page a record's página constant names.
+
+    Most designs write the page directly -- modelo 200's ``001``, modelo 763's
+    ``02``. Modelo 390 writes a FIVE-digit composite, ``01000`` through
+    ``08000``, where the leading digits are the page and the trailing ``000`` is
+    a sub-counter.
+
+    That split is not assumed: the design cross-checks it itself. Its second
+    record is headed ``Pag. 1 DISENO DE REGISTRO`` -- named by AEAT's own
+    running header, with no help from this function -- and that same record
+    declares ``Constante "01000"`` and closes ``</T39001000>``. Page 1 and token
+    01000 are therefore the same record stated two ways, which fixes the
+    reading; the remaining seven records run 02000 to 08000 and name pages 2 to
+    8, colliding with nothing.
+
+    A five-digit token NOT ending in the sub-counter is left alone rather than
+    split on a rule this evidence does not cover.
+    """
+    if len(token) == 5 and token.endswith("000"):
+        return int(token[:2])
+    return int(token)
 
 
 def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
     """Name an unheaded record body from the identity it declares about itself.
 
-    Some AEAT designs never head a record with a title. Modelo 200's 2010 orden
-    edition is the worked case: its page records are separated only by a running
-    page header, and each record's identity lives INSIDE the body -- as the
-    ``Constante "006"`` of its Página field, and again as the ``</T200006>``
-    closing identifier AEAT requires as the record's last field.
+    Some AEAT designs never head a record with a title. Each record states which
+    page it is twice: as the ``Constante "006"`` of its Página field, and as the
+    ``</T200006>`` closing identifier AEAT requires as the record's last field.
+    Both are declared required CONTENT, so reading them is recovery rather than
+    guesswork.
 
-    Both are constants AEAT declares as a field's REQUIRED CONTENT, so a body
-    carrying them is stating which page it is; reading them is not a heuristic
-    over prose.
+    The closing identifier is preferred, because it names the modelo as well as
+    the page and a stray constant elsewhere in the body cannot imitate it. It is
+    set aside in exactly one circumstance: when its page component is not as
+    wide as the Página field DECLARES that component to be. The identifier is a
+    concatenation, so a lost digit inside it is silent -- modelo 390's seventh
+    record closes ``</T3900700>``, seven digits where its siblings carry eight,
+    which read as page 700. The field's own length is what exposes that, and
+    where the two disagree without such a width contradiction the identifier is
+    still trusted, because nothing says which side is the corrupt one.
 
     The Página strategy is keyed on GEOMETRY, never on the word "Página". These
     designs are published as PDFs whose text layer does not survive decoding
-    intact -- the label arrives as ``P?gina`` -- so a reader that matched the
+    intact -- the label arrives as ``P?gina`` -- so a reader matching the
     Spanish label would work on the editions that decode cleanly and fail on the
-    ones that do not, which is the opposite of what the corpus needs. AEAT fixes
-    the geometry instead: the modelo constant occupies positions 3-5 and the
-    page constant immediately after it. The page constant is TWO digits in some
-    designs and three in others -- modelo 763 and modelo 202 write
-    ``Constante "02"`` where modelo 200 writes ``Constante "001"`` -- so its
-    width is not part of the evidence; its position is. Requiring BOTH is what
-    makes this
-    safe -- a lone three-digit constant elsewhere in a body cannot satisfy it.
+    ones that do not. AEAT fixes the geometry instead: the modelo constant at
+    positions 3-5 and the page constant immediately after it. Requiring BOTH is
+    what makes this safe, since a lone constant elsewhere cannot satisfy it, and
+    the constant must be exactly as wide as its field declares.
 
     Returns ``None`` when the body declares neither identity, leaving it
     unidentified and on the worklist exactly as before. Recovering a name the
     record did not state would be inventing an identity, which is worse than
     reporting the gap.
     """
+    by_offset = {field.offset: field for field in sheet.fields}
+    modelo_field, page_field = by_offset.get(3), by_offset.get(6)
+    declared_page: str | None = None
+    if (
+        modelo_field is not None
+        and page_field is not None
+        and modelo_field.length == 3
+        and _pdf_declared_constant(modelo_field) is not None
+    ):
+        candidate = _pdf_declared_constant(page_field)
+        # Two conditions, and both earn their place. The constant must be as
+        # wide as its own field declares -- that is what lets modelo 763's two
+        # digits, modelo 200's three and modelo 390's five all be read without a
+        # reader-side assumption. And the width must be one AEAT actually uses
+        # for a page: a FOUR-digit constant at this position is an ejercicio,
+        # ``Constante "2011"``, and self-consistency alone would happily read it
+        # as page 2011.
+        if (
+            candidate is not None
+            and len(candidate) == page_field.length
+            and page_field.length in _PAGE_CONSTANT_WIDTHS
+        ):
+            declared_page = candidate
+
     for field in reversed(sheet.fields):
         for text in (field.content, field.description, field.validation):
             if not text:
                 continue
             match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
-            if match is not None:
-                return f"P\u00e1g. {int(match.group('page'))}"
-    by_offset = {field.offset: field for field in sheet.fields}
-    modelo_field, page_field = by_offset.get(3), by_offset.get(6)
-    if (
-        modelo_field is not None
-        and page_field is not None
-        and modelo_field.length == 3
-        and page_field.length in {2, 3}
-        and _pdf_declared_constant(modelo_field) is not None
-    ):
-        page = _pdf_declared_constant(page_field)
-        if page is not None:
-            return f"P\u00e1g. {int(page)}"
+            if match is None:
+                continue
+            closing = match.group("page")
+            if declared_page is not None and len(closing) != len(declared_page):
+                return f"Pág. {_page_number_from_token(declared_page)}"
+            return f"Pág. {_page_number_from_token(closing)}"
+
+    if declared_page is not None:
+        return f"Pág. {_page_number_from_token(declared_page)}"
     return None
 
 
