@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:0b8199a3b898cab0bb29fd3adc10cd8d4e2b953543f59638cc461602be5fd116'
+body_hash: 'sha256:6260963bea11b8fe39d25eef8617ed156a6819e1c6a387970775cd75ebf85158'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2646,3 +2646,55 @@ docstring is not updated, and asserts exact column-set equality.
 Both were checked rather than assumed, and both would have produced a confident wrong
 "finding" on a first reading. That is the method rule earning its place twice in one
 pass: read the design before gating it.
+
+### The ordering dependency, closed structurally
+
+The latent fragility recorded last pass is now fixed rather than described.
+
+`SecureObjectRepository.engine` is the one route into a bucket database that skips
+`_check_session_freshness` — the check every operation on that repository otherwise
+applies. Three date-index reads in the transaction repository took it, so each served a
+sealed session, an idle-expired session, or a session that had moved to another bucket,
+with nothing to stop it.
+
+None was exposed, because each is reached only after a guarded `load` and inherited the
+check that fired earlier in the call. `guarded_session_scope()` now applies the check at
+the read itself, and the three sites use it; the raw accessor stays for callers that
+genuinely need an engine.
+
+**The test drives the private method DIRECTLY.** Reaching it through a public entry point
+would run a guarded load first and re-establish the exact ordering that used to be the
+whole protection — proving the old accident still holds rather than the new guard. Proven
+by restoring the raw scope from an out-of-repo plugin: the read then succeeds under a
+foreign bucket's session.
+
+What this governs is the **idle lock**, not confidentiality of amounts: the index carries
+routing keys only, by design and by a live-schema assertion. An operator who walked away
+should not have a profile's transaction ids and filing dates still answering queries.
+
+### Attribution measured, not assumed
+
+Running the wider consumer packages surfaced 541 failures across ledger and modelo,
+dominated by `PurchaseInvoiceEvidenceInputError: this profile declares no fiscal-address
+postcode`. The one failure whose text mentioned readiness turned out to be a test
+matching rendered prose against a translation key, already raising before this change.
+
+Attribution was settled by set difference rather than by reading: the ledger slice was
+run with HEAD's copies of both modified files and then with mine — **82 failed / 1286
+passed, identical both ways**. None of those failures is attributable to this work; they
+belong to whoever landed the postcode requirement. The file-level swap used `git show`
+to write the HEAD content and restored from a scratchpad copy, so no git state operation
+was performed on a shared worktree.
+
+### The bundle question is answered, and not by us
+
+`2026-08-20-profile-portability-data-subject-access-adr` is **accepted**, and its three
+corrections have all landed — verified rather than assumed, since an accepted ruling on
+code is not self-executing: the `sar_help` / `sar_catalogue_info` strings are gone from
+all four catalogues, the declaration entry now records a missing capability instead of a
+legal duty, and the reference documentation states the gap.
+
+It confirms this campaign's finding in its own words — "the profile manager writes
+bundles nothing in the product reads back" — and assigns restoring export/import to
+`2026-08-13-profile-portability-successor-adr`, not here. The open item this campaign was
+carrying is therefore closed: ruled, deferred deliberately, and owned elsewhere.
