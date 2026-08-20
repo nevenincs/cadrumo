@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:951ff8771d57096fed2aa26585dc2f32f319df449df54a4727c52f132f2c1df2'
+body_hash: 'sha256:13ac5e86bef0c670289094bff5c360c007f77f553366acd3d09515d090f9b2f4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1677,6 +1677,42 @@ in-process transport, MCP schema-budget and closed-value-axis gates that this
 change does not touch, and there is no cheap baseline establishing when they
 started. This campaign has twice had to retract a confident attribution; an
 unattributed count is the honest record until someone measures it.
+
+### A red test inside a prescribed lane, unread for the whole campaign
+
+Chasing the harness failures led back into this campaign's OWN lane.
+`_complete_setup_payloads.py` was added with the complete-setup verb and never
+listed in `RESULT_SCHEMA_MODULES`, so two declare-then-verify gates over that
+surface had been failing: one reporting an in-tree schema owner missing from
+the declaration, the other that declared modules no longer reconcile with the
+registry projection. One line fixes both.
+
+The finding is where it sat. `entrypoints/cli/_config` is one of the three
+prescribed lanes, and the CLI package has reported "5 failed" on every run this
+campaign made. That number was recorded as an unchanged baseline, iteration
+after iteration, and treated as evidence of no regression -- which it was. It
+was never treated as five open questions, which it also was. A stable red count
+is not a clean signal; it is a signal nobody has read.
+
+That is a different failure from the lane-coverage blind spot recorded above.
+There the reds were invisible; here they were printed every time and scrolled
+past because the total had not moved.
+
+### A measurement artefact caught before it became a finding
+
+Worth recording as a near-miss. Following the harness envelope-parity failure
+produced what looked like a serious defect: `registry.inspect` reported "no
+registered output schema", which would mean the MCP transport could not
+validate a correct envelope. Checking the population path first, rather than
+writing it up, showed the opposite -- with the CLI package imported, all 291
+live commands have registered schemas and none is missing. The registry is
+populated BY importing the CLI, and the probe script had imported only
+`json_contract`.
+
+The probe measured its own import graph, not the tree. This campaign has
+already retracted two confident attributions; the cheap habit that avoided a
+third was verifying the measurement apparatus before believing an alarming
+result from it.
 
 ## Recommendations
 
