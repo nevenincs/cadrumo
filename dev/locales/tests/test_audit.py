@@ -46,11 +46,12 @@ _IDENTITY_HEADING_KEYS = {
 # entry, which the staleness assertion below reports as itself rather than as an
 # unreadable set difference.
 #
-# The ``cli.config.passphrase.*`` prompts were entries here until the custody
-# cutover removed the verb. They are absent from the catalogues rather than
-# retired: the operator surface still declares that command family, with credential
-# rotation recorded as owed. When the capability ships and the prompts come back,
-# they belong in this inventory again.
+# The ``cli.config.passphrase.*`` prompts were entries here until the
+# ``config rekey`` -> ``config passphrase change`` rename relocated them: the
+# current-passphrase prompt now lives under ``cli.config.custody`` and the
+# create-time pair under ``cli.config.profile``. The verb itself ships and its
+# family is MOUNTED, so the prompts are relocated rather than owed; what remains
+# under ``cli.config.passphrase`` is its help pair and one refusal.
 _PROSE_KEYS = {
     "ca": {
         "errors.auth.auth_former_product_session_state",

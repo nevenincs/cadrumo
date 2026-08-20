@@ -102,13 +102,17 @@ _LANDING_HEADLINE_IDENTITY_TOKENS = frozenset({"CADRUMO"})
 
 # A command family's own catalogue strings live under ``cli.<root>.<child>``.
 _CUSTODY_PASSPHRASE_NAMESPACE = ("cli", "config", "passphrase")
-_CUSTODY_PASSPHRASE_PROMPTS = (
-    "current_passphrase_prompt",
-    "new_passphrase_prompt",
-    "confirm_new_passphrase_prompt",
-)
-# A prompt is sentence prose addressed to the operator, not a heading.
-_CUSTODY_PASSPHRASE_IDENTITY_TOKENS = frozenset({"Cadrumo"})
+# The `config rekey` -> `config passphrase change` rename moved this family's
+# prompts to `cli.config.custody` and `cli.config.profile`. Only the namespace's
+# own surviving leaves belong here, and they split by identity contract, so each
+# group is asserted separately -- one `expected` set applies to every leaf named
+# in a single call.
+_CUSTODY_PASSPHRASE_HELP_LEAVES = ("help", "change_help")
+# Command help is a label, not operator-addressed prose: it names no product.
+_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS: frozenset[str] = frozenset()
+_CUSTODY_PASSPHRASE_NOTICE_LEAVES = ("no_active_profile",)
+# The refusal instructs `aeat config login NAME`, so it carries the executable.
+_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS = frozenset({"aeat"})
 
 
 def _declared_family_mount_state(namespace: tuple[str, ...]) -> FamilyMountState:
@@ -143,6 +147,32 @@ def _assert_command_family_catalogue_strings(
 ) -> None:
     """Assert a command family's catalogue strings against the family register.
 
+    This is the door every live assertion uses, and it takes NO state argument on
+    purpose: the register is resolved here, so no caller can assert a namespace
+    under a mount state the register did not rule for it. Holding the two
+    together structurally is what keeps a hardcoded state from tolerating absence
+    on a mounted family -- the exact masking this module exists to catch.
+    """
+
+    _assert_catalogue_strings_for_state(
+        data,
+        namespace,
+        _declared_family_mount_state(namespace),
+        leaves=leaves,
+        expected=expected,
+    )
+
+
+def _assert_catalogue_strings_for_state(
+    data: dict[str, LocaleNode],
+    namespace: tuple[str, ...],
+    state: FamilyMountState,
+    *,
+    leaves: tuple[str, ...],
+    expected: frozenset[str],
+) -> None:
+    """Assert catalogue strings for one explicitly supplied mount state.
+
     A ``MOUNTED`` family is on the wire, so every string it renders must exist and
     must satisfy the naming contract.
 
@@ -154,7 +184,6 @@ def _assert_command_family_catalogue_strings(
     family flips to ``MOUNTED``, this demands the strings back without an edit here.
     """
 
-    state = _declared_family_mount_state(namespace)
     held = state is FamilyMountState.DECLARED_UNIMPLEMENTED
 
     node: LocaleNode = data
@@ -254,8 +283,14 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
     _assert_command_family_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
-        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
-        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
+    )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
     )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (
         "Cadrumo profile name override (default = active profile on workflow state)"
@@ -339,6 +374,18 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "headline",
         expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
     )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
+    )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
+    )
 
 
 def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings(
@@ -363,8 +410,14 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     _assert_command_family_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
-        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
-        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
+    )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
     )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (
         "Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de flux)"
@@ -447,6 +500,18 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
         "landing",
         "headline",
         expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
+    )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
+    )
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
     )
 
 
@@ -541,11 +606,15 @@ def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
     mounted = next(family for family in MOUNTED_COMMAND_FAMILIES if family.mount_state is FamilyMountState.MOUNTED)
     mounted_namespace = ("cli", mounted.root.value, mounted.child)
 
-    _assert_command_family_catalogue_strings(
+    # No family in the register is DECLARED_UNIMPLEMENTED -- test_contract.py's
+    # test_no_family_is_left_declared_unimplemented gates that emptiness -- so the
+    # held branch has no live example and the state is supplied directly.
+    _assert_catalogue_strings_for_state(
         {},
         _CUSTODY_PASSPHRASE_NAMESPACE,
-        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
-        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+        FamilyMountState.DECLARED_UNIMPLEMENTED,
+        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
+        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
     )
 
     with pytest.raises(AssertionError, match="absent from the catalogue"):
@@ -567,26 +636,25 @@ def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
 
 
 def test_a_held_family_string_still_carries_the_naming_contract() -> None:
-    """Held is not unchecked: a present string still answers to the contract."""
+    """Held is not unchecked: a present string still answers to the contract.
+
+    The held state is supplied directly because no family in the register carries
+    it. Passing every named leaf PRESENT is what makes this test bite: absence
+    would be tolerated under held and prove nothing, so the string has to be
+    there and wrong for the naming contract to be the thing under test.
+    """
 
     catalogue: dict[str, LocaleNode] = {
-        "cli": {
-            "config": {
-                "passphrase": {
-                    "current_passphrase_prompt": "Current cadrumo secret-store passphrase: ",
-                    "new_passphrase_prompt": "New Cadrumo secret-store passphrase: ",
-                    "confirm_new_passphrase_prompt": "Confirm new Cadrumo secret-store passphrase: ",
-                }
-            }
-        }
+        "cli": {"config": {"passphrase": {"help": "Manage the cadrumo profile passphrase."}}},
     }
 
     with pytest.raises(AssertionError, match="carries identity tokens"):
-        _assert_command_family_catalogue_strings(
+        _assert_catalogue_strings_for_state(
             catalogue,
             _CUSTODY_PASSPHRASE_NAMESPACE,
-            leaves=_CUSTODY_PASSPHRASE_PROMPTS,
-            expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+            FamilyMountState.DECLARED_UNIMPLEMENTED,
+            leaves=("help",),
+            expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
         )
 
 

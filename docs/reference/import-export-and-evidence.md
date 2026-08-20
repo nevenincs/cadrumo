@@ -131,12 +131,24 @@ bytes supplied to it, but does not first require checksum or signature
 verification. After decryption, verify the recovered package and signatures
 separately.
 
-The portable profile bundle and the data-subject right-of-access response are
-not available in this version. The commands that produced them were withdrawn
-when profile storage moved to the sealed capsule, and no other command currently
-writes a portable per-profile bundle. The sealed custody archive is not a
-substitute: it is an encrypted full-custody transport for recovery, not a
-structured, readable copy of one profile's records.
+No command writes a portable profile bundle or a data-subject right-of-access
+response in this version. The commands that produced them were withdrawn when
+profile storage moved to the sealed capsule.
+
+The profile manager can still write a portable bundle: run `aeat config profile
+edit` with no other arguments to open it, then choose the export action. Do not
+use it to move a profile between machines or storage roots. Nothing in this
+version reads such a bundle back, because the import half was withdrawn
+alongside the command-line verbs, so a bundle written today cannot be loaded by
+this version. Treat the file as opaque until an import surface returns.
+
+This is a portability gap, not a recovery one. Backup and recovery are
+unaffected and run through `aeat config profile archive export` and
+`aeat config profile restore`, which operate on the sealed profile capsule.
+
+The sealed custody archive is not a substitute: it is an encrypted full-custody
+transport for recovery, not a structured, readable copy of one profile's
+records.
 
 The sealed custody archive serves a different purpose. It is an encrypted
 full-custody recovery transport for classified durable custody. Process-local
