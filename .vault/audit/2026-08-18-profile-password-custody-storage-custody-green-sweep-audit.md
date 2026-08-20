@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:6cb22bba518d3132e24a6581657c3ff6b5cc64b74a5f6a08400825bc31b98d10'
+body_hash: 'sha256:5296547253d7623f620e3dd1e359aa49833080c3ecd476bdc524bec563aa1544'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2007,3 +2007,52 @@ production `BucketSession.open(...)` and requires the enclosing function to run 
 canary, carries an anti-vacuity assertion (an empty enumeration would pass every
 other assertion in the file), and was proven to bite by removing the real call from
 `_provider_enter` and observing it named that exact site.
+
+### Multiuser safety: what is already sound, verified rather than assumed
+
+Three of the four multiuser axes in the campaign brief hold up under inspection, and
+recording *why* matters as much as recording gaps — otherwise the next sweep re-derives
+them.
+
+**PID liveness is fail-closed in the dangerous direction.** `pid_is_alive`
+(`core/_pid_liveness.py`) treats a permission-denied probe as ALIVE on both platforms:
+POSIX catches `PermissionError` from `os.kill(pid, 0)`, and Windows classifies only
+`ERROR_INVALID_PARAMETER` (87) as dead, every other `OpenProcess` failure as alive.
+This is exactly the second-OS-user case — user B cannot query user A's process — and
+the wrong polarity would let B reclaim a live holder's bucket lock and produce two
+writers.
+
+That branch is **not** covered by a real test, and the module says so honestly. The
+claim was checked rather than taken on trust: a scan of all 564 live processes on this
+machine found **zero** for which `OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` is
+denied — the System process (PID 4) grants a handle here. So the docstring's "not
+available in this test environment" is accurate, and no behavioural test was
+manufactured for it. Left as a stated, verified limitation rather than a fabricated
+green.
+
+**The bucket lockfile is the best-covered surface in the domain.** Cross-process busy
+detection uses a real live subprocess holder and asserts `BucketBusyError` with the
+holder's actual recorded PID — the fail-open direction is genuinely tested. Stale
+reclaim re-reads the PID immediately before unlinking and aborts unless the record is
+byte-identical, closing the TOCTOU window where a peer reclaims and re-creates. Release
+leaves a foreign lockfile alone. Reentrancy, child-process inheritance and
+sharing-violation races are all covered.
+
+**Resumed sessions cannot be unsecured.** `BucketSession.open_resumed` hardcodes
+`unsecured_backend=False`, and that is sound rather than a papered-over default: a
+resumed session comes from per-profile password custody, which the unsecured backend
+never participates in.
+
+### The capsule-archive payload was an unenrolled durable format
+
+An exported capsule archive carries two versions — the container's
+`ARCHIVE_SCHEMA_VERSION`, long enrolled, and the JSON payload's own — and the second
+was accounted for nowhere. The enrolment gate names this exact test: *being inside an
+enrolled container does not put a record's own grammar under that container's floor*.
+Both conditions hold, so it is enrolled as `profile_capsule_archive_payload`, classed
+DURABLE: the payload is what locates the password envelope, sentinel and recovery slot,
+so an unreadable one is a backup that no longer restores anything.
+
+Renamed to `CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION` — the discovery helper keys
+constants by bare name with the underscore stripped, so a generic
+`PAYLOAD_SCHEMA_VERSION` would have collided with any other module's.
