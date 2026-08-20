@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:04b026726f59ee7cfe90302c959b8ce79278c7636afb9ee78519d478498b3a97'
+body_hash: 'sha256:b6549b29526c5003e6893cefc662fcd2ce1400953192e52719eb4b2833a90d2b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6853,3 +6853,191 @@ anonymous rather than one absorbing the other. Proved from a plugin outside the
 repo -- recovery rewired to invent `Pág. 1` for everything reds five of the six.
 The sixth is the collision test, which asserts anonymity and so correctly passes
 when everything collides.
+
+## Tick: the payload AEAT describes in prose, and the boxes it never draws
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates confirmed at 30
+passed WITH last tick's parser change in place -- the prediction from the
+completeness control held.
+
+Continued on the dropped-rows class that identity recovery exposed.
+
+### Modelo 349: a box AEAT does not draw, recorded rather than guessed
+
+The visual-chart designs (modelo 349's 2002 edition, modelo 180's 2000) lose a
+40-to-65-byte run from every record. Traced it to the end.
+
+These designs are graphical: positions are a printed ruler and fields are boxes,
+some with mirrored labels (`ORTSIGER` is `REGISTRO` reversed). The reader builds
+fields from the horizontal rules that underline each box. For the Tipo 1
+declarante record it finds rules covering 1-1, 2-4, 5-8, 9-17, 58-58, 59-65 --
+and **nothing at all for 18-57**, which by width is the 40-character
+`APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE` whose label is printed on the
+page.
+
+Checked both rule bands (tops 135.2 and 149.5): identical, and neither carries a
+rule over that span. Searched every rect on the page for one spanning the
+expected x-range: **zero**. The box is not drawn.
+
+The per-character tick marks looked like a second route, and they encode real
+information -- a tick is MISSING exactly at each field boundary, at 4.92 and
+8.92 for the boundaries of fields 2-4 and 5-8. But between 18 and 43 there are
+no ticks either, so they cannot resolve this span.
+
+**Recorded, not fixed, with a reason.** Recovering the field would mean
+inferring a boundary the document does not draw. If the true layout is two
+fields rather than one, the reader would silently merge them -- an invented wire
+position in a filing-grade record design, which is worse than the reported gap.
+The remaining honest route is AEAT's published orden text for the 2002 edition
+rather than the diagram, and grounding it from a later edition's layout is the
+cross-year mapping this campaign already refuses elsewhere.
+
+### Modelo 200: not a parser bug at all
+
+The largest dropped-row cluster -- six designs across modelos 100 and 200 all
+stopping at exactly position 337 -- turned out not to be a reader defect.
+
+The record is an envelope. `Constante "<VECTOR>"` occupies 329-336 and
+`Constante "</VECTOR>"` occupies 637-645, and AEAT describes what lies between
+them in PROSE rather than numbering it: "Vector de páginas ... y el resto a
+blancos hasta completar las 300 posiciones". 337 to 636 is 300 positions,
+exactly. The bytes are declared; only the numbering is absent.
+
+Contiguity reported that as a 300-byte hole. That is wrong in the way that
+matters most here: it is indistinguishable from the dropped-row defect the check
+exists to catch, so a genuine reader bug in such a record would have hidden
+behind an expected complaint.
+
+The span is now taken from the two markers' own declared offsets. Never from the
+prose -- that is what makes it reading rather than invention, and the prose
+agrees exactly, which is corroboration and nothing more.
+
+**The narrowing is the substance of it.** Crediting a bracket unconditionally
+would let a genuinely dropped row hide between two markers, weakening the very
+check being repaired. So a bracket earns its region only when the design numbers
+NOTHING inside it. Modelo 200's own structural `<AUX>` wrapper is the control
+that proves this discriminates: it numbers five rows inside itself, is therefore
+not credited, and does not need to be, because those rows already tile it.
+Before the narrowing the helper credited 23-636; after it, exactly 337-636 --
+300 positions, matching AEAT's own sentence.
+
+A regex slip is worth recording because it failed silently in the safe
+direction: `(?P<closing></?)` captures the `<` as part of the group, so every
+marker read as a CLOSING one and nothing was ever credited. The corpus control
+showed a completely unchanged result, which is what sent me to look.
+
+### Verified against
+
+Full parse of all 218 bundled designs at three points this campaign:
+
+| | tick start | after identity recovery | after bracket accounting |
+|---|---|---|---|
+| sheets read | 2986 | 2996 | **3006** |
+| skipped | 302 | 292 | **282** |
+| complete designs | 194 | 194 | 194 |
+
+Zero designs lost a sheet, zero errors, and **no design changed completeness** --
+which is the check that matters for blast radius, because the generator consumes
+designs through `require_complete()`. No generator input moved, and the
+generated-tree gates confirm it.
+
+Design cluster: **1 failed, 101 passed** -- the single failure being the
+worklist test that is meant to be red until every design reads whole.
+
+`test_record_design_bracketed_payload` pins both halves, and both were proved
+from a plugin outside the repo: removing the narrowing reds exactly the
+narrowing test, and disabling accounting reds exactly the accounting test.
+Neither probe touches a tracked file.
+
+### Still open
+
+Dropped rows remain the dominant class, now better separated: the modelo 100/200
+`337` cluster was never a defect, while modelo 349 and 180's visual charts are a
+real gap that needs the orden text rather than the diagram. Modelo 131's 13-byte
+runs, modelo 202's single positions and modelo 604's position 325 are still
+unexamined.
+
+## Tick: one byte in modelo 604, and two tests that stopped looking
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates confirmed at 30
+passed both at tick start and with last tick's bracket accounting in place.
+
+### A one-byte hole that was the reader's, not the corpus's
+
+Modelo 604's English ATF design reported `declares 500 total positions but 325
+were not read at all`. A single byte, sitting between two rows the reader had no
+trouble with.
+
+AEAT's line is `A. 325 Alphabetic CORRECTION.` -- the row is lettered as an item
+of its correction group before its position is given, while every other row in
+that record opens with the position. The row parser required the position first,
+so the line was not a row at all. Its sibling `A. 350-367 Numeric CORRECTED TAX`
+was dropped the same way.
+
+Before touching the pattern I measured what admitting the marker would let in
+across every bundled PDF: **two lines, in one design, both genuine field rows.**
+That is the whole population. The guard that actually decides is untouched -- a
+line still has to name a naturaleza AEAT uses in the token after its position,
+which is what keeps AEAT's own prose out, since descriptions routinely open with
+the field's own range and 41 bundled designs carry such lines. `A. 15 personas`
+is refused exactly as `15 personas` is, and both directions are pinned.
+
+**Modelo 604 now reads complete: both records, zero skips.** It is the first
+design this campaign has moved from partial to whole.
+
+That also makes it the first change to produce a NEW generator input, which is
+the thing worth being careful about: the generator consumes designs through
+`require_complete()`, so a design crossing into completeness is exactly what
+could move a generated tree. Modelo 604 is not among the 30 enrolled trees, and
+the gates confirm it.
+
+### Two parametrised cases that had stopped testing anything
+
+`test_committed_definition_legal_authority_and_deadline_windows` failed for
+modelo 490 and modelo 604 with `KeyError: '2021-y-siguientes'`. Not a data
+defect: the test pinned a revision id, and both pinned ids stopped existing when
+this campaign split those modelos' spans. 490 now has `2021`, `2022-1t`,
+`2022-2t-4t`, `2023-y-siguientes`; 604 has `2021-2023` and
+`2024-y-siguientes`.
+
+The windows themselves never moved or changed -- I checked every revision of all
+three modelos before editing, and every declared window still cites its plazo,
+with the totals still 8, 12 and 8. The lookup simply raised before reaching any
+assertion, so two of the three modelos had gone unchecked while the file
+reported a familiar red.
+
+Re-anchored on the modelo rather than a named revision. The orden fixes how many
+filing windows the tax has; WHICH revision declares them is a registry-shape
+decision a split may legitimately change, so the count is now asserted where it
+is stable. The count is kept rather than dropped -- it is a regulatory fact
+about the orden, not a tally of the moment -- and the assertion is strengthened
+by covering every revision instead of one.
+
+Proved it bites: dropping a window reds all three cases, and stripping one
+window's legal_refs reds all three. Both from a plugin outside the repo.
+
+### Verified against
+
+Corpus parse of all 218 designs, continuing this campaign's running control:
+
+| | tick start | identity | brackets | row marker |
+|---|---|---|---|---|
+| sheets read | 2986 | 2996 | 3006 | **3007** |
+| skipped | 302 | 292 | 282 | **281** |
+| complete | 194 | 194 | 194 | **195** |
+
+Zero designs lost a sheet, zero errors, and no field count changed on any sheet
+that already read -- the one delta is modelo 604 gaining its two rows.
+
+`test_modelo_490_604_763_registry`: **2 failed -> 3 passed.** New
+`test_record_design_row_marker`: 5 passed, and restoring the position-first
+requirement reds exactly the three marker-dependent cases while the two
+prose-guard cases stay green, which is the right split.
+
+### Still open
+
+Dropped rows remain, now a shorter and better-separated list: modelo 131's
+13-byte runs and modelo 202's single positions are unexamined; modelo 349 and
+180's visual charts are the recorded case where AEAT draws no box and the orden
+text, not the diagram, is the only honest source. Modelo 200's casillas
+1501-1508 still carry no locale label.
