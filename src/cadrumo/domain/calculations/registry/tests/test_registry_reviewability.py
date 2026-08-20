@@ -36,28 +36,31 @@ _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 # reviewed decision, and its reasoning belongs in the commit that makes it --
 # not accumulated here, where it becomes a changelog nobody reads and every
 # future reader has to scroll past.
-_VALIDATOR_MODULE_LINE_BASELINES = {
-    # The verification-predicate DSL validators (arity and shape checks for
-    # equals, roll_forward_balances, casilla_equals_implies_*,
-    # deduccion_requires_adquisicion_before, profile_flag_enabled) live in
-    # _validate_verification_predicates.py rather than alongside the section
-    # validators, which is why it is the largest module here.
-    "_validate_verification_predicates.py": 494,
-    "_validate_evidence.py": 395,
-    "_validate_surfaces.py": 359,
-    "_validate_cross_revision.py": 328,
-    "_validate_relation_sources.py": 311,
-    "_validate_record_sections.py": 305,
-}
-# Same ratchet, pinned to this module's exact current length.
 #
-# One caveat worth carrying, because it recurs: line count is a proxy for
-# complexity, and the proxy inverts when a delta is pure comment. A module that
-# grows only by recording why a call site is the way it is has become easier to
-# review, not harder, and neither shrinking it to make room nor deleting the
-# explanation to fit the number is a good trade. Read what a delta is made of
-# before treating a red here as an instruction to cut.
-_WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_416
+# Slack cuts the other way and is just as real: a module that shrinks and
+# leaves its old ceiling standing hands back budget nobody is defending.
+# Re-pin on the way DOWN too, not only on the way up.
+_VALIDATOR_MODULE_LINE_BASELINES = {
+    "_validate.py": 307,
+    "_validate_cross_revision.py": 326,
+    "_validate_dependency_sections.py": 382,
+    "_validate_evidence.py": 415,
+    "_validate_export_exemption.py": 383,
+    "_validate_export_layout_coverage.py": 1063,
+    "_validate_exports.py": 536,
+    "_validate_previous_filing_year_coverage.py": 421,
+    "_validate_record_sections.py": 324,
+    "_validate_relation_periods.py": 589,
+    "_validate_relation_sources.py": 422,
+    "_validate_revision_sections.py": 323,
+    "_validate_surfaces.py": 353,
+    "_validate_verification_predicates.py": 335,
+}
+# The workbook-parity backend used to be ratcheted here. It now lives at
+# dev/registry/parity/_workbook_parity.py, and its ratchet moved with it to
+# dev/registry/tests/test_dev_module_reviewability.py. The gate left behind
+# pointed at a path that no longer existed, so it raised FileNotFoundError
+# on every run rather than measuring anything.
 
 
 @dataclass(frozen=True)
@@ -121,10 +124,3 @@ def test_registry_validator_modules_stay_below_complexity_baselines() -> None:
     assert oversize == []
 
 
-def test_registry_workbook_parity_module_does_not_grow_past_reviewed_baseline() -> None:
-    path = _REGISTRY_PACKAGE_ROOT / "_workbook_parity.py"
-    line_count = len(path.read_text(encoding="utf-8").splitlines())
-
-    assert line_count <= _WORKBOOK_PARITY_MODULE_LINE_BASELINE, (
-        f"{path.name}: {line_count} lines exceeds reviewed baseline {_WORKBOOK_PARITY_MODULE_LINE_BASELINE}"
-    )
