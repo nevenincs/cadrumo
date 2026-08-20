@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:54bd8363386a0237e44e4601343319069f6a286917d54540877e487061fac795'
+body_hash: 'sha256:fde183443941279a4820924f2976066aa6d2946a92b2a1af8dbd3f9b869a8d48'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -158,6 +158,49 @@ of the stamped revisions was ever one. Fixed by making the second site do what t
 first one's comment already said, recording the reason on a new
 `authority_fallback_reason` so "reviewed but cannot file" stays distinguishable from
 "nobody reviewed it".
+
+
+### m182-models-a-fraction-of-the-donor-row | high | Modelo 182 can represent 5 of 18 declarable donor fields, and the omissions move a taxpayer's deduction in both directions
+
+Modelo 182 `2007-y-siguientes` had never been examined by this campaign. It is not a
+stub: 7 casillas (2 declaration-header plus 5 tipo-2 donor-row), 5 `donativo_donor`
+ledger bindings, 9 deadline windows. Its casillas model the tipo-2 RECORD, so field
+coverage against the diseño is the applicable measure -- casilla-number coverage is
+inapplicable here for the usual substantive reason (38 fields, all described, zero
+numbered boxes).
+
+Measured against `01-182-ejercicio-2025.pdf`, the tipo-2 registro carries 23 fields:
+5 envelope/filler, 5 modelled, **13 data-bearing and unmodelled**:
+
+| offset | field | why it matters |
+|---|---|---|
+| 98, 100 | `DEDUCCIÓN COM. AUTÓNOMA`, `% DE DEDUCCIÓN COM. AUTÓNOMA` | an autonomous-community donation deduction the donor is entitled to; unrepresentable means the donor's deduction is UNDER-stated |
+| 106, 107 | `REVOCACIÓN`, `EJERCICIO EN QUE SE EFECTUÓ LA DONACIÓN REVOCADA` | a revoked donation must be reported; unrepresentable means an earlier deduction stands when it should not -- the OVER-deduction direction |
+| 78 | `CLAVE` | the donation-type key that selects the applicable régimen |
+| 97 | `DONATIVO … EN ESPECIE` | in-kind donations cannot be distinguished from cash |
+| 111, 112 | `TIPO DE BIEN`, `IDENTIFICACIÓN DEL BIEN` | the in-kind asset itself |
+| 133, 142 | patrimonio protegido titular NIF and name | contributions to a protected patrimony |
+| 27, 76, 105 | representante legal NIF, código provincia, naturaleza del declarado | declarant-side identification |
+
+This is the shape the `no-silent-under-declaration` rule asks to be probed in BOTH
+directions: the CCAA deduction omission is the OVER-PAYMENT direction, which that rule
+notes is the unwatched one, and the revocación omission is the under-declaration one.
+
+**Not stamped.** A review would assert this revision was examined while it can
+represent under a third of the record it models. Remediation is authoring the
+remaining tipo-2 casillas and the bindings that feed them -- the five that exist map
+exactly to the five `donativo_donor` bindings, so the registry currently models what
+the ledger supplies rather than what the form declares, and closing the gap means
+extending both.
+
+**A trap noticed while measuring it, worth stating.** m182 reports
+`construct_evidence_gaps=10` where every stamped revision reports 0. All ten are
+`unvalidated`, whose reason is "has refs but no validated registry authority" -- the
+fail-closed state of an UNREVIEWED revision. Stamping would flip all ten to
+`inherited` without verifying anything. A gap count that a stamp erases is not evidence
+for stamping, and is not evidence against it either; the substantive field coverage
+above is what decides.
+
 
 ## Recommendations
 
