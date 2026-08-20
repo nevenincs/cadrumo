@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:30557616bf7a6fb60f44eb79d76e4a391414f02f8199a0bef622841652947ff3'
+body_hash: 'sha256:5d718b0a5de98e524f486063e97c970c9887c15dc8098f12ef9356039083e16e'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7411,3 +7411,145 @@ each, now with slightly smaller reported holes. Modelo 390's 2015 design has
 seven unidentified bodies. The recorded cases stand: modelo 349 and 180's visual
 charts, modelo 100's doubly-glued byte, modelo 131's spilled-column byte, and
 modelo 200's casillas 1501-1508 without locale labels.
+
+## Tick: the glued ordinal, reopened on new evidence
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's reversed-column repair confirmed at 30 passed.
+
+### Modelo 390's 2015 design, recorded rather than guessed
+
+Its seven unidentified bodies each declare a FIVE-digit page constant --
+`Constante "02000"` -- against the two-or-three digits the recovery reads, and
+the closing identifiers run `39001000` through `39008000`.
+
+Widening the width would be one line. I did not, because the token is composite
+and its decomposition is not in the document: `01000` reads as page 1 with a
+three-digit sub-counter only if you assume that split. The evidence against
+guessing is concrete -- the design ALSO heads records `Pág. 0` and `Pág. 1`
+through its running headers, so the obvious decomposition would collide with
+names the design already produces, which says the two schemes are not
+interchangeable. This is modelo 390, the modelo the queue holds back precisely
+because it is the most filing-grade; a mislabelled record there is not a
+cosmetic error.
+
+### The glued ordinal, and why reopening it was right
+
+`3-9` is the most common hole shape in the whole corpus: 32 of the 40 holed
+records in modelo 200's 2010 edition. The cause is the shape recorded LAST tick
+as unfixable -- ordinal and position run together, `23 3 Num Modelo` where AEAT
+declares ordinal 2 at position 3.
+
+Last tick's reason was that splitting `59` into 5 and 9 is inference from
+context. That reason was right for the case in front of me then, and wrong as a
+general ruling. Here the glued rows sit BETWEEN two intact rows: ordinal 1 at
+position 1-2 before, ordinal 5 at position 10 after. The split is
+over-determined -- `23` is ordinal 2 at position 3 only if the ordinal continues
+the previous row's by one AND the position resumes exactly where that row ended.
+Two independent facts, both from a row already read, that must agree.
+
+Nothing about the token changed. The surrounding rows did, and that is the
+difference between reading and guessing. Where the constraint does not close --
+modelo 100's lone `59 1A`, with no read row before it -- the split is still
+refused and the gap still reported.
+
+### The guard both repairs now share
+
+The split first ran unconditionally and reproduced last tick's exact failure:
+three already-complete modelo 200 editions gained fields in records that already
+tiled. So it now runs only inside the repair pass, behind the same design-level
+gate as the reversed-column rejoin -- offered only where something is skipped,
+kept only where fewer positions are left uncovered. A design that reads cleanly
+returns its first read untouched.
+
+That the same trap caught the same way twice is worth recording: any change that
+adds rows to this parser must be gated on the design having something to
+recover, because contiguity permits duplication as containment and will not
+report it.
+
+### Verified against
+
+Corpus control over all 218 designs:
+
+| | tick start | after |
+|---|---|---|
+| sheets read | 3145 | **3154** |
+| fields read | 269030 | **269373** |
+| skipped | 143 | **134** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; **zero already-complete designs changed**.
+
+`test_record_design_glued_ordinal`: 5 passed. Splitting on the token alone, with
+both constraints ignored, reds exactly the three guards -- ordinal continuity,
+position continuity, and the no-previous-row case -- while the capability tests
+stay green.
+
+### Still open
+
+Modelo 200's three oldest editions remain the largest block. Modelo 390's 2015
+design is now recorded with its reason. The earlier recorded cases stand: modelo
+349 and 180's visual charts, modelo 100's lone glued byte, modelo 131's
+spilled-column byte. A peer has been landing the missing casilla labels
+(modelo 036, then 490 and 349).
+
+## Tick: the same row split the other way round
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's glued-ordinal split confirmed at 30 passed.
+
+### What the previous fix left behind
+
+With the identifier block recovered, modelo 200's remaining holes resolved to
+one shape: runs that are multiples of 17, the modelo 200 importe width. 61 runs
+of 17 in the 2010 edition, 21 of 34, 15 of 51 -- consecutive amount rows.
+
+The cause is a page break landing mid-row. AEAT repeats the last row after the
+running header, and the row after it breaks in two: ``7 28`` on one line,
+``17 Num Deducc para incentivar determinadas actividades`` on the next.
+
+That is the shape the reversed-column rejoin already reads -- one row split over
+two lines, neither half a row alone, each supplying exactly the columns the
+other lacks. The only difference is the ORDER. The rejoin was built against
+modelo 200's swapped emission, where length and type come first, and it did not
+look for the halves in their natural order. Roughly 1,500 rows in the two 2010
+editions arrive that way.
+
+Extending it is a few lines, and deliberately reuses the same two patterns, the
+same both-halves-incomplete evidence and the same duplicate guard rather than
+introducing a parallel rule for what is the same fact.
+
+### The guard earning its keep
+
+The 2012, 2013 and 2014 editions carry fourteen such pairs each, and those
+designs are already complete. Joining there would duplicate rows in records that
+already tile -- the failure this campaign has now hit twice. It did not happen:
+those designs report nothing skipped, so the repair pass is never offered to
+them, and the corpus control shows zero already-complete designs changed. The
+gate built two ticks ago is what made this extension safe to make at all.
+
+### Verified against
+
+Corpus control over all 218 designs:
+
+| | tick start | after |
+|---|---|---|
+| sheets read | 3154 | **3158** |
+| fields read | 269373 | **270071** |
+| skipped | 134 | **130** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; zero already-complete designs changed.
+
+`test_record_design_reversed_columns`: 5 passed. Restricting the rejoin to the
+swapped order alone reds exactly the new case and nothing else.
+
+### Still open
+
+Modelo 200's 2010 editions remain the largest block, now with 130 skipped
+records corpus-wide against 302 when this line of work started. The recorded
+cases stand unchanged: modelo 390's composite five-digit page token, modelo 349
+and 180's visual charts where AEAT draws no box, modelo 100's lone glued byte
+and modelo 131's spilled-column byte.
