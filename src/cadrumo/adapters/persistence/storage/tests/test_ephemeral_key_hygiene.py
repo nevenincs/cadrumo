@@ -12,6 +12,7 @@ import pytest
 from .....tests import (
     ast_for_path,
     leaf_name,
+    non_test_package_python_files,
     package_python_files,
     repo_relative,
 )
@@ -40,7 +41,6 @@ _DEFAULT_SQL_BACKED_CONSTRUCTORS: frozenset[str] = frozenset(
         "FincaRendimientoRepository",
         "FincaRepository",
         "FiledDeclaracionObservationStore",
-        "FiledDeclarationObservationStore",
         "InventoryLedgerRepository",
         "InvoiceCatalogueRepository",
         "IvaCompensationHistoryRepository",
@@ -357,3 +357,38 @@ def _is_secret_passphrase_env_arg(node: ast.AST) -> bool:
     if _literal_string(node) == "CADRUMO_SECRET_PASSPHRASE":
         return True
     return isinstance(node, ast.Name) and node.id == "PASSPHRASE_ENV_VAR"
+
+
+def test_every_pinned_constructor_still_names_a_real_class() -> None:
+    """Anchor the prohibition's target set, so a rename cannot empty it.
+
+    This gate matches CONSTRUCTOR NAMES. A name nothing defines can never
+    match, so renaming a SQL-backed repository silently drops it out of the
+    hygiene rule while leaving every assertion green -- the rename looks free
+    precisely because the gate stopped watching.
+
+    Found stale on its first run: the set carried both the Spanish-stem
+    ``FiledDeclaracionObservationStore`` and an English
+    ``FiledDeclarationObservationStore``. Only the first exists, and the second
+    is a name the domain-naming rule forbids ever creating, so it was pinning a
+    class that could not appear.
+    """
+    defined: set[str] = set()
+    for path in non_test_package_python_files():
+        try:
+            tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                defined.add(node.name)
+            elif isinstance(node, ast.alias):
+                defined.add(node.asname or node.name.rsplit(".", 1)[-1])
+
+    unresolved = sorted(name for name in _DEFAULT_SQL_BACKED_CONSTRUCTORS if name not in defined)
+
+    assert not unresolved, (
+        f"these pinned constructors name no class in production code: {unresolved}. Re-point the "
+        "entry at whatever the class is called now, or drop it -- a pin on a name nothing defines "
+        "matches nothing and quietly narrows what this gate covers."
+    )
