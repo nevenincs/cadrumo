@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-19'
+modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:b9f90a7165a4e0dc15630b45d4c5eb36ea0285f7ad652c80a9106ec6a8e901aa'
+body_hash: 'sha256:17f9178f0c7a789b751cab9e1fd7c43a723c9e9918f11d602ed89168f86a70c2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1520,6 +1520,43 @@ makes the narrower classification reachable without touching a caller.
 Both halves are pinned. Marking the whole family not-retryable would have
 satisfied the new assertion while stranding the case that only needed another
 attempt, so the parent's retryability is asserted too.
+
+### The retryable field had no contract, which is why one refusal got it wrong
+
+The duplicate-label fix raised an obvious follow-on: are there OTHER refusals
+misclassified the same way? Enumerating the registry answered a better
+question. Of 633 declared codes, 27 are published retryable -- and the field
+itself carried NO stated semantics. No docstring, no rule prose, nothing. Each
+classification was whatever its author assumed, which is exactly how a
+permanent refusal inherited a sibling's `True`.
+
+So the fix this pass is the definition rather than another instance. `retryable`
+now means: repeating the IDENTICAL call, with nothing else changed, may
+succeed. Time passing, a lock releasing, another party finishing. It was
+DERIVED from the 27 already-marked codes -- locks, network, timeouts, rate
+limits, compare-and-swap conflicts, login throttles all fit it -- so it
+describes the tree rather than redefining it, which is what makes it
+documentation of existing intent instead of a new policy.
+
+The consequence worth writing down is the trap: "retryable once the operator
+fixes something" is FALSE under this definition. An agent cannot distinguish
+that case from a transient one, and telling it to retry is precisely what
+produces a non-terminating loop.
+
+Two codes do not fit, and they are NOT mine to reclassify.
+`FAIL_GOOGLE_ADC_UNAVAILABLE` and `FAIL_GOOGLE_ADC_STALE` both require the
+operator to re-run a gcloud command before any retry can succeed. They are
+named in the gate's docstring and left to whoever owns that surface. Applying a
+definition I have just written to another area's error contract, on my own
+reading of it, would turn documentation into a unilateral policy change --
+which is the same overreach this campaign has avoided with rotation deletion
+and the profile-verb scope.
+
+The gate is scoped to the storage and custody codes this work is answerable
+for. Six of them, each naming what resolves ON ITS OWN, so a seventh cannot
+join by inheriting a neighbour's answer unexamined. The duplicate-label code is
+asserted ABSENT from the retryable set, so the specific distinction that
+motivated all of this cannot quietly collapse back.
 
 ## Recommendations
 
