@@ -189,7 +189,18 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.repair.logs": CommandRiskDeclaration(),
     "config.repair.profile": CommandRiskDeclaration(),
     "config.repair.quarantine": CommandRiskDeclaration(),
-    "config.repair.reset_progress": CommandRiskDeclaration(),
+    # Deletes the saved interrupted-command state outright. Only a fingerprint
+    # survives, for audit; there is no re-import path, which is what separates
+    # it from `repair.quarantine` beside it -- quarantine COPIES undecryptable
+    # rows (ciphertext intact) into an archive table the operator can restore
+    # from, and is correctly non-destructive for that reason.
+    #
+    # Declared on the same grounds as `app.maintenance.reconcile` above: an
+    # unrecoverable local delete is destructive regardless of the recovery
+    # intent behind it. The verb's own `--yes` gate does not substitute for the
+    # declaration -- a flag is something an autonomous caller supplies itself,
+    # while this table is what decides whether it should be asked at all.
+    "config.repair.reset_progress": CommandRiskDeclaration(destructive=True),
     # The reset lifecycle inherits the pre-split ``config.reset`` destructive
     # declaration: start and resume irreversibly wipe local state, so they must
     # elicit human confirmation on the MCP surface, never auto-approve. ``status``
