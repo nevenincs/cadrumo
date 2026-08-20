@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:e411ba8b7229129183ac9bc29b8a313756d436944b319274fe4cb8729d9ec8b9'
+body_hash: 'sha256:df1e38fc8db55cd6b966538aa4e407b96c05b7b63b5383cc5028e3a292acc60b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2151,3 +2151,40 @@ and no surface reaches it. The asymmetry is visible in the symbols themselves �
 That is a missing import verb, not a subsystem to retire. Deleting the export half
 would remove a working operator capability, and deleting the import half would remove
 the only code that could ever make those exports restorable.
+
+### Session isolation was the untested half of the multiuser story
+
+The active bucket session holds the bucket's unwrapped DEK, and it is resolved
+*implicitly*: the column-level encrypt path cannot be handed a session reference —
+SQLAlchemy calls `process_bind_param` with a fixed signature — so it reads one from a
+`ContextVar`. If that lookup were process-wide rather than per-context, any thread in
+a long-lived host would encrypt or decrypt with whichever profile happened to be bound
+last. Both long-lived hosts here run worker threads: the MCP transport and the TUI
+screens.
+
+Nothing asserted it. The only threaded session test (`test_live_session_registry.py`)
+asserts the **opposite** direction — that the emergency zeroisation sweep deliberately
+*reaches* a session bound on another thread — so the substrate's central isolation
+guarantee had no coverage at all, and the module's own docstring reasoning about PEP
+567 was the only thing standing behind it.
+
+Now covered with real threads and real sessions, and proven to bite by replacing the
+`ContextVar` with a process-wide holder from a pytest plugin **outside the repo** — no
+tracked file mutated, so a peer's sweep could not commit the mutation.
+
+**The durable lesson is how one of those tests passed while broken.** The
+two-threads-hold-different-sessions case originally used a single barrier, so both
+threads were bound simultaneously — and it passed against the deliberately-broken
+substrate. The faster thread read its value, **left its block**, and
+`activate_session`'s restore-on-exit put the previous value back, which was exactly
+the value the slower thread then read. Isolation and a lucky unwind produce identical
+observations.
+
+A second barrier fixes it: neither block may unwind until both reads have landed, so a
+shared holder necessarily returns the last value written to both readers. Generalised:
+**when a test asserts that two concurrent actors see different state, the assertion is
+only sound if neither actor can finish before both have observed** — otherwise
+teardown ordering, not the property under test, decides the result. This is the
+concurrency-shaped sibling of the vacuous-fixture finding recorded earlier: in both
+cases the test passed while never reaching its subject, and only deliberately breaking
+the production code exposed it.
