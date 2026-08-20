@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:554998d8d8b090782c15c0c8c011b4f24652f75e99e75b523ea0e022306030d4'
+body_hash: 'sha256:f57497134876dbd731b23b2424d4dabe6308d189e046a58ebce01ae9e2ec5eec'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2530,3 +2530,37 @@ file was mutated, and the staleness half by recording a verb that already exists
 one fails open, and expect the guarding to have accrued on the other. The safe-when-stale
 list is the easier one to write tests for, which is exactly why it ends up with more of
 them.
+
+### A barren iteration, recorded as such
+
+Three priority-one probes, no defect. Written down because a negative result nobody
+records gets re-derived by the next sweep at full cost.
+
+**Unregistered namespaces fail CLOSED.** Saving to a namespace absent from
+`STORAGE_NAMESPACE_REGISTRY` refuses with `StorageValidationError
+errors.storage.namespace.unregistered`, so data cannot reach disk without a declared
+sensitivity class. Probed against a real runtime profile, not read from the source.
+
+**No fourth redaction consumer is escaping the shared base.** `ALWAYS_REDACT_KEY_TERMS`
+exists because `password` once lived in one predicate only, leaving two others treating
+it as ordinary — and that "survived because nothing enumerated the third consumer".
+`test_redaction_base_composition.py` now enumerates three consumers and asserts each
+composes the base, with anti-tautology assertions that each also adds something of its
+own. A tree-wide scan found no key-name collection that overlaps the base without being
+a superset of it, bar one false positive (`_SEGMENT_ABBREVIATIONS`, an MCP
+command-segment map that happens to contain "certificate" and "secret").
+
+**And a gate deliberately NOT built.** The composition gate hand-lists its three
+consumers, which is one level up from the failure it records — a fourth predicate would
+escape it silently. Two mechanical discovery detectors were tried so the enumeration
+could be derived instead of maintained, and BOTH were rejected on measurement:
+
+* word-overlap (a collection sharing two or more base terms) false-positives on ordinary
+  vocabulary maps;
+* the structural shape `any(term in key for term in SET)` finds only ONE of the three
+  known consumers — the other two are written differently.
+
+Shipping either would have replaced a correct hand-list with a detector that misses two
+of three real consumers: a false green, which is the exact defect class this campaign has
+spent its iterations removing. The hand-enumeration stands, and this note is the reason
+not to re-attempt the automation without a sounder signal.
