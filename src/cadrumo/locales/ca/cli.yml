@@ -2273,13 +2273,6 @@ cli:
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
-      sar_catalogue_info: 'Aquest arxiu conté les categories de dades personals indicades
-        al camp data_categories d''aquesta resposta. No és tot el que es conserva
-        del perfil: les categories d''excluded_data_categories romanen a l''emmagatzematge
-        xifrat i no són en aquest fitxer. Fes servir l''arxiu de recuperació xifrat
-        per obtenir-les.'
-      sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
-        de l''interessat (RGPD): el paquet portàtil del perfil.'
       show:
         summary_invalid: 'El registre del perfil no és vàlid: %{count} problema/es
           bloquejant/s.'

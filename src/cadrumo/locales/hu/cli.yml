@@ -2283,13 +2283,6 @@ cli:
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
-      sar_catalogue_info: 'Ez az archívum a válasz data_categories mezőjében felsorolt
-        személyesadat-kategóriákat tartalmazza. Nem tartalmaz mindent, amit a profilról
-        tárolunk: az excluded_data_categories kategóriái titkosított tárolóban maradnak,
-        és nincsenek ebben a fájlban. Ezek megszerzéséhez használd a titkosított helyreállítási
-        archívumot.'
-      sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
-        archívumként (a hordozható profilcsomag).
       show:
         summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
         summary_tombstoned: A profil rekordja törlésre van jelölve.
