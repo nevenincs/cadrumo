@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:58c2b7f040c46136b87ddab9e6ab0801fb362b9f4deb93755534accc38cf29ac'
+body_hash: 'sha256:c9a814cffc34d1ae21648089ec5958e2da123f5213223c545d57a09b49665038'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7266,3 +7266,70 @@ box. Modelo 100's 2012-2014 editions keep their one doubly-glued byte, recorded
 last tick with its reason. Modelo 131's 2009-2014 edition keeps one byte behind
 a spilled column value -- the prefix case above. Modelo 200's casillas
 1501-1508 still carry no locale label.
+
+## Tick: a leading zero, and eight designs
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed both at
+tick start and after the change.
+
+### The worklist told me where to look
+
+With the dropped-row classes mostly resolved, the worklist was small enough to
+read as a table rather than a pile: 20 partial designs, and five of them shared
+one shape -- exactly ONE unidentified record body and ZERO holes. Modelo 202's
+three editions, modelo 210's 2011 design and modelo 763's. Five designs, each a
+single unnamed record away from whole.
+
+They were unnamed for a leading zero.
+
+The identity recovery built two ticks ago reads a record's page constant from
+AEAT's own geometry: the modelo constant at positions 3-5 and the page constant
+immediately after it at 6. I pinned that page constant to THREE digits, because
+modelo 200 -- the design I built it against -- writes `Constante "001"`. Modelo
+763, 202 and 210 write `Constante "02"`.
+
+So the recogniser recognised the wide form only. The narrow form is the same
+fact stated in two characters instead of three, and the width was never part of
+the evidence: the POSITION is what AEAT fixes, and the position was matching all
+along. Widening to two-or-three digits, in the closing `</T76302>` identifier as
+well, is the whole change.
+
+### What that was worth
+
+**Eight designs went from partial to complete**, not five -- modelo 100's 2009,
+2010 and 2011 editions came with them, because their last unnamed body was the
+same narrow-page shape.
+
+| | tick start | after |
+|---|---|---|
+| complete designs | 200 | **208** |
+| partial designs | 20 | **10** |
+| sheets read | 3090 | **3145** |
+| skipped | 198 | **143** |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet and **zero already-complete designs changed**, so no
+generator input moved. Two of the newly-complete designs belong to modelos that
+ARE enrolled trees -- 202 and 210 -- but the enrolled trees cite
+`aeat-dr-202-2019|2023|2025` and `aeat-dr-210-2022`, not the 2011 and 2012
+editions completed here. The gates confirm it.
+
+### The guard added with the widening
+
+Two-or-three digits is the observed range, not an invitation. A four-digit
+constant at the same position is a different fact -- `Constante "2011"` is an
+ejercicio -- and a test pins that it is NOT read as a page. Restoring the
+three-digit pin reds exactly the new capability test and nothing else, which is
+the right split: the guard passes either way because it was never about width.
+
+### Where the remaining ten sit
+
+Half are already recorded with their reasons: modelo 100's 2012-2014 doubly
+glued byte, modelo 131's spilled-column byte, and modelo 349 and 180's visual
+charts where AEAT draws no box at all.
+
+That leaves genuinely unexamined work in two places -- modelo 200's three oldest
+editions, which carry about forty holed records each and are now by far the
+largest single block, and modelo 390's 2015 design with seven unidentified
+bodies. Modelo 100's 2014 edition also keeps one unnamed body the narrow-page
+widening did not reach.
