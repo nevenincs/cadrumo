@@ -18,6 +18,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import importlib
+
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -97,4 +99,33 @@ def test_the_exclusion_probe_still_bites() -> None:
     assert "sqlalchemy" in modules, (
         "the probe did not observe a module the child provably imported; it can no "
         "longer distinguish a clean graph from a dirty one"
+    )
+
+
+def test_every_forbidden_target_still_resolves() -> None:
+    """Anchor the prohibition's target set, so a rename cannot empty it.
+
+    This gate is keyed on module PATHS, and a path that no longer exists is
+    trivially absent from any child's module table -- so a rename retires the
+    rule silently while leaving it green. The bite-proof above cannot catch
+    that: it exercises ``sqlalchemy``, a third-party name that will not move,
+    so the five first-party paths could all be renamed with the proof still
+    passing.
+
+    A sibling gate in this tree lost its whole subject exactly this way -- four
+    pinned custody symbols were removed, and its prohibition went on asserting
+    that nobody imports names nothing has. It was visible only because it
+    carried an anchor like this one.
+    """
+    unresolvable: list[str] = []
+    for target in _FORBIDDEN_IN_CHILD:
+        try:
+            importlib.import_module(target)
+        except ImportError:
+            unresolvable.append(target)
+
+    assert not unresolvable, (
+        f"these forbidden import targets no longer resolve: {unresolvable}. A prohibition on a "
+        "name nothing has is vacuous -- re-point it at whatever the subsystem is called now, or "
+        "drop the entry deliberately if the subsystem is genuinely gone."
     )
