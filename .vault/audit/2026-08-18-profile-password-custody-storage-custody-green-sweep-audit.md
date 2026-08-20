@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:66f6e5948fc6281e6635deada86f75e98256acc2fd6607477b5c57b588785ebb'
+body_hash: 'sha256:ec92aeada3c5776301cd3a70c27a76dcbe061449ae3cb4c373af6e335cfa5b35'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1833,6 +1833,47 @@ contract-drift gate handing a direction to tests that did not hold it. The
 common shape is worth stating once more: prose that delegates authority to
 another artefact ages differently from the artefact, and nothing in the build
 notices when the target goes.
+
+### The standing 14 are resolved: custody-dependent, now marked, lane green
+
+The previous entry left this open and said not to answer it on a guess. It has
+been answered on evidence instead.
+
+Three independent facts settle it. `resume_profile_session` documents that when
+the OS keychain is unavailable the refusal "leaves the login PROCESS-SCOPED" --
+cross-process resume IS the keychain, and no acceleration receipt is minted at
+all. The `os_keychain` marker's own declared subject is "a later process resumes
+the record by unwrapping its DEK under that key", which is precisely what these
+ten functions assert. And they fail at their PRECONDITIONS rather than their
+subjects: the obstructed-retirement case never reaches its assertion because
+there is no receipt to obstruct ("the displaced profile must hold a receipt for
+the retirement to reach").
+
+So the boundary the phantom conftest was supposed to draw is now stated in the
+marker itself, in a form a maintainer can apply: a case belongs under
+`os_keychain` when it cannot reach its subject without a minted receipt.
+
+Marked per FUNCTION, never per module. Those four modules hold 35 tests and only
+ten need custody; module-level marking would have removed 30 passing tests from
+the default lanes, trading a truthful lane for lost coverage -- the cheap route
+that would have looked identical in the summary line.
+
+Verified rather than assumed, because "make the lane green" is exactly the
+outcome that invites a shortcut. The `os_keychain` lane now collects 17 where it
+collected 2; the four modules still contribute 30 passing tests to the default
+lanes; and a marked test still EXECUTES and fails on WinError 1312 when run
+under `-m os_keychain`. They are deselected, not disabled, and a real regression
+in them still surfaces on any host that can run them.
+
+The integration lane is green: 309 passed, none failed. Both prescribed lanes
+and the CLI package are now clean on this host, which means the campaign's own
+signal is finally readable -- the condition that, as several entries above
+record, is what let real defects hide for so long.
+
+One process note. The commit marking the tests claimed the pyproject note was
+updated in the same change; it was not, and the stale note would have warned
+against a classification that had just been made on evidence. Corrected in the
+next commit rather than left to be discovered.
 
 ## Recommendations
 
