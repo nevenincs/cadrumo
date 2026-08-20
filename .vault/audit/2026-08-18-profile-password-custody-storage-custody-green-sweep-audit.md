@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:6cd9ace73ccf18654066af01119863af9ab66e4244113f98b932af593c73b04f'
+body_hash: 'sha256:1a6f23eff5a57938e35b7463c566b4a234131aaea8e33277813e3b752af5cc80'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2845,3 +2845,41 @@ actually for.
 That is the third time in this campaign a plausible threat model survived until it was
 executed. The pattern is stable enough to state: **an assertion about a library's
 behaviour is a hypothesis until the library runs it.**
+
+### The less-trusted restore door had the weaker read
+
+Following the untrusted-input seam from the sealed archive to the OTHER shape the same
+verb accepts. `config profile restore` takes either an archive file or a capsule
+DIRECTORY, and the directory is the least trusted input this domain handles: copied out
+of a backup, supplied by someone else, or rebuilt by hand after a disk failure.
+
+It was read with `path.is_file()` then `path.read_bytes()`. Meanwhile the PUBLISHED
+capsule reader — whose source sits inside this product's own storage root, and is
+therefore the *more* trusted of the two — already read the same four members through
+custody's anchored, bounded, no-follow primitive with per-record ceilings. **The trust
+levels and the read strengths ran in opposite directions.**
+
+Three defects in that pair, each already solved next door:
+
+* `read_bytes` **follows a symlink**, so a member could name a file outside the capsule
+  and its contents would be adopted into the restored profile. In a gestor or
+  multi-client setting that is an exfiltration route rather than a curiosity: the bytes
+  land in a profile the capsule's supplier later receives back.
+* it bounds **nothing**, though every member carries a declared ceiling the published
+  reader applies — envelope 704 B, sentinel 8 KiB, database 64 MiB.
+* `is_file()` then reopen is two operations on a NAME rather than one on a file, which is
+  precisely what `read_optional_profile_custody_local_record` documents itself as
+  existing to prevent. The anti-pattern was being run against the primitive built to
+  replace it.
+
+**Both refusals were asserted from what the code actually said, not from what the test
+author expected.** The first draft guessed at wording and failed; the real messages are
+"profile capsule record is not a bounded regular file" for the oversized member and
+"must not be a reparse point or directory" for the symlink — the no-follow guard naming
+itself, which is a stronger and more specific refusal than the one anticipated. Both are
+now pinned by their real text.
+
+**Generalisable:** where one concept has two doors, compare their reads and ask which
+door is more exposed. Hardening tends to accrue on the path its author was looking at,
+which is usually the internal one — the external door is the one that was already
+"working".
