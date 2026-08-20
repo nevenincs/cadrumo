@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-19'
+modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:456f5a3c7331990ae39f4637ad661b5c1d3ec755c855b1dc790df35873a30f30'
+body_hash: 'sha256:bead38add1b5fb364dd0794ee19f886613be9ab0f6cba022edd7188d44486727'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -6549,3 +6549,110 @@ byte-identical before and after it runs.
 
 Selection `-k "347 or 308"`: **7 failed / 38 passed -> 45 passed.** Authority
 CLEAN.
+
+## Tick: the registry reviewability cluster, and a naming gate that was already red
+
+Queue items 1-6 remain verified done; this tick worked the
+`test_registry_reviewability` cluster that sits beside them.
+
+### The gate reports only its largest offender, which hides the population
+
+`test_registry_reviewability_baseline_remains_well_below_hard_cap` asserts
+against `max(sizes)`, so it names exactly one file. Fixing that file promotes the
+next one and the gate looks identical. Measured directly instead of iterating:
+**59 files over the 1500-line hard cap, 73 over the 1400-line baseline**, across
+nine modelos. Chasing the reported name one at a time would have read as
+progress while the population barely moved.
+
+I also mis-read my own first measurement: grepping `^E   Assertion` shows only
+the FIRST line of a multi-line assertion message, so a gate reporting twenty
+files looked like it reported one. The population had to be measured from the
+tree, not from the gate's output.
+
+### Fragmentation is a supported loader capability, not a workaround
+
+Before splitting anything I read `_merge_export_layout_fragments` and
+`_merge_export_layout_by_id`: layouts merge by id, and records merge by id with
+`append_array_fields=frozenset({"fields"})`. So a single record's field list may
+be split across fragments and the loader appends it back. `_REVISION_APPEND_ARRAYS`
+is derived from the schema, so bindings, casillas and projection endpoints append
+the same way. None of this is reaching around the gate -- it is the shape the
+loader is built for, and modelo 390 already ships one layout across nine files.
+
+### What changed
+
+Every oversized fragment was split along its own structure: export layouts by
+record and then within a record by field, bindings and projection endpoints by
+entry, casillas by entry with each chunk named from its declared span.
+
+**Line count over the hard cap: 59 -> 0. Over the review baseline: 73 -> 0.**
+Largest registry TOML dropped from 14,534 lines to 1,305. Authority CLEAN
+throughout, and the 30 generated-export-tree drift gates stayed green (30
+passed) -- re-fragmentation does not disturb what they attest.
+
+The control on every step was a full dump of the loaded result -- every layout,
+record, record type and `(offset, length, field id)` tuple, plus every binding,
+casilla and projection endpoint -- compared before and after. All identical.
+This is the check that matters: the point of the change is that it is invisible
+to the loaded authority.
+
+### Two mistakes, both caught by the control rather than by a gate
+
+The first chunker assumed one record per file. `0001-export-layouts.toml` holds
+several, so the tail records' fields were emitted under the FIRST record's
+header: the envelope header gained 30 fields it does not have, and page-02 and
+page-09 lost theirs. Every file still parsed, the authority still loaded CLEAN,
+and the reviewability gate went green. Only the field-level dump caught it. A
+size gate cannot see a field that moved to the wrong record.
+
+The second: I named chunks `0001b-`, `0001c-`. The fragment grammar requires a
+strict four-digit prefix, so the loader refused with `invalid numbered
+administrative fragment filename`. Renumbering the whole directory sequentially
+is the fix, and it preserves the filename-sort order that drives field append.
+
+### A pre-existing red gate, fixed
+
+`test_casilla_fragment_naming` was **already failing** before this tick, on 77
+fragments whose names no longer described their contents. Renamed all 77 using
+the gate's own `_expected_stem` derivation rather than a parallel implementation
+of the convention. Gate now green (4 passed).
+
+The rename changes lexicographic merge order, which the gate's own docstring
+argues is safe because casilla order is presentation-only. I did not take that on
+faith: the casilla SET is unchanged in every revision, and only six revisions
+changed order at all.
+
+### The one that looked like data loss and was not
+
+After the rename the dump showed modelo 194 gaining two casillas and modelo 296
+losing `05` while gaining `02` -- exactly what a stem collision silently
+overwriting a fragment would look like, and my rename had no collision guard.
+It was not that. Both directories are byte-identical to HEAD, and peer commit
+`8f25c2212d registry(modelo-296): renumber to the printed boxes` landed between
+my control capture and the re-dump. A shared worktree means a control can go
+stale under you; the check that settled it was `git status` on the two
+directories, not re-reasoning about my own script.
+
+### Verified against, and still open
+
+`test_casilla_order_invariance` fails two modelo-200 cases on a missing `es`
+locale key for casilla 1503. I proved this is not mine by restoring modelo 200's
+casillas to their committed names and re-running: identical 2 failed / 6 passed.
+The gap is real and pre-existing -- modelo 200's unpadded casillas `1501`-`1508`
+have no entry in any of the four catalogues, while its other casillas are
+zero-padded `00001`-style. Recorded rather than fixed: `aeat-locales-cli`
+requires a real value in all four catalogues including `ca` and `hu`, and a
+casilla label is AEAT's printed wording, which I will not invent.
+
+Still red in the cluster, and now the honest next items:
+
+- **Line width.** The gate has moved to its width dimension: 166 lines over 600
+  chars in 81 files, almost all authored prose (`reason = "..."`) and
+  `legal_refs` arrays. Arrays wrap losslessly; prose needs `"""` with backslash
+  continuations to preserve the exact string, so it is a careful edit over
+  authored grounding text, not a mechanical sweep.
+- **`_max_toml_lines(size)` ignores its argument** and always returns the
+  constant. It is the designed seam for a per-file cap, left unimplemented --
+  worth knowing before anyone concludes some file is already exempted. Nothing
+  is.
+- The validator-module and workbook-parity complexity baselines are untouched.

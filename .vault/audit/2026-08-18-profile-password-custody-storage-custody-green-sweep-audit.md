@@ -2488,3 +2488,45 @@ Deliberately NOT swept this iteration: a peer is actively mounting profile CLI v
 this exact package, and a 30-name facade change is precisely the broad edit that
 collides with in-flight work. It also removes no code — it narrows a surface — so the
 cost of deferring is low and the cost of colliding is not.
+
+### The fail-open list was the unguarded one
+
+Two verb-path registries sit in `_bootstrap_exempt.py`, and their guarding is inverted
+relative to their risk.
+
+`BOOTSTRAP_EXEMPTIONS` records what is let through without an active profile. When an
+entry goes stale it fails **closed** — an exemption naming a verb nobody can type exempts
+nothing. It carries eight gates: every entry names a registered verb, still resolves,
+cites a test that exists, a prefix exemption carries exactly its declared subtree, a
+read-only claim matches the operator-surface contract, plus a positive control.
+
+`LOGIN_GATED_VERB_PATHS` records what must NEVER be readmitted by the mechanical
+admission rule. When an entry goes stale it fails **open** — the refusal governs a path
+nobody can type while the rule is free to exempt whatever the verb is called now. It had
+no resolution check at all.
+
+The module is honest about the gap rather than hiding it: its family anchor stops at
+`config profile` by design (a family declares no command inventory), and the docstring
+hands the leaf-rename case to "the same hand-sweep discipline every verb rename in this
+tree already owes". The residue lands hardest on the strongest entry — `config profile
+delete`, whose own recorded reason is that the absence of an exemption IS the protection,
+and that a wrongly-granted one costs a taxpayer their encrypted financial history rather
+than a redundant copy of it.
+
+**A plain live-resolution rule would have been wrong here**, which is why the design was
+read before the gate was written. The registry deliberately admits a path for a verb the
+tree does not register yet — "the refusal is what governs the surface when it lands" —
+so requiring every entry to resolve would fight a decision, not a defect. Unmounted paths
+are therefore exempted BY NAME with a stated reason, because *"does not resolve"* and
+*"was renamed"* are indistinguishable unless someone says which; and a staleness check
+forces the record out once the verb lands, so the exemption cannot become permanent on
+exactly the surface being rebuilt. Today the set holds one entry: `config profile
+export`, mid-rebuild by another owner.
+
+Proven both ways — the rename simulated from an out-of-repo pytest plugin so no tracked
+file was mutated, and the staleness half by recording a verb that already exists.
+
+**Generalisable:** when two registries express opposite sides of one rule, check which
+one fails open, and expect the guarding to have accrued on the other. The safe-when-stale
+list is the easier one to write tests for, which is exactly why it ends up with more of
+them.
