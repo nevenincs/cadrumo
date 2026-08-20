@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:5d718b0a5de98e524f486063e97c970c9887c15dc8098f12ef9356039083e16e'
+body_hash: 'sha256:5e7251df6456910db037ad32f5c1c11da206602671228991da1d6282ea1e9492'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7553,3 +7553,76 @@ records corpus-wide against 302 when this line of work started. The recorded
 cases stand unchanged: modelo 390's composite five-digit page token, modelo 349
 and 180's visual charts where AEAT draws no box, modelo 100's lone glued byte
 and modelo 131's spilled-column byte.
+
+## Tick: the guard that was refusing almost everything
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's both-orders rejoin confirmed at 30 passed.
+
+### A repair that was working at a fraction of its reach
+
+Modelo 200's holes were still dominated by multiples of 17 after last tick, and
+tracing one led back to a pair the rejoin already knows how to read: `17 Num
+Ret. e ingr. a cuenta ...` above `30 419` plus its casilla reference. It
+matched both patterns and
+neither half parsed alone, so it should have joined. It did not.
+
+The duplicate guard blocked it. That guard collects the row identities a design
+states INTACT, so a split copy of a row the design also emits whole is not
+joined twice -- and I built it design-wide. But a fixed-width record restarts at
+ordinal 1, position 1, so low identities recur throughout a design. Measured on
+the 2010 edition: **ordinal 30 at position 419 is stated intact by 28 different
+records, and ordinal 7 at position 28 by 34.** Of 1,087 distinct identities,
+139 recur.
+
+So the guard was refusing legitimate joins across almost the whole design, and
+refusing them invisibly -- a blocked join is indistinguishable from no join. It
+had been suppressing the repair since the tick it was introduced, including the
+work reported last tick, which landed only what happened to be unique.
+
+Scoping it to the record it is a statement about restores the intent exactly.
+Record boundaries come from the parser's own geometry: a row declaring position
+1 begins a record. Joins fired in that design went from 318 to **990**.
+
+### What it recovered
+
+| | tick start | after |
+|---|---|---|
+| skipped records | 130 | **55** |
+| sheets read | 3158 | **3233** |
+| fields read | 270071 | **274396** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; zero already-complete designs changed. Modelo 200's
+2010 orden edition dropped from 30 holed records to 2, and its 2010 ejercicio
+edition from 38 to 14.
+
+For scale: this line of work began at **302** skipped records.
+
+### The lesson, which is about the guard rather than the parser
+
+Both of this campaign's guard defects have been the same mistake in opposite
+directions. The first was too permissive and duplicated rows in records that
+already tiled; this one was too broad and refused rows that were never
+duplicates. Both were silent, and neither was visible in any sheet or
+completeness tally -- the first showed only as "already-complete designs
+changed", the second only by tracing a single pair that should have joined and
+asking why it had not.
+
+A guard on identity needs its SCOPE stated as carefully as its rule, and the
+scope here is the record, because that is the thing an identity identifies.
+
+### Verified against
+
+The corpus control above, plus `test_record_design_reversed_columns`: 8 passed.
+Restoring the design-wide scope reds the cross-record join and the partition
+test; dropping the guard entirely additionally reds the same-record blocking
+test. Both probes run from a plugin outside the repo.
+
+### Still open
+
+Ten partial designs remain. Modelo 200's 2010 and 2011 editions still carry 14
+and 15 holed records. The recorded cases are unchanged: modelo 390's composite
+five-digit page token, modelo 349 and 180's visual charts, modelo 100's lone
+glued byte, modelo 131's spilled-column byte.
