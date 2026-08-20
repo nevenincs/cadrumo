@@ -56,7 +56,10 @@ errors:
       és vàlid. Torna a escriure les 24 paraules exactament com apareixen a la còpia
       de seguretat.
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
-      disponible. Comprova que hi hagi un magatzem de credencials instal·lat i actiu.
+      disponible. O no hi ha cap magatzem de credencials registrat, o aquesta sessió
+      d'inici no pot desar credencials, cosa habitual en sessions de xarxa o de servei.
+      Inicia la sessió de manera interactiva o comprova que hi hagi un magatzem de
+      credencials instal·lat i actiu.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
     auth_storage_master_key_unavailable: Aquesta sessió de perfil s'ha reprès i només

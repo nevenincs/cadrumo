@@ -54,7 +54,10 @@ errors:
     auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
       Pontosan írja be a 24 szót, ahogy a biztonsági másolatban szerepel.
     auth_storage_keyring_unavailable: Az operációs rendszer kulcstára nem elérhető.
-      Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.
+      Vagy nincs regisztrálva hitelesítő tároló, vagy ez a bejelentkezési munkamenet
+      nem tud hitelesítő adatokat tárolni, ami hálózati vagy szolgáltatásfiókos bejelentkezésnél
+      gyakori. Jelentkezzen be interaktívan, vagy ellenőrizze, hogy telepítve és aktív-e
+      egy hitelesítő tároló.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
     auth_storage_master_key_unavailable: Ez a profilmunkamenet folytatásból indult,
