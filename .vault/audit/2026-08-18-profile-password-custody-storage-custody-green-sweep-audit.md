@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:13ac5e86bef0c670289094bff5c360c007f77f553366acd3d09515d090f9b2f4'
+body_hash: 'sha256:8184c5a872354de9f6cd9971d2374769257e2341c54e63a4af6609125b254d27'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1713,6 +1713,50 @@ The probe measured its own import graph, not the tree. This campaign has
 already retracted two confident attributions; the cheap habit that avoided a
 third was verifying the measurement apparatus before believing an alarming
 result from it.
+
+### Reading the standing red counts: 14 confirmed, and an operator-facing English leak fixed
+
+Applying the previous lesson -- that a stable red count is a signal nobody has
+read -- to this campaign's own two standing numbers.
+
+The 14 integration failures were carried all campaign on the strength of ONE
+sampled test. Checked properly this time: only two cite the keyring in their
+assertion (`KEYRING_UNAVAILABLE is ABSENT`, `'keyring_unavailable' == 'absent'`).
+The other twelve fail as `assert False is True`, a zero-length material check,
+and receipt-dependent retirements -- all of which route through keyring-backed
+session acceleration, so a single cause is consistent across all fourteen. The
+standing context is confirmed rather than overturned, which is the outcome
+worth having recorded either way.
+
+The CLI package's remaining reds were the productive half.
+`cli.help.missing_argument`, `missing_option` and `missing_parameter` were cited
+by production with English defaults and existed in NO catalogue, so every
+"Missing option '--to'" reached the operator in English whatever their output
+language. Two shipped gates had been reporting it for as long as this campaign
+has been running that package. Fixed, and verified end to end: the same command
+now answers "Error: Falta la opción '--to'."
+
+### Nearly "improving" a deliberate design, stopped by its own gate
+
+Worth recording because the instinct was reasonable and wrong.
+
+These keys are invisible to the locale scaffold: they reach `tr()` through a
+table of (prefix, key, default) tuples, so the scaffold's literal scan calls
+them unused -- and `scaffold` aligns catalogues to keys it can see, which looked
+like a live risk of the values being deleted again. The fix seemed obvious:
+cite each key directly so both tools agree.
+
+A sibling gate refused it. `test_framework_localisation_cites_keys_the_scaffold_cannot_see`
+asserts the indirection MUST remain, because that gate exists to cover exactly
+the class of keys the scaffold cannot see and would pass vacuously if every key
+became directly cited. The deletion risk was already covered from the other
+side: if scaffold removed these keys, the coverage gate fails.
+
+The production change was reverted; only the catalogues gained values. The
+lesson is the same one this campaign keeps relearning from the other direction
+-- read the neighbouring gate before changing the shape it is built around.
+Here the neighbour was right and the instinct was wrong, which is the more
+uncomfortable version.
 
 ## Recommendations
 
