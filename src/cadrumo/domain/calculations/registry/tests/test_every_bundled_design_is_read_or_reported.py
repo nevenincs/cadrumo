@@ -51,7 +51,13 @@ import pytest
 
 from .....core import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
-from .. import RecordDesignCorrection, RecordDesignFieldTypeCorrection, extract_record_design
+from .. import (
+    RecordDesignCorrection,
+    RecordDesignFieldTypeCorrection,
+    RecordDesignHeaderCellCorrection,
+    RecordDesignSinglePositionCorrection,
+    extract_record_design,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -82,18 +88,42 @@ _CAUSE_CLASSES: tuple[tuple[str, str], ...] = (
 )
 
 
-def _describe_correction(item: RecordDesignCorrection) -> str:
-    """Render one applied correction for the worklist, per its own kind.
+def _correction_locus(item: RecordDesignCorrection) -> str:
+    """Where in the design a correction applies, in that kind's own coordinates.
 
-    The two kinds address different subjects -- a data row versus a header
-    column -- and carry different fields, so the human-readable summary needs
-    its own kind branch even though the CLASSIFICATION above it (``corrected``
-    is checked before ``is_complete``) needs none: both kinds already feed the
-    same ``extraction.corrections`` tuple.
+    Every kind carries ``sheet``, and nothing else is shared: a field-type
+    correction addresses a data row, a header-cell correction a header row and
+    column, a single-position correction a wire position. A locus built from
+    whichever of those a kind happens to have is what lets the worklist and the
+    grounding assertions below name a correction without knowing its kind.
+
+    An unknown kind RAISES rather than degrading to a bare sheet name. This
+    function used to fall through to the header shape for anything that was not
+    a field-type correction, so when a third kind was added it raised
+    AttributeError on a missing field -- and because every test in this module
+    goes through ``_outcomes()``, the whole module errored instead of reporting
+    its worklist. A loud failure here names the gap; a silent default would let
+    the next kind land unnoticed.
     """
     if isinstance(item, RecordDesignFieldTypeCorrection):
-        return f"{item.sheet!r} row {item.source_row}: type {item.corrected_type!r} -- {item.reason}"
-    return f"{item.sheet!r} header row {item.header_row} col {item.column_index} ({item.column_role}) -- {item.reason}"
+        return f"{item.sheet!r} row {item.source_row}"
+    if isinstance(item, RecordDesignHeaderCellCorrection):
+        return f"{item.sheet!r} header row {item.header_row} col {item.column_index} ({item.column_role})"
+    if isinstance(item, RecordDesignSinglePositionCorrection):
+        return f"{item.sheet!r} position {item.position}"
+    raise AssertionError(
+        f"correction kind {getattr(item, 'kind', type(item).__name__)!r} has no locus branch here; "
+        "add one rather than letting this gate error on a shape it cannot describe"
+    )
+
+
+def _describe_correction(item: RecordDesignCorrection) -> str:
+    """Render one applied correction for the worklist, per its own kind."""
+    if isinstance(item, RecordDesignFieldTypeCorrection):
+        return f"{_correction_locus(item)}: type {item.corrected_type!r} -- {item.reason}"
+    if isinstance(item, RecordDesignSinglePositionCorrection):
+        return f"{_correction_locus(item)}: type {item.corrected_type!r} ({item.description}) -- {item.reason}"
+    return f"{_correction_locus(item)} -- {item.reason}"
 
 
 @dataclass(frozen=True)
@@ -316,11 +346,16 @@ def test_every_correction_is_visibly_distinct_from_complete_and_carries_its_grou
         assert matches, f"corrected design {outcome.design!r} no longer resolves to a bundled file"
         extraction = extract_record_design(matches[0])
         for correction in extraction.corrections:
+            # The locus is kind-agnostic on purpose: these messages used to name
+            # ``correction.source_row``, which only a field-type correction has,
+            # so the FAILURE path would itself raise AttributeError for the other
+            # two kinds -- a gate that crashes instead of reporting exactly when
+            # it has something to report.
             assert correction.editions_read, (
-                f"modelo {outcome.modelo} {outcome.design!r} sheet {correction.sheet!r} row "
-                f"{correction.source_row} names no editions read"
+                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} "
+                "names no editions read"
             )
             assert correction.reason.strip(), (
-                f"modelo {outcome.modelo} {outcome.design!r} sheet {correction.sheet!r} row "
-                f"{correction.source_row} states no reason"
+                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} "
+                "states no reason"
             )

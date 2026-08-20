@@ -274,9 +274,12 @@ def test_the_declared_unimplemented_surface_names_its_unmet_obligation() -> None
     """The subject-access surface stays declared, with its reason, or it vanishes.
 
     The register holds every key whose schema outlives its verb. This one is
-    pinned by name because its obligation is legal rather than functional:
-    deleting it would retire a data-protection duty by tidying, and nothing
-    else in the tree records that the duty is unmet.
+    pinned by name because the capability it named has no successor: no surviving
+    surface discloses which personal-data categories a profile bundle carries and
+    which stay in encrypted storage. The entry is deliberately NOT a claim about
+    a legal duty -- nothing in this repository grounds one, and the withdrawn verb
+    exported the operator's own profile to the operator's own disk -- so the
+    reason text states the missing capability instead.
 
     So the declaration is the record, and a record nothing asserts is deleted by
     the next sweep that finds it unreferenced. The gap must stay stated rather

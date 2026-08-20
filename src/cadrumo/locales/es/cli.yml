@@ -2300,13 +2300,6 @@ cli:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
           descartable.
-      sar_catalogue_info: 'Este archivo contiene las categorías de datos personales
-        indicadas en el campo data_categories de esta respuesta. No es todo lo que
-        se conserva del perfil: las categorías de excluded_data_categories permanecen
-        en el almacenamiento cifrado y no están en este fichero. Usa el archivo de
-        recuperación cifrado para obtenerlas.'
-      sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
-        del interesado (RGPD): el paquete portátil del perfil.'
       show:
         summary_invalid: 'El registro del perfil no es válido: %{count} problema(s)
           bloqueante(s).'

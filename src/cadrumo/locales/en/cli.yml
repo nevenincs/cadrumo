@@ -2135,13 +2135,6 @@ cli:
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
-      sar_catalogue_info: 'This archive holds the personal-data categories listed
-        in the data_categories field of this response. It is not everything held for
-        the profile: the categories in excluded_data_categories stay in encrypted
-        storage and are not in this file. Use the encrypted recovery archive to obtain
-        those.'
-      sar_help: Export all personal data held for a profile as a GDPR right-of-access
-        archive (the portable profile bundle).
       show:
         summary_invalid: 'Profile record is invalid: %{count} blocking issue(s).'
         summary_tombstoned: Profile record is tombstoned.
