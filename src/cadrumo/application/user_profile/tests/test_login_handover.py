@@ -947,6 +947,7 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
             _close_live_login()
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(tmp_path: Path) -> None:
     """A retired profile's acceleration receipt must not still yield its DEK.
 
@@ -991,6 +992,7 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
         assert second["closed_previous"] == profile_a
 
 
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tmp_path: Path) -> None:
     """Re-entering the selected profile retires nothing and revokes nothing.
 
@@ -1216,6 +1218,7 @@ def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) ->
         _HandoverPhase.A_RETIRED,
     ),
 )
+@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     tmp_path: Path,
     phase: _HandoverPhase,
