@@ -266,19 +266,7 @@ if TYPE_CHECKING:
         reconcile_censal_read as reconcile_censal_read,
     )
     from ._commands import (
-        CompleteSetupCommand as CompleteSetupCommand,
-    )
-    from ._commands import (
-        EditProfileFieldCommand as EditProfileFieldCommand,
-    )
-    from ._commands import (
-        EditProfileSectionCommand as EditProfileSectionCommand,
-    )
-    from ._commands import (
         ProfileImportResult as ProfileImportResult,
-    )
-    from ._commands import (
-        ProfileLifecycleResult as ProfileLifecycleResult,
     )
     from ._commands import (
         ProfilePreflightReport as ProfilePreflightReport,
@@ -290,9 +278,6 @@ if TYPE_CHECKING:
         ProfileSnapshot as ProfileSnapshot,
     )
     from ._commands import (
-        ProfileSnapshotRequest as ProfileSnapshotRequest,
-    )
-    from ._commands import (
         ProfileStaleCheckReport as ProfileStaleCheckReport,
     )
     from ._commands import (
@@ -300,9 +285,6 @@ if TYPE_CHECKING:
     )
     from ._commands import (
         ProfileValidationReport as ProfileValidationReport,
-    )
-    from ._commands import (
-        RegisterProfileCommand as RegisterProfileCommand,
     )
     from ._completeness import (
         conditional_profile_missing_required as conditional_profile_missing_required,
@@ -937,9 +919,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CensoSyncError": "._censo_errors",
     "CensoSyncService": "._censo_sync",
     "CommittedProfileRepository": "._profile_repository",
-    "CompleteSetupCommand": "._commands",
-    "EditProfileFieldCommand": "._commands",
-    "EditProfileSectionCommand": "._commands",
     "EffectiveFact": "._projections",
     "EncryptedProfileBundleError": "._bundle_encryption",
     "EncryptedProfileBundleExport": "._bundle_encryption",
@@ -980,7 +959,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileFieldView": "._overview",
     "ProfileFactWriteDoor": "._fact_write",
     "ProfileImportResult": "._commands",
-    "ProfileLifecycleResult": "._commands",
     "ProfileLoginOutcome": "._login_session",
     "ProfileLoginThrottledError": "._login_session",
     "ProfileNotFoundError": "._profile_repository",
@@ -1000,13 +978,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileSectionView": "._overview",
     "ProfileSessionResumeOutcomePort": "._custody_ports",
     "ProfileSnapshot": "._commands",
-    "ProfileSnapshotRequest": "._commands",
     "ProfileStaleCheckReport": "._commands",
     "ProfileSummary": "._profile_repository",
     "ProfileValidationIssue": "._commands",
     "ProfileValidationReport": "._commands",
     "ProfileValidationService": "._validation",
-    "RegisterProfileCommand": "._commands",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS": "._bundle",
     "TYPED_CATEGORY_NAMESPACES": "._custody_carry",
     "USER_PROFILE_SNAPSHOT_NAMESPACE": "._repository",
@@ -1146,9 +1122,6 @@ __all__ = [
     "CensoSyncError",
     "CensoSyncService",
     "CommittedProfileRepository",
-    "CompleteSetupCommand",
-    "EditProfileFieldCommand",
-    "EditProfileSectionCommand",
     "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
@@ -1193,7 +1166,6 @@ __all__ = [
     "ProfileFieldView",
     "ProfileId",
     "ProfileImportResult",
-    "ProfileLifecycleResult",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
     "ProfileNotFoundError",
@@ -1215,13 +1187,11 @@ __all__ = [
     "ProfileSectionView",
     "ProfileSessionResumeOutcomePort",
     "ProfileSnapshot",
-    "ProfileSnapshotRequest",
     "ProfileStaleCheckReport",
     "ProfileSummary",
     "ProfileValidationIssue",
     "ProfileValidationReport",
     "ProfileValidationService",
-    "RegisterProfileCommand",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",

@@ -19,7 +19,7 @@ surface is unchanged: every name remains reachable via
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -27,96 +27,12 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, Hex64Str, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
-from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import (
-    ProfileSetupState,
     UserProfileFact,
-    UserProfileFactValue,
     UserProfileRecord,
 )
-
-# ---------------------------------------------------------------------------
-# Lifecycle commands
-# ---------------------------------------------------------------------------
-
-
-class RegisterProfileCommand(BaseModel):
-    """Register a new live profile root in the secure DB backend.
-
-    ``setup_state`` selects the registration arm: ``COMPLETE`` (the default)
-    for a complete registration, or ``INCOMPLETE`` for the interactive setup
-    flow's early mint. The record is live, but modelo work is refused until
-    :class:`CompleteSetupCommand` lands. Profile removal is owned by the
-    capsule lifecycle and is not a registration state.
-
-    The early mint does NOT reserve a tax id. Uniqueness is enforced
-    against the facts the mint is given, and the setup flow's first
-    persist contributes no fact for an unanswered or blank tax-id page,
-    so a mint that happens before that answer carries no identity to
-    reserve. Completeness is also deferred on this arm, so nothing
-    refuses the empty record. A mint that DOES carry the answered fact
-    reserves it normally.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    facts: tuple[UserProfileFact, ...] = ()
-    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE
-
-
-class CompleteSetupCommand(BaseModel):
-    """Transition a ``SETUP_INCOMPLETE`` profile to ``ACTIVE`` at setup commit."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-
-
-class EditProfileFieldCommand(BaseModel):
-    """Upsert one effective-dated profile fact."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    path: str = Field(min_length=3, max_length=192)
-    value: UserProfileFactValue
-    valid_from: date | None = None
-    valid_to: date | None = None
-    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
-
-
-class EditProfileSectionCommand(BaseModel):
-    """Bulk-upsert every fact in one schema section."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    section_key: str = Field(min_length=1, max_length=64)
-    facts: tuple[UserProfileFact, ...]
-    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle results
-# ---------------------------------------------------------------------------
-
-
-class ProfileLifecycleResult(BaseModel):
-    """Result of a lifecycle mutation (register / edit / remove / duplicate).
-
-    Attributes:
-        profile: The mutated :class:`UserProfileRecord`.
-        applied_at: The timestamp when the mutation was applied.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile: UserProfileRecord
-    applied_at: datetime
-
 
 # ---------------------------------------------------------------------------
 # Validation and preflight
@@ -197,24 +113,6 @@ class ProfilePreflightReport(BaseModel):
 # ---------------------------------------------------------------------------
 # Filing snapshots
 # ---------------------------------------------------------------------------
-
-
-class ProfileSnapshotRequest(BaseModel):
-    """Request an immutable filing-time snapshot of one profile."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: Period
-
-    @model_validator(mode="after")
-    def _period_matches_filing_year(self) -> Self:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("filing_year must match period.filing_year")
-        return self
 
 
 class ProfileSnapshot(BaseModel):
