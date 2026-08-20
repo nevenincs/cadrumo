@@ -475,10 +475,10 @@ modelo:
                 évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Negyedéves időszak (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -955,10 +955,10 @@ modelo:
                 évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Negyedéves időszak (1T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -2227,10 +2227,10 @@ modelo:
                 negyedév [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Negyedéves időszak (2T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -3630,10 +3630,10 @@ modelo:
                 negyedév [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Negyedéves időszak (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:

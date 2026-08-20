@@ -64,10 +64,12 @@ modelo:
               label: Corrected period
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
-              label: null
+              label: Surname and forename, or company name, of the substitute taxable
+                person
             x-edqn6t39ehqn8rpedpkmc:
               help: null
-              label: null
+              label: Tax identification number (NIF) of the substitute final-recipient
+                trader or professional
           construct:
             modelo-349-informative:
               field:

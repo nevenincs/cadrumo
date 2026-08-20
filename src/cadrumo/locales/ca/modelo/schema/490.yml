@@ -496,10 +496,10 @@ modelo:
                 i període [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període trimestral (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -997,10 +997,10 @@ modelo:
                 i període [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període trimestral (1T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -2307,10 +2307,10 @@ modelo:
                 de regularització. 3T [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període trimestral (2T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -3748,10 +3748,10 @@ modelo:
                 de regularització. 3T [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període trimestral (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
