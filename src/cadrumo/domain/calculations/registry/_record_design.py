@@ -2075,6 +2075,76 @@ class _PdfSheetResult:
     opened_at_row: int | None
 
 
+#: A record's own closing identifier, which names the modelo and the page it
+#: belongs to: ``</T200001>`` closes page 1 of modelo 200. AEAT writes it as the
+#: last field of every page record in the designs that head their records with
+#: nothing a heading recogniser can see.
+_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{3})>")
+#: The same fact stated at the TOP of the record, as the contenido of its
+#: ``Página`` row: ``3 6 3 An Página. OBLIGATORIO Constante "001"``.
+_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{3})"')
+
+
+def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
+    """Name an unheaded record body from the identity it declares about itself.
+
+    Some AEAT designs never head a record with a title. Modelo 200's 2010 orden
+    edition is the worked case: its page records are separated only by a running
+    page header, and each record's identity lives INSIDE the body -- as the
+    ``Constante "006"`` of its Página field, and again as the ``</T200006>``
+    closing identifier AEAT requires as the record's last field.
+
+    Both are constants AEAT declares as a field's REQUIRED CONTENT, so a body
+    carrying them is stating which page it is; reading them is not a heuristic
+    over prose.
+
+    The Página strategy is keyed on GEOMETRY, never on the word "Página". These
+    designs are published as PDFs whose text layer does not survive decoding
+    intact -- the label arrives as ``P?gina`` -- so a reader that matched the
+    Spanish label would work on the editions that decode cleanly and fail on the
+    ones that do not, which is the opposite of what the corpus needs. AEAT fixes
+    the geometry instead: the modelo constant occupies positions 3-5 and the
+    page constant 6-8, immediately after it. Requiring BOTH is what makes this
+    safe -- a lone three-digit constant elsewhere in a body cannot satisfy it.
+
+    Returns ``None`` when the body declares neither identity, leaving it
+    unidentified and on the worklist exactly as before. Recovering a name the
+    record did not state would be inventing an identity, which is worse than
+    reporting the gap.
+    """
+    for field in reversed(sheet.fields):
+        for text in (field.content, field.description, field.validation):
+            if not text:
+                continue
+            match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
+            if match is not None:
+                return f"P\u00e1g. {int(match.group('page'))}"
+    by_offset = {field.offset: field for field in sheet.fields}
+    modelo_field, page_field = by_offset.get(3), by_offset.get(6)
+    if (
+        modelo_field is not None
+        and page_field is not None
+        and modelo_field.length == 3
+        and page_field.length == 3
+        and _pdf_declared_constant(modelo_field) is not None
+    ):
+        page = _pdf_declared_constant(page_field)
+        if page is not None:
+            return f"P\u00e1g. {int(page)}"
+    return None
+
+
+def _pdf_declared_constant(field: RecordDesignField) -> str | None:
+    """The three-digit constant a field declares as its required content."""
+    for text in (field.content, field.description, field.validation):
+        if not text:
+            continue
+        match = _PDF_PAGE_CONSTANT_RE.search(str(text))
+        if match is not None:
+            return match.group("page")
+    return None
+
+
 def _unidentified_record_body_name(row_number: int) -> str:
     """Name an unnamed record body by WHERE it is, never by what it might be."""
     return f"<unidentified record body beginning at source row {row_number}>"
@@ -2127,6 +2197,7 @@ class _PdfParseState:
         precisely to catch an incomplete read -- can finally see them.
         """
         self._close_current_body()
+        self._recover_unidentified_bodies()
         read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
         if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
@@ -2146,6 +2217,36 @@ class _PdfParseState:
                 *(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
             ),
         )
+
+    def _recover_unidentified_bodies(self) -> None:
+        """Give every unheaded body the identity it declares about itself.
+
+        A recovered name must be UNIQUE within the design. Two bodies resolving
+        to one name would silently merge two records into one identity, which is
+        the failure the unidentified-body report exists to prevent -- so a
+        collision leaves both on the worklist rather than picking a winner.
+        """
+        taken = {result.sheet.name for result in self.results if result.identified}
+        recovered: dict[int, str] = {}
+        seen: dict[str, int] = {}
+        for index, result in enumerate(self.results):
+            if result.identified or not result.sheet.fields:
+                continue
+            name = _recovered_record_identity(result.sheet)
+            if name is None or name in taken:
+                continue
+            if name in seen:
+                recovered.pop(seen[name], None)
+                continue
+            seen[name] = index
+            recovered[index] = name
+        for index, name in recovered.items():
+            result = self.results[index]
+            self.results[index] = _PdfSheetResult(
+                sheet=result.sheet.model_copy(update={"name": name}),
+                identified=True,
+                opened_at_row=result.opened_at_row,
+            )
 
     def feed(self, line: str, row_number: int) -> None:
         if not line or _is_pdf_footer(line):
@@ -2352,6 +2453,73 @@ def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
         )
 
 
+#: A record row declaring a bracket constant: ``Constante "<VECTOR>"`` opens a
+#: payload region and ``Constante "</VECTOR>"`` closes it.
+_PDF_BRACKET_CONSTANT_RE = re.compile(r'Constante\s*"<(?P<closing>/?)(?P<tag>[A-Z][A-Z0-9_]*)>"')
+
+
+def _bracketed_payload_positions(sheet: RecordDesignSheet) -> set[int]:
+    """Positions a record brackets as a payload region rather than numbering.
+
+    Some AEAT records wrap a block of content between two constant rows --
+    ``Constante "<VECTOR>"`` at 329-336 and ``Constante "</VECTOR>"`` at 637-645
+    in modelo 200's 2010 orden edition -- and describe what sits between them in
+    PROSE rather than as numbered field rows ("y el resto a blancos hasta
+    completar las 300 posiciones"). The bytes are declared; only the numbering
+    is absent.
+
+    Contiguity reads that as a 300-byte hole and reports the record as partly
+    read, which is wrong in a way that matters: it is indistinguishable from the
+    dropped-row defect the check exists to catch, so a genuine reader bug in
+    such a record would hide behind an expected complaint.
+
+    The span is taken from the two constants' own offsets, never from the prose.
+    That is what keeps this from being an invention: AEAT declares both markers
+    as required content at fixed positions, so what they bracket is fixed too.
+    The prose is corroboration and it agrees exactly -- 337 to 636 is 300
+    positions -- but nothing here parses it.
+
+    Only a MATCHED pair counts, and only in the order open-then-close. A lone
+    marker, or a closing marker before its opening, describes no region and is
+    left to be reported as the hole it is.
+    """
+    openings: dict[str, RecordDesignField] = {}
+    covered: set[int] = set()
+    for field in sorted(sheet.fields, key=lambda item: item.offset):
+        for text in (field.content, field.description, field.validation):
+            if not text:
+                continue
+            match = _PDF_BRACKET_CONSTANT_RE.search(str(text))
+            if match is None:
+                continue
+            tag = match.group("tag")
+            if not match.group("closing"):
+                openings[tag] = field
+            elif (opening := openings.pop(tag, None)) is not None:
+                start = opening.offset + opening.length
+                if start < field.offset and not _numbers_rows_inside(sheet, start, field.offset):
+                    covered.update(range(start, field.offset))
+            break
+    return covered
+
+
+def _numbers_rows_inside(sheet: RecordDesignSheet, start: int, end: int) -> bool:
+    """Whether the design numbers any field row strictly inside ``start``..``end``.
+
+    This is what keeps bracket accounting from weakening the hole check. A
+    bracket credited unconditionally would hide a genuine dropped row that
+    happened to fall between two markers, which is the exact defect contiguity
+    exists to catch.
+
+    So a bracket earns its region ONLY when AEAT numbers nothing inside it --
+    the opaque-payload case, where the bytes are described in prose. Modelo
+    200's structural ``<AUX>`` wrapper numbers five rows inside itself and is
+    therefore NOT credited; it does not need to be, because those rows already
+    tile it. Its ``<VECTOR>`` payload numbers none and is credited.
+    """
+    return any(start <= field.offset < end for field in sheet.fields)
+
+
 def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
     """Return why ``sheet``'s parsed rows do not tile its declared extent, else ``None``.
 
@@ -2392,6 +2560,7 @@ def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
     covered: set[int] = set()
     for parsed_field in sheet.fields:
         covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+    covered |= _bracketed_payload_positions(sheet)
     declared = set(range(1, sheet.total_positions + 1))
     if holes := sorted(declared - covered):
         return (

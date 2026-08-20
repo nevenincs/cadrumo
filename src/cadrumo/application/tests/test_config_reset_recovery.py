@@ -283,14 +283,6 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
 
         resumed_process = _run_fresh_resume(root, interrupted.operation_id)
         resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
-        if boundary == "auth_clearing_after_effect":
-            assert resumed.status is ConfigResetOperationStatus.PAUSED
-            assert resumed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
-            assert resumed.paused_target_ids == (_PROFILE_A_ID,)
-            assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
-            resumed_process = _run_fresh_resume(root, interrupted.operation_id)
-            resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
-
         assert resumed.status is ConfigResetOperationStatus.COMPLETE
         assert resumed.summary is not None
         assert resumed.summary.target_count == 1

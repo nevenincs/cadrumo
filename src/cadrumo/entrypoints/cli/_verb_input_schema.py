@@ -455,11 +455,15 @@ class SchemaResolutionError(RuntimeError):
 DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {
     "config.profile.subject_access_request": (
         "Data-protection subject-access request. The operator verb was removed as collateral "
-        "of the profile-capsule cutover rather than by a decision, and no other surface "
-        "answers the obligation it existed to satisfy. Its schema declaration is therefore "
-        "kept where every other unresolved declaration was deleted as residue: deleting this "
-        "one would retire a legal obligation by tidying, and the absence would stop being "
-        "visible anywhere. Restoring the verb removes this entry."
+        "of the profile-capsule cutover rather than by a decision. What has no successor is "
+        "its data-category disclosure: the verb reported which personal-data categories the "
+        "bundle carried and which stayed in encrypted storage, and no surviving surface "
+        "reports either set -- the profile manager's export discards that record entirely. "
+        "The declaration is kept where other unresolved declarations were deleted as residue, "
+        "because deleting it would remove the only place the gap is stated. What the verb "
+        "itself did was export the operator's own profile to the operator's own disk, so this "
+        "entry records a missing capability, not a discharged or outstanding legal duty. "
+        "Restoring a disclosure surface removes this entry."
     ),
     "config.profile.rename": (
         "Profile relabelling. The rename_label implementation and its domain protocol were removed "

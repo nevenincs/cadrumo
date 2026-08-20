@@ -177,8 +177,8 @@ def _observed_deletion_fingerprint(
         ) from exc
     return BucketDeletionFingerprint(
         digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
-        file_count=len(inventory.entries),
-        total_bytes=inventory.total_bytes,
+        file_count=len(inventory.digest_entries),
+        total_bytes=sum(entry.size_bytes for entry in inventory.digest_entries),
     )
 
 

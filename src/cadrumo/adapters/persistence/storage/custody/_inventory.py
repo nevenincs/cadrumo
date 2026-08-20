@@ -50,6 +50,33 @@ statement about whether a connection is open, so neither their bytes nor their
 existence can be held constant across a transaction that closes one.
 """
 
+_BUCKET_LOCK_RELATIVE_PATH: Final[str] = storage_location(StorageCategory.BUCKET_LOCK).subpath
+"""The capsule-relative path of the bucket holder lockfile.
+
+Read off the storage taxonomy for the same reason the database path is: a
+capsule IS a bucket directory, so the lockfile the storage layer writes to
+claim the bucket sits inside the tree this module inventories.
+"""
+
+HOLDER_LOCK_RELATIVE_PATHS: Final[frozenset[str]] = frozenset({_BUCKET_LOCK_RELATIVE_PATH})
+"""Members the digest ignores ENTIRELY, path and bytes alike.
+
+The lockfile's whole payload is the holder's process id, and its presence is a
+statement about WHO HOLDS the bucket rather than about custody. A transaction
+whose own precondition is to acquire that lock cannot hold it constant: the
+process that resumes after a crash is a different process, so it writes a
+different pid, and a digest covering it can never reproduce across the boundary
+it exists to span. That is the same self-invalidation the sidecar exclusion
+above answers, one file over.
+
+Excluded entirely rather than by path alone, because presence is volatile too
+(absent unheld, present held, removed when a stale holder is reclaimed) and
+because a staged capsule never carries one while a published capsule can -- so
+a presence member would diverge a stage-versus-committed comparison that is
+otherwise identical. Nothing about lock SAFETY rests here: acquisition is
+enforced by exclusive creation and stale reclaim, never by this digest.
+"""
+
 DATABASE_PRESENCE_ONLY_RELATIVE_PATHS: Final[frozenset[str]] = frozenset({_BUCKET_DATABASE_RELATIVE_PATH})
 """Members the digest covers by PATH but not by content.
 
@@ -89,7 +116,7 @@ class ProfileCustodyInventoryEntry:
 class ProfileCustodyInventory:
     """Bounded, no-follow exact inventory used by local custody transactions.
 
-    The capsule holds three kinds of member, and the digest treats each
+    The capsule holds four kinds of member, and the digest treats each
     differently:
 
     - Custody records -- the password envelope, the DEK sentinel, the label
@@ -100,6 +127,10 @@ class ProfileCustodyInventory:
       Covered by path only.
     - Its write-ahead sidecars, :data:`DATABASE_SIDECAR_RELATIVE_PATHS`. Not
       covered at all.
+    - The bucket holder lockfile, :data:`HOLDER_LOCK_RELATIVE_PATHS`. Not
+      covered at all, because its payload is the holding process's id and a
+      transaction that acquires the lock cannot hold that constant across the
+      process boundary a crash-resume spans.
 
     :attr:`entries` is the honest observation: every regular file the walk saw,
     whatever its treatment. :attr:`digest_entries` is the subset whose CONTENT
@@ -165,6 +196,7 @@ def _build_profile_custody_inventory(
         entry
         for entry in ordered
         if entry.relative_path not in DATABASE_SIDECAR_RELATIVE_PATHS
+        and entry.relative_path not in HOLDER_LOCK_RELATIVE_PATHS
         and entry.relative_path not in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS
     )
     if not covered:
@@ -190,7 +222,7 @@ def _digest_members(ordered: tuple[ProfileCustodyInventoryEntry, ...]) -> list[l
     """
     members: list[list[object]] = []
     for entry in ordered:
-        if entry.relative_path in DATABASE_SIDECAR_RELATIVE_PATHS:
+        if entry.relative_path in DATABASE_SIDECAR_RELATIVE_PATHS or entry.relative_path in HOLDER_LOCK_RELATIVE_PATHS:
             continue
         if entry.relative_path in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS:
             members.append([entry.relative_path])
@@ -342,6 +374,7 @@ def _inventory_windows_entry(
 __all__ = [
     "DATABASE_PRESENCE_ONLY_RELATIVE_PATHS",
     "DATABASE_SIDECAR_RELATIVE_PATHS",
+    "HOLDER_LOCK_RELATIVE_PATHS",
     "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES",
     "PROFILE_CUSTODY_DATA_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",
