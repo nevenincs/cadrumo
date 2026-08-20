@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:17b39c2f84f9c53dcd02b36f285653299edbde73d559f1a8b04ec92f6ee5f8ca'
+body_hash: 'sha256:e3d68859c68a823b52d5933c262a7a027b805b058db3157d8ac76f3bc69f3664'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2736,3 +2736,43 @@ conftest's job. Eight false positives, all of them fixtures doing exactly what f
 do. The shipped `non_test_package_python_files()` helper yields conftest, which is
 reasonable for most gates and wrong for this one — a reminder that a shared discovery
 helper encodes someone else's question, not necessarily yours.
+
+### The dev/ tooling lane, and an exemption that had become a pre-authorisation
+
+`testpaths` names exactly one file out of the whole `dev/` tree
+(`dev/packaging/tests/test_installed_oracles.py`). Every other dev gate — locales,
+identity, registry, docs, audit, sanitizer — runs only under `just test-dev-tooling`,
+whose own doc line says it covers "the dev/ tooling gates that no other lane reaches".
+So a default run, and both of this campaign's lanes, never collect them. Running that
+lane's storage-adjacent subset: **86 failed, 939 passed**, dominated by registry
+conformance work belonging to another campaign.
+
+The finding worth keeping is `test_utf8_enrollment_inventory`'s SECOND assertion, and
+the gate names the state better than a summary would: five entries in
+`_KNOWN_VIOLATING_FILES` exempted nothing — four files had been cleaned since enrolment,
+one no longer exists — and it calls them **silent pre-authorisations**.
+
+That is the right reading, and it is the fail-open shape this campaign keeps finding in
+new clothes. An exemption that has outlived its violation is not inert: it stands ready
+to admit the NEXT bare literal in that file with nothing left to object, and the file
+looks enrolled rather than clean to every future reader. A ratchet only ratchets if
+entries leave it when their reason does.
+
+Deleted, which locks those five files at zero. Eight bare literals in this domain now
+route through `UTF_8_ENCODING` — custody service and login-session pointer writes,
+capsule archive and record payloads, the secure-reference digest, the terminal writer,
+and the KDF worker.
+
+**The KDF worker was the one that needed checking rather than assuming.** It runs under
+an import-graph prohibition — no sqlalchemy, no bs4, no blob_store, envelope, sql,
+master_key or capsule machinery in the child — so adding an import could have pulled the
+forbidden graph in. The gate was run rather than reasoned about, and stays green.
+
+Six literals remain in `domain/calculations/registry`, left deliberately: they are that
+campaign's files, and it has uncommitted work in them right now.
+
+**A method note.** The first attempt inserted each import after "the last import line",
+which landed them inside `TYPE_CHECKING` blocks and mid-way through parenthesised
+imports — 21 syntax errors across five files. Re-done by parsing each module and
+inserting after the last MODULE-LEVEL import node, verified by re-parsing. A textual
+heuristic about Python structure is a guess; the AST is the structure.
