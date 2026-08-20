@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:a5cc9f85b84eff5929a2329b1611a95fbb8c25f199ba52dca688ab51c6c49a13'
+body_hash: 'sha256:d4c1b106e992b6771d165600d877c2fc5b466c2c17385f58a9749b41cd08ce8a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2352,3 +2352,47 @@ attribute and a module global are two different bindings of one function, and an
 observer attached to the wrong one produces a confident, precisely-wrong measurement.
 That is the same root cause as the earlier bundle-subsystem misreading, where a
 function-local deferred import hid the only live call site.
+
+### The slices the prescribed lanes never run
+
+The campaign's two lanes exclude `serial` and `os_keychain`, so those tests had never
+been run in this work. Both were checked, because a permanently-unrun slice is where
+coverage rots unobserved.
+
+**`serial`: healthy.** 16 tests, all passing.
+
+**`os_keychain`: 26 failures, and every one is the same environmental cause.** The
+standing context carried "14", which is now stale — the marked set grew, partly through
+this campaign's own correct re-marking. What matters is that the bucket has not become a
+hiding place: grouping the failures by their raised error shows 12 `pywintypes.error
+(1312, 'CredRead')`, 12 `KeyringUnavailableError` wrapping the same, 12 `OSError
+[WinError 1312]`, and the remainder — `assert False is True`, `KEYRING_UNAVAILABLE is
+ABSENT` — are downstream consequences of the receipt write failing, not independent
+defects. Nothing real is concealed behind the marker. Worth re-checking periodically:
+a "known environmental" bucket that is never re-grouped by cause is exactly how a real
+failure eventually hides in one.
+
+### The keychain refusal sent the operator to the wrong place
+
+`AUTH_STORAGE_KEYRING_UNAVAILABLE` rendered "The operating-system keychain is
+unavailable. Check that a credential store is installed and active."
+
+On a network or service logon — the mode that produces every failure above — the
+credential store **is** installed and active. The condition is that the logon session
+cannot hold credentials. An operator following that guidance verifies the one thing that
+is not the problem, finds it fine, and has nowhere left to go. The text was written for
+the headless-Linux case (no backend registered) and silently generalised to a mode it
+does not describe.
+
+Fixed in all four catalogues through the locales CLI: the message now names both
+conditions and gives the action for each. The `context` channel was considered as an
+alternative carrier for the raw OS detail and rejected — it is `Notice`-scoped and its
+validators explicitly forbid action-guidance keys, so guidance belongs in the message.
+
+**Two measurement artefacts were caught before acting on them**, both worth noting
+because each would have produced a confident wrong fix. Probing `default_suggestion` on
+every custody error code returned "all 71 missing" — the field does not exist on
+`ErrorCode` at all. And reading the four locales through the terminal showed `hu` blank,
+which was the console's cp1252 encoding failing on Hungarian characters, not a missing
+key; writing through UTF-8 showed the string present. Neither is a defect in the tree;
+both are defects in how it was being looked at.
