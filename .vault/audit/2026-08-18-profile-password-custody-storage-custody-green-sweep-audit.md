@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:d461ca9f92075545b3b70df8fa8637d0cb73c501605024567d4de1c2ed5ef203'
+body_hash: 'sha256:951ff8771d57096fed2aa26585dc2f32f319df449df54a4727c52f132f2c1df2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1640,6 +1640,43 @@ They are deliberately NOT declared here. They span live, ledger, provision and
 config surfaces this campaign does not own, and a risk assessment invented to
 clear a gate is worse than a recorded gap: it would read as judgement where
 none happened.
+
+### Running the distribution the lanes never touch found a regression this campaign shipped
+
+Acting on the previous correction -- that the prescribed lanes are not the tree
+-- the harness distribution was run for the first time. It found a break this
+campaign caused.
+
+Reducing `SecretStoreBackend` to `{auto, unsecured}` swept `src/cadrumo` and
+`dev/` and missed `src/cadrumo-harness`. Two harness tests still set
+`CADRUMO_SECRET_STORE_BACKEND="file"`, so every command they drive died in
+Settings validation before reaching its subject. Among the casualties was
+`test_warm_runtime_holds_no_bucket_session_between_calls` -- a session-isolation
+property named directly in this campaign's brief, failing because of this
+campaign's own change. Fixed; the harness integration lane goes from 20
+failures to 17.
+
+The blind spot is now measured rather than described. The prescribed lanes miss
+`adapters/persistence/profile`, they miss `src/cadrumo-harness` entirely, and
+the default `addopts` marker selection (`-m 'unit and not external_tool and not
+os_keychain'`) excludes every integration test in that distribution on top of
+that. A bare `pytest src/cadrumo-harness` collects 51 tests; with `-m
+integration` it collects 349. So the red risk-table gate corrected in the entry
+above is invisible to BOTH the campaign lanes and a default local run -- which
+is how it stayed red without anyone noticing, and how a shared-enum change
+broke a sibling distribution unobserved.
+
+Three separate misses now trace to the same cause: a repository-wide change
+verified against a subset. The durable correction is not "remember the harness"
+but that a change to a shared CORE surface -- an enum, a protocol, an error
+code -- is verified against the distributions that import it, enumerated rather
+than recalled.
+
+The remaining 17 harness failures are deliberately NOT attributed. They sit in
+in-process transport, MCP schema-budget and closed-value-axis gates that this
+change does not touch, and there is no cheap baseline establishing when they
+started. This campaign has twice had to retract a confident attribution; an
+unattributed count is the honest record until someone measures it.
 
 ## Recommendations
 
