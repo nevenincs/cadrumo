@@ -432,6 +432,37 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
+#: A row whose ordinal and position are emitted twice before the rest of the
+#: row: ``99 1592 99 1592 17 Num ...``. The repeat is the evidence -- the line
+#: states the same two numbers twice, so dropping the first pair asserts nothing
+#: the row does not already say about itself.
+_STUTTERED_PDF_ROW_RE = re.compile(
+    r"^(?P<indent>\s*)(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P=ordinal)\s+(?P=offset)\s+(?P<rest>\d.*)$",
+)
+
+
+def _collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Drop a row's duplicated ordinal-and-position prefix.
+
+    Modelo 200's 2010 and 2011 editions emit nine rows this way, and every one
+    of their positions is currently reported as a hole, so the duplication is
+    not cosmetic -- it costs the record the field.
+
+    Deliberately narrow to the SELF-EVIDENCING case. A row may also arrive with
+    genuine leading text, where the tail of a wrapped description spills onto
+    its line, and those cannot be admitted on the line's own evidence: measured
+    across the bundled corpus, lines of that shape include both real rows and
+    prose carrying number sequences, and nothing in the line distinguishes them.
+    A back-reference to the same two numbers has no such ambiguity.
+    """
+    return tuple(
+        f"{match.group('indent')}{match.group('ordinal')} {match.group('offset')} {match.group('rest')}"
+        if (match := _STUTTERED_PDF_ROW_RE.match(line)) is not None
+        else line
+        for line in lines
+    )
+
+
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
@@ -523,7 +554,7 @@ def _extract_record_design_pdf_stream(
     lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     if _uses_page_record_layout(lines):
         lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
-    lines = _join_wrapped_row_descriptions(lines)
+    lines = _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(lines))
     if not any(line.strip() for line in lines):
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
@@ -1647,8 +1678,17 @@ def _positive_integer_after(values: tuple[object, ...], label_index: int) -> int
 #: read rows the loss showed up as scattered single-byte holes -- 12, 192,
 #: 372, 581 in one record alone -- which reads like corpus damage rather
 #: than one missing token.
+#: A trailing period after the type is abbreviation punctuation, not a
+#: different token: modelo 131 writes ``52 464 13 An. Complementaria (7) -
+#: Numero de Justificante anterior``. The narrative path has always accepted
+#: it -- ``_naturaleza_or_none`` strips ' .' before matching -- so this only
+#: brings the compact path into line with the recogniser beside it.
+#:
+#: Three lines in three designs, and they are the whole of modelo 131's
+#: reported damage: each edition lost this one 13-byte row and reported it as
+#: a dropped run at 464-476, 477-489 and 503-515 respectively.
 _COMPACT_PDF_ROW_RE = re.compile(
-    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*(?P<type>An|Num|Tit|N|A)\s+(?P<text>.+)$",
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*(?P<type>An|Num|Tit|N|A)\.?\s+(?P<text>.+)$",
     re.IGNORECASE,
 )
 #: A PDF row declaring the physical end of record. Its DESCRIPTION half composes
