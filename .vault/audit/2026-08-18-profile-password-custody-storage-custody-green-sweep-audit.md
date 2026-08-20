@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:17f9178f0c7a789b751cab9e1fd7c43a723c9e9918f11d602ed89168f86a70c2'
+body_hash: 'sha256:d48818be0453a0e8a12593aae0afa288b382890c0a8b5b99d34f8d9ec81dfc98'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -1557,6 +1557,47 @@ for. Six of them, each naming what resolves ON ITS OWN, so a seventh cannot
 join by inheriting a neighbour's answer unexamined. The duplicate-label code is
 asserted ABSENT from the retryable set, so the specific distinction that
 motivated all of this cannot quietly collapse back.
+
+### A gate the codebase believed it had: nothing checked that live commands are risk-assessed
+
+The "never file" rule is enforced by a live-write block that fires from the
+declared `COMMAND_RISK` table. A command in a mutating family with NO declared
+row classifies all-false -- including `live_write=False`. The classification
+tests name this exactly: "the default is safe-looking, which is the trap". The
+codebase already built the instrument to detect it, `risk_declared`, which
+separates an assessed-and-safe command from a never-assessed one.
+
+Nothing used that instrument against the real surface.
+
+The chain of belief is the finding. The contract-drift gate checks one
+direction only -- no row outlives its command -- and declines the other with a
+sound reason: read-only verbs are legitimately row-less, so an exact mirror
+would fail against correct data. Its docstring then says "the classification
+tests own the other direction". Those tests prove the distinction works, using
+PLANTED verbs (`ledger.unassessed_new_verb`). They never assert that the LIVE
+surface is fully assessed. Each artefact is individually correct and each
+points at the next; the property none of them holds is the one that matters.
+
+This is the third time in this campaign that a green signal turned out to rest
+on a claim about a neighbouring artefact rather than on a check. It is worth
+naming as a pattern: a docstring that says another test owns a direction is a
+citation, and citations need following.
+
+Measured rather than assumed: 26 of 291 exposable commands carry no risk
+assessment. None is a submission verb, so this is a gap rather than a breach --
+but nothing prevented the 27th from being one.
+
+The 26 are frozen as a DEBT REGISTER, and the wording matters: being listed
+asserts nothing about a command's safety, only that its absence was known
+rather than newly introduced. The register must shrink and may never grow, a
+cleared entry must leave it, and a bound stops it becoming a blanket -- a
+register covering the whole surface would satisfy its own checks while meaning
+nothing.
+
+They are deliberately NOT declared here. They span live, ledger, provision and
+config surfaces this campaign does not own, and a risk assessment invented to
+clear a gate is worse than a recorded gap: it would read as judgement where
+none happened.
 
 ## Recommendations
 
