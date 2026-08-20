@@ -2201,10 +2201,10 @@ class _PdfSheetResult:
 #: belongs to: ``</T200001>`` closes page 1 of modelo 200. AEAT writes it as the
 #: last field of every page record in the designs that head their records with
 #: nothing a heading recogniser can see.
-_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{3})>")
+_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{2,3})>")
 #: The same fact stated at the TOP of the record, as the contenido of its
 #: ``Página`` row: ``3 6 3 An Página. OBLIGATORIO Constante "001"``.
-_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{3})"')
+_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{2,3})"')
 
 
 def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
@@ -2226,7 +2226,11 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
     Spanish label would work on the editions that decode cleanly and fail on the
     ones that do not, which is the opposite of what the corpus needs. AEAT fixes
     the geometry instead: the modelo constant occupies positions 3-5 and the
-    page constant 6-8, immediately after it. Requiring BOTH is what makes this
+    page constant immediately after it. The page constant is TWO digits in some
+    designs and three in others -- modelo 763 and modelo 202 write
+    ``Constante "02"`` where modelo 200 writes ``Constante "001"`` -- so its
+    width is not part of the evidence; its position is. Requiring BOTH is what
+    makes this
     safe -- a lone three-digit constant elsewhere in a body cannot satisfy it.
 
     Returns ``None`` when the body declares neither identity, leaving it
@@ -2247,7 +2251,7 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
         modelo_field is not None
         and page_field is not None
         and modelo_field.length == 3
-        and page_field.length == 3
+        and page_field.length in {2, 3}
         and _pdf_declared_constant(modelo_field) is not None
     ):
         page = _pdf_declared_constant(page_field)

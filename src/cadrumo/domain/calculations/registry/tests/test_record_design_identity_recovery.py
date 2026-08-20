@@ -135,3 +135,28 @@ def test_the_bundled_modelo_200_orden_design_now_reads_named_page_records() -> N
     assert any(name.startswith("Pág. ") for name in names), (
         f"no page record was recovered by its declared identity; read {names}"
     )
+
+def test_a_two_digit_page_constant_is_read_the_same_as_a_three_digit_one() -> None:
+    """The page constant's WIDTH is not part of the evidence; its position is.
+
+    Modelo 763, 202 and 210 write ``Constante "02"`` where modelo 200 writes
+    ``Constante "001"``. Pinning three digits recognised the wide form only, and
+    five designs kept a record nobody could name for want of a leading zero.
+    """
+    sheet = _sheet(
+        _field(1, 2, 'Inicio del identificador de modelo y pagina. Constante "<T"'),
+        _field(3, 3, 'Modelo Obligatorio Constante "763"'),
+        _field(6, 2, 'P�gina Obligatorio Constante "02"'),
+    )
+
+    assert _recovered_record_identity(sheet) == "Pág. 2"
+
+
+def test_a_page_constant_of_another_width_is_not_read_as_a_page() -> None:
+    """Two or three digits is the observed range; a four-digit constant is something else."""
+    sheet = _sheet(
+        _field(3, 3, 'Modelo. Constante "200"'),
+        _field(6, 4, 'Ejercicio. Constante "2011"'),
+    )
+
+    assert _recovered_record_identity(sheet) is None
