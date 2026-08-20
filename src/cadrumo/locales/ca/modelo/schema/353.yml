@@ -9,25 +9,28 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Resultat total (sumatori del resultat d'entitats)
             '02':
               help: null
-              label: null
+              label: Quotes a compensar pendents d'exercicis anteriors
             '03':
               help: null
-              label: null
+              label: Resultat ([01] - [08])
             '04':
               help: null
-              label: null
+              label: 'A deduir: resultat de les autoliquidacions anteriors presentades
+                pel mateix concepte, exercici i període'
             '05':
               help: null
-              label: null
+              label: Resultat de l'autoliquidació ([03] - [04])
             08:
               help: null
-              label: null
+              label: Quotes a compensar de períodes anteriors aplicades en aquest
+                període
             09:
               help: null
-              label: null
+              label: Quotes a compensar de períodes previs pendents per a períodes
+                posteriors ([02] - [08])
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix l'autoliquidació
