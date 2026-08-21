@@ -1760,10 +1760,30 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
               label: Ingreso/Domiciliación/Devolución - IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: Dato del anexo de transmision de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Ganancia
+                patrimonial
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: Dato del anexo de transmision de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. NIF
+                de la sociedad o fondo de inversión
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               label: Inicio del identificador de modelo y página
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: Dato del anexo de transmision de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Total
+                de ganancias patrimoniales
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: Dato del anexo de transmision de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Total
+                de retenciones o ingresos a cuenta
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
               help: null
               label: 'Base liquidable del ahorro (parte de la base liquidable de las

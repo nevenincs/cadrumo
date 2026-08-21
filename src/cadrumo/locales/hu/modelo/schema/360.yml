@@ -146,6 +146,10 @@ modelo:
               label: 1. Ügylet száma
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Arányosítás %-a
+            x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Szállítói adatok. Cím
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Vezetéknév
                 és utónév vagy cégnév
@@ -153,6 +157,10 @@ modelo:
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Ország
+            x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Szállítói adatok. Az NVAT kibocsátó országa
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Az adóhivatkozást
                 kiadó ország
@@ -263,6 +271,10 @@ modelo:
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Telefon
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
               label: 2. Egyszerűsített jelző
+            x-chim6r1edto34bbkd5o6u:
+              help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Az ügylet típusa
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
               label: Teszt benyújtás
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:

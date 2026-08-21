@@ -78,6 +78,10 @@ modelo:
               label: MTN - Vehículos - Tipo
             x-chim6r1edpnmqojick:
               label: Identificación - Nombre
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseno de registro
+                oficial.
+              label: Devengo. Periodo
             x-chim6r1ee9in2bb2c5pmab9g70:
               label: Rég. Espec. recargo equival. (REQ) - Liquidación - Base Imponible
                 [08]

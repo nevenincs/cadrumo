@@ -53,6 +53,9 @@ modelo:
               label: Número de justificant de la declaració anterior (9)
             x-chim6r1edpnmqojick:
               label: Identificació (1) - Nom
+            x-chim6r1ee1in4qbfchng:
+              help: Dada declarada al model 309, presa del disseny de registre oficial.
+              label: Meritació. Període
             x-chim6r1ee9iiqoj1ediiqc9g:
               label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [10]
             x-chim6r1ee9iiqoj1ediiqc9j:

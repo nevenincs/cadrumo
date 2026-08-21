@@ -170,6 +170,30 @@ modelo:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Deductible expenses
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Gross cash payment
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Withholdings applied to
+                the cash benefit
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Payments on account made
+                for benefits in kind
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Payments on account passed
+                on for benefits in kind
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Valuation of the benefit
+                in kind
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income
@@ -211,10 +235,30 @@ modelo:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Applicable reductions
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Chartered Community
+                of Navarre
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Withholdings applied to cash income
@@ -398,6 +442,30 @@ modelo:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Deductible expenses
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Gross cash payment
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Withholdings applied to
+                the cash benefit
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Payments on account made
+                for benefits in kind
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Payments on account passed
+                on for benefits in kind
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Benefits arising from work incapacity. Valuation of the benefit
+                in kind
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income
@@ -466,10 +534,30 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Employment income from managing funds linked to entrepreneurship,
                 innovation and economic activity development
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Chartered Community
+                of Navarre
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Withholdings applied to cash income

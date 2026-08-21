@@ -37,12 +37,20 @@ modelo:
               label: TIPUS DE PERCEPCIÓ
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NOMBRE TOTAL DE PERCEPTORS
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Import de despeses
             x-ctgn6t3f5pn6ipg:
               label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
               label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
+            x-e1in4opec9gn6p8:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Base de retencions i ingressos a compte
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -55,6 +63,10 @@ modelo:
               label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: CODI EMISSOR
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Compensacions
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: EXERCICI DE MERITACIÓ
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -63,6 +75,10 @@ modelo:
               label: DATA D'INICI DEL PRÉSTEC
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: DATA DE VENCIMENT DEL PRÉSTEC
+            x-e1in4opectgn4obeehkm2so:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Garanties
             x-e1in4opedlim8qb1chnn4:
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
@@ -87,11 +103,42 @@ modelo:
               label: PENDENT
             x-e1in4opee1in4or5e1hmirreclpg:
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: '% de retenció'
             x-e1in4opee1p6utj9dphmio8:
               label: CODI DE PROVÍNCIA
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Import de reduccions
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Guipúscoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
+                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: TIPUS DE CODI
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -145,12 +192,20 @@ modelo:
               label: TIPUS DE PERCEPCIÓ
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NOMBRE TOTAL DE PERCEPTORS
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Import de despeses
             x-ctgn6t3f5pn6ipg:
               label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
               label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
+            x-e1in4opec9gn6p8:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Base de retencions i ingressos a compte
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -163,6 +218,10 @@ modelo:
               label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: CODI EMISSOR
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Compensacions
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: EXERCICI DE MERITACIÓ
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -171,6 +230,10 @@ modelo:
               label: DATA D'INICI DEL PRÉSTEC
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: DATA DE VENCIMENT DEL PRÉSTEC
+            x-e1in4opectgn4obeehkm2so:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Garanties
             x-e1in4oped5pmirg:
               label: CODI ISIN
             x-e1in4opedlim8qb1chnn4:
@@ -197,11 +260,42 @@ modelo:
               label: PENDENT
             x-e1in4opee1in4or5e1hmirreclpg:
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: '% de retenció'
             x-e1in4opee1p6utj9dphmio8:
               label: CODI DE PROVÍNCIA
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Import de reduccions
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Guipúscoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dada del perceptor declarada al model 193. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
+                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: TIPUS DE CODI
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

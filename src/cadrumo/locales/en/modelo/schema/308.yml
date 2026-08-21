@@ -74,6 +74,9 @@ modelo:
               label: NMT - Vehicles - Type
             x-chim6r1edpnmqojick:
               label: Identification - First name
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
             x-chim6r1ee9in2bb2c5pmab9g70:
               label: Special equivalence surcharge regime (SESR) - Settlement - Taxable
                 base [08]

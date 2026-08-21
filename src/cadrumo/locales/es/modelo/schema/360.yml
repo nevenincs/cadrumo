@@ -152,6 +152,10 @@ modelo:
               label: 1. Número de operación
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Prorrata %
+            x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: Dato declarado en el modelo 360, tomado del diseno de registro
+                oficial.
+              label: Datos del proveedor. Dirección
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
               label: 1. Datos del proveeedor de bienes/prestador de servicios. Apellidos
                 y nombre o denominación social
@@ -159,6 +163,10 @@ modelo:
               label: 1. Datos del proveeedor de bienes/prestador de servicios. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
               label: 1. Datos del proveeedor de bienes/prestador de servicios. País
+            x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: Dato declarado en el modelo 360, tomado del diseno de registro
+                oficial.
+              label: Datos del proveedor. País emisor del NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
               label: 1. Datos del proveeedor de bienes/prestador de servicios. País
                 emisor de la Referencia Fiscal
@@ -269,6 +277,10 @@ modelo:
               label: 2. Datos del proveeedor de bienes/prestador de servicios. Teléfono
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
               label: 2. Indicador de simplificada
+            x-chim6r1edto34bbkd5o6u:
+              help: Dato declarado en el modelo 360, tomado del diseno de registro
+                oficial.
+              label: Tipo de operación
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
               label: Presentación en pruebas
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:

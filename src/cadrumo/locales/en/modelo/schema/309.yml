@@ -52,6 +52,9 @@ modelo:
               label: Receipt number of the previous return (9)
             x-chim6r1edpnmqojick:
               label: Identification (1) - First name
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 309, taken from the official record design.
+              label: Accrual. Period
             x-chim6r1ee9iiqoj1ediiqc9g:
               label: Settlement (8) - Equivalence surcharge - Taxable base [10]
             x-chim6r1ee9iiqoj1ediiqc9j:

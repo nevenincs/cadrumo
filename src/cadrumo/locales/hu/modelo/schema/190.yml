@@ -181,6 +181,30 @@ modelo:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
               label: Levonható költségek
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Bruttó pénzbeli juttatás
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. A pénzbeli ellátásra alkalmazott
+                levonások
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Természetbeni ellátásokra
+                teljesített előlegfizetések
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Természetbeni ellátásokra
+                áthárított előlegfizetések
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. A természetbeni juttatás
+                értékelése
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
@@ -228,9 +252,27 @@ modelo:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
               label: Alkalmazandó csökkentések
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: A pénzbeli juttatásokra alkalmazott adólevonások
@@ -427,6 +469,30 @@ modelo:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
               label: Levonható költségek
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Bruttó pénzbeli juttatás
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. A pénzbeli ellátásra alkalmazott
+                levonások
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Természetbeni ellátásokra
+                teljesített előlegfizetések
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. Természetbeni ellátásokra
+                áthárított előlegfizetések
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Munkaképtelenségből eredő ellátások. A természetbeni juttatás
+                értékelése
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
@@ -502,9 +568,27 @@ modelo:
                 adat.
               label: Vállalkozáshoz, innovációhoz és gazdasági tevékenység fejlesztéséhez
                 kötött alapok kezeléséből származó munkajövedelem
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: A pénzbeli juttatásokra alkalmazott adólevonások

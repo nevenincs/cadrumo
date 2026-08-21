@@ -75,6 +75,9 @@ modelo:
               label: NMT - Vehicles - Tipus
             x-chim6r1edpnmqojick:
               label: Identificació - Nom
+            x-chim6r1ee1in4qbfchng:
+              help: Dada declarada al model 308, presa del disseny de registre oficial.
+              label: Meritació. Període
             x-chim6r1ee9in2bb2c5pmab9g70:
               label: Règim Espec. recàrrec equival. (RERE) - Liquidació - Base Imposable
                 [08]

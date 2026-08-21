@@ -53,6 +53,10 @@ modelo:
               label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
               label: Azonosítás (1) - Név
+            x-chim6r1ee1in4qbfchng:
+              help: A 309-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:

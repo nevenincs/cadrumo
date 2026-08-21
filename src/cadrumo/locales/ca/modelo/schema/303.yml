@@ -903,14 +903,14 @@ modelo:
               help: null
               label: null
             '64':
-              help: null
-              label: null
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
+              label: Resultat. Suma de resultats
             '65':
               help: null
               label: null
             '66':
-              help: null
-              label: null
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
+              label: Resultat. Atribuïble a l'Administració de l'Estat
             '68':
               help: null
               label: null
@@ -918,8 +918,8 @@ modelo:
               help: null
               label: null
             '71':
-              help: null
-              label: null
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
+              label: Resultat de la liquidació
             '74':
               help: null
               label: null
@@ -996,8 +996,8 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
+              label: Resultat de l'autoliquidació
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: null

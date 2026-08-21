@@ -1757,10 +1757,29 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
               label: Ingrés / Domiciliació / Devolució. IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Guany patrimonial
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. NIF de la
+                societat o fons d'inversió
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Model
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               label: Inici de l'identificador de model i pàgina
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Total de
+                guanys patrimonials
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Total de
+                retencions o ingressos a compte
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
               help: null
               label: 'Base liquidable de l''estalvi (part de la base liquidable de

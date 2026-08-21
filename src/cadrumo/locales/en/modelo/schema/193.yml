@@ -37,12 +37,20 @@ modelo:
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: TOTAL NUMBER OF RECIPIENTS
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Amount of expenses
             x-ctgn6t3f5pn6ipg:
               label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
               label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
+            x-e1in4opec9gn6p8:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Base for withholdings and payments on account
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -55,6 +63,10 @@ modelo:
               label: SECURITIES ACCOUNT CODE / LOAN TRANSACTION NUMBER
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: ISSUER CODE
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Compensations
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: ACCRUAL YEAR
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -63,6 +75,10 @@ modelo:
               label: LOAN START DATE
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: LOAN MATURITY DATE
+            x-e1in4opectgn4obeehkm2so:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Guarantees
             x-e1in4opedlim8qb1chnn4:
               label: INTERMEDIARY RECIPIENT
             x-e1in4opedpgn8tbic5m6auj1:
@@ -88,12 +104,44 @@ modelo:
               label: OUTSTANDING
             x-e1in4opee1in4or5e1hmirreclpg:
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholding %
             x-e1in4opee1p6utj9dphmio8:
               label: PROVINCE CODE
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Amount of reductions
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Chartered Community
+                of Navarre
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: CODE TYPE
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -147,12 +195,20 @@ modelo:
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: TOTAL NUMBER OF RECIPIENTS
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Amount of expenses
             x-ctgn6t3f5pn6ipg:
               label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
               label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
+            x-e1in4opec9gn6p8:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Base for withholdings and payments on account
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -165,6 +221,10 @@ modelo:
               label: SECURITIES ACCOUNT CODE / LOAN TRANSACTION NUMBER
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: ISSUER CODE
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Compensations
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: ACCRUAL YEAR
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -173,6 +233,10 @@ modelo:
               label: LOAN START DATE
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: LOAN MATURITY DATE
+            x-e1in4opectgn4obeehkm2so:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Guarantees
             x-e1in4oped5pmirg:
               label: ISIN CODE
             x-e1in4opedlim8qb1chnn4:
@@ -200,12 +264,44 @@ modelo:
               label: OUTSTANDING
             x-e1in4opee1in4or5e1hmirreclpg:
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholding %
             x-e1in4opee1p6utj9dphmio8:
               label: PROVINCE CODE
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Amount of reductions
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Provincial Council
+                of Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 193. The design splits amounts
+                into an integer and a decimal part.
+              label: Withholdings and payments on account paid in. Chartered Community
+                of Navarre
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: CODE TYPE
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

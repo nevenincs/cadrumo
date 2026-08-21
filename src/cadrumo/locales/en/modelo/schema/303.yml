@@ -897,14 +897,14 @@ modelo:
               help: null
               label: null
             '64':
-              help: null
-              label: null
+              help: Field declared on modelo 303, taken from the official record design.
+              label: Result. Sum of results
             '65':
               help: null
               label: null
             '66':
-              help: null
-              label: null
+              help: Field declared on modelo 303, taken from the official record design.
+              label: Result. Attributable to the State Administration
             '68':
               help: null
               label: null
@@ -912,8 +912,8 @@ modelo:
               help: null
               label: null
             '71':
-              help: null
-              label: null
+              help: Field declared on modelo 303, taken from the official record design.
+              label: Result of the settlement
             '74':
               help: null
               label: null
@@ -990,8 +990,8 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Field declared on modelo 303, taken from the official record design.
+              label: Result of the self-assessment
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: null

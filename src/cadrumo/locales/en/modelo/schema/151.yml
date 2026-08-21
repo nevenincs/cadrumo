@@ -1750,10 +1750,30 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
               label: Payment / Direct debit / Refund. IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: Field of modelo 151's annex for transfers of shares or units in
+                collective investment undertakings.
+              label: Annex. Transfer of shares or units in collective investment undertakings.
+                Capital gain
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: Field of modelo 151's annex for transfers of shares or units in
+                collective investment undertakings.
+              label: Annex. Transfer of shares or units in collective investment undertakings.
+                NIF of the investment company or fund
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               label: Start of the modelo and page identifier
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: Field of modelo 151's annex for transfers of shares or units in
+                collective investment undertakings.
+              label: Annex. Transfer of shares or units in collective investment undertakings.
+                Total capital gains
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: Field of modelo 151's annex for transfers of shares or units in
+                collective investment undertakings.
+              label: Annex. Transfer of shares or units in collective investment undertakings.
+                Total withholdings or payments on account
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
               help: null
               label: 'Savings taxable base (the part of the taxable base from income

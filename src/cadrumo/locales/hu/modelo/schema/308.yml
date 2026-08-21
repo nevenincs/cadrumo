@@ -76,6 +76,10 @@ modelo:
               label: ÚKE - Járművek - Típus
             x-chim6r1edpnmqojick:
               label: Azonosítás - Név
+            x-chim6r1ee1in4qbfchng:
+              help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Esedékesség. Időszak
             x-chim6r1ee9in2bb2c5pmab9g70:
               label: Különleges egyenértékűségi felár rendszer (KEF) - Elszámolás
                 - Adóalap [08]

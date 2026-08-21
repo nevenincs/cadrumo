@@ -37,12 +37,20 @@ modelo:
               label: JUTTATÁS TÍPUSA
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: A KEDVEZMÉNYEZETTEK SZÁMA
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Költségek összege
             x-ctgn6t3f5pn6ipg:
               label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
               label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opec9gn6p8:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: A levonások és előlegfizetések alapja
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -55,6 +63,10 @@ modelo:
               label: ÉRTÉKPAPÍRSZÁMLA KÓDJA / KÖLCSÖNÜGYLET SZÁMA
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: KIBOCSÁTÓ KÓDJA
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Kompenzációk
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: ESEDÉKESSÉG ÉVE
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -63,6 +75,10 @@ modelo:
               label: A KÖLCSÖN KEZDŐ DÁTUMA
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: A KÖLCSÖN LEJÁRATI DÁTUMA
+            x-e1in4opectgn4obeehkm2so:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Garanciák
             x-e1in4opedlim8qb1chnn4:
               label: KÖZVETÍTŐ KEDVEZMÉNYEZETT
             x-e1in4opedpgn8tbic5m6auj1:
@@ -87,11 +103,41 @@ modelo:
               label: FÜGGŐBEN
             x-e1in4opee1in4or5e1hmirreclpg:
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Levonási %
             x-e1in4opee1p6utj9dphmio8:
               label: TARTOMÁNYKÓD
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Csökkentések összege
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Levonások és előlegfizetések
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: KÓD TÍPUSA
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -145,12 +191,20 @@ modelo:
               label: JUTTATÁS TÍPUSA
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: A KEDVEZMÉNYEZETTEK SZÁMA
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Költségek összege
             x-ctgn6t3f5pn6ipg:
               label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
               label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opec9gn6p8:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: A levonások és előlegfizetések alapja
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -163,6 +217,10 @@ modelo:
               label: ÉRTÉKPAPÍRSZÁMLA KÓDJA / KÖLCSÖNÜGYLET SZÁMA
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: KIBOCSÁTÓ KÓDJA
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Kompenzációk
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: ESEDÉKESSÉG ÉVE
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -171,6 +229,10 @@ modelo:
               label: A KÖLCSÖN KEZDŐ DÁTUMA
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: A KÖLCSÖN LEJÁRATI DÁTUMA
+            x-e1in4opectgn4obeehkm2so:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Garanciák
             x-e1in4oped5pmirg:
               label: ISIN-KÓD
             x-e1in4opedlim8qb1chnn4:
@@ -197,11 +259,41 @@ modelo:
               label: FÜGGŐBEN
             x-e1in4opee1in4or5e1hmirreclpg:
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Levonási %
             x-e1in4opee1p6utj9dphmio8:
               label: TARTOMÁNYKÓD
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Csökkentések összege
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Levonások és előlegfizetések
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
+                Tanácsa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
+                az összegeket egész és tizedes részre bontja.
+              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: KÓD TÍPUSA
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

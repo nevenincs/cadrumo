@@ -953,14 +953,16 @@ modelo:
               help: null
               label: null
             '64':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 303, tomado del diseno de registro
+                oficial.
+              label: Resultado. Suma de resultados
             '65':
               help: null
               label: null
             '66':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 303, tomado del diseno de registro
+                oficial.
+              label: Resultado. Atribuible a la Administración del Estado
             '68':
               help: null
               label: null
@@ -968,8 +970,9 @@ modelo:
               help: null
               label: null
             '71':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 303, tomado del diseno de registro
+                oficial.
+              label: Resultado de la liquidación
             '74':
               help: null
               label: null
@@ -1046,8 +1049,9 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 303, tomado del diseno de registro
+                oficial.
+              label: Resultado de la autoliquidación
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: null

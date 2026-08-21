@@ -176,6 +176,31 @@ modelo:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Despeses deduïbles
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Percepció íntegra
+                dinerària
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Retencions practicades
+                sobre la prestació dinerària
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
+                efectuats per prestacions en espècie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
+                repercutits per prestacions en espècie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Valoració de la
+                percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie
@@ -224,9 +249,28 @@ modelo:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Reduccions aplicables
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Guipúscoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
+                Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retencions practicades sobre les percepcions dineràries
@@ -418,6 +462,31 @@ modelo:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Despeses deduïbles
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Percepció íntegra
+                dinerària
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Retencions practicades
+                sobre la prestació dinerària
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
+                efectuats per prestacions en espècie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
+                repercutits per prestacions en espècie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Prestacions derivades d'incapacitat laboral. Valoració de la
+                percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie
@@ -494,9 +563,28 @@ modelo:
                 190.
               label: Rendiments del treball per la gestió de fons vinculats a l'emprenedoria,
                 la innovació i el desenvolupament de l'activitat econòmica
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Diputació Foral de
+                Guipúscoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dada del perceptor declarada al model 190. El disseny divideix
+                els imports en part entera i part decimal.
+              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
+                Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retencions practicades sobre les percepcions dineràries

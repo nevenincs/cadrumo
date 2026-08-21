@@ -181,6 +181,31 @@ modelo:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
               label: Gastos deducibles
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Percepción íntegra
+                dineraria
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Retenciones practicadas
+                sobre la prestación dineraria
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+                efectuados por prestaciones en especie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+                repercutidos por prestaciones en especie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Valoración de
+                la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingresos a cuenta efectuados sobre las percepciones en especie
@@ -229,9 +254,29 @@ modelo:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
               label: Reducciones aplicables
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+                Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retenciones practicadas sobre las percepciones dinerarias
@@ -425,6 +470,31 @@ modelo:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
               label: Gastos deducibles
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Percepción íntegra
+                dineraria
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Retenciones practicadas
+                sobre la prestación dineraria
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+                efectuados por prestaciones en especie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+                repercutidos por prestaciones en especie
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Prestaciones derivadas de incapacidad laboral. Valoración de
+                la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingresos a cuenta efectuados sobre las percepciones en especie
@@ -501,9 +571,29 @@ modelo:
                 190.
               label: Rendimientos del trabajo por la gestión de fondos vinculados
                 al emprendimiento, la innovación y el desarrollo de la actividad económica
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+                Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retenciones practicadas sobre las percepciones dinerarias

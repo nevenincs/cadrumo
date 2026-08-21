@@ -148,6 +148,9 @@ modelo:
               label: 1. Transaction number
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Prorrata %
+            x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: Field declared on modelo 360, taken from the official record design.
+              label: Supplier details. Address
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
               label: 1. Details of the supplier of goods / provider of services. Surnames
                 and first name or company name
@@ -155,6 +158,9 @@ modelo:
               label: 1. Details of the supplier of goods / provider of services. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
               label: 1. Details of the supplier of goods / provider of services. Country
+            x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: Field declared on modelo 360, taken from the official record design.
+              label: Supplier details. NVAT issuing country
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
               label: 1. Details of the supplier of goods / provider of services. Country
                 issuing the Tax Reference
@@ -265,6 +271,9 @@ modelo:
               label: 2. Details of the supplier of goods / provider of services. Telephone
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
               label: 2. Simplified indicator
+            x-chim6r1edto34bbkd5o6u:
+              help: Field declared on modelo 360, taken from the official record design.
+              label: Type of transaction
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
               label: Test submission
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:

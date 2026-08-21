@@ -39,12 +39,20 @@ modelo:
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NÚMERO TOTAL DE PERCEPTORES
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Importe de gastos
             x-ctgn6t3f5pn6ipg:
               label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
               label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
+            x-e1in4opec9gn6p8:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Base de retenciones e ingresos a cuenta
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -57,6 +65,10 @@ modelo:
               label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: CÓDIGO EMISOR
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Compensaciones
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: EJERCICIO DEVENGO
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -65,6 +77,10 @@ modelo:
               label: FECHA DE INICIO DEL PRÉSTAMO
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
+            x-e1in4opectgn4obeehkm2so:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Garantías
             x-e1in4opedlim8qb1chnn4:
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
@@ -89,11 +105,43 @@ modelo:
               label: PENDIENTE
             x-e1in4opee1in4or5e1hmirreclpg:
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: '% de retención'
             x-e1in4opee1p6utj9dphmio8:
               label: CÓDIGO PROVINCIA
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Importe de reducciones
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: TIPO CÓDIGO
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -147,12 +195,20 @@ modelo:
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NÚMERO TOTAL DE PERCEPTORES
+            x-ctgn6t3f5pkmqs3fe9q6a:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Importe de gastos
             x-ctgn6t3f5pn6ipg:
               label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
               label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
+            x-e1in4opec9gn6p8:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Base de retenciones e ingresos a cuenta
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -165,6 +221,10 @@ modelo:
               label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
               label: CÓDIGO EMISOR
+            x-e1in4opecdnmqs35dppm2or9dtn6aso:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Compensaciones
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               label: EJERCICIO DEVENGO
             x-e1in4opecpim6q315li6atj5dpjmu:
@@ -173,6 +233,10 @@ modelo:
               label: FECHA DE INICIO DEL PRÉSTAMO
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
               label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
+            x-e1in4opectgn4obeehkm2so:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Garantías
             x-e1in4oped5pmirg:
               label: CÓDIGO ISIN
             x-e1in4opedlim8qb1chnn4:
@@ -199,11 +263,43 @@ modelo:
               label: PENDIENTE
             x-e1in4opee1in4or5e1hmirreclpg:
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-e1in4opee1nn4or5dpq62qj5:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: '% de retención'
             x-e1in4opee1p6utj9dphmio8:
               label: CÓDIGO PROVINCIA
+            x-e1in4opee9im8tb3cdkmurj5ec:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Importe de reducciones
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Araba/Álava
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
+                de Gipuzkoa
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Dato del perceptor declarado en el modelo 193. El diseno divide
+                los importes en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               label: TIPO CÓDIGO
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

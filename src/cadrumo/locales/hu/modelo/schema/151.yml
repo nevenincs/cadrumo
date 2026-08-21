@@ -1737,10 +1737,30 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
               label: Befizetés / Csoportos beszedés / Visszatérítés. IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Tőkenyereség
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. A befektetési társaság vagy alap NIF száma
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               label: A modelo- és oldalazonosító kezdete
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Tőkenyereségek összesen
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Levonások vagy előlegfizetések összesen
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
               help: null
               label: 'Megtakarítási adóalap (a TRLIRNR 25.1.f cikke szerinti jövedelmek

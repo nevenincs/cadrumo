@@ -913,14 +913,16 @@ modelo:
               help: null
               label: null
             '64':
-              help: null
-              label: null
+              help: A 303-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Eredmény. Eredmények összege
             '65':
               help: null
               label: null
             '66':
-              help: null
-              label: null
+              help: A 303-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Eredmény. Az állami adóhatóságnak tulajdonítható
             '68':
               help: null
               label: null
@@ -928,8 +930,9 @@ modelo:
               help: null
               label: null
             '71':
-              help: null
-              label: null
+              help: A 303-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Az elszámolás eredménye
             '74':
               help: null
               label: null
@@ -1006,8 +1009,9 @@ modelo:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: A 303-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Az önadózás eredménye
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: null
