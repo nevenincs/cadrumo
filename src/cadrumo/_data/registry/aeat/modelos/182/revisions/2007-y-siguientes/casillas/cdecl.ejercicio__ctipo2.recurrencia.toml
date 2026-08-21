@@ -8,7 +8,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarante.f003"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -20,7 +19,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarante.f010"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.donante-nif"
@@ -32,7 +30,6 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarado.f005"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.donante-nombre"
@@ -44,7 +41,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarado.f007"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.importe-donado"
@@ -56,7 +52,6 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarado.f012", "m182-2025.declarado.f013"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.porcentaje-deduccion"
@@ -68,7 +63,6 @@ required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarado.f010", "m182-2025.declarado.f011"]
 
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.recurrencia"
@@ -80,4 +74,3 @@ required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-export_refs = ["m182-2025.declarado.f023"]

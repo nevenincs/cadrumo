@@ -13,11 +13,3 @@ consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
-
-[[revisions."2007-y-siguientes".application_links]]
-id = "modelo-182-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-182-2025"]
