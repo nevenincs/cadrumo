@@ -21,6 +21,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f033"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "02"
@@ -32,6 +33,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f034"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "03"
@@ -43,6 +45,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f035"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "04"
@@ -54,6 +57,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f036"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "05"
@@ -65,6 +69,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f037"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "06"
@@ -76,6 +81,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f038"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "67"
@@ -87,6 +93,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f039"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "37"
@@ -98,6 +105,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f040"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "07"
@@ -109,6 +117,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f041"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "08"
@@ -120,6 +129,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f042"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "38"
@@ -131,6 +141,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f043"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "39"
@@ -142,6 +153,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f044"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "59"
@@ -153,6 +165,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f045"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "60"
@@ -164,6 +177,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f046"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "10"
@@ -175,6 +189,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f047"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "11"
@@ -186,6 +201,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f048"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "12"
@@ -197,6 +213,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f049"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "13"
@@ -208,6 +225,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f050"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "44"
@@ -219,6 +237,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f051"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "45"
@@ -230,6 +249,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f052"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "46"
@@ -241,6 +261,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f053"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "14"
@@ -252,6 +273,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f054"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "15"
@@ -263,6 +285,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f055"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "47"
@@ -274,6 +297,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f056"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "48"
@@ -285,6 +309,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina01.f057"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "16"
@@ -296,6 +321,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f006"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "17"
@@ -307,6 +333,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f007"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "49"
@@ -318,6 +345,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f008"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "50"
@@ -329,6 +357,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f009"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "51"
@@ -340,6 +369,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f010"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "58"
@@ -351,6 +381,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f011"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "52"
@@ -362,6 +393,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f012"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "53"
@@ -373,6 +405,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f013"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "18"
@@ -384,6 +417,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f014"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "19"
@@ -395,6 +429,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f015"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "20"
@@ -408,6 +443,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f016"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "21"
@@ -421,6 +457,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f017"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "22"
@@ -434,6 +471,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f018"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "23"
@@ -447,6 +485,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f019"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "24"
@@ -460,6 +499,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f020"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "25"
@@ -473,6 +513,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f021"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "61"
@@ -486,6 +527,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f022"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "62"
@@ -499,6 +541,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "63"
@@ -512,6 +555,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f024"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "64"
@@ -525,6 +569,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "65"
@@ -538,6 +583,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "66"
@@ -551,6 +597,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f027"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "54"
@@ -562,6 +609,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f028"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "57"
@@ -573,6 +621,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f029"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "42"
@@ -584,6 +633,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f030"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "43"
@@ -595,6 +645,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f031"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "55"
@@ -606,6 +657,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f032"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "56"
@@ -617,6 +669,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f033"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "26"
@@ -630,6 +683,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f034"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "27"
@@ -641,6 +695,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f035"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "28"
@@ -652,6 +707,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f036"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "29"
@@ -663,6 +719,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f037"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "30"
@@ -674,6 +731,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f038"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "31"
@@ -685,6 +743,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f039"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "32"
@@ -698,6 +757,7 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f040"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "33"
@@ -709,6 +769,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f041"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "34"
@@ -720,6 +781,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f042"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "35"
@@ -731,3 +793,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2025"]
+export_refs = ["m222-2025.pagina02.f043"]

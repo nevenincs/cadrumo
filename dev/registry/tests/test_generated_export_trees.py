@@ -101,6 +101,11 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # above. Modelo 185 is monthly, so its period is a month code rather than
     # the annual "0A" every other row here carries.
     _GeneratedTree("185", "2025-y-siguientes", "aeat-dr-185-2026", "2026", 2026, "01"),
+    # Enrolled with the layout. Modelo 222 is the consolidacion twin of 202 and
+    # shares its orden and its DR222_00 envelope grammar, so it carries 202's
+    # supporting-modelo needs too: the isolation must admit modelo 200, whose
+    # annual IS return these pagos fraccionados are instalments of.
+    _GeneratedTree("222", "2025-y-siguientes", "aeat-dr-222-2025", "2025", 2025, "1P"),
 )
 
 
