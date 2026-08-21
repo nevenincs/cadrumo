@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:e330d1e0ac286a77989daaa21db046c1d1adb11c83e242150417c74d05660764'
+body_hash: 'sha256:fd7535842f48067894684c0f07ddc9695387c102aa3d2e7fbf608ac235c97163'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4561,3 +4561,44 @@ code at all. **A grep for the symptom is not a test for the cause.**
 Net effect: the six-module subset now runs green at 34 passed, and the three genuinely
 environment-bound cases are enrolled where `just test-os-keychain` can reach them on a
 desktop session.
+
+### Second out-of-lane batch: two reds, two different wrong assumptions, no defects
+
+Five more storage and profile modules under `entrypoints/cli/tests`. Four failures across
+two causes, and again the diagnosis was the work.
+
+**A CLI test asserting through a door its fixture never opened.**
+`test_two_profiles_keep_independent_ledgers_across_unlocks` seeds with
+`register_minimal_profile` and then invokes `aeat config login`. That helper's own
+docstring rules it out in as many words: the sibling `register_cli_profile` exists because
+"the custody envelope has to open under the passphrase the isolated CLI backend
+configures... Seeding a record writes no such envelope, which is why the two doors are not
+interchangeable". The login refused for a PASSWORD, not a missing receipt, so it was never
+the keychain class.
+
+The isolation assertions -- the module's actual subject -- passed throughout. The module
+docstring also states that re-entering the session span drives the same primitive
+`config login` does, so the login call added no coverage and required a door the seeding
+never opened. Removed, with the reason recorded at the site. **Verified this did not soften
+the claim**: pointing both profiles at one bucket still fails the test.
+
+**A control assertion in the wrong language, for the second time.**
+`test_the_verb_refuses_because_the_profile_fact_is_unanswered` asserts `"Refused."` appears
+in the output; the refusal renders as "Rechazado.". Its own siblings in the same module do
+NOT have this problem, because they resolve their expected label through the same locale
+the CLI renders in -- the control was the only assertion holding a hardcoded English token.
+
+Moved to the envelope's `error.category == "REFUSED"`, which is what "this is a refusal"
+means independently of rendering. That is a better answer than pinning a language here:
+the sibling assertions read localised text on purpose, so forcing English for the module
+would have fought them.
+
+**The pattern is now three-for-three and worth stating as a rule.** Every red found in
+these out-of-lane sweeps has been a test asserting something its own fixture, marker, or
+locale could not deliver -- never a product defect. `entrypoints/cli/tests` holds the
+domain's end-to-end surface and no lane runs it, so nothing forces these assumptions to
+stay true. **A test asserting operator-visible TEXT is asserting against a translation, and
+a test invoking a verb is asserting against whatever door its fixture opened.** Both are
+easy to write correctly once and then have quietly invalidated by work elsewhere.
+
+Eleven of roughly fifty domain-relevant modules in that directory have now been swept.
