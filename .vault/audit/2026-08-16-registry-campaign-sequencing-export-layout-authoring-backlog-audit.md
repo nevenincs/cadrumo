@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a35bd5579658a583aab03f53f0fe03edb05ab07120a5fd615c6bad32d471d123'
+body_hash: 'sha256:dd9cb89efcba21636e4501378c927ebf845f800b82a9f26fb7b4543c049947c8'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9220,3 +9220,31 @@ A fourth failure pair was the synthetic applicability-cutover fixture declaring
 no `authority_grade`, the same shape as the modelo 999 and `minimal_revision`
 fixtures earlier; declared `applicability`, the rung a fixture that resolves an
 applicability rule is built to support.
+
+## The reviewability churn is stopped at its source, not swept again
+
+The wrapping sweep had to be repeated: modelo 576 came back over cap this tick
+because a peer re-stamped it, replacing the wrapped note with a fresh single-line
+one. That is the third sweep, and the pattern names its own cause —
+`_render_toml_value` emits every governance scalar on ONE line, so every stamping
+round re-introduces the defect the sweep just cleared.
+
+`dev/registry/conformance/_stamp.py` now renders a long assignment as a wrapped
+TOML multi-line basic string, with every newline eaten by a line-ending
+backslash, so the VALUE is byte-identical to the single-line form. Short notes
+are untouched, so ordinary manifests and their diffs do not move. The wrap width
+is deliberately far below BOTH caps in the tree (520 and 600) rather than
+importing either: this module is in `dev/` and the gates are in `src/`, so
+importing one constant is the wrong direction.
+
+Measured end to end on a temp tree: a **2,466-character note stamps to a widest
+physical line of 498**, round-trips byte-identical, and a LATER stamp still
+replaces it — the span-walking fix that made multi-line notes replaceable is what
+makes this safe to emit.
+
+**One apparent failure was mine to read correctly, not to fix.** The first probe
+reported the value NOT round-tripping. The wrapper was fine: the note ended in a
+trailing space and the stamper normalises whitespace on write, so the comparison
+was against a value the writer had legitimately trimmed. Verified by testing the
+renderer directly on trailing-space, no-trailing-space and double-space cases —
+all identical — before touching anything.
