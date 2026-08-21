@@ -65,13 +65,42 @@ def _modules_importing_test_support() -> dict[str, int]:
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
             continue
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module and "tests" in node.module.split("."):
+            if isinstance(node, ast.ImportFrom) and node.module and _names_a_tests_package(node.module):
                 found.setdefault(repo_relative(path), node.lineno)
             elif isinstance(node, ast.Import):
                 for alias in node.names:
-                    if "tests" in alias.name.split("."):
+                    if _names_a_tests_package(alias.name):
                         found.setdefault(repo_relative(path), node.lineno)
+            elif isinstance(node, ast.Call) and _dynamic_tests_import(node):
+                found.setdefault(repo_relative(path), node.lineno)
     return found
+
+
+def _names_a_tests_package(module: str) -> bool:
+    """Whether a dotted module path has a ``tests`` component."""
+    return "tests" in module.split(".")
+
+
+def _dynamic_tests_import(node: ast.Call) -> bool:
+    """Whether ``node`` imports a tests package by STRING rather than syntax.
+
+    ``importlib.import_module("cadrumo.tests.secure_sql")`` is an import that
+    no ``ast.Import`` node describes. This is not a hypothetical spelling
+    here: the architecture rules explicitly sanction a dynamic
+    ``import_module`` to break a cycle, so a production module has a
+    legitimate reason to already be using it -- and a statement-only scan
+    would report that module clean while it pulled in test scaffolding.
+    """
+    func = node.func
+    leaf = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+    if leaf not in {"import_module", "__import__"}:
+        return False
+    return any(
+        isinstance(argument, ast.Constant)
+        and isinstance(argument.value, str)
+        and _names_a_tests_package(argument.value)
+        for argument in node.args
+    )
 
 
 def test_the_scan_reads_the_real_production_tree() -> None:
@@ -124,3 +153,29 @@ def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> Non
     from ..adapters.persistence.storage.runtime import _SYNTHETIC_SESSION_BUCKET_IDS
 
     assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
+
+def test_a_dynamic_import_of_test_support_is_still_seen() -> None:
+    """DISCRIMINATING: an import no ``ast.Import`` node describes.
+
+    A statement-only scan reports a module clean while it reaches test
+    scaffolding through a string. That spelling is sanctioned in this tree for
+    cycle-breaking, so it is the one a production module is most likely to
+    already have on hand.
+    """
+    dynamic = ast.parse("import importlib\nm = importlib.import_module('cadrumo.tests.secure_sql')\n")
+    builtin = ast.parse("m = __import__('cadrumo.tests.secure_sql')\n")
+
+    assert any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(dynamic))
+    assert any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(builtin))
+
+
+def test_an_ordinary_dynamic_import_is_not_flagged() -> None:
+    """ANTI-TAUTOLOGY: only a tests package counts, not every dynamic import.
+
+    ``import_module`` is the sanctioned cycle-break in this tree, so flagging
+    it wholesale would fire on legitimate production code and make the gate
+    something to silence rather than read.
+    """
+    ordinary = ast.parse("import importlib\nm = importlib.import_module('cadrumo.core.config')\n")
+
+    assert not any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(ordinary))
