@@ -14,7 +14,8 @@ from .. import BboxAnchorSpec, ExportDraftAttribute, RegistrySnapshot
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
-from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS
+from .._schema_exports import FilingEnvelopePrefixRole
+from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -753,6 +754,22 @@ def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -
         _validate_revision(modelo, catalogues, mutated)
 
 
+def _committed_export_field(revision: ModeloRevision) -> ExportFieldDefinition:
+    """Return one real field from ``revision``'s committed export layout.
+
+    The width proofs below mutate a field that actually shipped rather than
+    building one, so the legal and source references, data type and padding are
+    the committed revision's own and only the width under test differs. A
+    constructed field can satisfy a detector that the real declaration's shape
+    would slip past.
+    """
+    return next(
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+    )
+
 def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_draft_field() -> None:
     """Collapsing M200's envelope-open composite back onto the year field must be refused.
 
@@ -764,14 +781,58 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     modelo code, the discriminante, the period token and the ``0000>`` marker
     AEAT's ``DP200000`` sheet requires there.
 
-    The composite is declared field-by-field now, and restoring the collapsed width
-    on the committed revision drives the real registry validator over the real
-    loaded declaration. The field is located by property rather than by a pinned
-    id, so a rename cannot make this pass vacuously.
+    The defect site is now gone by CONSTRUCTION rather than by a validator
+    refusing it: the seventeen bytes are declared once as a typed
+    :attr:`FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG`, and
+    :class:`FilingEnvelopeDefinition` refuses a declaration carrying both that
+    spelling and the six-role one. So there is no ``filing_year`` draft field on
+    a Modelo 200 record for a collapse to be re-authored onto.
+
+    Asserting the emptiness this test used to assert would now be false anyway --
+    the campaign authored Modelo 200's generated export tree, so the revision
+    declares a layout again. The proof therefore has two halves: the repaired
+    state is asserted on the real committed revision, and the width detector is
+    driven over a constructed field, because a detector proven only where the
+    defect can no longer occur proves nothing.
     """
     modelo, _catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.export_layouts == ()
+
+    composed = tuple(
+        prefix
+        for layout in revision.export_layouts
+        if layout.filing_envelope is not None
+        for prefix in layout.filing_envelope.prefix_fields
+        if prefix.role is FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+    )
+    assert len(composed) == 1, "Modelo 200 spells its envelope-open tag as one composed role"
+    assert composed[0].length == 17, "the composed tag carries the whole AEAT identifier's width"
+
+    collapsed_onto_a_record = tuple(
+        field.id
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.DRAFT
+        and field.draft_attribute is ExportDraftAttribute.FILING_YEAR
+        and field.length != DRAFT_ATTRIBUTE_CANONICAL_WIDTHS[ExportDraftAttribute.FILING_YEAR]
+    )
+    assert collapsed_onto_a_record == (), (
+        f"a record field binds the ejercicio to a slot that is not the year's own width: "
+        f"{collapsed_onto_a_record}"
+    )
+
+    collapsed = _committed_export_field(revision).model_copy(
+        update={
+            "kind": CasillaFieldKind.DRAFT,
+            "draft_attribute": ExportDraftAttribute.FILING_YEAR,
+            "casilla_id": None,
+            "literal": None,
+            "length": 17,
+        },
+    )
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024-y-siguientes", field=collapsed)
+    assert any("to a slot of length 17" in failure for failure in failures), failures
 
 
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
@@ -785,12 +846,54 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     real registry validator over the real loaded revision. A detector that only fires
     on shaped input can still miss the site that matters.
 
-    The field id is read from the committed revision rather than restated, so the
-    declaration must exist and must be filler for the restore to mean anything.
+    This one is closed harder than the sibling above. The misbinding needed a
+    draft attribute yielding the DECLARANT's own tax id, and no such attribute
+    exists any more: :class:`ExportDraftAttribute` declares four members, all of
+    them period or ejercicio facts. A slot reserved for a group parent's foreign
+    TIN therefore has nothing to be re-bound to.
+
+    What keeps that closed is the width mapping's TOTALITY, so this asserts the
+    property rather than the current membership: re-introducing an identity
+    attribute without ruling on its width fails validation instead of passing
+    silently, and a 15-wide slot fed a 9-character Spanish tax id is exactly the
+    contradiction the detector reports.
     """
     modelo, _catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.export_layouts == ()
+
+    assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == set(ExportDraftAttribute), (
+        "the width ruling must stay total over the declarable attributes, or a "
+        "re-introduced identity attribute could be bound with no width ruling at all"
+    )
+    assert all(
+        attribute.name.startswith(("FILING_", "PERIOD_")) for attribute in ExportDraftAttribute
+    ), (
+        "a draft attribute yielding a party's identity is back; the grupo-mercantil "
+        "parent-TIN misbinding becomes expressible again and needs its own width ruling"
+    )
+
+    declarant_bound_slots = tuple(
+        field.id
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.DRAFT and field.length == SPANISH_TAX_ID_WIDTH
+    )
+    assert declarant_bound_slots == (), (
+        f"a draft field is bound at the Spanish tax id's width: {declarant_bound_slots}"
+    )
+
+    misbound = _committed_export_field(revision).model_copy(
+        update={
+            "kind": CasillaFieldKind.DRAFT,
+            "draft_attribute": ExportDraftAttribute.FILING_YEAR,
+            "casilla_id": None,
+            "literal": None,
+            "length": SPANISH_TAX_ID_WIDTH,
+        },
+    )
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024-y-siguientes", field=misbound)
+    assert any(f"to a slot of length {SPANISH_TAX_ID_WIDTH}" in failure for failure in failures), failures
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
