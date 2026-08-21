@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:2de275e58f45271e41b6aa2f773cdc6f512d6f7ed8d9e39a7d582a332d779f20'
+body_hash: 'sha256:4e695beba296f0974262d1407b0572a256de2b75fba08c54bccca4bcf72b4663'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1182,7 +1182,6 @@ the bundled corpus does.
   "cited event-relative plazo" wording, and the m194 stamp, which asserted a nominal
   1-31 enero window while the data stored 2 February.
 
-
 ### three-filing-scope-stamps-sit-on-revisions-a-gate-calls-uncoverable | high | self-implicating; the limit was stated but the scope flip asserts past it
 
 A full registry-suite run after the deadline sweep: **19 failed, 5089 passed** in 4m25s.
@@ -1228,7 +1227,6 @@ The conservative reading is that a revision whose declared design post-dates mos
 claimed years should be SPLIT at the design boundary rather than stamped with a caveat --
 which is what the gate itself says, and what the span gate says separately for the
 contrary-evidence class. The three stamps stand for now, with this recorded against them.
-
 
 ## Recommendations
 

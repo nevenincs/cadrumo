@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dff6776843e138a86db95530fe3a2c2ab5f86ae2708b98c1e5e22139ed50f970'
+body_hash: 'sha256:f5135d0fa2e3917c92ca30289ebc30e2fd1a5a1770c3f85afce5b6e7c8644044'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10518,3 +10518,89 @@ The layout cites the revision's base pair throughout. The five provisions modelo
 art. 11.12, 17.2, 33 and 34, and `ley-19-1994` art. 26 -- are unchanged by this
 tick and still need BOE corpus text before the seventeen affected casillas can
 cite what establishes them.
+
+## The worklist is fully accounted for, and a new join clears 89 labels
+
+### Modelo 220 closes the worklist, and its stated reason was false
+
+Modelo 220 was the last item this campaign called "genuinely authorable". It is
+not, and its revision said so for the wrong reason. The prose read *"deferred
+until an authoritative Modelo 220 diseño de registro is bundled"* -- the same
+false-blocker shape corrected on modelo 185. **Four are bundled and all four
+load**: `aeat-dr-220-2022` (124 sheets / 14,851 fields), `-2023` (127 / 15,648),
+`-2024` (136 / 16,066) and `-2025` (140 / 16,707), and the last two are named in
+this revision's own `source_refs`.
+
+The real blocker is stronger and the gate states it. The single open-ended
+`2024-y-siguientes` revision SPANS A RE-LAYOUT: 4,524 of 7,466 shared boxes
+moved across the 2024/2025 boundary, 216 boxes added, 130 removed, record set
+137 -> 141. `test_revision_span_matches_published_designs` reports "needs 2
+revisions" and, separately, that the modelo's entire revision history cites only
+the founding `orden-hac-657-2025` with no amending orden anywhere in the legal
+catalogue -- its instruction being to acquire and cite that BOE orden and
+explicitly NOT to satisfy it with design evidence. Authoring one layout across
+the span would be wrong for whichever year it did not follow. The revision now
+records that reason instead of the false one.
+
+**So all twelve worklist entries are accounted for:** six deliberately never
+emit, five have no bundled design, and modelo 220 needs an acquisition. Nothing
+on the export-layout worklist is authorable today without acquisition or an
+operator ruling. That is the honest state of it.
+
+### A join that reaches labels every positional extractor missed
+
+Every extractor this campaign has built joined a casilla to the design
+POSITIONALLY -- by offset, by `(segmento, offset)`, or by box number. All of
+them fail on a casilla whose `number` is a slug, which is most of what remains:
+modelo 232 numbers its casillas `3.vinculada.1.nif`, modelo 347 numbers them
+`contraparte.importe-anual`.
+
+A modelo with a published layout already carries the join, and it needs no
+guessing at all: **the casilla names its export fields, the semantic map anchors
+each export field to a design row, and that row carries the wording.** The map
+already resolved the sheet, so the whole class of sheet-collision defects this
+campaign has been fighting cannot arise.
+
+Measured across the backlogged modelos with layouts, it reaches 161 of 199.
+
+### "Reachable" is not "usable", and the difference was 23 bad labels
+
+The first measurement was wrong in the optimistic direction and the control was
+to read what the join actually returned. For modelo 184 it returns, for 23 of
+its 37 casillas, text like `. ENTERO:` and
+`Parte entera del importe, si no tiene contenido se`. Those are the ENTERO and
+DECIMAL leaves of a split amount: the join finds text, and the text names which
+HALF of a number the slot holds, never what the number IS. Applied blindly it
+would have written 23 labels reading "Parte entera del importe, si no tiene
+contenido se" -- worse than the blank they replaced, because a blank is visibly
+missing and a wrong label is not.
+
+The tool now separates the two: a boilerplate filter rejects ENTERO/DECIMAL leaf
+text, and where a casilla binds several export fields the LONGEST usable
+candidate wins, so a split pair's block heading outranks a half. Modelo 347's
+`contraparte.importe-metalico` is the worked case -- both its halves say "Parte
+entera/decimal del importe percibido en metálico", and the design prints
+`101-115 Numérico IMPORTE PERCIBIDO EN METÁLICO` above them, which is the name.
+
+### 89 labels authored
+
+Backlog **378 -> 289**, with 89 labels and 89 help strings in four locales:
+
+* **modelo 232, 45** -- five parallel `operaciones con personas o entidades
+  vinculadas` rows of nine fields, so 45 labels come from one block name, nine
+  terms and a row index.
+* **modelo 347, 33** -- mostly distinct fields, translated whole; below the
+  hundred-label mark a term glossary is machinery for its own sake.
+* **modelo 202, 11** -- the SAME eleven figures modelo 222 declares in its own
+  `Informacion adicional` block, in the same order and wording, because 222 is
+  202's consolidacion twin. The translations were reused rather than re-derived;
+  only the block number differs, (5) against (6), and each keeps its own.
+
+Locale parity is unchanged at 872 and that is correct, not a miss: parity counts
+missing KEYS while the backlog counts blank VALUES, and these keys were present
+and empty. The two numbers measure different things and only one of them moved.
+
+**Still usable and not yet done:** modelo 322 (35 of 45) and modelo 184 (14 of
+37). Modelo 193's 28 and modelo 184's other 23 are the split-half class and need
+their block headings read out of the design's position-keyed text, the way
+modelo 222's boxes were.
