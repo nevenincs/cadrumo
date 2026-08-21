@@ -95,6 +95,11 @@ def _revision_toml(*, entity_type: str, applicable_reason: str) -> str:
 [revisions."2025"]
 valid_from = 2025-01-01
 period_selector = {{ year_from = 2025, periods = ["0A"] }}
+# This fixture exists to resolve an APPLICABILITY rule -- whether the modelo is
+# due, and to whom -- and is not built to compute amounts or back a filing, so
+# that is the rung it declares. An undeclared grade is a refusal now, and it
+# lands before the applicability assertions run.
+authority_grade = "applicability"
 legal_refs = ["{_LEGAL_ID}"]
 source_refs = ["{_SOURCE_ID}"]
 orden_aplicabilidad = ["{_LEGAL_ID}"]

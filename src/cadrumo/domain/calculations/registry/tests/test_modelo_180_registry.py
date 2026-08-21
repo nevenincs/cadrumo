@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import get_args
+
 from datetime import date
 from decimal import Decimal
 
@@ -11,6 +13,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
+    ApplicationLinkDefinition,
     RegistryValidationError,
     RegistryValidator,
     build_snapshot,
@@ -148,17 +151,28 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
     linked_by_surface = {
         link.surface: link for link in snapshot.revision.application_links if link.id in construct.application_links
     }
-    assert {
+    # "verification" was named here and cannot exist: it is not a member of
+    # ApplicationLink.surface's closed vocabulary, and no revision anywhere in
+    # the registry declares one. This is the THIRD expectation found naming it,
+    # after modelo 190's and modelo 130's, so the set is checked against the
+    # vocabulary before it is checked against the revision -- a surface nothing
+    # can declare now fails as the authoring error it is, rather than as a
+    # missing link on whichever modelo happens to be under test.
+    expected_surfaces = {
         "calculation",
         "filing",
         "review",
-        "verification",
         "approval",
         "reconciliation",
         "extractor",
         "portal",
         "workflow",
-    } <= set(linked_by_surface)
+    }
+    declarable = set(get_args(ApplicationLinkDefinition.model_fields["surface"].annotation))
+    assert expected_surfaces <= declarable, (
+        f"expectation names surfaces the schema cannot declare: {sorted(expected_surfaces - declarable)}"
+    )
+    assert expected_surfaces <= set(linked_by_surface)
     assert all(link.requires_snapshot for link in linked_by_surface.values())
 
 
