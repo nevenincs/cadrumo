@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f653470f1089777e91841f98b0046779888bcac45d79c07c2742fb1e7fd9ed93'
+body_hash: 'sha256:dc02d89c63a16f52d17c84bcbdf5bf695b4a0d4f8e71d65a7ef3cf46936e9627'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3271,3 +3271,41 @@ enumerate its population once. The first enumeration here selected by NAME and p
 mostly noise; the second selected by PROVENANCE and produced a set small enough to judge
 one by one. When a sweep returns mostly false positives, suspect the selector before
 concluding the population is dirty.
+
+### Coverage as the selector, after a name-based one produced noise
+
+A fresh axis, opened with the previous pass's lesson applied immediately. The first
+attempt enumerated domain modules whose public symbols **no test names** and returned 30
+— mostly CLI registration functions and command callbacks, which are driven end-to-end
+through the CLI runner without any test mentioning their names. A name-based selector
+again, and again mostly noise. Rather than triage 30 candidates, the selector was
+replaced: run the lanes under coverage and read what is actually unexecuted.
+
+That produced two items, both real.
+
+**`exit_provider_session` sat at 32% — its body was unexecuted.** The function carries an
+explicit safety property in its own docstring: if another boundary already replaced the
+active binding, only the CAPTURED session is closed, and a different current session is
+never evicted. Nothing checked it.
+
+The property is invisible to ordinary testing because it has **no bad input**. It needs
+two bindings and an unwind in between. A provider that reached for
+`close_active_bucket_session` unconditionally would seal whatever happened to be bound at
+that moment — another context's unlocked bucket, taken away by an unwind it never took
+part in — and every single-session test would still pass. Substituting exactly that
+teardown reds the discriminating case. Closure is asserted on each session's own sealed
+state rather than a call count, because a teardown that "ran" while leaving a session
+usable is the failure. 32% → 92%.
+
+**`_rotation_key_fixtures.py` sat at 0%** — a fixture module for the rotation subsystem
+this campaign retired many passes ago, with no importer anywhere. Deleting the subsystem
+and its tests left its fixtures behind, and nothing noticed because an unimported test
+helper is invisible to every gate: it is not production code, so the dead-export sweeps
+skip it, and it is not a test, so no failure names it. Deleted.
+
+**Generalisable:** the campaign's sweeps all select by NAME — a symbol, a constant, a
+call, an import. That whole family shares a blind spot for code whose usage is
+behavioural, and it produces false positives for exactly the same reason. Coverage
+selects by EXECUTION, which is the one signal none of the name-based instruments can
+fake, and it found both a dead file and an unexecuted safety property that eight passes
+of name-based sweeping had walked past.
