@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcffafd8bcba0e064b0bbe2a6796bf7d94b4df47f4910068c80cc1b8d89784ff'
+body_hash: 'sha256:03d4821b2e7c9579d8c38ad454e7f00765c2d0124d78cda28d852e8c7d6c91f9'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4026,3 +4026,50 @@ the rule from the swept-probe incident.
 now be read as environment-blocked rather than open work. What is left on this axis after
 this entry is thin, and the campaign is close to the point where the coverage-refusal
 selector stops paying.
+
+### The deletion protocol is now covered end to end, and the linked tombstone is defended twice
+
+Completes the previous entry, which covered two of the protocol's five functions. The
+remaining three — the pre-rename marker checkpoint, the tombstone removal, and the
+tombstone path derivation — are now exercised.
+
+**A test that passed for the wrong reason, caught by probing it.** The linked-tombstone
+test was written and documented as pinning the directory anchor's reparse-point refusal.
+Removing that refusal left all twelve tests GREEN. The test was real, but its stated
+mechanism was wrong, and had the probe not been run the docstring would have taught the
+next reader something false about which guard protects that path.
+
+What actually happens is better than what was claimed: the removal is defended **twice
+over**. With the anchor's check removed, a second independent refusal fires from the
+staging snapshot ("unpublished profile capsule staging contains a reparse point"), and the
+link target survives either way. The test now asserts the OUTCOME — refusal plus target
+survival — and says explicitly that it does not pin either mechanism, because naming one
+would restate the error just corrected.
+
+The general form is worth keeping: **a passing test proves the outcome, never the reason
+for it.** The docstring is a claim about mechanism, and only a probe against that specific
+mechanism substantiates it. This campaign has now produced two variants of the same
+mistake — a measurement taken at the wrong moment, and an instrument that caused what it
+measured — and this is the third: an explanation attached to a result that does not
+depend on it.
+
+**What the protocol now guarantees, each proven load-bearing where a single guard owns
+it:** the marker binds one deletion exclusively and to one transaction; a capsule or
+tombstone that changed after preflight is refused rather than swept into the deletion; an
+absent tombstone is ambiguous at verification but idempotent at removal, which is the
+correct asymmetry for a rollback that may run twice; and a tombstone that is not a real
+directory never has its tree walked.
+
+### Dead export, recorded rather than removed
+
+`default_policy_table` is defined in `core/classification`, re-exported through the
+storage facade, and called by nothing anywhere in `src/` or `dev/` — its only occurrences
+are the three facade plumbing lines. Left in place: the definition belongs to another
+package, and removing one name from a facade is not worth an isolated change while the
+standing directive excludes facade narrowing as a mechanical edit. Recorded so it can ride
+along with whoever next touches that surface.
+
+Measured alongside it, and NOT actioned for the same reason: 51 of custody's 145 exports
+and 53 of storage's 261 have no consumer outside their own package. That is over-exposure
+rather than dead code — the implementations are all used internally — and it is the same
+shape as the deferred `user_profile` over-export item.
