@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:70893c0aca916229f88d74015e6c98fbe20e9c18b6b4b2c6b840b47236cbacc5'
+body_hash: 'sha256:dafeccbfb19db0b6dd4c0ad1ffbb91ed383f86e6417b346a03974a30f73a0da4'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8620,3 +8620,73 @@ so the cluster is blocked on artifact acquisition, not on authoring.
 `test_docstring_core_struct_links` carries 4 failures that predate this work,
 confirmed by re-running with the schema edit stashed out; the two references
 added here resolve.
+
+## Two hollow gates for filing-grade defects, restored to real proofs
+
+`test_registry_schema_part1` carried two tests whose docstrings described
+real-site mutation proofs — restore the shipped defect on the committed Modelo
+200 revision, drive the real registry validator over it — above bodies that read
+only `assert revision.export_layouts == ()`.
+
+Recovered from history: commit `c0fbbb0456` replaced the mutation proofs with
+that emptiness assertion, correct at the time because Modelo 200's layouts had
+been removed from filing grade. **This campaign authored Modelo 200's generated
+export tree**, so the assertion became false and the tests failed on a premise
+their own docstrings did not claim.
+
+### Both defect sites are gone by construction, which is stronger than a gate
+
+- The seventeen-byte envelope-open tag is now one typed
+  `FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG` of length 17, and
+  `FilingEnvelopeDefinition` refuses a declaration carrying both that spelling
+  and the six-role one. No `filing_year` draft field exists on a Modelo 200
+  record for a collapse to be re-authored onto.
+- The grupo-mercantil misbinding needed a draft attribute yielding the
+  DECLARANT's tax id. `ExportDraftAttribute` declares four members, all period or
+  ejercicio facts. The attribute that made it expressible was removed.
+
+So neither test can be restored verbatim. Each now proves both halves: the
+repaired state on the real committed revision, and the width detector driven over
+a **real committed field** mutated to the defect width rather than one built for
+the occasion. The second test asserts the width mapping's TOTALITY rather than
+its current membership, so re-introducing an identity attribute without a width
+ruling fails instead of passing silently.
+
+Disproved by neutering `validate_draft_field_slot_width` to return no failures:
+both red. Without that control each would have passed on its real-data half
+alone — the exact hollowness being repaired.
+
+### `modelo-130-verification` could never have been satisfied
+
+The required-application-links floor named it. `verification` is not a member of
+`ApplicationLink.surface`'s closed vocabulary and **no revision anywhere in the
+registry declares one**. Modelo 130's verification concern is carried by the
+`review` and `approval` links it does declare, so the floor names those. Proven
+still to bite by removing one member from the observed set.
+
+This is the second instance of the same phantom; the first was removed from
+`test_modelo_190_registry.py` earlier in the campaign.
+
+## The authority-grade fixture sweep, one rung further
+
+Five failures across `test_referential_integrity_part2` and `part3` shared the
+modelo 999 cause from the previous tick: the shared `minimal_revision` builder
+declared no `authority_grade`, and the refusal lands before the referential
+assertions run. The builder already carried a note explaining why it sets
+`review_status` for exactly that reason; the grade declaration now sits beside it
+with the same reasoning. Declared `applicability`: these fixtures are built to
+carry casilla and binding REFERENCES, not to compute or file.
+
+That unblocked a sixth test, `test_dangling_export_field_casilla_ref`, which then
+failed on wording. The check fires correctly and its diagnostic has IMPROVED —
+it now names the layout, record and field path, and reports the resolved
+`endpoint_casilla_id` (the accessor yielding `casilla_id` or a projection ref's
+casilla) rather than the declared attribute. The assertion pinned the old
+spelling, so it now matches the two things the diagnostic must carry to be
+actionable — which field, and which id failed to resolve — and a diagnostic that
+dropped the field id would still red.
+
+Modules: `test_registry_schema_part1` 3 failed → **49 passed**; the referential
+and fixture-sharing cluster **128 → 143 passed, 0 failed**. Authority CLEAN,
+ruff clean across the registry tests (four pre-existing lint errors fixed,
+two of them left by this campaign's own earlier span work).

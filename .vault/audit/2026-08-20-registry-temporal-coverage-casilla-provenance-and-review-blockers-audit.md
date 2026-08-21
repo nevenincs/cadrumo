@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4727d29d50c0391536886e56e9c55f66ba7b9196629816a8f3df5b639c23f60c'
+body_hash: 'sha256:33fbe2eb909f592094e67a81c32e9ead55d9eb9210914a43e61bbe8be9dff724'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -497,7 +497,6 @@ revisions at the year their cited orden actually approves, or cite the orden tha
 approves the later models -- and to revisit m200's existing stamp, which asserts a
 review of an applicability claim that outruns its own evidence.
 
-
 ### the-missing-is-orden-is-identified-orden-hac-529-2026 | high | the gate's prescribed FIX resolves to a specific BOE disposition, verified against its own text
 
 The previous finding left the IS pair (m200, m220) asserting open-ended applicability
@@ -541,7 +540,6 @@ opening would strand the existing ``filing_year = 2025`` windows. That is a dedi
 action with its own verification, not a loop tick. What this iteration removes is the
 research: the fix is now a lookup with a verified citation and three verbatim
 provisions, rather than an open acquisition question.
-
 
 ## Recommendations
 
