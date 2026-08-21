@@ -920,33 +920,47 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
 
 
 @cache
-def _design_fingerprints_by_source_ref() -> dict[str, tuple[object, ...]]:
-    """Every design source ref mapped to the FINGERPRINT of the file it names.
-
-    Not the file name, and the difference is the whole reason this resolves.
-    The corpus bundles some designs twice under names differing only by a
-    truncated extension, and :func:`_designs_in_publication_order` collapses
-    those twins -- keeping whichever sorts first, which is not necessarily the
-    one the catalogue cites. Modelo 303's late 2024 design is the case: the
-    catalogue names ``...-381-kb-xls.xlsx`` while the walk keeps its
-    byte-identical ``...-381-kb-x.xlsx``, so a name comparison fails on two
-    files that are the same design.
-
-    :func:`_design_fingerprint` is the identity this module already uses to
-    collapse container twins, so citations are resolved through it too rather
-    than through a second, weaker notion of sameness.
-    """
+def _corpus_path_by_source_ref() -> dict[str, str]:
+    """Every source ref mapped to the corpus path it records, unparsed."""
     _modelos, catalogues = bundled_registry_tree()
-    fingerprints: dict[str, tuple[object, ...]] = {}
-    for ref, entry in catalogues.sources.items():
-        corpus_path = getattr(entry, "corpus_path", None)
-        if not corpus_path:
-            continue
-        resolved = bundled_path() / str(corpus_path)
-        if not resolved.is_file() or not _design_sheets(resolved):
-            continue
-        fingerprints[ref] = _design_fingerprint(resolved)
-    return fingerprints
+    return {
+        ref: str(entry.corpus_path)
+        for ref, entry in catalogues.sources.items()
+        if getattr(entry, "corpus_path", None)
+    }
+
+
+@lru_cache(maxsize=None)
+def _design_fingerprint_for_ref(ref: str) -> tuple[object, ...] | None:
+    """The fingerprint of the design a source ref names, or ``None`` if it names none.
+
+    Resolved lazily, one ref at a time. Fingerprinting PARSES the design, so
+    building this for every catalogue source up front costs a full corpus read
+    on a question only a handful of refs per revision ever ask.
+
+    Fingerprint rather than file name, and that is what makes the match work.
+    The corpus bundles some designs twice under names differing only by a
+    truncated extension; :func:`_designs_in_publication_order` collapses those
+    twins and keeps whichever sorts first, which is not necessarily the one the
+    catalogue cites. Modelo 303's late 2024 design is exactly that: the
+    catalogue names ``...-381-kb-xls.xlsx`` while the walk keeps its
+    byte-identical ``...-381-kb-x.xlsx``. Comparing names fails on two files
+    that are the same design; comparing the identity this module already uses to
+    collapse twins does not.
+    """
+    corpus_path = _corpus_path_by_source_ref().get(ref)
+    if corpus_path is None:
+        return None
+    resolved = bundled_path() / corpus_path
+    if not resolved.is_file() or not _design_sheets(resolved):
+        return None
+    return _design_fingerprint(resolved)
+
+
+def _cited_design_fingerprints(revision: object) -> set[tuple[object, ...]]:
+    """The designs this revision's own source refs name, by fingerprint."""
+    found = (_design_fingerprint_for_ref(str(ref)) for ref in revision.source_refs)
+    return {fingerprint for fingerprint in found if fingerprint is not None}
 
 
 def _mid_year_span(revision: object) -> int | None:
@@ -960,12 +974,6 @@ def _mid_year_span(revision: object) -> int | None:
         return None
     covers_whole_year = (valid_from.month, valid_from.day) == (1, 1) and (valid_to.month, valid_to.day) == (12, 31)
     return None if covers_whole_year else valid_from.year
-
-
-def _cited_design_fingerprints(revision: object) -> set[tuple[object, ...]]:
-    """The designs this revision's own source refs name, by fingerprint."""
-    by_ref = _design_fingerprints_by_source_ref()
-    return {by_ref[str(ref)] for ref in revision.source_refs if str(ref) in by_ref}
 
 
 def _designs_claimed_by(modelo_id: str, revision: object) -> tuple[Path, ...]:
@@ -1847,11 +1855,42 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
         "no gated revision claims an ejercicio carrying two designs, so this assertion would be "
         "vacuous -- the corpus that made the design-file keying necessary has changed"
     )
-    assert mid_course_reported, (
+
+    # PROVEN ON A CONSTRUCTED SPAN, because no DECLARED revision spans a
+    # mid-course boundary any more and that is the tree being right rather than
+    # the instrument being blind. Every mid-course split AEAT published is now
+    # partitioned into halves, and a half scoped to its own months claims only
+    # the design it cites, so it reports nothing -- correctly.
+    #
+    # Widening one of those halves back across the whole ejercicio reconstructs
+    # the case the keying exists for. If an inventory ever returns to keeping one
+    # design per year, this reports no boundary and fails, which is the same
+    # protection the original assertion gave when the tree still carried a
+    # spanning revision.
+    widened_reported: list[str] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        if revision.valid_from is None or revision.valid_to is None:
+            continue
+        if revision.valid_from.year != revision.valid_to.year:
+            continue
+        year = revision.valid_from.year
+        widened = revision.model_copy(
+            update={"valid_from": date(year, 1, 1), "valid_to": date(year, 12, 31)},
+        )
+        widened_reported.extend(
+            f"modelo {modelo.id} revision {revision_id!r} ejercicio {earlier}"
+            for earlier, later in _boundaries_for(modelo.id, widened)
+            if earlier == later
+        )
+
+    assert widened_reported, (
         "the corpus holds a mid-course split inside a gated span "
-        f"({sorted(set(mid_split_available))}) but the verdict names no boundary inside a single "
-        "ejercicio, so an inventory is back to keeping one design per year and its silence about "
-        "that boundary means nothing"
+        f"({sorted(set(mid_split_available))}) but widening a revision across the whole ejercicio "
+        "still names no boundary inside a single year, so an inventory is back to keeping one "
+        "design per year and its silence about that boundary means nothing"
+    )
+    assert not mid_course_reported, (
+        "a DECLARED revision spans a mid-course boundary: " + ", ".join(sorted(set(mid_course_reported)))
     )
 
 
