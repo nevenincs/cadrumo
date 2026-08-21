@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8b7ef711ce99ffcdd5220d2d9dd66f7ef1a95115794be956bc6ee6e283db28c'
+body_hash: 'sha256:498936ccec13982b313340b376bad566563ac380d8524cb3b0fc582fed515e5f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10222,3 +10222,113 @@ is NOT a statutory month-end to cite the AEAT calendar it was moved by. Under
 nominal storage every close IS a month-end, so the rule holds vacuously on both
 windows rather than contradicting them -- an invariant written as a biconditional
 on the data, not as a pinned date.
+
+## Modelo 222: the 63 liquidacion casillas, and a hazard that was not one
+
+Modelo 222 is one of only two worklist revisions that are genuinely un-authored
+rather than deliberately non-emitting. Its own revision comment invites the work:
+*"nobody has yet mapped its box numbers against this revision's schema, so no
+casilla number is fabricated from it."* This tick authored those 63 boxes. The
+export LAYOUT is not authored and is described at the end.
+
+### The recorded hazard is a false positive, measured both ways
+
+The revision carries a note addressed to exactly this work:
+
+> HAZARD RECORDED FOR WHOEVER AUTHORS THOSE CASILLAS -- the 2024 diseno prints
+> boxes 16, 22 and 32 TWICE each within a single sheet, over different figures
+> ... authoring them as bare numbers would collapse six declared figures into
+> three AND the coverage report would still read 63 of 63 covered.
+
+It counts bracket OCCURRENCES rather than box DECLARATIONS. Each of those boxes
+is declared once and *cited* a second time inside a later field's formula:
+
+```
+[16] declared "Base del pago fraccionado [16]"
+     cited by "Resultado previo (clave ([16] x [17]) - [49]..."
+[22] declared "Importe del pago fraccionado [22]"
+     cited by "Resultado previo (claves [22]+[25]+[54]+..."
+[32] declared "Resultado [32]"
+     cited by "Cantidad a ingresar (mayor de claves [32]..."
+```
+
+The rule that resolves it: **a field's own box is the LAST bracket in its
+description; every earlier bracket is one of its formula inputs.** Measured over
+both bundled disenos -- 63 own-box declarations in the 2025 file, 56 in the 2024
+one, zero duplicates in either.
+
+The control matters more than the result. A rule that found no duplicates in
+2025 proves nothing on its own, because a rule that never reports duplicates
+would say the same. So it was run against the 2024 design the hazard names: it
+reproduces the two mentions of each box and correctly classifies one as a
+declaration and one as a citation. Had the hazard been taken at face value, the
+fix would have been to invent distinct numbers for six figures that are three --
+the actual defect, introduced while believing one was being avoided. The
+correction is recorded above the revision's `valid_from`, where the next author
+meets it; the reviewer's own `reviewed_by` attestation is left untouched.
+
+### What the tree refused, and what it taught
+
+Two refusals, each taken as the answer:
+
+**The typo-twin validator flagged 14 roles.** They are the Mod. 40.3 B.2 "casos
+especificos" block: four parallel rate tiers, each with its own base, porcentaje
+and importe, plus a resultado and a resultado previo. Every one appears exactly
+once, so each looks like a typo of its indexed siblings. The sanctioned answer
+already existed -- `semantic_role_cardinality = "intentional_singleton"` with a
+reason, the same marker modelo 347 carries for its per-quarter contraparte
+roles. Worth recording that singletons are NOT the problem: 1,232 roles appear
+exactly once registry-wide and the ratchet still demands zero warnings, because
+the validator only fires when a singleton has a near-twin.
+
+**My own slug builder collapsed 63 boxes onto 51 roles.** The first version
+stripped `Mod. 40.2` vs `40.3` and `B.1) Caso general` vs `B.2) Casos
+especificos` as block chrome. Those are not chrome: they are exactly what
+distinguishes two boxes carrying identical wording under different regimes.
+Restoring them reached 59; the last four were Aumentos/Disminuciones twins whose
+distinguishing word sits 250+ characters into the description and fell off the
+truncation. Holding the qualifier aside, truncating the core, and re-appending it
+makes such a pair uncollidable however long the shared prose grows.
+
+### Grounding, and one citation that could not be made
+
+Each casilla carries the base pair its two pre-existing siblings already use --
+`orden-hfp-227-2017:art-2` and `ley-27-2014:art-40` -- plus `art-101` or
+`art-105` on exactly the six boxes whose own design text names that article.
+
+**Six boxes name `art. 11.12 LIS` and it is NOT in the legal catalogue.** They
+carry the base pair only. Citing an unresolvable ref would fail the legal-ref
+gate, and authoring the entry without BOE corpus text is forbidden, so this is
+recorded rather than fixed: the six are the `Dotaciones del art. 11.12` family
+(boxes 44, 45, 49, 50, 54, 57), and closing it needs the LIS art. 11.12 corpus
+text and a catalogue entry.
+
+`input_kind` is `manual` on all 63. Modelo 202 pairs its 13 `computed` casillas
+1:1 with 13 declared formulas; this revision declares none, so `computed` would
+assert a derivation that does not exist.
+
+Three boxes (18, 26, 34) describe themselves with a formula over other boxes, and
+stripping the box numbers leaves residue like `(clave ( x ) - - - +`. The
+parenthetical is removed whole, so the label reads `Resultado previo` and
+`Cantidad a ingresar` rather than a mangled equation.
+
+Labels and help were translated with the four repeating wrappers shared -- the
+modality citation, the B.1/B.2 sub-block, the Aumentos/Disminuciones qualifier --
+and only the core term done per box. Not the full compositional glossary used for
+151 and 322: the core terms here are almost all one-offs, so a term table would
+be machinery for its own sake. Backlog and parity both return to their
+pre-existing figures (378 and 872), modelo 222 contributing zero to either.
+
+### The layout is NOT authored, and why
+
+The worklist still lists modelo 222, correctly. Its export layout needs every
+field mapped, and 60 of the design's 123 fields carry no box number: the
+identification block, the regime flags, the `Informacion adicional (6)` amounts,
+the IBAN and the NRS. Modelo 202 maps its equivalents through modelo-scoped
+producer keys and carries 18 `M202_*` members in the core `FilingProducerKey`
+enum. Modelo 222 has none, so the layout needs roughly 33 new core enum members,
+and each must resolve to a real profile fact or be declared in an unsupported
+inventory -- the gate forbids silent filler. Which of 33 group-regime flags this
+application can actually produce is a question about the taxpayer profile, not
+about the registry, and it is the next piece of this modelo rather than something
+to improvise 33 members' worth of.
