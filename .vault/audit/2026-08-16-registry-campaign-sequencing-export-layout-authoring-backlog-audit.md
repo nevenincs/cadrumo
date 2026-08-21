@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:99c7176ec7cc14b2101f6a1cb51e8b57c271d2adeff75647dd2c11126d605fab'
+body_hash: 'sha256:41a50feeb9ec192487d74925a4bc4c932ea3e216c992c4d8e618868d51ae7c53'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9789,3 +9789,39 @@ Eight deliberate identities recorded (`Prorrata %`, `Divisa`, `Indicador de
 simplificada` -- cognates carrying only AEAT's row ordinal). `dev/locales` parity
 remains red on its pre-existing drift and improved again: **1,165 -> 953**
 missing codebase keys.
+
+## Modelos 184 and 193: the same recovery, and a small glossary beats a clever one
+
+Both modelos print labels in CAPITALS and then run straight into a lowercase
+instruction on some fields -- `ACTIVIDAD PRINCIPAL: Se hará constar`,
+`TIPO DE ENTIDAD: campo numérico.`, `TELÉFONO : Campo numérico de nueve`. The
+capitalised head is the label; the tail is the instruction. Stripping it recovers
+**45 of 82** for modelo 184 and **77 of 97** across modelo 193's two revisions.
+
+What does NOT survive is left alone rather than guessed: pure filler (`BLANCOS`),
+fields that are instruction all the way down (`ENTERO : Numérico. Parte entera.
+Se consignará la`), and labels the design cut mid-phrase
+(`PORCENTAJE DE RENTA ATRIBUIBLE A`).
+
+**These two were translated WHOLE, not composed from terms.** Modelo 184 has 34
+distinct labels and modelo 193 has 33; below roughly a hundred, whole-label
+translation reads better and costs no more. The compositional route earns its
+complexity when one term recurs across hundreds of labels, as in 151 and 322 --
+using it here would have been machinery for its own sake.
+
+Unresolved Spanish labels **501 -> 456 -> 379**. Authority CLEAN.
+
+### A glossary key built from the terminal, not from the data
+
+One modelo 193 entry matched nothing: I had keyed it on
+`... DIPUTACIONES FORALES DEL PAÍ`, which is where a console listing truncated
+the label at 92 characters. The real label continues
+`... DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA`.
+
+The generator caught it -- it reports every label with no entry -- so the wrong
+key cost one iteration rather than a silently missing label. The narrow lesson:
+a lookup table keyed by exact string must be built from the data, never from
+what the terminal chose to show; the display width is not part of the contract.
+
+`dev/locales` parity remains red on its pre-existing drift and improved again:
+**953 -> 876** missing codebase keys.
