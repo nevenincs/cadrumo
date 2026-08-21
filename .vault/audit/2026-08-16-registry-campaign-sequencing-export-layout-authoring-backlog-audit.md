@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:00c7e2dd12dc35c65bd54e3184c62052f0df79b9bb86ef10d04baec5925d9015'
+body_hash: 'sha256:f16ed5a1e06cf843727e768f0200eabbd62851fb4641a0cca0b1272618fbb3f7'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8306,3 +8306,127 @@ every revision -- timed out rather than returning a verdict, so it proves
 nothing and is not counted. The bound it would have tested is asserted directly
 instead: `test_only_a_partial_span_inside_one_year_is_narrowed` requires every
 genuine cross-year span to be left un-narrowed.
+
+## Tick: a probe that could not reach the rule it was probing
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed.
+
+### The modelo 184 split is grounded, and deliberately not attempted here
+
+Of the four cross-year spans now tracked, modelo 184's is the smallest -- one
+open-ended revision citing two designs. The boundary is not a judgement call:
+the catalogue declares it outright, `aeat-dr-184-2023-2024` with
+`applies_from 2023-01-01` and `applies_to 2024-12-31`, `aeat-dr-184-2025` with
+`applies_from 2025-01-01`, both reviewed and carrying source URL and sha256.
+Measured while checking: **all 121 record-design sources declare
+`applies_from`**, 69 also `applies_to`, so this grounding is available for every
+split still outstanding.
+
+Not attempted this tick, and the reason is scope rather than doubt. Modelo 184
+is an ENROLLED generated tree keyed on the revision id, so a split renames the
+revision the tree references, moves its export directory, changes the enrolment
+and requires the earlier revision's layouts to be generated from the 2023 design
+through the publication pipeline. Half of that leaves thirty gates red. It is
+one coherent piece of work, not a fragment to start here.
+
+### The probe that could not reach its own rule
+
+`test_source_applicability_window` had three failures, and none was about
+applicability windows. Each moves a scoped source's window to probe the
+refusal -- and the refusal that fired was a different one entirely:
+`record-design source 'aeat-dr-184-2025' declares epoch '2025' but applies to
+2024-12-31`.
+
+The probe picks its subject with `sorted(scoped)[0]`. The scoped set holds
+exactly ONE record design, and it sorts first, so the picker chose precisely the
+one source these tests cannot use: a record design carries a
+`record_design_epoch`, and validation refuses an epoch its window no longer
+governs BEFORE the applicability check is reached.
+
+The module already knew this shape. `_revision_scoped_procedural_legal_id`
+exists because substantive law is checked against the revision's devengo by a
+different rule, so the legal probes filter by kind rather than taking the first
+id. The source picker never got the same treatment, and an alphabetical accident
+decided whether it worked. It now excludes record designs for the stated reason,
+with seven other scoped sources available.
+
+**test_source_applicability_window: 3 failed -> 20 passed.** Restoring the old
+`sorted(...)[0]` picker reproduces exactly the three original failures, which is
+what shows the exclusion is load-bearing rather than incidental.
+
+### Verified against
+
+Generated-tree gates 30 passed. Authority CLEAN. The disproving probe above.
+
+### Still open
+
+Four cross-year spans awaiting splits, each now with its boundary declared in
+the catalogue rather than inferred. Modelo 184 is the smallest and needs the
+generated-tree publication pipeline run as one piece.
+
+## Tick: a moved module, and two tests holding a superseded contract
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed.
+
+### The modelo 184 split, stated as multi-tick work rather than deferred again
+
+I looked at what the split actually requires before deciding, rather than
+re-deferring on instinct. Publication has no production driver -- the only
+callers of `publish_validated_generated_export_tree` are tests -- and the gate
+exercises CHECK mode against the committed tree. A split needs the earlier
+revision's casillas, bindings and constructs authored against the 2023 design
+and its export tree generated through that pipeline, plus the revision rename,
+the enrolment change and the export directory move, all landing together or
+thirty gates go red.
+
+So it is one multi-tick piece of work with a known shape, not a fragment to
+start mid-tick. The grounding is settled and waiting: the catalogue declares the
+boundary outright.
+
+### A scan looking in a directory that no longer exists
+
+`test_projection_ref_compiler_has_only_the_two_canonical_loader_callers` walked
+`src/cadrumo` and `scaffold/registry` and expected two callers, one of them
+`scaffold/registry/_semantic_map_loader.py`.
+
+That module now lives at `dev/registry/pipeline/_semantic_map_loader.py`.
+Scanning a directory that does not exist finds nothing and looks exactly like a
+loader that stopped calling the compiler, so the gate was asserting a path no
+walk could reach -- the same shape as the workbook-parity ratchet that pointed
+at a moved module some ticks ago.
+
+Corrected to scan `dev/registry`, and the compiler's OWN module is now excluded
+rather than counted: `hydrate_filing_projection_ref` delegates to the compiler
+inside the same file, and admitting that would make the definition site look
+like a consumer and hide whether a real third loader had appeared.
+
+### Two tests written against a contract that was deliberately replaced
+
+The other two failures demanded that a well-formed RAW projection payload be
+refused, carrying the message "loader-hydrated FilingProjectionRef". That string
+exists nowhere outside the test file.
+
+`ProjectionEndpointDeclaration` explains why in its own validator: the
+declaration is persisted and re-read, so a guard demanding an already-typed
+reference could never admit its own serialised form, and the invariant that
+matters is that the CANONICAL COMPILER produced the value -- not that the caller
+arrived holding one. The contract moved from "reject raw" to "compile raw", and
+these two assertions were left behind.
+
+Checked for a real gap before rewriting them, because the sibling model has that
+compiler-routing validator and `ExportFieldDefinition` does not. There is none
+worth a schema change: both models refuse a whitespace-padded id and both refuse
+a boolean where an integer belongs, since the typed refs' own strict config
+already does what the compiler's extra checks would. Reporting that plainly
+rather than adding a validator to make a story tidy.
+
+Rewritten to the documented contract: a well-formed raw payload compiles and
+round-trips, a malformed one is refused. Replacing the canonical compiler with a
+pass-through reds exactly those two, which is the assertion the old message was
+meant to carry.
+
+**test_export_projection_refs: 3 failed -> 20 passed.**
+
+### Still open
+
+Four cross-year spans awaiting splits, modelo 184's the smallest and now scoped.

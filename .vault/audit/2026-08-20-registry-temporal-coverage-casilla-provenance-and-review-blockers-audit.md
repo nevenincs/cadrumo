@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0b00d77f0f348e802c21d5fbf79248ea3b44e277138196064b941347baa4a8db'
+body_hash: 'sha256:c3636f524786743d85fe166f45df130f6079ffacddc8dc08f293414d8c7ffd58'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -347,7 +347,6 @@ landed casillas on one reading would be barging. m604 stays **pending_review** i
 revisions: a revision whose numbering does not mirror the official layout cannot be
 honestly stamped, and stamping it would flip it onto the filing-authority proof path.
 
-
 ### the-span-gate-is-not-what-separates-reviewed-from-pending | high | 60 of 80 stamped revisions carry the same failure the pending ones do, and no stamp says so
 
 ``test_every_modelo_revision_span_is_corpus_proven`` and
@@ -393,7 +392,6 @@ box-number regex against Modelo 200's five-digit boxes, which switched the box-o
 and box-set signals off while reporting nothing wrong. Its note is the general lesson:
 *"Agreement between two instruments sharing one blind spot is worth nothing, and unlike
 a wrong answer it offers nothing to notice."*
-
 
 ## Recommendations
 
