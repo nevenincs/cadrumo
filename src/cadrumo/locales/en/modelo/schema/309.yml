@@ -7,13 +7,131 @@ modelo:
       revision:
         2004-y-siguientes:
           casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              label: Settlement (8) - To deduct [23]
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
+              label: Awardee (4) - Surnames or company name
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
+              label: Awardee (4) - NIF
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
+              label: Awardee (4) - First name
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              label: Characteristics and technical data (7) - Aircraft - Year of manufacture
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              label: Characteristics and technical data (7) - Aircraft - Manufacturer
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              label: Characteristics and technical data (7) - Aircraft - Make - Type
+                - Model
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              label: Characteristics and technical data (7) - Aircraft - Maximum take-off
+                weight (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              label: Characteristics and technical data (7) - Aircraft - Serial no.
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Supplementary return (9)
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              label: Settlement (8) - Total tax accrued ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the return relates
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              label: Characteristics and technical data (7) - Vessels - Maximum length
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              label: Characteristics and technical data (7) - Vessels - Manufacturer
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              label: Characteristics and technical data (7) - Vessels - Identification
+                (build no.)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              label: Characteristics and technical data (7) - Vessels - Type-Model
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              label: 'Taxable event (6):'
+            x-chim6r1ed5h62rg:
+              label: IBAN (10)
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Receipt number of the previous return (9)
+            x-chim6r1edpnmqojick:
+              label: Identification (1) - First name
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              label: Settlement (8) - Equivalence surcharge - Taxable base [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              label: Settlement (8) - Equivalence surcharge - Taxable base [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              label: Settlement (8) - Equivalence surcharge - Taxable base [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              label: Settlement (8) - Equivalence surcharge - Taxable base [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              label: Settlement (8) - Equivalence surcharge - Tax amount [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              label: Settlement (8) - Equivalence surcharge - Tax amount [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              label: Settlement (8) - Equivalence surcharge - Tax amount [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              label: Settlement (8) - Equivalence surcharge - Tax amount [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              label: Settlement (8) - Equivalence surcharge - Rate % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              label: Settlement (8) - Equivalence surcharge - Rate % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              label: Settlement (8) - Equivalence surcharge - Rate % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              label: Settlement (8) - Equivalence surcharge - Rate % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              label: Settlement (8) - Amount payable [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              label: Settlement (8) - General regime - Taxable base [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              label: Settlement (8) - General regime - Taxable base [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              label: Settlement (8) - General regime - Taxable base [07]
+            x-chim6r1ee9jiqoj1ediiqchl:
+              label: Settlement (8) - General regime - Taxable base [25]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              label: Settlement (8) - General regime - Tax amount [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              label: Settlement (8) - General regime - Tax amount [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              label: Settlement (8) - General regime - Tax amount [09]
+            x-chim6r1ee9jiqorldtq62b9i6s:
+              label: Settlement (8) - General regime - Tax amount [27]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              label: Settlement (8) - General regime - Rate % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              label: Settlement (8) - General regime - Rate % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              label: Settlement (8) - General regime - Rate % [08]
+            x-chim6r1ee9jiqt39e1niqchm:
+              label: Settlement (8) - General regime - Rate % [26]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              label: 'Tax situation (5):'
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Return type
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Trigger type (new means of transport / agricultural regime /
                 equivalence surcharge / enforced execution)
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              label: Transferor (3) - Surnames or company name
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              label: Transferor (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
+              label: Transferor (3) - NIF-IVA
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              label: Transferor (3) - First name
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              label: Transferor (3) - Country
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              label: Characteristics and technical data (7) - Vehicles - Identification
+                no. (chassis)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              label: Characteristics and technical data (7) - Vehicles - Classification
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              label: Characteristics and technical data (7) - Vehicles - Make
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              label: 'Characteristics and technical data (7) - Vehicles - Model (commercial
+                name):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              label: Characteristics and technical data (7) - Vehicles - Type
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: Self-charged VAT on intra-Community acquisitions (new means of
