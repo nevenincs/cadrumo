@@ -800,7 +800,7 @@ modelo:
                 aplique el régimen especial del criterio de caja?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
                 del grupo de entidades.
@@ -820,7 +820,7 @@ modelo:
               label: Identificación. Dominante / dependiente
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo (anual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
                 del grupo de entidades.
@@ -848,28 +848,31 @@ modelo:
               label: Identificación. ¿Existe volumen de operaciones (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA deducible (soportado en operaciones interiores
+                + autorepercutido deducible)
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
+                en adquisiciones intracomunitarias)
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Cuota total de IVA repercutido calculada al tipo general del 21%.
+              label: Cuota IVA repercutido al tipo general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
           construct:
             modelo-322-iva-grupo-individual:
               field:
@@ -1343,8 +1346,11 @@ modelo:
               label: Liquidación (continuación). Resultado ([65] + [77] - [66] + [67])
                 [68]
             '69':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: 'A deducir (exclusivamente en caso de autoliquidación complementaria):
+                resultado de las autoliquidaciones anteriores presentadas por el mismo
+                concepto, ejercicio y periodo'
             '70':
               help: null
               label: Resultado de la autoliquidación ([68] - [69] - [112]) [70]
@@ -1531,11 +1537,15 @@ modelo:
                 Grupo 2. Suma de deducciones (719 + 721 + 723 + 725 + 727 + 729 +
                 731 + 733 + 734). Cuota deducible [735]'
             '74':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Adquisiciones de bienes y servicios afectadas por el régimen
+                especial del criterio de caja. Base imponible
             '75':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Adquisiciones de bienes y servicios afectadas por el régimen
+                especial del criterio de caja. Cuota soportada
             '76':
               help: null
               label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
@@ -1552,8 +1562,10 @@ modelo:
               label: Operaciones realizadas en el ejercicio. Operaciones en régimen
                 general [80]
             '81':
-              help: null
-              label: null
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Operaciones acogidas al régimen especial del criterio de caja
+                devengadas conforme a la regla general del art. 75 LIVA
             '83':
               help: null
               label: Operaciones realizadas en el ejercicio. Operaciones exentas sin
@@ -1662,7 +1674,7 @@ modelo:
               label: Destinatario de operaciones acogidas al criterio de caja
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: null
               label: NIF de la entidad dominante
@@ -1677,7 +1689,7 @@ modelo:
               label: Dominante o dependiente
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo (anual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: null
               label: 'Aplicacion de la prorrata especial: opcion o revocacion'
@@ -1695,28 +1707,31 @@ modelo:
               label: Volumen anual de operaciones distinto de cero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA deducible (soportado en operaciones interiores
+                + autorepercutido deducible)
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
+                en adquisiciones intracomunitarias)
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Cuota total de IVA repercutido calculada al tipo general del 21%.
+              label: Cuota IVA repercutido al tipo general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
           construct:
             modelo-322-iva-grupo-individual:
               field:

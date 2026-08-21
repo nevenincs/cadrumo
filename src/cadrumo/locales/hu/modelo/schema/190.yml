@@ -41,6 +41,10 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Születési év
+            x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Tartásdíj-járadékok
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -173,6 +177,10 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Induló vállalkozások részvényjuttatásából származó többlet
+            x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Levonható költségek
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
@@ -198,6 +206,10 @@ modelo:
             x-e1in4opedpnmqojick:
               help: null
               label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
+            x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Kiegyenlítő járadékok
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
               help: null
               label: Nem keresőképtelenségből származó bruttó pénzbeli juttatás
@@ -212,6 +224,13 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Tartománykód
+            x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Alkalmazandó csökkentések
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
+                BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: A pénzbeli juttatásokra alkalmazott adólevonások
@@ -268,6 +287,10 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Születési év
+            x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Tartásdíj-járadékok
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -400,6 +423,10 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Induló vállalkozások részvényjuttatásából származó többlet
+            x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Levonható költségek
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
@@ -425,12 +452,39 @@ modelo:
             x-e1in4opedpnmqojick:
               help: null
               label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
+            x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Kiegyenlítő járadékok
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
               help: null
               label: Nem keresőképtelenségből származó bruttó pénzbeli juttatás
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
               help: null
               label: Nem keresőképtelenségből származó természetbeni juttatás értéke
+            x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
+              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+                az evben.
+              label: A B.01 kód szerinti ellátás típusa. 03. Teljes vagy részleges
+                tartós rokkantság
+            x-e1in4opee1p6asrkc5hmirre5ll7aoj9dhgm6qbfdo:
+              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+                az evben.
+              label: A B.01 kód szerinti ellátás típusa. 01. Nyugdíj
+            x-e1in4opee1p6asrkc5hmirre5ln6ubb3dtn78sj9c9qn8qbmc4:
+              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+                az evben.
+              label: A B.01 kód szerinti ellátás típusa. 04. Nem járulékalapú rokkantsági
+                vagy nyugdíjellátás
+            x-e1in4opee1p6asrkc5hmirre5lp6asrkds:
+              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+                az evben.
+              label: A B.01 kód szerinti ellátás típusa. 05. A 35/2006 törvény 17.2.a).1
+                cikke szerinti egyéb ellátások
+            x-e1in4opee1p6asrkc5hmirre5lr6itb4cli62p0:
+              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+                az evben.
+              label: A B.01 kód szerinti ellátás típusa. 02. Özvegyi ellátás
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -439,11 +493,18 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Tartománykód
+            x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
+              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
+                A nyomtatvany egesz es tizedes reszre bontja.
+              label: Alkalmazandó csökkentések
             x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Vállalkozáshoz, innovációhoz és gazdasági tevékenység fejlesztéséhez
                 kötött alapok kezeléséből származó munkajövedelem
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
+                BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: A pénzbeli juttatásokra alkalmazott adólevonások

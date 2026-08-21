@@ -793,7 +793,7 @@ modelo:
                 cash-accounting special regime?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the return relates
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
@@ -813,7 +813,7 @@ modelo:
               label: Identification. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Period (annual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
@@ -840,28 +840,28 @@ modelo:
               label: Identification. Is there a volume of transactions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Reverse-charge VAT amount on intra-Community acquisitions
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total deductible VAT amount
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total accrued VAT amount
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Output VAT amount at the reduced rate (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: General regime result
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Deductible input VAT on domestic current transactions
           construct:
             modelo-322-iva-grupo-individual:
               field:
@@ -1336,8 +1336,10 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'To deduct (only for a supplementary self-assessment): result
+                of earlier self-assessments filed for the same item, year and period'
             '70':
               help: null
               label: null
@@ -1522,11 +1524,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Taxable base
             '75':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Input tax
             '76':
               help: null
               label: Regularisation of amounts under art. 80.Cinco.5ª LIVA [76]
@@ -1543,8 +1549,10 @@ modelo:
               label: Transactions carried out in the year. Transactions under the
                 general regime [80]
             '81':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Transactions under the cash-accounting special regime accrued
+                under the general rule of art. 75 LIVA
             '83':
               help: null
               label: Transactions carried out in the year. Exempt transactions without
@@ -1650,7 +1658,7 @@ modelo:
               label: Recipient of cash-basis scheme transactions
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the return relates
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: null
               label: Tax ID of the dominant entity
@@ -1665,7 +1673,7 @@ modelo:
               label: Dominant or dependent entity
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Period (annual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: null
               label: 'Special pro rata: election or revocation'
@@ -1683,28 +1691,28 @@ modelo:
               label: Annual turnover other than zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Reverse-charge VAT amount on intra-Community acquisitions
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total deductible VAT amount
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total accrued VAT amount
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Output VAT amount at the reduced rate (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: General regime result
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Deductible input VAT on domestic current transactions
           construct:
             modelo-322-iva-grupo-individual:
               field:

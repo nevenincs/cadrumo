@@ -785,7 +785,7 @@ modelo:
                 el règim especial del criteri de caixa?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: Dada declarada al model 322, autoliquidacio mensual individual
                 del grup d'entitats.
@@ -805,7 +805,7 @@ modelo:
               label: Identificació. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període (anual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: Dada declarada al model 322, autoliquidacio mensual individual
                 del grup d'entitats.
@@ -833,28 +833,28 @@ modelo:
               label: Identificació. Hi ha volum d'operacions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total quota d'IVA deduïble
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total quota d'IVA meritada
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Quota total d'IVA repercutit calculada al tipus general del 21%.
+              label: Quota IVA repercutit al tipus general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Resultat del règim general
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Quota IVA suportat en operacions interiors corrents
           construct:
             modelo-322-iva-grupo-individual:
               field:
@@ -1320,8 +1320,11 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'A deduir (exclusivament en cas d''autoliquidació complementària):
+                resultat de les autoliquidacions anteriors presentades pel mateix
+                concepte, exercici i període'
             '70':
               help: null
               label: null
@@ -1504,11 +1507,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Adquisicions de béns i serveis afectades pel règim especial del
+                criteri de caixa. Base imposable
             '75':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Adquisicions de béns i serveis afectades pel règim especial del
+                criteri de caixa. Quota suportada
             '76':
               help: null
               label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
@@ -1525,8 +1532,10 @@ modelo:
               label: Operacions realitzades en l'exercici. Operacions en règim general
                 [80]
             '81':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Operacions acollides al règim especial del criteri de caixa meritades
+                segons la regla general de l'art. 75 LIVA
             '83':
               help: null
               label: Operacions realitzades en l'exercici. Operacions exemptes sense
@@ -1633,7 +1642,7 @@ modelo:
               label: Destinatari d'operacions acollides al criteri de caixa
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: null
               label: NIF de l'entitat dominant
@@ -1648,7 +1657,7 @@ modelo:
               label: Dominant o dependent
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Període (anual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: null
               label: 'Aplicació de la prorrata especial: opció o revocació'
@@ -1666,28 +1675,28 @@ modelo:
               label: Volum anual d'operacions diferent de zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total quota d'IVA deduïble
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total quota d'IVA meritada
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Quota total d'IVA repercutit calculada al tipus general del 21%.
+              label: Quota IVA repercutit al tipus general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Resultat del règim general
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Quota IVA suportat en operacions interiors corrents
           construct:
             modelo-322-iva-grupo-individual:
               field:

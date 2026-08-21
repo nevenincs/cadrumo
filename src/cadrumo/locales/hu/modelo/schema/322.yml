@@ -789,7 +789,7 @@ modelo:
                 címzettje?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az adóbevallás vonatkozási éve
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
@@ -809,7 +809,7 @@ modelo:
               label: Azonosítás. Uralkodó / függő
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Időszak (éves, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
@@ -836,28 +836,29 @@ modelo:
               label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Összes levonható ÁFA összeg
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Összes keletkezett ÁFA összeg
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: A 21%-os általános kulccsal számított felszámított ÁFA teljes
+                összege.
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Általános rendszer eredménye
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
           construct:
             modelo-322-iva-grupo-individual:
               field:
@@ -1343,8 +1344,10 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos
+                jogcímen, évre és időszakra korábban benyújtott önadózások eredménye'
             '70':
               help: null
               label: null
@@ -1517,11 +1520,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
+                Adóalap
             '75':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
+                felszámított adó
             '76':
               help: null
               label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
@@ -1538,8 +1545,10 @@ modelo:
               label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
                 szerint [80]
             '81':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek
+                a LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
             '83':
               help: null
               label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
@@ -1644,7 +1653,7 @@ modelo:
               label: Pénzforgalmi elszámolású ügyletek címzettje
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az adóbevallás vonatkozási éve
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: null
               label: Az anyavállalat adószáma
@@ -1659,7 +1668,7 @@ modelo:
               label: Anyavállalat vagy leányvállalat
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Időszak (éves, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: null
               label: 'Különleges arányosítás: választás vagy visszavonás'
@@ -1677,28 +1686,29 @@ modelo:
               label: Az éves forgalom nem nulla
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Összes levonható ÁFA összeg
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Összes keletkezett ÁFA összeg
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: A 21%-os általános kulccsal számított felszámított ÁFA teljes
+                összege.
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Általános rendszer eredménye
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
           construct:
             modelo-322-iva-grupo-individual:
               field:
