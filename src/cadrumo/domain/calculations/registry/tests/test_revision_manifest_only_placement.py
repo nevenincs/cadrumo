@@ -59,6 +59,13 @@ _FIELD_LITERALS: dict[str, str] = {
     "review_status": '"pending_review"',
     "reviewed_by": '"operator"',
     "reviewed_at": "2026-07-27",
+    # An inline table, because this field is a Mapping of declarations rather
+    # than a scalar: the refusal must fire on WHERE the field is declared, so the
+    # value has to be well-formed enough to reach the placement check.
+    "family_dispositions": (
+        "{ casilla_continuidad_evolutions = { reason = \"declared for the placement refusal\", "
+        f'legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}'
+    ),
 }
 
 _CASILLA_FRAGMENT = f"""
@@ -202,7 +209,13 @@ def test_the_governance_stamp_is_manifest_only_by_type_not_by_a_second_marker() 
 
 def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
     """Pin the derived set, so a marker lost in a rebase is a red test."""
-    expected = REVISION_GOVERNANCE_FIELDS | {"authority_grade", "legal_refs", "orden_aplicabilidad", "valid_to"}
+    expected = REVISION_GOVERNANCE_FIELDS | {
+        "authority_grade",
+        "family_dispositions",
+        "legal_refs",
+        "orden_aplicabilidad",
+        "valid_to",
+    }
 
     assert expected == REVISION_MANIFEST_ONLY_FIELDS
     assert set(ModeloRevision.model_fields) >= REVISION_MANIFEST_ONLY_FIELDS

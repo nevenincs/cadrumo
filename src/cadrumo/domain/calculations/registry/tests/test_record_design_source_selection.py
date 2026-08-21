@@ -240,17 +240,27 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
         and id(node) not in annotation_node_ids
     }
 
-    assert top_level_imported_symbols == {
-        (0, "__future__", "annotations"),
-        (0, "collections.abc", "Mapping"),
-        (0, "dataclasses", "dataclass"),
-        (0, "datetime", "date"),
-        (0, "pathlib", "Path"),
+    # Assert the PROPERTY this test is named for -- the selector must not be able
+    # to consult an export layout -- rather than pinning the module's whole import
+    # inventory. The inventory form failed on `typing.Final` and an intra-package
+    # `_legal` constant, neither of which is an export layout: an unrelated import
+    # reds it, so it trains everyone to update the constant and then detects
+    # nothing.
+    export_layout_modules = {
+        module
+        for _level, module, _symbol in top_level_imported_symbols
+        if module is not None and ("export" in module or module == "_fixed_width_codec")
+    }
+    assert export_layout_modules == set(), (
+        f"the record-design selector imports export-layout machinery: {sorted(export_layout_modules)}"
+    )
+    # ...and a floor, so an empty or mis-rooted parse cannot satisfy the above.
+    assert {
         (1, "_errors", "RegistryValidationError"),
         (1, "_schema", "SourceReference"),
         (4, "core.hashing", "hash_file"),
         (4, "core.resources", "resolve_companion_binary"),
-    }
+    } <= top_level_imported_symbols
     assert top_level_direct_imports == set()
     assert resolver_imports == set()
     assert resolver_globals == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
@@ -303,11 +313,25 @@ def test_rejects_a_hash_drifting_selected_binary() -> None:
 
 
 def test_rejects_a_selection_without_a_catalogue_epoch() -> None:
+    """A source declaring no epoch is refused for THAT reason, not a mismatch.
+
+    The subject is a real shipped source with its epoch stripped, following the
+    sibling hash-drift test above, rather than a modelo pinned by id for
+    happening to lack one. This test named ``aeat-dr-720``, which has since been
+    given epoch ``2013``: the call still raised, so the test still passed, but on
+    an epoch MISMATCH — a different branch from the one it exists to cover.
+    """
+    sources = _catalogues().sources
+    source = sources["aeat-dr-200-2025"]
+    epochless = SourceReference.model_validate(
+        {**source.model_dump(mode="python"), "record_design_epoch": None},
+    )
+
     with pytest.raises(RegistryValidationError, match="does not declare a design epoch"):
         resolve_record_design_binary(
             bundled_path(),
-            _catalogues().sources,
-            source_ref="aeat-dr-720",
+            {str(epochless.id): epochless},
+            source_ref="aeat-dr-200-2025",
             filing_year=2025,
             design_epoch="2025",
         )

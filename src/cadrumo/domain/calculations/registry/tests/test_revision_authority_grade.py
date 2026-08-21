@@ -178,7 +178,12 @@ def test_a_planted_grade_reds_a_copy_of_a_real_shipped_revision(tmp_path: Path) 
     original_text = fragment.read_text(encoding="utf-8")
     revision_id = fragment.parents[1].name
 
-    assert load_modelo_directory(modelo_dir).revisions[revision_id].authority_grade is None
+    # The baseline is whatever the copied modelo's MANIFEST declares, read rather
+    # than assumed absent. This asserted `is None`, true while nothing carried the
+    # field and false once the corpus was graded -- and the grade it then saw was
+    # declared in the manifest, its correct home, so the assertion failed on a
+    # premise rather than on the property this test is named for.
+    baseline = load_modelo_directory(modelo_dir).revisions[revision_id].authority_grade
 
     fragment.write_text(
         f'{original_text}\n[revisions."{revision_id}"]\nauthority_grade = "filing"\n',
@@ -188,7 +193,11 @@ def test_a_planted_grade_reds_a_copy_of_a_real_shipped_revision(tmp_path: Path) 
         load_modelo_directory(modelo_dir)
 
     fragment.write_text(original_text, encoding="utf-8")
-    assert load_modelo_directory(modelo_dir).revisions[revision_id].authority_grade is None
+    restored = load_modelo_directory(modelo_dir).revisions[revision_id].authority_grade
+    assert restored == baseline, "removing the plant must restore the manifest's own declaration"
+    # The refusal above plus this equality are the whole property: the planted
+    # "filing" must never merge in, so the reload has to match the manifest's own
+    # declaration exactly.
 
 
 def _first_bundled_fragmented_modelo() -> Path:
