@@ -3158,17 +3158,23 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchec9gn6p8:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0,62%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n64objck:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n66tbfehgg:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Tax amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: null
               label: null
@@ -4330,8 +4336,10 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhec9gn6p8:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0,26%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
               help: null
               label: null
@@ -4342,17 +4350,23 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchec9gn6p8:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0,62%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n64objck:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n66tbfehgg:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Tax amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: null
               label: null
@@ -4366,8 +4380,10 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n64objck:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 1%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
               help: null
               label: null
@@ -5517,8 +5533,10 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhec9gn6p8:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0,26%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
               help: null
               label: null
@@ -5529,17 +5547,23 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchec9gn6p8:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0,62%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n64objck:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60n66tbfehgg:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 0%.
+                Tax amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: null
               label: null
@@ -5553,8 +5577,10 @@ modelo:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n64objck:
-              help: null
-              label: null
+              help: Amount declared on the annual IVA summary, modelo 390, for the
+                equivalence surcharge at the stated rate.
+              label: General-regime transactions. Equivalence surcharge. Tipo 1%.
+                Taxable base
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
               help: null
               label: null

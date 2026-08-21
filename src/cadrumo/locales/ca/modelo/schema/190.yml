@@ -37,6 +37,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Any de naixement
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -79,9 +83,17 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Ascendents. Menors de 75 anys. Nre. total
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
               help: null
               label: Clau de percepció
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Complement d'ajuda per a la infància
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -94,6 +106,10 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Còmput dels 3 primers fills. Fill 3r
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Contracte o relació
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -140,12 +156,40 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Fills i altres descendents. Resta. Nre. total
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Discapacitat
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Exercici de meritació
+            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Excessos per lliurament d'accions d'empreses emergents
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Ingressos a compte
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Mobilitat geogràfica
             x-e1in4opedpkmc:
               help: null
               label: null
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: NIF del cònjuge o del titular de la unitat de convivència
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: NIF del representant legal
             x-e1in4opedpnmqojick:
               help: null
               label: Cognoms i nom o denominació del perceptor
@@ -156,12 +200,28 @@ modelo:
               help: null
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Comunicació de préstecs per a habitatge habitual
+            x-e1in4opee1p6utj9dphmio8:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Codi de província
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retencions practicades sobre les percepcions dineràries
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
               help: null
               label: Subclau de percepció
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Titular de la unitat de convivència
           construct:
             modelo-190-annual-summary:
               field:
@@ -200,6 +260,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Any de naixement
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -242,9 +306,17 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Ascendents. Menors de 75 anys. Nre. total
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
               help: null
               label: Clau de percepció
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Complement d'ajuda per a la infància
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -257,6 +329,10 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Còmput dels 3 primers fills. Fill 3r
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Contracte o relació
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -303,12 +379,40 @@ modelo:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
               label: Fills i altres descendents. Resta. Nre. total
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Discapacitat
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Exercici de meritació
+            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Excessos per lliurament d'accions d'empreses emergents
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Ingressos a compte
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Mobilitat geogràfica
             x-e1in4opedpkmc:
               help: null
               label: null
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: NIF del cònjuge o del titular de la unitat de convivència
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: NIF del representant legal
             x-e1in4opedpnmqojick:
               help: null
               label: Cognoms i nom o denominació del perceptor
@@ -319,12 +423,33 @@ modelo:
               help: null
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Comunicació de préstecs per a habitatge habitual
+            x-e1in4opee1p6utj9dphmio8:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Codi de província
+            x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Rendiments del treball per la gestió de fons vinculats a l'emprenedoria,
+                la innovació i el desenvolupament de l'activitat econòmica
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Retencions practicades sobre les percepcions dineràries
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
               help: null
               label: Subclau de percepció
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Dada del perceptor declarada en el registre de tipus 2 del model
+                190.
+              label: Titular de la unitat de convivència
           construct:
             modelo-190-annual-summary:
               field:

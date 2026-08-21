@@ -37,6 +37,9 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Year of birth
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -79,9 +82,15 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Ascendants. Under 75 years old. Total number
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Ceuta or Melilla
             x-e1in4opecdm62tj5:
               help: null
               label: Income key
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Child support supplement
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -94,6 +103,9 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Count of the first 3 children. 3rd child
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Contract or relationship
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -141,12 +153,33 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Children and other descendants. Remainder. Total number
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Disability
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Accrual year
+            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Excess from delivery of start-up company shares
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Payments on account
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Geographic mobility
             x-e1in4opedpkmc:
               help: null
               label: Recipient's tax ID (NIF)
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: NIF of the spouse or of the holder of the cohabitation unit
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: NIF of the legal representative
             x-e1in4opedpnmqojick:
               help: null
               label: Recipient's surnames and given name, or legal name
@@ -156,12 +189,24 @@ modelo:
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
               help: null
               label: Valuation of in-kind income not arising from work incapacity
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Notification of loans for a habitual residence
+            x-e1in4opee1p6utj9dphmio8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Province code
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Withholdings applied to cash income
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Family situation
             x-e1in4opeedqm4orcc5r6a:
               help: null
               label: Income subkey
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Holder of the cohabitation unit
           construct:
             modelo-190-annual-summary:
               field:
@@ -200,6 +245,9 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Year of birth
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -242,9 +290,15 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Ascendants. Under 75 years old. Total number
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Ceuta or Melilla
             x-e1in4opecdm62tj5:
               help: null
               label: Income key
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Child support supplement
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -257,6 +311,9 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Count of the first 3 children. 3rd child
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Contract or relationship
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -304,12 +361,33 @@ modelo:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
               label: Children and other descendants. Remainder. Total number
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Disability
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Accrual year
+            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Excess from delivery of start-up company shares
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Payments on account
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Geographic mobility
             x-e1in4opedpkmc:
               help: null
               label: Recipient's tax ID (NIF)
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: NIF of the spouse or of the holder of the cohabitation unit
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: NIF of the legal representative
             x-e1in4opedpnmqojick:
               help: null
               label: Recipient's surnames and given name, or legal name
@@ -319,12 +397,28 @@ modelo:
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
               help: null
               label: Valuation of in-kind income not arising from work incapacity
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Notification of loans for a habitual residence
+            x-e1in4opee1p6utj9dphmio8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Province code
+            x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Employment income from managing funds linked to entrepreneurship,
+                innovation and economic activity development
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
               help: null
               label: Withholdings applied to cash income
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Family situation
             x-e1in4opeedqm4orcc5r6a:
               help: null
               label: Income subkey
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+              label: Holder of the cohabitation unit
           construct:
             modelo-190-annual-summary:
               field:
