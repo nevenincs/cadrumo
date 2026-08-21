@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3aae124fe377be190c327306e9ada31a809a60972ff07e2ef7dfbffc65af574'
+body_hash: 'sha256:4a1c8cab3ed9de772a910f4b014a6a5d7f59264a894f9de17b1108a0dbdb81d7'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10751,3 +10751,52 @@ with distinct headings, and three modelo 193 declarante totals across both its
 revisions. The 21 modelo 184 group-shared and the 11 modelo 193 casillas with no
 covering heading stay blank on the standing basis that a wrong label is worse
 than a missing one.
+
+## Modelo 190's group heading was not the end of the road
+
+Modelo 190's descendientes block was set aside early in this campaign, and
+again last tick, on a finding that is true as far as it goes: its record design
+decomposes only to the GROUP. The field at @223+6 is "HIJOS Y OTROS
+DESCENDIENTES." spanning four casillas with distinct meanings, so both joins
+this campaign has built -- positional and export-refs -- bottom out at a heading
+that names the block and not the field. The group-heading rule written last tick
+correctly refuses to use it.
+
+What neither join looked at is that **the design says in words that the block is
+subdivided, and then subdivides it**:
+
+```
+223-228 Numerico HIJOS Y OTROS DESCENDIENTES.
+  ... Este campo se subdivide en cuatro:
+  223 «< 3 anos. N.º Total»: Numero de descendientes del perceptor que ...
+  224 «< 3 anos. Por entero»: ...
+```
+
+The sub-names are offset-keyed and quoted in guillemets, so they extract exactly:
+23 of them across the perceptor record. Pairing each with the design group whose
+range contains it gives a label built from two quotations of the same document --
+"Hijos y otros descendientes. Menores de 3 anos. N.º total" -- and every
+(group, sub) pair is unique across the 23, so no two casillas can collide.
+
+That is 46 labels, both revisions, backlog **232 -> 186**. The sub-name is itself
+a category plus a Total/Por entero qualifier and both repeat across the five
+groups, so 23 labels came from 5 group names, 10 categories and 2 qualifiers.
+
+**Two of my own earlier statements were wrong and are corrected here.** Modelo
+190 does have an export layout -- last tick's report said it had none, which is
+why the export-refs join was described as unavailable to it; the join is
+unavailable for a different reason, that modelo 190 has no semantic map under
+`dev/registry/mappings/`. And "the design does not carry per-casilla labels
+there" was too strong: the record-design TABLE does not, and the surrounding
+prose does.
+
+The lesson generalises past this modelo. Every extractor this campaign has built
+reads the design's structured table -- offsets, widths, one description per row.
+The instruction prose beside it is a second, differently-shaped source that the
+tooling has never read, and where a table row covers several casillas it is the
+only place the individual fields are named. A group heading means "look
+elsewhere in this document", not "this cannot be grounded".
+
+**Still blank and correctly so:** 64 modelo 190 casillas whose offsets the prose
+never names in guillemets, modelo 184's 21 group-shared, and modelo 193's 11
+with no covering heading.
