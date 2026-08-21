@@ -1,0 +1,135 @@
+# Modelo 222 'Informacion adicional (6)' casillas: the eleven 17-wide amounts
+# the bundled official diseno `aeat-dr-222-2025` declares WITHOUT a box number.
+# The block's twelfth slot, Resultado consolidado del periodo, does carry box
+# [35] and is authored with the box casillas instead.
+#
+# These are operator-entered figures, so they are casillas with slug ids rather
+# than producer keys. Each names a provision the legal catalogue does not hold
+# (art. 17.2, 33 and 34 LIS, and art. 26 of Ley 19/1994), so each carries the
+# revision's base grounding only; citing an unresolvable ref would fail the
+# legal-ref gate.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.quita-espera-importe-excluido"
+number = "633-649"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_quita_espera_importe_excluido"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.quita-espera-integrado-base"
+number = "650-666"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_quita_espera_integrado_base"
+required = false
+input_kind = "manual"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The diseno splits the quita o espera figure into the part integrated into the BASE imponible and the part integrated at CUOTA level for cooperatives only. Two distinct official slots, so each role appears once."
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.quita-espera-integrado-cuota"
+number = "667-683"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_quita_espera_integrado_cuota"
+required = false
+input_kind = "manual"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The diseno splits the quita o espera figure into the part integrated into the BASE imponible and the part integrated at CUOTA level for cooperatives only. Two distinct official slots, so each role appears once."
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.reversion-deterioros"
+number = "684-700"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_reversion_deterioros"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.reserva-inversiones-canarias"
+number = "701-717"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_reserva_inversiones_canarias"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.bonificacion-ley-19-1994"
+number = "718-734"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_bonificacion_ley_19_1994"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.regimen-zec-no-computable"
+number = "735-751"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_regimen_zec_no_computable"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.minoracion-bonificacion-art-33"
+number = "752-768"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_minoracion_bonificacion_art_33"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.aumento-capital-compensacion-creditos"
+number = "769-785"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_aumento_capital_compensacion_creditos"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.renta-exenta-cap-xiv-tit-vii"
+number = "786-802"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_renta_exenta_cap_xiv_tit_vii"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "info.bonificacion-art-34"
+number = "803-819"
+section = ["informacion-adicional"]
+data_type = "money"
+semantic_role = "is_pf_grupo_info_bonificacion_art_34"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025"]
