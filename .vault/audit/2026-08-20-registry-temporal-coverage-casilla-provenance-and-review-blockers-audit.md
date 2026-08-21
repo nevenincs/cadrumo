@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0a8d04820daf3c8b9c440fc4d3e8c707600e3df7c10d6e76a9c021b267be6354'
+body_hash: 'sha256:701a91a0a7c04da32567353e8f88cc6d1846a9115692af1e7e0d7e6c9d0dd63b'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -294,7 +294,6 @@ description. Until it does, the honest statement is the one above: coverage coun
 numbers, 21 modelos carry more figures than numbers, and the size of that gap is
 unquantified.
 
-
 ### m604-declares-no-official-box-numbers | medium | 122 casillas, zero numeric ``number``, on a revision that declares a byte-extent fichero layout
 
 m604 was authored between iterations (`32e91b24fb`, `67ebbc9fed`, `11ec8d3bcc`) and now
@@ -347,7 +346,6 @@ stated rationale to weigh against the corpus convention, and rewriting 122 fresh
 landed casillas on one reading would be barging. m604 stays **pending_review** in both
 revisions: a revision whose numbering does not mirror the official layout cannot be
 honestly stamped, and stamping it would flip it onto the filing-authority proof path.
-
 
 ## Recommendations
 

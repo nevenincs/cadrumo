@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:976c74a52212ec38a83dd3be22c07f1c210423136d22ef0773ba38808114d269'
+body_hash: 'sha256:00c7e2dd12dc35c65bd54e3184c62052f0df79b9bb86ef10d04baec5925d9015'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8205,3 +8205,104 @@ false positive blocked behind the duplicated modelo 303 design, and the
 bookkeeping set `_KNOWN_SPANNING` still carrying `303:2022` whose split has
 landed -- left alone because removing its last entry trips the module's own
 instruction to delete itself, which is correct only once the tree is clean.
+
+## Tick: the four false positives, resolved
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed.
+
+### Correcting last tick's reading of the duplicate
+
+I recorded modelo 303's twice-bundled 2024 design as needing an operator
+decision, on the grounds that the two copies might differ and deleting bundled
+evidence is irreversible. Two things were wrong with that.
+
+The files are **byte-identical** -- same size, same sha256 -- so there was never
+a question of which is canonical. And the walk that reads them ALREADY collapses
+such twins: `_designs_in_publication_order` deduplicates by
+`_design_fingerprint`, and its docstring names this exact corpus quirk. Nothing
+needed deleting, and nothing needed deciding.
+
+Measured across the corpus while checking: 218 bundled files, **215 distinct
+contents**, three duplicate pairs. All three are the truncated-extension shape
+the walk already handles.
+
+What actually broke my fix was smaller and entirely mine. Deduplication keeps
+whichever twin sorts first, which is not necessarily the one the catalogue
+cites: the catalogue names `...-381-kb-xls.xlsx`, the walk keeps
+`...-381-kb-x.xlsx`. I was comparing citations to claimed designs by FILE NAME,
+so two files that are the same design did not match. Citations are now resolved
+through `_design_fingerprint` -- the identity this module already uses to
+collapse twins -- rather than through a second, weaker notion of sameness.
+
+A performance note worth carrying: fingerprinting PARSES a design, so building
+a ref-to-fingerprint map for the whole catalogue reads the entire corpus to
+answer a question a handful of refs per revision ever ask. Resolved lazily, one
+ref at a time.
+
+### The result
+
+**Spanning revisions: 8 -> 4.** The four that stopped reporting are exactly the
+four false positives -- modelo 303's two 2024 halves and modelo 490's two 2022
+halves -- and the four that remain are exactly the genuine cross-year spans this
+audit has recorded since the split work began: modelo 184 (2023, 2025), 200
+(2024, 2025), 322 (2022, 2023) and 347 (2009, 2010).
+
+That let the bookkeeping become honest. `_KNOWN_SPANNING` carried one entry,
+`303:2022`, whose split had landed; it now carries the four genuine spans and
+records why four others left the set WITHOUT being split -- they were correctly
+scoped all along and the detector could not see it.
+**test_revision_span_split_progress: 2 failed -> 3 passed.**
+
+### Verified against
+
+`test_mid_year_design_claim` pins all three properties: the halves report no
+boundary inside their own year, the genuine cross-year spans still report, and
+only a partial span inside one year is narrowed at all. Withdrawing the
+narrowing reds two of the three.
+
+The second control is the one that matters. A narrowing that silenced modelo
+184, 200, 322 or 347 would be hiding the gate's entire purpose, which is why
+those four are asserted to KEEP reporting rather than merely left unmentioned.
+
+Generated-tree gates 30 passed. Authority CLEAN.
+
+### Still open
+
+Four genuine cross-year spans awaiting their splits -- the same four, now
+tracked rather than mixed in with false positives.
+
+### The regression the narrowing caused, and the test that caught it
+
+Narrowing broke `test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio`,
+which asserts the verdict names at least one boundary whose two years are EQUAL.
+Removing the four false positives removed the only such boundaries, so the
+assertion had nothing left to find.
+
+Checked whether that meant the instrument had gone blind, because that is the
+failure this module exists to prevent. It has not: widening one of modelo 303's
+2024 halves back across the whole ejercicio still reports `(2024, 2024)`, while
+the half as declared reports nothing. The keying still sees a mid-course
+boundary; no DECLARED revision spans one any more, which is the tree being
+right.
+
+Rewritten to prove the capability on that constructed span, keeping the original
+vacuity guard that the corpus still HOLDS a mid-split ejercicio -- and adding the
+converse assertion, that no declared revision spans one. Same protection if an
+inventory ever returns to keeping one design per year, and a regression that
+reintroduces a spanning revision is now caught rather than required.
+
+This is the third test in this campaign written to require a defect that has
+since been fixed. The pattern is worth naming: a gate proving itself against
+live breakage becomes unsatisfiable the moment the breakage is repaired, and the
+remedy each time was to move the proof onto a constructed case and assert the
+repaired state on the real one.
+
+`test_revision_span_matches_published_designs`: back to its four pre-existing
+failures, name for name -- the regression I introduced is gone.
+
+A note on the controls: the disproving probe that withdraws the narrowing reds
+two of the three new tests. The complementary probe -- forcing narrowing on
+every revision -- timed out rather than returning a verdict, so it proves
+nothing and is not counted. The bound it would have tested is asserted directly
+instead: `test_only_a_partial_span_inside_one_year_is_narrowed` requires every
+genuine cross-year span to be left un-narrowed.
