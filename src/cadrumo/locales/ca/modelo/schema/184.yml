@@ -8,68 +8,91 @@ modelo:
         2015-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Casella 121-122 del model 184, exercici 2015.
               label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
+              help: Casella ejercicio del model 184, exercici 2015.
               label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
+              help: Casella 146 del model 184, exercici 2015.
               label: ACTIVITAT PRINCIPAL
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
+              help: Casella 145 del model 184, exercici 2015.
               label: TIPUS D'ENTITAT
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
+              help: Casella 149-150 del model 184, exercici 2015.
               label: CLAU PAÍS
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
+              help: Casella 148 del model 184, exercici 2015.
               label: OBJECTE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
+              help: Casella 147 del model 184, exercici 2015.
               label: TIPUS D'ENTITAT
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Import net de la xifra de negocis
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Casella 108-120 del model 184, exercici 2015.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Casella 59-107 del model 184, exercici 2015.
               label: TELÈFON
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Casella 172-180 del model 184, exercici 2015.
               label: N.I.F. DEL REPRESENTANT
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Casella 181-220 del model 184, exercici 2015.
               label: COGNOMS I NOM O RAÓ SOCIAL DEL REPRESENTANT
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella tipo-declaracion del model 184, exercici 2015.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehkn0rpdednn0rriehig:
+              help: Casella 58 del model 184, exercici 2015.
               label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lpmuor9dtpg:
+              help: Casella 136-144 del model 184, exercici 2015.
               label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
+              help: Casella 156 del model 184, exercici 2015.
               label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Base de la deducció / import
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
+              help: Casella 97-116 del model 184, exercici 2015.
               label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
                 D'INVERSIÓ COL·LECTIVA
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
+              help: Casella 88-96 del model 184, exercici 2015.
               label: NIF DE PERSONA O ENTITAT CESSIONÀRIA / NIF DE LA INSTITUCIÓ D'INVERSIÓ
                 COL·LECTIVA
             x-ehkn0rpi5phmoobmck:
+              help: Casella 77 del model 184, exercici 2015.
               label: Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital
                 immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió,
                 G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions
                 IS, K=retencions suportades, L=excés de rendes negatives de països
                 sense conveni)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
+              help: Casella 80-81 del model 184, exercici 2015.
               label: CLAU PAÍS
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
+              help: Casella 396 del model 184, exercici 2015.
               label: CRITERI DE COBRAMENTS I PAGAMENTS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Casella 498-500 del model 184, exercici 2015.
               label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
+              help: Casella 84-87 del model 184, exercici 2015.
               label: GRUP O EPÍGRAF IAE
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
+              help: Casella 117-124 del model 184, exercici 2015.
               label: Any
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
               help: Import declarat al model 184. El disseny el divideix en part entera
@@ -176,12 +199,16 @@ modelo:
                 i part decimal.
               label: Percentatge de reducció
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Casella 246-265 del model 184, exercici 2015.
               label: REFERÈNCIA CADASTRAL
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
+              help: Casella 82 del model 184, exercici 2015.
               label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
+              help: Casella 196-207 del model 184, exercici 2015.
               label: RENDA ATRIBUÏBLE AMB DRET A REDUCCIÓ
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
+              help: Casella 177-190 del model 184, exercici 2015.
               label: Import de la renda atribuïble / rendiment net atribuïble al membre
                 de l'entitat (sense signe, sense coma decimal, en euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
@@ -189,13 +216,17 @@ modelo:
                 i part decimal.
               label: Retencions i ingressos a compte
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Casella 245 del model 184, exercici 2015.
               label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpi5ppnaoj3dhgncp8:
+              help: Casella 78-79 del model 184, exercici 2015.
               label: Subclau del tipus de renda atribuïda (granularitat per origen
                 geogràfic Espanya/estranger, reduccions aplicables, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
+              help: Casella 83 del model 184, exercici 2015.
               label: TIPUS D'ACTIVITAT
             x-ehkn0rpi5pq6is3f5lk6uqj1:
+              help: Casella 76 del model 184, exercici 2015.
               label: TIPUS DE FULL
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
               help: Import declarat al model 184. El disseny el divideix en part entera
@@ -206,26 +237,32 @@ modelo:
                 i part decimal.
               label: 'Valor liquidatiu / ajustos: augments'
             x-ehkn0rpj5phmoobmck:
+              help: Casella 93 del model 184, exercici 2015.
               label: CLAU
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
+              help: Casella 79-80 del model 184, exercici 2015.
               label: CLAU PAÍS
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
+              help: Casella 81 del model 184, exercici 2015.
               label: CLAU TIPUS DE PARTÍCIP
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
               label: Codi de província
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Casella 200-202 del model 184, exercici 2015.
               label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
               label: Nombre de dies com a membre
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
+              help: Casella 120-159 del model 184, exercici 2015.
               label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
             x-ehkn0rpj5pkmqs3fe9q6a:
+              help: Casella 96-108 del model 184, exercici 2015.
               label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
@@ -244,16 +281,20 @@ modelo:
                 i part decimal.
               label: Percentatge de participació
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
+              help: Casella 195-199 del model 184, exercici 2015.
               label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
+              help: Casella 160-171 del model 184, exercici 2015.
               label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
             x-ehkn0rpj5pp6ap3lcdhmirre:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Reducció
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Casella 174-193 del model 184, exercici 2015.
               label: REFERÈNCIA CADASTRAL
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
+              help: Casella 216-229 del model 184, exercici 2015.
               label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
                 EN ESTIMACIÓ OBJECTIVA
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
@@ -265,80 +306,113 @@ modelo:
                 en regim d'atribucio de rendes.
               label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Casella 173 del model 184, exercici 2015.
               label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpj5ppnaoj3dhgncp8:
+              help: Casella 94-95 del model 184, exercici 2015.
               label: SUBCLAU
             x-ehkn0rpj5pq6is3f5lk6uqj1:
+              help: Casella 76 del model 184, exercici 2015.
               label: TIPUS DE FULL
+          construct:
+            modelo-184-informative:
+              field:
+                title: Model 184 declaració informativa d'entitats en règim d'atribució
+                  de rendes
+          field:
+            label: Model 184, exercicis 2015 a 2024
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Casella 121-122 del model 184, exercici 2025.
               label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
+              help: Casella ejercicio del model 184, exercici 2025.
               label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
+              help: Casella 146 del model 184, exercici 2025.
               label: ACTIVITAT PRINCIPAL
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
+              help: Casella 145 del model 184, exercici 2025.
               label: TIPUS D'ENTITAT
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
+              help: Casella 149-150 del model 184, exercici 2025.
               label: CLAU PAÍS
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
+              help: Casella 148 del model 184, exercici 2025.
               label: OBJECTE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
+              help: Casella 147 del model 184, exercici 2025.
               label: TIPUS D'ENTITAT
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Import net de la xifra de negocis
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Casella 108-120 del model 184, exercici 2025.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Casella 59-107 del model 184, exercici 2025.
               label: TELÈFON
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Casella 172-180 del model 184, exercici 2025.
               label: N.I.F. DEL REPRESENTANT
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Casella 181-220 del model 184, exercici 2025.
               label: COGNOMS I NOM O RAÓ SOCIAL DEL REPRESENTANT
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella tipo-declaracion del model 184, exercici 2025.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehkn0rpdednn0rriehig:
+              help: Casella 58 del model 184, exercici 2025.
               label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Nombre total de registres d'entitat
             x-chim6r1eehnn8obc5lpmuor9dtpg:
+              help: Casella 136-144 del model 184, exercici 2025.
               label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
+              help: Casella 156 del model 184, exercici 2025.
               label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Base de la deducció / import
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
+              help: Casella 97-116 del model 184, exercici 2025.
               label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
                 D'INVERSIÓ COL·LECTIVA
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
+              help: Casella 88-96 del model 184, exercici 2025.
               label: NIF DE PERSONA O ENTITAT CESSIONÀRIA / NIF DE LA INSTITUCIÓ D'INVERSIÓ
                 COL·LECTIVA
             x-ehkn0rpi5phmoobmck:
+              help: Casella 77 del model 184, exercici 2025.
               label: Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital
                 immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió,
                 G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions
                 IS, K=retencions suportades, L=excés de rendes negatives de països
                 sense conveni)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
+              help: Casella 80-81 del model 184, exercici 2025.
               label: CLAU PAÍS
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
+              help: Casella 396 del model 184, exercici 2025.
               label: CRITERI DE COBRAMENTS I PAGAMENTS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Casella 498-500 del model 184, exercici 2025.
               label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
+              help: Casella 84-87 del model 184, exercici 2025.
               label: GRUP O EPÍGRAF IAE
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
+              help: Casella 117-124 del model 184, exercici 2025.
               label: Any
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
               help: Import declarat al model 184. El disseny el divideix en part entera
@@ -445,12 +519,16 @@ modelo:
                 i part decimal.
               label: Percentatge de reducció
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Casella 246-265 del model 184, exercici 2025.
               label: REFERÈNCIA CADASTRAL
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
+              help: Casella 82 del model 184, exercici 2025.
               label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
+              help: Casella 196-207 del model 184, exercici 2025.
               label: RENDA ATRIBUÏBLE AMB DRET A REDUCCIÓ
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
+              help: Casella 177-190 del model 184, exercici 2025.
               label: Import de la renda atribuïble / rendiment net atribuïble al membre
                 de l'entitat (sense signe, sense coma decimal, en euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
@@ -458,13 +536,17 @@ modelo:
                 i part decimal.
               label: Retencions i ingressos a compte
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Casella 245 del model 184, exercici 2025.
               label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpi5ppnaoj3dhgncp8:
+              help: Casella 78-79 del model 184, exercici 2025.
               label: Subclau del tipus de renda atribuïda (granularitat per origen
                 geogràfic Espanya/estranger, reduccions aplicables, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
+              help: Casella 83 del model 184, exercici 2025.
               label: TIPUS D'ACTIVITAT
             x-ehkn0rpi5pq6is3f5lk6uqj1:
+              help: Casella 76 del model 184, exercici 2025.
               label: TIPUS DE FULL
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
               help: Import declarat al model 184. El disseny el divideix en part entera
@@ -475,26 +557,32 @@ modelo:
                 i part decimal.
               label: 'Valor liquidatiu / ajustos: augments'
             x-ehkn0rpj5phmoobmck:
+              help: Casella 93 del model 184, exercici 2025.
               label: CLAU
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
+              help: Casella 79-80 del model 184, exercici 2025.
               label: CLAU PAÍS
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
+              help: Casella 81 del model 184, exercici 2025.
               label: CLAU TIPUS DE PARTÍCIP
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
               label: Codi de província
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Casella 200-202 del model 184, exercici 2025.
               label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
               label: Nombre de dies com a membre
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
+              help: Casella 120-159 del model 184, exercici 2025.
               label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
             x-ehkn0rpj5pkmqs3fe9q6a:
+              help: Casella 96-108 del model 184, exercici 2025.
               label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
               help: Dada del membre declarat en el registre de tipus 3 del model 184.
@@ -513,16 +601,20 @@ modelo:
                 i part decimal.
               label: Percentatge de participació
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
+              help: Casella 195-199 del model 184, exercici 2025.
               label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
+              help: Casella 160-171 del model 184, exercici 2025.
               label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
             x-ehkn0rpj5pp6ap3lcdhmirre:
               help: Import declarat al model 184. El disseny el divideix en part entera
                 i part decimal.
               label: Reducció
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Casella 174-193 del model 184, exercici 2025.
               label: REFERÈNCIA CADASTRAL
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
+              help: Casella 216-229 del model 184, exercici 2025.
               label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
                 EN ESTIMACIÓ OBJECTIVA
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
@@ -534,8 +626,18 @@ modelo:
                 en regim d'atribucio de rendes.
               label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Casella 173 del model 184, exercici 2025.
               label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpj5ppnaoj3dhgncp8:
+              help: Casella 94-95 del model 184, exercici 2025.
               label: SUBCLAU
             x-ehkn0rpj5pq6is3f5lk6uqj1:
+              help: Casella 76 del model 184, exercici 2025.
               label: TIPUS DE FULL
+          construct:
+            modelo-184-informative:
+              field:
+                title: Model 184 declaració informativa d'entitats en règim d'atribució
+                  de rendes
+          field:
+            label: Model 184, exercicis 2025 i següents
