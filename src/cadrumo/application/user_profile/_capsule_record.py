@@ -167,7 +167,7 @@ class ProfileRecordSession:
     def assert_initial_record(self, record: UserProfileRecord) -> None:
         if UUID(str(record.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("initial profile record UUID differs from its custody session")
-        if False:
+        if record.record_revision != 1 or record.previous_record_digest is not None:
             raise ProfileRecordIntegrityError(
                 "initial profile record must be exactly revision one without a predecessor"
             )
