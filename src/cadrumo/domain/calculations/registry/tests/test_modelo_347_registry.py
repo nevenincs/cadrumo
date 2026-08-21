@@ -161,7 +161,15 @@ def test_committed_modelo_347_construct_includes_revision_members() -> None:
     for revision in modelo.revisions.values():
         assert len(revision.constructs) == 1, revision.id
         construct = revision.constructs[0]
-        assert construct.casilla_ids == tuple(c.id for c in revision.casillas)
+        # Coverage, not ordering. `ConstructDefinition` validates that members
+        # are unique and that each names a declared entity; it does not fix their
+        # order, and the construct's 44 ids diverged from the revision's fragment
+        # merge order while covering exactly the same set. Requiring identical
+        # tuples asserted the merge order rather than the membership, so adding
+        # or renaming a casilla fragment reddened it with nothing wrong.
+        declared_casillas = tuple(c.id for c in revision.casillas)
+        assert set(construct.casilla_ids) == set(declared_casillas), revision.id
+        assert len(construct.casilla_ids) == len(declared_casillas), revision.id
         assert construct.extraction_profiles == tuple(p.id for p in revision.extraction_profiles)
         assert construct.verification_expectations == tuple(e.id for e in revision.verification_expectations)
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)

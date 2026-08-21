@@ -19,3 +19,29 @@ predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positi
 expression = 'implies_nonzero(["03", "06"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+
+# The OTHER direction, and the one the predicate above deliberately did not take.
+# Its note records base-to-retencion as "the obvious choice", passed over to stay
+# furthest from the engine's own additions -- while stating in the same breath
+# that the arithmetic-identity objection "does not hold by arithmetic here".
+#
+# It does not, and that is what makes this safe to declare: casilla 06 is
+# add([04], [05]) and casilla 09 is add([07], [08]), two independent sums over
+# separately manual leaves. Nothing derives 09 from 06, so a positive base total
+# against a zero retenciones total is a real observation about the filing rather
+# than something the engine could not have produced.
+#
+# Without it that direction is unguarded: a filer declaring a positive base and
+# no withholding at all clears the count-to-base predicate, because its
+# antecedent (the rentas count) and its consequent (the base) are both positive.
+# RD 439/2007 art. 75 identifies the capital-mobiliario rents subject to
+# withholding and its type-based exceptions, and art. 90 sets the positive rate
+# for the base, so the pairing has no legitimate cause under either.
+#
+# ADVISORY, never BLOCKING: a category whose payer applied no withholding in one
+# leaf while the other leaf covers it is legitimate, and must not refuse a draft.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
+expression = 'implies_nonzero(["06", "09"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-75", "rd-439-2007:art-90", "ley-35-2006:art-101"]

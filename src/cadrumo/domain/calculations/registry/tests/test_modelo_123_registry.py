@@ -313,7 +313,10 @@ def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> No
     """
     snapshot = _snapshot_2024()
 
-    predicate_id = "modelo-123-2024-base-total-implica-retenciones-total"
+    # Named for the revision it lives on, matching its sibling
+    # `modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas`;
+    # the revision is `2024-y-siguientes`, not `2024`.
+    predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
     predicate = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
 
     assert predicate.expression == 'implies_nonzero(["06", "09"])'
