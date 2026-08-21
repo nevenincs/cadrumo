@@ -173,7 +173,7 @@ def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
     """An out-of-range share triggers the AtributionMemberObservation validator."""
 
-    revision = _modelo("184", "2015-y-siguientes")
+    revision = _modelo("184", "2025-y-siguientes")
     cells = (
         RowSetCellEdit(binding="modelo-184-member-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-184-member-row-share", row_index=1, value=Decimal("150")),

@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORTED_RECORD_DESIGN_YEARS = range(2023, 2027)
 _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
-    ("184", "2015-y-siguientes", 2026): "aeat-dr-184-2025",
+    ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
     ("220", "2024-y-siguientes", 2026): "aeat-dr-220-2025",
 }

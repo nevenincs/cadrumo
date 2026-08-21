@@ -629,7 +629,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--period",
                 "0A",
                 "--revision",
-                "2015-y-siguientes",
+                "2025-y-siguientes",
             ],
         )
         assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"

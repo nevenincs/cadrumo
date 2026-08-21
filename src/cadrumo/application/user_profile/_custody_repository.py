@@ -170,7 +170,21 @@ class ProfileCustodyTransactionRepository:
 
 @contextmanager
 def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[None]:
-    """Acquire root then profile lock, the only accepted custody lock order."""
+    """Acquire root then profile lock, the only accepted custody lock order.
+
+    Custody transactions are GLOBALLY serialised, not per profile. The root
+    lock is taken first and held for the whole span, so two transactions for
+    DIFFERENT profiles exclude each other exactly as two for the same profile
+    do; a long transaction on one profile blocks every other.
+
+    The profile lock therefore never contends under the current call graph --
+    it is only ever acquired inside this function, with the root lock already
+    held. Removing it fails the lock-order gate and nothing else, which is
+    stated here because "there is a per-profile lock" otherwise reads as a
+    promise of per-profile concurrency that the root lock does not deliver.
+    It stays because the ORDER is the deadlock-safety rule: a future path that
+    takes both must take them this way round.
+    """
     adapters = custody
     storage_root = effective_storage_root(root)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()

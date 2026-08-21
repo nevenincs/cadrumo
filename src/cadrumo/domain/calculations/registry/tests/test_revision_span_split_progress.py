@@ -40,15 +40,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: own growth.
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        # The four revisions that genuinely cite two designs across a YEAR
-        # boundary and still await their split. Each is recorded in the
-        # export-layout authoring backlog audit with the boundary it crosses.
-        ("184", "2015-y-siguientes"),
+        # The revisions that genuinely cite two designs across a YEAR boundary
+        # and still await their split. Each is recorded in the export-layout
+        # authoring backlog audit with the boundary it crosses.
         ("200", "2024-y-siguientes"),
         ("322", "2008-2025"),
         ("347", "2008-y-siguientes"),
     },
 )
+#: `("184", "2015-y-siguientes")` removed: the revision was partitioned into
+#: `2015-2024` and `2025-y-siguientes` at the boundary Orden HAC/1430/2025 sets
+#: for itself -- art. cuarto Uno introduces NUMERO TOTAL DE REGISTROS DE ENTIDAD
+#: at 221-229 of tipo 1 and the orden is applicable for the first time to
+#: ejercicio 2025 for this modelo. Verified rather than assumed, and in the
+#: direction that would catch a silenced detector: `_boundaries_for` returns
+#: nothing for EITHER new revision, the two published trees carry different
+#: design epochs, and their declarante records differ at exactly the disputed
+#: position (2015-2024 writes a 267-long filler at 221; 2025-y-siguientes writes
+#: the 9-long casilla there and moves the filler to 230). A detector that had
+#: simply stopped seeing modelo 184 could not produce that difference.
+#:
 #: `("303", "2022")` removed: its split landed, and the detector confirms it --
 #: `_boundaries_for` returns nothing for that revision now.
 #:

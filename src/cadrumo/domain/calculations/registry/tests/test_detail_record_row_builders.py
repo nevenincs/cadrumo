@@ -101,7 +101,7 @@ def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_value
 
 
 def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif() -> None:
-    revision = next(m for m in _modelos() if m.id == "184").revisions["2015-y-siguientes"]
+    revision = next(m for m in _modelos() if m.id == "184").revisions["2025-y-siguientes"]
     obs = (
         AtributionMemberObservation(
             source_id="m2",

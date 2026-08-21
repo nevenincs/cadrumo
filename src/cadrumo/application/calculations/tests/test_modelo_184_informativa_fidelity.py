@@ -94,7 +94,7 @@ def _year_n_observation() -> RegistryModeloObservation:
 
     The member has a non-default attribution amount so a default-silently-zero
     regression surfaces as strict inequality on reload. The casilla layout
-    follows the M184 registry (revision "2015-y-siguientes"):
+    follows the M184 registry (revision "2025-y-siguientes"):
 
     - ``decl.ejercicio`` (informational — filing year)
     - ``decl.tipo-declaracion`` (informational — 1=originaria)
