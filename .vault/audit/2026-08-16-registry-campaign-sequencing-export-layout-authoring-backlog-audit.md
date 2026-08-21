@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d0a0765437e342715cda9f96fa0fcd0bfbe75012b8f0281df84a742cf92dd1f'
+body_hash: 'sha256:558cb80de7a5e72624967ae7cfb9fdfa11857480f19d2abea26a06504193bc5d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8990,3 +8990,71 @@ Registry suite: **58 failed, 5,036 passed** (from 64 / 5,030). Six fixed, **none
 newly failing** — and this time that is a real per-test diff rather than the
 summary arithmetic, because both logs pass the integrity check the previous entry
 introduced: 64 `FAILED` lines against a 64-failure summary, 58 against 58.
+
+## Four causes behind eight failures: a retired enum value, seven unwrapped notes, and a gate that moved
+
+### `"reviewed"` is still valid — just not everywhere
+
+Two loader fixtures set `review_status = "reviewed"` on a `[legal.*]` entry and
+were refused. The value is not retired: the shipped catalogues still carry 424 of
+them. The vocabularies split by BLOCK, which the fixtures had not tracked:
+
+```
+[legal.*]      operator_reviewed 220, agent_reviewed 432   (LegalReviewStatus)
+[sources.*]    reviewed 424                                 (the degenerate ReviewStatus)
+[parameters.*] reviewed 28                                  (likewise)
+```
+
+Only the two `[legal.*]` occurrences were repointed, to `agent_reviewed`; the
+five `parameters` ones were left, because the real catalogues confirm that is
+still their vocabulary.
+
+### Seven reviewer notes over the reviewability cap
+
+`136`, `182`, `187`, `188`, `194`, `576` and `721` each carried a single-line
+`reviewed_by` of up to 2,238 characters against a 600 cap. Wrapped as TOML
+multi-line basic strings with line-ending continuations, widest line now 502.
+
+**The known hazard was checked first.** This document records m188 and m194 being
+**permanently unstampable** through the sanctioned writer precisely because their
+notes were multi-line, and that the fix landed in
+`dev/registry/conformance/_stamp.py`. So the wrapping is only safe post-fix.
+Verified rather than assumed: a wrapped M136 note was restamped on a temp copy of
+the tree through `stamp_revision`, the note was replaced, the other governance
+scalars were preserved and every non-governance key was unchanged.
+
+Each file was verified BEFORE being written — `tomllib` round-trip equality of
+the whole document, plus a width check on the rendered candidate. That order
+matters: a first attempt wrote before asserting and corrupted M136's value, which
+had to be restored from HEAD. Two bugs were caught this way and neither reached
+a committed file: a heredoc that mangled the continuation backslashes into a
+literal `\n`, and a width check that measured the replacement string (which
+contains newlines) as a single line.
+
+This also cleared `test_registry_reviewability`'s two failures, which were the
+same over-cap lines seen through a different gate.
+
+### The filing-grade review gate deliberately stopped demanding operator review
+
+Three `test_legal_review_authority_scope` failures expected refusals naming
+`operator_reviewed`. Production admits any REVIEWED status, and its docstring
+gives the reason: nothing in this project may stamp `operator_reviewed`, so
+demanding it made a filing-grade snapshot unreachable by construction and the
+gate refused every modelo rather than the unreviewed ones. "A check no input can
+pass tests nothing." The `pending_review` tooth is unchanged.
+
+The parametrized case now carries the refusal each status actually earns —
+`pending_review` at the review gate, `agent_reviewed` one gate later at filing
+capability — so a status silently changing gates reds rather than passes.
+
+The third test's subject had been retired by this campaign's own stamping: M182
+is `agent_reviewed` now, so it has no pending revision to refuse. Its unique
+coverage is the PUBLIC `authority.snapshot` accessor, and its claim — that
+operator-reviewed legal REFERENCES do not promote the revision — is now asserted
+against live inputs: the revision is `agent_reviewed` while all four of its legal
+refs are `operator_reviewed`, so reference review promoting a revision would
+yield a snapshot here. Proven by suppressing `_check_snapshot_filing_capability`:
+the test reds with `DID NOT RAISE`.
+
+Cluster: 8 failed → **39 passed**. Authority CLEAN, generated-tree gates 30
+passed, ruff clean.

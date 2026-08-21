@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:512ea38b9e631943afeaa0fdbde1a8f19275bf7a390509a233c59cbef49c1441'
+body_hash: 'sha256:afa77d150c08fd024c6d78622f412c1d5ae821561f86add037a8c3c94bcb81eb'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -631,7 +631,6 @@ then continues into the vencimiento-coincidence clause. That is the orden itself
 requiring the nominal-store / shift-at-read split the campaign settled on earlier -- the
 convention is not merely a repo choice, it is what the source wording demands.
 
-
 ### the-applicability-rung-is-exempt-from-proving-its-only-claim | high | 8 revisions know no deadline and owe no reason; the filing rung, which owes one, has one every time
 
 m840 was picked because it carries the pending set's only
@@ -700,7 +699,6 @@ the part a reviewer reads as justification. m145 and m720 are already
 
 Not corrected here: the fix is prose on revisions two of which are stamped, and changing
 a recorded reason changes what those stamps attest to.
-
 
 ## Recommendations
 
