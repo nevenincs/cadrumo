@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ac4e74b29ac2415b10d6666c9e3f325025cfa96b5155c54ab8744047cc76662'
+body_hash: 'sha256:9b08d03bb1004e89ea9ca2610fb84ef8d1a61580f54b2b54ee6b2b58eae3c93e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1319,6 +1319,53 @@ m604 has been static since `11ec8d3bcc`, so the earlier "do not barge, it is in 
 reasoning has expired; what remains is that re-numbering 122 casillas is an authoring
 task with its own verification, and the finding is already recorded here and in the
 repeated-box hazard note carried on m222's stamp.
+
+
+### m604-2021-2023-is-an-omission-not-a-reasoned-absence | medium | the distinction that decides whether a disposition can be authored at all
+
+The m604 re-numbering unblocked ``2024-y-siguientes``, which was reviewed and stamped.
+Its sibling ``2021-2023`` was re-numbered too -- coverage 0 of 7 to **7 of 7** -- but it
+cannot follow, and the reason sharpens the earlier deadline-absence finding.
+
+m604/2021-2023 has **no ``deadline_windows`` directory and no
+``family_dispositions.deadline_windows``**, while declaring ``authority_grade =
+"applicability"`` -- the rung defined as knowing when the modelo is due. That is the same
+surface defect m840, m576 and m036 carried, and each of those was closed by authoring the
+reason. **This one cannot be, and that is the finding.**
+
+**In every case closed earlier, the LAW made a calendar window impossible.** m840's
+plazo is event-anchored to the alta, variación or cese; m576's to the matriculación or
+first definitive use; m036's to the alta, modificación or baja event. No recurring window
+exists to declare, so "none is fabricated" is a true and complete reason.
+
+**m604's plazo is the opposite shape.** ``orden-hac-510-2021`` art. 3 states a fixed
+monthly calendar rule -- *"entre los días diez y veinte del mes siguiente al
+correspondiente periodo de liquidación mensual"* -- and the sibling revision enumerates
+twelve windows from exactly that rule. Windows for 2021-2023 are therefore perfectly
+constructible. Their absence is an **omission**, not a consequence of the law.
+
+**So no honest disposition can be written here.** A reason would have to assert why a
+constructible window was not constructed, and the two candidates are not
+distinguishable from the data: either the application's supported filing range begins
+later -- the sibling declares windows only for ``filing_year = 2025``, which hints at it
+-- or nobody authored them. The first is a scope policy this review cannot verify; the
+second is not a reason at all. Writing either down would be inventing a rationale.
+
+**And enumerating the 36 windows is equally a judgement, not a mechanical fix.** The rule
+is known and the dates would be derivable, but doing so would give a closed 2021-2023
+span three years of windows while the live sibling carries one year. That deviates from
+the modelo's own convention, and which convention is right is a product decision.
+
+**m604/2021-2023 therefore stays pending**, and for a reason no further measurement will
+resolve. It fails the "when due" half of the rung it declares; the remedy is a choice
+between enumerating historical windows and declaring a scoped support range, and that
+choice belongs to whoever owns the modelo's filing-year scope.
+
+This refines the earlier finding usefully: an applicability-grade revision with no
+deadline windows is not one defect but two. Where the law is event-anchored the absence
+is reasonable and a disposition closes it. Where the law states a calendar rule the
+absence is a gap, and only data or a policy statement closes it.
+
 
 ## Recommendations
 
