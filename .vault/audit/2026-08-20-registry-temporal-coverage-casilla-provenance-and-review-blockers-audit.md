@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c665508038c8f949407e563aac5b0d633010ac8ea5b00eebde65b952176abee'
+body_hash: 'sha256:fce3af694601123c3c017d7ff1a7e5ad486defb857eab45a7e40548c1e3c2b06'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1450,6 +1450,57 @@ specified: both ordenes bundled with the standard provenance note, ``artículo �
 ``disposición final única`` enrolled from HAC/1363/2018, the ``disposición final 1``
 provision from HAP/2373/2014, then the revision split at 2015 and Q4 2018 with each
 segment citing the orden that governs it.
+
+
+### the-layout-coverage-message-omits-the-half-that-explains-it | medium | four of sixteen entries read as false positives until the upper bound is recovered
+
+Triaging ``test_every_claimed_filing_year_is_covered_by_its_declared_layout_design``
+into actionable classes turned up something about the gate rather than the data. It
+names **sixteen** revisions, not the fourteen recorded earlier.
+
+**Four of the sixteen appear self-contradictory on their face:**
+
+| revision | message says | design's ``applies_from`` |
+|---|---|---|
+| m180 '2019-2022' | claims 2022 | **2014** |
+| m232 '2016-2017' | claims 2017 | **2016** |
+| m303 '2022' | claims 2022 | **2022** |
+| m210 '2025' | claims 2026 | **2022** |
+
+In each the claimed year is at or after the year the design starts applying, so the
+message reads as a contradiction. It is not. **The message reports
+``apply only from {min(starts)}`` and never prints ``applies_to``**, which is the half
+that does the work:
+
+```
+aeat-dr-180-2014  applies (2014, 2022)
+aeat-dr-232-2016  applies (2016, 2017)
+aeat-dr-303-2022  applies (2022, 2022)
+aeat-dr-210-2022  applies (2022, 2025)
+```
+
+And the years being compared are not the years printed. ``uncovered`` collects
+**ejercicio** years, while coverage is tested against the **presentation calendar years**
+that ejercicio is filed in -- the arrears correction the gate's own docstring documents
+at length, having removed an earlier false-positive class. So m180's ejercicio 2022 is
+presented in 2023, which falls outside ``(2014, 2022)``, and the entry is correct. The
+reader is simply shown "2022" and "from 2014" and left to reconcile them.
+
+**The check is sound; the message understates its own evidence.** Adding the upper bound
+and naming the presentation year would make each entry self-explanatory:
+*"ejercicio 2022, presented 2023, outside aeat-dr-180-2014 (2014-2022)"*.
+
+This matters because the list is a work queue. Anyone triaging it will hit those four
+first, judge them spurious, and lose confidence in the other twelve -- which is close to
+what happened here, and was only avoided by reading the comparison at line 169 and the
+derivation at line 204 rather than trusting the rendered text.
+
+It is the same failure shape this campaign has recorded twice on its own instruments: a
+measurement that is correct internally and lossy at the boundary where a human reads it.
+The box-collapse detector reported ``False`` for the form that motivated it; the span
+gate's ABSENT and CONTRARY classes were indistinguishable until parsed apart. No
+production code is wrong in any of the three -- the defect is in what reaches the reader.
+
 
 ## Recommendations
 
