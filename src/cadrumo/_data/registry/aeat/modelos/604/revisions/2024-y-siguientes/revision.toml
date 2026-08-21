@@ -23,7 +23,39 @@ source_refs = [
     "enrolled-modelo-604-procedure",
     "aeat-dr-604-2024",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the Impuesto sobre las Transacciones Financieras autoliquidacion. \
+DISCLOSURE -- this review follows a change made by the same agent in the immediately \
+preceding action: all 37 casillas that carry an official AEAT box number were re-numbered \
+from slug values to those numbers, derived from the bundled diseno's own field \
+descriptions. Before that change build_diseno_coverage_report read 0 of 37 covered; it now \
+reads 37 of 37 with zero gaps. The reviewer and that author are the same agent, and no \
+casilla content, offset or binding was altered -- only the number field. VERIFIED -- WHEN \
+DUE: orden-hac-510-2021 art. 3 reads verbatim in the bundled corpus \"El modelo 604 debera \
+presentarse e ingresarse por el depositario central de valores o por el sujeto pasivo \
+entre los dias diez y veinte del mes siguiente al correspondiente periodo de liquidacion \
+mensual\", and the twelve monthly windows reproduce it exactly -- period 2025-01 opens \
+2025-02-10 and closes 2025-02-20, and so on through the year. VERIFIED -- TO WHOM: art. 1 \
+is the dedicated approving clause, \"Se aprueba el modelo 604 «Impuesto sobre las \
+Transacciones Financieras. Autoliquidacion»\", carrying no year bound, so the open-ended \
+2024-y-siguientes claim does not outrun its orden. VERIFIED -- NUMBERING now mirrors the \
+official layout: liquidacion boxes 01-12 and territorio boxes 13-37 (Alava 13-17, \
+Guipuzcoa 18-22, Vizcaya 23-27, Navarra 28-32, Estado 33-37), 37 distinct numbers with no \
+duplicate, matching the dise no's derived set exactly. The eight signo casillas \
+deliberately keep slug numbers: the dise no prints \"Signo Cuota de rectificaciones ... \
+[14]\", the sign OF box 14 rather than a box of its own, and (segmento, number) is \
+uniqueness-enforced on this single-segment modelo. NOT CLAIMED -- EXPORT LAYOUT \
+COMPLETENESS: record 604-00 leaves 13 bytes uncovered, at 93..96 and 101..109. Those gaps \
+are deliberate: commit 3ff1651215 retracted fabricated filler declarations across several \
+modelos and removed modelo-604-604-00-presenter-tax-id at offset 101, exactly where the \
+nine-byte run begins and exactly a NIF's width. Nothing was invented to close them and \
+nothing should be. NOT CLAIMED -- SPAN: the gate reports only 1 comparable bundled design \
+year inside this claimed span; that is thin ABSENT-class evidence, not the \
+contrary-evidence class it reports for m220 and m763. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- all 3 locales are \
+complete, but the strings were not audited for accuracy."""
+reviewed_at = 2026-08-21
 
 [revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
