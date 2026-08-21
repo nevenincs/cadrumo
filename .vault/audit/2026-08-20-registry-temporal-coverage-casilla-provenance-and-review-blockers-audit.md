@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:afa77d150c08fd024c6d78622f412c1d5ae821561f86add037a8c3c94bcb81eb'
+body_hash: 'sha256:44dfcd1a114ad060dc6189cde1175cd6cf6bf262c1b7fd993d379e587c4217a1'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -699,6 +699,44 @@ the part a reviewer reads as justification. m145 and m720 are already
 
 Not corrected here: the fix is prose on revisions two of which are stamped, and changing
 a recorded reason changes what those stamps attest to.
+
+
+### remediation-of-the-applicability-deadline-gap | resolved for the two in reach | 8 -> 6, and one loose stamp phrase corrected
+
+The finding above recorded 8 applicability-grade revisions carrying neither a deadline
+window nor a reason. Two were in this campaign's reach and both are now closed, by
+authoring the reason rather than by relaxing the standard.
+
+**m840** -- ``orden-hac-2572-2003`` apartado sexto delegates in full: *"deberá
+realizarse, según se trate de declaraciones de alta, variación o baja, en los plazos
+regulados en los artículos 5, 6 y 7 del Real Decreto 243/1995"*. Event-anchored to the
+start, variación or cese of the actividad.
+
+**m576** -- ``orden-eha-3851-2007`` art. 1 delegates in full: *"el lugar, plazo y forma
+de presentación del modelo 576, así como su ingreso, se regirán por lo dispuesto en la
+Orden EHA/1981/2005, de 21 de junio"*. Event-anchored to the matriculación or first
+definitive use.
+
+Both delegates -- RD 243/1995 and Orden EHA/1981/2005 -- are **neither enrolled nor
+bundled**, so each disposition cites the delegation through its bundled article and
+explicitly does not reproduce the concrete periods. Inventing windows would have meant
+fabricating dates the registry cannot evidence.
+
+**A stamp of this campaign's own was corrected in the process.** The m576 ``reviewed_by``
+read *"deadline absence is the cited event-relative plazo, not an omission"*. Against
+the corpus that was loose: the DELEGATING article is cited, the delegate is not, so the
+plazo was not "cited" in any usable sense. The re-issued stamp quotes the earlier
+phrasing and supersedes it in place rather than quietly replacing it.
+
+That is the concrete form of the earlier concern that a reason living only in a
+``reviewed_by`` string is not machine-readable: when the prose was checked against the
+source, it turned out to be slightly wrong, and nothing in the registry would have
+surfaced that. Both reasons now sit in ``family_dispositions.deadline_windows`` where
+the loader carries them and a future reader does not depend on a sentence.
+
+**Remaining: 6** -- m036, m122, m490 x3, m604/2021-2023. Three are stamped by another
+hand (m122, m490 x3) and two are pending (m036, m604). None were touched.
+
 
 ## Recommendations
 
