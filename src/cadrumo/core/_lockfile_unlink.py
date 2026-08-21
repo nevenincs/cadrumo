@@ -51,6 +51,8 @@ LOCKFILE_UNLINK_RETRY_SECONDS = 10.0
 """Default budget for retrying a blocked release; a reader's handle lives microseconds."""
 
 _UNLINK_POLL_SECONDS = 0.02
+
+
 def unlink_lockfile(
     path: Path,
     *,
