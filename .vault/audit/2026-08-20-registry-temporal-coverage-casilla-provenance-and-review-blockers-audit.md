@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:41a2643c44c52d1bdc89b2fe2db8530cb83f1aa2941db6c4b1b965c805594932'
+body_hash: 'sha256:9603b97421eab5522c42d7a03b3a140eee2ce52ebb0a0e8bbb9573d73829e5ba'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1581,6 +1581,57 @@ hands, and the per-revision relayout check above is a precondition for four of t
 eleven. What this iteration removes is the ambiguity: the list is no longer sixteen
 undifferentiated failures but eleven citation fixes with the evidence already on disk and
 fourteen acquisitions, and the arrears off-by-one explains why they all look alike.
+
+
+### CORRECTION-only-three-are-citation-fixable-the-rest-are-structural | high | supersedes the eleven-citation-defects triage
+
+The previous finding classed eleven revisions as citation defects on the grounds that
+neither m390 nor m714 appears in the span gate's contrary-evidence list. **That inference
+was too quick, and running the per-pair check overturns it.**
+
+Comparing each modelo's consecutive bundled designs box-by-box, on offset AND length:
+
+| modelo | pair | boxes moved |
+|---|---|---|
+| m714 | 2021 -> 2022 | **8** |
+| m714 | 2022 -> 2023 | 0 |
+| m714 | 2023 -> 2024 | 0 |
+| m714 | 2024 -> 2025 | 0 |
+| m390 | 2022 -> 2023 | **13** |
+| m390 | 2023 -> 2024 | **189** |
+| m390 | 2017 -> 2018 | **97** |
+| m390 | 2019/20 -> 2021 | **8** |
+
+**Only three of the eleven survive: m714/2022, /2023 and /2024**, whose successor designs
+are byte-identical to their own. m714/2021 needs the 2022 design and eight boxes moved;
+every m390 pair moves too, some massively.
+
+**Why the earlier inference failed.** The span gate asks whether a relayout crosses a
+REVISION's span. m714/2021 and m390/2022 are single-ejercicio revisions, so a design
+change at the 2021/2022 or 2022/2023 boundary sits *at the edge* of the span rather than
+inside it, and the gate correctly does not flag it. Absence from that list therefore says
+nothing about whether the NEXT design is byte-compatible -- which is the question the
+citation fix actually depends on. Two different questions, and the earlier finding
+substituted one for the other.
+
+**What this changes, and it is not small.** For the other eight, the arrears-presentation
+problem **cannot be closed by citing a second design at all**, because the successor
+encodes different offsets. A revision for ejercicio N whose filing presents in N+1 under
+a materially different layout cannot be served by one export layout, and no amount of
+reference-adding fixes that. Those are structural -- the revision needs splitting, or the
+layout needs to be understood as encoding the ejercicio's design while the filing is
+written under the presentation year's, which is a modelling question this campaign cannot
+settle.
+
+So the triage now reads: **3 citation-fixable with verified byte-identical successors,
+8 structural, 14 acquisition.** The middle group is the one that grew, and it is the one
+that needs a decision rather than data.
+
+Eighth time in this campaign that re-checking overturned a conclusion, and the third
+where the overturned conclusion was already written into this document. The check that
+caught it -- compare the actual designs rather than infer from another gate's silence --
+is the same one that should have been run before the claim was made.
+
 
 ## Recommendations
 
