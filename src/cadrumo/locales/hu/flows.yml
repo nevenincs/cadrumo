@@ -181,6 +181,7 @@ flows:
           collectible_invoice: Kimenő számla
           donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
+          gasto193_contributor: Adózónkénti költségek (193-as modelo)
           iva_compensation_annual_partition: Éves áfakompenzáció
           iva_wallet_decision: Áfaegyenleg-döntés
           ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése
@@ -206,6 +207,7 @@ flows:
           relation_prefill: Kapcsolódó bevallás
           retenciones_aggregation: Levonások összesítése
           withholding: Levonási nyilvántartás
+          withholding296: Levonási kedvezményezett (296-os modelo)
         estado_casilla_oficial:
           addressed: Közvetlenül megjelenített
           represented_via_binding: Kötésen keresztül megjelenített
