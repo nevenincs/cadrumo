@@ -13,6 +13,7 @@ no field to name and must survive verbatim.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 
 import pytest
@@ -128,11 +129,24 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input() -> None:
     error, the same text would reach the operator under an invalid-value
     header, telling them to correct an argument that is not wrong.
     """
-    result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+    # Asserted on the envelope, not the prose: both the refusal word and
+    # Click's "Invalid value" header are translated, so an English token cannot
+    # decide the question in a Spanish-rendered run. The category IS the
+    # channel -- a parameter error never carries REFUSED.
+    result = _invoke(
+        ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
+    )
 
     assert result.exit_code != 0, result.output
-    assert "Refused." in result.output, result.output
-    assert "Invalid value" not in result.output, result.output
+    envelope = json.loads(result.output)
+    error = envelope["error"]
+
+    # Neither the category nor the code settles this: a Click parameter error
+    # on this same verb is published as REFUSED with the identical
+    # `REFUSED_CLI_BOUNDARY` code -- both were checked against the live CLI.
+    # What separates the channels is the FAILED CONDITION: workflow state names
+    # the condition it could not satisfy, and a bad command line names none.
+    assert (error["action"] or {})["failed_condition_id"] == "cli.overview.profile.complete", result.output
 
 
 def test_calendar_refusal_carries_the_remediation_command() -> None:
