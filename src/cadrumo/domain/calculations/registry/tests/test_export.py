@@ -37,6 +37,7 @@ from .._export import (
     export_fields_overlap,
 )
 from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
+from .._schema_exports import FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from ._loader_directory_mode_support import _committed_modelo, _committed_registry_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -483,16 +484,41 @@ def _discriminante_divergence_risks(field: ExportFieldDefinition) -> list[str]:
 
 
 def test_the_modelo_200_envelope_discriminante_stays_an_unmodelled_literal() -> None:
-    """M200's 2024 revision declares no fixed-width envelope, so it carries no discriminante authority to diverge.
+    """The registry declares the discriminante SLOT and never its value.
 
-    Nothing here is a regulatory withdrawal: the envelope layout has simply
-    never been built for this revision, so there is exactly one authority for
-    the discriminante literal (none) rather than a modelled one and a
-    hardcoded one disagreeing.
+    This asserted that M200's 2024 revision declared no fixed-width envelope at
+    all, which made "exactly one authority for the literal" true by there being
+    none. That envelope has since been authored, so the placeholder premise is
+    gone and the real question is live: with a modelled envelope present, can the
+    registry state a discriminante value that disagrees with the hardcoded one?
+
+    It cannot, and structurally rather than by convention.
+    :class:`FilingEnvelopePrefixFieldDeclaration` carries ``role`` and ``length``
+    and nothing else, so a declaration can reserve the byte but never fill it;
+    ``_ENVELOPE_GRAMMAR_LITERALS`` stays the single authority for the value. This
+    reds the moment a value-bearing field is added to that model -- the exact
+    window in which the two sites could begin to diverge.
     """
-    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
+    declared_fields = set(FilingEnvelopePrefixFieldDeclaration.model_fields)
 
-    assert revision.export_layouts == ()
+    assert declared_fields == {"role", "length"}, (
+        f"the envelope prefix declaration gained a field beyond the slot it reserves: "
+        f"{sorted(declared_fields - {'role', 'length'})}. If it can now carry a value, the "
+        f"registry and _ENVELOPE_GRAMMAR_LITERALS are two authorities for the discriminante."
+    )
+
+    # ...and the role is really in use, so the guard is not watching a dead model.
+    discriminante_slots = [
+        prefix
+        for modelo in _committed_registry_modelos()
+        for revision in modelo.revisions.values()
+        for layout in revision.export_layouts
+        if layout.filing_envelope is not None
+        for prefix in layout.filing_envelope.prefix_fields
+        if prefix.role is FilingEnvelopePrefixRole.DISCRIMINANT
+    ]
+    assert discriminante_slots, "no bundled envelope declares a discriminante slot; the guard proves nothing"
+    assert all(prefix.length == 1 for prefix in discriminante_slots)
 
 
 def test_no_typed_declaration_channel_names_an_accounts_regime_concept() -> None:
