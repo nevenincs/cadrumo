@@ -55,6 +55,7 @@
     "modelo.schema.151.revision.2015-2022.casilla.x-e0o3cbhl68mn0r31dpq62b9g68.label": "'Planta' is the standard Catalan term for a building floor and is spelled identically to Spanish, so the label is deliberately identical rather than untranslated.",
     "modelo.schema.180.revision.2019-2022.casilla.x-e1in4opedpkmc.label": "Catalan renders this identically: 'NIF' is the Spanish tax-identifier acronym AEAT publishes untranslated, and 'del perceptor' is the same in Catalan.",
     "modelo.schema.180.revision.2023-y-siguientes.casilla.x-e1in4opedpkmc.label": "Catalan renders this identically: 'NIF' is the Spanish tax-identifier acronym AEAT publishes untranslated, and 'del perceptor' is the same in Catalan.",
+    "modelo.schema.309.revision.2004-y-siguientes.casilla.x-chim6r1ed5h62rg.label": "IBAN is an international standard term (ISO 13616) and is spelled identically in Spanish and Catalan; the box marker (10) is AEAT's own numbering, so the whole label coincides. Not an untranslated string.",
     "topic.sii.title": "official AEAT system acronym (Suministro Inmediato de Informacion), never Catalanised",
     "topic.verifactu.title": "official AEAT system brand name (VERI*FACTU), never Catalanised",
     "untranslated_pending": "The ca locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nCatalan translations and removes entries from this allowlist.\n",
