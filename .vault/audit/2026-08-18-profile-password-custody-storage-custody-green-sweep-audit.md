@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b9380510a607f2638224f15d79328a4738d2d0bf6d47e9b92a59392c673d552'
+body_hash: 'sha256:3a776120e8a13fd3d9d6e6b3bb92f57bb6c48e0a994e4950c38ba6648dcdc41c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4212,3 +4212,41 @@ disturbed.
 reddened `test_custody_retryable_codes_are_declared`, which refuses any owned retryable code
 that does not state what resolves on its own. The declaration was written rather than the
 gate widened.
+
+### The flattened-retryability defect is one site, now gated; the rest is another surface's
+
+The previous entry fixed a boundary that applied one `retryable` answer to two opposite
+situations. That is an enumerable shape, so it was swept rather than left as an anecdote.
+
+**The sweep pairs the live registry with the source.** Every registered error class is
+resolved, real subclass relationships are computed, and a pair is divergent when parent and
+child publish opposite `retryable` answers. **28 such pairs exist across the tree** — the
+shape is common and mostly deliberate, since the subclassing is what keeps established
+handlers working. Handlers are then read from the AST, and one is reported when it catches
+a divergent parent and re-raises a DIFFERENT type without routing the subclass first.
+
+**In scope, the answer is one site — the one already fixed.** The sweep initially reported
+a second, `_custody_repository.save_journal`, and it is a FALSE POSITIVE: that handler
+re-raises the SAME type it caught, narrowing a message rather than changing an answer, and
+its `try` body is a bounded file read that cannot raise the subclass at all. Requiring a
+genuine translation — a raised type other than the caught one — removes it by construction,
+so the gate ships with **no allowlist** rather than with an exemption and a reason. That is
+the better outcome: an allowlist is where judgement drifts, and here none is needed.
+
+**Out of scope, and deliberately left there.** Roughly thirty sites under
+`entrypoints/cli/_config` flatten `GoogleAuthError` over five retryable ADC subclasses, and
+`OutboundStorageError` over two. Whether those codes should be retryable AT ALL is an open
+question for whoever owns that surface — `test_custody_retryable_codes_are_declared` drew
+the same boundary when it scoped itself. Gating them here would be this campaign answering
+a question it does not own, so the inventory is recorded and handed over rather than acted
+on. The precise sites are reproducible by running the gate with
+`_SCOPED_PACKAGES` widened to include `entrypoints/cli`.
+
+**Proven against the real site, not only a sample.** The detector was driven over synthetic
+source in both directions, AND the fix was temporarily reverted in `_registration.py`,
+where the gate fails naming line 309. The synthetic half alone would prove only that the
+detector works — the campaign's earlier lesson is that a detector correct on a sample can
+still never reach the real code. Two anti-vacuity assertions guard the rest: the divergent
+map must be non-empty and must contain the known custody pair, and the module scan must
+reach more than fifty files, because an empty map or an empty file list clears every
+handler for free.
