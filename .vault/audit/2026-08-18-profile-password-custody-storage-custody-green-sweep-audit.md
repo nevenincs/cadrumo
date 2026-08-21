@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:c28109559739e7fc817f4c02f402d890cc13af69eb55f309653e206b1c524da5'
+body_hash: 'sha256:921bc40f02be344d205e768d120cfe863f296ecdb9f4037d0d6024bdd6072568'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4754,3 +4754,37 @@ The second is that both the weakness and the fix were demonstrated on the verbs 
 under test. The sibling module's measurement would have been a fair analogy and not a
 proof, and this campaign has now twice found analogies that did not hold when checked
 directly.
+
+### Completing the backward sweep: every gate this campaign added is now proven to bite
+
+The previous entry applied the discriminator lesson to one earlier change. This entry
+finishes the job by auditing the whole set, because a rule applied to a single instance is
+an anecdote.
+
+Sixteen gates and test additions were reviewed against one question: has a change been
+observed that makes this fail? Fifteen had a recorded real-site probe — a reverted
+expression, a removed retry, a swapped handler pair, a stripped marker, a diverted
+advisory. **One did not.**
+
+`test_concurrent_registration_cannot_duplicate_a_label` was committed after its only probe
+— removing the custody root lock — left it GREEN across nine races. That result was
+recorded honestly at the time, but it meant the test shipped with nothing demonstrated
+that could fail it. By this repo's own standard, quoted in a module docstring elsewhere in
+the tree, "a test which can never be watched to fail asserts only that its author believed
+the fix correct".
+
+Probed properly: disabling the single label comparison in the custody scan makes BOTH
+processes register, and both assertions fail naming the two winning UUIDs. So the test does
+discriminate, and what it pins is the duplicate-label REFUSAL. What it does not pin is the
+root lock. Both halves are now in its docstring, because a reader meeting a test named for
+concurrency would otherwise reasonably assume it covers the serialisation, and it does not:
+the losing process still meets the winner's committed capsule when it scans, which is why
+the lock can be removed without the test noticing.
+
+**The residual gap is recorded rather than closed.** Nothing asserts that the root lock
+serialises two registrations under a tighter race than spawn timing produces. Closing it
+needs a race that reliably interleaves the scan and the publication, which the current
+barrier does not achieve — the processes are released together but diverge across seconds
+of Argon2id work. That is a real limit of the harness, not a missing assertion someone
+forgot, and inventing a test that cannot be watched to fail would repeat exactly the defect
+this entry exists to correct.
