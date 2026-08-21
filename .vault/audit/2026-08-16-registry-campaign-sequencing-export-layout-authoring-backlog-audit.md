@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:498936ccec13982b313340b376bad566563ac380d8524cb3b0fc582fed515e5f'
+body_hash: 'sha256:796f8f56740807f64bcf658b482cb82b5df9e006e157f7562d2ecc5fc994b6b1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10332,3 +10332,31 @@ inventory -- the gate forbids silent filler. Which of 33 group-regime flags this
 application can actually produce is a question about the taxpayer profile, not
 about the registry, and it is the next piece of this modelo rather than something
 to improvise 33 members' worth of.
+
+### The de-shift sweep claims a third test: modelo 193
+
+After 345 and 190, modelo 193. The same commit shape --
+`registry(m193): ground the deadline in the article that establishes it, and
+de-shift it` -- and the same two-part change: the 2026 window's close moved to
+the nominal 31 January AND its grounding narrowed from the modelo's seven-ref set
+to the single `orden-eha-3377-2011:art-5`, the article that fixes the plazo.
+
+Fixed the same way, asserting both halves plus the ref. Three tests in three
+ticks have now been corrected identically, which is worth naming as a pattern
+rather than three incidents: **a test that pins a stored deadline date is
+load-bearing on a storage CONVENTION, not on a fact**, and the convention is
+being changed deliberately across the informativas. Any remaining test asserting
+`closes_on == <a date that is not a statutory month-end>` is a future casualty of
+the same sweep. The durable shape is the pair -- stored nominal, plus the shift
+that derives the operational date -- because it survives the convention change
+and additionally catches the false `shifted=False / business_day` claim that the
+pre-shifted form makes.
+
+### One naming rule learned twice
+
+The casilla fragment stem names the FIRST and LAST casilla in DECLARATION order,
+not the numerically lowest and highest. Modelo 222's blocks are written in design
+order (sheet, then offset), so the file ends on box 35 and the stem is
+`c01__c35`, not `c01__c67`. The same gate caught the same mistake on modelo 182
+last tick; the generator now derives the stem from declaration order so it cannot
+recur.
