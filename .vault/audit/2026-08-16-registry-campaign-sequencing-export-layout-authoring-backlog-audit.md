@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:3e43586b36940b4a51fb83e649e5363a536b570217580986b084b5f10ac91090'
+body_hash: 'sha256:168c5d4e7663c0255df06b042987de566497ca6ed7cef2efd7782e468c00d0a3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9629,3 +9629,55 @@ The modelo 309 `IBAN (10)` label was allowlisted as deliberately identical for
 honesty ratchet was still red on `hu`. Allowlisted with the same reason. The
 lesson is narrow and worth stating: an identical-string exemption is per LOCALE,
 and fixing the locale the failure names leaves the others standing.
+
+## Modelo 151 authored: 617 casilla labels in four catalogues
+
+The largest single unit in the label backlog, and the corrected filter said it
+was worth attempting: **614 of 618 usable**, with the four exclusions being three
+legitimate labels my 120-character cap had wrongly rejected and one genuine
+`Reservado AEAT` filler. Raising the cap put the three back, so 617 were
+authored and one filler skipped.
+
+**617 labels came from 143 atomic terms.** Splitting on `. ` as well as ` - `
+collapsed 173 segments into 143 terms, because AEAT writes these as
+`Owner. Group. Field [nn]` and the owner and group repeat across whole blocks.
+That is what makes the unit tractable at all: the translation work is 143 terms,
+not 617 sentences, and every occurrence of a term renders identically by
+construction.
+
+Lookup is normalised (casefolded, accent- and punctuation-insensitive) because
+one design writes the same term several ways -- `Situacion`/`Situación`,
+`Teléfono Fijo`/`Teléfono fijo`, `Referencia Catastral`/`Referencia catastral`.
+
+**AEAT's typo is preserved in Spanish and not propagated.** The design writes
+`Rentención o ingreso a cuenta` beside the correct `Retención`, and this document
+already established that the misspelling is AEAT's own. Spanish keeps whichever
+the design printed, because the design is its authority; the normalised lookup
+maps both onto one entry so the other three languages carry the intended term.
+
+Twenty-one terms were missing on the first pass and were added after generation
+REPORTED them, not guessed at up front -- the glossary records what the design
+actually prints rather than what it was assumed to print.
+
+Unresolved Spanish casilla labels **1,699 -> 1,082**.
+
+### Fourteen deliberate identities, each with its own reason
+
+`Pagador`, `Portal` and `Planta` are spelled identically in Catalan and Spanish,
+and `Modelo` is the AEAT form-type noun this project keeps in Spanish by naming
+rule. Twelve Catalan keys and one each in English and Hungarian therefore
+coincide with their source. All fourteen recorded through
+`dev.locales allow-identical` with the specific reason, not a blanket one.
+
+The honesty ratchet's identical-string test is green.
+
+### What is left on modelo 151, and what was already broken
+
+Four casillas remain unlabelled: their declared start offset matches no design
+field, so there is no printed label to read. One is named in the honesty gate's
+remaining list, which is correct rather than a regression.
+
+`dev/locales/tests` carries three audit failures that predate this work and are
+not touched by it: 732+ em dashes in modelo **200**'s `.help` values, and
+codebase-missing `gasto193` keys. This work wrote only modelo 151 `.label` keys
+and introduced zero em dashes.

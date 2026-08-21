@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:65ccfef9972b4d8972823c72ef86aa26412a342a7435e480df715fa912d6c636'
+body_hash: 'sha256:6773ac6b83247601f496f3ab3ebb9b0e577f57cc8d3d4e389a043f4d7d4c0b94'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -837,6 +837,61 @@ bundled corpus HTML files then found **zero** that fail UTF-8 decoding, which
 contradicts it. The two observations were not reconciled, so no encoding finding is
 asserted here -- only the note that anyone carving an excerpt from that file should read
 the result back before trusting it.
+
+
+### the-export-frontier-measured-and-a-gap-that-is-honest | medium | 3 of 5 tile completely; m604's 13 uncovered bytes are a retraction's trace, not a defect
+
+The remaining pending set narrowed to seven: two carrying contrary span evidence (m220,
+m763) and five that declare a fixed-width export layout (m165, m181, m270, m604 x2).
+Stamping the latter flips their derived scope to FILING -- the coverage module states it
+plainly: *"Agent review is sufficient to reach the filing fold."* So the frontier was
+measured before being pushed at.
+
+**What the flip does and does not do.** The four evidence gates run identically at either
+scope; ``authority_scope`` only LABELS whether the resulting ledger rests on proven
+filing authority, and ``authority_fallback_reason`` exists precisely so a reviewed
+revision that still cannot produce a filing-grade snapshot is distinguishable from one
+nobody reviewed. All five carry ``construct_evidence_rows = 0``, so no gap would be
+relabelled from inspection to filing; what changes is the ledger asserting
+``filing_eligible``.
+
+**A real asymmetry in the loader.** ``_verify_record_offsets`` rejects OVERLAPPING byte
+ranges and nothing else. It never checks whether a record's extent is fully tiled, so a
+fixed-width layout can pass registry validation with bytes no casilla writes. That is
+why the m576 stamp had to verify "no gap or overlap" by hand.
+
+**Measured across the five, per record extent:**
+
+| revision | records | extent | uncovered |
+|---|---|---|---|
+| m165 2013-y-siguientes | 2 | 1000 | **0** |
+| m181 2009-y-siguientes | 2 | 1000 | **0** |
+| m270 2013-y-siguientes | 2 | 1000 | **0** |
+| m604 2021-2023 | 2 | 1228 | 13 |
+| m604 2024-y-siguientes | 3 | 2028 | 13 |
+
+Three tile completely. m604's 13 bytes sit in record ``604-00`` as two runs -- 93..96
+(4 bytes) and 101..109 (9 bytes) -- both bounded by fields named ``reservado-54``,
+``reservado-97`` and ``reservado-110``.
+
+**Those gaps are honest, and the evidence is in the history.** Commit `3ff1651215`,
+*"retract fabricated filler declarations for EEDD/developer-identity slots across
+m122/131/156/180/216/270/390/604 export layouts"*, removed
+``modelo-604-604-00-presenter-tax-id`` at **offset 101** -- exactly where the nine-byte
+run begins, and exactly a NIF's width. The gap is the visible trace of somebody
+declining to invent a field AEAT's diseño does not evidence. Declaring those bytes now
+would re-fabricate precisely what was retracted.
+
+**Which makes the loader's silence on gaps arguably correct rather than an oversight.**
+A gap can mean "nobody finished the layout" or it can mean "the evidence for these bytes
+does not exist and nothing was invented". No byte-extent check can tell those apart, so
+gating on full tiling would punish the honest case and reward fabrication. The
+measurement belongs in review, where a human or an agent can read the history -- which
+is what happened here.
+
+Nothing was stamped this iteration. m165, m181 and m270 now have their byte-extent half
+verified clean, which is the expensive part of a filing-scope review.
+
 
 ## Recommendations
 
