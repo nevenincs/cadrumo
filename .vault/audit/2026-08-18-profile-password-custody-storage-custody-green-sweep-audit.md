@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:da0966ef394a2c45b34802cad48ffe4bab377b144f3c96faf00ec7f5f53227b8'
+body_hash: 'sha256:eb654a3063a4c818f393ad472529c26962900b442cb75ffbfc96c41122de3893'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2981,3 +2981,41 @@ at 15 instead.
 pinning, and it is usually the one the refactor made expressible. Ask what the change now
 lets you say that you could not say before, and assert that — rather than asserting the
 edit, or shipping the edit unasserted.
+
+### One name, three guarantees — and a flag that vanishes on Windows
+
+Extending the duplication sweep from constants to FUNCTIONS. `_read_regular_file` was
+defined **three times** in the custody package, with three different guarantees. A call
+site cannot see that: it reads the name, assumes the anchored no-follow read, and gets
+whichever implementation its own module happens to define.
+
+**The sentinel's copy is the finding, and it was measured rather than reasoned about.**
+It relied on `os.O_NOFOLLOW`, which does not exist on Windows — `getattr(os,
+"O_NOFOLLOW", 0)` quietly becomes `0` — so the protection the code appears to request
+silently is not requested at all on this project's primary platform. Driving both
+functions against a real symlink: the sentinel reader **followed it and returned the
+linked file's contents**; its identically-named sibling refused with "must not be a
+reparse point or directory".
+
+A `getattr(os, FLAG, 0)` fallback is worth naming as a pattern: it turns an unsupported
+platform into a SILENTLY WEAKER one rather than a loud failure, and the weakening is
+invisible at every call site.
+
+Deleted rather than repaired, after classifying which half was superseded:
+`read_profile_custody_sentinel` had no caller anywhere, and the live sentinel read goes
+through `_capsule_data` using the anchored primitive with the sentinel bound. The WRITE
+half is live and stays. That classification is what made deletion safe rather than brave.
+
+The recovery artifact's reader is renamed `_read_external_regular_file` for the
+constraint it carries — it anchors a directory OUTSIDE the storage root, which the
+in-root primitive cannot do. Genuinely different, not a duplicate to merge, which is the
+substitutability filter the audit rules ask for.
+
+**Two notes on the gates, both self-inflicted and both instructive.** The reader check
+first reused the constant scan, which reads assignments — asking it about a function
+returned nothing, and under any assertion phrased as a maximum that would have read as
+compliance. It now uses a function-aware scan, with both behaviours asserted so the two
+cannot silently collapse into one helper. Second, the sensitive-write inventory reddened
+on the deletion, demanding its stale declaration for the removed function be dropped:
+that gate did exactly its job, and it is the same "declaration outliving its subject"
+discipline this campaign has been enforcing elsewhere, arriving from the other side.
