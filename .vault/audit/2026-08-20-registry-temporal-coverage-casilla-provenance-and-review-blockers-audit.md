@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb3e7120ca350044ad12f6d954870cf2f9b7aa85c7680b8080e5de240bf92eda'
+body_hash: 'sha256:0a8d04820daf3c8b9c440fc4d3e8c707600e3df7c10d6e76a9c021b267be6354'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -293,6 +293,61 @@ merely references. The extraction does not mark that today; the tag is just text
 description. Until it does, the honest statement is the one above: coverage counts
 numbers, 21 modelos carry more figures than numbers, and the size of that gap is
 unquantified.
+
+
+### m604-declares-no-official-box-numbers | medium | 122 casillas, zero numeric ``number``, on a revision that declares a byte-extent fichero layout
+
+m604 was authored between iterations (`32e91b24fb`, `67ebbc9fed`, `11ec8d3bcc`) and now
+carries **79 casillas at 2024-y-siguientes and 43 at 2021-2023**, span-matched to
+``03-604-ejercicio-2024.xlsx`` and ``04-604-ejercicios-2021-a-2023.xlsx``. It is no
+longer a 2-casilla stub.
+
+``build_diseno_coverage_report`` nevertheless reports **0 of 37 covered** on both. That
+is not a content gap -- the liquidación boxes ARE modelled (15 casillas under
+``liquidacion`` plus 30 under ``territorio`` at 2024). It is a **numbering** mismatch:
+every one of the 122 casillas carries a slug in ``number``
+(``liq-01-base-imponible``, ``terr-alava-cuota-total-atribuible``), and the report keys
+on the printed box number.
+
+**The corpus convention is the opposite**, measured across the reviewed set: numeric
+``number`` = the printed AEAT box, slug = a field with no printed box.
+m390/2025 364 numeric of 393; m303/2025 181 of 207; m200 3460 of 3462; m036 29 of 31.
+**m604 is 0 of 122** -- the only member of the set with no official numbering at all.
+The ``CasillaDefinition`` docstring is explicit that ``number`` is "reviewed AEAT
+record-design metadata", and `modelo-export-mirrors-official-structure` gates the
+casilla SET *and its numbering* against the official layout.
+
+**Why it happened, and why the schema is not the culprit.** ``(segmento, number)`` is
+hard-enforced unique (`_validate_revision_identity.py:180`), and m604 is single-segment,
+so ``segmento`` is ``None`` and ``number`` alone must be unique. The 2024 diseño prints
+boxes 03, 04 and 10 over TWO record fields each -- a signo byte and the value -- so a
+literal ``number = "03"`` on both is refused. `7282a513e4` shows a peer hitting exactly
+that refusal on ``decl-idioma`` and escaping via a slug; the escape then spread to all
+122.
+
+**A duplication hypothesis was tested and REFUTED, not shipped as a finding.** m303,
+m390 and m200 declare no ``signo`` casilla across 4,000+ casillas, which looked like
+m604 duplicating a concept the corpus models as the sign of a ``money`` value. It is
+not: m604 declares a **byte-extent** fichero layout that maps every byte, signo bytes
+included, to a backing casilla via ``export_refs``, whereas m303's export file is a
+2.2 KB envelope descriptor (``prefix_extent``, ``record_identity``,
+``closer_derivation``) with no per-byte map. The two are not comparable and m604's
+signo casillas are structurally required.
+
+**What the narrow fix would be** -- NOT applied, see below. A signo field has no printed
+box of its own: the diseño reads "Signo BI [03]", the sign OF box 03. So the signo
+casillas keep their slug while the twelve liquidación VALUE casillas take their printed
+``01``..``12``, and uniqueness holds. If the 30 territorio casillas likewise carry the
+printed boxes, the distinct total is ~37 -- exactly the count the report derives, which
+is a checkable prediction rather than an assumption.
+
+**Not applied: m604 is peer-owned and landed 2026-08-20.** No reasoning body was
+recorded on `32e91b24fb` ("for the updated coverage/signed rules"), so there is no
+stated rationale to weigh against the corpus convention, and rewriting 122 freshly
+landed casillas on one reading would be barging. m604 stays **pending_review** in both
+revisions: a revision whose numbering does not mirror the official layout cannot be
+honestly stamped, and stamping it would flip it onto the filing-authority proof path.
+
 
 ## Recommendations
 
