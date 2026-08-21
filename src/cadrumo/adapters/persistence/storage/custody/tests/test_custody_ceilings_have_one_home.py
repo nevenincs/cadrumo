@@ -158,3 +158,63 @@ def test_the_storage_scan_reaches_the_crypto_module() -> None:
     assert "crypto/_crypto.py" in modules
     assert "custody/_records.py" in modules
     assert "master_key/_bucket_session.py" in modules
+
+
+
+def _defining_function_modules(name: str) -> tuple[str, ...]:
+    """Return every module in this package that DEFINES a function ``name``.
+
+    Separate from the constant scan on purpose. That one reads assignments, so
+    asking it about a function returns nothing -- which would read as "one
+    home or fewer" under any assertion phrased as a maximum. A helper answers
+    the question it was written for, not the one it is handed.
+    """
+    homes: list[str] = []
+    for path in sorted(_CUSTODY_PACKAGE.glob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
+            continue
+        if any(
+            isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name for node in tree.body
+        ):
+            homes.append(path.name)
+    return tuple(homes)
+
+
+def test_the_function_scan_finds_a_function_the_constant_scan_cannot() -> None:
+    """ANTI-VACUITY for the helper itself, and the reason it exists.
+
+    The constant scan returns nothing for a function name. If the reader check
+    used it, an empty result would look like compliance. Both are asserted
+    here so the distinction cannot quietly collapse back into one helper.
+    """
+    assert _defining_function_modules("_read_regular_file") == ("_filesystem.py",)
+    assert _defining_modules("_read_regular_file") == ()
+
+def test_the_anchored_reader_name_has_one_implementation() -> None:
+    """One reader name must mean one guarantee.
+
+    ``_read_regular_file`` existed three times in this package with three
+    different guarantees. The divergence was not visible from a call site: a
+    caller reads the name, assumes the anchored no-follow read, and gets
+    whichever one its module happens to define.
+
+    The sentinel's copy is why this is asserted rather than left to review. It
+    used ``os.O_NOFOLLOW``, which does not exist on Windows -- ``getattr(os,
+    "O_NOFOLLOW", 0)`` quietly becomes 0 -- so on this project's primary
+    platform it FOLLOWED a link where its identically-named sibling refused
+    one. That was measured, not inferred, before it was removed.
+
+    The remaining sibling is named for its constraint shape
+    (``_read_external_regular_file``): it anchors a directory outside the
+    storage root, which the in-root primitive cannot do, so it is a genuinely
+    different reader rather than a duplicate to merge.
+    """
+    homes = _defining_function_modules("_read_regular_file")
+
+    assert homes == ("_filesystem.py",), (
+        f"_read_regular_file is defined in {list(homes)}. A second reader under this name will be "
+        "read as the anchored one by every caller that does not open it. Name a reader with "
+        "different guarantees for the constraint it carries, as _read_external_regular_file does."
+    )

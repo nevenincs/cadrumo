@@ -277,7 +277,7 @@ def import_profile_custody_recovery_artifact(
 ) -> ProfileCustodyRecoveryArtifact:
     """Read an artifact without any implicit recovery enrollment or overwrite."""
     artifact = parse_profile_custody_recovery_artifact(
-        _read_regular_file(source, maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES),
+        _read_external_regular_file(source, maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES),
     )
     if artifact.profile_id != expected_profile_id or artifact.dek_epoch != expected_dek_epoch:
         raise ProfileCustodyRecordError("recovery artifact UUID or DEK epoch does not match its named target")
@@ -325,7 +325,17 @@ def unlock_imported_profile_custody_recovery_artifact(
     )
 
 
-def _read_regular_file(path: Path, *, maximum_bytes: int) -> bytes:
+def _read_external_regular_file(path: Path, *, maximum_bytes: int) -> bytes:
+    """Read a bounded regular file OUTSIDE the storage root, anchored externally.
+
+    Named for its constraint shape rather than its action, because the custody
+    package holds another reader with the same action and a different
+    guarantee: ``_filesystem._read_regular_file`` anchors a directory INSIDE
+    the storage root and cannot serve a recovery artifact, which by design
+    lives outside it. Two readers named alike is how a caller ends up assuming
+    the guarantee it did not get -- a third one, in the sentinel module, lost
+    its no-follow protection entirely on Windows while carrying the same name.
+    """
     if os.name == "nt":
         with _windows_external_directory_anchor(path.parent):
             return _read_windows_regular_file(path, maximum_bytes=maximum_bytes)

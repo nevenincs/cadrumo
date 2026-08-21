@@ -169,7 +169,6 @@ if TYPE_CHECKING:
         PROFILE_CUSTODY_SENTINEL_FILENAME,
         PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
         create_profile_custody_sentinel,
-        read_profile_custody_sentinel,
         write_profile_custody_sentinel,
     )
     from ._sentinel_contract import (
@@ -316,7 +315,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "publish_staged_profile_custody_capsule": "._capsule",
     "read_optional_profile_custody_local_record": "._filesystem",
     "read_profile_custody_local_record": "._filesystem",
-    "read_profile_custody_sentinel": "._sentinel",
     "recognize_current_profile_capsule": "._capsule",
     "refuse_hostile_recovery_artifact_destination": "._recovery_artifact",
     "refuse_retired_profile_custody_paths": "._capsule_discovery",
@@ -492,7 +490,6 @@ __all__ = [
     "publish_staged_profile_custody_capsule",
     "read_optional_profile_custody_local_record",
     "read_profile_custody_local_record",
-    "read_profile_custody_sentinel",
     "recognize_current_profile_capsule",
     "refuse_hostile_recovery_artifact_destination",
     "refuse_retired_profile_custody_paths",

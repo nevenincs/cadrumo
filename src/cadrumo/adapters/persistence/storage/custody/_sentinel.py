@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import os
-import stat
 from pathlib import Path
 from typing import Final
 
@@ -50,37 +49,9 @@ def create_profile_custody_sentinel(
     return parse_profile_custody_sentinel_record(record.canonical_json_bytes())
 
 
-def read_profile_custody_sentinel(path: Path) -> ProfileCustodySentinelRecord:
-    """Read one bounded canonical sentinel from a non-link regular file."""
-    return parse_profile_custody_sentinel_record(
-        _read_regular_file(path, maximum_bytes=PROFILE_CUSTODY_SENTINEL_MAX_BYTES)
-    )
-
-
 def write_profile_custody_sentinel(path: Path, record: ProfileCustodySentinelRecord) -> None:
     """Write a validated sentinel once into an exclusively created staging path."""
     _write_exclusive_fsynced(path, record.canonical_json_bytes())
-
-
-def _read_regular_file(path: Path, *, maximum_bytes: int) -> bytes:
-    if maximum_bytes < 1:
-        raise ValueError("custody record read limit must be positive")
-    try:
-        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
-    except OSError as exc:
-        raise ProfileCustodyRecordError("profile custody sentinel is unavailable") from exc
-    try:
-        metadata = os.fstat(descriptor)
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size < 1 or metadata.st_size > maximum_bytes:
-            raise ProfileCustodyRecordError("profile custody sentinel is not a bounded regular file")
-        payload = os.read(descriptor, maximum_bytes + 1)
-        if len(payload) != metadata.st_size or len(payload) > maximum_bytes:
-            raise ProfileCustodyRecordError("profile custody sentinel changed during its bounded read")
-        return payload
-    except OSError as exc:
-        raise ProfileCustodyRecordError("profile custody sentinel cannot be read") from exc
-    finally:
-        os.close(descriptor)
 
 
 def _write_exclusive_fsynced(path: Path, payload: bytes) -> None:
@@ -109,6 +80,5 @@ __all__ = [
     "PROFILE_CUSTODY_SENTINEL_FILENAME",
     "PROFILE_CUSTODY_SENTINEL_MAX_BYTES",
     "create_profile_custody_sentinel",
-    "read_profile_custody_sentinel",
     "write_profile_custody_sentinel",
 ]
