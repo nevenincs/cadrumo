@@ -17,6 +17,7 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ..crypto import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
 )
@@ -117,7 +118,7 @@ class _SupervisedKdfWorker:
         self._require_clean_worker_exit()
         if (kind, result) == (KDF_FRAME_CONTROL, KDF_FAILED_FRAME):
             return None
-        if kind != KDF_FRAME_DEK or len(result) != 32:
+        if kind != KDF_FRAME_DEK or len(result) != KEY_SIZE:
             raise _supervision_refusal()
         return result
 

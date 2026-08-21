@@ -14,7 +14,7 @@ from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
 from .....core.external_constants import UTF_8_ENCODING
-from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto import GCM_TAG_SIZE, KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 from ._kdf_attestation import kdf_worker_ready_attestation
 from ._kdf_codec import (
@@ -120,7 +120,7 @@ def _unwrap(payload: Mapping[str, object]) -> bytes:
         key=key,
         associated_data=associated_data,
     )
-    if len(dek) != 32:
+    if len(dek) != KEY_SIZE:
         raise ValueError("profile custody wrapped DEK has invalid length")
     return dek
 
@@ -129,7 +129,7 @@ def _wrap(payload: Mapping[str, object]) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
     secret = decode_profile_password(_decode_b64(payload["secret_b64"]))
     dek = _decode_b64(payload["dek_b64"])
-    if len(dek) != 32:
+    if len(dek) != KEY_SIZE:
         raise ValueError("profile custody DEK has invalid length")
     key = _derive_key(secret=secret.encode("utf-8", errors="strict"), kdf=kdf)
     encrypted = encrypt_record(
@@ -139,8 +139,8 @@ def _wrap(payload: Mapping[str, object]) -> bytes:
     )
     wrapped_dek = ProfileCustodyWrappedDek(
         nonce_b64=base64.b64encode(encrypted.nonce).decode("ascii"),
-        ciphertext_b64=base64.b64encode(encrypted.ciphertext[:-16]).decode("ascii"),
-        tag_b64=base64.b64encode(encrypted.ciphertext[-16:]).decode("ascii"),
+        ciphertext_b64=base64.b64encode(encrypted.ciphertext[:-GCM_TAG_SIZE]).decode("ascii"),
+        tag_b64=base64.b64encode(encrypted.ciphertext[-GCM_TAG_SIZE:]).decode("ascii"),
     )
     return canonical_frame_bytes({"wrapped_dek": wrapped_dek.model_dump(mode="json")})
 
