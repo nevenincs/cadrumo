@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0c0b9196380395b758b31f71b6e3ebefc316972df40080ddb1fce74229a9851'
+body_hash: 'sha256:202e949b025598696e3da4744de05be51dcb008ccf638342de00c09f7415555e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1087,7 +1087,6 @@ This is the sixth time in this campaign that re-checking overturned a plausible 
 conclusion, and the second time the overturned conclusion was one already written into
 this document.
 
-
 ### the-approving-clause-habit-eight-of-ten-windows-corrected | high | four windows cited the approving article; the establishing text was bundled every time
 
 The ten windows storing ``closes_on = 2026-02-02`` are now resolved to eight corrections
@@ -1137,7 +1136,6 @@ campaign refuses. What is removed is the research -- the acquisition target is n
 **m194** stores 2026-02-02 while its orden states *1-20 enero* (papel) and *1 enero-20
 febrero* (soporte). The stored date matches **neither**, so this is not a pre-shift of
 either nominal and needs its own ruling rather than a mechanical correction.
-
 
 ## Recommendations
 

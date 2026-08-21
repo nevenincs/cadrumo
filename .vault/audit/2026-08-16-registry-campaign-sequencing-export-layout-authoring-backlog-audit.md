@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:796f8f56740807f64bcf658b482cb82b5df9e006e157f7562d2ecc5fc994b6b1'
+body_hash: 'sha256:89038d52ede4c13b41d517a2d87ecd92e171c49c46fc6e80ac85eded4e54ed9c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10360,3 +10360,91 @@ order (sheet, then offset), so the file ends on box 35 and the stem is
 `c01__c35`, not `c01__c67`. The same gate caught the same mistake on modelo 182
 last tick; the generator now derives the stem from declaration order so it cannot
 recur.
+
+## Modelo 222, part two: the unnumbered amounts, and the producer-key gate
+
+Modelo 222's casilla schema is now complete: 63 box-numbered casillas last tick,
+and this tick the **eleven** figures the `Informacion adicional (6)` block
+declares with NO box number at all. The block mixes both shapes -- its
+`Resultado consolidado del periodo` slot carries box [35] and was already
+authored with the box casillas -- so the eleven were invisible to a box-number
+sweep and would have been dropped by one.
+
+They are operator-entered amounts, not profile facts, so they are casillas with
+slug ids (the shape modelos 182 and 185 use) rather than producer keys. 76
+casillas total; authority CLEAN; backlog and parity both return to 378 and 872
+with modelo 222 contributing zero to either.
+
+The typo-twin validator flagged one pair, `quita_espera_integrado_base` against
+`..._integrado_cuota`. They are two different official slots -- the part
+integrated into the base imponible and the part integrated at CUOTA level for
+cooperatives only -- and carry the `intentional_singleton` marker with that
+reason.
+
+### Five provisions modelo 222 cites that the legal catalogue does not hold
+
+Authoring these forced a second pass over the grounding, and the gap is bigger
+than the single article recorded last tick. Modelo 222's own design text names,
+and the catalogue cannot resolve:
+
+| provision | cited by |
+|---|---|
+| `ley-27-2014:art-11.12` | 6 box casillas (the `Dotaciones` family: 44, 45, 49, 50, 54, 57) |
+| `ley-27-2014:art-17.2` | aumento de capital por compensacion de creditos |
+| `ley-27-2014:art-33` | minoracion por rentas con derecho a bonificacion |
+| `ley-27-2014:art-34` | bonificacion art. 34 |
+| `ley-19-1994:art-26` | bonificacion Canarias |
+
+All seventeen affected casillas carry the revision's base grounding
+(`orden-hfp-227-2017:art-2` plus `ley-27-2014:art-40`), which is true but
+weaker than the rule wants: the provision that ESTABLISHES each figure is named
+by the design and cannot be cited. Closing it needs BOE corpus text for each and
+a catalogue entry per article -- an acquisition-and-authoring job, not something
+to invent, so it is recorded rather than fixed.
+
+### The producer-key exhaustiveness gate is red by 447, across five modelos
+
+The layout was deferred last tick on the grounds that it needs roughly 33 new
+`M222_*` members in the core `FilingProducerKey` enum, and that each must resolve
+to a real profile fact because `test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary`
+demands the resolver name every member. That test was then measured, and the
+finding reframes the whole question:
+
+```
+FilingProducerKey members      485
+named by filing_producer_values 38
+MISSING                        447   M200 135 | M296 112 | IRNR 102 | M360 70 | M202 18 | M353 5
+```
+
+**The gate is already red, by a factor of twelve, across five modelos.** It lives
+in `application/filing/tests`, which is why the registry-suite baseline this
+campaign tracks has never shown it. So the established practice for every modelo
+that carries producer keys is exactly what was treated last tick as a blocker:
+add the enum members and the map entries, and do not wire a resolver branch.
+
+That changes the recommendation but not the decision. Adding 33 more members
+would deepen a known-red safety gate from 447 to 480, and the gate is the one
+that enforces "no silent filler" on the producer surface. Doing that silently,
+because five other modelos already did, is how a hole this size gets dug. The
+casilla schema -- which needs no producer keys at all -- was completed instead,
+and the layout waits on a decision that is now a clean either/or:
+
+* wire `Modelo222ProducerProfile` with real fields for ~26 group-regime facts, so
+  222 contributes zero to the gap, at the cost of deciding which group-regime
+  flags this application's taxpayer profile actually carries; or
+* follow the five existing modelos, accept 480, and treat the resolver gap as a
+  campaign of its own.
+
+The first is the honest one and is filing-grade product scope; the second is
+consistent with precedent and cheap. Recorded for an operator ruling rather than
+chosen unilaterally, because the choice is about what the application claims it
+can produce.
+
+The remaining layout shape is fully measured and needs no rediscovery: 123
+fields, of which 63 are box casillas and 11 are the slug casillas authored here,
+8 literals, 8 fillers, 2 draft attributes, ~7 covered by existing generic
+producer keys, and ~26 needing `M222_*` members. The `DR22200` envelope grammar
+is byte-identical to modelo 202's -- same 15 rows, same widths, same
+descriptions, differing only in the closing tag `</T2220...>` against
+`</T2020...>` -- so its records fragment can be copied from 202's with the sheet
+and rows substituted.
