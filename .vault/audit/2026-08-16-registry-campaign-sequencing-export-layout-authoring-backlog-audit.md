@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b98ad8a7f3b053a90ce40ec772dea9b64d03d9896891218a8ce03d4c02000d3'
+body_hash: 'sha256:a52110a1c62f6f11300af986fbe4cc9da6fa6fcbbeae9ef304b76fef6736992f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10852,3 +10852,55 @@ Where a design carries no such prose the casillas stay blank: 64 modelo 190
 offsets the prose never names, modelo 193's 11, and the remaining 322, 202 and
 200 sets, whose designs yield 2 to 6 prose names each against 11 to 14
 unresolved casillas.
+
+## Indexing sheets by record ORDER put five modelo 390 labels on the wrong page
+
+Extending the table-heading reader to the modelos that have layouts needed a
+casilla-to-sheet mapping, and the obvious one is wrong. A derived layout's record
+list is not parallel to the design's sheet list: modelo 390's records begin with
+`envelope_header`, so record index N is sheet index N-1 from there on, and every
+lookup lands one page off.
+
+It announced itself because the casillas are well named. Five modelo 390
+casillas called `iva.anual.repercutido.recargo.*` resolved to headings reading
+"IVA **deducible** - Oper. inter. corrientes bienes y servicios". Recargo
+repercutido and IVA deducible are different sides of the return, so the join was
+wrong however plausible the text looked -- and it looked entirely plausible,
+which is the danger. Traced to the export field, those casillas sit on
+`page_02b`, not on the Pág. 5 the order-index had selected.
+
+Mapping by NAME instead resolves them to "5. Operaciones Reg. Gral. - Base
+Imponible y cuota - **Recargo de equivalencia** - Tipo 0% - Base imponible
+[663]", and the rate in each id matches the rate in its heading independently:
+`tipo-0` -> 0%, `tipo-0-26` -> 0,26%, `tipo-0-62` -> 0,62%, `tipo-1` -> 1%. Four
+agreements no order-index could have manufactured.
+
+**Modelos 200 and 202 fell to zero under the name mapping** and are left alone.
+Their record types (`page-01`, `pagina01`) do not match their sheet identities
+(`dr M202 (1)`) by any rule this reader can apply, and the order mapping that
+would have "resolved" them is the one just shown to be unsound. Eleven modelo 202
+headings and seven modelo 200 headings that looked correct under the bad mapping
+were discarded rather than shipped on the strength of looking right.
+
+## 44 labels, and modelo 190's plainest source was the last one tried
+
+Backlog **165 -> 121**.
+
+**Modelo 190, 31 labels.** Two ticks were spent on this modelo's prose because
+its group headings blocked the table reader on the descendientes block. The
+untried combination was the plainest: for 16 of the remaining casillas the design
+table names them directly, one row each, no group involved. Applied across both
+revisions that is 31. The four genuine group headings that remain -- the two
+incapacidad-laboral blocks, the foral-retenciones block and the clave B.01
+prestacion types -- stay blank.
+
+The order of attack was backwards, and worth saying so: the exotic source was
+tried before the plain one because the exotic source was what the previous
+failure had made salient.
+
+**Modelo 390, 13 labels** across four revisions: the recargo de equivalencia
+base and cuota at each declared rate, grounded as above.
+
+One identical-string allowlist entry: `Ceuta o Melilla` is the same in Spanish
+and Catalan, both proper nouns and a shared "o", recorded with that reason rather
+than left to trip the honesty gate.
