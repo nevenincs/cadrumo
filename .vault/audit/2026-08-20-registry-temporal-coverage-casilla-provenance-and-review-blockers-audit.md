@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:aad7fa4163e094a3c09d321bb20ca14c2ab93278567dc80ee17d13f1c2a9bc79'
+body_hash: 'sha256:512ea38b9e631943afeaa0fdbde1a8f19275bf7a390509a233c59cbef49c1441'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -630,6 +630,77 @@ Worth noting for m136 specifically: ``orden-hap-70-2013`` art. 7 states the plaz
 then continues into the vencimiento-coincidence clause. That is the orden itself
 requiring the nominal-store / shift-at-read split the campaign settled on earlier -- the
 convention is not merely a repo choice, it is what the source wording demands.
+
+
+### the-applicability-rung-is-exempt-from-proving-its-only-claim | high | 8 revisions know no deadline and owe no reason; the filing rung, which owes one, has one every time
+
+m840 was picked because it carries the pending set's only
+``modelo_scope_classification_findings=1``. It turned out to have no ``deadline_windows``
+AT ALL and no ``family_dispositions.deadline_windows`` explaining the absence -- while
+declaring ``authority_grade = "applicability"``, a rung the owning enum defines as *"The
+revision knows when the modelo is due and to whom it applies."*
+
+**Measured across the tree. 81 revisions carry deadline windows; 14 do not, and the
+split falls exactly on the grade line:**
+
+| grade | count | absence reasoned |
+|---|---|---|
+| filing | 6 (m145, m151, m202 x2, m308, m309) | **6 of 6** |
+| applicability | 8 (m036, m122, m490 x3, m576, m604, m840) | **0 of 8** |
+
+That is backwards from the semantics. The FILING rung owes family dispositions, gets
+them, and every one of its six carries a reason. The APPLICABILITY rung -- whose sole
+claim is deadline knowledge -- is the one permitted to carry neither a deadline nor an
+explanation. The standing rule *"a revision at APPLICABILITY grade owes no family
+disposition; the filing rung does"* is what produces it: it exempts precisely the rung
+whose only assertion is the thing left unevidenced.
+
+Nothing enforces this. The tree loads clean with ``required_coverage_gap_rows 0``,
+because build validation checks dispositions per rung, never whether a rung's own
+defining claim is backed.
+
+**Five of the eight are already ``agent_reviewed``** (m122, m490 x3, m576); three are
+pending (m036, m604, m840). The defect does not track the review boundary -- the same
+result the span sweep and the IS-pair finding produced, now on a third axis.
+
+One of the five is this campaign's own: the m576 stamp asserts *"deadline absence is the
+cited event-relative plazo, not an omission"*. That reasoning is honest and probably
+correct, but it lives only in a ``reviewed_by`` prose string -- **the registry itself
+records no machine-readable reason**, so nothing but that sentence distinguishes a
+reasoned event-relative plazo from a plain omission.
+
+**m840 was NOT stamped.** It fails the "when due" half of its own declared rung with no
+recorded reason, which is a blocker at exactly the level it claims.
+
+### a-shared-disposition-reason-misstates-three-of-the-nine-revisions-it-sits-on | medium | including one that contradicts its own file's header
+
+m840's ``family_dispositions.formulas`` reason reads *"This is an informational
+declaration reporting third-party data to AEAT; it computes no taxpayer liability of its
+own."* The same sentence appears verbatim on **nine** revisions: m145, m189, m232 x2,
+m280, m345, m347, m720, m840.
+
+Against the registry's own ``official_name`` values it is false for at least three:
+
+| modelo | official name | "third-party data to AEAT" |
+|---|---|---|
+| 347 | Declaración anual de operaciones con **terceras personas** | true |
+| 145 | Comunicación de datos del **perceptor** de rentas del trabajo | own data, and filed with the PAGADOR, not AEAT |
+| 720 | Bienes y derechos **situados en el extranjero** | the declarant's OWN assets |
+| 840 | Declaración del IAE (alta, variación, baja) | the taxpayer's OWN activity |
+
+On m840 it also contradicts the revision header **in the same file**, which says the IAE
+communication *"is administered municipally and is not a return this application
+emits"* -- not "reported to AEAT" at all.
+
+The CONCLUSION is right everywhere: none of these compute a taxpayer liability, so the
+formula family is genuinely inapplicable. What is wrong is the stated REASON, and the
+reason is the part the schema requires to carry ``legal_refs`` and ``source_refs`` and
+the part a reviewer reads as justification. m145 and m720 are already
+``agent_reviewed``, so the misstatement sits inside reviewed revisions.
+
+Not corrected here: the fix is prose on revisions two of which are stamped, and changing
+a recorded reason changes what those stamps attest to.
+
 
 ## Recommendations
 
