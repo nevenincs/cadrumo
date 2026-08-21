@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:41a50feeb9ec192487d74925a4bc4c932ea3e216c992c4d8e618868d51ae7c53'
+body_hash: 'sha256:9d14da12dc315535e619b1848e26d362fdae9081378162fd2f25aa789b9f9ce6'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9825,3 +9825,148 @@ what the terminal chose to show; the display width is not part of the contract.
 
 `dev/locales` parity remains red on its pre-existing drift and improved again:
 **953 -> 876** missing codebase keys.
+
+## The offset-vs-sheet join defect, and what it did to the queue
+
+A record design numbers each sheet's positions from 1, so an offset is unique
+only WITHIN a sheet. My extractor keyed on offset alone. Modelo 151's design has
+11 sheets and 156 colliding offsets: **106 of 616 labels were wrong**, including
+`did.ingreso-domiciliacion-devolucion-iban` (sheet `M151DID00`) carrying
+`Naturaleza [02]` from sheet `M15102000`. Fixed by joining on `(segmento,
+offset)` and emitting the sheet alongside the label, so a caller can see the join
+rather than trust it.
+
+Auditing the other offset-joined modelos: 308 and 309 are single-sheet designs
+and were never at risk; 193, 184 and 360 were. Sheet-aware re-extraction found
+**five real mislabels** -- modelo 193's `gasto.nif`, `gasto.nombre` and
+`perc.nif` across both revisions (a gastos-sheet casilla wearing the declarante
+sheet's label), and modelo 360's `decl.op1-numero` and `decl.op1-codigo-8`. All
+corrected in all four locales.
+
+Two modelo 184 casillas *would* have changed and were deliberately left alone:
+the live labels (`Subclave del tipo de renta atribuida`, `Importe de la renta
+atribuible / rendimiento neto atribuible al miembro`) are richer than the raw
+uppercase design text my extractor produces. A sheet-aware extraction is not
+automatically an improvement over an authored label; overwriting here would have
+been a regression dressed as a fix. Modelo 184's 21 remaining sheet-ambiguous
+casillas keep no extracted label at all, on the standing basis that a wrong
+label is worse than a missing one.
+
+### Re-measuring the six queue items: all six are clean
+
+The sequencing queue was built from an offset-only join and from reading
+`export_layouts` (the AUTHORED form) instead of
+`derive_export_layouts_from_bindings`. Re-measured through the correct
+instruments, **every one of the six is a false finding or already resolved**:
+
+1. **184 casilla 77 / segmento `184-2-entidad`.** The design DOES carry it: byte
+   offset 77 on the entidad sheet is `CLAVE`, matching `tipo2.clave`; offset 77
+   on the socio sheet is `CÓDIGO PROVINCIA`, matching `tipo3.codigo-provincia`.
+   The semantic map's `ordinal` is a sheet ROW INDEX, not a byte offset -- ordinal
+   77 is `f081`/`otros-gastos-deducibles`. Conflating the two produced the
+   finding.
+2. **151/2015-2022 citing the 2023 diseño.** Zero citations remain anywhere in
+   that revision's tree; it cites `aeat-dr-151-2015` only.
+3. **193 record lengths.** All three records span 500 in both the authored and
+   the derived form. Real written coverage is 470/482/381, and every gap falls
+   over design-declared `BLANCOS`.
+4. **720 type_1/type_2.** Both write all 500 bytes with zero gap runs.
+5. **369 gaps over DATA.** Zero gap runs in any record of all three schemas.
+   `t36904-un` is 9 authored fields and 161 derived -- the staging trap that
+   produced the original figure.
+6. **390 page-05/page-07.** Every gap falls over `BLANCOS` or `RESERVADO PARA LA
+   A.E.A.T. (Dejar en blanco)`. The 2025 page-05 interior gaps at `223-239` and
+   `543-559` are the sharpest case: the 2024 design carried
+   `6. Operaciones Reg. Simplificado - Actividad 1/2 - Reducción aplicable`
+   there, and the 2025 design marks both RESERVADO. AEAT retired the fields;
+   declining to write them is correct, and writing them would be the defect.
+
+**Each verdict carries a control.** The 184 conclusion rests on a runtime
+rebinding of `tipo2.clave` to `tipo3.codigo-provincia` from a plugin outside the
+repo: the tree-check gate went red, so its green is meaningful. The 193 BLANCOS
+classifier was proved by dropping the widest data field and confirming it
+reported a gap over data. Widening the reserved-field pattern to catch
+`Identificador cliente EEDD. RESERVADO PARA LAS EEDD.` was checked against the
+whole design first -- exactly one field is swept in, so the widening discards one
+false positive and nothing else.
+
+Modelo 390's `envelope_header` was NOT measured by that classifier (it has no
+sheet), and is not claimed clean on the strength of it. Its own builder enforces
+contiguity and an exact 1..328 span at
+`dev/registry/pipeline/_m390_auxiliary_envelope.py:293`, and that gate passes.
+
+### Two source kinds shipped without their locale keys
+
+`gasto193_contributor` and `withholding296` reached `BindingSourceKind` with no
+`docs.casilla.binding_source.*` or
+`flows.modelo_review.filter.option.binding_source.*` entry in any catalogue, so
+the operator-facing filter and the casilla docs chrome rendered nothing for
+them. Authored in all four locales from the resolvers' own definitions. This is
+the co-landing gap the parity gate exists to catch, and it is worth noting the
+gate DID catch it -- the keys sat in the 876 only because that number is read as
+one undifferentiated backlog. The non-schema remainder is now zero: every
+remaining missing key is a `modelo.schema.*` casilla label or help string.
+
+### The em dash sweep
+
+`test_committed_catalogues_carry_no_em_dash` was red on **732 values** -- 183 per
+locale, all modelo 200 `.help`, all the same `label — qualifier` shape the gate's
+own docstring names as the non-official pattern. Every occurrence was verified
+spaced before substitution, and the replacement left no residual U+2014. The
+gate was red before and green after, which is the bite observed live rather than
+asserted.
+
+Unresolved Spanish labels **379 -> 378**. Authority CLEAN. Registry suite
+19 failed / 5091 passed, unchanged.
+
+## The replacement queue: 14 revisions that cannot emit
+
+With all six sequencing items measuring clean, the remaining distance to a green
+matrix is the filing-capability worklist, and it is already enumerated by a gate
+built for exactly this: `test_filing_capability_worklist`. That test is
+**sanctioned to fail permanently by operator directive** and forbids narrowing,
+allowlisting or excusing "informative" modelos -- "the one legitimate way to
+change this test's result is to build an export layout."
+
+Worth stating plainly, because I nearly got it wrong: all 14 of these revisions
+are `applicability` grade, and the tempting move is to scope the gate to
+`filing` grade and call it green. That is precisely the ratification the test's
+own docstring says let the project sit for its whole history unable to file IVA,
+sociedades or retenciones while the tree stayed green. The grade is not a licence
+to stop; it records where the ladder currently sits.
+
+Measured for tractability -- design availability, sheet count, field count --
+rather than ordered by modelo number:
+
+| modelo | revision | design | sheets | fields |
+|---|---|---|---|---|
+| 185 | 2003-2025 + 2025-y-siguientes | `aeat-dr-185-2026` | 2 | 36 |
+| 182 | 2007-y-siguientes | `aeat-dr-182-2024` | 2 | 43 |
+| 194 | 2019-y-siguientes | `aeat-dr-194-2023` | 2 | 43 |
+| 188 | 2019-y-siguientes | `aeat-dr-188-2023` | 2 | 44 |
+| 187 | 2019-y-siguientes | `aeat-dr-187-2022` | 2 | 53 |
+| 222 | 2025-y-siguientes | `aeat-dr-222-2025` | 2 | 123 |
+| 840 | 2003-y-siguientes | `aeat-dr-840` | 3 | 381 |
+| 036 | 2025-02-03-y-siguientes | `aeat-dr-036-2025` | 12 | 1032 |
+| 220 | 2024-y-siguientes | `aeat-dr-220-2023` | 127 | 15648 |
+| 038 | 2002-y-siguientes | **none bundled** | - | - |
+| 136 | 2026 | **none bundled** | - | - |
+| 721 | 2023-y-siguientes | **none bundled** | - | - |
+| 763 | 2011-y-siguientes | **none bundled** | - | - |
+
+Ten have a bundled design and are authorable now, smallest first. **Four have no
+bundled design at all** and are genuinely acquisition-blocked -- they need the
+official AEAT diseño de registro before any layout can be grounded, and no amount
+of local work substitutes for it. Modelo 220's 15,648 fields across 127 sheets is
+a campaign of its own and should not be attempted between smaller items.
+
+Two cautions for whoever takes the next item. The route is the generator pipeline
+-- a semantic map under `dev/registry/mappings/modelo_<id>/` plus a render
+profile, published through `publish_validated_generated_export_tree` -- never
+`render_complete_export_tree` straight into `src/` and never a `filecmp` diff, per
+`modelo-export-mirrors-official-structure`. And the design ref shown for modelo
+185 is `aeat-dr-185-2026` for both revisions including `2003-2025`; that is this
+measurement's first-match pick, not necessarily what the revision cites, and it
+carries the same smell as the 151/2023 item above. Confirm the cited ref against
+the revision before authoring, because a layout grounded in the wrong year's
+diseño is the defect this campaign keeps finding.
