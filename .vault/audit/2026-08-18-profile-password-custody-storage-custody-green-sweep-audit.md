@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:921bc40f02be344d205e768d120cfe863f296ecdb9f4037d0d6024bdd6072568'
+body_hash: 'sha256:dd808fa152c17c61ddbb9d94bd545eda706472506fe7b13b0f78ca0d0222af90'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4788,3 +4788,46 @@ barrier does not achieve — the processes are released together but diverge acr
 of Argon2id work. That is a real limit of the harness, not a missing assertion someone
 forgot, and inventing a test that cannot be watched to fail would repeat exactly the defect
 this entry exists to correct.
+
+### A lock-exclusion assertion that measured process startup, not the lock
+
+The previous entry recorded a residual gap: nothing asserts the custody root lock
+serialises two DIFFERENT profiles. Checking that claim before building anything found it
+overstated — two tests in `test_custody_transactions` already address it — and checking
+THOSE found something worse than the gap.
+
+**`test_create_root_lock_serializes_duplicate_labels_across_real_processes`** races two
+spawned creates for different profile ids under one label. Removing the root lock makes it
+fail **1 run in 3**: a genuine detector, but probabilistic, so a single CI run catches the
+regression about a third of the time.
+
+**`test_transaction_lock_serializes_siblings_and_releases_after_process_death`** looked
+deterministic and was not. With the root lock removed entirely it passed **3 out of 3**.
+The reason is in its timing:
+
+    second.start()
+    with pytest.raises(Empty):
+        result_queue.get(timeout=0.25)
+
+The window opens at `start()` and closes 250 ms later, while a spawned interpreter needs
+SECONDS to import cadrumo before it can attempt a lock at all. The sibling could never have
+reported inside that window whatever the lock did, so "the second process must not acquire"
+was satisfied by startup latency. Half the test was real — it does prove the lock releases
+after the holder is terminated, which is the stale-lock property — and half asserted
+nothing.
+
+Fixed by having the sibling publish `ready` once its interpreter is up and the lock call is
+all that remains. The window now opens after that report, so it measures contention rather
+than spawn cost. With the root lock removed the test fails **3 out of 3**; restored, it
+passes.
+
+**The general shape is worth carrying.** A timing window is only an assertion about the
+subject if the subject is the slowest thing inside it. Anything expensive that happens
+before the measurement starts — a process spawn, an import, a fixture — will satisfy a
+short window on its own, and the test then passes for a reason unrelated to its name. The
+tell is that the window is shorter than the setup it races.
+
+Three consecutive entries have now found that a claim about coverage did not survive being
+probed: a gap that was already covered, a control that no longer discriminated, and an
+exclusion window that measured the wrong thing. In each case the probe cost minutes and the
+belief would have persisted indefinitely.
