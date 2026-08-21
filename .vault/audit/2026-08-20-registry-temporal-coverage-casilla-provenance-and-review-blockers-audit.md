@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7262311995e19fe5b77b721e6c5b34d4d72e63ff4e24ad2facfae58494f335bd'
+body_hash: 'sha256:4c665508038c8f949407e563aac5b0d633010ac8ea5b00eebde65b952176abee'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1405,7 +1405,6 @@ Orden HAC/529/2026 (BOE-A-2026-11583).
 is work a review iteration should improvise: each is a revision split plus a legal
 enrolment, with its own verification.
 
-
 ### bundling-new-corpus-text-from-a-fetch-needs-operator-authorization | boundary | why naming the orden is the correct stopping point
 
 m763's span gate names two fixes, and the first looked landable: *"acquire and cite the
@@ -1451,7 +1450,6 @@ specified: both ordenes bundled with the standard provenance note, ``artículo �
 ``disposición final única`` enrolled from HAC/1363/2018, the ``disposición final 1``
 provision from HAP/2373/2014, then the revision split at 2015 and Q4 2018 with each
 segment citing the orden that governs it.
-
 
 ## Recommendations
 
