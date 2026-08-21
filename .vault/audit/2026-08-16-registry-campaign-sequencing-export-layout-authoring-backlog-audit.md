@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:ffe78f7f2b91ac940933c2b5e414e5e5faef42d6f3e0ca3ff87b821bfea31ca6'
+body_hash: 'sha256:10db1a20585e49f7924b322e85334be1619b2cf2d5ca52cba7e0bc7079f7014e'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9331,3 +9331,20 @@ caught.
 Modelo 840 joined the applicability-grade family: an informative IAE censal
 declaration with no export layout, whose test built at the FILING default and
 refused before reaching its subject.
+
+### Measured state
+
+Registry suite: **30 failed, 5,080 passed** (from 36 / 5,074), with one
+regression from the deadline correction absorbed in the same tick — modelo 193's
+own test pinned the rule-derived 31 January, the same shape as modelo 190's, and
+now carries the published date with its reason. Both logs pass the FAILED-line
+integrity check (36 against 36, 30 against 30), so the diff is real.
+
+Swept for other expectations pinned to a corrected date: modelo 369's
+`date(2026, 1, 31)` assertions are untouched because 369's windows were NOT
+corrected — it is named in no bundled calendar — and the two round-trip modules
+use that date as a filing-period context rather than a deadline. Modelo 184's
+`2026-02-28` window is itself a Saturday and joins the 88 recorded: it closes in
+February and the March calendar does not name 184.
+
+Authority CLEAN, generated-tree gates 30 passed, ruff clean.

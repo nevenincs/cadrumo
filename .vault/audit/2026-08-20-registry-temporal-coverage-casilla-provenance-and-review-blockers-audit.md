@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:33742c02681fb6e8ef1f60fbc2b1a55d9fa0afc7a60c8ef95df7b7ff1a31b636'
+body_hash: 'sha256:169cc5f2a0a3f2d84349ff540e2753acb07c7b7940d56bbad8a4291aff3480e4'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -736,7 +736,6 @@ the loader carries them and a future reader does not depend on a sentence.
 **Remaining: 6** -- m036, m122, m490 x3, m604/2021-2023. Three are stamped by another
 hand (m122, m490 x3) and two are pending (m036, m604). None were touched.
 
-
 ### span-verdicts-split-into-absent-and-contrary-evidence | high | 69 are missing evidence; 6 are evidence AGAINST the revision, and 4 of those 6 are stamped
 
 Earlier iterations treated "span-flagged" as one population of 74 and concluded it
@@ -788,7 +787,6 @@ this revision looks stampable.
 contrary evidence (m220, m763) are structurally contested and should be split or have
 their amending orden cited before review, not stamped with a limit. The rest are ABSENT
 cases where a stated limit is the honest treatment.
-
 
 ## Recommendations
 
