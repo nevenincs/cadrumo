@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:13e994a1109e69bf22ae04202bfce195df7f42190da4ee9dc6a4e2c1fdaac50d'
+body_hash: 'sha256:f3bf0712f905e4792e5a60c929f946b0d3639516fb840edcbb2b9b02e9cb99d9'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9147,3 +9147,7 @@ table-only, so a type migrating into annotation reach can no longer look like th
 table having stopped contributing. Proven by making the derivation ignore its
 roots: it reds with "the selector table contributed nothing the annotations
 miss".
+
+Registry suite: **42 failed, 5,068 passed** (from 50 / 5,044 at the tick's start).
+Eleven fixed in total, none newly failing across either half of the tick, on
+per-test diffs over logs that all pass the integrity check.
