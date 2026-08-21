@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:5edb8cf848678e6e882d9bb3066d3bfb673ff0e105bcc6c4d594d9d9c4e4d230'
+body_hash: 'sha256:7d05e5dc90a3e84d07770a94e402966f02670bba104dc22a6731ccff7338a780'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3544,3 +3544,49 @@ chased. Both shipping lanes stay green.
 this change and re-running the same seven gates, not by inspecting whether the offending
 lines looked related. They are all `datetime` clock-seam and registry-parity gates owned
 by other campaigns.
+
+### The custody root lock serialises pointer writers but not readers
+
+The writer half left open by the previous entry is now closed, and the reason it
+existed is worth stating plainly: **the lock covers the wrong population.** Pointer
+writes are serialised by the custody root lock, so cooperating writers cannot
+interleave. Readers take no lock at all — they cannot, because `read_pointer` runs
+during `Settings()` bootstrap, before there is anything to lock with. Every process
+reads the pointer as it starts. On Windows a reader's open handle refuses the
+writer's replace and unlink outright, so a profile switch or a logout could fail
+while correctly holding the lock that was supposed to make it safe.
+
+Measured over an eight-second race against a reader loop: 426 `ERROR_SHARING_VIOLATION`
+and 115 `ERROR_ACCESS_DENIED`. After the fix, zero on both sides of the window.
+
+**Checked for the fail-open reading first, and it is not one.** Every caller propagates:
+`ActiveProfilePointerTransaction` raises rather than swallowing, and `compare_and_write`
+re-reads to confirm publication. Logout is the sharpest caller — it closes the session
+artefacts BEFORE clearing the pointer, so a refusal leaves the secrets correctly
+zeroised and the pointer still naming the profile. That is fail-closed and the secret
+handling stays correct; what the operator gets is a raw `OSError` and a stale selection.
+Worth fixing as robustness, not as a confidentiality defect, and the distinction is
+recorded so a later reader does not re-escalate it.
+
+**The tension named in the previous entry is resolved rather than worked around.**
+`core/_lockfile_unlink.py` already encoded these two codes and the reasoning behind them,
+but could not be reused because it imports `core.logging`, which `_bucket_pointer_io`
+must not. The codes and their predicate now live in `core/_windows_contention.py`, which
+imports nothing at all and is therefore safe from both. Each consumer keeps its own retry
+budget, because the right budget depends on what losing the race costs it — a stranded
+lockfile wedges a subsystem, a refused pointer write fails one command.
+
+Note the asymmetry between the two halves of this same window, which is why one shared
+helper could not serve both: the WRITE refusals carry `winerror` 32 and 5, so contention
+is identified by code and bounded by the budget. The READ refusal carries no `winerror`
+at all, so only the budget separates it from a denying ACL. Same file, same contention,
+two different discriminators available.
+
+Gated by a real race in both directions, each with an anti-vacuity guard asserting the
+threads actually overlapped, plus a predicate gate whose sharp test is the FAIL-SAFE
+direction: a POSIX `EACCES` must never be classified as contention, because every
+consumer waits on a `True` answer and would turn a permanent refusal into a stall. Proven
+by making the predicate answer `True` for any `PermissionError` — two tests fail. The
+write gate's anti-tautology case puts a directory at the pointer path: unremovable, so a
+retry that absorbed the error class outright would report a logout that silently left the
+profile selected.
