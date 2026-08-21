@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:10db1a20585e49f7924b322e85334be1619b2cf2d5ca52cba7e0bc7079f7014e'
+body_hash: 'sha256:0ab790249913a0ef8f8fe99e5d30a7357a210355a131b0f066012a3405770a8c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9348,3 +9348,73 @@ use that date as a filing-period context rather than a deadline. Modelo 184's
 February and the March calendar does not name 184.
 
 Authority CLEAN, generated-tree gates 30 passed, ruff clean.
+
+## Modelo 123's unguarded direction, and the note that argued against closing it
+
+`test_m123_2024_carries_base_total_implies_retenciones_total_advisory` raised
+`StopIteration`: it looked for an `implies_nonzero(["06", "09"])` ADVISORY
+predicate the registry does not declare.
+
+The registry had considered and declined it, in writing. The sibling predicate's
+own comment calls base-to-retencion "the obvious choice", passed over to stay
+"furthest from the engine's own additions" — while stating in the same sentence
+that the arithmetic-identity objection "does not hold by arithmetic here".
+
+It does not, and that is what makes the pairing safe rather than vacuous:
+
+```
+casilla 06  add([04], [05])   both leaves manual
+casilla 09  add([07], [08])   both leaves manual
+```
+
+Nothing derives 09 from 06. A positive base total against a zero retenciones
+total is a real observation, not something the engine could not have produced.
+
+**The direction was genuinely unguarded.** A filer declaring a positive base and
+no withholding at all CLEARS the existing count-to-base predicate, because its
+antecedent (the rentas count) and consequent (the base) are both positive. That
+is the shape `no-silent-under-declaration` requires an advisory for. RD 439/2007
+art. 75 identifies the capital-mobiliario rents subject to withholding and its
+exceptions, and art. 90 sets the positive rate on the base.
+
+Authored as ADVISORY, never blocking, and driven over three cases rather than
+asserted to exist:
+
+```
+positive base, ZERO retenciones   fires = True    <- the defect
+positive base, positive retenciones fires = False
+zero base                          fires = False  <- a nil quarter never fires
+```
+
+The third case is the one that matters for trust: modelo 123 is filed quarterly
+even for a quarter with no activity, and an advisory that fired on those would
+train operators to ignore it.
+
+## Four gates that had outlived their premise
+
+- **`test_relation_offset`** drove `derive_offset_source_period` with `"ANUAL"`
+  and expected a resolution-time refusal. `RelationDefinition.target_periods`
+  validates the grammar now, so the relation cannot be built — the invariant
+  moved to BUILD time, which is the direction the binding rules ask for. The
+  resolve-time check stays as a backstop, and a backstop nothing can reach
+  through the type is the kind that rots, so it is still exercised through
+  `model_construct`.
+- **`test_modelo_303_registry`** asserted every revision runs 1 January to 31
+  December. The 2024 pair is a MID-YEAR split meeting at 31 August / 1
+  September, and that boundary is the entire content of the split; the uniform
+  span erased it. Each span is now carried per revision, and the two 2024
+  revisions are asserted to MEET — no gap, no overlap.
+- **`test_modelo_347_registry`** required the construct's member tuple to equal
+  the revision's casilla order. `ConstructDefinition` validates uniqueness and
+  membership, not order, and the 44 ids covered exactly the same set in a
+  different merge order. Now asserts coverage; proven still to bite by dropping
+  one member.
+- **`test_modelo_136_grounding`** expected the 20% lottery levy as a formula
+  LITERAL. It is a registry parameter now, which is where a year-versioned
+  regulatory value belongs. Asserting the reference alone would be weaker than
+  what it replaced, so the indirection is followed: the parameter must exist on
+  the revision and resolve to `Decimal("20")`.
+
+`test_remote_state_guard`'s snapshot helper joined the applicability-grade
+family — it caught `RegistrySnapshotError` while the grade refusal raises
+`RegistryValidationError`, so one applicability modelo aborted the whole walk.
