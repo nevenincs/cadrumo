@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8a3329d0dcd2ed183d50f397279c918043fbaf0f43c758205a23c64c73bcb78'
+body_hash: 'sha256:e330d1e0ac286a77989daaa21db046c1d1adb11c83e242150417c74d05660764'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4517,3 +4517,47 @@ payload instead.**
 Absorbed rather than deferred: it is a storage-surface test, red, in this campaign's
 domain. It is not a "locale failure belonging to another campaign" — the locale work is
 correct and the assertion was language-dependent.
+
+### Sweeping the out-of-lane CLI tests: four reds, none of them defects
+
+Having hit the out-of-lane pattern three times one failure at a time, the storage and
+profile tests under `entrypoints/cli/tests` — which the domain lanes do not cover — were
+swept as a population. Six custody-core modules produced **four failures**, and the
+triage matters more than the fixes.
+
+**Three were mis-CLASSIFIED, not broken.** Their subject is cross-process session
+resumption, and the `os_keychain` marker's own description states the rule exactly: a case
+belongs under it "when it cannot reach its subject without a minted acceleration receipt,
+because `resume_profile_session` leaves the login PROCESS-SCOPED when the keychain is
+unavailable and mints no receipt at all". The observed envelope said precisely that —
+`registered_bucket: true`, `profile_record_present: false`, `profile_source: "none"`. One
+module's docstring even records that it was authored only once the credential store had
+been cleared, so its dependence was known and simply never expressed as a marker.
+
+They carried no marker, so on any host whose store refuses they fail indistinguishably
+from real defects — and cost a full re-triage every time, as they did here. Marked per
+function, never per module, because that is what the marker's description requires and
+those modules hold cases that do NOT need custody. Verified as classification rather than
+suppression: `-m os_keychain` still selects all three, and the default lane now runs the
+same files green.
+
+**The fourth was an over-broad assertion against a contract this campaign helped pin.**
+`test_cold_start_refusal_is_consistent_across_surfaces` demanded byte-identical output from
+`modelo work list` and `ledger list`. The two differed in exactly one line — `command:` —
+which the envelope spine REQUIRES each surface to fill with its own command. The refusal,
+its failed condition, its evidence and its recovery action were identical throughout, so
+the contract the test names was never violated; the comparison simply included a field that
+differs by design. Narrowed to the surface-independent lines.
+
+**The triage nearly went wrong twice, both times from an unverified instrument.** An awk
+extraction meant to count keychain mentions per failure block matched nothing — pytest's
+header format differs — and reported a confident "0 mentions" for all four, which would
+have argued they were NOT keychain-related. Checking that the extraction captured any lines
+at all showed it had captured none. The direct search then found zero occurrences of
+"1312" anywhere in the log, which is true but also not evidence of absence of the class:
+the marker's subject is a missing receipt, and a host that mints none produces no error
+code at all. **A grep for the symptom is not a test for the cause.**
+
+Net effect: the six-module subset now runs green at 34 passed, and the three genuinely
+environment-bound cases are enrolled where `just test-os-keychain` can reach them on a
+desktop session.
