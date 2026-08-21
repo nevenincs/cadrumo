@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:651d01f834fcb780b812ac8ed1b7a9a96769947da3bbef3d1dbfae90e7578d7f'
+body_hash: 'sha256:9081efe8017735d86414e9fb22dbf860db43fb3ed903780329d3f1fb066d67be'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4681,3 +4681,39 @@ set fails loudly instead of silently narrowing what counts as reachable — the 
 anti-vacuity concern as an empty scan, applied to the gate's own vocabulary. Proven on a
 real module rather than only a sample: stripping `unit` from a live test file fails the
 gate naming it.
+
+### Replacing a prose assertion needs a MEASURED discriminator, not a plausible one
+
+Fourth out-of-lane batch: four modules, one failure — the localised-prose class for the
+third time. `test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input` asserts
+`"Refused."` and `"Invalid value" not in`, both English tokens against Spanish output.
+
+The class was measured before being treated as systemic: only five sites in the tree assert
+the English refusal word, and just this one fails. Too small for a gate, so it was fixed in
+place rather than turned into machinery.
+
+**The fix took three attempts, and the two failures are the finding.** The test's subject
+is the CHANNEL — workflow state versus a bad command line — so the replacement had to
+separate those two. Each candidate was checked against the live CLI:
+
+1. `error.category == "REFUSED"` — **does not discriminate.** A Click parameter error on
+   the same verb is published as `REFUSED` too. This one was written, run green, and
+   would have been committed on the strength of passing.
+2. `error.code != "REFUSED_CLI_BOUNDARY"` — **does not discriminate.** Both channels carry
+   that identical code, which the failing assertion revealed by printing the workflow
+   refusal's own envelope.
+3. `action.failed_condition_id == "cli.overview.profile.complete"` — **discriminates.**
+   Workflow state names the condition it could not satisfy; a parameter error carries
+   `None`, confirmed by invoking one.
+
+**The lesson generalises past this test.** Moving an assertion off prose and onto a
+structured field feels like a strict improvement, and it is not automatically one: the new
+field has to be shown to differ between the two situations the test distinguishes.
+A structured assertion that passes proves the field's value, never that the field can tell
+the cases apart. Both wrong candidates passed the test they were written for -- the first
+would have shipped a test that could no longer fail for its stated reason, which is exactly
+the defect this campaign has been finding in other people's work.
+
+Nothing here was a product defect. The gate landed two entries ago was checked before
+committing, along with the import gate; the two absolute-import offenders it reports are
+another campaign's registry tests, unchanged.
