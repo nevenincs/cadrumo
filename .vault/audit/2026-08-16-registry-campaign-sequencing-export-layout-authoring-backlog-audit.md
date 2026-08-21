@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc9536ac7bd185e98d0889bf911a3f8abc39649237ee7beb8e6e43aaa769f2a2'
+body_hash: 'sha256:30bd1aa298d33196df65e7402332dbbc70c77ee205519d37a982d5d3c186ab89'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11335,3 +11335,72 @@ Modelos 200, 322 and 347 carry the same class of finding and are untouched.
 Modelo 200's is materially larger -- 1140 of 3194 shared boxes move and the
 record set itself changes from 75 to 77 records -- so it is not a re-anchoring
 of one field and should not be assumed to follow this shape.
+
+## Tick addendum: the sweep the modelo 184 split pulled in
+
+Splitting a revision renames it, and the old id was pinned in eleven test
+modules plus the two progress ledgers. All were repointed by the filing year
+each exercises, and two of them became STRONGER rather than merely repaired:
+
+* `test_modelo_184_snapshot_builds_for_each_published_filing_year` previously
+  asserted that every year built a snapshot at all. It now pins WHICH half each
+  year resolves to, which is the fact that matters once the halves carry
+  different byte layouts -- a year landing on the wrong side would still build
+  cleanly while writing a filing at the wrong offsets.
+* `test_revision_span_split_progress` exists precisely so a split cannot
+  silence the detector. Its entry was removed only after checking in the
+  direction that would catch a silenced detector: `_boundaries_for` returns
+  nothing for EITHER new revision, the two published trees carry different
+  design epochs, and their declarante records differ at exactly the disputed
+  position. A detector that had simply stopped seeing modelo 184 could not
+  produce that difference.
+
+### A stale fixture that encoded a corrected defect
+
+`test_modelo_184_informativa_fidelity` pinned a casilla `tipo2.miembro-nif` at
+positions 9-17. The registry itself records why that box was removed: 9-17 is
+NIF DEL DECLARANTE in every record of both design epochs, so a casilla named
+for the member was bound to the DECLARANTE's bytes; the member's NIF is record
+3's 18-26, already modelled as `tipo3.miembro-nif`. The fixture was repointed
+to the correct casilla. This failure predates the split -- the removal is in
+the pre-split tree -- but it is fixed here rather than deferred.
+
+### A silently dropped row field, and a correction to how big it looked
+
+Chasing the remaining red in `test_detail_record_round_trip` found a real gap:
+`assemble_withholding_observations` maps 66 modelo 190 perceptor bindings onto
+observation field names, and four of them -- `perceptor_birth_year`,
+`perceptor_situacion_familiar`, `province_code` and
+`territorial_deduction_clave` -- were resolved to a field name and then dropped
+on the floor, with no refusal anywhere. The visible symptom is that a clave A
+row could not be assembled at all: the resolver asks for those bindings, which
+makes them required, and the validator then refused the row for a field the
+operator DID supply.
+
+The first measurement of that gap said FORTY-TWO fields, and that was wrong in
+a way worth recording. The constructor wires most of these through a tail of
+`**_optional_int_kwarg(fields, "...")` spreads, and a regex looking for
+`name=` cannot see a spread, so the count included 38 fields that were already
+wired. Python caught it at once -- "got multiple values for keyword argument
+'disability_clave'" -- but a measurement that counts only one of two wiring
+styles will overstate a gap every time. The real figure is four.
+
+Blank stays ABSENT rather than zero in the coercion, which is load-bearing: the
+design declares AÑO DE NACIMIENTO for claves A, B.01 and C and the validator
+refuses a row without it, so a blank coerced to 0 would clear that refusal
+while telling AEAT the perceptor was born in year zero.
+
+### The fixture the design actually requires
+
+With the plumbing fixed, the clave A row still needed its datos adicionales,
+and each code was taken from the design rather than guessed: campo 15 año de
+nacimiento, campo 16 situación familiar ("1" soltero, viudo, divorciado),
+discapacidad ("0" no padece ninguna), contrato o relación ("1", the general
+case the design folds penados and special-disability relations into), campo 21
+movilidad geográfica ("0", the design's explicit "en otro caso" value), campo
+27 préstamos vivienda ("0", never applied), provincia and deducción territorial.
+
+Titular de la unidad de convivencia is deliberately NOT set: the validator
+refused it on a clave A row because the design declares campo 20 only for clave
+L.29. That refusal is the design's applicability rule doing its job, and taking
+the value back out was the fix rather than working around it.

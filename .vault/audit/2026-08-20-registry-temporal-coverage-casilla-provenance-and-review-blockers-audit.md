@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9603b97421eab5522c42d7a03b3a140eee2ce52ebb0a0e8bbb9573d73829e5ba'
+body_hash: 'sha256:a1becd59f03e4bfebd8ec3d719aaeacfc645f5059519d38cad28ba1fb9dd5a34'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1582,7 +1582,6 @@ eleven. What this iteration removes is the ambiguity: the list is no longer sixt
 undifferentiated failures but eleven citation fixes with the evidence already on disk and
 fourteen acquisitions, and the arrears off-by-one explains why they all look alike.
 
-
 ### CORRECTION-only-three-are-citation-fixable-the-rest-are-structural | high | supersedes the eleven-citation-defects triage
 
 The previous finding classed eleven revisions as citation defects on the grounds that
@@ -1631,7 +1630,6 @@ Eighth time in this campaign that re-checking overturned a conclusion, and the t
 where the overturned conclusion was already written into this document. The check that
 caught it -- compare the actual designs rather than infer from another gate's silence --
 is the same one that should have been run before the claim was made.
-
 
 ## Recommendations
 
