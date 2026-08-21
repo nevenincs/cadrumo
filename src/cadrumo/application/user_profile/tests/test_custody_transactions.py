@@ -294,11 +294,20 @@ def _create_labeled_capsule_in_sibling(
     profile_id_text: str,
     label: str,
     result_queue: Any,
+    barrier: Any = None,
 ) -> None:
-    """Attempt the actual complete create transaction in an independent process."""
+    """Attempt the actual complete create transaction in an independent process.
+
+    The barrier is released once the envelope material exists and the
+    transaction is the only work left. Without it the siblings reach the create
+    whenever their own KDF setup happens to finish, so the race is loose and
+    the collision is decided by scheduling luck rather than by the lock.
+    """
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
     envelope, sentinel, data_files = _create_capsule_input(profile_id=profile_id)
+    if barrier is not None:
+        barrier.wait(60)
     try:
         ProfileCustodyTransactionService(root=root).create_capsule(
             profile_id=profile_id,
@@ -808,13 +817,14 @@ def test_create_root_lock_serializes_duplicate_labels_across_real_processes(tmp_
     """Two independently scheduled creates expose at most one matching label."""
     context = get_context("spawn")
     result_queue = context.Queue()
+    barrier = context.Barrier(2)
     first = context.Process(
         target=_create_labeled_capsule_in_sibling,
-        args=(str(tmp_path), str(_PROFILE_ID), "Same label", result_queue),
+        args=(str(tmp_path), str(_PROFILE_ID), "Same label", result_queue, barrier),
     )
     second = context.Process(
         target=_create_labeled_capsule_in_sibling,
-        args=(str(tmp_path), str(_OTHER_PROFILE_ID), "same LABEL", result_queue),
+        args=(str(tmp_path), str(_OTHER_PROFILE_ID), "same LABEL", result_queue, barrier),
     )
     first.start()
     second.start()
