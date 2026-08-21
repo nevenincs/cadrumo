@@ -18,8 +18,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .....core import BindingSourceKind
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
+from .....core import BindingSourceKind
 from .....core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     INVOICE_BINDING_SOURCE_KINDS,
