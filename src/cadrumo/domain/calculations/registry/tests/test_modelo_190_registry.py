@@ -10,6 +10,7 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
+from .....domain.deadlines import shift_deadline
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
@@ -136,18 +137,39 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 
 
 @pytest.mark.parametrize(
-    ("ejercicio", "window_id", "expected"),
+    ("ejercicio", "window_id", "expected", "expected_legal_refs", "expected_shift"),
     [
-        (2024, "modelo-190-2024-0a", (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31))),
-        # Closes 2 February, not 31 January: AEAT's own Calendario del
-        # Contribuyente 2026 lists modelo 190 under "Hasta el 2 de febrero",
-        # because 31 January 2026 is a Saturday. The rule-derived date closed
-        # the window two days early.
-        (2026, "modelo-190-2025-0a", (2026, "2025 0A", date(2026, 1, 1), date(2026, 2, 2))),
+        (
+            2024,
+            "modelo-190-2024-0a",
+            (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
+            ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1"),
+            (date(2025, 1, 31), False, "business_day"),
+        ),
+        # Both windows store the NOMINAL statutory close, the month-end the plazo
+        # names, and never AEAT's published operational date. 31 January 2026 is a
+        # Saturday, so this one's operational date IS 2 February -- but that is
+        # derived on read by shift_deadline, not stored. Storing the shifted date
+        # would report shifted=False / business_day, which says no shift occurred
+        # and discards the statutory date; both halves are asserted below because
+        # the two storage forms are indistinguishable on the operator-facing date
+        # alone. This window is also grounded on art. 5, the article that
+        # establishes the plazo, rather than art. 1, which approves the modelo.
+        (
+            2026,
+            "modelo-190-2025-0a",
+            (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+            ("orden-eha-3127-2009:art-5",),
+            (date(2026, 2, 2), True, "sabado"),
+        ),
     ],
 )
 def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
-    ejercicio: int, window_id: str, expected: tuple[int, str, date, date]
+    ejercicio: int,
+    window_id: str,
+    expected: tuple[int, str, date, date],
+    expected_legal_refs: tuple[str, ...],
+    expected_shift: tuple[date, bool, str],
 ) -> None:
     """Each filing year resolves the revision that declares ITS deadline window.
 
@@ -201,8 +223,10 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.period_kind == "annual"
     assert window.opens_on == opens_on
     assert window.closes_on == closes_on
-    assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+    assert window.legal_refs == expected_legal_refs
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
+    shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None)
+    assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read
