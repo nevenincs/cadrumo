@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a3b36cb512dc99a3bc8686e1b15c58c9c49f23ec62ed787c81dc3e2759b279d0'
+body_hash: 'sha256:cb3e7120ca350044ad12f6d954870cf2f9b7aa85c7680b8080e5de240bf92eda'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -246,6 +246,53 @@ capable, which is a product decision about whether Cadrumo supports the consolid
 group pago fraccionado. It is deliberately not started here: a half-authored casilla
 set is a silently narrower registry, and worse than the honest 2-casilla stub that
 exists now.
+
+### box-number-coverage-has-an-unmeasured-limit | medium | 21 of 56 diseños print one box number over several fields, and the obvious way to detect it is wrong
+
+``build_diseno_coverage_report`` keys a derived casilla on ``(segmento, number)``. A
+single-segment form has no ``segmento``, so two fields printing the same ``[NN]``
+derive ONE casilla, and a registry declaring that number reads as covering both. The
+second figure is unmodelled and no gap appears.
+
+The docstring anticipates recurrence ACROSS sheets and justifies collapsing it. What it
+does not discuss is recurrence WITHIN one sheet, which is the modelo 222 shape: boxes
+16, 22 and 32 each print twice in ``DR22202`` at different offsets, over "Base del pago
+fraccionado" versus "Resultado previo" and similar pairs.
+
+**Measured across the bundled corpus** -- first diseño per modelo, box tag read from
+each field's own description:
+
+| modelo | repeated numbers | extra fields that collapse |
+|---|---|---|
+| 151 | 50 | 403 |
+| 036 | 82 | 193 |
+| 390 | 9 | 24 |
+| 840 | 7 | 18 |
+| 763 | 10 | 10 |
+| 303 | 8 | 8 |
+| 200 | 5 | 6 |
+| 714 | 5 | 5 |
+
+...and 13 more with 1-3 each, for **21 of 56 modelos scanned**. This is the common
+case, not a curiosity, and it means a coverage figure counts NUMBERS while the form
+carries more FIGURES than numbers.
+
+**THE OBVIOUS DETECTOR IS WRONG, AND WAS BUILT AND REVERTED RATHER THAN SHIPPED.**
+Adding a `box_tagged_fields` count and flagging `box_tagged_fields >
+len(diseno_casillas)` looks like it separates the two. It does not. A field's
+description cites OTHER boxes inside its own arithmetic -- modelo 353's label is
+literally ``Resultado ([01] - [08]). [03]`` -- and ``_sheet_record_numbers`` scans
+``description``, ``validation`` AND ``content``, so a referenced number enters the
+derived set exactly like a declared one. Measured on modelo 222: **63 fields carry a
+tag, but there are 82 tag occurrences, and 3 fields cite more than one distinct box.**
+The field count and the number count are therefore not comparable in either direction,
+and the flag reported `False` for modelo 222 -- the very form that motivated it.
+
+**What a correct measure needs** is a way to tell a field's OWN box tag from a box it
+merely references. The extraction does not mark that today; the tag is just text in a
+description. Until it does, the honest statement is the one above: coverage counts
+numbers, 21 modelos carry more figures than numbers, and the size of that gap is
+unquantified.
 
 ## Recommendations
 
