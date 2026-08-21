@@ -91,7 +91,7 @@ modelo:
             x-chim6r1edto32bb3dti6iprf5krg:
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5ks0:
-              label: 6. Dades bancàries. Titular del compte. Nom
+              label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5ksg:
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3elnn8o8:
@@ -145,7 +145,7 @@ modelo:
             x-chim6r1edto32bb9dlo6usjkck:
               label: 1. Import sol·licitat a retornar
             x-chim6r1edto32bbeelmmasjf:
-              label: Versió del disseny de registre 000100
+              label: 1. Número d'operació
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:

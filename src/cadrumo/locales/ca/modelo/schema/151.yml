@@ -1732,31 +1732,31 @@ modelo:
               label: Període (anual, 0A)
             x-chkm8bj3elnn8o9dcdin4ro:
               help: null
-              label: Data d'adquisició [55]
+              label: Quota zero
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: null
-              label: NIF de la societat o fons d'inversió [53]
+              label: Devolució. Nom del banc
             x-chkm8bj4clr6ur3lcdkmurhdcdknap31cgmm6qbkf4:
               help: null
-              label: Diferència [04]
+              label: Devolució. Ciutat
             x-chkm8bj4clr6ur3lcdkmurhdcdnm8qb7dsmn0ob9ecmm6rrldpq74u9dcdnm8p8:
               help: null
-              label: Despeses d'aprovisionament de materials i subministraments [04]
+              label: Devolució. Codi de país
             x-chkm8bj4clr6ur3lcdkmurhdchkn4pb3cdkmurhdchimobb2c5n66rpdc9gmsqpdc5i68sj5edpg:
               help: null
-              label: Diferència (Millora o 2a adquisició) [08]
+              label: Devolució. Adreça del banc
             x-chkm8bj4clr6ur3lcdkmurhde9imstbecdkm2bb15lm62bb4clr6ur3lcdkmurhdc4mmcobmdtp2qp35dgmn8pbjdtp6ubbgelh6oq8:
               help: null
-              label: Tipus de declaració
+              label: Devolució. Renúncia a la devolució a favor del Tresor Públic
             x-chkm8bj4clr6ur3lcdkmurhdednmoqb3d5q62bbcc4mm8pbmdtm7aor9dtn2qs3fe8mn8sj1dppmcpbicln66qb1:
               help: null
-              label: Contribuent. NIF [02]
+              label: Devolució. Sol·licita la devolució per transferència
             x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
               help: null
-              label: Despeses d'aprovisionament de materials i subministraments [04]
+              label: Devolució. SWIFT-BIC
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
-              label: Naturalesa [02]
+              label: Ingrés / Domiciliació / Devolució. IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Model
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
@@ -1995,7 +1995,8 @@ modelo:
                 Propietat (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Representant. NIF [18]
+              label: Dades Addicionals de les rendes derivades de béns i immobles.
+                Propietat (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Dades Addicionals de les rendes derivades de béns i immobles.
@@ -2094,8 +2095,8 @@ modelo:
                 i gravat a l'estranger [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Representant. Localitat/Població (si és diferent del municipi)
-                [37]
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
@@ -2117,7 +2118,7 @@ modelo:
               label: Ingressos a compte repercutits [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Contribuent. Dades complementàries del domicili [36]
+              label: Ingressos a compte repercutits [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Ingressos a compte repercutits [05]
@@ -2150,7 +2151,7 @@ modelo:
               label: Pagador. Cognoms i nom o raó social [52]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Contribuent. Data de naixement [05]
+              label: Pagador. Física/Jurídica [51]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Pagador. Física/Jurídica [51]
@@ -2198,7 +2199,7 @@ modelo:
               label: Retenció o ingrés a compte [07]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
@@ -2226,7 +2227,8 @@ modelo:
                 Propietat (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Representant. NIF [18]
+              label: Dades Addicionals de les rendes derivades de béns i immobles.
+                Propietat (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Dades Addicionals de les rendes derivades de béns i immobles.
@@ -2325,8 +2327,8 @@ modelo:
                 i gravat a l'estranger [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Representant. Localitat/Població (si és diferent del municipi)
-                [37]
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
@@ -2348,7 +2350,7 @@ modelo:
               label: Ingressos a compte repercutits [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Contribuent. Dades complementàries del domicili [36]
+              label: Ingressos a compte repercutits [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Ingressos a compte repercutits [05]
@@ -2381,7 +2383,7 @@ modelo:
               label: Pagador. Cognoms i nom o raó social [52]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Contribuent. Data de naixement [05]
+              label: Pagador. Física/Jurídica [51]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Pagador. Física/Jurídica [51]
@@ -2429,13 +2431,13 @@ modelo:
               label: Retenció o ingrés a compte [07]
             x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkcljn4rpde9imst315lkmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc1m:
               help: null
-              label: Número de Justificant [25]
+              label: RESTA. Rendiment íntegre / Renda immobiliària imputada [06]
             x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
               help: null
               label: RESTA. Retenció o ingrés a compte [07]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
@@ -2468,8 +2470,7 @@ modelo:
               label: Ingressos a compte [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
               help: null
-              label: Contribuent. Tipus de vinculació. Progenitor sense vincle matrimonial
-                [09]
+              label: Ingressos a compte [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
               help: null
               label: Ingressos a compte [04]
@@ -2478,7 +2479,7 @@ modelo:
               label: Ingressos a compte [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60qg:
               help: null
-              label: Contribuent. Telèfon mòbil [42]
+              label: Ingressos a compte [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60r0:
               help: null
               label: Ingressos a compte [04]
@@ -2523,14 +2524,13 @@ modelo:
               label: Naturalesa [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1i:
               help: null
-              label: Meritació. Exercici [01]
+              label: Naturalesa [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
-                i gravat a l'estranger [08]
+              label: Naturalesa [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1k:
               help: null
-              label: Contribuent. Bloc [31]
+              label: Naturalesa [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1l:
               help: null
               label: Naturalesa [02]
@@ -2548,7 +2548,7 @@ modelo:
               label: Naturalesa [02]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6o:
               help: null
-              label: Rendiment íntegre / Renda immobiliària imputada [06]
+              label: Rendiment íntegre [06]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0cg:
               help: null
               label: Rendiment íntegre [06]
@@ -2581,7 +2581,7 @@ modelo:
               label: Retenció o ingrés a compte [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
               help: null
-              label: Valoració [03]
+              label: Retenció o ingrés a compte [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
               help: null
               label: Retenció o ingrés a compte [07]
@@ -2608,16 +2608,16 @@ modelo:
               label: RESTA. Retenció o ingrés a compte [07]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: Pagador. NIF [50]
+              label: Tipus de Renda [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Tipus de Renda [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
-              label: Ingressos a compte [04]
+              label: Tipus de Renda [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
               help: null
               label: Tipus de Renda [01]
@@ -2677,14 +2677,13 @@ modelo:
               label: 'Activitat: Codi i tipus d''activitat [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Rendiment íntegre / Renda immobiliària imputada [06]
+              label: 'Activitat: Codi i tipus d''activitat [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6k:
               help: null
               label: 'Activitat: Codi i tipus d''activitat [10]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Contribuent. Tipus de vinculació. Progenitor sense vincle matrimonial
-                [09]
+              label: 'Activitat: Grup o epígraf IAE [11]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Activitat: Grup o epígraf IAE [11]'
@@ -2699,7 +2698,8 @@ modelo:
               label: 'Activitat: Grup o epígraf IAE [11]'
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Contribuent. Planta [34]
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
@@ -2718,7 +2718,8 @@ modelo:
                 [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Contribuent. Número de casa [29]
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
@@ -2767,7 +2768,7 @@ modelo:
               label: Despeses de personal [03]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Naturalesa [02]
+              label: Ingressos íntegres [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Ingressos íntegres [02]
@@ -2776,10 +2777,10 @@ modelo:
               label: Ingressos íntegres [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Tipus de Renda [01]
+              label: Ingressos íntegres [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60qg:
               help: null
-              label: Pagador. Cognoms i nom o raó social [52]
+              label: Ingressos íntegres [02]
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Rendiment net: negatiu [07]'
@@ -2791,7 +2792,7 @@ modelo:
               label: 'Rendiment net: negatiu [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Ingressos a compte [04]
+              label: 'Rendiment net: negatiu [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1l:
               help: null
               label: 'Rendiment net: negatiu [07]'
@@ -2800,13 +2801,13 @@ modelo:
               label: 'Rendiment net: positiu [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Contribuent. Canvi de domicili [13]
+              label: 'Rendiment net: positiu [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Rendiment net: positiu [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Valoració [03]
+              label: 'Rendiment net: positiu [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1l:
               help: null
               label: 'Rendiment net: positiu [05]'
@@ -2821,13 +2822,13 @@ modelo:
               label: Retenció o ingrés a compte [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Ingressos a compte repercutits [05]
+              label: Retenció o ingrés a compte [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d8:
               help: null
               label: Retenció o ingrés a compte [06]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
@@ -2851,11 +2852,10 @@ modelo:
               label: 'Activitat: Codi i tipus d''activitat [10]'
             x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Rendiment íntegre / Renda immobiliària imputada [06]
+              label: 'Activitat: Codi i tipus d''activitat [10]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Contribuent. Tipus de vinculació. Progenitor sense vincle matrimonial
-                [09]
+              label: 'Activitat: Grup o epígraf IAE [11]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Activitat: Grup o epígraf IAE [11]'
@@ -2867,7 +2867,8 @@ modelo:
               label: 'Activitat: Grup o epígraf IAE [11]'
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Contribuent. Planta [34]
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
@@ -2882,7 +2883,8 @@ modelo:
                 [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Contribuent. Número de casa [29]
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
@@ -2921,7 +2923,7 @@ modelo:
               label: Despeses de personal [03]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Naturalesa [02]
+              label: Ingressos íntegres [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Ingressos íntegres [02]
@@ -2930,7 +2932,7 @@ modelo:
               label: Ingressos íntegres [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Tipus de Renda [01]
+              label: Ingressos íntegres [02]
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Rendiment net: negatiu [07]'
@@ -2942,19 +2944,19 @@ modelo:
               label: 'Rendiment net: negatiu [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Ingressos a compte [04]
+              label: 'Rendiment net: negatiu [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
               help: null
               label: 'Rendiment net: positiu [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Contribuent. Canvi de domicili [13]
+              label: 'Rendiment net: positiu [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Rendiment net: positiu [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Valoració [03]
+              label: 'Rendiment net: positiu [05]'
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
               help: null
               label: Retenció o ingrés a compte [06]
@@ -2966,19 +2968,19 @@ modelo:
               label: Retenció o ingrés a compte [06]
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Ingressos a compte repercutits [05]
+              label: Retenció o ingrés a compte [06]
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmmspb7c5q6itjf5ko3e:
               help: null
-              label: Contribuent Domicili Estranger. Codi postal/ZIP [47]
+              label: 'RESTA. Rendiment net: negatiu [07]'
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
               help: null
-              label: Tipus de Renda [01]
+              label: 'RESTA. Rendiment net: positiu [05]'
             x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
               help: null
-              label: Naturalesa [02]
+              label: RESTA. Retenció o ingrés a compte [06]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
@@ -3005,7 +3007,7 @@ modelo:
               label: Guany patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1k:
               help: null
-              label: Tipus de Renda [01]
+              label: Guany patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1l:
               help: null
               label: Guany patrimonial [02]
@@ -3014,13 +3016,13 @@ modelo:
               label: Guany patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1n:
               help: null
-              label: Contribuent. Dades complementàries del domicili [36]
+              label: Guany patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1o:
               help: null
               label: Guany patrimonial [02]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6c:
               help: null
-              label: Naturalesa [02]
+              label: NIF de la societat o fons d'inversió [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0cg:
               help: null
               label: NIF de la societat o fons d'inversió [53]
@@ -3032,13 +3034,13 @@ modelo:
               label: NIF de la societat o fons d'inversió [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d8:
               help: null
-              label: Despeses d'aprovisionament de materials i subministraments [04]
+              label: NIF de la societat o fons d'inversió [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0dg:
               help: null
               label: NIF de la societat o fons d'inversió [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0do:
               help: null
-              label: Contribuent. Escala [33]
+              label: NIF de la societat o fons d'inversió [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0e0:
               help: null
               label: NIF de la societat o fons d'inversió [53]
@@ -3062,7 +3064,7 @@ modelo:
               label: Retenció o ingrés a compte [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0do:
               help: null
-              label: Rendiment íntegre / Renda immobiliària imputada [06]
+              label: Retenció o ingrés a compte [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0e0:
               help: null
               label: Retenció o ingrés a compte [03]
@@ -3074,13 +3076,13 @@ modelo:
               label: RESTA. Retenció o ingrés a compte [03]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Meritació. Exercici [01]
+              label: Tipus de Renda [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Tipus de Renda [01]
@@ -3095,7 +3097,7 @@ modelo:
               label: Tipus de Renda [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
               help: null
-              label: Retenció o ingrés a compte [07]
+              label: Tipus de Renda [01]
             x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6g:
               help: null
               label: Total guanys patrimonials [04]
@@ -3104,15 +3106,13 @@ modelo:
               label: Total retencions o ingressos a compte [05]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
               help: null
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
+              label: Adquirent. Cognoms i nom o raó social [61]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
               help: null
               label: Adquirent. Cognoms i nom o raó social [61]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
               help: null
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
+              label: Adquirent. Física/Jurídica [60]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
               help: null
               label: Adquirent. Física/Jurídica [60]
@@ -3133,7 +3133,7 @@ modelo:
               label: Qualificador de número [30]
             x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0b9g68:
               help: null
-              label: Declaració Complementària 2 [24]
+              label: Qualificador de número [30]
             x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo:
               help: null
               label: Codi postal [38]
@@ -3151,7 +3151,7 @@ modelo:
               label: Dades complementàries de domicili [36]
             x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6omj0cg:
               help: null
-              label: RESTA. Retenció o ingrés a compte [07]
+              label: Dades complementàries de domicili [36]
             x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d0:
               help: null
               label: Diferència (Adquisició) [04]
@@ -3193,14 +3193,13 @@ modelo:
               label: Data de transmissió [57]
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6kriqc1i:
               help: null
-              label: RESTA. Retenció o ingrés a compte [07]
+              label: Data de transmissió [57]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qg:
               help: null
               label: Guany o pèrdua (Adquisició) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qiqc1i:
               help: null
-              label: Contribuent Dades Addicionals habitatge actual. Percentatge de
-                participació [15]
+              label: Guany o pèrdua (Adquisició) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e8:
               help: null
               label: Guany o pèrdua (Millora o 2a adquisició) [09]
@@ -3233,16 +3232,16 @@ modelo:
               label: Nom de la via pública [27]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6g:
               help: null
-              label: Tipus de Renda [01]
+              label: Notari o fedatari [64]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6gmj0cg:
               help: null
               label: Notari o fedatari [64]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74:
               help: null
-              label: 'Rendiment net: negatiu [07]'
+              label: Número de casa [29]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74mj0cg:
               help: null
-              label: Comunitat Autònoma de residència durant l'exercici indicat [20]
+              label: Número de casa [29]
             x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6k:
               help: null
               label: Número de protocol [65]
@@ -3251,13 +3250,13 @@ modelo:
               label: Número de protocol [65]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
               help: null
-              label: Naturalesa [02]
+              label: Número de Justificant del model 211 [54]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
               help: null
               label: Número de Justificant del model 211 [54]
             x-e0o3gbjgdhgmst315kpj8:
               help: null
-              label: Retenció o ingrés a compte [06]
+              label: Planta [34]
             x-e0o3gbjgdhgmst315kpj8b9g68:
               help: null
               label: Planta [34]
@@ -3269,7 +3268,7 @@ modelo:
               label: Portal [32]
             x-e0o3gbjge9nncqbecdkm2b9j74:
               help: null
-              label: Ingressos a compte [04]
+              label: Província [39]
             x-e0o3gbjge9nncqbecdkm2b9j74mj0cg:
               help: null
               label: Província [39]
@@ -3281,8 +3280,7 @@ modelo:
               label: Porta [35]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpg:
               help: null
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
+              label: Referència cadastral [53]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: null
               label: Referència cadastral [53]
@@ -3297,7 +3295,7 @@ modelo:
               label: Retenció o ingrés a compte [11]
             x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
               help: null
-              label: Indicador de fi de registre
+              label: Retenció o ingrés a compte [11]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: null
               label: Tipus de numeració [28]
@@ -3306,7 +3304,7 @@ modelo:
               label: Tipus de numeració [28]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
@@ -3348,7 +3346,7 @@ modelo:
               label: Valor de transmissió (Millora o 2a adquisició) [06]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm:
               help: null
-              label: Naturalesa [02]
+              label: Descripció del guany patrimonial [66]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko34:
               help: null
               label: Descripció del guany patrimonial [66]
@@ -3375,7 +3373,7 @@ modelo:
               label: Diferència [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1i:
               help: null
-              label: Quota de participació [58]
+              label: Diferència [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1j:
               help: null
               label: Diferència [04]
@@ -3390,10 +3388,10 @@ modelo:
               label: Data d'adquisició [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
-              label: Retenció o ingrés a compte [07]
+              label: Data d'adquisició [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
               help: null
-              label: Representant. Telèfon mòbil [42]
+              label: Data d'adquisició [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
               help: null
               label: Data d'adquisició [69]
@@ -3423,7 +3421,7 @@ modelo:
               label: Guany patrimonial [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1j:
               help: null
-              label: RESTA. Retenció o ingrés a compte [03]
+              label: Guany patrimonial [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
               help: null
               label: Guany patrimonial [05]
@@ -3447,13 +3445,13 @@ modelo:
               label: Naturalesa [02]
             x-e0o3ibjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Escala [33]
+              label: Naturalesa [02]
             x-e0o3ibjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko36:
               help: null
-              label: Total retencions o ingressos a compte [05]
+              label: RESTA. Guany patrimonial [03]
             x-e0o3ibjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6g:
               help: null
-              label: null
+              label: RESTA. Retenció o ingrés a compte [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k:
               help: null
               label: Retenció o ingrés a compte [04]
@@ -3462,13 +3460,13 @@ modelo:
               label: Retenció o ingrés a compte [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko36:
               help: null
-              label: Total guanys patrimonials [04]
+              label: Retenció o ingrés a compte [04]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: NIF de la societat o fons d'inversió [53]
+              label: Tipus de Renda [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Tipus de Renda [01]
@@ -3492,7 +3490,7 @@ modelo:
               label: Total guanys patrimonials [05]
             x-e0o3ibjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d60r0:
               help: null
-              label: Municipi [40]
+              label: Total retenció o ingressos a compte [06]
             x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
               label: Valor d'adquisició [03]
@@ -3537,7 +3535,7 @@ modelo:
               label: Quota líquida total [30]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
               help: null
-              label: Localitat/Població [37]
+              label: Quota líquida total. Part autonòmica [32]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
               help: null
               label: Quota líquida total. Part estatal [31]
@@ -3568,7 +3566,7 @@ modelo:
               label: Deducció per donatius. Part estatal [25]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: null
-              label: Naturalesa [02]
+              label: Descripció de l'element patrimonial [67]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
               help: null
               label: Descripció de l'element patrimonial [67]
@@ -3592,8 +3590,7 @@ modelo:
               label: Diferència [04]
             x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
               help: null
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
+              label: Diferència [04]
             x-e0oj0bj5e1kmesj1cpiiqo9h5kpja:
               help: null
               label: Epígraf A1 [35]
@@ -3614,7 +3611,7 @@ modelo:
               label: Epígrafs E1 i E2 [40]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
               help: null
-              label: Contribuent. Dades del contribuent principal. NIF [11]
+              label: Data d'adquisició [69]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
               label: Data d'adquisició [69]
@@ -3626,13 +3623,13 @@ modelo:
               label: Data d'adquisició [69]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
               help: null
-              label: Naturalesa [02]
+              label: Data de transmissió [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
               help: null
               label: Data de transmissió [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
               help: null
-              label: Despeses d'aprovisionament de materials i subministraments [04]
+              label: Data de transmissió [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
               help: null
               label: Data de transmissió [68]
@@ -3641,7 +3638,7 @@ modelo:
               label: Guany patrimonial [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1i:
               help: null
-              label: Valoració [03]
+              label: Guany patrimonial [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1j:
               help: null
               label: Guany patrimonial [05]
@@ -3657,13 +3654,13 @@ modelo:
                 administratives [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipus de declaració
+              label: Tipus de Renda [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipus de Renda [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Contribuent. Telèfon mòbil [42]
+              label: Tipus de Renda [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Tipus de Renda [01]
@@ -3672,10 +3669,10 @@ modelo:
               label: Total guanys patrimonials [06]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
-              label: Tipus de Renda [01]
+              label: Valor d'adquisició [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
               help: null
-              label: Contribuent. Localitat/Població [37]
+              label: Valor d'adquisició [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
               help: null
               label: Valor d'adquisició [03]
@@ -3684,13 +3681,13 @@ modelo:
               label: Valor d'adquisició [03]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
               help: null
-              label: Retenció o ingrés a compte [03]
+              label: Valor de transmissió [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
               help: null
-              label: Tipus de via [26]
+              label: Valor de transmissió [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
               help: null
-              label: Naturalesa [02]
+              label: Valor de transmissió [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
               help: null
               label: Valor de transmissió [02]

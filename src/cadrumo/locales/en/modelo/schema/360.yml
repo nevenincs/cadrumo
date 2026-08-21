@@ -91,7 +91,7 @@ modelo:
             x-chim6r1edto32bb3dti6iprf5krg:
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5ks0:
-              label: 6. Bank details. Account holder. Name
+              label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5ksg:
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3elnn8o8:
@@ -145,7 +145,7 @@ modelo:
             x-chim6r1edto32bb9dlo6usjkck:
               label: 1. Amount requested for refund
             x-chim6r1edto32bbeelmmasjf:
-              label: Record design version 000100
+              label: 1. Transaction number
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:

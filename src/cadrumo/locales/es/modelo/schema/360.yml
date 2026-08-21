@@ -95,7 +95,7 @@ modelo:
             x-chim6r1edto32bb3dti6iprf5krg:
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5ks0:
-              label: 6. Datos bancarios. Titular de la cuenta. Nombre
+              label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5ksg:
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3elnn8o8:
@@ -149,7 +149,7 @@ modelo:
             x-chim6r1edto32bb9dlo6usjkck:
               label: 1. Importe solicitado a devolver
             x-chim6r1edto32bbeelmmasjf:
-              label: Versión del diseño de registro 000100
+              label: 1. Número de operación
             x-chim6r1edto32bbge9nn4sj1ehgg:
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:

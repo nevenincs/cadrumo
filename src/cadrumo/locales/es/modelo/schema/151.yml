@@ -1735,31 +1735,31 @@ modelo:
               label: Periodo (anual, 0A)
             x-chkm8bj3elnn8o9dcdin4ro:
               help: null
-              label: Fecha de adquisición [55]
+              label: Cuota cero
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: null
-              label: NIF de la sociedad o fondo de inversión [53]
+              label: Devolución - Banco/Bank name
             x-chkm8bj4clr6ur3lcdkmurhdcdknap31cgmm6qbkf4:
               help: null
-              label: Diferencia [04]
+              label: Devolución - Ciudad/City
             x-chkm8bj4clr6ur3lcdkmurhdcdnm8qb7dsmn0ob9ecmm6rrldpq74u9dcdnm8p8:
               help: null
-              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+              label: Devolución - Código País/Country code
             x-chkm8bj4clr6ur3lcdkmurhdchkn4pb3cdkmurhdchimobb2c5n66rpdc9gmsqpdc5i68sj5edpg:
               help: null
-              label: Diferencia (Mejora o 2ª adquisición) [08]
+              label: Devolución - Dirección del Banco/ Bank address
             x-chkm8bj4clr6ur3lcdkmurhde9imstbecdkm2bb15lm62bb4clr6ur3lcdkmurhdc4mmcobmdtp2qp35dgmn8pbjdtp6ubbgelh6oq8:
               help: null
-              label: Tipo de declaración
+              label: Devolución. Renuncia a la devolución a favor del Tesoro Público
             x-chkm8bj4clr6ur3lcdkmurhdednmoqb3d5q62bbcc4mm8pbmdtm7aor9dtn2qs3fe8mn8sj1dppmcpbicln66qb1:
               help: null
-              label: Contribuyente. NIF [02]
+              label: Devolución. Solicita la devolución por transferencia
             x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
               help: null
-              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+              label: Devolución. SWIFT-BIC
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
-              label: Naturaleza [02]
+              label: Ingreso/Domiciliación/Devolución - IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
@@ -2002,7 +2002,8 @@ modelo:
                 Propiedad (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Representante. NIF [18]
+              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+                Propiedad (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
@@ -2101,8 +2102,8 @@ modelo:
                 y gravado en el extranjero [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Representante. Localidad/Poblacion (si es distinta del municipio)
-                [37]
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
@@ -2124,7 +2125,7 @@ modelo:
               label: Ingresos a cuenta repercutidos [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Contribuyente. Datos complementarios del domicilio [36]
+              label: Ingresos a cuenta repercutidos [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Ingresos a cuenta repercutidos [05]
@@ -2157,7 +2158,7 @@ modelo:
               label: Pagador. Apellidos y nombre o razón social [52]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Contribuyente. Fecha de nacimiento [05]
+              label: Pagador. F/J [51]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Pagador. F/J [51]
@@ -2205,7 +2206,7 @@ modelo:
               label: Rentención o ingreso a cuenta [07]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
@@ -2233,7 +2234,8 @@ modelo:
                 Propiedad (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Representante. NIF [18]
+              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+                Propiedad (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
@@ -2332,8 +2334,8 @@ modelo:
                 y gravado en el extranjero [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Representante. Localidad/Poblacion (si es distinta del municipio)
-                [37]
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
@@ -2355,7 +2357,7 @@ modelo:
               label: Ingresos a cuenta repercutidos [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Contribuyente. Datos complementarios del domicilio [36]
+              label: Ingresos a cuenta repercutidos [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Ingresos a cuenta repercutidos [05]
@@ -2388,7 +2390,7 @@ modelo:
               label: Pagador. Apellidos y nombre o razón social [52]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Contribuyente. Fecha de nacimiento [05]
+              label: Pagador. F/J [51]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Pagador. F/J [51]
@@ -2436,13 +2438,13 @@ modelo:
               label: Rentención o ingreso a cuenta [07]
             x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkcljn4rpde9imst315lkmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc1m:
               help: null
-              label: Número de Justificante [25]
+              label: RESTO. Rendimiento integro/Renta inmobiliaria imputada [06]
             x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
               help: null
               label: RESTO. Rentención o ingreso a cuenta [07]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
@@ -2475,8 +2477,7 @@ modelo:
               label: Ingresos a cuenta [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
               help: null
-              label: Contribuyente. Tipo de vinculación. Progenitor sin vínculo matrimonial
-                [09]
+              label: Ingresos a cuenta [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
               help: null
               label: Ingresos a cuenta [04]
@@ -2485,7 +2486,7 @@ modelo:
               label: Ingresos a cuenta [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60qg:
               help: null
-              label: Contribuyente. Teléfono móvil [42]
+              label: Ingresos a cuenta [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60r0:
               help: null
               label: Ingresos a cuenta [04]
@@ -2530,14 +2531,13 @@ modelo:
               label: Naturaleza [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1i:
               help: null
-              label: Devengo. Ejercicio [01]
+              label: Naturaleza [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
-                y gravado en el extranjero [08]
+              label: Naturaleza [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1k:
               help: null
-              label: Contribuyente. Bloque [31]
+              label: Naturaleza [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1l:
               help: null
               label: Naturaleza [02]
@@ -2555,7 +2555,7 @@ modelo:
               label: Naturaleza [02]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6o:
               help: null
-              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+              label: Rendimiento integro [06]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0cg:
               help: null
               label: Rendimiento integro [06]
@@ -2588,7 +2588,7 @@ modelo:
               label: Rentención o ingreso a cuenta [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
               help: null
-              label: Valoración [03]
+              label: Rentención o ingreso a cuenta [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
               help: null
               label: Rentención o ingreso a cuenta [07]
@@ -2615,16 +2615,16 @@ modelo:
               label: RESTO. Rentención o ingreso a cuenta [07]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: Pagador. NIF [50]
+              label: Tipo de Renta [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Tipo de Renta [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
-              label: Ingresos a cuenta [04]
+              label: Tipo de Renta [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
               help: null
               label: Tipo de Renta [01]
@@ -2684,14 +2684,13 @@ modelo:
               label: 'Actividad: Código y tipo de actividad [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+              label: 'Actividad: Código y tipo de actividad [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6k:
               help: null
               label: 'Actividad: Código y tipo de actividad [10]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Contribuyente. Tipo de vinculación. Progenitor sin vínculo matrimonial
-                [09]
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Actividad: Grupo o epígrafe IAE [11]'
@@ -2706,7 +2705,8 @@ modelo:
               label: 'Actividad: Grupo o epígrafe IAE [11]'
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Contribuyente. Planta [34]
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
@@ -2725,7 +2725,8 @@ modelo:
                 en el extranjero [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Contribuyente. Número de casa [29]
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
@@ -2774,7 +2775,7 @@ modelo:
               label: Gastos de personal [03]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Naturaleza [02]
+              label: Ingresos íntegros [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Ingresos íntegros [02]
@@ -2783,10 +2784,10 @@ modelo:
               label: Ingresos íntegros [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Tipo de Renta [01]
+              label: Ingresos íntegros [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60qg:
               help: null
-              label: Pagador. Apellidos y nombre o razón social [52]
+              label: Ingresos íntegros [02]
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Rendimiento neto: negativo [07]'
@@ -2798,7 +2799,7 @@ modelo:
               label: 'Rendimiento neto: negativo [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Ingresos a cuenta [04]
+              label: 'Rendimiento neto: negativo [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1l:
               help: null
               label: 'Rendimiento neto: negativo [07]'
@@ -2807,13 +2808,13 @@ modelo:
               label: 'Rendimiento neto: positivo [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Contribuyente. Cambio de domicilio [13]
+              label: 'Rendimiento neto: positivo [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Rendimiento neto: positivo [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Valoración [03]
+              label: 'Rendimiento neto: positivo [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1l:
               help: null
               label: 'Rendimiento neto: positivo [05]'
@@ -2828,13 +2829,13 @@ modelo:
               label: Rentención o ingreso a cuenta [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Ingresos a cuenta repercutidos [05]
+              label: Rentención o ingreso a cuenta [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d8:
               help: null
               label: Rentención o ingreso a cuenta [06]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
@@ -2858,11 +2859,10 @@ modelo:
               label: 'Actividad: Código y tipo de actividad [10]'
             x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+              label: 'Actividad: Código y tipo de actividad [10]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Contribuyente. Tipo de vinculación. Progenitor sin vínculo matrimonial
-                [09]
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Actividad: Grupo o epígrafe IAE [11]'
@@ -2874,7 +2874,8 @@ modelo:
               label: 'Actividad: Grupo o epígrafe IAE [11]'
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Contribuyente. Planta [34]
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
@@ -2889,7 +2890,8 @@ modelo:
                 en el extranjero [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Contribuyente. Número de casa [29]
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
@@ -2928,7 +2930,7 @@ modelo:
               label: Gastos de personal [03]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Naturaleza [02]
+              label: Ingresos íntegros [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Ingresos íntegros [02]
@@ -2937,7 +2939,7 @@ modelo:
               label: Ingresos íntegros [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Tipo de Renta [01]
+              label: Ingresos íntegros [02]
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Rendimiento neto: negativo [07]'
@@ -2949,19 +2951,19 @@ modelo:
               label: 'Rendimiento neto: negativo [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Ingresos a cuenta [04]
+              label: 'Rendimiento neto: negativo [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
               help: null
               label: 'Rendimiento neto: positivo [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Contribuyente. Cambio de domicilio [13]
+              label: 'Rendimiento neto: positivo [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Rendimiento neto: positivo [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Valoración [03]
+              label: 'Rendimiento neto: positivo [05]'
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
               help: null
               label: Rentención o ingreso a cuenta [06]
@@ -2973,19 +2975,19 @@ modelo:
               label: Rentención o ingreso a cuenta [06]
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Ingresos a cuenta repercutidos [05]
+              label: Rentención o ingreso a cuenta [06]
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmmspb7c5q6itjf5ko3e:
               help: null
-              label: Contribuyente Domicilio Extranjero. Codigo postal/ZIP [47]
+              label: 'RESTO. Rendimiento neto: negativo [07]'
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
               help: null
-              label: Tipo de Renta [01]
+              label: 'RESTO. Rendimiento neto: positivo [05]'
             x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
               help: null
-              label: Naturaleza [02]
+              label: RESTO. Rentención o ingreso a cuenta [06]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
@@ -3012,7 +3014,7 @@ modelo:
               label: Ganancia Patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1k:
               help: null
-              label: Tipo de Renta [01]
+              label: Ganancia Patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1l:
               help: null
               label: Ganancia Patrimonial [02]
@@ -3021,13 +3023,13 @@ modelo:
               label: Ganancia Patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1n:
               help: null
-              label: Contribuyente. Datos complementarios del domicilio [36]
+              label: Ganancia Patrimonial [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1o:
               help: null
               label: Ganancia Patrimonial [02]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6c:
               help: null
-              label: Naturaleza [02]
+              label: NIF de la sociedad o fondo de inversión [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0cg:
               help: null
               label: NIF de la sociedad o fondo de inversión [53]
@@ -3039,13 +3041,13 @@ modelo:
               label: NIF de la sociedad o fondo de inversión [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d8:
               help: null
-              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+              label: NIF de la sociedad o fondo de inversión [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0dg:
               help: null
               label: NIF de la sociedad o fondo de inversión [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0do:
               help: null
-              label: Contribuyente. Escalera [33]
+              label: NIF de la sociedad o fondo de inversión [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0e0:
               help: null
               label: NIF de la sociedad o fondo de inversión [53]
@@ -3069,7 +3071,7 @@ modelo:
               label: Rentención o ingreso a cuenta [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0do:
               help: null
-              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+              label: Rentención o ingreso a cuenta [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0e0:
               help: null
               label: Rentención o ingreso a cuenta [03]
@@ -3081,13 +3083,13 @@ modelo:
               label: RESTO. Rentención o ingreso a cuenta [03]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Devengo. Ejercicio [01]
+              label: Tipo de Renta [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Tipo de Renta [01]
@@ -3102,7 +3104,7 @@ modelo:
               label: Tipo de Renta [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
               help: null
-              label: Rentención o ingreso a cuenta [07]
+              label: Tipo de Renta [01]
             x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6g:
               help: null
               label: Total ganancias patrimoniales [04]
@@ -3111,15 +3113,13 @@ modelo:
               label: Total retenciones o ingresos a cuenta [05]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
               help: null
-              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
-                Referencia catastral [14]
+              label: Adquiriente. Apellidos y nombre o razón social [61]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
               help: null
               label: Adquiriente. Apellidos y nombre o razón social [61]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
               help: null
-              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
-                Situación [13]
+              label: Adquiriente. F/J [60]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
               help: null
               label: Adquiriente. F/J [60]
@@ -3140,7 +3140,7 @@ modelo:
               label: Calificador de número [30]
             x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0b9g68:
               help: null
-              label: Declaracion Complementaria 2 [24]
+              label: Calificador de número [30]
             x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo:
               help: null
               label: Código postal [38]
@@ -3158,7 +3158,7 @@ modelo:
               label: Datos complementarios de domicilio [36]
             x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6omj0cg:
               help: null
-              label: RESTO. Rentención o ingreso a cuenta [07]
+              label: Datos complementarios de domicilio [36]
             x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d0:
               help: null
               label: Diferencia (Adquisición) [04]
@@ -3200,14 +3200,13 @@ modelo:
               label: Fecha de transmisión [57]
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6kriqc1i:
               help: null
-              label: RESTO. Rentención o ingreso a cuenta [07]
+              label: Fecha de transmisión [57]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qg:
               help: null
               label: Ganancia o pérdida (Adquisición) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qiqc1i:
               help: null
-              label: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
-                [15]
+              label: Ganancia o pérdida (Adquisición) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e8:
               help: null
               label: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
@@ -3240,17 +3239,16 @@ modelo:
               label: Nombre de la vía pública [27]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6g:
               help: null
-              label: Tipo de Renta [01]
+              label: Notario o fedetario [64]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6gmj0cg:
               help: null
               label: Notario o fedetario [64]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74:
               help: null
-              label: 'Rendimiento neto: negativo [07]'
+              label: Número de casa [29]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74mj0cg:
               help: null
-              label: Comunidad Autonoma de residencia durante el ejercicio indicado
-                [20]
+              label: Número de casa [29]
             x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6k:
               help: null
               label: Número de protocolo [65]
@@ -3259,13 +3257,13 @@ modelo:
               label: Número de protocolo [65]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
               help: null
-              label: Naturaleza [02]
+              label: Número Justificante del modelo 211 [54]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
               help: null
               label: Número Justificante del modelo 211 [54]
             x-e0o3gbjgdhgmst315kpj8:
               help: null
-              label: Rentención o ingreso a cuenta [06]
+              label: Planta [34]
             x-e0o3gbjgdhgmst315kpj8b9g68:
               help: null
               label: Planta [34]
@@ -3277,7 +3275,7 @@ modelo:
               label: Portal [32]
             x-e0o3gbjge9nncqbecdkm2b9j74:
               help: null
-              label: Ingresos a cuenta [04]
+              label: Provincia [39]
             x-e0o3gbjge9nncqbecdkm2b9j74mj0cg:
               help: null
               label: Provincia [39]
@@ -3289,8 +3287,7 @@ modelo:
               label: Puerta [35]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpg:
               help: null
-              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
-                Situación [13]
+              label: Referencia Catastral [53]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: null
               label: Referencia Catastral [53]
@@ -3305,7 +3302,7 @@ modelo:
               label: Retención o ingreso a cuenta [11]
             x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
               help: null
-              label: Indicador de fin de registro
+              label: Retención o ingreso a cuenta [11]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: null
               label: Tipo de numeración [28]
@@ -3314,7 +3311,7 @@ modelo:
               label: Tipo de numeración [28]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
@@ -3356,7 +3353,7 @@ modelo:
               label: Valor de transmisión (Mejora o 2ª adquisición) [06]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm:
               help: null
-              label: Naturaleza [02]
+              label: Descripción de la ganancia patrimonial [66]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko34:
               help: null
               label: Descripción de la ganancia patrimonial [66]
@@ -3383,7 +3380,7 @@ modelo:
               label: Diferencia [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1i:
               help: null
-              label: Cuota de participación [58]
+              label: Diferencia [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1j:
               help: null
               label: Diferencia [04]
@@ -3398,10 +3395,10 @@ modelo:
               label: Fecha de adquisición [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
-              label: Rentención o ingreso a cuenta [07]
+              label: Fecha de adquisición [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
               help: null
-              label: Representante. Teléfono móvil [42]
+              label: Fecha de adquisición [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
               help: null
               label: Fecha de adquisición [69]
@@ -3431,7 +3428,7 @@ modelo:
               label: Ganancia patrimonial [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1j:
               help: null
-              label: RESTO. Rentención o ingreso a cuenta [03]
+              label: Ganancia patrimonial [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
               help: null
               label: Ganancia patrimonial [05]
@@ -3455,13 +3452,13 @@ modelo:
               label: Naturaleza [02]
             x-e0o3ibjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Escalera [33]
+              label: Naturaleza [02]
             x-e0o3ibjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko36:
               help: null
-              label: Total retenciones o ingresos a cuenta [05]
+              label: RESTO. Ganancia patrimonial [03]
             x-e0o3ibjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6g:
               help: null
-              label: null
+              label: RESTO. Retención o ingreso a cuenta [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k:
               help: null
               label: Retención o ingreso a cuenta [04]
@@ -3470,13 +3467,13 @@ modelo:
               label: Retención o ingreso a cuenta [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko36:
               help: null
-              label: Total ganancias patrimoniales [04]
+              label: Retención o ingreso a cuenta [04]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: NIF de la sociedad o fondo de inversión [53]
+              label: Tipo de Renta [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Tipo de Renta [01]
@@ -3500,7 +3497,7 @@ modelo:
               label: Total ganancias patrimoniales [05]
             x-e0o3ibjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d60r0:
               help: null
-              label: Municipio [40]
+              label: Total retencion o ingresos a cuenta [06]
             x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
               label: Valor de adquisición [03]
@@ -3545,7 +3542,7 @@ modelo:
               label: Cuota líquida total [30]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
               help: null
-              label: Localidad/Población [37]
+              label: Cuota líquida total. Parte autonómica [32]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
               help: null
               label: Cuota líquida total. Parte estatal [31]
@@ -3578,7 +3575,7 @@ modelo:
               label: Deducción por donativos. Parte estatal [25]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: null
-              label: Naturaleza [02]
+              label: Descripción del elemento patrimonial [67]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
               help: null
               label: Descripción del elemento patrimonial [67]
@@ -3602,8 +3599,7 @@ modelo:
               label: Diferencia [04]
             x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
               help: null
-              label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
-                Origen [12]
+              label: Diferencia [04]
             x-e0oj0bj5e1kmesj1cpiiqo9h5kpja:
               help: null
               label: Epígrafe A1 [35]
@@ -3624,7 +3620,7 @@ modelo:
               label: Epígrafe E1 y E2 [40]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
               help: null
-              label: Contribuyente. Datos del contribuyente principal. NIF [11]
+              label: Fecha de adquisición [69]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
               label: Fecha de adquisición [69]
@@ -3636,13 +3632,13 @@ modelo:
               label: Fecha de adquisición [69]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
               help: null
-              label: Naturaleza [02]
+              label: Fecha de transmisión [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
               help: null
               label: Fecha de transmisión [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
               help: null
-              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+              label: Fecha de transmisión [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
               help: null
               label: Fecha de transmisión [68]
@@ -3651,7 +3647,7 @@ modelo:
               label: Ganancia patrimonial [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1i:
               help: null
-              label: Valoración [03]
+              label: Ganancia patrimonial [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1j:
               help: null
               label: Ganancia patrimonial [05]
@@ -3667,13 +3663,13 @@ modelo:
                 administrativas [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Tipo de declaración
+              label: Tipo de Renta [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Tipo de Renta [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Contribuyente. Teléfono móvil [42]
+              label: Tipo de Renta [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Tipo de Renta [01]
@@ -3682,10 +3678,10 @@ modelo:
               label: Total ganancias patrimoniales [06]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
-              label: Tipo de Renta [01]
+              label: Valor de adquisición [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
               help: null
-              label: Contribuyente. Localidad/Poblacion [37]
+              label: Valor de adquisición [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
               help: null
               label: Valor de adquisición [03]
@@ -3694,13 +3690,13 @@ modelo:
               label: Valor de adquisición [03]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
               help: null
-              label: Rentención o ingreso a cuenta [03]
+              label: Valor de transmisión [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
               help: null
-              label: Tipo de vía [26]
+              label: Valor de transmisión [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
               help: null
-              label: Naturaleza [02]
+              label: Valor de transmisión [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
               help: null
               label: Valor de transmisión [02]

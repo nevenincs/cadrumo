@@ -28,11 +28,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NÚMERO TOTAL DE PERCEPTORES
             x-ctgn6t3f5pn6ipg:
-              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+              label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
-              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+              label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -60,7 +60,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALEZA DEL DECLARANTE
             x-e1in4opedpkmc:
-              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+              label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
@@ -124,11 +124,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NÚMERO TOTAL DE PERCEPTORES
             x-ctgn6t3f5pn6ipg:
-              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+              label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
-              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+              label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -158,7 +158,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALEZA DEL DECLARANTE
             x-e1in4opedpkmc:
-              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+              label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:

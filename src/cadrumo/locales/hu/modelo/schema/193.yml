@@ -26,11 +26,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: A KEDVEZMÉNYEZETTEK SZÁMA
             x-ctgn6t3f5pn6ipg:
-              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+              label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
-              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+              label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -58,7 +58,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: A BEVALLÓ JELLEGE
             x-e1in4opedpkmc:
-              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+              label: A KEDVEZMÉNYEZETT NIF SZÁMA
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
@@ -122,11 +122,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: A KEDVEZMÉNYEZETTEK SZÁMA
             x-ctgn6t3f5pn6ipg:
-              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+              label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
-              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+              label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -156,7 +156,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: A BEVALLÓ JELLEGE
             x-e1in4opedpkmc:
-              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+              label: A KEDVEZMÉNYEZETT NIF SZÁMA
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:

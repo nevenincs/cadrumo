@@ -1712,31 +1712,31 @@ modelo:
               label: Időszak (éves, 0A)
             x-chkm8bj3elnn8o9dcdin4ro:
               help: null
-              label: Beszerzés dátuma [55]
+              label: Nulla adóösszeg
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: null
-              label: A társaság vagy befektetési alap NIF-je [53]
+              label: Visszatérítés. Bank neve
             x-chkm8bj4clr6ur3lcdkmurhdcdknap31cgmm6qbkf4:
               help: null
-              label: Különbözet [04]
+              label: Visszatérítés. Város
             x-chkm8bj4clr6ur3lcdkmurhdcdnm8qb7dsmn0ob9ecmm6rrldpq74u9dcdnm8p8:
               help: null
-              label: Anyag- és készletbeszerzési költségek [04]
+              label: Visszatérítés. Országkód
             x-chkm8bj4clr6ur3lcdkmurhdchkn4pb3cdkmurhdchimobb2c5n66rpdc9gmsqpdc5i68sj5edpg:
               help: null
-              label: Különbözet (Felújítás vagy 2. beszerzés) [08]
+              label: Visszatérítés. Bank címe
             x-chkm8bj4clr6ur3lcdkmurhde9imstbecdkm2bb15lm62bb4clr6ur3lcdkmurhdc4mmcobmdtp2qp35dgmn8pbjdtp6ubbgelh6oq8:
               help: null
-              label: Bevallás típusa
+              label: Visszatérítés. Lemondás a visszatérítésről az államkincstár javára
             x-chkm8bj4clr6ur3lcdkmurhdednmoqb3d5q62bbcc4mm8pbmdtm7aor9dtn2qs3fe8mn8sj1dppmcpbicln66qb1:
               help: null
-              label: Adózó. NIF [02]
+              label: Visszatérítés. Visszatérítést kér átutalással
             x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
               help: null
-              label: Anyag- és készletbeszerzési költségek [04]
+              label: Visszatérítés. SWIFT-BIC
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
-              label: Jelleg [02]
+              label: Befizetés / Csoportos beszedés / Visszatérítés. IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
@@ -1972,7 +1972,8 @@ modelo:
                 adatai. Tulajdon (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Képviselő. NIF [18]
+              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+                adatai. Tulajdon (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
@@ -2067,7 +2068,8 @@ modelo:
                 bruttó hozam [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Képviselő. Helység/Település (ha eltér a településtől) [37]
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és megadóztatott
+                bruttó hozam [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és megadóztatott
@@ -2089,7 +2091,7 @@ modelo:
               label: Áthárított előlegfizetések [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Adózó. Kiegészítő címadatok [36]
+              label: Áthárított előlegfizetések [05]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Áthárított előlegfizetések [05]
@@ -2122,7 +2124,7 @@ modelo:
               label: Kifizető. Vezetéknév és utónév vagy cégnév [52]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Adózó. Születési dátum [05]
+              label: Kifizető. Természetes/Jogi személy [51]
             x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Kifizető. Természetes/Jogi személy [51]
@@ -2170,7 +2172,7 @@ modelo:
               label: Levonás vagy előlegfizetés [07]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
@@ -2198,7 +2200,8 @@ modelo:
                 adatai. Tulajdon (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
               help: null
-              label: Képviselő. NIF [18]
+              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+                adatai. Tulajdon (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
               help: null
               label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
@@ -2293,7 +2296,8 @@ modelo:
                 bruttó hozam [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
               help: null
-              label: Képviselő. Helység/Település (ha eltér a településtől) [37]
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és megadóztatott
+                bruttó hozam [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
               help: null
               label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és megadóztatott
@@ -2315,7 +2319,7 @@ modelo:
               label: Áthárított előlegfizetések [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
               help: null
-              label: Adózó. Kiegészítő címadatok [36]
+              label: Áthárított előlegfizetések [05]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
               help: null
               label: Áthárított előlegfizetések [05]
@@ -2348,7 +2352,7 @@ modelo:
               label: Kifizető. Vezetéknév és utónév vagy cégnév [52]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2:
               help: null
-              label: Adózó. Születési dátum [05]
+              label: Kifizető. Természetes/Jogi személy [51]
             x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g68:
               help: null
               label: Kifizető. Természetes/Jogi személy [51]
@@ -2396,13 +2400,13 @@ modelo:
               label: Levonás vagy előlegfizetés [07]
             x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkcljn4rpde9imst315lkmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc1m:
               help: null
-              label: Igazolószám [25]
+              label: MARADÉK. Bruttó hozam / beszámított ingatlanjövedelem [06]
             x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
               help: null
               label: MARADÉK. Levonás vagy előlegfizetés [07]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
@@ -2435,7 +2439,7 @@ modelo:
               label: Előlegfizetések [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
               help: null
-              label: Adózó. Kapcsolat típusa. Házassági kötelék nélküli szülő [09]
+              label: Előlegfizetések [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
               help: null
               label: Előlegfizetések [04]
@@ -2444,7 +2448,7 @@ modelo:
               label: Előlegfizetések [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60qg:
               help: null
-              label: Adózó. Mobiltelefon [42]
+              label: Előlegfizetések [04]
             x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60r0:
               help: null
               label: Előlegfizetések [04]
@@ -2489,14 +2493,13 @@ modelo:
               label: Jelleg [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1i:
               help: null
-              label: Esedékesség. Adóév [01]
+              label: Jelleg [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és megadóztatott
-                bruttó hozam [08]
+              label: Jelleg [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1k:
               help: null
-              label: Adózó. Épületblokk [31]
+              label: Jelleg [02]
             x-e0o38bjec5q7asj1dhinko9d60p2qc1l:
               help: null
               label: Jelleg [02]
@@ -2514,7 +2517,7 @@ modelo:
               label: Jelleg [02]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6o:
               help: null
-              label: Bruttó hozam / beszámított ingatlanjövedelem [06]
+              label: Bruttó hozam [06]
             x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0cg:
               help: null
               label: Bruttó hozam [06]
@@ -2547,7 +2550,7 @@ modelo:
               label: Levonás vagy előlegfizetés [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
               help: null
-              label: Értékelés [03]
+              label: Levonás vagy előlegfizetés [07]
             x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
               help: null
               label: Levonás vagy előlegfizetés [07]
@@ -2574,16 +2577,16 @@ modelo:
               label: MARADÉK. Levonás vagy előlegfizetés [07]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: Kifizető. NIF [50]
+              label: Jövedelem típusa [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Jövedelem típusa [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
-              label: Előlegfizetések [04]
+              label: Jövedelem típusa [01]
             x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
               help: null
               label: Jövedelem típusa [01]
@@ -2643,13 +2646,13 @@ modelo:
               label: 'Tevékenység: tevékenységi kód és típus [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Bruttó hozam / beszámított ingatlanjövedelem [06]
+              label: 'Tevékenység: tevékenységi kód és típus [10]'
             x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6k:
               help: null
               label: 'Tevékenység: tevékenységi kód és típus [10]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Adózó. Kapcsolat típusa. Házassági kötelék nélküli szülő [09]
+              label: 'Tevékenység: IAE csoport vagy tétel [11]'
             x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Tevékenység: IAE csoport vagy tétel [11]'
@@ -2664,7 +2667,8 @@ modelo:
               label: 'Tevékenység: IAE csoport vagy tétel [11]'
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Adózó. Emelet [34]
+              label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön megfizetett
+                adó [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön megfizetett
@@ -2683,7 +2687,8 @@ modelo:
                 adó [13]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Adózó. Házszám [29]
+              label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön szerzett
+                és megadóztatott bruttó hozam [12]
             x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön szerzett
@@ -2732,7 +2737,7 @@ modelo:
               label: Személyi jellegű ráfordítások [03]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Jelleg [02]
+              label: Bruttó jövedelem [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Bruttó jövedelem [02]
@@ -2741,10 +2746,10 @@ modelo:
               label: Bruttó jövedelem [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Jövedelem típusa [01]
+              label: Bruttó jövedelem [02]
             x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60qg:
               help: null
-              label: Kifizető. Vezetéknév és utónév vagy cégnév [52]
+              label: Bruttó jövedelem [02]
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Nettó hozam: negatív [07]'
@@ -2756,7 +2761,7 @@ modelo:
               label: 'Nettó hozam: negatív [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Előlegfizetések [04]
+              label: 'Nettó hozam: negatív [07]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1l:
               help: null
               label: 'Nettó hozam: negatív [07]'
@@ -2765,13 +2770,13 @@ modelo:
               label: 'Nettó hozam: pozitív [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Adózó. Címváltozás [13]
+              label: 'Nettó hozam: pozitív [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Nettó hozam: pozitív [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Értékelés [03]
+              label: 'Nettó hozam: pozitív [05]'
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1l:
               help: null
               label: 'Nettó hozam: pozitív [05]'
@@ -2786,13 +2791,13 @@ modelo:
               label: Levonás vagy előlegfizetés [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Áthárított előlegfizetések [05]
+              label: Levonás vagy előlegfizetés [06]
             x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d8:
               help: null
               label: Levonás vagy előlegfizetés [06]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
@@ -2816,10 +2821,10 @@ modelo:
               label: 'Tevékenység: tevékenységi kód és típus [10]'
             x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
               help: null
-              label: Bruttó hozam / beszámított ingatlanjövedelem [06]
+              label: 'Tevékenység: tevékenységi kód és típus [10]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
               help: null
-              label: Adózó. Kapcsolat típusa. Házassági kötelék nélküli szülő [09]
+              label: 'Tevékenység: IAE csoport vagy tétel [11]'
             x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
               help: null
               label: 'Tevékenység: IAE csoport vagy tétel [11]'
@@ -2831,7 +2836,8 @@ modelo:
               label: 'Tevékenység: IAE csoport vagy tétel [11]'
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
               help: null
-              label: Adózó. Emelet [34]
+              label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön megfizetett
+                adó [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
               help: null
               label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön megfizetett
@@ -2846,7 +2852,8 @@ modelo:
                 adó [13]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
               help: null
-              label: Adózó. Házszám [29]
+              label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön szerzett
+                és megadóztatott bruttó hozam [12]
             x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
               help: null
               label: Kiegészítő adatok (vállalkozói tevékenység. Külföldön szerzett
@@ -2885,7 +2892,7 @@ modelo:
               label: Személyi jellegű ráfordítások [03]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
               help: null
-              label: Jelleg [02]
+              label: Bruttó jövedelem [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
               help: null
               label: Bruttó jövedelem [02]
@@ -2894,7 +2901,7 @@ modelo:
               label: Bruttó jövedelem [02]
             x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
               help: null
-              label: Jövedelem típusa [01]
+              label: Bruttó jövedelem [02]
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
               help: null
               label: 'Nettó hozam: negatív [07]'
@@ -2906,19 +2913,19 @@ modelo:
               label: 'Nettó hozam: negatív [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
               help: null
-              label: Előlegfizetések [04]
+              label: 'Nettó hozam: negatív [07]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
               help: null
               label: 'Nettó hozam: pozitív [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
               help: null
-              label: Adózó. Címváltozás [13]
+              label: 'Nettó hozam: pozitív [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
               help: null
               label: 'Nettó hozam: pozitív [05]'
             x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
               help: null
-              label: Értékelés [03]
+              label: 'Nettó hozam: pozitív [05]'
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
               help: null
               label: Levonás vagy előlegfizetés [06]
@@ -2930,19 +2937,19 @@ modelo:
               label: Levonás vagy előlegfizetés [06]
             x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
               help: null
-              label: Áthárított előlegfizetések [05]
+              label: Levonás vagy előlegfizetés [06]
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmmspb7c5q6itjf5ko3e:
               help: null
-              label: Adózó külföldi címe. Irányítószám/ZIP [47]
+              label: 'MARADÉK. Nettó hozam: negatív [07]'
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
               help: null
-              label: Jövedelem típusa [01]
+              label: 'MARADÉK. Nettó hozam: pozitív [05]'
             x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
               help: null
-              label: Jelleg [02]
+              label: MARADÉK. Levonás vagy előlegfizetés [06]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
@@ -2969,7 +2976,7 @@ modelo:
               label: Tőkenyereség [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1k:
               help: null
-              label: Jövedelem típusa [01]
+              label: Tőkenyereség [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1l:
               help: null
               label: Tőkenyereség [02]
@@ -2978,13 +2985,13 @@ modelo:
               label: Tőkenyereség [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1n:
               help: null
-              label: Adózó. Kiegészítő címadatok [36]
+              label: Tőkenyereség [02]
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1o:
               help: null
               label: Tőkenyereség [02]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6c:
               help: null
-              label: Jelleg [02]
+              label: A társaság vagy befektetési alap NIF-je [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0cg:
               help: null
               label: A társaság vagy befektetési alap NIF-je [53]
@@ -2996,13 +3003,13 @@ modelo:
               label: A társaság vagy befektetési alap NIF-je [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d8:
               help: null
-              label: Anyag- és készletbeszerzési költségek [04]
+              label: A társaság vagy befektetési alap NIF-je [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0dg:
               help: null
               label: A társaság vagy befektetési alap NIF-je [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0do:
               help: null
-              label: Adózó. Lépcső [33]
+              label: A társaság vagy befektetési alap NIF-je [53]
             x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0e0:
               help: null
               label: A társaság vagy befektetési alap NIF-je [53]
@@ -3026,7 +3033,7 @@ modelo:
               label: Levonás vagy előlegfizetés [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0do:
               help: null
-              label: Bruttó hozam / beszámított ingatlanjövedelem [06]
+              label: Levonás vagy előlegfizetés [03]
             x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0e0:
               help: null
               label: Levonás vagy előlegfizetés [03]
@@ -3038,13 +3045,13 @@ modelo:
               label: MARADÉK. Levonás vagy előlegfizetés [03]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Esedékesség. Adóév [01]
+              label: Jövedelem típusa [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Jövedelem típusa [01]
@@ -3059,7 +3066,7 @@ modelo:
               label: Jövedelem típusa [01]
             x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
               help: null
-              label: Levonás vagy előlegfizetés [07]
+              label: Jövedelem típusa [01]
             x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6g:
               help: null
               label: Összes tőkenyereség [04]
@@ -3068,15 +3075,13 @@ modelo:
               label: Összes levonás vagy előlegfizetés [05]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
               help: null
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
+              label: Beszerző. Vezetéknév és utónév vagy cégnév [61]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
               help: null
               label: Beszerző. Vezetéknév és utónév vagy cégnév [61]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
               help: null
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
+              label: Beszerző. Természetes/Jogi személy [60]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
               help: null
               label: Beszerző. Természetes/Jogi személy [60]
@@ -3097,7 +3102,7 @@ modelo:
               label: Házszám kiegészítő [30]
             x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0b9g68:
               help: null
-              label: Kiegészítő bevallás 2 [24]
+              label: Házszám kiegészítő [30]
             x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo:
               help: null
               label: Irányítószám [38]
@@ -3115,7 +3120,7 @@ modelo:
               label: Kiegészítő címadatok [36]
             x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6omj0cg:
               help: null
-              label: MARADÉK. Levonás vagy előlegfizetés [07]
+              label: Kiegészítő címadatok [36]
             x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d0:
               help: null
               label: Különbözet (Beszerzés) [04]
@@ -3157,14 +3162,13 @@ modelo:
               label: Átruházás dátuma [57]
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6kriqc1i:
               help: null
-              label: MARADÉK. Levonás vagy előlegfizetés [07]
+              label: Átruházás dátuma [57]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qg:
               help: null
               label: Nyereség vagy veszteség (Beszerzés) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qiqc1i:
               help: null
-              label: Adózó jelenlegi lakásának kiegészítő adatai. Részesedés százaléka
-                [15]
+              label: Nyereség vagy veszteség (Beszerzés) [05]
             x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e8:
               help: null
               label: Nyereség vagy veszteség (Felújítás vagy 2. beszerzés) [09]
@@ -3197,16 +3201,16 @@ modelo:
               label: Közterület neve [27]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6g:
               help: null
-              label: Jövedelem típusa [01]
+              label: Közjegyző vagy hitelesítő [64]
             x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6gmj0cg:
               help: null
               label: Közjegyző vagy hitelesítő [64]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74:
               help: null
-              label: 'Nettó hozam: negatív [07]'
+              label: Házszám [29]
             x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74mj0cg:
               help: null
-              label: A megadott évben a lakóhely szerinti autonóm közösség [20]
+              label: Házszám [29]
             x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6k:
               help: null
               label: Jegyzőkönyvi szám [65]
@@ -3215,13 +3219,13 @@ modelo:
               label: Jegyzőkönyvi szám [65]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
               help: null
-              label: Jelleg [02]
+              label: A 211-es modelo igazolószáma [54]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
               help: null
               label: A 211-es modelo igazolószáma [54]
             x-e0o3gbjgdhgmst315kpj8:
               help: null
-              label: Levonás vagy előlegfizetés [06]
+              label: Emelet [34]
             x-e0o3gbjgdhgmst315kpj8b9g68:
               help: null
               label: Emelet [34]
@@ -3233,7 +3237,7 @@ modelo:
               label: Lépcsőház [32]
             x-e0o3gbjge9nncqbecdkm2b9j74:
               help: null
-              label: Előlegfizetések [04]
+              label: Tartomány [39]
             x-e0o3gbjge9nncqbecdkm2b9j74mj0cg:
               help: null
               label: Tartomány [39]
@@ -3245,8 +3249,7 @@ modelo:
               label: Ajtó [35]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpg:
               help: null
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
+              label: Kataszteri hivatkozás [53]
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: null
               label: Kataszteri hivatkozás [53]
@@ -3261,7 +3264,7 @@ modelo:
               label: Levonás vagy előlegfizetés [11]
             x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
               help: null
-              label: Rekordvég jelző
+              label: Levonás vagy előlegfizetés [11]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: null
               label: Házszám típusa [28]
@@ -3270,7 +3273,7 @@ modelo:
               label: Házszám típusa [28]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
@@ -3314,7 +3317,7 @@ modelo:
               label: Átruházási érték (Felújítás vagy 2. beszerzés) [06]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm:
               help: null
-              label: Jelleg [02]
+              label: A tőkenyereség leírása [66]
             x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko34:
               help: null
               label: A tőkenyereség leírása [66]
@@ -3341,7 +3344,7 @@ modelo:
               label: Különbözet [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1i:
               help: null
-              label: Részesedési hányad [58]
+              label: Különbözet [04]
             x-e0o3ibj4d5j6asj5dphmio9d60q2qc1j:
               help: null
               label: Különbözet [04]
@@ -3356,10 +3359,10 @@ modelo:
               label: Beszerzés dátuma [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
-              label: Levonás vagy előlegfizetés [07]
+              label: Beszerzés dátuma [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
               help: null
-              label: Képviselő. Mobiltelefon [42]
+              label: Beszerzés dátuma [69]
             x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
               help: null
               label: Beszerzés dátuma [69]
@@ -3389,7 +3392,7 @@ modelo:
               label: Tőkenyereség [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1j:
               help: null
-              label: MARADÉK. Levonás vagy előlegfizetés [03]
+              label: Tőkenyereség [03]
             x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
               help: null
               label: Tőkenyereség [05]
@@ -3413,13 +3416,13 @@ modelo:
               label: Jelleg [02]
             x-e0o3ibjec5q7asj1dhinko9d60p2qc1j:
               help: null
-              label: Lépcső [33]
+              label: Jelleg [02]
             x-e0o3ibjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko36:
               help: null
-              label: Összes levonás vagy előlegfizetés [05]
+              label: MARADÉK. Tőkenyereség [03]
             x-e0o3ibjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6g:
               help: null
-              label: null
+              label: MARADÉK. Levonás vagy előlegfizetés [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k:
               help: null
               label: Levonás vagy előlegfizetés [04]
@@ -3428,13 +3431,13 @@ modelo:
               label: Levonás vagy előlegfizetés [04]
             x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko36:
               help: null
-              label: Összes tőkenyereség [04]
+              label: Levonás vagy előlegfizetés [04]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
-              label: A társaság vagy befektetési alap NIF-je [53]
+              label: Jövedelem típusa [01]
             x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
               label: Jövedelem típusa [01]
@@ -3458,7 +3461,7 @@ modelo:
               label: Összes tőkenyereség [05]
             x-e0o3ibjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d60r0:
               help: null
-              label: Település [40]
+              label: Összes levonás vagy előlegfizetés [06]
             x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
               label: Beszerzési érték [03]
@@ -3503,7 +3506,7 @@ modelo:
               label: Összes nettó adó [30]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
               help: null
-              label: Helység/Település [37]
+              label: Összes nettó adó. Regionális rész [32]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
               help: null
               label: Összes nettó adó. Állami rész [31]
@@ -3534,7 +3537,7 @@ modelo:
               label: Adományok utáni levonás. Állami rész [25]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: null
-              label: Jelleg [02]
+              label: A vagyontárgy leírása [67]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
               help: null
               label: A vagyontárgy leírása [67]
@@ -3558,8 +3561,7 @@ modelo:
               label: Különbözet [04]
             x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
               help: null
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
+              label: Különbözet [04]
             x-e0oj0bj5e1kmesj1cpiiqo9h5kpja:
               help: null
               label: A1 tétel [35]
@@ -3580,7 +3582,7 @@ modelo:
               label: E1 és E2 tétel [40]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
               help: null
-              label: Adózó. A fő adózó adatai. NIF [11]
+              label: Beszerzés dátuma [69]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
               help: null
               label: Beszerzés dátuma [69]
@@ -3592,13 +3594,13 @@ modelo:
               label: Beszerzés dátuma [69]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
               help: null
-              label: Jelleg [02]
+              label: Átruházás dátuma [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
               help: null
               label: Átruházás dátuma [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
               help: null
-              label: Anyag- és készletbeszerzési költségek [04]
+              label: Átruházás dátuma [68]
             x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
               help: null
               label: Átruházás dátuma [68]
@@ -3607,7 +3609,7 @@ modelo:
               label: Tőkenyereség [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1i:
               help: null
-              label: Értékelés [03]
+              label: Tőkenyereség [05]
             x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1j:
               help: null
               label: Tőkenyereség [05]
@@ -3623,13 +3625,13 @@ modelo:
                 összegek [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: null
-              label: Bevallás típusa
+              label: Jövedelem típusa [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
               help: null
               label: Jövedelem típusa [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
               help: null
-              label: Adózó. Mobiltelefon [42]
+              label: Jövedelem típusa [01]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: null
               label: Jövedelem típusa [01]
@@ -3638,10 +3640,10 @@ modelo:
               label: Összes tőkenyereség [06]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
               help: null
-              label: Jövedelem típusa [01]
+              label: Beszerzési érték [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
               help: null
-              label: Adózó. Helység/Település [37]
+              label: Beszerzési érték [03]
             x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
               help: null
               label: Beszerzési érték [03]
@@ -3650,13 +3652,13 @@ modelo:
               label: Beszerzési érték [03]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
               help: null
-              label: Levonás vagy előlegfizetés [03]
+              label: Átruházási érték [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
               help: null
-              label: Közterület jellege [26]
+              label: Átruházási érték [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
               help: null
-              label: Jelleg [02]
+              label: Átruházási érték [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
               help: null
               label: Átruházási érték [02]

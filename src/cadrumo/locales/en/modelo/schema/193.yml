@@ -26,12 +26,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: TOTAL NUMBER OF RECIPIENTS
             x-ctgn6t3f5pn6ipg:
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE DECLARANT
+              label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
-              label: SURNAMES AND FIRST NAME, COMPANY NAME OR DENOMINATION OF THE
-                RECIPIENT
+              label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -59,7 +58,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURE OF THE DECLARANT
             x-e1in4opedpkmc:
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE DECLARANT
+              label: NIF OF THE RECIPIENT
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF OF THE PREVIOUS PAYER
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
@@ -125,12 +124,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: TOTAL NUMBER OF RECIPIENTS
             x-ctgn6t3f5pn6ipg:
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE DECLARANT
+              label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
-              label: SURNAMES AND FIRST NAME, COMPANY NAME OR DENOMINATION OF THE
-                RECIPIENT
+              label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -160,7 +158,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURE OF THE DECLARANT
             x-e1in4opedpkmc:
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE DECLARANT
+              label: NIF OF THE RECIPIENT
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF OF THE PREVIOUS PAYER
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:

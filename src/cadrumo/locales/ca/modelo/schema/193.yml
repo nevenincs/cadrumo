@@ -26,11 +26,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NOMBRE TOTAL DE PERCEPTORS
             x-ctgn6t3f5pn6ipg:
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+              label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
-              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+              label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -58,7 +58,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALESA DEL DECLARANT
             x-e1in4opedpkmc:
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+              label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
@@ -122,11 +122,11 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               label: NOMBRE TOTAL DE PERCEPTORS
             x-ctgn6t3f5pn6ipg:
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+              label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
-              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+              label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
             x-e1in4opecdinat315lmmar39dhm62:
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
@@ -156,7 +156,7 @@ modelo:
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALESA DEL DECLARANT
             x-e1in4opedpkmc:
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+              label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
