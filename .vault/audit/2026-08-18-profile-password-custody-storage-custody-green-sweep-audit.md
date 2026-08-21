@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:eb654a3063a4c818f393ad472529c26962900b442cb75ffbfc96c41122de3893'
+body_hash: 'sha256:61f934b2fa2fb5ec7793dc6507327843228e031136b4ec1275636f679a49f464'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3019,3 +3019,36 @@ cannot silently collapse into one helper. Second, the sensitive-write inventory 
 on the deletion, demanding its stale declaration for the removed function be dropped:
 that gate did exactly its job, and it is the same "declaration outliving its subject"
 discipline this campaign has been enforcing elsewhere, arriving from the other side.
+
+### The silently-degrading flag, swept to its boundary
+
+Taking the `getattr(os, FLAG, 0)` pattern named last pass and asking how far it reaches.
+Twenty-odd sites in the custody package use that idiom; the classification is what
+matters:
+
+* `O_BINARY → 0` on POSIX is **correct** — POSIX has no text mode, so the fallback
+  requests nothing because nothing is needed.
+* `FILE_ATTRIBUTE_REPARSE_POINT → 0` on POSIX is **correct** for the same reason: there
+  are no reparse points there, and `O_NOFOLLOW` covers the equivalent case.
+* `O_NOFOLLOW → 0` on Windows is the dangerous one, because the guarantee it names is
+  still needed on that platform and is simply not requested.
+
+**All ten surviving `O_NOFOLLOW` uses are POSIX-gated** — inside an `os.name` branch,
+passing `dir_fd=` (which Windows does not support, so the call cannot succeed there), or
+in a helper named for the platform it serves. Windows takes its protection from an
+explicit reparse-point refusal instead. So the sentinel reader removed last pass was the
+only Windows-reachable instance, and the class is closed rather than merely one instance
+of it. That is measured, not assumed.
+
+A gate now holds the boundary, and it is **structural on purpose**. A behavioural check
+would need every read path driven with a link in place, and the paths that matter most
+are the hardest to drive; what is cheap and complete is the property that made the bug
+possible — asking for no-follow where the platform cannot supply it. Its discriminating
+case is written against a synthetic function rather than the tree, because a clean tree
+is exactly when a detector stops being exercised by its own subject and can rot into
+always-passing.
+
+**Generalisable:** a compatibility fallback deserves classifying by whether the thing it
+falls back from is still NEEDED on the platform that lacks it. `O_BINARY` and
+`O_NOFOLLOW` look identical as code and are opposites as decisions — one degrades to a
+no-op because nothing is required, the other degrades to a missing guarantee.
