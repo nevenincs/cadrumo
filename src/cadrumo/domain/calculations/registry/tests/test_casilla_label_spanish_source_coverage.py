@@ -49,8 +49,14 @@ def test_every_casilla_label_resolves_in_the_mandatory_spanish_source() -> None:
     """No modelo, revision or casilla in the bundled tree lacks a Spanish label."""
     unresolved = _unresolved_spanish_casilla_labels()
 
-    assert unresolved == (), "casilla labels unresolved in the mandatory Spanish source:\n  " + "\n  ".join(
-        unresolved[:50],
+    # The COUNT is stated, not just a sample. This listed `unresolved[:50]`
+    # with no indication that it was a slice, so a 1,798-casilla backlog read
+    # as a 50-casilla one -- a diagnostic that understates its own subject by
+    # 36x is worse than a long list, because the reader sizes the work from it.
+    assert unresolved == (), (
+        f"{len(unresolved)} casilla label(s) unresolved in the mandatory Spanish "
+        f"source (showing the first {min(len(unresolved), 50)}):\n  "
+        + "\n  ".join(unresolved[:50])
     )
 
 

@@ -19,6 +19,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from .....core import BindingSourceKind
+from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     INVOICE_BINDING_SOURCE_KINDS,
@@ -92,16 +93,23 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
-# Enum members that are explicitly deferred on the application mesh
-# (``DEFERRED_SOURCE_KINDS``) AND carry no registry binding yet, by design. Unlike
-# the other deferred members (M184 / M232 / M720 / M360 — sources that ARE
-# registry-declared and merely lack a live resolver), these are advisory-backed
-# feeds whose registry binding waits on a separately-deferred upstream. The set
-# is currently empty because capital-goods regularización was promoted into the
-# live registry/source-mesh path. A member here that later gains a registry
-# binding must be removed from this carve-out (the disjointness assertion below
-# fails otherwise).
-_DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset()
+def _deferred_undeclared_source_kinds(declared: frozenset[BindingSourceKind]) -> frozenset[BindingSourceKind]:
+    """Members the application mesh DEFERS that carry no registry binding yet.
+
+    Derived from production's :data:`DEFERRED_SOURCE_KINDS` rather than restated,
+    because a second copy of that decision drifts from it: this was a hand-written
+    empty set annotated "currently empty", and it stayed empty when
+    ``withholding296`` was deferred, so a member with a real, reviewed deferral
+    was reported as an orphan or typo.
+
+    The distinction the carve-out draws still holds and is what the subtraction
+    computes: the other deferred members (M184 / M232 / M720 / M360) ARE
+    registry-declared and merely lack a live resolver, so they never reach here.
+    These are advisory-backed feeds whose registry binding waits on a separately
+    deferred upstream, and a member that later gains a binding leaves the set on
+    its own.
+    """
+    return frozenset(DEFERRED_SOURCE_KINDS) - declared
 
 
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:
@@ -123,17 +131,21 @@ def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> No
         - declared
         - _RESERVED_UNDECLARED_SOURCE_KINDS
         - _MESH_ONLY_SOURCE_KINDS
-        - _DEFERRED_UNDECLARED_SOURCE_KINDS
+        - _deferred_undeclared_source_kinds(frozenset(declared))
     )
     assert not orphans, (
         "BindingSourceKind member(s) declared by no registry binding and not in "
         f"the reserved/mesh-only/deferred carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
     )
 
-    spuriously_declared_deferred = _DEFERRED_UNDECLARED_SOURCE_KINDS & declared
-    assert not spuriously_declared_deferred, (
-        "Deferred-undeclared source kind(s) now declared by the registry; remove "
-        f"from _DEFERRED_UNDECLARED_SOURCE_KINDS: {sorted(str(kind) for kind in spuriously_declared_deferred)}"
+    # The deferred carve-out no longer needs a staleness assertion: it is derived
+    # by subtracting the declared set, so a member that gains a registry binding
+    # leaves it in the same breath and the intersection is empty by construction.
+    # Asserting it here would be a tautology. What IS still worth holding is that
+    # production's deferral list names only real members, which a typo in
+    # DEFERRED_SOURCE_KINDS would break.
+    assert frozenset(DEFERRED_SOURCE_KINDS) <= set(BindingSourceKind), (
+        "DEFERRED_SOURCE_KINDS names something outside the closed taxonomy"
     )
 
     spuriously_reserved = _RESERVED_UNDECLARED_SOURCE_KINDS & declared

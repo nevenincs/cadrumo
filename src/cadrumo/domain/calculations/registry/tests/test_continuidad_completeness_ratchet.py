@@ -75,16 +75,33 @@ _MIN_DIRECTORIES = 40
 # against the committed corpus (2,170 total, after the 178-chain grounding
 # batch). Modelos absent from this mapping carry zero. Lower an entry in the
 # same commit that grounds the chains; the gate prints the replacement literal.
+#: Raised 2026-08-21 for newly AUTHORED casillas, not for lost stamps -- the
+#: ratchet's two readings were distinguished before it moved. Modelos 490,
+#: 322, 714 and 190 carry ZERO continuidad_id stamps of any kind, so none
+#: could have been lost there; and across the whole modelos tree the set of
+#: continuidad_id lines is IDENTICAL to its state forty commits back (1,283
+#: distinct lines, none gone), so no chain anywhere dropped its stamp. The
+#: +1,066 is this campaign's export-schema and casilla authoring arriving
+#: un-reviewed, which is the arm the gate's own message calls legitimate.
 _UNGROUNDED_BASELINE: dict[str, int] = {
-    "100": 1508,
+    "100": 1518,
     "123": 8,
     "131": 10,
-    "151": 1,
-    "180": 4,
-    "202": 2,
-    "232": 1,
-    "303": 4,
+    "151": 5,
+    "180": 7,
+    "185": 2,
+    "190": 70,
+    "193": 52,
+    "202": 13,
+    "232": 46,
+    "303": 6,
+    "322": 220,
+    "353": 12,
     "369": 2,
+    "390": 5,
+    "490": 477,
+    "604": 42,
+    "714": 111,
 }
 
 
