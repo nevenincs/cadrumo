@@ -1,0 +1,254 @@
+# Modelo 185 record-detail casillas, authored from the bundled official diseno
+# de registro `aeat-dr-185-2026` -- 2 records, 36 fields, both exactly 500 bytes.
+# Every casilla names ONE design field by its offset span, and the design is the
+# sole source of its number, width and label; nothing here is inferred from a
+# sibling modelo. Grounded in orden-hac-1197-2025 art 1, which approves the
+# modelo and its anexo record designs, and art 4, which fixes the monthly plazo.
+#
+# The three month columns (mes, mes-1, mes-2) share one semantic_role per
+# concept: the role names WHAT the value is, and the month is a coordinate the
+# casilla id carries.
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.numero-justificante"
+number = "108-120"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "numero_justificante"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarante.f009"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "136-137"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "periodo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarante.f012"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "decl.total-registros"
+number = "138-146"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "total_registros"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarante.f013"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.nif"
+number = "18-26"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "nif"
+semantic_role = "declarado_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f005"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.nombre"
+number = "36-75"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "name"
+semantic_role = "declarado_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f007"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.numero-afiliacion"
+number = "76-87"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "numero_afiliacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f008"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.pluriactividad"
+number = "88"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "pluriactividad"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f009"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.situacion-mes"
+number = "89"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "situacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f010"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.regimen-cotizacion-mes"
+number = "90"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f011"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.dias-alta-mes"
+number = "91-92"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f012"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.tipo-jornada-mes"
+number = "93"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f013"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.situacion-mes-1"
+number = "94"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "situacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f014"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.regimen-cotizacion-mes-1"
+number = "95"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f015"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.dias-alta-mes-1"
+number = "96-97"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f016"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.tipo-jornada-mes-1"
+number = "98"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f017"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.situacion-mes-2"
+number = "99"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "situacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f018"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.regimen-cotizacion-mes-2"
+number = "100"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f019"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.dias-alta-mes-2"
+number = "101-102"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f020"]
+
+[[revisions."2025-y-siguientes".casillas]]
+id = "declarado.tipo-jornada-mes-2"
+number = "103"
+segmento = "185-2-declarado"
+section = ["declarado", "afiliado"]
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+export_refs = ["m185-2026.declarado.f021"]

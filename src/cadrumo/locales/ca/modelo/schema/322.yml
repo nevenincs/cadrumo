@@ -9,124 +9,151 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [01]
             '02':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [02]
             '03':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [03]
             '04':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [04]
             '05':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [05]
             '06':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [06]
             '07':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [07]
             08:
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [08]
             09:
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [09]
             '10':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
+                intragrup [10]
             '107':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Territori comú
+                [107]
             '11':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
+                intragrup [11]
             '12':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [12]
             '120':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització (excepte les
+                incloses en la casella 123) [120]
             '122':
               help: null
-              label: null
+              label: Operacions subjectes amb inversió del subjecte passiu [122]
             '123':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització acollides
+                als règims especials de finestreta única [123]
             '124':
               help: null
-              label: null
+              label: Operacions subjectes i acollides als règims especials de finestreta
+                única [124]
             '125':
               help: null
-              label: null
+              label: Operacions subjectes amb inversió del subjecte passiu [125]
             '126':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització acollides
+                als règims especials de finestreta única [126]
             '127':
               help: null
-              label: null
+              label: Operacions subjectes i acollides als règims especials de finestreta
+                única [127]
             '128':
               help: null
-              label: null
+              label: Operacions intragrup valorades conforme al que disposen els arts.
+                78 y 79 LIVA [128]
             '13':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [13]
             '14':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [14]
             '15':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [15]
             '150':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [150]
             '151':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [151]
             '152':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [152]
             '153':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [153]
             '154':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [154]
             '155':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [155]
             '156':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [156]
             '157':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [157]
             '158':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [158]
             '159':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [159]
             '16':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [16]
             '160':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [160]
             '161':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [161]
             '162':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [162]
             '163':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [163]
             '164':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [164]
             '165':
               help: null
               label: null
@@ -144,7 +171,8 @@ modelo:
               label: null
             '17':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [17]
             '170':
               help: null
               label: null
@@ -159,19 +187,24 @@ modelo:
               label: null
             '18':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [18]
             '19':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [19]
             '20':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [20]
             '21':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
+                i serveis. Base imposable [21]
             '22':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
+                i serveis. Quota [22]
             '23':
               help: null
               label: null
@@ -180,190 +213,220 @@ modelo:
               label: null
             '25':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
+                general. Base imposable [25]
             '26':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
+                general. Quota [26]
             '27':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [27]
             '28':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [28]
             '29':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [29]
             '30':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [30]
             '31':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [31]
             '32':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [32]
             '33':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [33]
             '34':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [34]
             '35':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [35]
             '36':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
+                d'equivalència. Base imposable [36]
             '37':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
+                d'equivalència. Quota [37]
             '38':
               help: null
               label: null
             '39':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup corrents. Base imposable [39]
             '40':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup corrents. Quota [40]
             '41':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup amb béns d'inversió. Base imposable [41]
             '42':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup amb béns d'inversió. Quota [42]
             '43':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
+                intragrup. Base imposable [43]
             '44':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
+                intragrup. Quota [44]
             '45':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors corrents. Base imposable [45]
             '46':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors corrents. Quota [46]
             '47':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors amb béns d'inversió. Base imposable [47]
             '48':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors amb béns d'inversió. Quota [48]
             '49':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns corrents. Base imposable [49]
             '50':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns corrents. Quota [50]
             '500':
               help: null
-              label: null
+              label: Prorrata - 1 - Codi CNAE [500]
             '501':
               help: null
-              label: null
+              label: Prorrata - 1 - Import d'operacions [501]
             '502':
               help: null
-              label: null
+              label: Prorrata - 1 - Import d'operacions amb dret a deducció [502]
             '503':
               help: null
-              label: null
+              label: Prorrata - 1 - Tipus de prorrata [503]
             '504':
               help: null
-              label: null
+              label: Prorrata - 1 - % de prorrata [504]
             '505':
               help: null
-              label: null
+              label: Prorrata - 2 - Codi CNAE [505]
             '506':
               help: null
-              label: null
+              label: Prorrata - 2 - Import d'operacions [506]
             '507':
               help: null
-              label: null
+              label: Prorrata - 2 - Import d'operacions amb dret a deducció [507]
             '508':
               help: null
-              label: null
+              label: Prorrata - 2 - Tipus de prorrata [508]
             '509':
               help: null
-              label: null
+              label: Prorrata - 2 - % de prorrata [509]
             '51':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns d'inversió. Base imposable [51]
             '510':
               help: null
-              label: null
+              label: Prorrata - 3 - Codi CNAE [510]
             '511':
               help: null
-              label: null
+              label: Prorrata - 3 - Import d'operacions [511]
             '512':
               help: null
-              label: null
+              label: Prorrata - 3 - Import d'operacions amb dret a deducció [512]
             '513':
               help: null
-              label: null
+              label: Prorrata - 3 - Tipus de prorrata [513]
             '514':
               help: null
-              label: null
+              label: Prorrata - 3 - % de prorrata [514]
             '515':
               help: null
-              label: null
+              label: Prorrata - 4 - Codi CNAE [515]
             '516':
               help: null
-              label: null
+              label: Prorrata - 4 - Import d'operacions [516]
             '517':
               help: null
-              label: null
+              label: Prorrata - 4 - Import d'operacions amb dret a deducció [517]
             '518':
               help: null
-              label: null
+              label: Prorrata - 4 - Tipus de prorrata [518]
             '519':
               help: null
-              label: null
+              label: Prorrata - 4 - % de prorrata [519]
             '52':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns d'inversió. Quota [52]
             '520':
               help: null
-              label: null
+              label: Prorrata - 5 - Codi CNAE [520]
             '521':
               help: null
-              label: null
+              label: Prorrata - 5 - Import d'operacions [521]
             '522':
               help: null
-              label: null
+              label: Prorrata - 5 - Import d'operacions amb dret a deducció [522]
             '523':
               help: null
-              label: null
+              label: Prorrata - 5 - Tipus de prorrata [523]
             '524':
               help: null
-              label: null
+              label: Prorrata - 5 - % de prorrata [524]
             '53':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns i serveis corrents. Base imposable [53]
             '54':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns i serveis corrents. Quota [54]
             '55':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns d'inversió. Base imposable [55]
             '56':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns d'inversió. Quota [56]
             '57':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
+                d'operacions (no intragrup). Base imposable [57]
             '58':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
+                d'operacions (no intragrup). Quota [58]
             '59':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Compensació règim especial A.G. y P.
+                Quota [59]
             '60':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Regularització de béns d'inversió.
+                Quota [60]
             '61':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Regularització per aplicació del percentatge
+                definitiu de prorrata. Quota [61]
             '62':
               help: null
               label: null
@@ -372,16 +435,21 @@ modelo:
               label: null
             '64':
               help: null
-              label: null
+              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
+                (%) [64]
             '65':
               help: null
-              label: null
+              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
+                [65]
             '66':
               help: null
-              label: null
+              label: Liquidació (continuació). Quotes a compensar de períodes anteriors
+                a la incorporació al grup [66]
             '67':
               help: null
-              label: null
+              label: Liquidació (continuació). Exclusivament per a subjectes passius
+                que tributen conjuntament a l'Administració de l'Estat i a les Hisendes
+                Forals. Resultat de la regularització anual [67]
             '68':
               help: null
               label: null
@@ -393,115 +461,179 @@ modelo:
               label: null
             '700':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Base imposable [700]
             '701':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Quota deduïble [701]
             '702':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Base
+                imposable [702]
             '703':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Quota
+                deduïble [703]
             '704':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns corrents. Base imposable
+                [704]
             '705':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns corrents. Quota deduïble
+                [705]
             '706':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns d'inversió. Base imposable
+                [706]
             '707':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
+                [707]
             '708':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Base imposable [708]
             '709':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [709]
             '71':
               help: null
-              label: null
+              label: Informació addicional. Lliuraments intracomunitaris de béns i
+                serveis [71]
             '710':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
+                Base imposable [710]
             '711':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [711]
             '712':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Base imposable [712]
             '713':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Quota deduïble [713]
             '714':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Rectificació de deduccions. Base imposable [714]
             '715':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Rectificació de deduccions. Quota deduïble [715]
             '716':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Regularització de béns d'inversió. Quota deduïble [716]
             '717':
               help: null
               label: null
             '718':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Base imposable [718]
             '719':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Quota deduïble [719]
             '72':
               help: null
-              label: null
+              label: Informació addicional. Exportacions i operacions assimilades
+                [72]
             '720':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Base
+                imposable [720]
             '721':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Quota
+                deduïble [721]
             '722':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns corrents. Base imposable
+                [722]
             '723':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns corrents. Quota deduïble
+                [723]
             '724':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns d'inversió. Base imposable
+                [724]
             '725':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
+                [725]
             '726':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Base imposable [726]
             '727':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [727]
             '728':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
+                Base imposable [728]
             '729':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [729]
             '730':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Base imposable [730]
             '731':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Quota deduïble [731]
             '732':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Rectificació de deduccions. Base imposable [732]
             '733':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Rectificació de deduccions. Quota deduïble [733]
             '734':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Regularització de béns d'inversió. Quota deduïble [734]
             '735':
               help: null
               label: null
@@ -513,64 +645,82 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
             '77':
               help: null
-              label: null
+              label: IVA a la importació liquidat per la Duana pendent d'ingrés [77]
             '79':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments de béns immobles
+                i operacions financeres no habituals [79]
             '80':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim general
+                [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions exemptes sense
+                dret a deducció [83]
             '84':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització (excepte les
+                incloses en la casella 126) [84]
             '86':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim simplificat
+                [86]
             '88':
               help: null
               label: null
             '89':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Àlaba [89]
             '90':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Guipúscoa [90]
             '91':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Biscaia [91]
             '92':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Navarra [92]
             '93':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments intracomunitaris
+                de béns i serveis [93]
             '94':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Exportacions i altres operacions
+                exemptes amb dret a deducció [94]
             '95':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim especial
+                de l'agricultura, ramaderia i pesca [95]
             '96':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions realitzades
+                per subjectes passius acollits al règim especial del recàrrec d'equivalència
+                [96]
             '97':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en Règim especial
+                de béns usats, objectes d'art, antiguitats i objectes de col·lecció
+                [97]
             '98':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim especial
+                d'Agències de Viatges [98]
             '99':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
+                [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: null
@@ -677,172 +827,212 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [01]
             '02':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [02]
             '03':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [03]
             '04':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [04]
             '05':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [05]
             '06':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [06]
             '07':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [07]
             08:
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [08]
             09:
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [09]
             '10':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
+                intragrup [10]
             '107':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Territori comú
+                [107]
             '11':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
+                intragrup [11]
             '112':
               help: null
-              label: null
+              label: Liquidació (continuació). Pagament a compte de lliuraments de
+                gasolines, gasoils i biocarburants posteriors a la ultimació del règim
+                de dipòsit diferent del duaner [112]
             '12':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [12]
             '120':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització (excepte les
+                incloses en la casella 123) [120]
             '122':
               help: null
-              label: null
+              label: Operacions subjectes amb inversió del subjecte passiu [122]
             '123':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització acollides
+                als règims especials de finestreta única [123]
             '124':
               help: null
-              label: null
+              label: Operacions subjectes i acollides als règims especials de finestreta
+                única [124]
             '125':
               help: null
-              label: null
+              label: Operacions subjectes amb inversió del subjecte passiu [125]
             '126':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització acollides
+                als règims especials de finestreta única [126]
             '127':
               help: null
-              label: null
+              label: Operacions subjectes i acollides als règims especials de finestreta
+                única [127]
             '128':
               help: null
-              label: null
+              label: Operacions intragrup valorades conforme al que disposen els arts.
+                78 y 79 LIVA [128]
             '13':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [13]
             '14':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [14]
             '15':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [15]
             '150':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [150]
             '151':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [151]
             '152':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [152]
             '153':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [153]
             '154':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [154]
             '155':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [155]
             '156':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [156]
             '157':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [157]
             '158':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [158]
             '159':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [159]
             '16':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [16]
             '160':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [160]
             '161':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [161]
             '162':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [162]
             '163':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [163]
             '164':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [164]
             '165':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Base imposable [165]
             '166':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [166]
             '167':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [167]
             '168':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [168]
             '169':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [169]
             '17':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [17]
             '170':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [170]
             '171':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
+                [171]
             '172':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [172]
             '173':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [173]
             '18':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
+                [18]
             '19':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Tipus % [19]
             '20':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
+                Quota [20]
             '21':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
+                i serveis. Base imposable [21]
             '22':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
+                i serveis. Quota [22]
             '23':
               help: null
               label: null
@@ -851,190 +1041,220 @@ modelo:
               label: null
             '25':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
+                general. Base imposable [25]
             '26':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
+                general. Quota [26]
             '27':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [27]
             '28':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [28]
             '29':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [29]
             '30':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [30]
             '31':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [31]
             '32':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [32]
             '33':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
+                [33]
             '34':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [34]
             '35':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [35]
             '36':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
+                d'equivalència. Base imposable [36]
             '37':
               help: null
-              label: null
+              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
+                d'equivalència. Quota [37]
             '38':
               help: null
               label: null
             '39':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup corrents. Base imposable [39]
             '40':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup corrents. Quota [40]
             '41':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup amb béns d'inversió. Base imposable [41]
             '42':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
+                intragrup amb béns d'inversió. Quota [42]
             '43':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
+                intragrup. Base imposable [43]
             '44':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
+                intragrup. Quota [44]
             '45':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors corrents. Base imposable [45]
             '46':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors corrents. Quota [46]
             '47':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors amb béns d'inversió. Base imposable [47]
             '48':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
+                interiors amb béns d'inversió. Quota [48]
             '49':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns corrents. Base imposable [49]
             '50':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns corrents. Quota [50]
             '500':
               help: null
-              label: null
+              label: Prorrata - 1 - Codi CNAE [500]
             '501':
               help: null
-              label: null
+              label: Prorrata - 1 - Import d'operacions [501]
             '502':
               help: null
-              label: null
+              label: Prorrata - 1 - Import d'operacions amb dret a deducció [502]
             '503':
               help: null
-              label: null
+              label: Prorrata - 1 - Tipus de prorrata [503]
             '504':
               help: null
-              label: null
+              label: Prorrata - 1 - % de prorrata [504]
             '505':
               help: null
-              label: null
+              label: Prorrata - 2 - Codi CNAE [505]
             '506':
               help: null
-              label: null
+              label: Prorrata - 2 - Import d'operacions [506]
             '507':
               help: null
-              label: null
+              label: Prorrata - 2 - Import d'operacions amb dret a deducció [507]
             '508':
               help: null
-              label: null
+              label: Prorrata - 2 - Tipus de prorrata [508]
             '509':
               help: null
-              label: null
+              label: Prorrata - 2 - % de prorrata [509]
             '51':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns d'inversió. Base imposable [51]
             '510':
               help: null
-              label: null
+              label: Prorrata - 3 - Codi CNAE [510]
             '511':
               help: null
-              label: null
+              label: Prorrata - 3 - Import d'operacions [511]
             '512':
               help: null
-              label: null
+              label: Prorrata - 3 - Import d'operacions amb dret a deducció [512]
             '513':
               help: null
-              label: null
+              label: Prorrata - 3 - Tipus de prorrata [513]
             '514':
               help: null
-              label: null
+              label: Prorrata - 3 - % de prorrata [514]
             '515':
               help: null
-              label: null
+              label: Prorrata - 4 - Codi CNAE [515]
             '516':
               help: null
-              label: null
+              label: Prorrata - 4 - Import d'operacions [516]
             '517':
               help: null
-              label: null
+              label: Prorrata - 4 - Import d'operacions amb dret a deducció [517]
             '518':
               help: null
-              label: null
+              label: Prorrata - 4 - Tipus de prorrata [518]
             '519':
               help: null
-              label: null
+              label: Prorrata - 4 - % de prorrata [519]
             '52':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
+                de béns d'inversió. Quota [52]
             '520':
               help: null
-              label: null
+              label: Prorrata - 5 - Codi CNAE [520]
             '521':
               help: null
-              label: null
+              label: Prorrata - 5 - Import d'operacions [521]
             '522':
               help: null
-              label: null
+              label: Prorrata - 5 - Import d'operacions amb dret a deducció [522]
             '523':
               help: null
-              label: null
+              label: Prorrata - 5 - Tipus de prorrata [523]
             '524':
               help: null
-              label: null
+              label: Prorrata - 5 - % de prorrata [524]
             '53':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns i serveis corrents. Base imposable [53]
             '54':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns i serveis corrents. Quota [54]
             '55':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns d'inversió. Base imposable [55]
             '56':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
+                béns d'inversió. Quota [56]
             '57':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
+                d'operacions (no intragrup). Base imposable [57]
             '58':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
+                d'operacions (no intragrup). Quota [58]
             '59':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Compensació règim especial A.G. y P.
+                Quota [59]
             '60':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Regularització de béns d'inversió.
+                Quota [60]
             '61':
               help: null
-              label: null
+              label: Liquidació. IVA deduïble. Regularització per aplicació del percentatge
+                definitiu de prorrata. Quota [61]
             '62':
               help: null
               label: null
@@ -1043,16 +1263,21 @@ modelo:
               label: null
             '64':
               help: null
-              label: null
+              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
+                (%) [64]
             '65':
               help: null
-              label: null
+              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
+                [65]
             '66':
               help: null
-              label: null
+              label: Liquidació (continuació). Quotes a compensar de períodes anteriors
+                a la incorporació al grup [66]
             '67':
               help: null
-              label: null
+              label: Liquidació (continuació). Exclusivament per a subjectes passius
+                que tributen conjuntament a l'Administració de l'Estat i a les Hisendes
+                Forals. Resultat de la regularització anual [67]
             '68':
               help: null
               label: null
@@ -1064,115 +1289,179 @@ modelo:
               label: null
             '700':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Base imposable [700]
             '701':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Quota deduïble [701]
             '702':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Base
+                imposable [702]
             '703':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Quota
+                deduïble [703]
             '704':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns corrents. Base imposable
+                [704]
             '705':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns corrents. Quota deduïble
+                [705]
             '706':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns d'inversió. Base imposable
+                [706]
             '707':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
+                [707]
             '708':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Base imposable [708]
             '709':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [709]
             '71':
               help: null
-              label: null
+              label: Informació addicional. Lliuraments intracomunitaris de béns i
+                serveis [71]
             '710':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
+                Base imposable [710]
             '711':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [711]
             '712':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Base imposable [712]
             '713':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Quota deduïble [713]
             '714':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Rectificació de deduccions. Base imposable [714]
             '715':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Rectificació de deduccions. Quota deduïble [715]
             '716':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 1. Regularització de béns d'inversió. Quota deduïble [716]
             '717':
               help: null
               label: null
             '718':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Base imposable [718]
             '719':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
+                Quota deduïble [719]
             '72':
               help: null
-              label: null
+              label: Informació addicional. Exportacions i operacions assimilades
+                [72]
             '720':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Base
+                imposable [720]
             '721':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Quota
+                deduïble [721]
             '722':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns corrents. Base imposable
+                [722]
             '723':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns corrents. Quota deduïble
+                [723]
             '724':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns d'inversió. Base imposable
+                [724]
             '725':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
+                [725]
             '726':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Base imposable [726]
             '727':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [727]
             '728':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
+                Base imposable [728]
             '729':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
+                corrents. Quota deduïble [729]
             '730':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Base imposable [730]
             '731':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
+                i pesca. Quota deduïble [731]
             '732':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Rectificació de deduccions. Base imposable [732]
             '733':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Rectificació de deduccions. Quota deduïble [733]
             '734':
               help: null
-              label: null
+              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
+                Grup 2. Regularització de béns d'inversió. Quota deduïble [734]
             '735':
               help: null
               label: null
@@ -1184,64 +1473,83 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
             '77':
               help: null
-              label: null
+              label: Liquidació (continuació). IVA a la importació liquidat per la
+                Duana pendent d'ingrés [77]
             '79':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments de béns immobles
+                i operacions financeres no habituals [79]
             '80':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim general
+                [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions exemptes sense
+                dret a deducció [83]
             '84':
               help: null
-              label: null
+              label: Operacions no subjectes per regles de localització (excepte les
+                incloses en la casella 126) [84]
             '86':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim simplificat
+                [86]
             '88':
               help: null
               label: null
             '89':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Àlaba [89]
             '90':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Guipúscoa [90]
             '91':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Biscaia [91]
             '92':
               help: null
-              label: null
+              label: Informació de la tributació per territori (només per a subjectes
+                passius que tributen a diverses Administracions) - Navarra [92]
             '93':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments intracomunitaris
+                de béns i serveis [93]
             '94':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Exportacions i altres operacions
+                exemptes amb dret a deducció [94]
             '95':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim especial
+                de l'agricultura, ramaderia i pesca [95]
             '96':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions realitzades
+                per subjectes passius acollits al règim especial del recàrrec d'equivalència
+                [96]
             '97':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en Règim especial
+                de béns usats, objectes d'art, antiguitats i objectes de col·lecció
+                [97]
             '98':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Operacions en règim especial
+                d'Agències de Viatges [98]
             '99':
               help: null
-              label: null
+              label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
+                [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: Codi d'activitat - Altres 1a

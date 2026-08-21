@@ -7,6 +7,7 @@ docs:
       collectible_invoice: from the invoices you issued
       donativo_donor: from the donativo donor records
       foreign_asset: from your foreign-asset records
+      gasto193_contributor: from the administration and deposit expenses per contribuyente
       iva_compensation_annual_partition: from the IVA compensación carried across
         the year
       iva_wallet_decision: from your IVA compensación decision
@@ -34,6 +35,7 @@ docs:
       relation_prefill: from a related modelo's result
       retenciones_aggregation: from the retenciones you recorded
       withholding: from the withholdings you recorded
+      withholding296: from the modelo 296 withholdings per perceptor
     cadence:
       ad_hoc: Filed when the event occurs
       annual: Filed annually

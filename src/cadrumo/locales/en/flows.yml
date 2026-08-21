@@ -178,6 +178,7 @@ flows:
           collectible_invoice: Customer invoice
           donativo_donor: Donation donor
           foreign_asset: Foreign asset
+          gasto193_contributor: Expenses per contribuyente (modelo 193)
           iva_compensation_annual_partition: Annual VAT compensation
           iva_wallet_decision: VAT wallet decision
           ledger_impatriado_income_aggregation: Inbound-expatriate income totals
@@ -202,6 +203,7 @@ flows:
           relation_prefill: Related filing
           retenciones_aggregation: Withholding totals
           withholding: Withholding record
+          withholding296: Withholding perceptor (modelo 296)
         estado_casilla_oficial:
           addressed: Directly addressed
           represented_via_binding: Represented through binding

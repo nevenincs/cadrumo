@@ -7,6 +7,7 @@ docs:
       collectible_invoice: des de les factures emeses
       donativo_donor: des dels donants registrats
       foreign_asset: des dels seus béns a l'estranger
+      gasto193_contributor: des de les despeses d'administració i dipòsit per contribuent
       iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
       iva_wallet_decision: des de la seva decisió de compensació d'IVA
       ledger_impatriado_income_aggregation: des dels seus ingressos del règim d'impatriats
@@ -32,6 +33,7 @@ docs:
       relation_prefill: des del resultat d'un model relacionat
       retenciones_aggregation: des de les retencions registrades
       withholding: des de les retencions suportades
+      withholding296: des de les retencions per perceptor del model 296
     cadence:
       ad_hoc: Es presenta quan es produeix el fet
       annual: Es presenta anualment

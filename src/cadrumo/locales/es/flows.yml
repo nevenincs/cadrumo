@@ -183,6 +183,7 @@ flows:
           collectible_invoice: Factura emitida
           donativo_donor: Donante
           foreign_asset: Activo extranjero
+          gasto193_contributor: Gastos por contribuyente (modelo 193)
           iva_compensation_annual_partition: Compensación anual de IVA
           iva_wallet_decision: Decisión de saldo de IVA
           ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
@@ -208,6 +209,7 @@ flows:
           relation_prefill: Declaración relacionada
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención
+          withholding296: Perceptor de retención (modelo 296)
         estado_casilla_oficial:
           addressed: Representada directamente
           represented_via_binding: Representada mediante vínculo

@@ -7,13 +7,102 @@ modelo:
       revision:
         2009-y-siguientes:
           casilla:
+            x-chim6r1echincrrcelhmirre5lh6ioo:
+              label: Refund - SWIFT-BIC
+            x-chim6r1echincrrcelhmirre5lkm4obe:
+              label: Refund - IBAN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the request relates
+            x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              label: NMT - Acquirer - Surnames or company name
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              label: New means of transport (NMT) - Acquirer - NIF
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              label: NMT - Acquirer - First name
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              label: NMT - Acquirer - Country
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              label: NMT - Aircraft - Year of manufacture
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              label: NMT - Aircraft - Manufacturer
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              label: NMT - Aircraft - Make
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              label: NMT - Aircraft - Maximum take-off weight
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              label: NMT - Aircraft - Serial no.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              label: NMT - Vessels - Maximum length
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              label: NMT - Vessels - Manufacturer
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              label: NMT - Vessels - Identification
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              label: NMT - Vessels - Type
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              label: NMT - Settlement - VAT to refund art. 21.4º, párrafo 2º LIVA
+                [20]
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              label: NMT - Settlement - VAT to refund on intra-Community supplies
+                [07]
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              label: NMT - Settlement - VAT to refund on transport activity [18]
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              label: NMT - Settlement - Input VAT [03]
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              label: NMT - Settlement - Input VAT art. 21.4º, párrafo 2º LIVA [19]
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              label: NMT - Settlement - Maximum refundable [06]
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              label: NMT - Settlement - Acquisition price [01]
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              label: NMT - Settlement - Sale price [04]
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              label: NMT - Settlement - Rate (%) [02]
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              label: NMT - Settlement - Rate (%) [05]
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              label: NMT - Vehicles - Chassis id. no.
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              label: NMT - Vehicles - Classification
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              label: NMT - Vehicles - Make
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              label: NMT - Vehicles - Model (commercial name)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              label: NMT - Vehicles - Type
+            x-chim6r1edpnmqojick:
+              label: Identification - First name
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              label: Special equivalence surcharge regime (SESR) - Settlement - Taxable
+                base [08]
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              label: SESR - Settlement - Taxable base [11]
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              label: SESR - Settlement - Taxable base [14]
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              label: SESR - Settlement - Tax amount [10]
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              label: SESR - Settlement - Tax amount [13]
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              label: SESR - Settlement - Tax amount [16]
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              label: SESR - Settlement - VAT to refund [17]
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              label: SESR - Settlement - Rate (%) [09]
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              label: SESR - Settlement - Rate (%) [12]
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              label: SESR - Settlement - Rate (%) [15]
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Return type
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               help: null
               label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
                 occasional taxable person / simplified transport regime)
+            x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              label: Taxation type by taxable person
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:

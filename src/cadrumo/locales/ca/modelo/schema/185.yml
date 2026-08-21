@@ -22,9 +22,80 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Número identificatiu seqüencial d'aquesta declaració, de 13 posicions
+                numèriques.
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
+            x-chim6r1ee1in4qbfchng:
+              help: Mes natural al qual correspon la declaració, de 01 gener a 12
+                desembre.
+              label: PERÍODE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chim6r1eehnn8obc5lp6apr9edq74rrj:
+              help: Nombre total de declarats inclosos per a aquest declarant, és
+                a dir, de registres de tipus 2.
+              label: NOMBRE TOTAL DE REGISTRES
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6:
+              help: Dies d'alta cotitzats durant el mes objecte de declaració.
+              label: NOMBRE DE DIES D'ALTA EN EL MES
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9h:
+              help: Dies d'alta cotitzats durant el mes objecte de declaració. Es
+                refereix al mes -1.
+              label: NOMBRE DE DIES D'ALTA DEL MES -1
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9i:
+              help: Dies d'alta cotitzats durant el mes objecte de declaració. Es
+                refereix al mes -2.
+              label: NOMBRE DE DIES D'ALTA DEL MES -2
+            x-chim6r31e9gm8rpedpkmc:
+              help: NIF de la persona declarada a la qual es refereixen les cotitzacions.
+              label: NIF DEL DECLARAT
+            x-chim6r31e9gm8rpedpnmqojick:
+              help: Cognoms i nom de la persona declarada.
+              label: COGNOMS I NOM DEL DECLARAT
+            x-chim6r31e9gm8rpedpqmqpbidsmm2pj9dhkm2or9dtn0:
+              help: Número d'afiliació de la persona declarada, de 12 posicions.
+              label: NÚMERO D'AFILIACIÓ
+            x-chim6r31e9gm8rpee1m7asj9c5hn8qbmd5i62p0:
+              help: Indica si la persona declarada es troba en situació de pluriactivitat.
+              label: PLURIACTIVITAT
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpg:
+              help: Règim de cotització aplicable en el mes objecte de declaració.
+              label: RÈGIM DE COTITZACIÓ DEL MES
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqc8:
+              help: Règim de cotització aplicable en el mes objecte de declaració.
+                Es refereix al mes -1.
+              label: RÈGIM DE COTITZACIÓ DEL MES -1
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqcg:
+              help: Règim de cotització aplicable en el mes objecte de declaració.
+                Es refereix al mes -2.
+              label: RÈGIM DE COTITZACIÓ DEL MES -2
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6:
+              help: Situació de la persona declarada en el mes objecte de declaració.
+              label: SITUACIÓ DEL MES
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9h:
+              help: Situació de la persona declarada en el mes objecte de declaració.
+                Es refereix al mes -1.
+              label: SITUACIÓ DEL MES -1
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9i:
+              help: Situació de la persona declarada en el mes objecte de declaració.
+                Es refereix al mes -2.
+              label: SITUACIÓ DEL MES -2
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ec:
+              help: 'Clau de jornada del mes: 0 sense valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.'
+              label: TIPUS DE JORNADA DEL MES
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj2:
+              help: 'Clau de jornada del mes: 0 sense valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
+                Es refereix al mes -1.'
+              label: TIPUS DE JORNADA DEL MES -1
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj4:
+              help: 'Clau de jornada del mes: 0 sense valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
+                Es refereix al mes -2.'
+              label: TIPUS DE JORNADA DEL MES -2
           construct:
             modelo-185-informative:
               field:

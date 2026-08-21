@@ -1,14 +1,21 @@
-# The close date is READ from AEAT's own Calendario del Contribuyente, not derived
-# from the statutory "durante el mes de enero" rule.
+# The close date is the NOMINAL statutory one from orden-hfp-823-2022 art. 4:
+# "el plazo de presentacion del modelo 345 sera el comprendido entre el 1 y el 31
+# de enero de cada ano".
 #
-# It was declared 2026-01-31, which is the rule's date and a SATURDAY. AEAT's
-# published calendar for 2026 lists "Declaracion anual 2025: 345" under the
-# heading "Hasta el 2 de febrero" -- the following Monday -- so the rule-derived
-# date closes the window two days early and would present a filer with a deadline
-# that has not arrived. Writing a deadline from the rule rather than the
-# published calendar is the filing-grade harm this registry's other deadline
-# families already warn about; the bundled calendar is now cited as the source
-# the date is read from.
+# This window previously stored 2026-02-02, AEAT's published operational date for
+# a 31 January that falls on a Saturday. The reasoning recorded at the time was
+# that storing the rule's date "closes the window two days early and would present
+# a filer with a deadline that has not arrived". That premise was measured and does
+# not hold: application/overview/_calendar.py passes closes_on through
+# shift_deadline and surfaces adjusted_close_date, so the operator sees 2 February
+# either way.
+#
+# What the pre-shifted form loses is provenance. Measured both ways for modelo 345:
+#   stored 2026-01-31 -> adjusted 2026-02-02, shifted=True,  reason='sabado'
+#   stored 2026-02-02 -> adjusted 2026-02-02, shifted=False, reason='business_day'
+# The second is a false statement -- it reports that no shift occurred and that
+# 2 February is the ordinary business-day deadline -- and it destroys the statutory
+# date entirely. Storing nominal costs the filer nothing and keeps both facts.
 
 [[revisions."2025".deadline_windows]]
 id = "modelo-345-2025-0a"
@@ -16,10 +23,9 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-hfp-823-2022:art-4"]
 source_refs = [
     "aeat-modelo-345-deadlines",
     "boe-modelo-345-base-order",
-    "aeat-calendario-contribuyente-2026-hasta-2-febrero",
 ]

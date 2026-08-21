@@ -7,13 +7,104 @@ modelo:
       revision:
         2009-y-siguientes:
           casilla:
+            x-chim6r1echincrrcelhmirre5lh6ioo:
+              label: Visszatérítés - SWIFT-BIC
+            x-chim6r1echincrrcelhmirre5lkm4obe:
+              label: Visszatérítés - IBAN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A kérelem vonatkozási éve
+            x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              label: ÚKE - Beszerző - Vezetéknév vagy cégnév
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              label: Új közlekedési eszközök (ÚKE) - Beszerző - NIF
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              label: ÚKE - Beszerző - Név
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              label: ÚKE - Beszerző - Ország
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              label: ÚKE - Légi járművek - Gyártási év
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              label: ÚKE - Légi járművek - Gyártó
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              label: ÚKE - Légi járművek - Márka
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              label: ÚKE - Légi járművek - Legnagyobb felszállótömeg
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              label: ÚKE - Légi járművek - Sorozatszám
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              label: ÚKE - Vízi járművek - Legnagyobb hossz
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              label: ÚKE - Vízi járművek - Gyártó
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              label: ÚKE - Vízi járművek - Azonosítás
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              label: ÚKE - Vízi járművek - Típus
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              label: ÚKE - Elszámolás - Visszatérítendő áfa art. 21.4º, párrafo 2º
+                LIVA [20]
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              label: ÚKE - Elszámolás - Közösségen belüli értékesítés után visszatérítendő
+                áfa [07]
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              label: ÚKE - Elszámolás - Fuvarozási tevékenység után visszatérítendő
+                áfa [18]
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              label: ÚKE - Elszámolás - Előzetesen felszámított áfa [03]
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              label: ÚKE - Elszámolás - Előzetesen felszámított áfa art. 21.4º, párrafo
+                2º LIVA [19]
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              label: ÚKE - Elszámolás - Legnagyobb visszatéríthető összeg [06]
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              label: ÚKE - Elszámolás - Beszerzési ár [01]
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              label: ÚKE - Elszámolás - Eladási ár [04]
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              label: ÚKE - Elszámolás - Adókulcs (%) [02]
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              label: ÚKE - Elszámolás - Adókulcs (%) [05]
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              label: ÚKE - Járművek - Alvázazonosító szám
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              label: ÚKE - Járművek - Besorolás
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              label: ÚKE - Járművek - Márka
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              label: ÚKE - Járművek - Modell (kereskedelmi megnevezés)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              label: ÚKE - Járművek - Típus
+            x-chim6r1edpnmqojick:
+              label: Azonosítás - Név
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              label: Különleges egyenértékűségi felár rendszer (KEF) - Elszámolás
+                - Adóalap [08]
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              label: KEF - Elszámolás - Adóalap [11]
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              label: KEF - Elszámolás - Adóalap [14]
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              label: KEF - Elszámolás - Adóösszeg [10]
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              label: KEF - Elszámolás - Adóösszeg [13]
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              label: KEF - Elszámolás - Adóösszeg [16]
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              label: KEF - Elszámolás - Visszatérítendő áfa [17]
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              label: KEF - Elszámolás - Adókulcs (%) [09]
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              label: KEF - Elszámolás - Adókulcs (%) [12]
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              label: KEF - Elszámolás - Adókulcs (%) [15]
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Bevallás típusa
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               help: null
               label: Kérelem típusa (egyenértékűségi felár / 30a. cikk / 21.4. cikk
                 / eseti adóalany / egyszerűsített szállítási szabályozás)
+            x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              label: Adózás típusa az adóalany szerint
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:

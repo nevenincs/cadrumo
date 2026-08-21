@@ -17,9 +17,9 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-181-procedure", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
+source_refs = ["enrolled-modelo-181-procedure"]
 
 [[revisions."2009-y-siguientes".deadline_windows]]
 id = "modelo-181-2026-0a"

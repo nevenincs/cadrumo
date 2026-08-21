@@ -23,9 +23,80 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaración
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Número identificativo secuencial de esta declaración, de 13 posiciones
+                numéricas.
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN
+            x-chim6r1ee1in4qbfchng:
+              help: Mes natural al que corresponde la declaración, de 01 enero a 12
+                diciembre.
+              label: PERÍODO
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-chim6r1eehnn8obc5lp6apr9edq74rrj:
+              help: Número total de declarados incluidos para este declarante, es
+                decir, de registros de tipo 2.
+              label: NÚMERO TOTAL DE REGISTROS
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6:
+              help: Días de alta cotizados durante el mes objeto de declaración.
+              label: NÚMERO DE DÍAS DE ALTA EN EL MES
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9h:
+              help: Días de alta cotizados durante el mes objeto de declaración. Se
+                refiere al mes -1.
+              label: NÚMEROS DÍAS DE ALTA MES -1
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9i:
+              help: Días de alta cotizados durante el mes objeto de declaración. Se
+                refiere al mes -2.
+              label: NÚMEROS DÍAS DE ALTA MES -2
+            x-chim6r31e9gm8rpedpkmc:
+              help: NIF de la persona declarada a la que se refieren las cotizaciones.
+              label: N.I.F. DEL DECLARADO
+            x-chim6r31e9gm8rpedpnmqojick:
+              help: Apellidos y nombre de la persona declarada.
+              label: APELLIDOS Y NOMBRE DEL DECLARADO
+            x-chim6r31e9gm8rpedpqmqpbidsmm2pj9dhkm2or9dtn0:
+              help: Número de afiliación de la persona declarada, de 12 posiciones.
+              label: NÚMERO DE AFILIACIÓN
+            x-chim6r31e9gm8rpee1m7asj9c5hn8qbmd5i62p0:
+              help: Indica si la persona declarada se encuentra en situación de pluriactividad.
+              label: PLURIACTIVIDAD
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpg:
+              help: Régimen de cotización aplicable en el mes objeto de declaración.
+              label: RÉGIMEN DE COTIZACIÓN DEL MES
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqc8:
+              help: Régimen de cotización aplicable en el mes objeto de declaración.
+                Se refiere al mes -1.
+              label: RÉGIMEN DE COTIZACIÓN DEL MES -1
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqcg:
+              help: Régimen de cotización aplicable en el mes objeto de declaración.
+                Se refiere al mes -2.
+              label: RÉGIMEN DE COTIZACIÓN DEL MES -2
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6:
+              help: Situación de la persona declarada en el mes objeto de declaración.
+              label: SITUACIÓN MES
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9h:
+              help: Situación de la persona declarada en el mes objeto de declaración.
+                Se refiere al mes -1.
+              label: SITUACIÓN MES -1
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9i:
+              help: Situación de la persona declarada en el mes objeto de declaración.
+                Se refiere al mes -2.
+              label: SITUACIÓN MES -2
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ec:
+              help: 'Clave de jornada del mes: 0 sin valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.'
+              label: TIPO JORNADA MES
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj2:
+              help: 'Clave de jornada del mes: 0 sin valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
+                Se refiere al mes -1.'
+              label: TIPO JORNADA MES -1
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj4:
+              help: 'Clave de jornada del mes: 0 sin valor, 1 completa, 2 parcial
+                igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
+                Se refiere al mes -2.'
+              label: TIPO JORNADA MES -2
           construct:
             modelo-185-informative:
               field:

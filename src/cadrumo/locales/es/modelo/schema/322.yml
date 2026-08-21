@@ -10,124 +10,151 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [01]
             '02':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [02]
             '03':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [03]
             '04':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [04]
             '05':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [05]
             '06':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [06]
             '07':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [07]
             08:
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [08]
             09:
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [09]
             '10':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [10]
             '107':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Territorio común
+                [107]
             '11':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [11]
             '12':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [12]
             '120':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 123). [120]
             '122':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo [122]
             '123':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [123]
             '124':
               help: null
-              label: null
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [124]
             '125':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo [125]
             '126':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [126]
             '127':
               help: null
-              label: null
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [127]
             '128':
               help: null
-              label: null
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA [128]
             '13':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [13]
             '14':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [14]
             '15':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [15]
             '150':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [150]
             '151':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [151]
             '152':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [152]
             '153':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [153]
             '154':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [154]
             '155':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [155]
             '156':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [156]
             '157':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [157]
             '158':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [158]
             '159':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [159]
             '16':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [16]
             '160':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [160]
             '161':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [161]
             '162':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [162]
             '163':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [163]
             '164':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [164]
             '165':
               help: null
               label: null
@@ -145,7 +172,8 @@ modelo:
               label: null
             '17':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [17]
             '170':
               help: null
               label: null
@@ -160,352 +188,467 @@ modelo:
               label: null
             '18':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [18]
             '19':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [19]
             '20':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [20]
             '21':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Base imponible [21]
             '22':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Cuota [22]
             '23':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.) [23]
             '24':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.). Cuota [24]
             '25':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Base imponible [25]
             '26':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Cuota [26]
             '27':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [27]
             '28':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [28]
             '29':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [29]
             '30':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [30]
             '31':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [31]
             '32':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [32]
             '33':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [33]
             '34':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [34]
             '35':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [35]
             '36':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Base imponible [36]
             '37':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Cuota [37]
             '38':
               help: null
-              label: null
+              label: Total cuota devengada ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
             '39':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Base imponible [39]
             '40':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Cuota [40]
             '41':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Base imponible [41]
             '42':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Cuota [42]
             '43':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Base imponible [43]
             '44':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Cuota [44]
             '45':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Base imponible [45]
             '46':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Cuota [46]
             '47':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Base imponible [47]
             '48':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Cuota [48]
             '49':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Base imponible [49]
             '50':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Cuota [50]
             '500':
               help: null
-              label: null
+              label: Prorratas - 1 - Código CNAE [500]
             '501':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones [501]
             '502':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
+                [502]
             '503':
               help: null
-              label: null
+              label: Prorratas - 1 - Tipo de prorrata [503]
             '504':
               help: null
-              label: null
+              label: Prorratas - 1 - % de prorrata [504]
             '505':
               help: null
-              label: null
+              label: Prorratas - 2 - Código CNAE [505]
             '506':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones [506]
             '507':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
+                [507]
             '508':
               help: null
-              label: null
+              label: Prorratas - 2 - Tipo de prorrata [508]
             '509':
               help: null
-              label: null
+              label: Prorratas - 2 - % de prorrata [509]
             '51':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Base imponible [51]
             '510':
               help: null
-              label: null
+              label: Prorratas - 3 - Código CNAE [510]
             '511':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones [511]
             '512':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción[512]
             '513':
               help: null
-              label: null
+              label: Prorratas - 3 - Tipo de prorrata [513]
             '514':
               help: null
-              label: null
+              label: Prorratas - 3 - % de prorrata [514]
             '515':
               help: null
-              label: null
+              label: Prorratas - 4 - Código CNAE[515]
             '516':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones[516]
             '517':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
+                [517]
             '518':
               help: null
-              label: null
+              label: Prorratas - 4 - Tipo de prorrata[518]
             '519':
               help: null
-              label: null
+              label: Prorratas - 4 - % de prorrata [519]
             '52':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Cuota [52]
             '520':
               help: null
-              label: null
+              label: Prorratas - 5 - Código CNAE [520]
             '521':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones[521]
             '522':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción[522]
             '523':
               help: null
-              label: null
+              label: Prorratas - 5 - Tipo de prorrata [523]
             '524':
               help: null
-              label: null
+              label: Prorratas - 5 - % de prorrata [524]
             '53':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Base imponible [53]
             '54':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Cuota[54]
             '55':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Base imponible [55]
             '56':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Cuota [56]
             '57':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Base imponible [57]
             '58':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Cuota [58]
             '59':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE.Compensación régimen especial A.G.
+                y P. Cuota [59]
             '60':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Regularización bienes de inversión.
+                Cuota [60]
             '61':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Regularización por aplicación del
+                porcentaje definitivo de prorrata. Cuota [61]
             '62':
               help: null
-              label: null
+              label: Total a deducir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
             '63':
               help: null
-              label: null
+              label: Liquidación (continuación). Diferencia ([38] - [62]) . [63]
             '64':
               help: null
-              label: null
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado (%) . [64]
             '65':
               help: null
-              label: null
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado. [65]
             '66':
               help: null
-              label: null
+              label: Liquidación (continuación). Cuotas a compensar de períodos anteriores
+                a la incorporación al grupo. [66]
             '67':
               help: null
-              label: null
+              label: Liquidación (continuación). Exclusivamente para sujetos pasivos
+                que tributan conjuntamente a la Administración del Estado y a las
+                Haciendas Forales. Resultado de la regularización anual. [67]
             '68':
               help: null
-              label: null
+              label: Liquidación (continuación). Resultado ([65] - [66] + [67]) [68]
             '69':
               help: null
               label: null
             '70':
               help: null
-              label: null
+              label: Resultado de la autoliquidación ([68] - [69]) [70]
             '700':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [700]'
             '701':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [701]'
             '702':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [702]'
             '703':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [703]'
             '704':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [704]'
             '705':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [705]'
             '706':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [706]'
             '707':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [707]'
             '708':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [708]'
             '709':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [709]'
             '71':
               help: null
-              label: null
+              label: Información adicional. Entregas intracomunitarias de bienes y
+                servicios [71]
             '710':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [710]'
             '711':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [711]'
             '712':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [712]'
             '713':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [713]'
             '714':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Base imponible [714]'
             '715':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Cuota deducible [715]'
             '716':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Regularización de bienes de inversión. Cuota deducible [716]'
             '717':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Suma de deducciones (701 + 703 + 705 + 707 + 709 + 711 +
+                713 + 715 + 716). Cuota deducible [717]'
             '718':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [718]'
             '719':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2.. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [719]'
             '72':
               help: null
-              label: null
+              label: Información adicional. Exportaciones y operaciones asimiladas.
+                [72]
             '720':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [720]'
             '721':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [721]'
             '722':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [722]'
             '723':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [723]'
             '724':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [724]'
             '725':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [725]'
             '726':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [726]'
             '727':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [727]'
             '728':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [728]'
             '729':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [729]'
             '730':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [730]'
             '731':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [731]'
             '732':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Base imponible [732]'
             '733':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Cuota deducible [733]'
             '734':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Regularización de bienes de inversión. Cuota deducible [734]'
             '735':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Suma de deducciones (719 + 721 + 723 + 725 + 727 + 729 +
+                731 + 733 + 734). Cuota deducible [735]'
             '74':
               help: null
               label: null
@@ -514,64 +657,85 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
             '77':
               help: null
-              label: null
+              label: IVA a la importación liquidado por la Aduana pendiente de ingreso
+                [77]
             '79':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes inmuebles
+                y operaciones financieras no habituales [79]
             '80':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                general [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones exentas sin
+                derecho a deducción [83]
             '84':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 126) [84]
             '86':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                simplificado [86]
             '88':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Total volumen de operaciones
+                (Art. 121 Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127
+                + 128 + 86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) - Álava [89]
             '90':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones)-Guipúcoa [90]
             '91':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Vizcaya [91]
             '92':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Navarra [92]
             '93':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas intracomunitarias
+                de bienes y servicios [93]
             '94':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio.. Exportaciones y otras
+                operaciones exentas con derecho a deducción [94]
             '95':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de la agricultura, ganadería y pesca [95]
             '96':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio.. Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
+                [96]
             '97':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección [97]
             '98':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de Agencias de Viajes [98]
             '99':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes de
+                inversión [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: null
@@ -678,505 +842,656 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [01]
             '02':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [02]
             '03':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [03]
             '04':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [04]
             '05':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [05]
             '06':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [06]
             '07':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [07]
             08:
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [08]
             09:
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [09]
             '10':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [10]
             '107':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Territorio común
+                [107]
             '11':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [11]
             '112':
               help: null
-              label: null
+              label: Liquidación (continuación). Pago a cuenta de entregas de gasolinas,
+                gasóleos y biocarburantes posteriores a la ultimacion del regimen
+                de deposito distinto del aduanero [112]
             '12':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [12]
             '120':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 123). [120]
             '122':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo [122]
             '123':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [123]
             '124':
               help: null
-              label: null
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [124]
             '125':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo [125]
             '126':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [126]
             '127':
               help: null
-              label: null
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [127]
             '128':
               help: null
-              label: null
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA [128]
             '13':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [13]
             '14':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [14]
             '15':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [15]
             '150':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [150]
             '151':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [151]
             '152':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [152]
             '153':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [153]
             '154':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [154]
             '155':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [155]
             '156':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [156]
             '157':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [157]
             '158':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [158]
             '159':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [159]
             '16':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [16]
             '160':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [160]
             '161':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [161]
             '162':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [162]
             '163':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [163]
             '164':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [164]
             '165':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Base imponible [165]
             '166':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [166]
             '167':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [167]
             '168':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [168]
             '169':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [169]
             '17':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [17]
             '170':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [170]
             '171':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [171]
             '172':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [172]
             '173':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [173]
             '18':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [18]
             '19':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [19]
             '20':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [20]
             '21':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Base imponible [21]
             '22':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Cuota [22]
             '23':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.) [23]
             '24':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.). Cuota [24]
             '25':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Base imponible [25]
             '26':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Cuota [26]
             '27':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [27]
             '28':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [28]
             '29':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [29]
             '30':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [30]
             '31':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [31]
             '32':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [32]
             '33':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [33]
             '34':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [34]
             '35':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [35]
             '36':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Base imponible [36]
             '37':
               help: null
-              label: null
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Cuota [37]
             '38':
               help: null
-              label: null
+              label: Total cuota devengada ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
+                [38]
             '39':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Base imponible [39]
             '40':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Cuota [40]
             '41':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Base imponible [41]
             '42':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Cuota [42]
             '43':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Base imponible [43]
             '44':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Cuota [44]
             '45':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Base imponible [45]
             '46':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Cuota [46]
             '47':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Base imponible [47]
             '48':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Cuota [48]
             '49':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Base imponible [49]
             '50':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Cuota [50]
             '500':
               help: null
-              label: null
+              label: Prorratas - 1 - Código CNAE [500]
             '501':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones [501]
             '502':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
+                [502]
             '503':
               help: null
-              label: null
+              label: Prorratas - 1 - Tipo de prorrata [503]
             '504':
               help: null
-              label: null
+              label: Prorratas - 1 - % de prorrata [504]
             '505':
               help: null
-              label: null
+              label: Prorratas - 2 - Código CNAE [505]
             '506':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones [506]
             '507':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
+                [507]
             '508':
               help: null
-              label: null
+              label: Prorratas - 2 - Tipo de prorrata [508]
             '509':
               help: null
-              label: null
+              label: Prorratas - 2 - % de prorrata [509]
             '51':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Base imponible [51]
             '510':
               help: null
-              label: null
+              label: Prorratas - 3 - Código CNAE [510]
             '511':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones [511]
             '512':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción[512]
             '513':
               help: null
-              label: null
+              label: Prorratas - 3 - Tipo de prorrata [513]
             '514':
               help: null
-              label: null
+              label: Prorratas - 3 - % de prorrata [514]
             '515':
               help: null
-              label: null
+              label: Prorratas - 4 - Código CNAE[515]
             '516':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones[516]
             '517':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
+                [517]
             '518':
               help: null
-              label: null
+              label: Prorratas - 4 - Tipo de prorrata[518]
             '519':
               help: null
-              label: null
+              label: Prorratas - 4 - % de prorrata [519]
             '52':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Cuota [52]
             '520':
               help: null
-              label: null
+              label: Prorratas - 5 - Código CNAE [520]
             '521':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones[521]
             '522':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción[522]
             '523':
               help: null
-              label: null
+              label: Prorratas - 5 - Tipo de prorrata [523]
             '524':
               help: null
-              label: null
+              label: Prorratas - 5 - % de prorrata [524]
             '53':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Base imponible [53]
             '54':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Cuota[54]
             '55':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Base imponible [55]
             '56':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Cuota [56]
             '57':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Base imponible [57]
             '58':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Cuota [58]
             '59':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE.Compensación régimen especial A.G.
+                y P. Cuota [59]
             '60':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Regularización bienes de inversión.
+                Cuota [60]
             '61':
               help: null
-              label: null
+              label: Liquidación. IVA DEDUCIBLE. Regularización por aplicación del
+                porcentaje definitivo de prorrata. Cuota [61]
             '62':
               help: null
-              label: null
+              label: Total a deducir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
             '63':
               help: null
-              label: null
+              label: Liquidación (continuación). Diferencia ([38] - [62]) . [63]
             '64':
               help: null
-              label: null
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado (%) . [64]
             '65':
               help: null
-              label: null
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado. [65]
             '66':
               help: null
-              label: null
+              label: Liquidación (continuación). Cuotas a compensar de períodos anteriores
+                a la incorporación al grupo. [66]
             '67':
               help: null
-              label: null
+              label: Liquidación (continuación). Exclusivamente para sujetos pasivos
+                que tributan conjuntamente a la Administración del Estado y a las
+                Haciendas Forales. Resultado de la regularización anual. [67]
             '68':
               help: null
-              label: null
+              label: Liquidación (continuación). Resultado ([65] + [77] - [66] + [67])
+                [68]
             '69':
               help: null
               label: null
             '70':
               help: null
-              label: null
+              label: Resultado de la autoliquidación ([68] - [69] - [112]) [70]
             '700':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [700]'
             '701':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [701]'
             '702':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [702]'
             '703':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [703]'
             '704':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [704]'
             '705':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [705]'
             '706':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [706]'
             '707':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [707]'
             '708':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [708]'
             '709':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [709]'
             '71':
               help: null
-              label: null
+              label: Información adicional. Entregas intracomunitarias de bienes y
+                servicios [71]
             '710':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [710]'
             '711':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [711]'
             '712':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [712]'
             '713':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [713]'
             '714':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Base imponible [714]'
             '715':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Cuota deducible [715]'
             '716':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Regularización de bienes de inversión. Cuota deducible [716]'
             '717':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Suma de deducciones (701 + 703 + 705 + 707 + 709 + 711 +
+                713 + 715 + 716). Cuota deducible [717]'
             '718':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [718]'
             '719':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2.. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [719]'
             '72':
               help: null
-              label: null
+              label: Información adicional. Exportaciones y operaciones asimiladas.
+                [72]
             '720':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [720]'
             '721':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [721]'
             '722':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [722]'
             '723':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [723]'
             '724':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [724]'
             '725':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [725]'
             '726':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [726]'
             '727':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [727]'
             '728':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [728]'
             '729':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [729]'
             '730':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [730]'
             '731':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [731]'
             '732':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Base imponible [732]'
             '733':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Cuota deducible [733]'
             '734':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Regularización de bienes de inversión. Cuota deducible [734]'
             '735':
               help: null
-              label: null
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Suma de deducciones (719 + 721 + 723 + 725 + 727 + 729 +
+                731 + 733 + 734). Cuota deducible [735]'
             '74':
               help: null
               label: null
@@ -1185,64 +1500,85 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
             '77':
               help: null
-              label: null
+              label: Liquidación (continuación). IVA a la importación liquidado por
+                la Aduana pendiente de ingreso. [77]
             '79':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes inmuebles
+                y operaciones financieras no habituales [79]
             '80':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                general [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones exentas sin
+                derecho a deducción [83]
             '84':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 126) [84]
             '86':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                simplificado [86]
             '88':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Total volumen de operaciones
+                (Art. 121 Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127
+                + 128 + 86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) - Álava [89]
             '90':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones)-Guipúcoa [90]
             '91':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Vizcaya [91]
             '92':
               help: null
-              label: null
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Navarra [92]
             '93':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas intracomunitarias
+                de bienes y servicios [93]
             '94':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio.. Exportaciones y otras
+                operaciones exentas con derecho a deducción [94]
             '95':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de la agricultura, ganadería y pesca [95]
             '96':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio.. Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
+                [96]
             '97':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección [97]
             '98':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de Agencias de Viajes [98]
             '99':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes de
+                inversión [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: Codigo de actividad - Otras 1a

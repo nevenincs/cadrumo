@@ -1,0 +1,291 @@
+schema_version = 1
+fragment_id = "declarado"
+modelo = "185"
+design_epoch = "2026"
+source_ref = "aeat-dr-185-2026"
+source_sha256 = "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae"
+
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 120
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f002"
+kind = "literal"
+literal = "185"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 122
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 124
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 127
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f005"
+kind = "casilla"
+casilla_id = "declarado.nif"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 130
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f006"
+kind = "filler"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 138
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f007"
+kind = "casilla"
+casilla_id = "declarado.nombre"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 139
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f008"
+kind = "casilla"
+casilla_id = "declarado.numero-afiliacion"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 143
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f009"
+kind = "casilla"
+casilla_id = "declarado.pluriactividad"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 152
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f010"
+kind = "casilla"
+casilla_id = "declarado.situacion-mes"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 164
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f011"
+kind = "casilla"
+casilla_id = "declarado.regimen-cotizacion-mes"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 172
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f012"
+kind = "casilla"
+casilla_id = "declarado.dias-alta-mes"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 192
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f013"
+kind = "casilla"
+casilla_id = "declarado.tipo-jornada-mes"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 197
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f014"
+kind = "casilla"
+casilla_id = "declarado.situacion-mes-1"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 210
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f015"
+kind = "casilla"
+casilla_id = "declarado.regimen-cotizacion-mes-1"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 222
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f016"
+kind = "casilla"
+casilla_id = "declarado.dias-alta-mes-1"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 243
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f017"
+kind = "casilla"
+casilla_id = "declarado.tipo-jornada-mes-1"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 247
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f018"
+kind = "casilla"
+casilla_id = "declarado.situacion-mes-2"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 259
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f019"
+kind = "casilla"
+casilla_id = "declarado.regimen-cotizacion-mes-2"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 276
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f020"
+kind = "casilla"
+casilla_id = "declarado.dias-alta-mes-2"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 292
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f021"
+kind = "casilla"
+casilla_id = "declarado.tipo-jornada-mes-2"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 296
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m185-2026.declarado.f022"
+kind = "filler"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 313
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Declarado"
