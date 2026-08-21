@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:2298ee5e6f21bde55e28ddbd35baf7bfeb45b9b9a8f6b35aed0519308991aaf7'
+body_hash: 'sha256:85a77cd025944db24b77d21e375477d83677d09c8a377dd5ca1fb6653fb4c657'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1228,7 +1228,6 @@ claimed years should be SPLIT at the design boundary rather than stamped with a 
 which is what the gate itself says, and what the span gate says separately for the
 contrary-evidence class. The three stamps stand for now, with this recorded against them.
 
-
 ### RESOLVED-filing_eligible-has-no-runtime-consumer | resolved | the scope flip reclassifies gaps into the stricter bucket, it authorises nothing
 
 The previous finding left one question open: whether ``filing_eligible`` has a consumer
@@ -1274,7 +1273,6 @@ revisions, not a reason to withhold or reverse a review.
 
 Seventh time in this campaign that re-checking changed a conclusion, and the first where
 it exonerated the work rather than implicating it.
-
 
 ## Recommendations
 

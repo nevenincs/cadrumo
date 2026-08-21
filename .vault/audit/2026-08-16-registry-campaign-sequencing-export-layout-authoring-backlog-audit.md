@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5135d0fa2e3917c92ca30289ebc30e2fd1a5a1770c3f85afce5b6e7c8644044'
+body_hash: 'sha256:ee9a97496c124a815edf71f31f38259642bf5e0dc76e093985108d1b6e8b69dc'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10604,3 +10604,75 @@ and empty. The two numbers measure different things and only one of them moved.
 37). Modelo 193's 28 and modelo 184's other 23 are the split-half class and need
 their block headings read out of the design's position-keyed text, the way
 modelo 222's boxes were.
+
+## The guard against bad labels was inert, and the bug was one byte
+
+Last tick recorded a boilerplate filter that keeps a split amount's
+ENTERO/DECIMAL leaf from becoming a label, and claimed it had prevented 23 bad
+modelo 184 labels. **The filter did not work.** Its compiled pattern was
+
+```
+'^\s*[.\s]*(ENTERO|DECIMAL)\s*[:.]|^\s*Parte (entera|decimal)\x08'
+```
+
+The intended word boundary `\b` had been written into a NON-raw string, so
+Python resolved it to a literal backspace (`\x08`) before `re.compile` ever saw
+it. The whole `Parte entera/decimal` branch then required a control character no
+design text contains, and could never match. The pattern READ correctly in the
+source and was inert in fact.
+
+It surfaced on modelo 184, whose "usable" count came back as 14 when only 5 are
+real: nine of the fourteen were `Parte decimal del importe, si no tiene
+contenido se`. Applied, those would have been exactly the defect the filter was
+written to prevent -- and the previous tick's report claimed the prevention had
+already happened.
+
+Two things make this worth more than a one-line correction:
+
+* **A guard that cannot fail is indistinguishable from a guard that works**, and
+  the only way to tell them apart is to feed it what it must reject. The filter
+  now runs `_self_check()` at import, asserting five strings it must reject and
+  three it must keep, so an inert pattern cannot survive silently a second time.
+* **The escape hazard bit through a repair of itself.** The first fix attempt
+  rewrote the pattern through a shell heredoc and left the `\x08` byte in place,
+  because the replacement slice missed the line. The byte had to be removed as a
+  byte. Regex belongs in a file written by an editor, never assembled through a
+  shell.
+
+**Control on damage already shipped:** every `es` modelo-schema value was scanned
+for the boilerplate. Two hits, both modelo 182 HELP strings that deliberately
+say "el diseño lo divide en parte entera y parte decimal" as an explanation. **No
+shipped LABEL carries it.** The four modelos authored while the filter was inert
+(232, 347, 202, 322) were protected by something else: each required an explicit
+translation-table entry and reported anything unmatched as `unhandled`, so
+boilerplate could only ever be skipped, never written. That redundancy is why
+the inert filter cost nothing, and it is worth keeping deliberately rather than
+by luck.
+
+Both measurements the filter produced were therefore wrong in the optimistic
+direction. Corrected: of 199 backlogged labels the join reaches 161, of which
+**129 are usable** (89 authored last tick, 40 this tick) and 32 are the
+split-half class.
+
+## 40 more labels: modelo 322 and the honest remainder of modelo 184
+
+Backlog **289 -> 249**.
+
+**Modelo 322, 35 labels.** Four shapes, each on its own terms: boxes 165-173 are
+three sub-blocks of Base imponible / Tipo % / Cuota, so nine labels come from
+three sub-block names and three field terms; boxes 69, 74, 75 and 81 are long
+single fields translated whole; ten `decl.*` identification fields; and the
+twelve `actividad.*` slots.
+
+The `actividad` slots needed a judgement the design itself settles. Each is led
+by "Exclusivamente a cumplimentar en el último periodo de la Declaración B/C - ",
+which is a WHEN-to-fill instruction rather than the field's name, and the letter
+is redundant with the field that follows it. Measured over all twelve before
+stripping anything: B pairs with "Código de actividad" six times and C with
+"Epígrafe IAE" six times, with zero exceptions. The lead moved to the help
+string, where the condition belongs.
+
+**Modelo 184, 5 labels.** The five the design actually names. The other 32 are
+the split-half class and are deliberately left blank: they need the block heading
+read out of the design's position-keyed text, the way modelo 222's boxes were,
+and a blank is visibly missing where a wrong label is not.
