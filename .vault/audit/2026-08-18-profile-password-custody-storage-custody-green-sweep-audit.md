@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-20'
+modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1a6f23eff5a57938e35b7463c566b4a234131aaea8e33277813e3b752af5cc80'
+body_hash: 'sha256:a7790bc70f890c2cc6db6cdcca8804bccac4d431addcbc2e0c3cf5f12e26c368'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2883,3 +2883,37 @@ now pinned by their real text.
 door is more exposed. Hardening tends to accrue on the path its author was looking at,
 which is usually the internal one — the external door is the one that was already
 "working".
+
+### A ceiling defined twice, agreeing with itself
+
+Sweeping the domain's remaining bare file reads to see whether the two-doors asymmetry
+recurred: it does not. Every one is either bundled package data (the BIP-39 wordlist,
+which also checks it holds exactly 2048 words), an operator-TYPED path where following
+the name is the operator's own intent (`AttachmentStore.put_file`), or already hardened
+in place. `custody/_inventory.py`'s walk is the strongest read in the domain — `lstat`,
+explicit link and reparse refusal, regular-file check, size cap, Windows anchor, and a
+post-read dev/ino/size identity re-check to catch a swap mid-read.
+
+That read is where the finding was, though not in the read itself.
+`PROFILE_CUSTODY_DATA_FILE_MAX_BYTES` and `PROFILE_CUSTODY_DATA_MAX_ENTRIES` were each
+defined **twice**, with equal values, in `_filesystem` and `_inventory`. Two halves of
+one contract enforced different copies: the capsule data reader used the `_filesystem`
+pair, while the inventory that produces a capsule's integrity manifest used its own.
+
+**The equality is what let it survive.** Nothing failed and nothing diverged precisely
+because the copies agreed — so the duplication was invisible until someone raised one of
+them. At that point a capsule could be inventoried and not readable, or readable and not
+inventoriable, and the disagreement would present to an operator as a corrupt-looking
+capsule rather than as a constant somebody edited. A ceiling is a decision about what
+this format admits, not a value that gets independently rediscovered.
+
+Unified on the owning module, and gated. **The gate counts module-level ASSIGNMENTS
+rather than resolved attributes**, which is the load-bearing detail: after an import the
+second module's attribute is the same object, so comparing values — or even identity —
+would pass over exactly the state being forbidden. Only the definition is evidence of a
+second home, and that distinction is asserted directly so a later, weaker reading cannot
+satisfy the check.
+
+**Generalisable:** duplicated constants are hardest to see when they agree, and a test
+that compares their VALUES will never find them. Look for two definitions, not two
+values.
