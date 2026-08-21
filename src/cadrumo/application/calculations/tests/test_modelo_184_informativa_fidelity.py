@@ -85,7 +85,7 @@ _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
 _DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
 _TIPO2_CLAVE_CASILLA: CasillaId = validated_casilla_id("tipo2.clave")
 _TIPO2_SUBCLAVE_CASILLA: CasillaId = validated_casilla_id("tipo2.subclave")
-_TIPO2_MIEMBRO_NIF_CASILLA: CasillaId = validated_casilla_id("tipo2.miembro-nif")
+_TIPO3_MIEMBRO_NIF_CASILLA: CasillaId = validated_casilla_id("tipo3.miembro-nif")
 _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: CasillaId = validated_casilla_id("tipo2.renta-atribuible-importe")
 
 
@@ -100,7 +100,9 @@ def _year_n_observation() -> RegistryModeloObservation:
     - ``decl.tipo-declaracion`` (informational — 1=originaria)
     - ``tipo2.clave`` (casilla 77 — renta class)
     - ``tipo2.subclave`` (casillas 78-79 — renta subtype)
-    - ``tipo2.miembro-nif`` (casillas 9-17 — miembro NIF)
+    - ``tipo3.miembro-nif`` (casillas 18-26 — miembro NIF, on the socio record;
+      the tipo-2 field at 9-17 is the DECLARANTE NIF, which is why a casilla
+      named for the member was removed from that position)
     - ``tipo2.renta-atribuible-importe`` (casillas 178-190 — attribution amount)
     """
     return registry_grounded_modelo_observation(
@@ -113,7 +115,7 @@ def _year_n_observation() -> RegistryModeloObservation:
             _TIPO2_CLAVE_CASILLA: _CLAVE_RENTA,
             _TIPO2_SUBCLAVE_CASILLA: _SUBCLAVE_RENTA,
             # NIF encoded as numeric part (NIF "11111111A" → 11111111).
-            _TIPO2_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
+            _TIPO3_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
             _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: _BASE_N_A,
         },
     )
@@ -136,7 +138,7 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
             _TIPO2_CLAVE_CASILLA: _CLAVE_RENTA,
             _TIPO2_SUBCLAVE_CASILLA: _SUBCLAVE_RENTA,
             # Same NIF as year N — identity continuity across exercises.
-            _TIPO2_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
+            _TIPO3_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
             _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: _BASE_N1_A,
         },
     )
@@ -231,10 +233,10 @@ def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> N
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        nif_n = loaded_n.observation.casilla_values.get(_TIPO2_MIEMBRO_NIF_CASILLA)
-        nif_n1 = loaded_n1.observation.casilla_values.get(_TIPO2_MIEMBRO_NIF_CASILLA)
-        assert nif_n is not None, "year-N observation missing tipo2.miembro-nif casilla"
-        assert nif_n1 is not None, "year-N+1 observation missing tipo2.miembro-nif casilla"
+        nif_n = loaded_n.observation.casilla_values.get(_TIPO3_MIEMBRO_NIF_CASILLA)
+        nif_n1 = loaded_n1.observation.casilla_values.get(_TIPO3_MIEMBRO_NIF_CASILLA)
+        assert nif_n is not None, "year-N observation missing tipo3.miembro-nif casilla"
+        assert nif_n1 is not None, "year-N+1 observation missing tipo3.miembro-nif casilla"
         assert nif_n == Decimal("11111111"), f"NIF round-trip failed in year N: got {nif_n}"
         assert nif_n1 == Decimal("11111111"), f"NIF round-trip failed in year N+1: got {nif_n1}"
         assert nif_n == nif_n1, f"miembro NIF drifted between year N ({nif_n}) and year N+1 ({nif_n1})"

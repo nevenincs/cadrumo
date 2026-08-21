@@ -52,12 +52,45 @@ def test_modelo_190_perceptor_round_trip_preserves_typed_values() -> None:
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor One"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        # Datos adicionales. The design declares these only for claves A, B
+        # (subclaves 01, 03, 04, 99) and C, and the resolver asks for them, so a
+        # clave A row without them is refused and this fixture could not
+        # exercise the round trip it exists to prove. Every code below is the
+        # design's own: campo 15 AÑO DE NACIMIENTO, campo 16 SITUACIÓN FAMILIAR
+        # ("1" soltero, viudo, divorciado o separado legalmente), DISCAPACIDAD
+        # ("0" no padece ninguna discapacidad) and CONTRATO O RELACIÓN ("1", the
+        # general case the design folds penados and special disability
+        # relations into). Titular de la unidad de convivencia is NOT set: the
+        # design declares campo 20 only for clave L.29, and the validator
+        # refuses it on a clave A row.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-ano-nacimiento", row_index=1, value="1980"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-situacion-familiar", row_index=1, value="1"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-discapacidad", row_index=1, value="0"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-contrato-relacion", row_index=1, value="1"),
+        # Campo 21 MOVILIDAD GEOGRÁFICA: "1" only where the perceptor is
+        # entitled to the art. 19.2.f increase in deductible expenses, and the
+        # design says "en otro caso se hará constar en este campo el número
+        # cero", which is this fixture's case.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-movilidad-geografica", row_index=1, value="0"),
+        # Campo 27 COMUNICACIÓN DE PRÉSTAMOS PARA VIVIENDA: "0" is the design's
+        # code for a perceptor who never applied the reduction.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-prestamos-vivienda", row_index=1, value="0"),
+        # PROVINCIA: the two-digit INE code the design asks for; 28 is Madrid.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-provincia", row_index=1, value="28"),
+        # Deducción por rentas obtenidas en Ceuta y Melilla: "0" where it does
+        # not apply, which is this fixture's case for both perceptors.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-territorial-deduccion", row_index=1, value="0"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
         RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value=Decimal("1500")),
         RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=2, value="87654321Z"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=2, value="Perceptor Two"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=2, value="G"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-subclave", row_index=2, value="01"),
+        # PROVINCIA is asked for by the resolver, so EVERY row must carry it --
+        # a row that omits it is refused rather than defaulted, which is the
+        # right behaviour for a field AEAT expects on every perceptor record.
+        RowSetCellEdit(binding="modelo-190-perceptor-row-provincia", row_index=2, value="28"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-territorial-deduccion", row_index=2, value="0"),
         RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=2, value=Decimal("30000")),
         RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-especie", row_index=2, value=Decimal("5000")),
         RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=2, value=Decimal("5500")),
