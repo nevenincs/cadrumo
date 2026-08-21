@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b08d03bb1004e89ea9ca2610fb84ef8d1a61580f54b2b54ee6b2b58eae3c93e'
+body_hash: 'sha256:d0f323c36ffc69ef2f63801bc472e67f0e1338380009c8ed9f0c49fb03651991'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1320,7 +1320,6 @@ reasoning has expired; what remains is that re-numbering 122 casillas is an auth
 task with its own verification, and the finding is already recorded here and in the
 repeated-box hazard note carried on m222's stamp.
 
-
 ### m604-2021-2023-is-an-omission-not-a-reasoned-absence | medium | the distinction that decides whether a disposition can be authored at all
 
 The m604 re-numbering unblocked ``2024-y-siguientes``, which was reviewed and stamped.
@@ -1365,6 +1364,47 @@ This refines the earlier finding usefully: an applicability-grade revision with 
 deadline windows is not one defect but two. Where the law is event-anchored the absence
 is reasonable and a disposition closes it. Where the law states a calendar rule the
 absence is a gap, and only data or a policy statement closes it.
+
+
+### m763-spans-two-layout-amendments-not-one-and-cites-neither | high | the acquisition target is now named, as it was for m220
+
+The span gate reports m763/2011-y-siguientes as CONTRARY class: *"spans 1
+corpus-evidenced re-layout(s), needs 2 revisions -- 2012/2015 (54 of 64 shared boxes
+moved ... 63 added ... RECORD SET CHANGED)"*, alongside *"NO LEGAL EVIDENCE OF REVISION
+RECORDED -- this modelo's entire revision history cites only the founding orden
+(['orden-eha-1881-2011'])"*.
+
+The consolidated amendment history of that orden names the missing instruments, and
+there are **two**, not one:
+
+| orden | BOE | what it did |
+|---|---|---|
+| **Orden HAP/2373/2014**, de 9 de diciembre | BOE-A-2014-13180 | *"Se sustituye por la disposición final 1"*; effective *"para los periodos de liquidación que se inicien a partir del 1 de enero de 2015"* |
+| **Orden HAC/1363/2018**, de 28 de noviembre | BOE-A-2018-17602 | *"Se sustituye por el art. único"* -- replaces Anexo I with new registro designs; *"será de aplicación para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y siguientes"* |
+
+The first is exactly the 2012/2015 boundary the gate detected. **The second the gate did
+not detect at all** -- only two designs are bundled, so a 2018 re-layout leaves no
+corpus trace to compare. So the revision spans at least TWO layout-affecting amendments
+while citing only its founding orden, and the gate's "needs 2 revisions" is a floor
+rather than the answer: on this evidence it needs three, split at 2015 and at Q4 2018.
+
+**A near-miss worth recording.** A search result described BOE-A-2014-13180 as an orden
+about modelos 390, 303 and 322 -- which it is. It is an omnibus instrument that ALSO
+amends m763's disposición final, and only the consolidated amendment history of
+EHA/1881/2011 shows that. Attributing it from the search snippet would have missed the
+m763 connection entirely, and citing the wrong instrument as a modelo's layout authority
+is exactly the class of error this campaign has been correcting.
+
+**What this changes.** m763 remains unstampable and stays pending -- contrary evidence,
+unchanged. What is removed is the research: the remediation is to acquire and cite
+BOE-A-2014-13180 and BOE-A-2018-17602, then split ``2011-y-siguientes`` at 2015 and at
+Q4 2018, and it is now a specified task rather than an open question. That is the same
+service performed for m220, whose missing orden was identified earlier as
+Orden HAC/529/2026 (BOE-A-2026-11583).
+
+**Both contrary-class blockers are now named instruments rather than unknowns.** Neither
+is work a review iteration should improvise: each is a revision split plus a legal
+enrolment, with its own verification.
 
 
 ## Recommendations
