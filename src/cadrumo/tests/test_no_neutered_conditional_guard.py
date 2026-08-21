@@ -118,3 +118,23 @@ def test_the_scan_actually_reaches_the_package() -> None:
     walked nothing produces that emptiness for free.
     """
     assert len(package_ast_items()) > 500
+
+
+def test_the_exclusion_is_exercised_against_real_package_code() -> None:
+    """The synthetic probes prove the detector; this proves it on this tree.
+
+    A detector can be correct on a hand-written sample and still never meet the
+    shape in the wild. The substrate's retry and poll paths carry real
+    ``while True:`` loops, so the scan genuinely encounters constant-tested
+    nodes and has to decide about them -- and the gate above is green because
+    it decided correctly, not because it never looked.
+    """
+    idiomatic_loops = sum(
+        1
+        for _path, tree in package_ast_items()
+        for node in ast.walk(tree)
+        if isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value
+    )
+
+    assert idiomatic_loops > 10
+    assert not [(path, line) for path, tree in package_ast_items() for line, _source in _neutered_conditions(tree)]
