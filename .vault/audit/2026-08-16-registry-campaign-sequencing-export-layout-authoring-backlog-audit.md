@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd9cb89efcba21636e4501378c927ebf845f800b82a9f26fb7b4543c049947c8'
+body_hash: 'sha256:ffe78f7f2b91ac940933c2b5e414e5e5faef42d6f3e0ca3ff87b821bfea31ca6'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9248,3 +9248,86 @@ trailing space and the stamper normalises whitespace on write, so the comparison
 was against a value the writer had legitimately trimmed. Verified by testing the
 renderer directly on trailing-space, no-trailing-space and double-space cases —
 all identical — before touching anything.
+
+### Measured state, and the churn observed live
+
+Registry suite: **36 failed, 5,074 passed** (from 42 / 5,068). Nine tests fixed;
+the three reviewability gates reappear in the diff because peers re-stamped
+modelo 576 and then modelo 036 WHILE this tick ran — modelo 036's 752-character
+line landed during the final suite run itself. Both were wrapped and both gates
+are green again (33 passed), with zero lines over 520 in the tree.
+
+That live recurrence is the argument for the stamper fix rather than a fourth
+sweep: peers stamping through the pre-fix writer keep re-introducing the defect,
+and the fix only takes effect for them once it is committed and picked up. Until
+then the sweep is a holding action, which is worth saying plainly rather than
+reporting the gates as durably fixed.
+
+`dev/registry/tests/` carries 8 failures of its own — module-classification
+inventories, a missing `registry_authority` fixture, and dp30302 anchors. None
+mentions `_stamp`, so the stamper change is not implicated; this is a separate
+backlog outside the src registry suite this campaign has been measuring, and it
+is now named rather than left unmeasured.
+
+## 99 of 456 deadline windows close on a day AEAT does not
+
+The largest filing-grade finding of this campaign, and it surfaced from a single
+test disagreeing about one date.
+
+`test_modelo_345_grounding` expected modelo 345's 2025 annual window to close
+2026-02-02; the registry declared **2026-01-31**, which is a SATURDAY. AEAT's own
+bundled Calendario del Contribuyente 2026 lists "Declaración anual 2025: 345"
+under the heading "**Hasta el 2 de febrero**". The registry held the date the
+statutory rule produces, not the date AEAT publishes — the exact harm the modelo
+303 deadline family's own comment warns about: "a filing deadline written from
+the rule rather than the published calendar is a filing-grade harm."
+
+**The control that would have dismissed it was run first.** If production shifted
+non-working days at read time, the stored date would be harmless and correcting
+it would double-shift. Nothing in `src/` adjusts a deadline for weekends or
+holidays, so `closes_on` is presented to the operator exactly as declared.
+
+Swept the population: **99 of 456 windows close on a Saturday or Sunday.**
+
+### What was corrected, and why only eleven
+
+The bundle carries three calendars, all 2026, reaching 2 March. Twenty-two
+weekend closers fall inside that range, and the calendars name the modelo for
+eleven of them:
+
+```
+165 180 181 190 193 194 270 296 345 490   2026-01-31 (Sat) -> 2026-02-02  "Hasta el 2 de febrero"
+280                                        2026-02-28 (Sat) -> 2026-03-02  "Hasta el de 2 de marzo"
+```
+
+Each now cites the calendar it was read from, and six owning constructs were
+swept in the same change because the validator requires a construct's refs to
+cover its members' — the one-change discipline the grounding rule states.
+Weekend closers: **99 -> 89**. Authority CLEAN.
+
+**Reason the other 88 are recorded, not fixed:** their close dates fall outside
+every bundled calendar, or their modelo is not named in one. Reading a deadline
+from anything other than AEAT's published calendar is what produced the defect;
+guessing the shift would repeat it with a different arithmetic. Acquiring the
+2023-2025 calendars would close most of the remainder.
+
+### A pinned ref tuple became a rule
+
+`test_modelo_190_registry` pinned the window's `source_refs` as an exact tuple
+and reddened when the corrected window gained the calendar citation. It now
+asserts the RULE: a close date that is not the statutory month-end has been moved
+off a non-working day, and the only sanctioned reason to move it is the published
+calendar — so a moved window must cite a calendar and an unmoved one must not.
+The two parametrized windows disagree on that axis, so both directions are
+exercised.
+
+Three grounding suites (189, 280, 345) also pinned surface sets and source sets
+that this campaign's own export-layout authoring widened: an `export` application
+link appeared for all three, and modelo 189's revision gained the official
+`aeat-dr-189-2023` Diseño de Registro. Modelo 189's revision set is now asserted
+as the manifest set PLUS that one design, so a second unexplained source is still
+caught.
+
+Modelo 840 joined the applicability-grade family: an informative IAE censal
+declaration with no export layout, whose test built at the FILING default and
+refused before reaching its subject.
