@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:61a03d6ba389e8db8c4e07b8de12a56250ce8e3d70f094f686acfd2c81851863'
+body_hash: 'sha256:9271349c09c0dbc21a96f4366e05466dfb22ce5305da565fe46bbcee91f6d32c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3165,3 +3165,37 @@ matcher — these close evasions rather than uncover defects.
 evadable, the evasion is evidence about the AUTHOR'S habit, not about that detector.
 Every gate written the same way shares it. The cheap sweep is to take the working evasion
 and replay it against every sibling gate before assuming the first was unlucky.
+
+### Mention is not containment
+
+Replaying the evasion probe across the remaining gates found a different hole in the same
+family, and a sharper one.
+
+The no-follow gate asked whether a function's SOURCE **contained** gating text. Two
+shapes passed it: a function that branches on `os.name` somewhere and requests the flag
+OUTSIDE that branch, and one whose only `os.name` sits in a comment. It was checking that
+the author had thought about platforms, not that this use was guarded — which is exactly
+the sentinel bug it was written to prevent, wearing a decorative branch.
+
+It now walks the AST and requires each flag request to sit INSIDE an `os.name` branch,
+keeping the two other admissible gates (a `dir_fd=` argument Windows cannot satisfy, a
+`posix`-named helper). **The ten existing sites still pass under the stricter rule**,
+which is the useful part: they were genuinely gated rather than merely mentioning a
+platform, and the widening closed an evasion instead of exposing a defect.
+
+The ceilings scan was made recursive in the same pass. It used `glob("*.py")`, which
+matched `rglob` exactly — because this package has no subpackages. It was complete **by
+accident of layout**, and one subpackage would have silently narrowed every check built
+on it, with nothing failing to say so.
+
+**Generalisable, and distinct from the alias/getattr family:** a textual check answers
+"does this code mention the safeguard", while the property is "is this use covered by
+it". The two agree until someone writes the safeguard somewhere else in the same
+function — which a refactor does routinely, and which reads as more careful code, not
+less. When a gate greps for evidence of thought, it is measuring the author rather than
+the code.
+
+A companion note on completeness: a scan that is correct only because of the current
+directory layout is not correct, it is lucky. `glob` versus `rglob` is invisible until
+the day it matters, and by then the check has been quietly narrower than its name for
+some time.
