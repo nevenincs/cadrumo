@@ -52,10 +52,23 @@ _CUSTODY_PACKAGE = Path(__file__).resolve().parent.parent
 _STORAGE_PACKAGE = _CUSTODY_PACKAGE.parent
 
 
+def _custody_modules() -> tuple[Path, ...]:
+    """Return every non-test module in the package, subpackages included.
+
+    ``glob("*.py")`` reads the top level only. It matched ``rglob`` exactly
+    when this was written -- the package has no subpackages -- so the scan was
+    complete by accident of layout rather than by construction, and adding one
+    subpackage would have silently narrowed every check built on it.
+    """
+    return tuple(
+        path for path in _CUSTODY_PACKAGE.rglob("*.py") if "tests" not in path.parts and "__pycache__" not in path.parts
+    )
+
+
 def _defining_modules(name: str) -> tuple[str, ...]:
     """Return every module in this package that ASSIGNS ``name`` at module level."""
     homes: list[str] = []
-    for path in sorted(_CUSTODY_PACKAGE.glob("*.py")):
+    for path in sorted(_custody_modules()):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
@@ -63,7 +76,7 @@ def _defining_modules(name: str) -> tuple[str, ...]:
         for node in tree.body:
             targets = node.targets if isinstance(node, ast.Assign) else ([node.target] if isinstance(node, ast.AnnAssign) else [])
             if any(isinstance(target, ast.Name) and target.id == name for target in targets):
-                homes.append(path.name)
+                homes.append(path.relative_to(_CUSTODY_PACKAGE).as_posix())
     return tuple(homes)
 
 
@@ -170,7 +183,7 @@ def _defining_function_modules(name: str) -> tuple[str, ...]:
     the question it was written for, not the one it is handed.
     """
     homes: list[str] = []
-    for path in sorted(_CUSTODY_PACKAGE.glob("*.py")):
+    for path in sorted(_custody_modules()):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure

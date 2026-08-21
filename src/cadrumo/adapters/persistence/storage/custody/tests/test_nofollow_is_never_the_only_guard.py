@@ -37,19 +37,48 @@ _CUSTODY_PACKAGE = Path(__file__).resolve().parent.parent
 _FLAG = "O_NOFOLLOW"
 
 
-def _posix_gated(source_segment: str, function_name: str) -> bool:
-    """Whether this function can only run on a platform providing the flag.
-
-    Three admissible gates, each meaning the same thing: an explicit
-    ``os.name`` branch, a ``dir_fd=`` argument (unsupported on Windows, so the
-    call cannot succeed there), or a name declaring the platform it serves.
-    """
+def _requests_the_flag(node: ast.AST) -> bool:
+    """Whether ``node`` is a request for the flag, in either spelling."""
+    if isinstance(node, ast.Attribute) and node.attr == _FLAG:
+        return True
     return (
-        'os.name != "nt"' in source_segment
-        or 'os.name == "posix"' in source_segment
-        or "dir_fd=" in source_segment
-        or "posix" in function_name.lower()
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "getattr"
+        and len(node.args) >= 2
+        and isinstance(node.args[1], ast.Constant)
+        and node.args[1].value == _FLAG
     )
+
+
+def _is_platform_test(test: ast.expr) -> bool:
+    """Whether ``test`` compares ``os.name`` against a platform literal."""
+    if not isinstance(test, ast.Compare):
+        return False
+    left = test.left
+    return isinstance(left, ast.Attribute) and left.attr == "name" and getattr(left.value, "id", None) == "os"
+
+
+def _posix_gated(scope: ast.FunctionDef | ast.AsyncFunctionDef, function_name: str) -> bool:
+    """Whether every flag request in ``scope`` is platform-guarded.
+
+    Containment, not mention. Three admissible gates: the request sits INSIDE
+    an ``os.name`` branch; the function passes ``dir_fd=`` (unsupported on
+    Windows, so the call cannot succeed there); or its name declares the
+    platform it serves.
+    """
+    if "posix" in function_name.lower():
+        return True
+    if "dir_fd=" in ast.unparse(scope):
+        return True
+    guarded: set[int] = set()
+    for node in ast.walk(scope):
+        if isinstance(node, ast.If) and _is_platform_test(node.test):
+            for branch_node in [*node.body, *node.orelse]:
+                for inner in ast.walk(branch_node):
+                    if _requests_the_flag(inner):
+                        guarded.add(id(inner))
+    return not any(_requests_the_flag(node) and id(node) not in guarded for node in ast.walk(scope))
 
 
 def _unguarded_nofollow_sites() -> tuple[str, ...]:
@@ -63,10 +92,9 @@ def _unguarded_nofollow_sites() -> tuple[str, ...]:
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
-            segment = ast.get_source_segment(source, node) or ""
-            if _FLAG not in segment:
+            if not any(_requests_the_flag(inner) for inner in ast.walk(node)):
                 continue
-            if not _posix_gated(segment, node.name):
+            if not _posix_gated(node, node.name):
                 offenders.append(f"{path.name}:{node.name}")
     return tuple(offenders)
 
@@ -96,15 +124,54 @@ def test_no_function_requests_nofollow_on_a_windows_reachable_path() -> None:
     )
 
 
+def _scope_of(*source_lines: str) -> ast.FunctionDef:
+    """Parse a snippet holding exactly one function and return it."""
+    tree = ast.parse("\n".join(source_lines) + "\n")
+    return next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+
+
 def test_the_gate_recognises_an_ungated_use() -> None:
     """The detector must be able to fail, not merely to pass.
 
-    Written against a synthetic function rather than the tree, so the check
+    Written against synthetic functions rather than the tree, so the check
     keeps discriminating once the tree is clean -- which it is, and which is
     exactly when a detector stops being exercised by its own subject.
     """
-    ungated = 'def read(path):\n    return os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))\n'
-    gated = 'def read(path):\n    if os.name != "nt":\n        return os.open(path, getattr(os, "O_NOFOLLOW", 0))\n    return None\n'
+    ungated = _scope_of(
+        "def read(path):",
+        '    return os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))',
+    )
+    gated = _scope_of(
+        "def read(path):",
+        '    if os.name != "nt":',
+        '        return os.open(path, getattr(os, "O_NOFOLLOW", 0))',
+        "    return None",
+    )
 
     assert not _posix_gated(ungated, "read")
     assert _posix_gated(gated, "read")
+
+
+def test_a_platform_branch_that_does_not_enclose_the_flag_guards_nothing() -> None:
+    """DISCRIMINATING: the hole the first version of this gate had.
+
+    It asked whether the function's SOURCE contained the gating text. A
+    function that branches on ``os.name`` somewhere and then requests the flag
+    outside that branch therefore passed -- as did one whose only ``os.name``
+    was in a comment. That checked whether the author had thought about
+    platforms, not whether this use was guarded.
+    """
+    branch_elsewhere = _scope_of(
+        "def read(path):",
+        '    if os.name != "nt":',
+        '        log("posix")',
+        '    return os.open(path, getattr(os, "O_NOFOLLOW", 0))',
+    )
+    only_a_comment = _scope_of(
+        "def read(path):",
+        '    # os.name != "nt" would be the right check here',
+        '    return os.open(path, getattr(os, "O_NOFOLLOW", 0))',
+    )
+
+    assert not _posix_gated(branch_elsewhere, "read")
+    assert not _posix_gated(only_a_comment, "read")
