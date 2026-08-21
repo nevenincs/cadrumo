@@ -26,7 +26,38 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-185-procedure-2003",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review of the modelo 185 span governed by Orden HAC/96/2003. \
+DISCLOSURE -- this review follows a correction made in the SAME action by the same agent: \
+the 12 deadline windows cited disposicion Primero, which approves the disenos fisicos y \
+logicos and states no timing, so the \"when due\" evidence pointed at a provision that \
+does not establish the deadline. Disposicion Tercero was carved as a corpus excerpt, \
+enrolled as orden-hac-96-2003:art-3, and the windows repointed; the dates themselves were \
+already correct and were not changed. VERIFIED -- WHEN DUE: disposicion Tercero reads \
+verbatim in the bundled corpus \"La informacion mensual, modelo 185, a que se refiere el \
+apartado anterior se presentara ante el Departamento de Informatica Tributaria de la \
+Agencia Estatal de Administracion Tributaria en el plazo de los diez dias naturales \
+siguientes a la finalizacion del mes a que se refiera la informacion\", and all 12 windows \
+open the 1st and close the 10th of the month following their reference month, reproducing \
+it exactly and stored NOMINAL. The enrolled entry carries a required_text drawn from that \
+sentence and passes verify_legal_reference against the bundled excerpt. VERIFIED -- TO \
+WHOM: disposicion Primero is the approving clause, \"Se aprueban los disenos fisicos y \
+logicos, modelo 185, que figuran en el anexo I de esta Orden\", carrying no year bound. \
+The revision's valid_to of 2025-12-31 is not an invention: Orden HAC/1197/2025 enters into \
+force 2026-01-01 and derogates this orden, and the sibling revision 2025-y-siguientes \
+opens exactly there, so the pair is gap-free and overlap-free at the boundary. NOT CLAIMED \
+-- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- SPAN: the gate \
+reports 0 comparable bundled design year(s) inside this claimed span. That is an ABSENCE \
+of comparable evidence, not evidence against the revision, unlike the contrary-evidence \
+class the same gate reports for m220 and m763; closing it needs AEAT acquisition. NOT \
+CLAIMED -- support_probe_describes_this_revision is false, which is expected for a closed \
+historical span: AEAT's live support surface describes the current 2026 modelo, not this \
+one, and nothing here asserts otherwise. NOT CLAIMED -- this revision declares 2 casillas \
+and the anexo I record detail is not modelled; no export layout of either kind is \
+declared. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the strings were \
+not audited for accuracy."""
+reviewed_at = 2026-08-21
 
 [revisions."2003-2025".family_dispositions.casilla_continuidad_evolutions]
 reason = """
