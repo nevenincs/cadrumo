@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:502dfed3a888d26ce3bbf9bb457fd2d394ff50e7d6cf246994817a3303048a94'
+body_hash: 'sha256:6ac4e74b29ac2415b10d6666c9e3f325025cfa96b5155c54ab8744047cc76662'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1274,7 +1274,6 @@ revisions, not a reason to withhold or reverse a review.
 Seventh time in this campaign that re-checking changed a conclusion, and the first where
 it exonerated the work rather than implicating it.
 
-
 ### m604-is-the-contrary-class-so-it-cannot-be-stamped-with-a-caveat | resolved question | the campaign's own taxonomy answers it
 
 With ``filing_eligible`` shown to authorise nothing at runtime, the natural next question
@@ -1320,7 +1319,6 @@ m604 has been static since `11ec8d3bcc`, so the earlier "do not barge, it is in 
 reasoning has expired; what remains is that re-numbering 122 casillas is an authoring
 task with its own verification, and the finding is already recorded here and in the
 repeated-box hazard note carried on m222's stamp.
-
 
 ## Recommendations
 
