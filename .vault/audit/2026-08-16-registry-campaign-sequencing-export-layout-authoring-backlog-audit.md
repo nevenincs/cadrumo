@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a52110a1c62f6f11300af986fbe4cc9da6fa6fcbbeae9ef304b76fef6736992f'
+body_hash: 'sha256:3c940f15cf7e67cbfe9c5295e7fae1b13bd9665743740b55b0ced0b8ba83cadc'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10904,3 +10904,52 @@ base and cuota at each declared rate, grounded as above.
 One identical-string allowlist entry: `Ceuta o Melilla` is the same in Spanish
 and Catalan, both proper nouns and a shared "o", recorded with that reason rather
 than left to trip the honesty gate.
+
+## The record-to-sheet mapping was already declared; two guesses preceded reading it
+
+Three mappings from a layout record to its design sheet have now been tried, in
+the worst possible order:
+
+1. **By record ORDER.** A derived layout's record list begins with envelope
+   records, so from there on record index N is sheet index N-1. This put five
+   modelo 390 `recargo repercutido` casillas on the IVA-deducible page. Caught
+   only because the casilla ids named the concept the heading contradicted.
+2. **By NAME similarity.** Modelo 202's record types are `page-01` while its
+   sheets are `dr M202 (1)`; nothing matches, so the reader returns nothing and
+   the modelo looks unreachable. That silence is the safer failure of the two,
+   and it is still a failure.
+3. **By reading the declaration.** Every semantic map's `0001-records.toml`
+   states the pairing outright -- `sheet = "dr M202 (1)"`, `record_type =
+   "page-01"` -- because this campaign authored exactly that field for modelos
+   182, 185 and 222. It is the authority for the question, it needs no
+   heuristic, and a modelo without a semantic map now has NO mapping rather than
+   a wrong one.
+
+**The declared map vindicated values that had been discarded.** Last tick's
+modelo 202 and 200 headings were produced under the order mapping and thrown
+away once that mapping was shown unsound -- correctly, because at that moment
+sound and lucky were indistinguishable. Checked against the declaration, the
+order mapping happened to be right for both: `page-02` really is `dr M202 (2)`,
+`page-002` really is `DP200002`. The discard cost a tick and was still the right
+call; what makes it recoverable is that the authority existed to check against.
+
+The lesson is narrower than "read the data": the mapping was authored BY this
+campaign, in a file this campaign wrote, and was then guessed at twice from the
+outside. A derived structure was interrogated where a declared one was sitting
+next to it.
+
+## 29 labels: modelos 200 and 202 fully resolved
+
+Backlog **121 -> 92**.
+
+* **Modelo 202, 22** across its two remaining revisions -- the same eleven
+  `Informacion adicional` figures modelo 222 declares, reused from there for the
+  third time now, differing only in the block number the form prints.
+* **Modelo 200, 7** -- one block of sheet DP200002, "B. Participaciones directas
+  ... Correcciones valorativas", which the design letters a) through g). The box
+  number in each heading matches the casilla id independently ([1504] -> casilla
+  1504), which is what confirms the offset lookup landed on the right row.
+
+Modelo 322's 24 and modelo 193's 22 remain: 322's records resolve to sheets but
+no heading covers the casillas' spans, and modelo 193 has no semantic map at all,
+so it has no declared mapping to read.
