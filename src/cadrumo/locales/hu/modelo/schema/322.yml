@@ -9,124 +9,161 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [01]
             '02':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [02]
             '03':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [03]
             '04':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [04]
             '05':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [05]
             '06':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [06]
             '07':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [07]
             08:
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [08]
             09:
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [09]
             '10':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [10]
             '107':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Közös terület [107]
             '11':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [11]
             '12':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [12]
             '120':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 123. rovatban szereplők kivételével) [120]
             '122':
               help: null
-              label: null
+              label: Fordított adózás alá eső adóköteles ügyletek [122]
             '123':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [123]
             '124':
               help: null
-              label: null
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [124]
             '125':
               help: null
-              label: null
+              label: Fordított adózás alá eső adóköteles ügyletek [125]
             '126':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [126]
             '127':
               help: null
-              label: null
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [127]
             '128':
               help: null
-              label: null
+              label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
             '13':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [13]
             '14':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [14]
             '15':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [15]
             '150':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [150]
             '151':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [151]
             '152':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [152]
             '153':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [153]
             '154':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [154]
             '155':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [155]
             '156':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [156]
             '157':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [157]
             '158':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [158]
             '159':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [159]
             '16':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [16]
             '160':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [160]
             '161':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [161]
             '162':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [162]
             '163':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [163]
             '164':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [164]
             '165':
               help: null
               label: null
@@ -144,7 +181,8 @@ modelo:
               label: null
             '17':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [17]
             '170':
               help: null
               label: null
@@ -159,19 +197,24 @@ modelo:
               label: null
             '18':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [18]
             '19':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [19]
             '20':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [20]
             '21':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóalap [21]
             '22':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóösszeg [22]
             '23':
               help: null
               label: null
@@ -180,190 +223,226 @@ modelo:
               label: null
             '25':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóalap [25]
             '26':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóösszeg [26]
             '27':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [27]
             '28':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [28]
             '29':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [29]
             '30':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [30]
             '31':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [31]
             '32':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [32]
             '33':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [33]
             '34':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [34]
             '35':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [35]
             '36':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóalap [36]
             '37':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóösszeg [37]
             '38':
               help: null
               label: null
             '39':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóalap [39]
             '40':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóösszeg [40]
             '41':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [41]
             '42':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [42]
             '43':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóalap [43]
             '44':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóösszeg [44]
             '45':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóalap [45]
             '46':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóösszeg [46]
             '47':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [47]
             '48':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [48]
             '49':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóalap [49]
             '50':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóösszeg [50]
             '500':
               help: null
-              label: null
+              label: Prorrata - 1 - CNAE-kód [500]
             '501':
               help: null
-              label: null
+              label: Prorrata - 1 - Ügyletek összege [501]
             '502':
               help: null
-              label: null
+              label: Prorrata - 1 - Levonási joggal járó ügyletek összege [502]
             '503':
               help: null
-              label: null
+              label: Prorrata - 1 - Arányosítás típusa [503]
             '504':
               help: null
-              label: null
+              label: Prorrata - 1 - Arányosítás %-a [504]
             '505':
               help: null
-              label: null
+              label: Prorrata - 2 - CNAE-kód [505]
             '506':
               help: null
-              label: null
+              label: Prorrata - 2 - Ügyletek összege [506]
             '507':
               help: null
-              label: null
+              label: Prorrata - 2 - Levonási joggal járó ügyletek összege [507]
             '508':
               help: null
-              label: null
+              label: Prorrata - 2 - Arányosítás típusa [508]
             '509':
               help: null
-              label: null
+              label: Prorrata - 2 - Arányosítás %-a [509]
             '51':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóalap [51]
             '510':
               help: null
-              label: null
+              label: Prorrata - 3 - CNAE-kód [510]
             '511':
               help: null
-              label: null
+              label: Prorrata - 3 - Ügyletek összege [511]
             '512':
               help: null
-              label: null
+              label: Prorrata - 3 - Levonási joggal járó ügyletek összege [512]
             '513':
               help: null
-              label: null
+              label: Prorrata - 3 - Arányosítás típusa [513]
             '514':
               help: null
-              label: null
+              label: Prorrata - 3 - Arányosítás %-a [514]
             '515':
               help: null
-              label: null
+              label: Prorrata - 4 - CNAE-kód [515]
             '516':
               help: null
-              label: null
+              label: Prorrata - 4 - Ügyletek összege [516]
             '517':
               help: null
-              label: null
+              label: Prorrata - 4 - Levonási joggal járó ügyletek összege [517]
             '518':
               help: null
-              label: null
+              label: Prorrata - 4 - Arányosítás típusa [518]
             '519':
               help: null
-              label: null
+              label: Prorrata - 4 - Arányosítás %-a [519]
             '52':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóösszeg [52]
             '520':
               help: null
-              label: null
+              label: Prorrata - 5 - CNAE-kód [520]
             '521':
               help: null
-              label: null
+              label: Prorrata - 5 - Ügyletek összege [521]
             '522':
               help: null
-              label: null
+              label: Prorrata - 5 - Levonási joggal járó ügyletek összege [522]
             '523':
               help: null
-              label: null
+              label: Prorrata - 5 - Arányosítás típusa [523]
             '524':
               help: null
-              label: null
+              label: Prorrata - 5 - Arányosítás %-a [524]
             '53':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóalap [53]
             '54':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóösszeg [54]
             '55':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóalap [55]
             '56':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóösszeg [56]
             '57':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóalap [57]
             '58':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóösszeg [58]
             '59':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Kompenzáció az A.G. y P különleges
+                szabályozásban. Adóösszeg [59]
             '60':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyi eszközök korrekciója. Adóösszeg
+                [60]
             '61':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A végleges arányosítási százalék alkalmazása
+                miatti korrekció. Adóösszeg [61]
             '62':
               help: null
               label: null
@@ -372,16 +451,21 @@ modelo:
               label: null
             '64':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                (%) [64]
             '65':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                [65]
             '66':
               help: null
-              label: null
+              label: Elszámolás (folytatás). A csoporthoz csatlakozás előtti időszakokból
+                beszámítandó összegek [66]
             '67':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Kizárólag az állami adóhatóság és a foral
+                adóhatóságok által együttesen adóztatott adóalanyoknak. Az éves korrekció
+                eredménye [67]
             '68':
               help: null
               label: null
@@ -393,115 +477,169 @@ modelo:
               label: null
             '700':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [700]
             '701':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [701]
             '702':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [702]
             '703':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [703]
             '704':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [704]
             '705':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [705]
             '706':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [706]
             '707':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [707]
             '708':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [708]
             '709':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [709]
             '71':
               help: null
-              label: null
+              label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
+                [71]
             '710':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [710]
             '711':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [711]
             '712':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [712]
             '713':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [713]
             '714':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Adóalap [714]
             '715':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [715]
             '716':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [716]
             '717':
               help: null
               label: null
             '718':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [718]
             '719':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [719]
             '72':
               help: null
-              label: null
+              label: Kiegészítő információ. Export és azzal egy tekintet alá eső ügyletek
+                [72]
             '720':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [720]
             '721':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [721]
             '722':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [722]
             '723':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [723]
             '724':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [724]
             '725':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [725]
             '726':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [726]
             '727':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [727]
             '728':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [728]
             '729':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [729]
             '730':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [730]
             '731':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [731]
             '732':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Adóalap [732]
             '733':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [733]
             '734':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
             '735':
               help: null
               label: null
@@ -513,64 +651,81 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
             '77':
               help: null
-              label: null
+              label: A vámhatóság által megállapított, még be nem fizetett import
+                áfa [77]
             '79':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ingatlanértékesítések és nem szokásos
+                pénzügyi ügyletek [79]
             '80':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
+                szerint [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
+                [83]
             '84':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 126. rovatban szereplők kivételével) [84]
             '86':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
+                szerint [86]
             '88':
               help: null
               label: null
             '89':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Álava [89]
             '90':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Gipuzkoa [90]
             '91':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Biscaya [91]
             '92':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Navarra [92]
             '93':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Közösségen belüli termék- és szolgáltatásértékesítések
+                [93]
             '94':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Export és egyéb, levonási joggal
+                járó mentes ügyletek [94]
             '95':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek a mezőgazdasági, állattenyésztési
+                és halászati különleges szabályozás szerint [95]
             '96':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Az egyenértékűségi felár különleges
+                szabályozása alá tartozó adóalanyok ügyletei [96]
             '97':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek a használt cikkekre, műalkotásokra,
+                régiségekre és gyűjteménydarabokra vonatkozó különleges szabályozás
+                szerint [97]
             '98':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az utazási irodákra vonatkozó
+                különleges szabályozás szerint [98]
             '99':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: null
@@ -677,172 +832,226 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [01]
             '02':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [02]
             '03':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [03]
             '04':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [04]
             '05':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [05]
             '06':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [06]
             '07':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [07]
             08:
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [08]
             09:
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [09]
             '10':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [10]
             '107':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Közös terület [107]
             '11':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [11]
             '112':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
+                utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
+                követően [112]
             '12':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [12]
             '120':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 123. rovatban szereplők kivételével) [120]
             '122':
               help: null
-              label: null
+              label: Fordított adózás alá eső adóköteles ügyletek [122]
             '123':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [123]
             '124':
               help: null
-              label: null
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [124]
             '125':
               help: null
-              label: null
+              label: Fordított adózás alá eső adóköteles ügyletek [125]
             '126':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [126]
             '127':
               help: null
-              label: null
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [127]
             '128':
               help: null
-              label: null
+              label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
             '13':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [13]
             '14':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [14]
             '15':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [15]
             '150':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [150]
             '151':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [151]
             '152':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [152]
             '153':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [153]
             '154':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [154]
             '155':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [155]
             '156':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [156]
             '157':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [157]
             '158':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [158]
             '159':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [159]
             '16':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [16]
             '160':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [160]
             '161':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [161]
             '162':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [162]
             '163':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [163]
             '164':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [164]
             '165':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóalap [165]
             '166':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [166]
             '167':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [167]
             '168':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [168]
             '169':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [169]
             '17':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [17]
             '170':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [170]
             '171':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [171]
             '172':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [172]
             '173':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [173]
             '18':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [18]
             '19':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [19]
             '20':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [20]
             '21':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóalap [21]
             '22':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóösszeg [22]
             '23':
               help: null
               label: null
@@ -851,190 +1060,226 @@ modelo:
               label: null
             '25':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóalap [25]
             '26':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóösszeg [26]
             '27':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [27]
             '28':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [28]
             '29':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [29]
             '30':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [30]
             '31':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [31]
             '32':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [32]
             '33':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [33]
             '34':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [34]
             '35':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [35]
             '36':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóalap [36]
             '37':
               help: null
-              label: null
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóösszeg [37]
             '38':
               help: null
               label: null
             '39':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóalap [39]
             '40':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóösszeg [40]
             '41':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [41]
             '42':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [42]
             '43':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóalap [43]
             '44':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóösszeg [44]
             '45':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóalap [45]
             '46':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóösszeg [46]
             '47':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [47]
             '48':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [48]
             '49':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóalap [49]
             '50':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóösszeg [50]
             '500':
               help: null
-              label: null
+              label: Prorrata - 1 - CNAE-kód [500]
             '501':
               help: null
-              label: null
+              label: Prorrata - 1 - Ügyletek összege [501]
             '502':
               help: null
-              label: null
+              label: Prorrata - 1 - Levonási joggal járó ügyletek összege [502]
             '503':
               help: null
-              label: null
+              label: Prorrata - 1 - Arányosítás típusa [503]
             '504':
               help: null
-              label: null
+              label: Prorrata - 1 - Arányosítás %-a [504]
             '505':
               help: null
-              label: null
+              label: Prorrata - 2 - CNAE-kód [505]
             '506':
               help: null
-              label: null
+              label: Prorrata - 2 - Ügyletek összege [506]
             '507':
               help: null
-              label: null
+              label: Prorrata - 2 - Levonási joggal járó ügyletek összege [507]
             '508':
               help: null
-              label: null
+              label: Prorrata - 2 - Arányosítás típusa [508]
             '509':
               help: null
-              label: null
+              label: Prorrata - 2 - Arányosítás %-a [509]
             '51':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóalap [51]
             '510':
               help: null
-              label: null
+              label: Prorrata - 3 - CNAE-kód [510]
             '511':
               help: null
-              label: null
+              label: Prorrata - 3 - Ügyletek összege [511]
             '512':
               help: null
-              label: null
+              label: Prorrata - 3 - Levonási joggal járó ügyletek összege [512]
             '513':
               help: null
-              label: null
+              label: Prorrata - 3 - Arányosítás típusa [513]
             '514':
               help: null
-              label: null
+              label: Prorrata - 3 - Arányosítás %-a [514]
             '515':
               help: null
-              label: null
+              label: Prorrata - 4 - CNAE-kód [515]
             '516':
               help: null
-              label: null
+              label: Prorrata - 4 - Ügyletek összege [516]
             '517':
               help: null
-              label: null
+              label: Prorrata - 4 - Levonási joggal járó ügyletek összege [517]
             '518':
               help: null
-              label: null
+              label: Prorrata - 4 - Arányosítás típusa [518]
             '519':
               help: null
-              label: null
+              label: Prorrata - 4 - Arányosítás %-a [519]
             '52':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóösszeg [52]
             '520':
               help: null
-              label: null
+              label: Prorrata - 5 - CNAE-kód [520]
             '521':
               help: null
-              label: null
+              label: Prorrata - 5 - Ügyletek összege [521]
             '522':
               help: null
-              label: null
+              label: Prorrata - 5 - Levonási joggal járó ügyletek összege [522]
             '523':
               help: null
-              label: null
+              label: Prorrata - 5 - Arányosítás típusa [523]
             '524':
               help: null
-              label: null
+              label: Prorrata - 5 - Arányosítás %-a [524]
             '53':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóalap [53]
             '54':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóösszeg [54]
             '55':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóalap [55]
             '56':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóösszeg [56]
             '57':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóalap [57]
             '58':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóösszeg [58]
             '59':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Kompenzáció az A.G. y P különleges
+                szabályozásban. Adóösszeg [59]
             '60':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. Tárgyi eszközök korrekciója. Adóösszeg
+                [60]
             '61':
               help: null
-              label: null
+              label: Elszámolás. Levonható áfa. A végleges arányosítási százalék alkalmazása
+                miatti korrekció. Adóösszeg [61]
             '62':
               help: null
               label: null
@@ -1043,16 +1288,21 @@ modelo:
               label: null
             '64':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                (%) [64]
             '65':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                [65]
             '66':
               help: null
-              label: null
+              label: Elszámolás (folytatás). A csoporthoz csatlakozás előtti időszakokból
+                beszámítandó összegek [66]
             '67':
               help: null
-              label: null
+              label: Elszámolás (folytatás). Kizárólag az állami adóhatóság és a foral
+                adóhatóságok által együttesen adóztatott adóalanyoknak. Az éves korrekció
+                eredménye [67]
             '68':
               help: null
               label: null
@@ -1064,115 +1314,169 @@ modelo:
               label: null
             '700':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [700]
             '701':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [701]
             '702':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [702]
             '703':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [703]
             '704':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [704]
             '705':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [705]
             '706':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [706]
             '707':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [707]
             '708':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [708]
             '709':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [709]
             '71':
               help: null
-              label: null
+              label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
+                [71]
             '710':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [710]
             '711':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [711]
             '712':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [712]
             '713':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [713]
             '714':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Adóalap [714]
             '715':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [715]
             '716':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [716]
             '717':
               help: null
               label: null
             '718':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [718]
             '719':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [719]
             '72':
               help: null
-              label: null
+              label: Kiegészítő információ. Export és azzal egy tekintet alá eső ügyletek
+                [72]
             '720':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [720]
             '721':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [721]
             '722':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [722]
             '723':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [723]
             '724':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [724]
             '725':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [725]
             '726':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [726]
             '727':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [727]
             '728':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [728]
             '729':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [729]
             '730':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [730]
             '731':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [731]
             '732':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Adóalap [732]
             '733':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [733]
             '734':
               help: null
-              label: null
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
             '735':
               help: null
               label: null
@@ -1184,64 +1488,81 @@ modelo:
               label: null
             '76':
               help: null
-              label: null
+              label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
             '77':
               help: null
-              label: null
+              label: Elszámolás (folytatás). A vámhatóság által megállapított, még
+                be nem fizetett import áfa [77]
             '79':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ingatlanértékesítések és nem szokásos
+                pénzügyi ügyletek [79]
             '80':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
+                szerint [80]
             '81':
               help: null
               label: null
             '83':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
+                [83]
             '84':
               help: null
-              label: null
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 126. rovatban szereplők kivételével) [84]
             '86':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
+                szerint [86]
             '88':
               help: null
               label: null
             '89':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Álava [89]
             '90':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Gipuzkoa [90]
             '91':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Biscaya [91]
             '92':
               help: null
-              label: null
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Navarra [92]
             '93':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Közösségen belüli termék- és szolgáltatásértékesítések
+                [93]
             '94':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Export és egyéb, levonási joggal
+                járó mentes ügyletek [94]
             '95':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek a mezőgazdasági, állattenyésztési
+                és halászati különleges szabályozás szerint [95]
             '96':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Az egyenértékűségi felár különleges
+                szabályozása alá tartozó adóalanyok ügyletei [96]
             '97':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek a használt cikkekre, műalkotásokra,
+                régiségekre és gyűjteménydarabokra vonatkozó különleges szabályozás
+                szerint [97]
             '98':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Ügyletek az utazási irodákra vonatkozó
+                különleges szabályozás szerint [98]
             '99':
               help: null
-              label: null
+              label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: null
               label: Tevékenységi kód - Egyéb 1.
