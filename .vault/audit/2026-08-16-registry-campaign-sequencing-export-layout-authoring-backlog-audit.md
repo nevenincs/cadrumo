@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:74c82f441663046943196244e2841f48da57b6457b21df1694895eb02423645c'
+body_hash: 'sha256:3f63b3183f72be41a40d93c221962669ca8a90d1dcfbbae64c228f0531d77718'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10101,3 +10101,80 @@ the operator-facing date alone -- which is exactly why the old single-value
 assertion could be satisfied by the false-provenance value. Flipping its
 constant would have been the easy fix and would have re-encoded the defect the
 peer had just removed.
+
+## Modelo 182: the second layout off the worklist
+
+Worklist **13 -> 12**; enrolled generated-tree gate **32 -> 34**. The six
+sequencing items re-measured clean once more before starting.
+
+### Two designs, one revision, and why that is not a re-layout
+
+Modelo 182's single `2007-y-siguientes` revision cites BOTH `aeat-dr-182-2024`
+and `aeat-dr-182-2025`, which has the shape of the span defect this campaign
+keeps finding. Measured field by field, it is not one: the two designs carry the
+same 17 + 26 fields at the same offsets and widths, both exactly 250 bytes, and
+the ONLY difference in the whole pair is the wording of `RECURRENCIA DONATIVOS`
+at declarado position 132 -- 2024's "en favor de dicha entidad por importe igual
+o superior" against 2025's "en favor de una misma entidad, por un importe en
+este ejercicio y el del periodo impositivo anterior ... al del ejercicio
+inmediato anterior". A clarification of the recurrencia test, not a relayout.
+`test_revision_span_matches_published_designs` agrees: it reports 184, 200, 322
+and 347, and does not report 182.
+
+So one map serves both, and the enrollment row names `aeat-dr-182-2025` -- the
+current design, matching the revision's open end.
+
+### The design's own text decided three things I would otherwise have guessed
+
+The IR exposes the ENTERO/DECIMAL leaves of a split amount with NO parent text,
+so positions 79-83 and 100-104 arrive as bare "Parte entera:" / "Parte decimal:"
+with nothing naming the field. The design's extracted text carries the
+position-keyed headings that name them:
+
+```
+79-83   Numérico  % DE DEDUCCIÓN          (79-81 ENTERO, 82-83 DECIMAL)
+84-96   Numérico  IMPORTE O VALORACIÓN DEL DONATIVO
+100-104 Numérico  % DE DEDUCCIÓN COM. AUTÓNOMA
+```
+
+Each split pair binds ONE casilla across two export fields -- the shape modelo
+347 already uses for `contraparte.importe-metalico` -- numbered over the whole
+official span rather than over one half. The same text supplied both
+enumerations verbatim: recurrencia is exactly "1"/"2", and naturaleza del
+declarante is 1-4.
+
+**A guess that the tree caught.** The first draft of the authoring table carried
+`ley-49-2002:art-24` and `rd-1270-2003:art-6` as legal_refs. Those are plausible
+for donativos -- Ley 49/2002 is the mecenazgo regime the design itself cites in
+its clave text -- and they are NOT what this revision cites, which is
+`orden-eha-3021-2007:art-1` and `ley-35-2006:art-68.3`. Reading the refs off the
+revision's own casillas rather than reasoning about which law "should" apply is
+the only safe move here, and plausibility is exactly what makes the wrong answer
+dangerous.
+
+### SELLO ELECTRONICO is filler, on precedent and on the standing rule
+
+Modelo 182 declares an Alfanumérico `SELLO ELECTRONICO` at 238-250. Two
+precedents exist: modelo 296 maps its seal through a `header` producer key, and
+modelo 347 -- the same Tipo 1 / Tipo 2 informativa shape, with the identical
+Alfanumérico `SELLO ELECTRONICO` field at its own 488-500 -- maps it `filler`.
+Filler is right here. `producer_key` is validated against the `FilingProducerKey`
+enum, so the header route means adding a core member AND either a producer or an
+entry in the modelo's unsupported-producer inventory; and the seal is applied by
+AEAT's presentation channel, which this application never reaches, so there is no
+value to produce. Inventing a producer key for a value that cannot exist would be
+the shim, not the fix.
+
+### What the profile validator refused
+
+As with 185, the refusals were taken as answers. `amount_fractional_digits`
+requires zero integer digits and POSITIVE decimal digits, so a fractional half
+carries its width in `decimal_digits` -- the first draft put every width in
+`integer_digits` and was refused on three rules at once. The two untyped
+(`No consta`) declarante slots resolve from their own labels exactly as 185's
+did: "TELEFONO : Campo numerico de 9 posiciones" is a nine-digit string, and the
+40-position contact name is text.
+
+18 casillas, 24 numeric rules, 43 map entries, and 18 labels plus 18 help strings
+in four locales. Locale parity is unchanged at **872** -- the second modelo in a
+row to land net-neutral on the backlog.
