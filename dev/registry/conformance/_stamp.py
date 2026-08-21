@@ -949,6 +949,62 @@ def _render_toml_value(value: object) -> str:
     return f'"{escaped}"'
 
 
+_QUOTE = '"'
+_TRIPLE_QUOTE = '"""'
+_LINE_CONTINUATION = '\\\n'
+
+#: Physical width the wrapped form aims for. Deliberately well under BOTH
+#: reviewability caps in the tree (520 and 600) rather than tracking either: this
+#: module lives in ``dev/`` and the gates in ``src/``, so importing one constant
+#: is the wrong direction, and a value comfortably below every cap needs no
+#: coordination.
+_WRAPPED_NOTE_WIDTH = 90
+
+#: Above this, a rendered assignment is wrapped. Short notes stay single-line, so
+#: the common manifest is untouched and diffs stay small.
+_WRAP_ASSIGNMENT_ABOVE = 200
+
+
+def _render_governance_assignment(key: str, rendered_value: str) -> str:
+    """Render one ``key = value`` line, wrapping a long note across lines.
+
+    Reviewer notes are prose and routinely run past 2,000 characters. Emitted on
+    one line they break the registry reviewability gates, and the sweep to wrap
+    them by hand has had to be repeated after each stamping round -- the churn
+    starts here, so it is stopped here.
+
+    The wrapped form is a TOML multi-line basic string whose newlines are all
+    eaten by line-ending backslashes, so the VALUE is byte-identical to the
+    single-line form. Only a plain quoted string is wrapped, and only when it has
+    spaces to break at; anything else is returned unchanged rather than risking a
+    value the writer cannot reproduce.
+
+    :func:`_without_governance_assignments` already walks an assignment's full
+    span, so a multi-line value written here stays replaceable by a later stamp --
+    the defect that once made two revisions permanently unstampable.
+    """
+    single = f"{key} = {rendered_value}"
+    if len(single) <= _WRAP_ASSIGNMENT_ABOVE:
+        return single
+    if not (rendered_value.startswith(_QUOTE) and rendered_value.endswith(_QUOTE)):
+        return single
+    if rendered_value.startswith(_TRIPLE_QUOTE) or " " not in rendered_value:
+        return single
+    inner = rendered_value[1:-1]
+    words = inner.split(" ")
+    line = ""
+    out: list[str] = []
+    for word in words:
+        if line and len(line) + 1 + len(word) > _WRAPPED_NOTE_WIDTH:
+            out.append(line + " ")
+            line = word
+        else:
+            line = f"{line} {word}" if line else word
+    out.append(line)
+    body = _LINE_CONTINUATION.join(out)
+    return f"{key} = {_TRIPLE_QUOTE}{_LINE_CONTINUATION}{body}{_TRIPLE_QUOTE}"
+
+
 def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str:
     """Rewrite the manifest's governance keys inside its single revision table.
 
@@ -994,7 +1050,7 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     body = _without_governance_assignments(lines[start + 1 : end])
     while body and not body[-1].strip():
         body.pop()
-    body.extend(f"{key} = {rendered[key]}" for key in GOVERNANCE_KEYS if key in rendered)
+    body.extend(_render_governance_assignment(key, rendered[key]) for key in GOVERNANCE_KEYS if key in rendered)
 
     rebuilt = [*lines[:start], lines[start], *body, "", *lines[end:]]
     while rebuilt and not rebuilt[-1].strip():
