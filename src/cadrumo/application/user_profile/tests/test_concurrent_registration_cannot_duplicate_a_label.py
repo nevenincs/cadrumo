@@ -10,13 +10,19 @@ Driven as a real race between spawned processes released from a shared barrier,
 because an in-process test cannot show that separate operators are serialised.
 
 Scoped to the OUTCOME on purpose, and the scope is measured rather than assumed.
-The loser IS refused by the custody duplicate-label scan -- the cause chain reads
-``ProfileRegistrationError <- ProfileCustodyDuplicateLabelError`` -- but removing
-the custody root lock from ``profile_custody_transaction_lock`` does NOT make
-this test fail across nine races, so the test does not pin that lock either.
-What it holds is the property an operator would notice: however the second
-attempt is refused, the storage root ends with exactly one capsule bearing the
-label.
+What this test pins is the duplicate-label refusal itself: disabling that one
+comparison in the custody scan makes BOTH processes register, and both
+assertions below fail naming the two winners. What it does NOT pin is the root
+lock -- removing it from ``profile_custody_transaction_lock`` leaves the test
+green across nine races, because the losing process still meets the winner's
+committed capsule when it scans.
+
+So the guarantee held here is the one an operator would notice -- however the
+second attempt is refused, the storage root ends with exactly one capsule
+bearing the label -- and the serialisation that makes the scan reliable under a
+tighter race is asserted by nothing. That is stated rather than implied,
+because a reader would otherwise reasonably assume a concurrency test covers
+the lock.
 
 Stability was checked before committing: six consecutive races each produced
 exactly one registration, so a failure here means a genuine duplicate rather
