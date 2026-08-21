@@ -10,13 +10,13 @@ Driven as a real race between spawned processes released from a shared barrier,
 because an in-process test cannot show that separate operators are serialised.
 
 Scoped to the OUTCOME on purpose, and the scope is measured rather than assumed.
-Removing the custody root lock from ``profile_custody_transaction_lock`` does
-NOT make this test fail, so it does not pin that lock; the losing process is
-turned away one layer higher, by the registration path reporting
-``profile_already_exists``. What the test does hold is the property an operator
-would notice: however the second attempt is refused, the storage root ends with
-exactly one capsule bearing the label. Naming a specific mechanism here would be
-a claim this test cannot substantiate.
+The loser IS refused by the custody duplicate-label scan -- the cause chain reads
+``ProfileRegistrationError <- ProfileCustodyDuplicateLabelError`` -- but removing
+the custody root lock from ``profile_custody_transaction_lock`` does NOT make
+this test fail across nine races, so the test does not pin that lock either.
+What it holds is the property an operator would notice: however the second
+attempt is refused, the storage root ends with exactly one capsule bearing the
+label.
 
 Stability was checked before committing: six consecutive races each produced
 exactly one registration, so a failure here means a genuine duplicate rather

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:58ee4e8e6ad26bc18d99a76abad2560846d16a8b80e0aa286e5628f93872e719'
+body_hash: 'sha256:5b9380510a607f2638224f15d79328a4738d2d0bf6d47e9b92a59392c673d552'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4163,3 +4163,52 @@ notices. If it does not, the docstring is the thing to fix, not the test.
 Stability was measured before committing rather than assumed: six consecutive races each
 produced exactly one registration, so a failure here indicates a genuine duplicate rather
 than a timing artefact.
+
+### A lost custody race was reported to the operator as a name already taken
+
+The previous entry ended with a correction that was itself wrong, and chasing that is
+what found a real defect.
+
+**Correcting the correction.** That entry recorded, from the concurrent-registration race,
+that the losing process was "turned away one layer higher, by the registration path
+reporting `profile_already_exists`". Only the top-level exception type had been captured.
+Reading the `__cause__` chain shows
+`ProfileRegistrationError <- ProfileCustodyDuplicateLabelError`: the refusal originates in
+the custody duplicate-label scan exactly as first supposed, and the registration boundary
+merely translates it. **A top-level exception type is not the refusal; it is the last
+wrapper around it.** The prior test's docstring has been corrected in the same change.
+
+**The defect that translation hides.** `ProfileCustodyDuplicateLabelError` is a SUBCLASS of
+`ProfileCustodyTransactionConflictError` — a deliberate earlier decision so existing
+handlers keep catching both. Their answers are opposites:
+
+| error | code | retryable |
+|---|---|---|
+| `ProfileCustodyTransactionConflictError` (stale witness) | `..._TRANSACTION_CONFLICT` | **true** |
+| `ProfileCustodyDuplicateLabelError` (label taken) | `..._DUPLICATE_LABEL` | false |
+| what registration published for BOTH | `REFUSED_PROFILE_REGISTRATION` | **false** |
+
+The registration boundary caught only the parent, so a transient conflict — one the
+identical call can win once the witness is re-read — reached the operator as a permanent
+"profile already exists". This CLI's stated operator is an autonomous agent: told the name
+it just chose is taken, it does not retry, and instead picks a different name for a profile
+that does not exist.
+
+This is the mirror image of the defect this campaign already fixed one layer down, where a
+permanent refusal had inherited a retryable answer from a sibling. The same rule applies in
+both directions, and the same remedy fits: a SUBCLASS, so every existing
+`except ProfileRegistrationError` handler — including the TUI front end, which catches it
+by name — keeps working, while only the published code and its retryability differ. No new
+locale key was needed; the existing custody-conflict message key was reused.
+
+**Proven in both directions, and the swap is the sharper half.** Ordering the parent ahead
+of its subclass fails the ordering test AND, end to end, makes a genuinely taken label
+report as `ProfileRegistrationConflictError` — retryable — which would loop an agent forever
+on a name it can never have. Reverting to the single broad catch leaves a real duplicate
+refusing identically, which is the anti-regression check that the permanent path was not
+disturbed.
+
+**An earlier gate did its job unprompted.** Registering the new retryable code immediately
+reddened `test_custody_retryable_codes_are_declared`, which refuses any owned retryable code
+that does not state what resolves on its own. The declaration was written rather than the
+gate widened.
