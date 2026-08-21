@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec69b810cb5d6d2637028c955109b017032a081b01869ae7c0f3b847017465d2'
+body_hash: 'sha256:08c304c6e2528fc32b42d36bf60761bac509013f72a34b8365b56a1104b66f7a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4343,3 +4343,48 @@ start from it.
 `src/cadrumo/tests/` and `dev/tests/` after any iteration that adds or moves files under
 `src/`. The domain lanes cannot see either, and both have now caught something this
 campaign introduced.
+
+### Two candidates examined, both declined on their merits; no defect this iteration
+
+**The `adapters: Any` seam: a Protocol is feasible and still the wrong trade here.** Last
+entry classified it as a design escape wanting a Protocol rather than a rationale marker.
+Feasibility was checked first — `ty` does accept a module where a Protocol is expected, so
+the obvious blocker is not one — and the Protocol was then generated from
+`inspect.signature` rather than transcribed: sixteen methods referencing twelve domain
+types, roughly sixty lines.
+
+Declined, for reasons that only surfaced by generating it:
+
+- The class is `_ProfileCustodyTransactionCapability`, PRIVATE and internal, whose
+  docstring states no application caller may use it directly. It is not a public boundary.
+- The failure it would catch — an adapter renamed out from under an unchecked attribute
+  access — is already caught: the integration lane drives the whole delete path through
+  this service.
+- The generated Protocol necessarily includes `_trace`, a private observability parameter,
+  so the type contract would cement a seam that exists for one security proof.
+- Eighteen of the thirty unrationalised sites are outside this domain, so fixing one does
+  not change the gate's colour; it belongs with whoever widened the matcher.
+
+Recorded rather than done, and deliberately NOT papered over with a rationale marker
+either, which remains the wrong answer for a design escape. The generated signatures are
+reproducible in one command if the work is picked up.
+
+**The `_trace` parameter is live, and the investigation of it is worth recording for the
+mistake it nearly caused.** It is the only underscore-prefixed parameter on any public
+production function in the domain — exactly the shape of a test hook left in a shipped
+signature. A first pass concluded nothing supplies it.
+
+That conclusion was wrong, and the reason is instructive: the search printed an
+unconditional "(none above = never supplied)" line immediately after a `grep | head`, and
+the grep's first two lines WERE the call sites. **A summary line asserted by the harness
+rather than derived from the result will happily contradict the output directly above it.**
+Reading the actual lines showed `_capsule.py:950` supplies it inside
+`load_committed_profile_password_material`, which builds the `access_trace` a test asserts
+on to prove the password path never opens the recovery envelope. A live, load-bearing
+observability seam for a real security property — not dead surface.
+
+**Prior out-of-lane fixes re-verified.** Both violations this campaign introduced and
+corrected in the two preceding entries stay corrected: no campaign file appears in
+`test_relative_imports_only` or in the import-hygiene gate. The residual failures in both
+name other packages. Domain lanes green at 311 integration and 1573 unit, with nothing of
+this iteration's in the tree, because nothing needed changing.
