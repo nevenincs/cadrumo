@@ -39,6 +39,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from ._windows_contention import is_windows_contention
 from .logging import get_logger
 
 if TYPE_CHECKING:
@@ -50,23 +51,6 @@ LOCKFILE_UNLINK_RETRY_SECONDS = 10.0
 """Default budget for retrying a blocked release; a reader's handle lives microseconds."""
 
 _UNLINK_POLL_SECONDS = 0.02
-_WINDOWS_CONTENDED_REMOVAL_ERRORS = frozenset({5, 32})
-"""``ERROR_ACCESS_DENIED`` and ``ERROR_SHARING_VIOLATION``.
-
-The two codes Windows raises for a removal another handle is blocking: 32 while
-a peer holds the file open for reading, 5 once a delete against it is already
-pending. Both have been observed on this project's locks under cross-process
-contention, and both clear when the last handle closes.
-
-Windows does not distinguish these from a denying ACL or a read-only attribute
-at the unlink boundary, so the retry budget is the discriminator rather than the
-code: a transient block clears inside the window, a permanent one outlasts it
-and is reported as a removal that did not happen. Nothing is absorbed off
-Windows -- ``winerror`` is absent there, and POSIX has no sharing-violation
-class, so an ``EACCES`` is genuine and propagates.
-"""
-
-
 def unlink_lockfile(
     path: Path,
     *,
@@ -97,7 +81,7 @@ def unlink_lockfile(
         try:
             path.unlink(missing_ok=True)
         except PermissionError as exc:
-            if getattr(exc, "winerror", None) not in _WINDOWS_CONTENDED_REMOVAL_ERRORS:
+            if not is_windows_contention(exc):
                 raise
             if time.monotonic() >= deadline:
                 _log.debug(

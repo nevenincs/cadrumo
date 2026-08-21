@@ -37,8 +37,11 @@ from typing import TYPE_CHECKING
 # stay importable from the earliest point in core's own initialisation.
 from ._bucket_pointer import BucketPointer
 from ._fsync import fsync_parent_dir
+from ._windows_contention import is_windows_contention
 
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
+    from collections.abc import Callable
+
     from .errors import CadrumoError
 
 
@@ -73,6 +76,9 @@ read side carries no ``winerror`` to test.
 """
 
 _POINTER_READ_POLL_SECONDS = 0.02
+
+_POINTER_WRITE_RETRY_SECONDS = 1.0
+"""Budget for a write or removal a foreign reader's handle is blocking."""
 
 
 def _read_pointer_bytes(target: Path) -> bytes | None:
@@ -165,6 +171,40 @@ def capture_pointer(root: Path) -> bytes | None:
     return _read_pointer_bytes(pointer_path(root))
 
 
+def _await_uncontended(operation: Callable[[], None]) -> None:
+    """Run ``operation``, waiting out a peer reader's open handle on Windows.
+
+    The mirror of :func:`_read_pointer_bytes`. Every process resolves the
+    pointer as it starts, and those readers do NOT hold the custody root lock
+    that serialises writers -- so a switch or a logout can be refused by a
+    foreign reader the lock does not cover. Measured under a concurrent reader:
+    ``ERROR_SHARING_VIOLATION`` on the replace and the unlink, and
+    ``ERROR_ACCESS_DENIED`` once a delete was already pending.
+
+    Unlike the read side, these refusals carry a ``winerror``, so contention is
+    identified by code AND bounded by the budget rather than by the budget
+    alone. A refusal that outlasts the budget raises, so a denying ACL is still
+    reported rather than waited on forever.
+
+    Args:
+        operation: The write or removal to attempt; must be safe to repeat.
+
+    Raises:
+        OSError: For any failure that is not Windows contention, and for
+            contention outlasting :data:`_POINTER_WRITE_RETRY_SECONDS`.
+    """
+    deadline = time.monotonic() + _POINTER_WRITE_RETRY_SECONDS
+    while True:
+        try:
+            operation()
+        except PermissionError as exc:
+            if not is_windows_contention(exc) or time.monotonic() >= deadline:
+                raise
+            time.sleep(_POINTER_READ_POLL_SECONDS)
+            continue
+        return
+
+
 def clear_pointer(root: Path) -> None:
     """Clear the active-profile pointer idempotently.
 
@@ -179,7 +219,7 @@ def clear_pointer(root: Path) -> None:
     """
     target = pointer_path(root)
     try:
-        target.unlink()
+        _await_uncontended(target.unlink)
     except FileNotFoundError:
         return
 
@@ -207,7 +247,8 @@ def restore_pointer(root: Path, captured: bytes | None) -> None:
     # ``write_pointer`` below.
     from .atomic_write import atomic_write_hardened_bytes
 
-    atomic_write_hardened_bytes(pointer_path(root), captured)
+    target = pointer_path(root)
+    _await_uncontended(lambda: atomic_write_hardened_bytes(target, captured))
 
 
 def resolve_active_bucket_id() -> str | None:
