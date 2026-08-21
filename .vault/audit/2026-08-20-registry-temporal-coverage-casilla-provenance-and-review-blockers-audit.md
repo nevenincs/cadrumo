@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:29863d8e1924bf272e9aec93939b040419896ef6a851defacf8a240dad2419f9'
+body_hash: 'sha256:a3b36cb512dc99a3bc8686e1b15c58c9c49f23ec62ed787c81dc3e2759b279d0'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -200,7 +200,6 @@ fail-closed state of an UNREVIEWED revision. Stamping would flip all ten to
 for stamping, and is not evidence against it either; the substantive field coverage
 above is what decides.
 
-
 ### m222-authoring-is-specified-not-blocked | medium | The smallest "needs casilla authoring at scale" blocker is fully derivable from its bundled diseño, and here is what it costs
 
 Modelo 222 (pagos fraccionados, régimen de consolidación fiscal) declares 2
@@ -247,7 +246,6 @@ capable, which is a product decision about whether Cadrumo supports the consolid
 group pago fraccionado. It is deliberately not started here: a half-authored casilla
 set is a silently narrower registry, and worse than the honest 2-casilla stub that
 exists now.
-
 
 ## Recommendations
 

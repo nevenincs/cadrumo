@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-20'
+modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7773c6085334816a08d67d53cb741d3cef9b1b30f8feb8c9e47fa70ac2fafa78'
+body_hash: 'sha256:fa5d11a4eb721ed8479c66998b5a6fab7a5933863c55511118ebace61fb5d60a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7901,3 +7901,70 @@ is the next question rather than this tick's.
 
 The recorded cases stand: modelo 349 and 180's visual charts, modelo 100's lone
 glued byte, modelo 131's spilled-column byte.
+
+## Tick: the double-struck row, and an artefact left reported on purpose
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's DID work confirmed at 30 passed.
+
+### Modelo 390's doubled text layer
+
+Naming modelo 390's records last tick made their holes visible, and all eight
+had one cause: the PDF text layer emits some rows twice, character by character.
+``4422 662255 1177 NN 55.. OOppeerraacciioonneess`` is
+``42 625 17 N 5. Operaciones``, glyphs duplicated while the separating spaces
+stay single. Each of those rows is a position the record was reporting as
+dropped -- 324, 625, 659 and their siblings all appear in that design's own hole
+list.
+
+The repair verifies itself rather than reasoning about content: a line is
+rewritten only when it does not parse as a row, its tokens are exact pairwise
+repetitions, AND the de-doubled result parses. Fail any of the three and the
+line is returned untouched. Modelo 390 went from eight holed records to one.
+
+Finding it took three wrong measurements, which is worth recording because each
+failed differently. Requiring the whole line to be doubled missed it, since the
+spaces are single. Requiring every TOKEN to be doubled missed it too, because a
+description can carry a single-struck fragment beside doubled ones. And both
+sweeps read the wrong extractor: modelo 390 uses the page-record layout, so the
+production path takes its lines from pdfplumber, and my probes were measuring
+text the parser never sees. A population of zero is not evidence of absence when
+the harness is reading a different source than the code.
+
+### The artefact deliberately left reported
+
+The last unnamed body is in modelo 100's 2014 edition, and it is not a record:
+one field spanning positions 1-2, no modelo or página constant. Lines 2392 and
+2395 both print the record's opening row, separated by a running header -- a
+page break duplicated it, and the orphan opened a body because its position
+restarted at 1.
+
+Measured across every bundled design and both read modes: **exactly one body in
+the corpus** has this shape. Suppressing a record body is the one direction of
+change this parser treats as most dangerous, and a deletion rule maintained
+forever for a single artefact is not a good trade. The reported skip is honest
+-- it says a body was found that could not be named, which is true -- so it
+stays.
+
+### Verified against
+
+| | tick start | after |
+|---|---|---|
+| skipped records | 33 | **26** |
+| sheets read | 3255 | **3262** |
+| fields read | 276207 | **276719** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; zero already-complete designs changed.
+
+`test_record_design_double_struck`: 5 passed. Undoubling without requiring the
+result to parse reds the guard that a repair must PRODUCE a row; disabling the
+repair reds the capability cases.
+
+### Still open
+
+Twenty-six skipped records, from 302 when this line of work began. Modelo 200's
+2010 and 2011 editions hold most of what remains. The recorded cases stand:
+modelo 349 and 180's visual charts where AEAT draws no box, modelo 100's lone
+glued byte and its page-break artefact, modelo 131's spilled-column byte.
