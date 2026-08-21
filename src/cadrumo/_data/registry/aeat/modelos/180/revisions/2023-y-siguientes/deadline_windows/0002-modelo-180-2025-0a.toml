@@ -1,9 +1,35 @@
+# The close date is the NOMINAL date behind AEAT's published operational one.
+#
+# The Orden de 20 de noviembre de 2000 (BOE-A-2000-21430), which approves modelo
+# 180 and carries its disenos in anexo VI, states THREE plazos and this window
+# matches none: apartado decimo gives "los veinte primeros dias naturales del mes
+# de enero" for papel impreso, and apartados duodecimo and decimoseptimo both give
+# "el periodo comprendido entre el 1 de enero y el 20 de febrero de cada ano", for
+# soporte and for presentacion telematica respectively.
+#
+# AEAT's Calendario del Contribuyente 2026 nevertheless lists modelo 180 under
+# "Hasta el 2 de febrero" (Resumen anual 2025), which is the Saturday shift of
+# 31 January -- neither 20 January nor 20 February. The orden's ranges are
+# superseded in current practice by an instrument this registry does not cite, and
+# the calendar is the only AEAT-emitted statement of the applicable plazo
+# available. Modelo 194 is in the same position and is resolved the same way.
+#
+# Grounding in the calendar is what the standing rule permits when the orden does
+# not state the governing plazo. The calendar publishes the OPERATIONAL date; the
+# nominal behind it is 31 January, and storing that lets shift_deadline report
+# 2 February WITH its 'sabado' reason instead of asserting that 2 February is an
+# ordinary business-day deadline.
+#
+# No article is cited as ESTABLISHING this plazo, because none in the bundled
+# corpus does: orden-hfp-1284-2023:art-7 is entry-into-force text and
+# orden-hap-1732-2014:art-2 is a general enabling clause.
+
 [[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-180-2025-0a"
 filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-hfp-1284-2023:art-7", "ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
