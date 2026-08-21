@@ -5,6 +5,85 @@ modelo:
         official_name: null
         title: null
       revision:
+        '2024':
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALESA DEL DECLARANT
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: COGNOMS I NOM
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELÈFON
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: TIPUS DE PERCEPCIÓ
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: NOMBRE TOTAL DE PERCEPTORS
+            x-ctgn6t3f5pn6ipg:
+              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: NIF DEL REPRESENTANT LEGAL
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA O MELILLA / ILLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: CLAU DE PERCEPCIÓ
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: CLAU CODI
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: CLAU DE MERCAT
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: CODI EMISSOR
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: EXERCICI DE MERITACIÓ
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: DATA DE MERITACIÓ
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: DATA D'INICI DEL PRÉSTEC
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: DATA DE VENCIMENT DEL PRÉSTEC
+            x-e1in4opedlim8qb1chnn4:
+              label: PERCEPTOR MEDIADOR
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: NATURALESA
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALESA DEL DECLARANT
+            x-e1in4opedpkmc:
+              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: NIF DEL PAGADOR ANTERIOR
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: NIF DEL REPRESENTANT LEGAL
+            x-e1in4opedpnmqojick:
+              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: NÚMERO D'ORDRE
+            x-e1in4opee1gmero:
+              label: PAGAMENT
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: PENALITZACIONS
+            x-e1in4opee1imsp39cln78p8:
+              label: PENDENT
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-e1in4opee1p6utj9dphmio8:
+              label: CODI DE PROVÍNCIA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
+                FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: TIPUS DE CODI
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: TIPUS DE PERCEPCIÓ
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -22,3 +101,84 @@ modelo:
                 title: null
           field:
             label: null
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALESA DEL DECLARANT
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: COGNOMS I NOM
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELÈFON
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: TIPUS DE PERCEPCIÓ
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: NOMBRE TOTAL DE PERCEPTORS
+            x-ctgn6t3f5pn6ipg:
+              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: NIF DEL REPRESENTANT LEGAL
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA O MELILLA / ILLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: CLAU DE PERCEPCIÓ
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: CLAU CODI
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: CLAU DE MERCAT
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: CODI EMISSOR
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: EXERCICI DE MERITACIÓ
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: DATA DE MERITACIÓ
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: DATA D'INICI DEL PRÉSTEC
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: DATA DE VENCIMENT DEL PRÉSTEC
+            x-e1in4oped5pmirg:
+              label: CODI ISIN
+            x-e1in4opedlim8qb1chnn4:
+              label: PERCEPTOR MEDIADOR
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: NATURALESA
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALESA DEL DECLARANT
+            x-e1in4opedpkmc:
+              label: COGNOMS I NOM O RAÓ SOCIAL DEL DECLARANT
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: NIF DEL PAGADOR ANTERIOR
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: NIF DEL REPRESENTANT LEGAL
+            x-e1in4opedpnmqojick:
+              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: NÚMERO D'ORDRE
+            x-e1in4opee1gmero:
+              label: PAGAMENT
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: PENALITZACIONS
+            x-e1in4opee1imsp39cln78p8:
+              label: PENDENT
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
+            x-e1in4opee1p6utj9dphmio8:
+              label: CODI DE PROVÍNCIA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
+                FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: TIPUS DE CODI
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: TIPUS DE PERCEPCIÓ

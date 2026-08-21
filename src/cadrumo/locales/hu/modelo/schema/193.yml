@@ -5,6 +5,85 @@ modelo:
         official_name: null
         title: null
       revision:
+        '2024':
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: A BEVALLÓ JELLEGE
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: A BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: VEZETÉKNÉV ÉS UTÓNÉV
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELEFON
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: JUTTATÁS TÍPUSA
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: A KEDVEZMÉNYEZETTEK SZÁMA
+            x-ctgn6t3f5pn6ipg:
+              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: JUTTATÁS KÓDJA
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: KÓD KULCSA
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: PIACI KÓD
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: ÉRTÉKPAPÍRSZÁMLA KÓDJA / KÖLCSÖNÜGYLET SZÁMA
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: KIBOCSÁTÓ KÓDJA
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: ESEDÉKESSÉG ÉVE
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: ESEDÉKESSÉG DÁTUMA
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: A KÖLCSÖN KEZDŐ DÁTUMA
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: A KÖLCSÖN LEJÁRATI DÁTUMA
+            x-e1in4opedlim8qb1chnn4:
+              label: KÖZVETÍTŐ KEDVEZMÉNYEZETT
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: JELLEG
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: A BEVALLÓ JELLEGE
+            x-e1in4opedpkmc:
+              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
+            x-e1in4opedpnmqojick:
+              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: SORSZÁM
+            x-e1in4opee1gmero:
+              label: KIFIZETÉS
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: BÜNTETÉSEK
+            x-e1in4opee1imsp39cln78p8:
+              label: FÜGGŐBEN
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-e1in4opee1p6utj9dphmio8:
+              label: TARTOMÁNYKÓD
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
+                BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: KÓD TÍPUSA
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: JUTTATÁS TÍPUSA
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -22,3 +101,84 @@ modelo:
                 title: null
           field:
             label: null
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: A BEVALLÓ JELLEGE
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: A BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: VEZETÉKNÉV ÉS UTÓNÉV
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELEFON
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: JUTTATÁS TÍPUSA
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: A KEDVEZMÉNYEZETTEK SZÁMA
+            x-ctgn6t3f5pn6ipg:
+              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: JUTTATÁS KÓDJA
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: KÓD KULCSA
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: PIACI KÓD
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: ÉRTÉKPAPÍRSZÁMLA KÓDJA / KÖLCSÖNÜGYLET SZÁMA
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: KIBOCSÁTÓ KÓDJA
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: ESEDÉKESSÉG ÉVE
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: ESEDÉKESSÉG DÁTUMA
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: A KÖLCSÖN KEZDŐ DÁTUMA
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: A KÖLCSÖN LEJÁRATI DÁTUMA
+            x-e1in4oped5pmirg:
+              label: ISIN-KÓD
+            x-e1in4opedlim8qb1chnn4:
+              label: KÖZVETÍTŐ KEDVEZMÉNYEZETT
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: JELLEG
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: A BEVALLÓ JELLEGE
+            x-e1in4opedpkmc:
+              label: A BEVALLÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
+            x-e1in4opedpnmqojick:
+              label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: SORSZÁM
+            x-e1in4opee1gmero:
+              label: KIFIZETÉS
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: BÜNTETÉSEK
+            x-e1in4opee1imsp39cln78p8:
+              label: FÜGGŐBEN
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-e1in4opee1p6utj9dphmio8:
+              label: TARTOMÁNYKÓD
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
+                BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: KÓD TÍPUSA
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: JUTTATÁS TÍPUSA

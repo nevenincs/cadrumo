@@ -7,6 +7,85 @@ modelo:
           rentas. Resumen anual.
         title: Resumen anual de retenciones sobre capital mobiliario
       revision:
+        '2024':
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALEZA DEL DECLARANTE
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACION
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: APELLIDOS Y NOMBRE
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELÉFONO
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: TIPO DE PERCEPCIÓN
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: NÚMERO TOTAL DE PERCEPTORES
+            x-ctgn6t3f5pn6ipg:
+              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: NIF DEL REPRESENTANTE LEGAL
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA O MELILLA / ISLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: CLAVE DE PERCEPCIÓN
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: CLAVE CÓDIGO
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: CLAVE DE MERCADO
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: CÓDIGO EMISOR
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: EJERCICIO DEVENGO
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: FECHA DE DEVENGO
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: FECHA DE INICIO DEL PRÉSTAMO
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
+            x-e1in4opedlim8qb1chnn4:
+              label: PERCEPTOR MEDIADOR
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: NATURALEZA
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALEZA DEL DECLARANTE
+            x-e1in4opedpkmc:
+              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: NIF DEL PAGADOR ANTERIOR
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: NIF DEL REPRESENTANTE LEGAL
+            x-e1in4opedpnmqojick:
+              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: NÚMERO DE ORDEN
+            x-e1in4opee1gmero:
+              label: PAGO
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: PENALIZACIONES
+            x-e1in4opee1imsp39cln78p8:
+              label: PENDIENTE
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-e1in4opee1p6utj9dphmio8:
+              label: CÓDIGO PROVINCIA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
+                DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: TIPO CÓDIGO
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: TIPO DE PERCEPCIÓN
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -24,3 +103,84 @@ modelo:
                 title: Modelo 193 annual summary from Modelo 123 quarterly filings
           field:
             label: Modelo 193 ejercicio 2024 y siguientes
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALEZA DEL DECLARANTE
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACION
+            x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              label: APELLIDOS Y NOMBRE
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              label: TELÉFONO
+            x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: TIPO DE PERCEPCIÓN
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: NÚMERO TOTAL DE PERCEPTORES
+            x-ctgn6t3f5pn6ipg:
+              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: NIF DEL REPRESENTANTE LEGAL
+            x-ctgn6t3f5pn6urb2e9ig:
+              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+            x-e1in4opecdinat315lmmar39dhm62:
+              label: CEUTA O MELILLA / ISLA DE LA PALMA
+            x-e1in4opecdm62tj5:
+              label: CLAVE DE PERCEPCIÓN
+            x-e1in4opecdm62tj55lhmup39ctng:
+              label: CLAVE CÓDIGO
+            x-e1in4opecdm62tj55lmmasj3c5i6u:
+              label: CLAVE DE MERCADO
+            x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
+            x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              label: CÓDIGO EMISOR
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              label: EJERCICIO DEVENGO
+            x-e1in4opecpim6q315li6atj5dpjmu:
+              label: FECHA DE DEVENGO
+            x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              label: FECHA DE INICIO DEL PRÉSTAMO
+            x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
+            x-e1in4oped5pmirg:
+              label: CÓDIGO ISIN
+            x-e1in4opedlim8qb1chnn4:
+              label: PERCEPTOR MEDIADOR
+            x-e1in4opedpgn8tbic5m6auj1:
+              label: NATURALEZA
+            x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              label: NATURALEZA DEL DECLARANTE
+            x-e1in4opedpkmc:
+              label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARANTE
+            x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              label: NIF DEL PAGADOR ANTERIOR
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: NIF DEL REPRESENTANTE LEGAL
+            x-e1in4opedpnmqojick:
+              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
+            x-e1in4opedpqmqpbidsmmusj4cln0:
+              label: NÚMERO DE ORDEN
+            x-e1in4opee1gmero:
+              label: PAGO
+            x-e1in4opee1imsobcd5t62or9dtn6aso:
+              label: PENALIZACIONES
+            x-e1in4opee1imsp39cln78p8:
+              label: PENDIENTE
+            x-e1in4opee1in4or5e1hmirreclpg:
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
+            x-e1in4opee1p6utj9dphmio8:
+              label: CÓDIGO PROVINCIA
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
+                DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
+            x-e1in4opeehkn0rpdcdnm8qb7ds:
+              label: TIPO CÓDIGO
+            x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              label: TIPO DE PERCEPCIÓN

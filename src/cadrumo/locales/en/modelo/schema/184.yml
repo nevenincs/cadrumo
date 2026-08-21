@@ -9,67 +9,69 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
               help: null
-              label: null
+              label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return refers to
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: null
-              label: null
+              label: MAIN ACTIVITY
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
               help: null
-              label: null
+              label: ENTITY TYPE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
               help: null
-              label: null
+              label: COUNTRY CODE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
               help: null
-              label: null
+              label: PURPOSE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
               help: null
               label: null
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: null
-              label: null
+              label: ENTITY TYPE
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
               help: null
               label: null
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: null
-              label: null
+              label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: null
-              label: null
+              label: TELEPHONE
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
               help: null
-              label: null
+              label: N.I.F. OF THE REPRESENTATIVE
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
               help: null
-              label: null
+              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Type of return (original / replacement / supplementary)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: null
-              label: null
+              label: MEDIUM TYPE
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: null
               label: null
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: null
-              label: null
+              label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
               help: null
-              label: null
+              label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
               help: null
               label: null
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: null
-              label: null
+              label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
+                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
               help: null
-              label: null
+              label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
+                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmoobmck:
               help: null
               label: Attributed-income type key (A=movable capital, C=real-estate
@@ -78,19 +80,19 @@ modelo:
                 L=excess negative income from no-treaty countries)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
               help: null
-              label: null
+              label: COUNTRY CODE
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
               help: null
-              label: null
+              label: CASH RECEIPTS AND PAYMENTS BASIS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
-              label: null
+              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
               help: null
-              label: null
+              label: IAE GROUP OR HEADING
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
               help: null
-              label: null
+              label: Year
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
               help: null
               label: null
@@ -168,13 +170,13 @@ modelo:
               label: null
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
-              label: null
+              label: CADASTRAL REFERENCE
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
               help: null
-              label: null
+              label: RETURN DETERMINATION REGIME
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
               help: null
-              label: null
+              label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
               help: null
               label: Amount of income attributable / net return attributable to the
@@ -184,17 +186,17 @@ modelo:
               label: null
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
-              label: null
+              label: LOCATION OF THE PROPERTY
             x-ehkn0rpi5ppnaoj3dhgncp8:
               help: null
               label: Attributed-income subtype key (granularity by domestic/foreign
                 geographic origin, applicable reductions, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
               help: null
-              label: null
+              label: ACTIVITY TYPE
             x-ehkn0rpi5pq6is3f5lk6uqj1:
               help: null
-              label: null
+              label: SHEET TYPE
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
               help: null
               label: null
@@ -203,61 +205,63 @@ modelo:
               label: null
             x-ehkn0rpj5phmoobmck:
               help: null
-              label: null
+              label: CODE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
               help: null
               label: null
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: null
-              label: null
+              label: COUNTRY CODE
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
               help: null
-              label: null
+              label: PARTICIPANT TYPE CODE
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
               help: null
-              label: null
+              label: CODE
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
-              label: null
+              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF
+                THE PROPERTY
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
               help: null
-              label: null
+              label: ACTIVITY TYPE
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: null
-              label: null
+              label: TAX ADDRESS OF THE ENTITY MEMBER
             x-ehkn0rpj5pkmqs3fe9q6a:
               help: null
-              label: null
+              label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
               help: null
-              label: null
+              label: RETURN DETERMINATION REGIME
             x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
               help: null
-              label: null
+              label: NAME OR COMPANY NAME OF THE DECLARANT
             x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
               help: null
-              label: null
+              label: NAME OR COMPANY NAME OF THE DECLARANT
             x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
               help: null
-              label: null
+              label: N.I.F. OF THE REPRESENTATIVE
             x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
               help: null
               label: null
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: null
-              label: null
+              label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
             x-ehkn0rpj5pp6ap3lcdhmirre:
               help: null
               label: null
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
-              label: null
+              label: CADASTRAL REFERENCE
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
               help: null
-              label: null
+              label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY
+                ACTIVITIES UNDER OBJECTIVE ASSESSMENT
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
               help: null
               label: null
@@ -266,13 +270,13 @@ modelo:
               label: null
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
-              label: null
+              label: LOCATION OF THE PROPERTY
             x-ehkn0rpj5ppnaoj3dhgncp8:
               help: null
-              label: null
+              label: SUB-CODE
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: null
-              label: null
+              label: SHEET TYPE
           construct:
             modelo-184-informative:
               field:
