@@ -37,9 +37,110 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Aged 75 or over. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Aged 75 or over. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 33% and < 65%. Counted
+                in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 33% and < 65%. Total
+                number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 65%. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 65%. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Reduced mobility. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Reduced mobility. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Under 75 years old. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Under 75 years old. Total number
             x-e1in4opecdm62tj5:
               help: null
               label: Income key
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 1st child
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 2nd child
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 3rd child
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 33% and < 65%. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 33% and < 65%. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 65%. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 65%. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Reduced mobility.
+                Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Reduced mobility.
+                Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Under 3 years old. Counted in
+                full
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Under 3 years old. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Remainder. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Remainder. Total number
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income
@@ -99,9 +200,110 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Aged 75 or over. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Aged 75 or over. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 33% and < 65%. Counted
+                in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 33% and < 65%. Total
+                number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 65%. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Disability ≥ 65%. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Reduced mobility. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants with a disability. Reduced mobility. Total number
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Under 75 years old. Counted in full
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Ascendants. Under 75 years old. Total number
             x-e1in4opecdm62tj5:
               help: null
               label: Income key
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 1st child
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 2nd child
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Count of the first 3 children. 3rd child
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 33% and < 65%. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 33% and < 65%. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 65%. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Disability
+                ≥ 65%. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Reduced mobility.
+                Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants with a disability. Reduced mobility.
+                Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Under 3 years old. Counted in
+                full
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Under 3 years old. Total number
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Remainder. Counted in full
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+              label: Children and other descendants. Remainder. Total number
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Payments on account made on in-kind income

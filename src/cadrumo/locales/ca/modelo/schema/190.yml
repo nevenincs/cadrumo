@@ -37,9 +37,109 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. De 75 anys o més. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. De 75 anys o més. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Còmput
+                per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Nre.
+                total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Mobilitat reduïda. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Mobilitat reduïda. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. Menors de 75 anys. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. Menors de 75 anys. Nre. total
             x-e1in4opecdm62tj5:
               help: null
               label: Clau de percepció
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 1r
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 2n
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 3r
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
+                i < 65%. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
+                i < 65%. Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
+                Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
+                Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
+                Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
+                Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Menors de 3 anys. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Menors de 3 anys. Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Resta. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Resta. Nre. total
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie
@@ -100,9 +200,109 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. De 75 anys o més. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. De 75 anys o més. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Còmput
+                per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Nre.
+                total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Mobilitat reduïda. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents amb discapacitat. Mobilitat reduïda. Nre. total
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. Menors de 75 anys. Còmput per enter
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Ascendents. Menors de 75 anys. Nre. total
             x-e1in4opecdm62tj5:
               help: null
               label: Clau de percepció
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 1r
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 2n
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Còmput dels 3 primers fills. Fill 3r
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
+                i < 65%. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
+                i < 65%. Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
+                Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
+                Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
+                Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
+                Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Menors de 3 anys. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Menors de 3 anys. Nre. total
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Resta. Còmput per enter
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Dada del perceptor declarada al model 190, per al minim per descendents
+                o ascendents.
+              label: Fills i altres descendents. Resta. Nre. total
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingressos a compte efectuats sobre les percepcions en espècie

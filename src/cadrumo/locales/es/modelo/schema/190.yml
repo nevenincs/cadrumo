@@ -40,9 +40,111 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Número total de percepciones
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. De 75 años o más. Cómputo por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. De 75 años o más. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. Cómputo
+                por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. N.º
+                total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. Cómputo por
+                entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Movilidad reducida. Cómputo por
+                entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Movilidad reducida. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. Menores de 75 años. Cómputo por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. Menores de 75 años. N.º total
             x-e1in4opecdm62tj5:
               help: null
               label: Clave de percepción
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 1.º
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 2.º
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 3.º
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                33% y < 65%. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                33% y < 65%. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                65%. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                65%. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+                Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+                N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Menores de 3 años. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Menores de 3 años. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Resto. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Resto. N.º total
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingresos a cuenta efectuados sobre las percepciones en especie
@@ -103,9 +205,111 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Número total de percepciones
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. De 75 años o más. Cómputo por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. De 75 años o más. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. Cómputo
+                por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. N.º
+                total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. Cómputo por
+                entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Movilidad reducida. Cómputo por
+                entero
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes con discapacidad. Movilidad reducida. N.º total
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. Menores de 75 años. Cómputo por entero
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Ascendientes. Menores de 75 años. N.º total
             x-e1in4opecdm62tj5:
               help: null
               label: Clave de percepción
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 1.º
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 2.º
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Cómputo de los 3 primeros hijos. Hijo 3.º
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                33% y < 65%. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                33% y < 65%. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                65%. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
+                65%. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+                Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+                N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Menores de 3 años. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Menores de 3 años. N.º total
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Resto. Cómputo por entero
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Dato del perceptor declarado en el modelo 190, para el minimo
+                por descendientes o ascendientes.
+              label: Hijos y otros descendientes. Resto. N.º total
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: Ingresos a cuenta efectuados sobre las percepciones en especie

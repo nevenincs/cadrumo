@@ -37,9 +37,114 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: A kifizetések teljes száma
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 éves vagy idősebb. Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 éves vagy idősebb. Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 33% és < 65%.
+                Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 33% és < 65%.
+                Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 65%. Teljes egészében
+                számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 65%. Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Csökkent mozgásképesség. Teljes
+                egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Csökkent mozgásképesség. Teljes
+                szám
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 évnél fiatalabb. Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 évnél fiatalabb. Teljes szám
             x-e1in4opecdm62tj5:
               help: null
               label: Jövedelemkód
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 1. gyermek
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 2. gyermek
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 3. gyermek
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 33% és < 65%. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 33% és < 65%. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 65%. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 65%. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Csökkent
+                mozgásképesség. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Csökkent
+                mozgásképesség. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. 3 évnél fiatalabb. Teljes
+                egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. 3 évnél fiatalabb. Teljes
+                szám
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. Többi. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. Többi. Teljes szám
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
@@ -99,9 +204,114 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: A kifizetések teljes száma
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 éves vagy idősebb. Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 éves vagy idősebb. Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 33% és < 65%.
+                Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 33% és < 65%.
+                Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 65%. Teljes egészében
+                számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Fogyatékosság ≥ 65%. Teljes szám
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Csökkent mozgásképesség. Teljes
+                egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő felmenők. Csökkent mozgásképesség. Teljes
+                szám
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 évnél fiatalabb. Teljes egészében számítva
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Felmenők. 75 évnél fiatalabb. Teljes szám
             x-e1in4opecdm62tj5:
               help: null
               label: Jövedelemkód
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 1. gyermek
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 2. gyermek
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Az első 3 gyermek számítása. 3. gyermek
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 33% és < 65%. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 33% és < 65%. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 65%. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Fogyatékosság
+                ≥ 65%. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Csökkent
+                mozgásképesség. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Fogyatékossággal élő gyermekek és egyéb leszármazottak. Csökkent
+                mozgásképesség. Teljes szám
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. 3 évnél fiatalabb. Teljes
+                egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. 3 évnél fiatalabb. Teljes
+                szám
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. Többi. Teljes egészében számítva
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
+                vagy felmenői minimumhoz.
+              label: Gyermekek és egyéb leszármazottak. Többi. Teljes szám
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: null
               label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
