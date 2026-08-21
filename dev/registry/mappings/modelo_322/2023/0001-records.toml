@@ -1,0 +1,31 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "322"
+design_epoch = "2023"
+source_ref = "aeat-dr-322-2023"
+source_sha256 = "540805f09ca397511b9c2704533dcbcffc96a781602fd7d427d11fe9264e11f0"
+
+
+[[records]]
+sheet = "DR32201"
+record_identity = "DR32201"
+export_record_id = "m322-page-01"
+record_type = "page-01"
+
+[[records]]
+sheet = "DR32202"
+record_identity = "DR32202"
+export_record_id = "m322-page-02"
+record_type = "page-02"
+
+[[records]]
+sheet = "DR32203"
+record_identity = "DR32203"
+export_record_id = "m322-page-03"
+record_type = "page-03"
+
+[[records]]
+sheet = "DR32204"
+record_identity = "DR32204"
+export_record_id = "m322-page-04"
+record_type = "page-04"
