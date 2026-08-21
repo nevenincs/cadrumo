@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f60f7cf32574fe7b381cc217120053b1ffea04a221368609886100bd3899f296'
+body_hash: 'sha256:67357db40b479458147dc0d68788ccddd15e3289de391f5c7db41203ee2152cf'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3097,3 +3097,38 @@ spot.
 **Generalisable:** point the campaign's method at the campaign's own tools. A detector is
 production code for the question it answers, and it is subject to every failure mode it
 was built to find — including counting a declaration as a use.
+
+### The gate that catalogued four failed detectors was the fifth
+
+Continuing to point the method at this campaign's own tools, now at the highest-stakes
+gate: the one guarding lost-update on encrypted singleton records.
+
+Its docstring is a careful record of four previous detectors that each went green over
+live instances of the defect — a line-oriented grep, a syntactic match, an `ast.Assign`
+tracker, a direct-binding taint check — and concludes that this fifth one "does not hunt.
+It ENUMERATES every composing write". Probing it against ordinary refactors showed the
+enumeration is itself shape-based, and two spellings walk straight out of it:
+
+```
+writer = repository.save_with_secure_object_writes ; writer(...)
+getattr(repository, "save_with_secure_object_writes")(...)
+```
+
+Neither is exotic — the first is method extraction, the second is what a dispatch loop
+reaches for — and both were reported clean.
+
+Both are recognised now, each with a discriminating case, plus an anti-tautology pair
+proving a revision passed through the widened spellings still clears the site: widening a
+detector until everything is a violation would flag exactly the guarded code the gate
+exists to encourage. The tree stayed green through the widening, so no site was hiding
+behind the old matcher — this closes an evasion rather than uncovering a defect.
+
+**The docstring was corrected in the same change**, and that is the part worth carrying.
+"Does not hunt" was an overstatement about a matcher that hunts three spellings. A gate
+whose prose oversells its reach is worse than one that admits a narrow scope, because the
+next reader stops checking — and this file's own history is four detectors that were each
+believed complete.
+
+**Generalisable:** a detector's claim about itself is a claim to test. Write the evasions
+you would use if you wanted the gate to miss something, run them, and either close them or
+narrow the claim to what survives.
