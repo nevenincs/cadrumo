@@ -11,6 +11,7 @@ from .. import (
     RegistryValidator,
     build_snapshot,
 )
+from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,12 +52,20 @@ def test_committed_modelo_840_validates_against_catalogues() -> None:
 def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     modelo, catalogues = _load_modelo_840()
     for filing_year in (2003, 2010, 2018, 2024, 2026):
+        # Modelo 840 is the IAE censal declaration: informative, filed on AEAT's
+        # own surface, declaring no export layout, and graded `applicability`
+        # accordingly. Building at the FILING default refuses on the missing
+        # layout before this test's subject -- which revision a filing year
+        # resolves to -- is ever reached. Ask for the rung the law-selected
+        # revision declares, so a later promotion of 840 carries without an edit.
+        revision = select_revision(modelo, filing_year=filing_year, period="0A")
         snapshot = build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
             filing_year=filing_year,
             period="0A",
+            grade=revision.effective_authority_grade,
         )
         assert snapshot.revision.id == "2003-y-siguientes", filing_year
         assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)

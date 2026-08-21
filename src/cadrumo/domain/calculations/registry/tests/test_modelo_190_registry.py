@@ -139,7 +139,11 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     ("ejercicio", "window_id", "expected"),
     [
         (2024, "modelo-190-2024-0a", (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31))),
-        (2026, "modelo-190-2025-0a", (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31))),
+        # Closes 2 February, not 31 January: AEAT's own Calendario del
+        # Contribuyente 2026 lists modelo 190 under "Hasta el 2 de febrero",
+        # because 31 January 2026 is a Saturday. The rule-derived date closed
+        # the window two days early.
+        (2026, "modelo-190-2025-0a", (2026, "2025 0A", date(2026, 1, 1), date(2026, 2, 2))),
     ],
 )
 def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
@@ -198,7 +202,18 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.opens_on == opens_on
     assert window.closes_on == closes_on
     assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
-    assert window.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+    assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
+    # A close date that is NOT the statutory month-end has been moved off a
+    # non-working day, and the only sanctioned reason to move it is AEAT's own
+    # published calendar -- so such a window must cite the calendar it was read
+    # from. Pinning the ref tuple instead reddened when the 2026 window was
+    # corrected from Saturday 31 January to Monday 2 February.
+    moved = window.closes_on.day not in {31, 30, 28, 29}
+    cites_calendar = any("calendario-contribuyente" in ref for ref in window.source_refs)
+    assert cites_calendar == moved, (
+        f"{window.id}: closes_on {window.closes_on} and calendar citation must agree -- "
+        f"a moved deadline names the calendar, an unmoved one does not need it"
+    )
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:

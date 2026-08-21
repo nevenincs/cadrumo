@@ -48,7 +48,11 @@ def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation(
         "orden-hac-132-2026:art-unico",
     }
     assert set(revision.legal_refs) == _M189_LEGAL_REFS
-    assert set(revision.source_refs) == _M189_SOURCE_REFS
+    # The REVISION additionally cites the official Diseno de Registro this
+    # campaign enrolled; the modelo manifest above does not, which is the
+    # existing split rather than a drift. Asserted as the manifest set plus that
+    # one design, so a second unexplained source would still be caught.
+    assert set(revision.source_refs) == _M189_SOURCE_REFS | {"aeat-dr-189-2023"}
     assert revision.casillas
     roles_by_id = {casilla.id: casilla.semantic_role for casilla in revision.casillas}
     assert roles_by_id["declarante-nif"] == "irpf_declarante_nif"
@@ -60,7 +64,9 @@ def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation(
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {
         "boe-modelo-189-2023-amendment-hfp-1284",
     }
-    assert {link.surface for link in revision.application_links} == {"filing", "deadline"}
+    # "export" joined the surfaces when this campaign authored the modelo's
+    # export layout; the link set is a consequence of that, not a drift.
+    assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}
     assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-189-anual"}
 
     stale_refs = {"enrolled-modelo-189-procedure", "enrolled-modelo-189-layout"}
