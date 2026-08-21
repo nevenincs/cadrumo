@@ -181,6 +181,12 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casella 122 del model 193, exercici 2024.
               label: TIPUS DE PERCEPCIÓ
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Model 193 resum anual de retencions sobre capital mobiliari
+          field:
+            label: Model 193, exercici 2024
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -374,3 +380,9 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casella 122 del model 193, exercici 2025.
               label: TIPUS DE PERCEPCIÓ
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Model 193 resum anual de retencions sobre capital mobiliari
+          field:
+            label: Model 193, exercicis 2025 i següents

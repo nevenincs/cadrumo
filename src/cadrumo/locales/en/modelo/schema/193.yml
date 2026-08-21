@@ -184,6 +184,13 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Box 122 of modelo 193, tax year 2024.
               label: RECEIPT TYPE
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 annual summary of withholdings on capital mobiliario
+                  income
+          field:
+            label: Modelo 193, tax year 2024
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -380,3 +387,10 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Box 122 of modelo 193, tax year 2025.
               label: RECEIPT TYPE
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 annual summary of withholdings on capital mobiliario
+                  income
+          field:
+            label: Modelo 193, tax years 2025 onwards

@@ -184,6 +184,12 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casilla 122 del modelo 193, ejercicio 2024.
               label: TIPO DE PERCEPCIÓN
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 resumen anual de retenciones sobre capital mobiliario
+          field:
+            label: Modelo 193, ejercicio 2024
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -378,3 +384,9 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casilla 122 del modelo 193, ejercicio 2025.
               label: TIPO DE PERCEPCIÓN
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 resumen anual de retenciones sobre capital mobiliario
+          field:
+            label: Modelo 193, ejercicios 2025 y siguientes

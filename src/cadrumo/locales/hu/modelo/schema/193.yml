@@ -180,6 +180,12 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
+          field:
+            label: 193-as modelo, 2024. adóév
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -372,3 +378,9 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
+          field:
+            label: 193-as modelo, 2025. adóévtől

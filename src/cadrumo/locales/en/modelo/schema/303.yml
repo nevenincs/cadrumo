@@ -679,6 +679,7 @@ modelo:
               label: null
             '107':
               help: Box 107 of modelo 303, tax year 2022.
+              label: 'Territorial taxation information: common territory'
             '11':
               help: null
               label: null
@@ -699,12 +700,18 @@ modelo:
               label: null
             '125':
               help: Box 125 of modelo 303, tax year 2022.
+              label: Transactions subject under the reverse charge
             '126':
               help: Box 126 of modelo 303, tax year 2022.
+              label: Transactions not subject under place-of-supply rules covered
+                by the one-stop-shop special regimes
             '127':
               help: Box 127 of modelo 303, tax year 2022.
+              label: OSS. Transactions subject to and covered by the one-stop-shop
+                special regimes
             '128':
               help: Box 128 of modelo 303, tax year 2022.
+              label: Intra-group transactions valued per arts. 78 and 79 LIVA
             '13':
               help: null
               label: null
@@ -818,60 +825,90 @@ modelo:
               label: null
             '500':
               help: Box 500 of modelo 303, tax year 2022.
+              label: Pro rata shares - 1 - CNAE activity code
             '501':
               help: Box 501 of modelo 303, tax year 2022.
+              label: Pro rata shares - 1 - Amount of transactions
             '502':
               help: Box 502 of modelo 303, tax year 2022.
+              label: Pro rata shares - 1 - Amount of transactions carrying a right
+                to deduct
             '503':
               help: Box 503 of modelo 303, tax year 2022.
+              label: Pro rata shares - 1 - Pro rata type
             '504':
               help: Box 504 of modelo 303, tax year 2022.
+              label: Pro rata shares - 1 - Pro rata %
             '505':
               help: Box 505 of modelo 303, tax year 2022.
+              label: Pro rata shares - 2 - CNAE activity code
             '506':
               help: Box 506 of modelo 303, tax year 2022.
+              label: Pro rata shares - 2 - Amount of transactions
             '507':
               help: Box 507 of modelo 303, tax year 2022.
+              label: Pro rata shares - 2 - Amount of transactions carrying a right
+                to deduct
             '508':
               help: Box 508 of modelo 303, tax year 2022.
+              label: Pro rata shares - 2 - Pro rata type
             '509':
               help: Box 509 of modelo 303, tax year 2022.
+              label: Pro rata shares - 2 - Pro rata %
             '51':
               help: null
               label: null
             '510':
               help: Box 510 of modelo 303, tax year 2022.
+              label: Pro rata shares - 3 - CNAE activity code
             '511':
               help: Box 511 of modelo 303, tax year 2022.
+              label: Pro rata shares - 3 - Amount of transactions
             '512':
               help: Box 512 of modelo 303, tax year 2022.
+              label: Pro rata shares - 3 - Amount of transactions carrying a right
+                to deduct
             '513':
               help: Box 513 of modelo 303, tax year 2022.
+              label: Pro rata shares - 3 - Pro rata type
             '514':
               help: Box 514 of modelo 303, tax year 2022.
+              label: Pro rata shares - 3 - Pro rata %
             '515':
               help: Box 515 of modelo 303, tax year 2022.
+              label: Pro rata shares - 4 - CNAE activity code
             '516':
               help: Box 516 of modelo 303, tax year 2022.
+              label: Pro rata shares - 4 - Amount of transactions
             '517':
               help: Box 517 of modelo 303, tax year 2022.
+              label: Pro rata shares - 4 - Amount of transactions carrying a right
+                to deduct
             '518':
               help: Box 518 of modelo 303, tax year 2022.
+              label: Pro rata shares - 4 - Pro rata type
             '519':
               help: Box 519 of modelo 303, tax year 2022.
+              label: Pro rata shares - 4 - Pro rata %
             '52':
               help: null
               label: null
             '520':
               help: Box 520 of modelo 303, tax year 2022.
+              label: Pro rata shares - 5 - CNAE activity code
             '521':
               help: Box 521 of modelo 303, tax year 2022.
+              label: Pro rata shares - 5 - Amount of transactions
             '522':
               help: Box 522 of modelo 303, tax year 2022.
+              label: Pro rata shares - 5 - Amount of transactions carrying a right
+                to deduct
             '523':
               help: Box 523 of modelo 303, tax year 2022.
+              label: Pro rata shares - 5 - Pro rata type
             '524':
               help: Box 524 of modelo 303, tax year 2022.
+              label: Pro rata shares - 5 - Pro rata %
             '53':
               help: null
               label: null
@@ -919,79 +956,149 @@ modelo:
               label: null
             '700':
               help: Box 700 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+                transactions - Current goods and services - Taxable base
             '701':
               help: Box 701 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+                transactions - Current goods and services - Deductible cuota
             '702':
               help: Box 702 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+                transactions - Capital goods - Taxable base
             '703':
               help: Box 703 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+                transactions - Capital goods - Deductible cuota
             '704':
               help: Box 704 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+                - Current goods - Taxable base
             '705':
               help: Box 705 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+                - Current goods - Deductible cuota
             '706':
               help: Box 706 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+                - Capital goods - Taxable base
             '707':
               help: Box 707 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+                - Capital goods - Deductible cuota
             '708':
               help: Box 708 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+                acquisitions - Current goods and services - Taxable base
             '709':
               help: Box 709 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+                acquisitions - Current goods and services - Deductible cuota
             '71':
               help: Field declared on modelo 303, taken from the official record design.
               label: Result of the settlement
             '710':
               help: Box 710 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+                acquisitions - Capital goods - Taxable base
             '711':
               help: Box 711 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+                acquisitions - Capital goods - Deductible cuota
             '712':
               help: Box 712 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Compensation, special
+                regime for agriculture, livestock and fishing - Taxable base
             '713':
               help: Box 713 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Compensation, special
+                regime for agriculture, livestock and fishing - Deductible cuota
             '714':
               help: Box 714 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+                - Taxable base
             '715':
               help: Box 715 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+                - Deductible cuota
             '716':
               help: Box 716 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Adjustment of capital
+                goods
             '717':
               help: Box 717 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 1 - Total deductions
             '718':
               help: Box 718 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+                transactions - Current goods and services - Taxable base
             '719':
               help: Box 719 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+                transactions - Current goods and services - Deductible cuota
             '720':
               help: Box 720 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+                transactions - Capital goods - Taxable base
             '721':
               help: Box 721 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+                transactions - Capital goods - Deductible cuota
             '722':
               help: Box 722 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+                - Current goods - Taxable base
             '723':
               help: Box 723 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+                - Current goods - Deductible cuota
             '724':
               help: Box 724 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+                - Capital goods - Taxable base
             '725':
               help: Box 725 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+                - Capital goods - Deductible cuota
             '726':
               help: Box 726 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+                acquisitions - Current goods and services - Taxable base
             '727':
               help: Box 727 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+                acquisitions - Current goods and services - Deductible cuota
             '728':
               help: Box 728 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+                acquisitions - Capital goods - Taxable base
             '729':
               help: Box 729 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+                acquisitions - Capital goods - Deductible cuota
             '730':
               help: Box 730 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Compensation, special
+                regime for agriculture, livestock and fishing - Taxable base
             '731':
               help: Box 731 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Compensation, special
+                regime for agriculture, livestock and fishing - Deductible cuota
             '732':
               help: Box 732 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+                - Taxable base
             '733':
               help: Box 733 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+                - Deductible cuota
             '734':
               help: Box 734 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Adjustment of capital
+                goods
             '735':
               help: Box 735 of modelo 303, tax year 2022.
+              label: 13. Differentiated deduction regimes - 2 - Total deductions
             '74':
               help: null
               label: null
@@ -1006,40 +1113,72 @@ modelo:
               label: null
             '79':
               help: Box 79 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Non-recurring supplies
+                of immovable property, financial transactions and investment gold
+                transactions
             '80':
               help: Box 80 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                general regime
             '81':
               help: Box 81 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                special cash-basis regime per art. 75 LIVA
             '83':
               help: Box 83 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Exempt transactions with
+                no right to deduct
             '84':
               help: Box 84 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions not subject
+                under place-of-supply rules (except those in box 126)
             '86':
               help: Box 86 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                simplified regime
             '88':
               help: Box 88 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Total turnover
             '89':
               help: Box 89 of modelo 303, tax year 2022.
+              label: 'Territorial taxation information: Álava'
             '90':
               help: Box 90 of modelo 303, tax year 2022.
+              label: 'Territorial taxation information: Gipuzkoa'
             '91':
               help: Box 91 of modelo 303, tax year 2022.
+              label: 'Territorial taxation information: Bizkaia'
             '92':
               help: Box 92 of modelo 303, tax year 2022.
+              label: 'Territorial taxation information: Navarre'
             '93':
               help: Box 93 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Intra-Community supplies
+                of goods and services
             '94':
               help: Box 94 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Exports and other exempt
+                transactions carrying a right to deduct
             '95':
               help: Box 95 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                special regime for agriculture, livestock and fishing
             '96':
               help: Box 96 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions by taxable
+                persons under the recargo de equivalencia special regime
             '97':
               help: Box 97 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                special regime for second-hand goods, works of art, antiques and collectors'
+                items
             '98':
               help: Box 98 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Transactions under the
+                special regime for travel agencies
             '99':
               help: Box 99 of modelo 303, tax year 2022.
+              label: Transactions carried out in the year - Supplies of capital goods
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
