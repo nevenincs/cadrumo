@@ -23,7 +23,9 @@ genuinely well-formed row that differs only in the key it is filed under.
 
 from __future__ import annotations
 
+import ast
 import inspect
+import textwrap
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -212,7 +214,7 @@ def test_no_unverified_full_scan_survives_on_the_base() -> None:
         name: inspect.getsource(getattr(SecureBoundRepository, name)) for name in ("iter_records", "iter_ids")
     }
     for name, source in scan_sources.items():
-        assert "_iter_identified_payloads()" in source, f"{name} does not route through the verifying scan"
+        assert _calls(source, "_iter_identified_payloads"), f"{name} does not route through the verifying scan"
 
     verifier = inspect.getsource(SecureBoundRepository._iter_identified_payloads)
     assert "secure_object_key_digest(" in verifier, "the scan no longer recomputes the row key"
@@ -225,3 +227,40 @@ def test_no_unverified_full_scan_survives_on_the_base() -> None:
         f"an additional public scan surface exists: {sorted(public_scans)}; "
         "a second scan beside the verifying one re-opens the fail-open gap"
     )
+
+
+def _calls(source: str, callee: str) -> bool:
+    """Whether ``source`` actually CALLS ``callee``, not merely mentions it.
+
+    The delegation half of this gate asked whether the verifying scan's NAME
+    appeared in each public scan's source. A scan that stopped routing through
+    it while keeping a sentence naming it passed -- which is the reintroduced
+    unverified scan this module exists to notice.
+
+    The two checks BELOW this one stay textual on purpose: they assert the
+    verifier still contains its own recompute and its own refusal, where a
+    stray mention fails safe by refusing something harmless rather than
+    admitting an unverified scan.
+    """
+    tree = ast.parse(textwrap.dedent(source))
+    return any(
+        isinstance(node, ast.Call)
+        and (
+            (isinstance(node.func, ast.Attribute) and node.func.attr == callee)
+            or (isinstance(node.func, ast.Name) and node.func.id == callee)
+        )
+        for node in ast.walk(tree)
+    )
+
+
+def test_the_delegation_check_rejects_a_docstring_mention() -> None:
+    """DISCRIMINATING: a mention is not a call."""
+    routing = "def iter_records(self):\n    return self._iter_identified_payloads()\n"
+    mentioning = (
+        "def iter_records(self):\n"
+        '    """Rows come from _iter_identified_payloads() upstream."""\n'
+        "    return self._raw_rows()\n"
+    )
+
+    assert _calls(routing, "_iter_identified_payloads")
+    assert not _calls(mentioning, "_iter_identified_payloads")
