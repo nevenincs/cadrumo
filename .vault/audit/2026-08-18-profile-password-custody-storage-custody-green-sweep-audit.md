@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:90da7a99fe546a22fe583e9d67e0dcc68944a78125ccf9cae69e7c4d6db3b35f'
+body_hash: 'sha256:2404578a260a699dc195ed4ff5750937c9eddeb8a2c8e42f0438d9ee3c8ad5f4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3382,3 +3382,38 @@ invisible in a passing test.
 The corrected docstring records the earlier version and why it was insufficient. A
 passing assertion that passes for the wrong reason is harder to notice the second time,
 because by then it has a history of being green.
+
+### The accepting paths were tested; the refusals were not
+
+Coverage again, on `_secure_object_schema` at 70%. The unexecuted lines were **the
+refusals themselves** — every branch that raises on a shape the format cannot produce.
+The accepting paths were exercised, so the module read as tested while the question it
+exists to answer, *what happens when the stored bytes are wrong*, had never been asked.
+
+This is the same shape as the canary's early-exit coverage two passes ago, from the other
+side: there, many tests reached the function and none reached its verdict; here, the
+happy path was covered and none of the refusals were. Both produce a module that looks
+well tested. **Coverage of a parser means little until the malformed inputs are among the
+cases**, because parsers are mostly refusal by line count and mostly acceptance by test
+count.
+
+What these helpers read is whatever the database actually holds — a truncated write, a
+hand-edited row, a column written by something that is not this code.
+`no-legacy-compatibility` is explicit: refuse, do not tolerate. An ancestry column that
+will not parse is corruption now, and returning an empty chain would erase a revision's
+lineage rather than report it unreadable.
+
+Each refusal is paired with the acceptance it must not break — bytes, bytearray,
+memoryview and str all still coerce; NULL and empty ancestry are still a legitimately
+empty chain — because a module where everything raised would satisfy every refusal on its
+own. The sharpest case is a well-formed JSON list whose members are not revision ids: the
+shape closest to valid, and what a partial write produces. Proven by making the JSON
+refusal return `()` instead.
+
+**A flake, now with two data points.** `test_modelo_catalogue_defaults_isolate_bucket_writes`
+has failed in two separate lane runs during this campaign and passed on every re-run,
+including twice when run directly alongside the new tests. The worktree's known
+concurrent-I/O flakiness on its backing share explains it, and the isolation check was
+run precisely because these new tests write real SQLite databases and that name would be
+the first thing to suspect. Recorded rather than dismissed: one occurrence is noise, two
+is a candidate, and the next reader should not have to re-derive that it was checked.
