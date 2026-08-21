@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:789b4a4a263cfd85d4af90cf90e0bb936d5666c0ae7e0e10aab31bc8b4144622'
+body_hash: 'sha256:da0966ef394a2c45b34802cad48ffe4bab377b144f3c96faf00ec7f5f53227b8'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2953,3 +2953,31 @@ now required to find the modules that used to hold the copies.
 also has a canonical home elsewhere, the private copy is not just a second definition —
 it is the number without its justification. Look for a value that appears with a citation
 in one place and bare in another.
+
+### The same value with no name at all
+
+The residue a name-keyed sweep structurally cannot see. After retiring seven private
+copies of the crypto parameters, the same magnitudes were still written inline: two
+modules split an AEAD ciphertext with a bare `16` — `ciphertext[:-16]` and
+`ciphertext[-16:]` — and four sites checked a DEK against a bare `32`. Those are
+`GCM_TAG_SIZE` and `KEY_SIZE`. Inline they are the value with neither its name nor its
+reason, which is exactly why they outlived the named copies.
+
+**The rejections are the substance.** The scan surfaced sixteen inline uses of these
+magnitudes and most were left alone: a SHA-256 digest is 32 bytes, a salt is 16, a hex
+route-marker prefix is 16. Those are different concepts that happen to share a number,
+and renaming them to a crypto constant would assert a relationship that does not exist —
+a worse defect than the duplication, and one that would read as deliberate. A magnitude
+sweep produces candidates; only the surrounding meaning decides.
+
+**Renaming changes no behaviour, so the test does not assert the rename.** There is no
+sound gate here either: a tree-wide prohibition on a bare `16` would fire on every salt
+and digest above. What is assertable is the property the rename makes checkable — the tag
+the production writer splits off is exactly as long as the crypto layer says a tag is,
+driven through real encryption rather than compared against a constant. Proven by slicing
+at 15 instead.
+
+**Generalisable:** a refactor that changes no behaviour still has a property worth
+pinning, and it is usually the one the refactor made expressible. Ask what the change now
+lets you say that you could not say before, and assert that — rather than asserting the
+edit, or shipping the edit unasserted.
