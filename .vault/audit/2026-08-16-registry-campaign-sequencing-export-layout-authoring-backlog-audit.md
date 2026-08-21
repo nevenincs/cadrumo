@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb14e08477483eccf56459eebc2fb9f4f7ab6e1e20bf0639c4bbb4c8873c213d'
+body_hash: 'sha256:67b0724826804cc2e3335a89cf4bf1c160ccf129862fcf8daff6fe17cc930b65'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9496,3 +9496,15 @@ patched there, it reds 2,606 -> 3,899. The same mistake was made earlier in the
 campaign against the cross-period consumption gate. The lesson is not "check the
 loader" but that a control which does not red is a statement about the CONTROL
 until its reach is proven.
+
+### Measured state
+
+Registry suite: **19 failed, 5,091 passed** (from 22 / 5,088). Three fixed, none
+newly failing, on integrity-checked logs (22 `FAILED` lines against 22, 19
+against 19). Authority CLEAN, generated-tree gates 30 passed, ruff clean.
+
+The remaining 19 are `test_revision_span_matches_published_designs` (4) plus
+fifteen singletons. Two named backlogs stand behind them and both are acquisition
+or sequencing bound rather than blocked on analysis: the 1,798 missing Spanish
+casilla labels, and the 88 weekend deadlines plus four design spans that need
+official AEAT artifacts the bundle does not carry.
