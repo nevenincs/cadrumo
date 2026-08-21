@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:67357db40b479458147dc0d68788ccddd15e3289de391f5c7db41203ee2152cf'
+body_hash: 'sha256:61a03d6ba389e8db8c4e07b8de12a56250ce8e3d70f094f686acfd2c81851863'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3132,3 +3132,36 @@ believed complete.
 **Generalisable:** a detector's claim about itself is a claim to test. Write the evasions
 you would use if you wanted the gate to miss something, run them, and either close them or
 narrow the claim to what survives.
+
+### The evasion was systemic across this campaign's gates, not one gate's slip
+
+Having found the composing-write detector walkable, the same probe was run against the
+remaining shape-matching gates. **Two more were evadable in exactly the same way**, which
+makes it a property of how these detectors were written rather than one lapse.
+
+**The unsecured-session canary** matched `BucketSession.open` only as an attribute call.
+Three ordinary refactors reported a function as opening no session, so the canary
+requirement never applied to it: binding the class to a local, binding the opener, and
+`getattr`. Of the three gates this is the worst to have been evadable — a miss here is a
+real taxpayer's records written under a published deterministic key.
+
+Its **anti-tautology case earns as much attention as the widening**. `open` is among the
+most common method names there is — a file, a connection, a lock — so an unrelated
+`.open` and `open_resumed` are both asserted NOT to be flagged. A detector that filled
+this gate with functions that never touch a session would convert its requirement into
+noise to dismiss, which fails in a quieter way than missing a site.
+
+**The test-support import gate** scanned import STATEMENTS only, so
+`importlib.import_module("cadrumo.tests...")` walked past it. That is not an exotic
+spelling in this tree: `aeat-architecture-boundaries` explicitly sanctions a dynamic
+`import_module` to break a cycle, so a production module has a legitimate reason to
+already hold one. Only a tests path is flagged, with a case proving an ordinary dynamic
+import is not.
+
+Both trees stayed green through both widenings, so nothing was hiding behind either
+matcher — these close evasions rather than uncover defects.
+
+**Generalisable, and stronger than the single-gate version:** when one detector proves
+evadable, the evasion is evidence about the AUTHOR'S habit, not about that detector.
+Every gate written the same way shares it. The cheap sweep is to take the working evasion
+and replay it against every sibling gate before assuming the first was unlucky.
