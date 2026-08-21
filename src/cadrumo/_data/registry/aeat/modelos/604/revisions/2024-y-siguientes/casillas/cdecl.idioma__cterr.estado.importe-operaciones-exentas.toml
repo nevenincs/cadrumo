@@ -337,7 +337,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.01-base-imponible"
-number = "liq-01-base-imponible"
+number = "01"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -348,7 +348,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.02-cuota"
-number = "liq-02-cuota"
+number = "02"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -370,7 +370,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.03-base-rectificaciones"
-number = "liq-03-base-rectificaciones"
+number = "03"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -392,7 +392,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.04-cuota-rectificaciones"
-number = "liq-04-cuota-rectificaciones"
+number = "04"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -403,7 +403,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.05-operaciones-exentas"
-number = "liq-05-operaciones-exentas"
+number = "05"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -414,7 +414,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.08-diferencia"
-number = "liq-08-diferencia"
+number = "08"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -425,7 +425,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.09-cuota-estado"
-number = "liq-09-cuota-estado"
+number = "09"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -447,7 +447,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.10-cuota-rectificaciones-estado"
-number = "liq-10-cuota-rectificaciones-estado"
+number = "10"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -458,7 +458,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.11-porcentaje-atribuible-estado"
-number = "liq-11-porcentaje-atribuible-estado"
+number = "11"
 section = ["liquidacion"]
 data_type = "ratio"
 required = false
@@ -469,7 +469,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.12-resultado-estado"
-number = "liq-12-resultado-estado"
+number = "12"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -480,7 +480,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.06-a-deducir"
-number = "liq-06-a-deducir"
+number = "06"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -491,7 +491,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.07-resultado"
-number = "liq-07-resultado"
+number = "07"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -524,7 +524,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-sujetas-no-exentas"
-number = "terr-alava-cuota-sujetas-no-exentas"
+number = "13"
 section = ["territorio", "alava"]
 data_type = "money"
 required = false
@@ -546,7 +546,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-rectificaciones"
-number = "terr-alava-cuota-rectificaciones"
+number = "14"
 section = ["territorio", "alava"]
 data_type = "money"
 required = false
@@ -557,7 +557,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-total-atribuible"
-number = "terr-alava-cuota-total-atribuible"
+number = "15"
 section = ["territorio", "alava"]
 data_type = "money"
 required = false
@@ -568,7 +568,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.porcentaje-atribuible"
-number = "terr-alava-porcentaje-atribuible"
+number = "16"
 section = ["territorio", "alava"]
 data_type = "ratio"
 required = false
@@ -579,7 +579,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.importe-operaciones-exentas"
-number = "terr-alava-importe-operaciones-exentas"
+number = "17"
 section = ["territorio", "alava"]
 data_type = "money"
 required = false
@@ -590,7 +590,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-sujetas-no-exentas"
-number = "terr-guipuzcoa-cuota-sujetas-no-exentas"
+number = "18"
 section = ["territorio", "guipuzcoa"]
 data_type = "money"
 required = false
@@ -612,7 +612,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-rectificaciones"
-number = "terr-guipuzcoa-cuota-rectificaciones"
+number = "19"
 section = ["territorio", "guipuzcoa"]
 data_type = "money"
 required = false
@@ -623,7 +623,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-total-atribuible"
-number = "terr-guipuzcoa-cuota-total-atribuible"
+number = "20"
 section = ["territorio", "guipuzcoa"]
 data_type = "money"
 required = false
@@ -634,7 +634,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.porcentaje-atribuible"
-number = "terr-guipuzcoa-porcentaje-atribuible"
+number = "21"
 section = ["territorio", "guipuzcoa"]
 data_type = "ratio"
 required = false
@@ -645,7 +645,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.importe-operaciones-exentas"
-number = "terr-guipuzcoa-importe-operaciones-exentas"
+number = "22"
 section = ["territorio", "guipuzcoa"]
 data_type = "money"
 required = false
@@ -656,7 +656,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-sujetas-no-exentas"
-number = "terr-vizcaya-cuota-sujetas-no-exentas"
+number = "23"
 section = ["territorio", "vizcaya"]
 data_type = "money"
 required = false
@@ -678,7 +678,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-rectificaciones"
-number = "terr-vizcaya-cuota-rectificaciones"
+number = "24"
 section = ["territorio", "vizcaya"]
 data_type = "money"
 required = false
@@ -689,7 +689,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-total-atribuible"
-number = "terr-vizcaya-cuota-total-atribuible"
+number = "25"
 section = ["territorio", "vizcaya"]
 data_type = "money"
 required = false
@@ -700,7 +700,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.porcentaje-atribuible"
-number = "terr-vizcaya-porcentaje-atribuible"
+number = "26"
 section = ["territorio", "vizcaya"]
 data_type = "ratio"
 required = false
@@ -711,7 +711,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.importe-operaciones-exentas"
-number = "terr-vizcaya-importe-operaciones-exentas"
+number = "27"
 section = ["territorio", "vizcaya"]
 data_type = "money"
 required = false
@@ -722,7 +722,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-sujetas-no-exentas"
-number = "terr-navarra-cuota-sujetas-no-exentas"
+number = "28"
 section = ["territorio", "navarra"]
 data_type = "money"
 required = false
@@ -744,7 +744,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-rectificaciones"
-number = "terr-navarra-cuota-rectificaciones"
+number = "29"
 section = ["territorio", "navarra"]
 data_type = "money"
 required = false
@@ -755,7 +755,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-total-atribuible"
-number = "terr-navarra-cuota-total-atribuible"
+number = "30"
 section = ["territorio", "navarra"]
 data_type = "money"
 required = false
@@ -766,7 +766,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.porcentaje-atribuible"
-number = "terr-navarra-porcentaje-atribuible"
+number = "31"
 section = ["territorio", "navarra"]
 data_type = "ratio"
 required = false
@@ -777,7 +777,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.importe-operaciones-exentas"
-number = "terr-navarra-importe-operaciones-exentas"
+number = "32"
 section = ["territorio", "navarra"]
 data_type = "money"
 required = false
@@ -788,7 +788,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-sujetas-no-exentas"
-number = "terr-estado-cuota-sujetas-no-exentas"
+number = "33"
 section = ["territorio", "estado"]
 data_type = "money"
 required = false
@@ -810,7 +810,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-rectificaciones"
-number = "terr-estado-cuota-rectificaciones"
+number = "34"
 section = ["territorio", "estado"]
 data_type = "money"
 required = false
@@ -821,7 +821,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-total-atribuible"
-number = "terr-estado-cuota-total-atribuible"
+number = "35"
 section = ["territorio", "estado"]
 data_type = "money"
 required = false
@@ -832,7 +832,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.porcentaje-atribuible"
-number = "terr-estado-porcentaje-atribuible"
+number = "36"
 section = ["territorio", "estado"]
 data_type = "ratio"
 required = false
@@ -843,7 +843,7 @@ source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.importe-operaciones-exentas"
-number = "terr-estado-importe-operaciones-exentas"
+number = "37"
 section = ["territorio", "estado"]
 data_type = "money"
 required = false

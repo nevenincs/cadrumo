@@ -48,22 +48,16 @@ modelo:
               help: null
               label: Visszatérítést kér banki átutalással
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              help: null
               label: Tőkenyereség
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              help: null
               label: A társaság vagy befektetési alap adóazonosító száma (NIF)
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              help: null
               label: Forrásadó vagy adóelőleg
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              help: null
               label: Jövedelemtípus
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              help: null
               label: Tőkenyereségek összesen
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              help: null
               label: Forrásadók és adóelőlegek összesen
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: null
@@ -1737,10 +1731,32 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: null
               label: Befizetés / Csoportos beszedés / Visszatérítés. IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Tőkenyereség
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. A befektetési társaság vagy alap NIF száma
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: A 151-es modelo 03. rovata, 2025. adóév.
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: A 151-es modelo 01. rovata, 2025. adóév.
               label: A modelo- és oldalazonosító kezdete
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Tőkenyereségek összesen
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: A 151-es modelo kollektiv befektetesi jegyek atruhazasarol szolo
+                mellekletenek adata.
+              label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
+                jegyeinek átruházása. Levonások vagy előlegfizetések összesen
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
               help: null
               label: 'Megtakarítási adóalap (a TRLIRNR 25.1.f cikke szerinti jövedelmek

@@ -17,7 +17,7 @@ modelo:
                 antes, o complementaria que añade datos omitidos.'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
-            label: null
+            label: Modelo 185 (orden-hac-96-2003), ejercicios 2003 a 2025
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

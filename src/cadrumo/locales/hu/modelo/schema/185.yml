@@ -15,7 +15,7 @@ modelo:
                 vagy kihagyott adatokat pótló kiegészítő.'
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
-            label: null
+            label: 185-ös modelo (orden-hac-96-2003), 2003-2025. adóévek
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

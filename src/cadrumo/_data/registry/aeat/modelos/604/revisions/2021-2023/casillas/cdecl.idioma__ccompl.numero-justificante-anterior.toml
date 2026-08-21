@@ -337,7 +337,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.01-base-imponible"
-number = "liq-01-base-imponible"
+number = "01"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -348,7 +348,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.02-cuota"
-number = "liq-02-cuota"
+number = "02"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -370,7 +370,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.03-base-rectificaciones"
-number = "liq-03-base-rectificaciones"
+number = "03"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -392,7 +392,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.04-cuota-rectificaciones"
-number = "liq-04-cuota-rectificaciones"
+number = "04"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -403,7 +403,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.05-operaciones-exentas"
-number = "liq-05-operaciones-exentas"
+number = "05"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -414,7 +414,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.06-a-deducir"
-number = "liq-06-a-deducir"
+number = "06"
 section = ["liquidacion"]
 data_type = "money"
 required = false
@@ -425,7 +425,7 @@ source_refs = ["aeat-dr-604-2021"]
 
 [[revisions."2021-2023".casillas]]
 id = "liq.07-resultado"
-number = "liq-07-resultado"
+number = "07"
 section = ["liquidacion"]
 data_type = "money"
 required = false

@@ -130,7 +130,20 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
 
     assert modelo.exit_code != 0, modelo.output
     assert ledger.exit_code != 0, ledger.output
-    assert modelo.output.strip() == ledger.output.strip(), (
+
+    # The envelope spine requires every refusal to name the command that
+    # produced it, so the `command:` line differs by contract and cannot be
+    # part of a cross-surface comparison. Everything else -- the message, the
+    # failed condition, the evidence and the recovery action -- is what
+    # "identical refusal" means here.
+    def _surface_independent(output: str) -> tuple[str, ...]:
+        return tuple(
+            line
+            for line in output.strip().splitlines()
+            if not line.strip().startswith("command:")
+        )
+
+    assert _surface_independent(modelo.output) == _surface_independent(ledger.output), (
         "cold-start refusal diverged between modelo work and ledger surfaces:\n"
         f"  modelo work list: {modelo.output!r}\n"
         f"  ledger list:      {ledger.output!r}"

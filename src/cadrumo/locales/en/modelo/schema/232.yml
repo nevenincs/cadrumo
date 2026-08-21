@@ -16,140 +16,210 @@ modelo:
         2016-2017:
           casilla:
             vinculada-1-fjo:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Natural / legal
+                / other person (F/J/O)
             vinculada-1-importe:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Transaction
+                amount
             vinculada-1-ingreso-pago:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Income or payment
             vinculada-1-metodo-valoracion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Valuation method
             vinculada-1-nif:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - NIF of the
+                related person or entity
             vinculada-1-provincia-pais:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Province or
+                country code
             vinculada-1-razon-social:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Surnames and
+                first name or company name
             vinculada-1-tipo-operacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Type of transaction
             vinculada-1-tipo-vinculacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 1 declared on modelo
+                232.
+              label: Transactions with related persons or entities 1 - Type of relationship
             vinculada-2-fjo:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Natural / legal
+                / other person (F/J/O)
             vinculada-2-importe:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Transaction
+                amount
             vinculada-2-ingreso-pago:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Income or payment
             vinculada-2-metodo-valoracion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Valuation method
             vinculada-2-nif:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - NIF of the
+                related person or entity
             vinculada-2-provincia-pais:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Province or
+                country code
             vinculada-2-razon-social:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Surnames and
+                first name or company name
             vinculada-2-tipo-operacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Type of transaction
             vinculada-2-tipo-vinculacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 2 declared on modelo
+                232.
+              label: Transactions with related persons or entities 2 - Type of relationship
             vinculada-3-fjo:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Natural / legal
+                / other person (F/J/O)
             vinculada-3-importe:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Transaction
+                amount
             vinculada-3-ingreso-pago:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Income or payment
             vinculada-3-metodo-valoracion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Valuation method
             vinculada-3-nif:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - NIF of the
+                related person or entity
             vinculada-3-provincia-pais:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Province or
+                country code
             vinculada-3-razon-social:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Surnames and
+                first name or company name
             vinculada-3-tipo-operacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Type of transaction
             vinculada-3-tipo-vinculacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 3 declared on modelo
+                232.
+              label: Transactions with related persons or entities 3 - Type of relationship
             vinculada-4-fjo:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Natural / legal
+                / other person (F/J/O)
             vinculada-4-importe:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Transaction
+                amount
             vinculada-4-ingreso-pago:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Income or payment
             vinculada-4-metodo-valoracion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Valuation method
             vinculada-4-nif:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - NIF of the
+                related person or entity
             vinculada-4-provincia-pais:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Province or
+                country code
             vinculada-4-razon-social:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Surnames and
+                first name or company name
             vinculada-4-tipo-operacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Type of transaction
             vinculada-4-tipo-vinculacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 4 declared on modelo
+                232.
+              label: Transactions with related persons or entities 4 - Type of relationship
             vinculada-5-fjo:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Natural / legal
+                / other person (F/J/O)
             vinculada-5-importe:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Transaction
+                amount
             vinculada-5-ingreso-pago:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Income or payment
             vinculada-5-metodo-valoracion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Valuation method
             vinculada-5-nif:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - NIF of the
+                related person or entity
             vinculada-5-provincia-pais:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Province or
+                country code
             vinculada-5-razon-social:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Surnames and
+                first name or company name
             vinculada-5-tipo-operacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Type of transaction
             vinculada-5-tipo-vinculacion:
-              help: null
-              label: null
+              help: Field of related-party transaction number 5 declared on modelo
+                232.
+              label: Transactions with related persons or entities 5 - Type of relationship
             x-chim6r1ecdn62p8:
               help: null
               label: NACE code of the principal activity

@@ -16,7 +16,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_defaulted_natural_person_profile(profile_name: str) -> None:
-    """Register the profile through the shared CLI registration door."""
+    """Register a profile that genuinely lacks the baseline these tests block on.
+
+    The shared CLI door fills every schema-required field -- including the
+    conditional ones an economic-activity profile acquires -- so registering
+    through it alone yields a COMPLETE profile and the readiness block these
+    tests assert can never occur. An empty value is how a caller declines one
+    of those fills: the door drops falsy facts before registering, so the field
+    is absent rather than blank.
+    """
     register_cli_profile(
         label=profile_name,
         facts={
@@ -25,6 +33,7 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "identity.tax_id": "12345678Z",
             "identity.name": "Lucia",
             "identity.surnames": "Navarro",
+            "activities.description": "",
         },
     )
 
@@ -184,7 +193,12 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "identity.tax_id": "12345678Z",
             "identity.name": "Pere",
             "identity.surnames": "Rosello Rerun",
-            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario,pension",
+            # Declined explicitly: the shared door seeds an activity
+            # description for every profile, which is the one fact this
+            # persona must not have. A falsy value is dropped before
+            # registration, so the field is absent rather than blank.
+            "activities.description": "",
             "tax_residence.ccaa": "cataluna",
             "contact.postcode": "08001",
             "renta_filing.declaration_type": "1",
@@ -276,7 +290,11 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
             "taxpayer_type.entity_type": "attribution_entity",
             "identity.tax_id": "E12345674",
             "identity.name": "Comunidad sin actividad",
+            "activities.description": "",
         },
+        # The subject is an entity that is NOT configured, and the door
+        # marks setup complete unless told otherwise.
+        complete=False,
     )
 
     status = invoke_cached_cli(["--format", "json", "config", "profile", "status"])

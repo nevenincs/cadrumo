@@ -83,6 +83,7 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         return register_cli_profile(label=label, facts=facts)
 
 
+@pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
 def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_path: Path) -> None:
     """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced.
 

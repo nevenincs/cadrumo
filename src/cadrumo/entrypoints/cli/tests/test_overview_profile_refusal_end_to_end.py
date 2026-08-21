@@ -13,6 +13,7 @@ on.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -83,10 +84,22 @@ def test_the_verb_refuses_because_the_profile_fact_is_unanswered(
     this, a refusal caused by something else entirely could still carry the
     label and the next test would pass for the wrong reason.
     """
-    result = _invoke(list(args))
+    # Asserted on the envelope rather than on the prose, because the refusal
+    # word is translated and an English token never appears in a
+    # Spanish-rendered refusal. The siblings below stay on text only because
+    # they resolve their expected label through the locale the CLI renders in.
+    #
+    # The FAILED CONDITION is the assertion, not the category or the code:
+    # both of those are shared with a Click parameter error on the same verb,
+    # measured against the live CLI, so neither can establish that omitting the
+    # fact is what refused. A parameter error names no condition at all.
+    result = _invoke(["--format", "json", *args])
 
     assert result.exit_code != 0, result.output
-    assert "Refused." in result.output, result.output
+    envelope = json.loads(result.output)
+    assert envelope["status"] == "error", result.output
+    action = envelope["error"]["action"] or {}
+    assert action["failed_condition_id"] == "cli.overview.profile.complete", result.output
 
 
 @pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
