@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path, resources
+from .....domain.deadlines import shift_deadline
 from .._corpus_catalogue import verify_source_catalogue
 from .._legal import verify_legal_catalogue
 
@@ -67,7 +68,17 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     assert not revision.formulas
     assert revision.completeness_manifest is None
     assert {window.id for window in revision.deadline_windows} == {"modelo-345-2025-0a"}
-    assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 2, 2)}
+    # The window stores the NOMINAL statutory close from orden-hfp-823-2022 art. 4
+    # ("entre el 1 y el 31 de enero"), not AEAT's published operational date. The
+    # 31st falls on a Saturday in 2026, and the shift that derives 2 February is
+    # applied on read. Both halves are asserted because storing the pre-shifted
+    # date also passes a bare "operator sees 2 February" check while reporting
+    # shifted=False / business_day -- a false statement that discards the
+    # statutory date.
+    assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 1, 31)}
+    (window,) = revision.deadline_windows
+    shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None)
+    assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
     # "export" joined the surfaces when this campaign authored the modelo's
     # export layout; the link set is a consequence of that, not a drift.
