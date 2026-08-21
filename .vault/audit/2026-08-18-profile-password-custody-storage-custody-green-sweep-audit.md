@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a7790bc70f890c2cc6db6cdcca8804bccac4d431addcbc2e0c3cf5f12e26c368'
+body_hash: 'sha256:789b4a4a263cfd85d4af90cf90e0bb936d5666c0ae7e0e10aab31bc8b4144622'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -2917,3 +2917,39 @@ satisfy the check.
 **Generalisable:** duplicated constants are hardest to see when they agree, and a test
 that compares their VALUES will never find them. Look for two definitions, not two
 values.
+
+### Seven private copies of three crypto parameters
+
+Sweeping the domain for every constant with more than one defining module — the
+enumerable form of last pass's finding. Ten names came back; most are per-module idioms
+that SHOULD repeat (`_LOGGER`, the lazy-export maps, a `TypeAdapter`). Three were real,
+and they were the crypto parameters:
+
+* `_DEK_BYTES = 32` in `custody/_acceleration_receipt.py`, `custody/_records.py` and
+  `master_key/_bucket_session.py`
+* `_AEAD_NONCE_BYTES = 12` and `_AEAD_TAG_BYTES = 16` in `custody/_records.py` and
+  `custody/_sentinel_contract.py`
+
+`storage.crypto` already exported all three as `KEY_SIZE`, `NONCE_SIZE` and
+`GCM_TAG_SIZE` — in the same package tree, each documented with the standard it comes
+from. The nonce and tag sizes cite NIST SP 800-38D. A private `= 12` cites nothing, so
+the copies were not merely duplicates; they were the values stripped of their reason.
+
+**These are worse than a duplicated file ceiling.** A ceiling that diverges refuses a
+file — loud, and the operator sees it. A nonce or tag size that diverges means two
+readers of the SAME record disagree about where the tag ends and the ciphertext begins,
+and a key length that diverges means two modules disagree about how much key there is.
+All seven agreed, which is precisely why nothing had ever surfaced them.
+
+Call sites now use the canonical names rather than a local alias, so there is one NAME as
+well as one value — an alias would have left the gate a second assignment to police.
+
+The single-home gate is extended across the whole storage tree, and its anti-vacuity half
+was strengthened in the process: the new assertion is an equality against one path, which
+would pass vacuously if the walk stopped seeing everything *except* that path. The walk is
+now required to find the modules that used to hold the copies.
+
+**Generalisable, and the sharper half of last pass's rule:** when a duplicated constant
+also has a canonical home elsewhere, the private copy is not just a second definition —
+it is the number without its justification. Look for a value that appears with a citation
+in one place and bare in another.
