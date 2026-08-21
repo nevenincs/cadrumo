@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3bf0712f905e4792e5a60c929f946b0d3639516fb840edcbb2b9b02e9cb99d9'
+body_hash: 'sha256:a35bd5579658a583aab03f53f0fe03edb05ab07120a5fd615c6bad32d471d123'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9151,3 +9151,72 @@ miss".
 Registry suite: **42 failed, 5,068 passed** (from 50 / 5,044 at the tick's start).
 Eleven fixed in total, none newly failing across either half of the tick, on
 per-test diffs over logs that all pass the integrity check.
+
+## Modelo 296 carried two prior-period values into slots nothing read
+
+The one real registry defect in this tick's cluster, and it was dormant capacity
+of exactly the shape `aeat-calculation-aggregation` forbids.
+
+Modelo 296's `2024-y-siguientes` declares two `periodic_to_annual_summary`
+relations onto two `relation_prefill` bindings — slots that exist ONLY to be
+materialised by relation resolution — and **no casilla consumed either**. The
+cross-period gate reported them as inert: a prior-period value carried into a
+slot with no reader.
+
+The pairing is semantically exact, read from the casillas' own roles rather than
+inferred from position:
+
+```
+216 casilla 10  irnr_retencion_base_total   ->  296 casilla 02  irnr_resumen_base
+216 casilla 13  irnr_retencion_cuota_total  ->  296 casilla 03  irnr_resumen_retenciones
+```
+
+Casilla 04 (`irnr_resumen_retenciones_ingresadas`) has no modelo 216 source
+declared and stays operator input.
+
+Binding 02 and 03 made the revision calculation-bearing, which then required a
+calculation-completeness manifest it did not have — so one was authored declaring
+exactly that closure. Authority CLEAN.
+
+**The first control was mis-scoped and said so.** Unbinding casilla 02 at the
+authority's `snapshot` accessor changed nothing, because this gate loads through
+`_committed_registry_tree`. Patched there instead, the original failure returns
+verbatim — both the inert-carry message and the unexpected-role one. Without
+re-running it against the right loader the green would have been unattributed.
+
+`test_modelo_296_casilla_set_is_the_printed_box_set` asserted all three casillas
+were `manual`, which documented the incomplete state; it now states the split and
+names each binding, so a silent unbinding reds.
+
+## The layout-authority cohort reached zero, and its anchor said what to do
+
+`test_layout_authority_content`'s anchor carried its own retirement condition:
+`enrolled-modelo-186-layout` was "the one remaining false layout-authority claim
+in this shape ... the stable anchor until that lands, at which point this
+constant needs another swap". A peer retiered it to
+`official_source_guidance`, and the swap has nowhere to go: **78 norm-text
+layout-authority claims, zero reported**.
+
+That is the outcome the gate existed to drive, so the emptiness is now the
+assertion. The anchor's anti-vacuity job is covered better by the sibling that
+strips the evidence from EVERY accepted file and requires each to flip to
+refused, and the report's wording stays pinned by driving it over a constructed
+claim — an honest source re-pointed at the excerpt file — rather than a corpus
+member that no longer exists. Proven by making the predicate accept everything:
+the test reds with "a layout-authority claim over an excerpt must still be
+reported".
+
+## The phantom `verification` surface, third instance
+
+Modelo 180's expected workflow-surface set named `verification`, which is not a
+member of `ApplicationLink.surface`'s closed vocabulary and which no revision
+anywhere declares. This is the third expectation found naming it, after modelo
+190's and modelo 130's, so the set is now checked against the vocabulary BEFORE
+it is checked against the revision: a surface nothing can declare fails as the
+authoring error it is rather than as a missing link on whichever modelo is under
+test. Proven by re-introducing it — the guard names it directly.
+
+A fourth failure pair was the synthetic applicability-cutover fixture declaring
+no `authority_grade`, the same shape as the modelo 999 and `minimal_revision`
+fixtures earlier; declared `applicability`, the rung a fixture that resolves an
+applicability rule is built to support.

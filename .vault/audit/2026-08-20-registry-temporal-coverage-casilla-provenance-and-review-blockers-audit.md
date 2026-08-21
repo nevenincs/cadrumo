@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:44dfcd1a114ad060dc6189cde1175cd6cf6bf262c1b7fd993d379e587c4217a1'
+body_hash: 'sha256:87d4be240e19c36235d3cb24761b54bf5ff493cde23fc6e5888967355267f4c3'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -700,7 +700,6 @@ the part a reviewer reads as justification. m145 and m720 are already
 Not corrected here: the fix is prose on revisions two of which are stamped, and changing
 a recorded reason changes what those stamps attest to.
 
-
 ### remediation-of-the-applicability-deadline-gap | resolved for the two in reach | 8 -> 6, and one loose stamp phrase corrected
 
 The finding above recorded 8 applicability-grade revisions carrying neither a deadline
@@ -736,7 +735,6 @@ the loader carries them and a future reader does not depend on a sentence.
 
 **Remaining: 6** -- m036, m122, m490 x3, m604/2021-2023. Three are stamped by another
 hand (m122, m490 x3) and two are pending (m036, m604). None were touched.
-
 
 ## Recommendations
 
