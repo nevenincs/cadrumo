@@ -1,0 +1,434 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-185-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm185-declarado'
+record_type = 'declarado'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '185'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f003'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f005'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'declarado.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f006'
+offset = 27
+length = 9
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f007'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'declarado.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f008'
+offset = 76
+length = 12
+kind = 'casilla'
+casilla_id = 'declarado.numero-afiliacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f009'
+offset = 88
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.pluriactividad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f010'
+offset = 89
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.situacion-mes'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f011'
+offset = 90
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.regimen-cotizacion-mes'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f012'
+offset = 91
+length = 2
+kind = 'casilla'
+casilla_id = 'declarado.dias-alta-mes'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f013'
+offset = 93
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.tipo-jornada-mes'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f014'
+offset = 94
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.situacion-mes-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f015'
+offset = 95
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.regimen-cotizacion-mes-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f016'
+offset = 96
+length = 2
+kind = 'casilla'
+casilla_id = 'declarado.dias-alta-mes-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f017'
+offset = 98
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.tipo-jornada-mes-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f018'
+offset = 99
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.situacion-mes-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f019'
+offset = 100
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.regimen-cotizacion-mes-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f020'
+offset = 101
+length = 2
+kind = 'casilla'
+casilla_id = 'declarado.dias-alta-mes-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f021'
+offset = 103
+length = 1
+kind = 'casilla'
+casilla_id = 'declarado.tipo-jornada-mes-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm185-2026.declarado.f022'
+offset = 104
+length = 397
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-185-2026']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

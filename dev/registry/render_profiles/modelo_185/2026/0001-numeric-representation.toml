@@ -99,6 +99,64 @@ record_identity = "Tipo 1 - Registro De Declarante"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 42
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-59"
+decision_statement = "The design's own label states \"TELEFONO : Campo numerico de 9 posiciones.\", so the untyped field is nine digits."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 42
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 48
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-68"
+decision_statement = "A 40-position contact NAME (\"APELLIDOS Y NOMBRE: Se consignara el primer...\") for which the design declares no type. It is alphanumeric text, not a number, so it takes the mistyped-alphanumeric-text policy with zero digits."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 48
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
 semantic_kind = "identifier_digits"
 value_policy = "identifier-digits"
 integer_digits = 13

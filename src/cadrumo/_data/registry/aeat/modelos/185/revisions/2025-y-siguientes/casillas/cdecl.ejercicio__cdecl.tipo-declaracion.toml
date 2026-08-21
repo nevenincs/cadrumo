@@ -1,7 +1,13 @@
-# Modelo 185 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header (ejercicio, tipo de declaración) is declared, grounded in
-# orden-hac-1197-2025 art 1. No numbered form casilla is invented — no
-# authoritative Modelo 185 diseño de registro is bundled.
+# Modelo 185 declaration-header casillas, grounded in orden-hac-1197-2025 art 1.
+# Both carry a symbolic `number` rather than an offset span, matching the modelo
+# 184 precedent for exactly these two header concepts; the record-detail casillas
+# authored from the diseño use offset spans and live in the sibling fragment.
+#
+# The bundled official diseño de registro `aeat-dr-185-2026` IS this revision's
+# source_ref and does carry the full record detail (2 records, 36 fields). An
+# earlier note here said no diseño was bundled and used that as the reason to
+# author no numbered casilla; that premise was false and the detail is now
+# authored from the design itself.
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.ejercicio"
@@ -13,6 +19,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
+export_refs = ["m185-2026.declarante.f003"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -24,3 +31,4 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
+export_refs = ["m185-2026.declarante.f010"]

@@ -97,6 +97,10 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # is free to drift, and 347's map did exactly that unnoticed.
     _GeneratedTree("200", "2024-y-siguientes", "aeat-dr-200-2025", "2025", 2025, "0A"),
     _GeneratedTree("296", "2024-y-siguientes", "aeat-dr-296-2024", "2024", 2024, "0A"),
+    # Enrolled in the same change that authored the layout, per the m347 entry
+    # above. Modelo 185 is monthly, so its period is a month code rather than
+    # the annual "0A" every other row here carries.
+    _GeneratedTree("185", "2025-y-siguientes", "aeat-dr-185-2026", "2026", 2026, "01"),
 )
 
 
@@ -265,11 +269,14 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     #
     #   353/2008-2025  cites 2026 contribuyente calendars; revision ends 2025-12-31
     #   322/2008-2025  cites a 2026 calendar; same shape
-    #   151/2015-2022  cites the 2023 diseno on six casillas that its own
-    #                  2015-rendered tree does not address at all -- so the open
-    #                  question is whether those casillas belong to this revision,
-    #                  not which source they should cite. Heavier than a citation
-    #                  fix and left for its owner.
+    #   151/2015-2022  RESOLVED, and the note is kept only so the next reader
+    #                  does not go looking. It formerly cited the 2023 diseno on
+    #                  six casillas its own 2015-rendered tree does not address.
+    #                  Re-measured at HEAD: every source_ref reachable from the
+    #                  revision -- casillas, layout, and every record field -- is
+    #                  `aeat-dr-151-2015`, and the string "151-2023" appears
+    #                  nowhere in the revision tree. Only the two window rows
+    #                  above remain live.
     #
     # Whoever stamps one of these must expect the window refusal next, and fix it
     # rather than re-pin it.

@@ -1,0 +1,10 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-185-2025-y-siguientes-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-185-2026']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-hac-1197-2025:art-1',
+    'orden-hac-1197-2025:art-4',
+]
+dictionary_path_overrides = []
