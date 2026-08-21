@@ -159,7 +159,7 @@ def test_all_36_endpoints_are_projection_only_and_fixed_to_two_rows() -> None:
     endpoints = tuple(
         item
         for item in _revision().casillas
-        if tuple(item.section[:3]) == ("iva", "deducciones", "sectores-diferenciados")
+        if tuple(item.section[:3]) == ("iva", "deducciones", "sectores_diferenciados")
     )
     assert tuple(str(item.id) for item in endpoints) == tuple(str(number) for number in range(700, 736))
     assert all(item.input_kind is InputKind.PROJECTION_ONLY for item in endpoints)
