@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5f12e609844ee45732dba3295b4c05e205d2b2fe67bd62f9ea79b7bbe30925e'
+body_hash: 'sha256:7262311995e19fe5b77b721e6c5b34d4d72e63ff4e24ad2facfae58494f335bd'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1404,6 +1404,54 @@ Orden HAC/529/2026 (BOE-A-2026-11583).
 **Both contrary-class blockers are now named instruments rather than unknowns.** Neither
 is work a review iteration should improvise: each is a revision split plus a legal
 enrolment, with its own verification.
+
+
+### bundling-new-corpus-text-from-a-fetch-needs-operator-authorization | boundary | why naming the orden is the correct stopping point
+
+m763's span gate names two fixes, and the first looked landable: *"acquire and cite the
+BOE orden that authorises the later layout"*. The instruments were identified in the
+previous iteration, and the enrolment recipe is by now routine -- carve an excerpt,
+generate sidecars through ``dev.docs.preprocess.write_sidecar``, enrol with a
+``required_text``, repoint. So the question was why not simply do it.
+
+**Because every enrolment this campaign performed carved from text ALREADY BUNDLED.**
+``orden-hac-96-2003-tercero``, ``orden-eha-3127-2009-art-5``,
+``orden-eha-3377-2011-art-5`` and ``orden-eha-3290-2008-art-11`` were each sliced out of
+a consolidated file already on disk, and each was read back and verified against the
+source bytes. Neither of m763's amending ordenes is bundled at all.
+
+Bundling them means transcribing BOE text obtained through a web fetch. **The 22 bundled
+files that were obtained that way all record the same provenance:**
+
+> *"Provenance: verbatim excerpt transcribed from the BOE consolidated text (...) via
+> agent web fetch during the obligation-enrollment campaign, **under explicit operator
+> authorization**. Pending operator re-verification."*
+
+That note is not decoration. It records that fetch-sourced legal text entered the corpus
+under an authorization this loop does not carry, and that it remains pending operator
+re-verification even so. The standing rule is blunt about the risk it manages: an
+excerpt authored from a secondary source once carried a fabricated year list while the
+repository already bundled the authoritative text, and its ``required_text`` cross-check
+passed because the same author wrote both halves.
+
+A fetch result is a model's rendering of a page, not the page. This iteration's own fetch
+returned the m763 2018 disposición final complete and verbatim -- *"será de aplicación
+para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y
+siguientes"* -- but rendered the artículo único with an ellipsis through the middle of
+the operative clause. Carving a corpus excerpt from that would bundle a gap and then
+validate it against a phrase chosen to match what survived.
+
+**So naming the instrument is the correct stopping point, not a shortfall.** It is what
+iterations 16 (m220 -> Orden HAC/529/2026), 41 (m180 -> BOE-A-2000-21430) and 50 (m763 ->
+BOE-A-2014-13180 and BOE-A-2018-17602) each did, and the reason is the same in all three:
+the research is removable by an agent, the acquisition is not.
+
+What an operator-authorized acquisition would need to add for m763 is now fully
+specified: both ordenes bundled with the standard provenance note, ``artículo único`` and
+``disposición final única`` enrolled from HAC/1363/2018, the ``disposición final 1``
+provision from HAP/2373/2014, then the revision split at 2015 and Q4 2018 with each
+segment citing the orden that governs it.
+
 
 ## Recommendations
 
