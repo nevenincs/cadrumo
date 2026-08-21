@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c71c19164c634f27e7dd459aba48d6ab1e88a5bc7246f7cdc1952ef4cfdbdad'
+body_hash: 'sha256:8944eb898db335156a4522f89610e4872032b41e1a11c3c6abc5fb31a691be67'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3875,3 +3875,63 @@ reasoning is already written down at the site; the fourth was measured. Recordin
 verdicts and the numbers converts that cost into a one-time expense. No change was made
 and none was warranted; both lanes are green at HEAD (309 integration, 1552 unit) with
 nothing of this iteration's in the tree.
+
+### The substrate-smoke anomaly is a duplicate module execution, and my earlier refutation was wrong
+
+Carried open for several entries: two lock tests fail under `--cov` while green in both
+shipping lanes, with an expected `LockAcquisitionError` escaping a `pytest.raises` that
+names it. The hypothesis was two class objects of the same name. **This entry both
+confirms that hypothesis and corrects an earlier entry that declared it refuted.**
+
+**The refutation was a measurement error, not a wrong hypothesis.** Identity was probed
+at `pytest_sessionfinish` and again at the START of the failing test, and both reported
+one class (`same=True`) across seven workers. That was recorded as definitive. It was not:
+the divergence appears between the test starting and the exception being raised, so both
+probes sampled moments where the answer was legitimately "identical" and neither could
+see the failure. **A negative result is only as strong as the moment it was taken, and
+"measured three ways" means nothing when all three sample the wrong instant.**
+
+Interrogating the ESCAPING exception directly settles it:
+
+    escaped cls_id=1780502285968  __module__=cadrumo.core.locks_errors
+    sys.modules["cadrumo.core.locks_errors"].LockAcquisitionError -> 1780496314448
+    isinstance(exc, facade_class) -> False
+
+One entry in `sys.modules`, two class objects: the module was **executed twice**. The
+test module imports `exclusive_file_lock` at module level and so holds the FIRST
+execution's function, whose global raises the first class; the test then resolves
+`from .. import LockAcquisitionError` inside the function body, reaching the facade and
+the SECOND execution's class. `pytest.raises` compares them, finds no relationship, and
+correctly declines to suppress. Every layer behaves exactly as written.
+
+Ruled out along the way, each by measurement rather than argument: the multi-item `with`
+idiom (rewriting it as explicit nesting changed nothing), `pytest_playwright`'s
+`hard_failure` wrapper (pass-through only), a second `locks_errors` under a different
+module name (there is none), and in-process `sys.modules` manipulation by the collected
+packages (none exists). The absence of a `pytest.raises` frame in the traceback also
+proves nothing and briefly misled the analysis -- an `__exit__` that returns `False` adds
+no frame.
+
+**Production is unaffected**, and that is the part worth stating plainly: nothing
+re-imports a module at runtime, both lanes are green, and the earlier concern that a
+production `except LockAcquisitionError` could miss a real error does not follow from
+this mechanism. The hazard is confined to the test harness -- but there it is general
+rather than specific to these two tests: ANY test holding a module-level import of a
+cadrumo symbol while comparing against a later-resolved one can misfire, and the failure
+mode is not always loud. A test whose `except` clause silently fails to match would pass
+vacuously rather than fail.
+
+**Open, and now precisely bounded:** what causes the double execution. A circular import
+re-entered while a module is still initialising produces exactly this shape -- early
+importers keep the first copy while `sys.modules` ends up holding the second -- and this
+campaign already fixed one such cycle in `core/logging.py`, where the trigger was likewise
+only visible under a particular import order. `--cov` changes import timing, which is
+consistent with a latent cycle surfacing only there. The next step is narrowing WHEN the
+re-execution happens by sampling the class id at `pytest_configure` and again at test
+time; that was not run here.
+
+**Flake, third data point.** `test_modelo_catalogue_defaults_isolate_bucket_writes` failed
+once more in a unit lane and passed on the immediate re-run (1552 passed), alongside a
+one-off `test_preflight_accepts_legal_entity_legal_name_for_export_headers` that also
+cleared. Both consistent with the worktree's known concurrent-I/O flakiness on its backing
+share.
