@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:28c570137e0a87bd5a750de6994a35ad9e90ed6ff8d17f51bb15da5c70f71c74'
+body_hash: 'sha256:616dcc0fe3aa3506f67ccb28eb589c2b4c78d94e502a98e5f1407381e4f3678e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1499,6 +1499,44 @@ measurement that is correct internally and lossy at the boundary where a human r
 The box-collapse detector reported ``False`` for the form that motivated it; the span
 gate's ABSENT and CONTRARY classes were indistinguishable until parsed apart. No
 production code is wrong in any of the three -- the defect is in what reaches the reader.
+
+
+### FIXED-the-layout-coverage-message-and-what-it-now-exposes | resolved | plus a bounds question the clearer text surfaced
+
+The lossy message recorded in the previous finding is fixed. It now prints both design
+bounds and the presentation years actually compared, and the four entries that read as
+self-contradictory now explain themselves:
+
+```
+m180  ejercicio 2022, presented 2023, outside aeat-dr-180-2014 (2014-2022)
+m232  ejercicio 2017, presented 2018, outside aeat-dr-232-2016 (2016-2017)
+m303  ejercicio 2022, presented 2023, outside aeat-dr-303-2022 (2022-2022)
+m210  ejercicio 2026, presented 2026-2027, outside aeat-dr-210-2022 (2022-2025)
+m165  ejercicio 2013-2024, presented 2013-2025, outside aeat-dr-165-2026 (2026-open)
+```
+
+The verdict is unchanged -- same revisions named, 1 failed and 5 passed in the module
+before and after. Only the rendering changed, with a comment recording why so the next
+author does not trim it back. Nothing asserted the old text, so the change was safe.
+
+**What the clearer text immediately exposes.** ``aeat-dr-303-2022`` is bounded
+``(2022, 2022)`` while a 2022 ejercicio's fourth quarter is presented in January 2023. A
+design whose ``applies_to`` stops at its own ejercicio year therefore **cannot cover its
+final period's arrears filing**, and will diverge on that period by construction. m232 is
+the same shape: ``(2016, 2017)`` against ejercicio 2017 presented in 2018.
+
+That is either a bounds-authoring convention that needs one more year of headroom on
+every arrears-filed design, or a genuine coverage gap where AEAT really did publish a
+successor design for the presentation year. The two are distinguishable only by checking
+whether a successor design exists for each, which this change does not attempt.
+
+It is worth naming because it changes the triage: entries of that shape are a
+**systematic consequence of how ``applies_to`` is authored**, not sixteen independent
+defects, and they should be assessed as a class. The module's own docstring already
+records one false-positive class removed by reading presentation years instead of
+assuming an offset; this may be a second one hiding on the upper bound rather than the
+lower.
+
 
 ## Recommendations
 
