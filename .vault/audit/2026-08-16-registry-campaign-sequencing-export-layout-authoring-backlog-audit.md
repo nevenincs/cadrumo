@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:38ac7c0543fe95bdb94026eafe8819f21ced6efc998630b14339b4ef34679ddc'
+body_hash: 'sha256:7d412f282b6f8c8ebc132a925ed09a6a1bcb52f9a29332a3ac818e256a0e3fe8'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8692,3 +8692,81 @@ ruff clean across the registry tests (four pre-existing lint errors fixed,
 two of them left by this campaign's own earlier span work).
 
 Registry suite: **70 failed, 5,024 passed** (from 79 / 5,015).
+
+## Section-part hygiene: three transcription defects, then 3,015 separator conversions
+
+`test_schema_hygiene::test_section_parts_are_snake_case` reported **3,030
+offences across 15 modelos and 28 revisions**. A number that large is a
+convention question, not a defect, so the population was measured before
+anything was touched:
+
+```
+single_word      21,744
+snake_multiword  31,879   (26 modelos)
+kebab             3,015   (11 modelos)
+other                12
+```
+
+Snake IS the corpus convention by more than ten to one, so the gate is right and
+the data is the outlier.
+
+### Three of them were our corruption, and three that looked identical were not
+
+The kebab population contained slugs that read as lossy slugification:
+`rentencion-o-ingreso-a-cuenta`, `notario-o-fedetario`,
+`asignacion-de-canti-des-a-fines-sociales`,
+`comunidad-autonoma-l-ejercicio-indicado`,
+`datos-adicionales-d-e-bienes-e-inmuebles`,
+`valor-de-transmisio-a-o-2a-adquisicion-6`. All modelo 151.
+
+Checked against modelo 151's own bundled design before changing any of them, and
+the check reversed half the list. **AEAT's published Diseño de Registro writes
+`Rentención` 67 times against `Retención` 17, and `fedetario` 4 times against
+`fedatario` 0**; it also writes "l ejercicio indicado" and not "del ejercicio
+indicado". Those three slugs faithfully transcribe AEAT's own typos, and
+"correcting" them would have made the registry diverge from its source.
+
+The other three are ours, and each is proven by the `# AEAT campo:` comment
+sitting in its own declaration:
+
+```
+AEAT campo: Asignacion de cantidades a fines sociales      section: ...canti-des...
+AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) section: valor-de-transmisio-a-o-2a-...
+AEAT campo: Datos Adicionales de las rentas derivadas...   section: datos-adicionales-d-e-...
+```
+
+Within each declaration the casilla id and the campo comment carry the correct
+spelling and only the section leaf is wrong. Corrected, 43 leaves.
+
+The forty `datos-adicionales` casillas were then re-pointed a second time: the
+first pass put them all under one bare family name, but the sibling
+`2025-y-siguientes` revision names this family per sub-field. Both revisions now
+carry an identical vocabulary — 8 casillas each across `origen`, `propiedad`,
+`referencia-catastral`, `situacion`, `usufructo` — read from each casilla's own
+campo comment, not invented here.
+
+### `490-01` is a registry label, not an AEAT designation
+
+The conversion was held up by one objection: `490-01/02/03` (1,037 occurrences)
+looked like AEAT sheet designators of the `714-01 Patrimonio` family, and modelo
+490's casillas declare no `segmento`, so the section leaf is the ONLY carrier.
+Snake-casing an official identifier would be a fidelity loss.
+
+The bundled modelo 490 design prints no such token anywhere. It is a
+registry-internal label — the same finding this document already recorded for
+modelo 184's `184-2-entidad`. Objection withdrawn, and the conversion is
+fidelity-neutral.
+
+### Result
+
+3,015 kebab leaves converted across 88 files in 11 modelos, scoped strictly to
+single-line `section = [...]` arrays (all 22,617 confirmed single-line first, so
+casilla ids and `number = "96-112"` ranges could not be caught). Twelve remaining
+offences were slugs truncated at 48 characters mid-phrase leaving a dangling
+separator (modelo 200's "2025 Año de Investigación Santiago Ramón y Cajal" and
+three siblings); the separator was trimmed, the truncation left as it was.
+
+`test_schema_hygiene` 1 failed → **11 passed**. Authority CLEAN. Generated-tree
+gates **30 passed**, so no section leaf reaches generated output. Proven still to
+bite by re-introducing ONE kebab part from outside the tree: the gate names it
+and reds.

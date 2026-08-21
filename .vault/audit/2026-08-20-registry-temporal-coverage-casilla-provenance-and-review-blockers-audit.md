@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:034bc133508c6916b2ebcced376209281c473f8fb368ed3d06a9e96409348fd1'
+body_hash: 'sha256:a5fc8d083963b381c3194e3c7a1ac42195e5dc9d0a8ac6656ccd8dabdf0f2b78'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -541,7 +541,6 @@ action with its own verification, not a loop tick. What this iteration removes i
 research: the fix is now a lookup with a verified citation and three verbatim
 provisions, rather than an open acquisition question.
 
-
 ### the-open-ended-on-bounded-orden-sweep-and-what-it-cannot-see | medium | the IS pair is the only confirmable instance, and 38 of 52 revisions stay unanswerable
 
 The m200/m220 defect -- an open-ended revision asserting applicability on an orden that
@@ -593,7 +592,6 @@ deliberately widening the pattern and then disbelieving the wider result.
 No revision was stamped or altered on this sweep. What it establishes is narrow and
 honest: the IS pair is the only confirmable instance, and the remaining 38 need a
 per-family reading of how each orden states its temporal scope, not another regex.
-
 
 ## Recommendations
 
