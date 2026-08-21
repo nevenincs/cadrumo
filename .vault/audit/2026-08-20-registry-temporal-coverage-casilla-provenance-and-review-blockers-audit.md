@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:33fbe2eb909f592094e67a81c32e9ead55d9eb9210914a43e61bbe8be9dff724'
+body_hash: 'sha256:034bc133508c6916b2ebcced376209281c473f8fb368ed3d06a9e96409348fd1'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -540,6 +540,60 @@ opening would strand the existing ``filing_year = 2025`` windows. That is a dedi
 action with its own verification, not a loop tick. What this iteration removes is the
 research: the fix is now a lookup with a verified citation and three verbatim
 provisions, rather than an open acquisition question.
+
+
+### the-open-ended-on-bounded-orden-sweep-and-what-it-cannot-see | medium | the IS pair is the only confirmable instance, and 38 of 52 revisions stay unanswerable
+
+The m200/m220 defect -- an open-ended revision asserting applicability on an orden that
+approves ONE year -- was worth generalising, so it was swept across every revision whose
+``period_selector`` carries ``year_from`` and no ``year_to``.
+
+**52 open-ended revisions examined.** Results, and the detector's own coverage:
+
+| outcome | count |
+|---|---|
+| every cited orden bounded to one year | 9 |
+| some cited orden bounded, others not | 5 |
+| **no year phrase in any cited orden's corpus** | **38** |
+
+**The first pass found 2, the second found 9, and neither number is the answer.**
+A detector keyed only on the IS scoping clause ("iniciados entre el 1 de enero y el 31
+de diciembre de YYYY") returned m200 and m220 alone. Broadening it to ``ejercicio
+YYYY`` and siblings raised that to 9 -- proving the narrow form had a blind spot -- and
+then spot-checking the new hits showed the additions are noise:
+
+- **m117** cites text reading *"aplicable, **por primera vez**, para las declaraciones
+  correspondientes al ejercicio 2005"*. That is a FIRST-APPLICATION clause -- an
+  open-ended commencement. It means the exact OPPOSITE of a bound, so an open-ended
+  revision citing it is correct and the detector inverted its sense.
+- **m296**'s matched "ejercicio 2005" sits inside the quoted TITLE OF A DIFFERENT ORDEN
+  (IRPF/Patrimonio) embedded in the text, not in this orden's own scope clause.
+
+m126, m128, m151, m232 share the shape of one or the other. **Only m200 and m220 carry a
+genuine scoping clause that bounds the approval to a single year while the revision
+claims that year and every year after.**
+
+**The load-bearing result is the 38.** For three quarters of the open-ended population
+the cited orden's bundled corpus contains no year phrase at all, so the question "does
+this revision claim more years than its orden approves?" is not answered for them -- it
+is unasked. A phrase-based detector cannot scale to it: the IS pair was catchable only
+because that orden family states its scope in one recognisable sentence, and other
+families either commence open-endedly, scope by reference, or say nothing the bundled
+excerpt carries.
+
+**Reporting "only 2" as a clean sweep would have presented a blind spot as a clean bill
+of health** -- the failure mode
+``test_revision_span_matches_published_designs`` records in its own docstring after a
+four-digit box regex silently switched two signals off on Modelo 200: *"Agreement
+between two instruments sharing one blind spot is worth nothing, and unlike a wrong
+answer it offers nothing to notice."* This iteration reproduced that failure mode in a
+detector written three iterations after reading the warning, and caught it only by
+deliberately widening the pattern and then disbelieving the wider result.
+
+No revision was stamped or altered on this sweep. What it establishes is narrow and
+honest: the IS pair is the only confirmable instance, and the remaining 38 need a
+per-family reading of how each orden states its temporal scope, not another regex.
+
 
 ## Recommendations
 
