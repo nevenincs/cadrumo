@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae0b600cf5a29e9c082bf5604a0349251cd7e49c798dc8c10848853b37c91ba2'
+body_hash: 'sha256:306056ea3758ccab8d17d6965da0b9d5b38a2afb08aa8795a91d4c4b1a72ed20'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -440,7 +440,6 @@ campaign's work. Nothing was lost, because the entire scope statement lives INSI
 ``reviewed_by`` string rather than in the commit message. That is the whole reason the
 standing instruction puts it there, and this is the clearest demonstration yet.
 
-
 ### every-pending-revision-is-applicability-grade | high | most of the inventory measures them against a rung they do not claim, and m220 still fails on its own
 
 **Measured: all 14 remaining ``pending_review`` revisions declare
@@ -497,7 +496,6 @@ converge on anything.
 revisions at the year their cited orden actually approves, or cite the orden that
 approves the later models -- and to revisit m200's existing stamp, which asserts a
 review of an applicability claim that outruns its own evidence.
-
 
 ## Recommendations
 

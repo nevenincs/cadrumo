@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:380c56d867736ce4d973e38dd1e3af2e7af9a017dbf11936d6dca42af84430ef'
+body_hash: 'sha256:70893c0aca916229f88d74015e6c98fbe20e9c18b6b4b2c6b840b47236cbacc5'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8592,3 +8592,31 @@ not the one that ships. The tell was available and ignored twice: the authored
 records were implausibly thin (6 fields for a 106-field sheet) in trees the
 campaign had already stamped and verified. Implausible thinness in verified
 territory should read as "wrong object" before it reads as "found a defect".
+
+### The trap is now documented where it springs
+
+`ModeloRevision`'s docstring states that `export_layouts` is the AUTHORED form,
+carries the 9-vs-161 and 6-vs-105 figures, and names
+`derive_export_layouts_from_bindings` as the required resolution for any
+comparison against an official design. The scratch instrument's docstring can
+only warn whoever opens that one file; the schema attribute is what every future
+consumer reads. Authority CLEAN, ruff clean, `test_schema.py` 40 passed.
+
+Twenty-eight scratch scripts under `tmp/registry-measure/` read
+`rev.export_layouts`. Most legitimately inspect what was authored; only a
+coverage comparison is wrong to build on it. They are untracked scratch and are
+left as they are, with the durable warning placed on the schema instead.
+
+### Measured state
+
+Registry suite: **79 failed, 5,015 passed** (from 102 earlier in the campaign).
+The largest remaining cluster is `test_revision_span_matches_published_designs`,
+and it is the modelo 038 class generalised: revisions claiming a span with zero
+comparable bundled design years (036, 038, 111), and modelo 100's 2020-2025
+revisions with no design bundled for their own filing year at all. Every one
+names the same remedy -- bundle AEAT's published design for the missing years --
+so the cluster is blocked on artifact acquisition, not on authoring.
+
+`test_docstring_core_struct_links` carries 4 failures that predate this work,
+confirmed by re-running with the schema edit stashed out; the two references
+added here resolve.
