@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a776120e8a13fd3d9d6e6b3bb92f57bb6c48e0a994e4950c38ba6648dcdc41c'
+body_hash: 'sha256:161d416d03d0b76b8685e21910239c362ba774b9e5d7a8366877a10abdc4accd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4250,3 +4250,53 @@ still never reach the real code. Two anti-vacuity assertions guard the rest: the
 map must be non-empty and must contain the known custody pair, and the module scan must
 reach more than fifty files, because an empty map or an empty file list clears every
 handler for free.
+
+### A gate outside the domain lanes caught a defect this campaign introduced
+
+Found by following a stale path, which is the useful part: the always-on architecture rule
+states the import boundary is "Enforced by `dev/import_hygiene_scan.py` and
+`src/cadrumo/tests/test_import_hygiene_gate.py`". **Neither path exists.** The scanner is
+at `dev/quality/import_hygiene_scan.py` and the gate at `dev/tests/test_import_hygiene_gate.py`.
+An agent checking whether the boundary is enforced finds nothing at the cited locations and
+can reasonably conclude it is not — which is nearly what happened here. Corrected on the
+rule source and propagated with `vaultspec-core sync`, with the note that the gate sits
+outside the `src/` lanes and must be run explicitly.
+
+**Running it found a reach this campaign added.**
+`test_capsule_record_lineage_authority.py` imported `ProfileSetupState` from
+`domain.user_profile._values` — a cross-package PRIVATE module, which the architecture rule
+forbids outright. The symbol is already on the package facade, so the reach bought nothing;
+it was copied from a neighbouring test that carries the same debt, and it was never
+declared in `import_hygiene_test_debt.json`, so it was undeclared debt rather than accepted
+debt. Repointed to the facade.
+
+**The lesson is about lane coverage, not about that import.** Every iteration of this
+campaign has run two domain lanes over `src/`, and those lanes cannot see a gate that lives
+in `dev/tests/`. A defect introduced in `src/` and enforced from `dev/` is invisible to the
+loop that produced it. **A green lane is evidence about the lane's scope, not about the
+tree**, and the gates that matter most — the tree-wide architectural ones — are exactly the
+ones most likely to sit outside a domain-scoped lane. Worth running `dev/tests/` after any
+iteration that adds files under `src/`.
+
+**State of that gate, recorded honestly:** it is currently RED at 6 failed / 37 passed, and
+the remaining failures name the TUI boundary census, family2 delegate shims, and test-debt
+entries for other packages. None name this campaign's files after the fix above, and none
+were introduced by it; they belong to whoever owns those surfaces.
+
+### Dead cross-package bridges in the storage facade, measured and handed over
+
+Of the 25 names the storage facade re-exports from OTHER packages, **14 have no consumer
+reaching them through storage** — every reference lives in the owning package: the corpus
+manifest family, three classification types, `default_rules_for`, `DEFAULT_LOCK_TIMEOUT`
+and `default_policy_table`. They are a second, unused import path for symbols storage does
+not own.
+
+Not acted on, deliberately. Removing fourteen facade entries is facade narrowing, which the
+standing directive excludes as a mechanical edit, and it is the same shape as the deferred
+`user_profile` over-export item. Checked and NOT a rule violation on a second axis: the
+lazy-map targets name public subpackages (`core.classification`, `core.corpus_manifest`)
+whose `__init__` defines those symbols, so they are the owning facade, not private modules.
+Recorded with the measurement so whoever narrows facades can act without re-deriving it.
+
+Also verified covered this iteration and needing nothing: the six-phase login handover
+machine (every phase appears in tests) and the crash-recovery paths around it.
