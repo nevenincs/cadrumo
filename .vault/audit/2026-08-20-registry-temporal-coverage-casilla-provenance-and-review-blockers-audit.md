@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:133c8f5f828f99620a17a66a6c2077905c999fde4d8c3b9e0c66781984159b8d'
+body_hash: 'sha256:6d345ac099b7d996f2617ee01bc762487c0d478ec750c6f0440b73d25d1daec8'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -932,6 +932,56 @@ informativa modelos. A defect recorded as closed is present in shipped tax data.
 Only m165 was fixed: it was the revision under review and is unstamped. The other six
 pre-shifted windows sit on stamped revisions, where changing the data changes what the
 stamp attests to, and are left as a single clean follow-up with the evidence above.
+
+
+### the-pre-shift-argument-measured-and-refuted | high | the stored shift protects nobody and fabricates a false reason
+
+m345 was storing a pre-shifted close again, after being listed in the standing record as
+one of three revisions corrected for exactly that. Unlike m165, m181 and m270 -- where
+the shifted date was a sweep artefact -- this one carried a **reasoned argument** in the
+file:
+
+> *"It was declared 2026-01-31, which is the rule's date and a SATURDAY. AEAT's published
+> calendar for 2026 lists 'Declaración anual 2025: 345' under the heading 'Hasta el 2 de
+> febrero' ... so the rule-derived date closes the window two days early and would
+> present a filer with a deadline that has not arrived."*
+
+That is a real concern and deserved measuring rather than reverting. **It does not hold.**
+``application/overview/_calendar.py`` passes ``closes_on`` through ``shift_deadline`` and
+surfaces ``adjusted_close_date``, so the operator sees 2 February either way. Measured
+both ways for modelo 345:
+
+| stored | operator sees | shifted | reason |
+|---|---|---|---|
+| ``2026-01-31`` (nominal) | 2026-02-02 | True | **``sabado``** |
+| ``2026-02-02`` (pre-shifted) | 2026-02-02 | False | ``business_day`` |
+
+**Same date to the filer.** What the pre-shifted form adds is two false statements --
+that no shift occurred, and that 2 February is the ordinary business-day deadline -- and
+it destroys the statutory 31 January entirely. It protects nobody and fabricates
+provenance.
+
+This is the strongest available justification for the nominal-store rule, and it is
+sharper than the rule's own statement: the rule says *store nominal*, but this measures
+**what is lost by not doing so**, which is the reason rather than the date.
+
+Corrected to 2026-01-31 on ``orden-hfp-823-2022`` art. 4 verbatim -- *"el plazo de
+presentación del modelo 345 será el comprendido entre el 1 y el 31 de enero de cada
+año"* -- with the calendar ``source_ref`` dropped, since the orden is not silent here.
+The original comment was **replaced by the measurement rather than deleted**, so the next
+reader meets the refutation and not the argument.
+
+m345 has a SINGLE window and no sibling to expose the shift by contrast, which is
+plausibly why the regression survived where m165's three-window file gave itself away.
+
+Its stamp was left untouched: ``reviewed_by`` is the bare token
+``agent-prepared-pending-operator``, which asserts nothing about deadlines that the
+correction could falsify -- itself worth noting, since a stamp carrying no scope
+statement records only that somebody looked.
+
+**Pre-shift remediation: 4 of 7** (m165, m181, m270, m345). m180, m190 and m193 remain,
+all on stamped revisions.
+
 
 ## Recommendations
 
