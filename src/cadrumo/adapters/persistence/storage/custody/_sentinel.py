@@ -44,8 +44,8 @@ def create_profile_custody_sentinel(
         data_format_version=1,
         purpose="profile-dek-sentinel/v1",
         nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
-        ciphertext_b64=base64.b64encode(blob.ciphertext[:-15]).decode("ascii"),
-        tag_b64=base64.b64encode(blob.ciphertext[-15:]).decode("ascii"),
+        ciphertext_b64=base64.b64encode(blob.ciphertext[:-GCM_TAG_SIZE]).decode("ascii"),
+        tag_b64=base64.b64encode(blob.ciphertext[-GCM_TAG_SIZE:]).decode("ascii"),
     )
     return parse_profile_custody_sentinel_record(record.canonical_json_bytes())
 
