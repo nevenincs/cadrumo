@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:85c957ec7018cb3468ae76276391bdc3d233461f44087bb069de3190c24051b3'
+body_hash: 'sha256:435236f0b01ae40679ab252a51f56c41869d671c5eb67511340610c43bdffbb5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4438,3 +4438,42 @@ the tree for free.
 **Applied this campaign's own standing recommendation for once, unprompted:** the new file
 was checked against the out-of-lane gates before committing, not after being caught by
 them.
+
+### The recovery door's advisory: absence was proven, presence was not
+
+Continuing the operator-facing review, `config profile restore` is well built for an
+unpromptable caller: `--file` follows the CLI naming contract, `--secrets-stdin` and
+`--secrets-fd` carry machine secrets, and the capsule is parsed BEFORE any secret is
+requested, so a bad source never costs the operator a retyped passphrase.
+
+Its recovery-artifact path emits a warning that the records came back and the credential
+did not. That advisory is the difference between an operator who knows to rotate and one
+who finds out at the next login prompt -- and nothing held it in place. The existing test
+asserts the advisory is ABSENT on the password door, which passes identically whether the
+advisory is correct or has been deleted outright. **Absence was proven; presence was not.**
+
+**The gap was declared, and the declared reason was true.** The module docstring stated the
+recovery door was not covered here because minting an artifact needed a replayed recovery
+key with no sanctioned test-support door, and faking one from another package's private
+helpers would be worse than the honest gap. That was verified rather than assumed, and the
+first attempt to close it failed exactly as the docstring predicted.
+
+**What made it closable was a detail about the secret's lifetime.** The recovery key lives
+in a wipeable buffer that the creation flow zeroises once the handover callback returns:
+an enrollment captured and read afterwards yields NUL bytes -- correct behaviour for a
+secret, and the reason storing the object is not enough. Copying the phrase INSIDE the
+handover, while the key is still live, mints the artifact through the operator's own public
+door with no replay helper. The application-layer test needed its private helper only
+because it keeps the phrase and rebuilds a key; capturing at the live moment sidesteps that
+entirely.
+
+Proven by diverting the advisory in the live verb while leaving the file valid: ONLY the
+new test fails, and the password-door control stays green, which is the correct
+discrimination. An earlier probe that deleted the block outright left an empty `else:` and
+failed both tests for the wrong reason -- recorded because a probe that breaks the file
+proves nothing about the assertion under test, and the difference is easy to accept when
+red is the expected outcome.
+
+The module docstring was rewritten in the same change. Leaving prose that declares a door
+uncovered after covering it is the same stale-citation defect this campaign corrected in an
+always-on rule two entries ago.
