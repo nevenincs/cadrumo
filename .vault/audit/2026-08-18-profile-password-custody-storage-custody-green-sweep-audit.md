@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:caa569c562c582e1a7ea46ed1e7c5d31d06a6dbae806f00ddfe526039716c5e5'
+body_hash: 'sha256:58ee4e8e6ad26bc18d99a76abad2560846d16a8b80e0aa286e5628f93872e719'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4110,3 +4110,56 @@ destructive call needs a matching verification" rule. The general form needs its
 inventory of what counts as destructive and what counts as verifying it, and a rule that
 cannot enumerate its own subjects is the kind that passes vacuously. One protocol, one
 ordering, one gate.
+
+### Destructive-ordering sweep: one gap found last entry, none remaining
+
+Extending the verify-before-remove finding, the domain's destructive operations were
+hand-enumerated rather than discovered by heuristic, and the risk class was narrowed
+first: **a guard INSIDE the destructive function cannot be unwired.** Only a guard in a
+separate call, ordered by the caller, can be dropped silently. That reduces the inventory
+sharply.
+
+Checked, and each is sound:
+
+- **Tombstone removal** — separate verification, gated by the previous entry.
+- **Pointer compare-and-swap clear** — the comparison sits in the same function as the
+  clear, under the root lock, and an existing test asserts a stale expectation raises AND
+  leaves the pointer untouched. Watched.
+- **Live DEK revocation** — the identity check is inside the function and re-checked after
+  zeroisation, so caller ordering cannot lose it.
+- **The unguarded `clear_profile_custody_local_record` call sites** — internal staging and
+  backup paths where the caller owns the file, plus the pointer CAS above. The
+  compare-and-clear variant is used where a witness belongs to another party.
+- **Output-language hint clear** — a non-authoritative sidecar, fail-soft by design.
+
+### Concurrent registration cannot duplicate a label, and the test says only what it proved
+
+A profile label is what an operator types to select a profile, so two capsules answering
+to one name makes every later selection ambiguous. Every existing duplicate-label test
+registers profiles one after another; the concurrent case the refusal exists for was
+unasserted.
+
+**Two hypotheses were formed and both were wrong, which is the useful part.**
+
+First: the duplicate scan is named `_refuse_duplicate_label_under_root_lock` but takes no
+lock itself, and the service only ever calls `profile_custody_transaction_lock(root,
+profile_id)` — a per-profile lock by signature, which would not serialise two DIFFERENT
+profiles claiming one label. Reading the implementation refuted it: that helper acquires
+the custody ROOT lock first and holds it across the whole transaction. The name is
+accurate; the signature was misleading.
+
+Second, and caught before the test was committed: the test was written and documented as
+pinning that root lock. **Removing the root lock from the transaction lock does not make
+it fail** — three runs, all still one winner. The losing process is refused a layer higher,
+by the registration path reporting `profile_already_exists`. So the docstring was
+corrected to claim only what the test holds: the operator-visible outcome, one capsule per
+label, however the second attempt is turned away.
+
+This is the second consecutive entry where a mechanism claim in a docstring did not
+survive being probed. The habit that catches it is cheap and now routine: after a
+concurrency or ordering test goes green, break the mechanism it names and confirm the test
+notices. If it does not, the docstring is the thing to fix, not the test.
+
+Stability was measured before committing rather than assumed: six consecutive races each
+produced exactly one registration, so a failure here indicates a genuine duplicate rather
+than a timing artefact.
