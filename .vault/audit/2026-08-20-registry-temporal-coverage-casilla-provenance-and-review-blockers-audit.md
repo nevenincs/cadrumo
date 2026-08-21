@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6773ac6b83247601f496f3ab3ebb9b0e577f57cc8d3d4e389a043f4d7d4c0b94'
+body_hash: 'sha256:445fff8d21ed0837c412f80dd8f175466676122d2609e787504628e3b0f46dd6'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -838,7 +838,6 @@ contradicts it. The two observations were not reconciled, so no encoding finding
 asserted here -- only the note that anyone carving an excerpt from that file should read
 the result back before trusting it.
 
-
 ### the-export-frontier-measured-and-a-gap-that-is-honest | medium | 3 of 5 tile completely; m604's 13 uncovered bytes are a retraction's trace, not a defect
 
 The remaining pending set narrowed to seven: two carrying contrary span evidence (m220,
@@ -891,7 +890,6 @@ is what happened here.
 
 Nothing was stamped this iteration. m165, m181 and m270 now have their byte-extent half
 verified clean, which is the expensive part of a filing-scope review.
-
 
 ## Recommendations
 
