@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-20'
 body_schema: 'body-v1'
-body_hash: 'sha256:582c4c90c25e63496d56ced2ca82fb949403b6324f5612035500a319aaef9ff0'
+body_hash: 'sha256:7773c6085334816a08d67d53cb741d3cef9b1b30f8feb8c9e47fa70ac2fafa78'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7762,3 +7762,142 @@ work began. Modelo 200's two 2010 editions hold 5 each. The recorded cases stand
 modelo 390's composite five-digit page token, modelo 349 and 180's visual charts
 where AEAT draws no box, modelo 100's lone glued byte, modelo 131's
 spilled-column byte.
+
+## Tick: modelo 390's composite token, and the collision I read backwards
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's headless-tail staging confirmed at 30 passed.
+
+### The refusal that was wrong, and the evidence that settled it
+
+Two ticks ago I recorded modelo 390's 2015 design as ungroundable. Its seven
+unnamed records declare a FIVE-digit página constant, `01000` through `08000`,
+and I reasoned that decomposing `01000` to page 1 would collide with the
+`Pag. 1` the design's own running header already produces -- and that the
+collision showed the two naming schemes were different things.
+
+Mapping every record to its declared tokens showed the inference was backwards.
+The record headed `Pag. 1` by AEAT's running header IS the record that declares
+`Constante "01000"` and closes `</T39001000>`. They collide because they name
+the SAME record. That is the design cross-checking itself, and it fixes the
+split: leading digits are the page, trailing `000` a sub-counter. The remaining
+seven run 02000 to 08000 and name pages 2 to 8, colliding with nothing.
+
+The lesson is about the shape of the earlier reasoning rather than the modelo. A
+collision between two derivations is evidence they AGREE at least as readily as
+evidence they differ, and which reading holds is a question about the data, not
+about the plausibility of either story. I had stopped at the plausible one.
+
+### Two guards, each found by breaking something
+
+Widening the page width was not one change but three, and the corpus control
+rejected the first two.
+
+**Reordering the strategies renamed records in three complete designs.** Putting
+the Página field ahead of the closing identifier changed two names per design in
+modelo 200's 2012-2014 editions -- `Pag. 40` became `Pag. 20`, `Pag. 70` became
+`Pag. 60`. Inspecting those records showed the two sources genuinely disagree in
+one record of five, with four agreeing, and NOTHING says which side carries the
+corruption. Renaming on a coin-flip is worse than the status quo, so the
+identifier stays preferred and is set aside only where its page component is not
+as wide as the Página field declares -- which is exactly modelo 390's seventh
+record, closing `</T3900700>` with a digit lost, and is not modelo 200's case.
+
+**Pure width self-consistency read an ejercicio as a page.** Accepting any
+constant whose width matches its field admitted `Constante "2011"` at that
+position as page 2011, breaking a guard added deliberately a few ticks ago. The
+width must ALSO be one AEAT uses for a page: two, three or five. Four is absent
+from that set on purpose, and the test says why.
+
+### Verified against
+
+| | tick start | after |
+|---|---|---|
+| unidentified-body skips | 11 | **4** |
+| sheets read | 3252 | 3252 |
+| fields read | 276077 | 276077 |
+| skipped | 36 | 36 |
+| errors | 0 | 0 |
+
+Nothing at the extraction surface moved and no already-complete design changed;
+seven anonymous records became named. As on the tick that first introduced
+identity recovery, the gain is in the KIND of what remains -- a named record
+with a stated hole is work someone can pick up, an anonymous one is not.
+
+`test_record_design_page_token` and `test_record_design_identity_recovery`: 18
+passed together, including the truncated-identifier case, the same-width
+disagreement that must NOT be second-guessed, and the four-digit ejercicio that
+must not be read as a page.
+
+### Still open
+
+Thirty-six skipped records across ten designs. Four bodies remain unnamed. The
+recorded cases stand: modelo 349 and 180's visual charts where AEAT draws no
+box, modelo 100's lone glued byte, modelo 131's spilled-column byte.
+
+## Tick: the page that is not a number, and where a token may be read from
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's composite-token work confirmed at 30 passed.
+
+### Modelo 200's DID record
+
+Three modelo 200 designs each kept one unnamed record. It declares
+`Pagina. OBLIGATORIO Constante "DID"` -- an ALPHABETIC page -- and closes
+`</T200DID>`. The design's own vector example settles what that is: it lists
+the record in the page sequence beside the numbered ones,
+`...017018019019DIDFIN`. There is no number to derive, so the token is the
+label, and the recovery now reads it as one.
+
+### Where a token may be read from, which is the real content of this tick
+
+Widening the token to accept letters renamed a record in three ALREADY-COMPLETE
+designs: modelo 200's 2012-2014 editions turned `Pag. 520` into `Pag. DID` on a
+record of 1,618 fields, when DID belongs to a record of 45.
+
+The cause is a difference between the two strategies that had not mattered while
+both were numeric. The Página strategy is anchored by GEOMETRY -- the modelo
+constant at positions 3-5 with the page constant immediately after -- so it can
+only read the record's own declaration. The closing-identifier strategy searches
+a field's TEXT, so a token bled in from a neighbouring record is fair game. That
+looseness was tolerable for a numeric page, where the width check still guards
+it, and is not for an alphabetic one, which is precisely the shape most likely
+to appear in prose.
+
+So an alphabetic page is now taken only from the Página field. A non-numeric
+closing token stops the search rather than being read.
+
+Stated because it is the third time this trio of designs has caught a change:
+they are complete, stable, and every widening so far has moved them first. The
+corpus control line that matters remains "already-complete designs whose sheets
+changed", and it has now earned its place three times over.
+
+### Verified against
+
+| | tick start | after |
+|---|---|---|
+| unidentified-body skips | 4 | **1** |
+| skipped records | 36 | **33** |
+| sheets read | 3252 | **3255** |
+| fields read | 276077 | **276207** |
+| complete | 208 | 208 |
+| errors | 0 | 0 |
+
+Zero designs lost a sheet; zero already-complete designs changed.
+
+`test_record_design_page_token` and `test_record_design_identity_recovery`: 20
+passed. A recovery that reads an alphabetic token from the closing identifier
+reds both guard cases -- the truncated-identifier deferral and the
+alphabetic-only-from-the-field rule -- while the capability tests stay green.
+
+### Still open
+
+Thirty-three skipped records across ten designs. ONE unnamed body remains, in
+modelo 100's 2014 edition, and it is not a record: a single field spanning
+positions 1-2, with no modelo or página constant, split off from a record header
+because its position restarted at 1. Naming it would be naming an artefact;
+suppressing it needs a rule narrow enough not to hide a real short record, which
+is the next question rather than this tick's.
+
+The recorded cases stand: modelo 349 and 180's visual charts, modelo 100's lone
+glued byte, modelo 131's spilled-column byte.
