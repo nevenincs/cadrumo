@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:d23560e71defe8b5fa1344523ce78b94acef86d163df80be87c706e381dc700b'
+body_hash: 'sha256:dff6776843e138a86db95530fe3a2c2ab5f86ae2708b98c1e5e22139ed50f970'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10457,3 +10457,64 @@ the section is `informacion_adicional`. Worth noting only because the localizati
 key is derived from the casilla ID and not from the section: the 88 label and
 help strings survived the correction untouched, and backlog and parity stayed at
 378 and 872 across it.
+
+## Modelo 222, part three: the export layout lands
+
+Worklist **13 -> 12**; enrolled generated-tree gate **32 -> 34**. Modelo 222 now
+emits: 123 design fields mapped, a `DR22200` variable envelope, 74 casillas
+carrying `export_refs`, authority CLEAN, and check mode PASSING with no
+`_CHECK_MODE_PENDING` entry -- the second tree after modelo 185 to reach that,
+and for the same reason (applicability grade, so the filing-completeness
+validation does not bite).
+
+### The decision I had deferred twice, taken
+
+Two ticks running, this layout was deferred on the producer-key question. That is
+no longer a deferral, it is a stall, so the recommended option was taken:
+**follow modelo 202 exactly.** 222 is its consolidacion twin, approved by the
+same orden, with the same identification and `Datos adicionales` blocks and a
+byte-identical envelope grammar. 23 `M222_*` members were added to
+`FilingProducerKey`, named on 202's pattern where the fact is the group-level
+version of 202's own, and named on the same shape where consolidacion has no 202
+counterpart (the dominante entity's identity, the group number).
+
+**This deepens a red gate, deliberately, and that must not be buried.** The
+producer-vocabulary gate went **447 -> 470** unresolved keys:
+
+```
+M200 135 | M296 112 | IRNR 102 | M360 70 | M222 23 | M202 18 | M353 5
+```
+
+The alternative -- inventing a `Modelo222ProducerProfile` with 23 typed fields
+that nothing populates, purely to satisfy an AST check -- would create a fake
+typed surface and claim a capability the application does not have. Between
+"consistent with six siblings and visibly on the list" and "individually green
+by pretence", the first is the honest one. The operator ruling flagged last tick
+is now MORE urgent, not less: the gate enforces no-silent-filler on the producer
+surface, seven modelos are outside it, and each new layout makes the eventual
+reckoning larger. Nothing here should be read as that ruling having been made.
+
+### What the tooling caught, both times the same thing
+
+Two refusals, one cause. The semantic map failed the exact-bijection check with
+all 123 entries reported "extra" against 123 "missing" that differed in nothing
+else; then the render profile failed with `missing` and `unknown` naming the same
+row. Both were `source_cell`. Modelos 182 and 185 are PDF designs whose parser
+reports no cell, so the generators written for them omitted it; modelo 222 is an
+**xlsx**, the parser reports `A6`-style cells for every field, and the bijection
+compares them. The lesson is narrow and worth carrying: an anchor is a tuple, and
+a generator that drops one member of it produces a perfect-looking mismatch where
+every row is simultaneously missing and extra.
+
+The eligible-blank-numeric set turned out to be exactly ONE field -- the Devengo
+ejercicio -- so the render profile carries a single rule, matching modelo 202's
+own profile, which also carries exactly one. The 17-wide money slots need no
+rules at either modelo.
+
+### Grounding unchanged, and still short
+
+The layout cites the revision's base pair throughout. The five provisions modelo
+222's design names but the legal catalogue cannot resolve -- `ley-27-2014`
+art. 11.12, 17.2, 33 and 34, and `ley-19-1994` art. 26 -- are unchanged by this
+tick and still need BOE corpus text before the seventeen affected casillas can
+cite what establishes them.
