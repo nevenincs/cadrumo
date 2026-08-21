@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ba36ed914d3427181510320d70d9444e38bf948563d660b953d7bb8c2efc5a1'
+body_hash: 'sha256:f653470f1089777e91841f98b0046779888bcac45d79c07c2742fb1e7fd9ed93'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3233,3 +3233,41 @@ convention instead of restating it.
 **Generalisable:** a technique is not right or wrong on its own, only in a direction.
 Before sweeping a fix across siblings, check which way each instance fails — the ones
 that fail safe may be correct exactly as they are.
+
+### Closing the gate-quality seam with a measurement instead of another guess
+
+Five passes of probing detectors produced findings each time, so the question became
+whether the seam was exhausted or merely being sampled. It was answered by measuring
+rather than by trying one more probe.
+
+The first sweep keyed on variables NAMED like source (`source`, `segment`, `text`) and
+returned 23 hits — but most were assertions on rendered error messages and captured log
+output, which are exactly right as text checks. Name-based selection was the wrong
+instrument. Re-running it by **provenance** — positive membership over a variable
+assigned from `inspect.getsource` — returned 20, all genuinely about code.
+
+**Nineteen of those twenty are correct as they stand**, and separating them is the
+substance. They assert that an implementation contains its OWN logic: the envelope gate
+still raises its two errors, the integrity probe still opens ciphertext, the verifier
+still recomputes the row key. Evading one means deleting the code while keeping prose
+that describes it, and a stray mention there fails SAFE — it refuses something harmless.
+The dangerous direction is delegation, where an ordinary refactor moves a call out of a
+function and leaves the sentence behind.
+
+The twentieth was a delegation check: the public scans routing through
+`_iter_identified_payloads`. Its own docstring says no input can distinguish "the default
+verifies" from "a second unverified scan was reintroduced beside it" — so the text check
+was the only thing standing between the tree and that case, and a docstring mention
+satisfied it. Fixed and proven by substituting an `iter_records` whose only reference is
+prose.
+
+**The seam is closed**, with the boundary recorded rather than left implicit: delegation
+checks are AST calls, own-logic checks stay textual, message and log assertions were never
+in scope.
+
+**Generalisable, and the reason this pass ran a measurement instead of a probe:** a seam
+that keeps yielding is either deep or being sampled badly, and the way to tell is to
+enumerate its population once. The first enumeration here selected by NAME and produced
+mostly noise; the second selected by PROVENANCE and produced a set small enough to judge
+one by one. When a sweep returns mostly false positives, suspect the selector before
+concluding the population is dirty.
