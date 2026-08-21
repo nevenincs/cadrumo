@@ -13,6 +13,7 @@ on.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -83,10 +84,16 @@ def test_the_verb_refuses_because_the_profile_fact_is_unanswered(
     this, a refusal caused by something else entirely could still carry the
     label and the next test would pass for the wrong reason.
     """
-    result = _invoke(list(args))
+    # Asserted on the envelope rather than on the prose. The refusal word is
+    # translated, so an English token never appears in a Spanish-rendered
+    # refusal -- the sibling assertions below stay on text only because they
+    # resolve their expected label through the same locale the CLI renders in.
+    result = _invoke(["--format", "json", *args])
 
     assert result.exit_code != 0, result.output
-    assert "Refused." in result.output, result.output
+    envelope = json.loads(result.output)
+    assert envelope["status"] == "error", result.output
+    assert envelope["error"]["category"] == "REFUSED", result.output
 
 
 @pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
