@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:68750fd550a7973e418d93e5193e4eab2b117f10987f786faee99f7e231801fa'
+body_hash: 'sha256:5c71c19164c634f27e7dd459aba48d6ab1e88a5bc7246f7cdc1952ef4cfdbdad'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3824,3 +3824,54 @@ write to give up and report.
 Proven by restoring the eighty-millisecond value: the outlast test fails with the exact
 production error, while the bounded test stays green because it should refuse under
 either budget.
+
+### Budget sweep: four surfaces probed, none defective
+
+The previous entry found a retry budget sized by nothing that exhausted under real
+contention, so this iteration asked the obvious follow-up — which OTHER budgets in this
+surface are arbitrary — and enumerated them. **The answer is none.** Recorded with the
+measurements so the next reader inherits the verdict rather than re-deriving it.
+
+**Login throttle, probed for a fail-open and found sound.** `record_login_failure`
+swallows `LockAcquisitionError` and does not count the failure when it cannot take the
+lock, which reads as an opening: an attacker generating contention would get uncounted
+guesses, and the module's own docstring notes that overlapping attempts collide on
+Windows. Measured against the real function rather than argued:
+
+| parallel wrong passwords | counted |
+|---|---|
+| 2 / 5 / 10 / 20 threads | 2 / 5 / 10 / 20 |
+| 4 / 8 spawned processes | 4 / 8 |
+
+Every attempt is counted at both shapes. The swallow is reachable only by holding the
+lock long enough to exhaust its timeout, and an attacker holding the lock is an attacker
+not attempting logins — while the backoff caps at 60 s regardless. The tolerance is
+sound, and so is the deliberate fail-soft on an unreadable sidecar, which is
+NIST SP 800-63B §5.2.2 reasoning stated plainly in the module: a local-CLI self-DoS is
+worse than throttled retry.
+
+**Its concurrency gate was checked for shape, and the shape is fine.** The existing test
+drives threads rather than processes, which would be a real weakness if the file lock had
+an in-process shortcut — a thread test would then pass while cross-process counting
+broke. `core/locks.py` contains no threading component at all, so threads contend on the
+same file lock processes do. A cross-process duplicate was considered and NOT added: it
+would gate an already-gated property in a shape that cannot fail independently.
+
+**The non-blocking reconcile lock is deliberate.** `_RECONCILE_LOCK_TIMEOUT_S = 0.0` in
+`_bundle_export.py` reads as a missing budget and is the opposite: a lock a live export
+already holds means an in-flight publication rather than a crash orphan, so reconcile
+skips that target instead of waiting for it. Documented at the constant.
+
+**The custody lock acquisition is the shape the previous fix moved TO.** Both the POSIX
+and Windows lock loops are deadline-based with the budget supplied by the caller, gated
+on the right error codes (`EACCES`/`EAGAIN`; Windows sharing and lock violation 32/33 —
+correctly a different set from the replace-path `{5, 32}`, because it is a different
+operation). The bare `0.025` in each is a poll interval, not a budget.
+
+**Why this entry exists.** A campaign this long accumulates surfaces that LOOK defective
+on inspection — a swallowed lock error, a zero timeout, a bare sleep literal — and each
+costs a full investigation to clear. Three of the four here are deliberate designs whose
+reasoning is already written down at the site; the fourth was measured. Recording the
+verdicts and the numbers converts that cost into a one-time expense. No change was made
+and none was warranted; both lanes are green at HEAD (309 integration, 1552 unit) with
+nothing of this iteration's in the tree.
