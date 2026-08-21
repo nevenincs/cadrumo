@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6bda8f061d7565839daed4535a76dde0f609171e283236b0fa2f6d574b8d94b'
+body_hash: 'sha256:cc9536ac7bd185e98d0889bf911a3f8abc39649237ee7beb8e6e43aaa769f2a2'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11250,3 +11250,88 @@ revision the split creates, not on the over-broad one.
   `orden-hac-1430-2025:art-4` there.
 
 Modelos 200, 322 and 347 carry the same class of finding and are untouched.
+
+## Tick: modelo 184 split at the 2025 re-layout, executed
+
+Queue item 1's modelo. Re-measured at tick start: authority CLEAN, 34
+generated-tree gates pass, span gate 4 failed with modelo 184 first.
+
+### The epoch was derived, not hand-authored
+
+The generator carried only a `2025` epoch while both design sources were
+registered, and the published tree's provenance read `design_epoch 2025` -- so
+the 2015-onward revision emitted 2025 byte offsets for every prior year.
+
+Deriving the `2023` epoch rather than authoring it was justified by measurement
+first: all 140 of the 2025 map's entries resolve to a 2025 field, 139 pair onto
+a 2023 field by (record_identity, offset), the single orphan is the new
+BLANCOS@230 slot, and NO 2023 field is left uncovered. All 102 render-profile
+rules likewise resolve and pair. A partial pairing would have meant
+hand-authoring the remainder, which is a different job; the measurement is what
+established it was not needed.
+
+What could not transfer is the anchor. Entries and rules are keyed by
+(sheet, source_row, ordinal) -- positions in extracted text -- and the two PDFs
+paginate differently, so the transfer key is the layout fact both designs
+state and the anchor is then taken from the 2023 field. Two divergences, both
+forced by the norm rather than chosen, and the builder REFUSES to write if
+either stops being the only one:
+
+* declarante @221 is the new field in 2025 and BLANCOS in 2023, so its entry is
+  emitted as a `filler` and its casilla binding dropped;
+* the single profile rule anchored to that slot is dropped, because a numeric
+  representation rule over BLANCOS would describe a quantity the design does
+  not carry there.
+
+Result: 139 entries and 101 rules, both loading through the pipeline's own
+loaders.
+
+### The registry split
+
+`decl.total-registros-entidad` was dropped from 2015-2024 -- it is the box the
+2025 orden created, and its own `source_refs` already said `aeat-dr-184-2025`
+while it sat on a revision spanning 2015. Every casilla's `export_refs` were
+remapped from `m184-2025.*` to the `m184-2023.*` ids of the tree that revision
+actually emits; that remap is not arithmetic, because the inserted field shifts
+declarante numbering from one side of it, so it was derived from the same
+pairing the epoch was built with.
+
+`orden-hac-1430-2025:art-4` is now attached where it belongs: to the
+2025-y-siguientes revision and to the casilla it created, neither of which
+cited it before.
+
+Both trees were produced by `publish_validated_generated_export_tree` after
+`validate_generated_export_tree`, never rendered into `src/` by hand. The
+2025 tree was regenerated too rather than left string-patched: renaming a
+revision moves the export fragments' table keys, and a generated tree edited by
+hand is exactly what the pre-cutover proof exists to prevent.
+
+### Verified
+
+* authority CLEAN.
+* generated-tree gates 34 -> 36, both new revisions enrolled and green.
+* the span gate no longer names modelo 184; 200, 322 and 347 remain.
+* locale suite 531 passed, 0 failed. The rename orphaned 176 revision-scoped
+  keys and left 350 wanted, so the leaves were MOVED per locale rather than
+  re-authored -- same official boxes, and re-authoring would risk wording one
+  box two ways and discard four existing translations. Only the keys whose
+  casilla the target revision actually declares were written, which is why the
+  dropped box did not travel to 2015-2024. `codebase_missing` is back to 0.
+
+### Traps recorded for the remaining three
+
+* The design source declares its epoch as `2023`, not `2023-2024`; the resolver
+  refuses the latter.
+* Anchors must carry `ordinal_absent = true` where AEAT printed no ordinal; the
+  schema refuses a silent absence.
+* Export fragments key the revision as a BARE table path
+  (an array-of-tables path naming the revision unquoted) and embed it in the layout
+  id, so a quoted-key rewrite misses them and produces a file declaring two
+  revisions.
+* Narrowing a revision's design refs can duplicate a reference that was already
+  present; static inspection refuses a repeated source reference.
+
+Modelos 200, 322 and 347 carry the same class of finding and are untouched.
+Modelo 200's is materially larger -- 1140 of 3194 shared boxes move and the
+record set itself changes from 75 to 77 records -- so it is not a re-anchoring
+of one field and should not be assumed to follow this shape.
