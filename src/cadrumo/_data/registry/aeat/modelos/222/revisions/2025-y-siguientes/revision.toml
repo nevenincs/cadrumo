@@ -29,7 +29,37 @@ source_refs = [
     "boe-modelo-202-base-order",
     "aeat-dr-222-2025",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review of the IS consolidacion fiscal pago fraccionado. \
+VERIFIED -- WHEN DUE: orden-hfp-227-2017 art. 5.2 reads verbatim in the bundled corpus \
+\"La presentacion de la autoliquidacion modelo 222, pago fraccionado a cuenta del Impuesto \
+sobre Sociedades para los grupos fiscales, se efectuara, durante los primeros veinte dias \
+naturales de los meses de abril, octubre y diciembre de cada ano natural\", and every \
+declared window reproduces it exactly (1P opens 04-01 closes 04-20, 2P 10-01/10-20, 3P \
+12-01/12-20, for each declared year), stored NOMINAL. The phrase \"de cada ano natural\" \
+is a recurring open-ended plazo, which is why this revision's open-ended 2025-y-siguientes \
+claim does not outrun its orden. VERIFIED -- TO WHOM: art. 2 is the dedicated approving \
+clause, \"Se aprueba el modelo 222 «Impuesto sobre Sociedades. Regimen de consolidacion \
+fiscal. Pago fraccionado» que figura como anexo II de la presente orden\", carrying no \
+year bound. Note this modelo is governed by the pagos-fraccionados orden HFP/227/2017 and \
+NOT by the per-ejercicio IS orden, which is why it does not share the defect found on m200 \
+and m220, whose orden approves models only \"para los periodos impositivos iniciados entre \
+el 1 de enero y el 31 de diciembre de 2024\". NOT CLAIMED -- independent_check_coverage is \
+n/a: NO CLAIM, not zero. NOT CLAIMED -- SPAN: the gate reports only 1 comparable bundled \
+design year inside this claimed span. That is thin ABSENT-class evidence rather than \
+evidence against the revision, unlike the contrary-evidence class the same gate reports \
+for m220 and m763. NOT CLAIMED -- this revision declares 2 casillas against a bundled \
+diseno deriving 63 box numbers; no export layout of either kind is declared and the record \
+detail is not modelled. This review reaches scheduling and applicability only. HAZARD \
+RECORDED FOR WHOEVER AUTHORS THOSE CASILLAS -- the 2024 diseno prints boxes 16, 22 and 32 \
+TWICE each within a single sheet, over different figures. Because \
+build_diseno_coverage_report keys a derived casilla on (segmento, number) and this modelo \
+is single-segment, authoring them as bare numbers would collapse six declared figures into \
+three AND the coverage report would still read 63 of 63 covered, so the defect would be \
+invisible to the instrument meant to catch it. NOT CLAIMED -- all 3 locales are complete, \
+but the strings were not audited for accuracy."""
+reviewed_at = 2026-08-21
 
 [revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
