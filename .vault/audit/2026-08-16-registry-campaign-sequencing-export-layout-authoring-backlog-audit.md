@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:50d1b2b5ac00dd7dce4d1c4039baf6eed703f215061e1f0f796dcc049545945e'
+body_hash: 'sha256:3e43586b36940b4a51fb83e649e5363a536b570217580986b084b5f10ac91090'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9565,3 +9565,67 @@ parity numbers are identical across all four catalogues, which an
 equal-across-locales addition cannot produce, and none of the 56 keys is named in
 the failure. Named here rather than left unmeasured, alongside the
 `dev/registry/tests` backlog recorded earlier.
+
+### Measured state
+
+Registry suite unchanged at **19 failed, 5,091 passed** — expected, because this
+tick's work was locale catalogues and the registry suite does not gate on Spanish
+label coverage; that gate lives in `dev/locales/tests`. Authority CLEAN,
+generated-tree gates 30 passed, no test newly failing.
+
+## Reachability is not suitability: the label method does not generalise
+
+Modelo 309's labels came out cleanly because its design prints short
+`Seccion (n) - Grupo - Campo` text. Applying the same offset match to the rest of
+the backlog produced encouraging numbers that were **measuring the wrong thing**:
+
+```
+360/2010-y-siguientes   224 unlabelled | offset-matched 224   (100%)
+184/2015-y-siguientes    82 unlabelled | offset-matched  82   (100%)
+```
+
+Both are 100% REACHABLE and mostly unusable. Modelo 360's design prints
+instructional prose -- note references, allowed-value literals, ISO citations,
+and its own typo (`proveeedor`) -- and modelo 184's prints truncated instruction
+(`ENTERO : Numerico. Parte entera. Se consignara la`) and filler tokens
+(`BLANCOS`) beside genuine labels. Copying either verbatim would have authored
+roughly 300 labels out of design annotations.
+
+Filtering for label SHAPE rather than reachability gives the honest picture:
+
+```
+                    extracted   usable as labels
+308/2009-y-siguientes      43        43
+193/2025-y-siguientes      49        37
+193/2024                   48        36
+184/2015-y-siguientes      82        46
+360/2010-y-siguientes     224        88
+```
+
+**The first filter I wrote was wrong too, and its own output showed it.** It
+counted 193's `Parte entera: del importe total de las` as label-shaped, because
+the truncation pattern covered `la`, `de` and `del` but not `las` or `los`. The
+corrected filter pairs a truncation test with an instructional-marker test, since
+360 fails on markers and 193 on truncation — one test catches neither corpus.
+
+## Modelo 308 authored, because it is 43 of 43
+
+Modelo 308 is the only remaining revision whose design text is wholly
+label-shaped, so it is the one authored this tick — `Grupo - Subgrupo - Campo
+[nn]`, the same recomposition method, with legal citations carried verbatim
+(`art. 21.4o, parrafo 2o LIVA` is a provision reference, not translatable text).
+Its vocabulary overlaps modelo 309's, and the new terms are the two regime
+abbreviations AEAT itself uses: MTN (medios de transporte nuevos) and REQ
+(regimen especial del recargo de equivalencia).
+
+Applied through `dev.locales set-batch`. Unresolved Spanish labels
+**1,742 -> 1,699**, authority CLEAN, and zero of the 43 produced a string
+identical to its Spanish source.
+
+### A miss from the previous tick, found and closed
+
+The modelo 309 `IBAN (10)` label was allowlisted as deliberately identical for
+`ca` last tick. Hungarian renders it identically too and was not checked, so the
+honesty ratchet was still red on `hu`. Allowlisted with the same reason. The
+lesson is narrow and worth stating: an identical-string exemption is per LOCALE,
+and fixing the locale the failure names leaves the others standing.
