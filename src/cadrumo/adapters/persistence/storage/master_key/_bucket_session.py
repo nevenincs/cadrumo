@@ -30,6 +30,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from ..bucket import BucketLockedError
+from ..crypto import KEY_SIZE
 from ..custody import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
     from .....core.config import Settings
 
 _KEK_BYTES = 32
-_DEK_BYTES = 32
 DEFAULT_SESSION_ABSOLUTE_MINUTES = 240
 #: Entries kept by the per-session routed-settings memo. Measured need is two
 #: -- a profile write asks for the route once inside a settings override and
@@ -180,8 +180,8 @@ class BucketSession:
             raise _storage_validation_error("absolute_minutes must be a strict positive integer")
         if len(kek) != _KEK_BYTES:
             raise _storage_validation_error(f"kek must be exactly {_KEK_BYTES} bytes")
-        if len(dek) != _DEK_BYTES:
-            raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
+        if len(dek) != KEY_SIZE:
+            raise _storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
 
         opened_at = validate_utc_aware(opened_at)
         idle_window = timedelta(minutes=idle_minutes)
@@ -250,8 +250,8 @@ class BucketSession:
             raise _storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
             raise _storage_validation_error("idle_minutes must be a strict positive integer")
-        if len(dek) != _DEK_BYTES:
-            raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
+        if len(dek) != KEY_SIZE:
+            raise _storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
         opened_at = validate_utc_aware(opened_at)
         idle_deadline = validate_utc_aware(idle_deadline)
         absolute_deadline = validate_utc_aware(absolute_deadline)

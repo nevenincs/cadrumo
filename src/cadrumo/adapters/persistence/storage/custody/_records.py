@@ -19,6 +19,7 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
+from ..crypto import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
@@ -40,9 +41,6 @@ PROFILE_CUSTODY_KDF_PARALLELISM: Final[frozenset[int]] = frozenset({1, 2, 4})
 
 _KDF_SALT_BYTES: Final = 16
 _DEK_EPOCH_BYTES: Final = 16
-_DEK_BYTES: Final = 32
-_AEAD_NONCE_BYTES: Final = 12
-_AEAD_TAG_BYTES: Final = 16
 _SHA256_DIGEST_RE: Final = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
 
@@ -137,17 +135,17 @@ class ProfileCustodyWrappedDek(BaseModel):
     @field_validator("nonce_b64")
     @classmethod
     def _validate_nonce(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=_AEAD_NONCE_BYTES)
+        return _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
 
     @field_validator("ciphertext_b64")
     @classmethod
     def _validate_ciphertext(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=_DEK_BYTES)
+        return _decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=KEY_SIZE)
 
     @field_validator("tag_b64")
     @classmethod
     def _validate_tag(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=_AEAD_TAG_BYTES)
+        return _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
 class _ProfileCustodyEnvelopePayload(BaseModel):

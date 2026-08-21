@@ -36,7 +36,20 @@ _SINGLE_HOME_CEILINGS = (
     "PROFILE_CUSTODY_DATA_MAX_ENTRIES",
 )
 
+#: Crypto parameters whose one home is ``storage.crypto``, checked across the
+#: whole storage tree rather than this package alone.
+#:
+#: Seven private redefinitions of these three existed -- ``_DEK_BYTES`` in
+#: three modules, ``_AEAD_NONCE_BYTES`` and ``_AEAD_TAG_BYTES`` in two each --
+#: while ``crypto`` already exported all three with their rationale (the nonce
+#: and tag sizes cite NIST SP 800-38D; a private ``= 12`` cites nothing). A
+#: divergence here is not a refused file: it is a nonce or tag layout that two
+#: readers of the same record disagree about, or a key length two modules
+#: disagree about.
+_CRYPTO_PARAMETERS = ("KEY_SIZE", "NONCE_SIZE", "GCM_TAG_SIZE")
+
 _CUSTODY_PACKAGE = Path(__file__).resolve().parent.parent
+_STORAGE_PACKAGE = _CUSTODY_PACKAGE.parent
 
 
 def _defining_modules(name: str) -> tuple[str, ...]:
@@ -95,3 +108,53 @@ def test_the_detector_counts_definitions_not_imports() -> None:
 
     assert not assigns(importing)
     assert assigns(defining)
+
+
+def _defining_modules_under(root: Path, name: str) -> tuple[str, ...]:
+    """Return every module under ``root`` that ASSIGNS ``name`` at module level."""
+    homes: list[str] = []
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts or "tests" in path.parts:
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
+            continue
+        for node in tree.body:
+            targets = (
+                node.targets if isinstance(node, ast.Assign) else ([node.target] if isinstance(node, ast.AnnAssign) else [])
+            )
+            if any(isinstance(target, ast.Name) and target.id == name for target in targets):
+                homes.append(path.relative_to(root).as_posix())
+    return tuple(homes)
+
+
+@pytest.mark.parametrize("parameter", _CRYPTO_PARAMETERS)
+def test_a_crypto_parameter_is_defined_only_in_the_crypto_package(parameter: str) -> None:
+    """DISCRIMINATING: a private copy of a nonce, tag or key size.
+
+    These are not ceilings on what a file may contain; they are the LAYOUT two
+    readers of the same record must agree on. A second copy that drifts does
+    not refuse anything -- it reads a tag where the bytes hold ciphertext.
+    """
+    homes = _defining_modules_under(_STORAGE_PACKAGE, parameter)
+
+    assert homes == ("crypto/_crypto.py",), (
+        f"{parameter} is defined in {list(homes)}. Its one home is crypto/_crypto.py, where it is "
+        "documented with the standard it comes from. Import it rather than restating the number."
+    )
+
+
+def test_the_storage_scan_reaches_the_crypto_module() -> None:
+    """ANTI-VACUITY: the assertion above is an equality against one path.
+
+    If the walk stopped seeing the tree it would return an empty tuple, which
+    fails -- but if it stopped seeing everything EXCEPT crypto it would pass
+    while checking nothing. Both halves are pinned by requiring the walk to
+    find the private modules that used to hold the copies.
+    """
+    modules = {path.relative_to(_STORAGE_PACKAGE).as_posix() for path in _STORAGE_PACKAGE.rglob("*.py")}
+
+    assert "crypto/_crypto.py" in modules
+    assert "custody/_records.py" in modules
+    assert "master_key/_bucket_session.py" in modules
