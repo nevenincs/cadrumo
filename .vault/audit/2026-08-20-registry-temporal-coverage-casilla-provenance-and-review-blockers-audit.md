@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0b2355cd5a5e149a3ff79a83a8dafea873f3560cacdb2ce8e77d09d8d7035c87'
+body_hash: 'sha256:bb1df439f12d3264e5a3cd95988fa7a18aede47ec766a403ccc44ddb42ac9552'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1535,6 +1535,54 @@ defects, and they should be assessed as a class. The module's own docstring alre
 records one false-positive class removed by reading presentation years instead of
 assuming an offset; this may be a second one hiding on the upper bound rather than the
 lower.
+
+
+### the-layout-coverage-list-triaged-eleven-are-citation-defects-fourteen-need-acquisition | high | and the arrears pattern is now unmistakable
+
+The question the previous finding left open -- whether the arrears-bounds entries are a
+systematic authoring convention or genuine gaps -- is answered by asking, per revision,
+whether a bundled design already covers the uncovered presentation year.
+
+**The check names 25 divergent revisions, not the 16 the assertion message shows** (it
+reports the first layer that fails, not the whole set). They split cleanly:
+
+**Eleven have a successor design ALREADY BUNDLED -- citation defects, no acquisition
+needed:**
+
+| revision | uncovered presentation year | design that covers it |
+|---|---|---|
+| m180 2019-2022 | 2023 | ``aeat-dr-180-2023`` |
+| m210 2025 | 2026-2027 | ``aeat-dr-210-2026`` |
+| m232 2016-2017 | 2018 | ``aeat-dr-232-2018`` |
+| m303 2022 | 2023 | ``aeat-dr-303-2023`` |
+| m390 2022 / 2023 / 2024 | 2023 / 2024 / 2025 | ``aeat-dr-390-2023`` / ``-2024`` / ``-2025`` |
+| m714 2021 / 2022 / 2023 / 2024 | 2022 / 2023 / 2024 / 2025 | ``aeat-dr-714-2022`` / ``-2023`` / ``-2024`` / ``-2025`` |
+
+**Fourteen have no bundled successor** -- m126, m128, m165, m181, m184, m270, m308,
+m309, m322, m341, m347, m353, m390/2025, m576 -- and are genuine acquisition gaps.
+
+**The m390 and m714 series make the pattern unmistakable.** Four consecutive m714
+revisions each need exactly the next year's design, and three consecutive m390 revisions
+do the same. This is not eleven independent mistakes: a revision for ejercicio N declares
+the design applying in calendar year N, while its arrears filing presents in N+1 and
+needs the design applying then. The convention is off by one presentation year, applied
+consistently.
+
+**What the fix is, and the check it needs first.** Adding the successor design to the
+export layout's ``source_refs`` is only sound if the two designs agree byte-wise --
+an export layout encodes offsets from one design, and citing two that disagree would
+assert it follows both. The span gate already measures exactly that, and neither m390
+nor m714 appears in its contrary-evidence list (which is m184, m200, m220, m322, m347,
+m763). So for those seven revisions no corpus-evidenced relayout crosses the boundary and
+citing the successor is safe. m180, m210, m232 and m303 need the same check run
+individually before their refs are extended.
+
+**Not landed here.** The edit touches export layouts across eight modelos owned by other
+hands, and the per-revision relayout check above is a precondition for four of the
+eleven. What this iteration removes is the ambiguity: the list is no longer sixteen
+undifferentiated failures but eleven citation fixes with the evidence already on disk and
+fourteen acquisitions, and the arrears off-by-one explains why they all look alike.
+
 
 ## Recommendations
 
