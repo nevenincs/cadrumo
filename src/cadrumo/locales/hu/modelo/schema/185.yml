@@ -21,9 +21,80 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: E bevallás sorszámos azonosító száma, 13 számjegyű.
+              label: A BEVALLÁS AZONOSÍTÓ SZÁMA
+            x-chim6r1ee1in4qbfchng:
+              help: A bevallással érintett naptári hónap, 01 januártól 12 decemberig.
+              label: IDŐSZAK
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-chim6r1eehnn8obc5lp6apr9edq74rrj:
+              help: Az e bevallóhoz tartozó bejelentett személyek, azaz a 2-es típusú
+                rekordok teljes száma.
+              label: A REKORDOK TELJES SZÁMA
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6:
+              help: A bevallott hónapban bejelentett és járulékfizetéssel érintett
+                napok.
+              label: A HÓNAPBAN BEJELENTETT NAPOK SZÁMA
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9h:
+              help: A bevallott hónapban bejelentett és járulékfizetéssel érintett
+                napok. A -1. hónapra vonatkozik.
+              label: A -1. HÓNAPBAN BEJELENTETT NAPOK SZÁMA
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9i:
+              help: A bevallott hónapban bejelentett és járulékfizetéssel érintett
+                napok. A -2. hónapra vonatkozik.
+              label: A -2. HÓNAPBAN BEJELENTETT NAPOK SZÁMA
+            x-chim6r31e9gm8rpedpkmc:
+              help: A bejelentett személy NIF száma, akire a járulékok vonatkoznak.
+              label: A BEJELENTETT SZEMÉLY NIF SZÁMA
+            x-chim6r31e9gm8rpedpnmqojick:
+              help: A bejelentett személy vezeték- és utóneve.
+              label: A BEJELENTETT SZEMÉLY VEZETÉK- ÉS UTÓNEVE
+            x-chim6r31e9gm8rpedpqmqpbidsmm2pj9dhkm2or9dtn0:
+              help: A bejelentett személy tagsági száma, 12 karakter.
+              label: TAGSÁGI SZÁM
+            x-chim6r31e9gm8rpee1m7asj9c5hn8qbmd5i62p0:
+              help: Jelzi, hogy a bejelentett személy többes biztosítási jogviszonyban
+                áll-e.
+              label: TÖBBES BIZTOSÍTÁSI JOGVISZONY
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpg:
+              help: A bevallott hónapban alkalmazandó járulékfizetési rendszer.
+              label: A HÓNAP JÁRULÉKFIZETÉSI RENDSZERE
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqc8:
+              help: A bevallott hónapban alkalmazandó járulékfizetési rendszer. A
+                -1. hónapra vonatkozik.
+              label: A -1. HÓNAP JÁRULÉKFIZETÉSI RENDSZERE
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqcg:
+              help: A bevallott hónapban alkalmazandó járulékfizetési rendszer. A
+                -2. hónapra vonatkozik.
+              label: A -2. HÓNAP JÁRULÉKFIZETÉSI RENDSZERE
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6:
+              help: A bejelentett személy jogállása a bevallott hónapban.
+              label: HAVI JOGÁLLÁS
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9h:
+              help: A bejelentett személy jogállása a bevallott hónapban. A -1. hónapra
+                vonatkozik.
+              label: JOGÁLLÁS A -1. HÓNAPBAN
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9i:
+              help: A bejelentett személy jogállása a bevallott hónapban. A -2. hónapra
+                vonatkozik.
+              label: JOGÁLLÁS A -2. HÓNAPBAN
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ec:
+              help: 'A hónap munkaidő-kódja: 0 nincs érték, 1 teljes, 2 részmunkaidő
+                legalább 50%, 3 részmunkaidő 50% alatt, 4 nem alkalmazandó.'
+              label: A HÓNAP MUNKAIDŐ-TÍPUSA
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj2:
+              help: 'A hónap munkaidő-kódja: 0 nincs érték, 1 teljes, 2 részmunkaidő
+                legalább 50%, 3 részmunkaidő 50% alatt, 4 nem alkalmazandó. A -1.
+                hónapra vonatkozik.'
+              label: A -1. HÓNAP MUNKAIDŐ-TÍPUSA
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj4:
+              help: 'A hónap munkaidő-kódja: 0 nincs érték, 1 teljes, 2 részmunkaidő
+                legalább 50%, 3 részmunkaidő 50% alatt, 4 nem alkalmazandó. A -2.
+                hónapra vonatkozik.'
+              label: A -2. HÓNAP MUNKAIDŐ-TÍPUSA
           construct:
             modelo-185-informative:
               field:

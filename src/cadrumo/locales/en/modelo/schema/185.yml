@@ -21,9 +21,79 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the return relates
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Sequential identifying number of this return, 13 numeric positions.
+              label: IDENTIFYING NUMBER OF THE RETURN
+            x-chim6r1ee1in4qbfchng:
+              help: Natural month the return covers, from 01 January to 12 December.
+              label: PERIOD
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-chim6r1eehnn8obc5lp6apr9edq74rrj:
+              help: Total number of reported persons included for this declarant,
+                that is, of type 2 records.
+              label: TOTAL NUMBER OF RECORDS
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6:
+              help: Days registered and contributed during the month being declared.
+              label: NUMBER OF REGISTERED DAYS IN THE MONTH
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9h:
+              help: Days registered and contributed during the month being declared.
+                Refers to month -1.
+              label: NUMBER OF REGISTERED DAYS IN MONTH -1
+            x-chim6r31e9gm8rpechkm2spdc5m78o9ddlin6b9i:
+              help: Days registered and contributed during the month being declared.
+                Refers to month -2.
+              label: NUMBER OF REGISTERED DAYS IN MONTH -2
+            x-chim6r31e9gm8rpedpkmc:
+              help: NIF of the reported person the contributions relate to.
+              label: NIF OF THE REPORTED PERSON
+            x-chim6r31e9gm8rpedpnmqojick:
+              help: Surnames and first name of the reported person.
+              label: SURNAMES AND FIRST NAME OF THE REPORTED PERSON
+            x-chim6r31e9gm8rpedpqmqpbidsmm2pj9dhkm2or9dtn0:
+              help: Membership number of the reported person, 12 positions.
+              label: MEMBERSHIP NUMBER
+            x-chim6r31e9gm8rpee1m7asj9c5hn8qbmd5i62p0:
+              help: Indicates whether the reported person is in a multiple-activity
+                situation.
+              label: MULTIPLE ACTIVITY
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpg:
+              help: Contribution scheme applicable in the month being declared.
+              label: CONTRIBUTION SCHEME FOR THE MONTH
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqc8:
+              help: Contribution scheme applicable in the month being declared. Refers
+                to month -1.
+              label: CONTRIBUTION SCHEME FOR MONTH -1
+            x-chim6r31e9gm8rpee9imeqbdcln2qorfehknkob3d5nmsbbdclpiqcg:
+              help: Contribution scheme applicable in the month being declared. Refers
+                to month -2.
+              label: CONTRIBUTION SCHEME FOR MONTH -2
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6:
+              help: Status of the reported person in the month being declared.
+              label: STATUS IN THE MONTH
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9h:
+              help: Status of the reported person in the month being declared. Refers
+                to month -1.
+              label: STATUS IN MONTH -1
+            x-chim6r31e9gm8rpeedkn8tb1cdkmurhddlin6b9i:
+              help: Status of the reported person in the month being declared. Refers
+                to month -2.
+              label: STATUS IN MONTH -2
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ec:
+              help: 'Working-hours code for the month: 0 no value, 1 full time, 2
+                part time at or above 50%, 3 part time below 50%, 4 not applicable.'
+              label: WORKING-HOURS TYPE FOR THE MONTH
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj2:
+              help: 'Working-hours code for the month: 0 no value, 1 full time, 2
+                part time at or above 50%, 3 part time below 50%, 4 not applicable.
+                Refers to month -1.'
+              label: WORKING-HOURS TYPE FOR MONTH -1
+            x-chim6r31e9gm8rpeehkn0rpdd9nn4rj1chgiqrb5ecmj4:
+              help: 'Working-hours code for the month: 0 no value, 1 full time, 2
+                part time at or above 50%, 3 part time below 50%, 4 not applicable.
+                Refers to month -2.'
+              label: WORKING-HOURS TYPE FOR MONTH -2
           construct:
             modelo-185-informative:
               field:
