@@ -29,25 +29,25 @@ import pytest
 
 from .. import extract_record_design
 from .. import RecordDesignField, RecordDesignSheet
-from .._record_design import _page_number_from_token, _recovered_record_identity
+from .._record_design import _page_label_from_token, _recovered_record_identity
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize(("token", "page"), [("01000", 1), ("02000", 2), ("08000", 8)])
-def test_a_composite_token_yields_its_leading_page(token: str, page: int) -> None:
-    assert _page_number_from_token(token) == page
+@pytest.mark.parametrize(("token", "page"), [("01000", "1"), ("02000", "2"), ("08000", "8")])
+def test_a_composite_token_yields_its_leading_page(token: str, page: str) -> None:
+    assert _page_label_from_token(token) == page
 
 
-@pytest.mark.parametrize(("token", "page"), [("001", 1), ("014", 14), ("02", 2)])
-def test_a_plain_token_is_read_as_written(token: str, page: int) -> None:
-    assert _page_number_from_token(token) == page
+@pytest.mark.parametrize(("token", "page"), [("001", "1"), ("014", "14"), ("02", "2")])
+def test_a_plain_token_is_read_as_written(token: str, page: str) -> None:
+    assert _page_label_from_token(token) == page
 
 
 def test_a_five_digit_token_without_the_sub_counter_is_left_whole() -> None:
     """Nothing in the corpus says how to split this, so it is not split."""
-    assert _page_number_from_token("01234") == 1234
+    assert _page_label_from_token("01234") == "1234"
 
 
 def test_the_bundled_modelo_390_design_names_its_eight_page_records() -> None:
@@ -108,3 +108,34 @@ def test_a_disagreement_without_a_width_contradiction_keeps_the_identifier() -> 
     )
 
     assert _recovered_record_identity(sheet) == "Pág. 70"
+
+
+def test_an_alphabetic_page_token_is_the_label_itself() -> None:
+    """Modelo 200 gives one record a page that is not a number.
+
+    ``Constante "DID"``, closing ``</T200DID>``, and the design's own vector
+    example lists it in the page sequence beside the numbered records
+    (``...017018019019DIDFIN``). There is nothing to derive, so the token is the
+    label.
+    """
+    assert _page_label_from_token("DID") == "DID"
+
+
+def test_an_alphabetic_page_is_taken_only_from_the_pagina_field() -> None:
+    """The closing identifier is matched anywhere in a field's text.
+
+    ``</T200DID>`` appears in prose inside other records of the same design, and
+    reading it there named a 1,618-field record after the token belonging to a
+    45-field one. An alphabetic page is therefore accepted only where geometry
+    anchors it -- the Página field at position 6, beside the modelo constant.
+    """
+    sheet = RecordDesignSheet(
+        name="<unidentified>",
+        fields=(
+            _field(3, 3, 'Modelo. Constante "200"'),
+            _field(6, 3, 'Pagina. Constante "520"'),
+            _field(900, 10, 'Identificador de fin. Constante "</T200DID>"'),
+        ),
+    )
+
+    assert _recovered_record_identity(sheet) == "Pág. 520"

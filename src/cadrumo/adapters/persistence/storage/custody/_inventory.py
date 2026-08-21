@@ -15,6 +15,7 @@ from .....core import StorageCategory, iter_directory, storage_location
 from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
+    PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     anchor_directory,
     is_reparse_metadata,
     posix_directory_fd,
@@ -24,8 +25,6 @@ from ._filesystem import (
 
 PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = 2048
 PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = 512 * 1024 * 1024
-PROFILE_CUSTODY_DATA_MAX_ENTRIES = 1024
-PROFILE_CUSTODY_DATA_FILE_MAX_BYTES = 64 * 1024 * 1024
 
 _BUCKET_DATABASE_RELATIVE_PATH: Final[str] = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 """The capsule-relative path of the profile's own encrypted SQLite database.
@@ -375,8 +374,6 @@ __all__ = [
     "DATABASE_PRESENCE_ONLY_RELATIVE_PATHS",
     "DATABASE_SIDECAR_RELATIVE_PATHS",
     "HOLDER_LOCK_RELATIVE_PATHS",
-    "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES",
-    "PROFILE_CUSTODY_DATA_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES",
     "ProfileCustodyInventory",

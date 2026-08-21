@@ -2475,10 +2475,10 @@ class _PdfSheetResult:
 #: belongs to: ``</T200001>`` closes page 1 of modelo 200. AEAT writes it as the
 #: last field of every page record in the designs that head their records with
 #: nothing a heading recogniser can see.
-_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{2,5})>")
+_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>[A-Z0-9]{2,5})>")
 #: The same fact stated at the TOP of the record, as the contenido of its
 #: ``Página`` row: ``3 6 3 An Página. OBLIGATORIO Constante "001"``.
-_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{2,5})"')
+_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>[A-Z0-9]{2,5})"')
 
 
 #: The widths AEAT writes a página constant in, observed across the bundled
@@ -2487,28 +2487,30 @@ _PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{2,5})"')
 _PAGE_CONSTANT_WIDTHS: Final[frozenset[int]] = frozenset({2, 3, 5})
 
 
-def _page_number_from_token(token: str) -> int:
-    """The page a record's página constant names.
+def _page_label_from_token(token: str) -> str:
+    """The page a record's página constant names, as the design writes it.
 
-    Most designs write the page directly -- modelo 200's ``001``, modelo 763's
-    ``02``. Modelo 390 writes a FIVE-digit composite, ``01000`` through
+    Most designs write a number directly: modelo 200's ``001``, modelo 763's
+    ``02``. Two shapes are not plain numbers and both are read as AEAT states
+    them.
+
+    Modelo 390's 2015 edition writes a five-digit composite, ``01000`` through
     ``08000``, where the leading digits are the page and the trailing ``000`` is
-    a sub-counter.
+    a sub-counter. That split is not assumed: the design cross-checks it, since
+    the record its running header names ``Pag. 1`` is the record declaring
+    ``Constante "01000"``.
 
-    That split is not assumed: the design cross-checks it itself. Its second
-    record is headed ``Pag. 1 DISENO DE REGISTRO`` -- named by AEAT's own
-    running header, with no help from this function -- and that same record
-    declares ``Constante "01000"`` and closes ``</T39001000>``. Page 1 and token
-    01000 are therefore the same record stated two ways, which fixes the
-    reading; the remaining seven records run 02000 to 08000 and name pages 2 to
-    8, colliding with nothing.
-
-    A five-digit token NOT ending in the sub-counter is left alone rather than
-    split on a rule this evidence does not cover.
+    Modelo 200 writes an ALPHABETIC page for one record -- ``Constante "DID"``,
+    closing ``</T200DID>`` -- and its own vector example lists that record in
+    the page sequence beside the numbered ones
+    (``...017018019019DIDFIN``). There is no number to derive, so the token is
+    the label.
     """
-    if len(token) == 5 and token.endswith("000"):
-        return int(token[:2])
-    return int(token)
+    if token.isdigit():
+        if len(token) == 5 and token.endswith("000"):
+            return str(int(token[:2]))
+        return str(int(token))
+    return token
 
 
 def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
@@ -2576,12 +2578,22 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
             if match is None:
                 continue
             closing = match.group("page")
+            # The closing identifier is matched anywhere in a field's text, so a
+            # token bled in from a neighbouring record can be picked up. That is
+            # tolerable for a numeric page, which the width check still guards,
+            # but not for an ALPHABETIC one: modelo 200's ``</T200DID>`` appears
+            # in prose inside other records, and reading it there renamed a
+            # 1,618-field record after the token that belongs to a 45-field one.
+            # An alphabetic page is therefore taken only from the Página field,
+            # which geometry anchors.
+            if not closing.isdigit():
+                break
             if declared_page is not None and len(closing) != len(declared_page):
-                return f"Pág. {_page_number_from_token(declared_page)}"
-            return f"Pág. {_page_number_from_token(closing)}"
+                return f"Pág. {_page_label_from_token(declared_page)}"
+            return f"Pág. {_page_label_from_token(closing)}"
 
     if declared_page is not None:
-        return f"Pág. {_page_number_from_token(declared_page)}"
+        return f"Pág. {_page_label_from_token(declared_page)}"
     return None
 
 
