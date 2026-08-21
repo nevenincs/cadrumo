@@ -64,11 +64,29 @@ def _revision_scoped_legal_id(modelo: ModeloDefinition) -> str:
     return sorted(scoped)[0]
 
 
-def _revision_scoped_source_id(modelo: ModeloDefinition) -> str:
-    """Return one source id the 2025 revision owns and the modelo does not."""
+def _revision_scoped_source_id(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> str:
+    """Return one non-record-design scoped source id the 2025 revision owns.
+
+    A RECORD DESIGN is excluded for the same reason
+    :func:`_revision_scoped_procedural_legal_id` excludes substantive law: it is
+    checked by a DIFFERENT rule that fires first. A record-design source carries
+    a ``record_design_epoch``, and validation refuses an epoch its window no
+    longer governs -- so moving such a source's window to probe the applicability
+    check instead reports "declares epoch '2025' but applies to 2024-12-31" and
+    the test never reaches the boundary it is asking about.
+
+    That is not hypothetical: the scoped set holds exactly one record design,
+    ``aeat-dr-184-2025``, and it sorts first, so taking ``sorted(...)[0]`` picked
+    precisely the one source these probes cannot use.
+    """
     scoped = _revision_scoped_source_ids(modelo)
-    assert scoped, "the M100 2025 revision must own at least one source ref of its own"
-    return sorted(scoped)[0]
+    usable = sorted(
+        source_id
+        for source_id in scoped
+        if getattr(catalogues.sources[source_id], "kind", None) != "record_design"
+    )
+    assert usable, "the M100 2025 revision must own at least one non-design source ref of its own"
+    return usable[0]
 
 
 def _revision_scoped_procedural_legal_id(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> str:
@@ -222,8 +240,8 @@ def test_modelo_level_legal_refs_stay_exempt_from_the_revision_window() -> None:
 
 def test_snapshot_refuses_a_source_that_expired_before_the_revision_opened() -> None:
     """The audit's probe: a stale 2020..2024 window must not stay authoritative."""
-    modelo, _catalogues = _modelo_and_catalogues()
-    source_id = _revision_scoped_source_id(modelo)
+    modelo, catalogues = _modelo_and_catalogues()
+    source_id = _revision_scoped_source_id(modelo, catalogues)
 
     with pytest.raises(RegistryValidationError, match="outside their applicability window"):
         _rebuild_with_source_window(
@@ -235,8 +253,8 @@ def test_snapshot_refuses_a_source_that_expired_before_the_revision_opened() -> 
 
 def test_snapshot_refuses_a_source_that_only_applies_after_the_revision_closed() -> None:
     """The mirror case: a future-only window is equally ungrounded."""
-    modelo, _catalogues = _modelo_and_catalogues()
-    source_id = _revision_scoped_source_id(modelo)
+    modelo, catalogues = _modelo_and_catalogues()
+    source_id = _revision_scoped_source_id(modelo, catalogues)
 
     with pytest.raises(RegistryValidationError, match="outside their applicability window"):
         _rebuild_with_source_window(
@@ -250,7 +268,7 @@ def test_snapshot_refuses_invalid_legal_window_before_invalid_source_window() ->
     """Legal-window refusal remains earlier than source-window refusal."""
     modelo, catalogues = _modelo_and_catalogues()
     legal_id = _revision_scoped_legal_id(modelo)
-    source_id = _revision_scoped_source_id(modelo)
+    source_id = _revision_scoped_source_id(modelo, catalogues)
     legal_reference = catalogues.legal[legal_id].model_copy(
         update={"effective_from": date(2020, 1, 1), "effective_to": date(2024, 12, 31)},
     )
@@ -287,8 +305,8 @@ def test_snapshot_accepts_windows_that_touch_the_revision_boundary(
     applies_to: date | None,
 ) -> None:
     """The refusal is for windows that miss the revision, not ones that touch it."""
-    modelo, _catalogues = _modelo_and_catalogues()
-    source_id = _revision_scoped_source_id(modelo)
+    modelo, catalogues = _modelo_and_catalogues()
+    source_id = _revision_scoped_source_id(modelo, catalogues)
 
     snapshot = _rebuild_with_source_window(source_id, applies_from=applies_from, applies_to=applies_to)
 

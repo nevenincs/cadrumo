@@ -7,6 +7,15 @@ modelo:
         title: Declaración informativa mensual de cotizaciones de afiliados y mutualistas
       revision:
         2003-2025:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Ejercicio fiscal al que se refiere la declaración, con cuatro
+                cifras.
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: 'Carácter de la declaración: originaria, sustitutiva de otra presentada
+                antes, o complementaria que añade datos omitidos.'
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: null
         2025-y-siguientes:

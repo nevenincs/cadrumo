@@ -40,9 +40,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: own growth.
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("303", "2022"),  # row #117
+        # The four revisions that genuinely cite two designs across a YEAR
+        # boundary and still await their split. Each is recorded in the
+        # export-layout authoring backlog audit with the boundary it crosses.
+        ("184", "2015-y-siguientes"),
+        ("200", "2024-y-siguientes"),
+        ("322", "2008-2025"),
+        ("347", "2008-y-siguientes"),
     },
 )
+#: `("303", "2022")` removed: its split landed, and the detector confirms it --
+#: `_boundaries_for` returns nothing for that revision now.
+#:
+#: Four entries left this set at the same time, and NOT because anything was
+#: split. Modelo 303's two 2024 halves and modelo 490's two 2022 halves were
+#: reported as spanning by a detector that claimed designs per YEAR: AEAT splits
+#: an ejercicio mid-course by publishing two designs sharing a coverage year, so
+#: each half received both and reported a boundary inside its own year. They
+#: were already correctly scoped. `_designs_claimed_by` now restricts a
+#: half-year revision to the design it cites, and the four false positives
+#: stopped reporting while every genuine cross-year span above kept doing so.
 #: `("390", "2010-y-siguientes")` (rows #110, #115, #118) removed: the revision-span
 #: split replaced the open-ended revision with four exact-year revisions (2022,
 #: 2023, 2024, 2025), each claiming exactly one design year. Verified rather than

@@ -17,6 +17,7 @@ from uuid import UUID
 from .....core import StorageCategory, storage_path
 from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ..crypto import KEY_SIZE
 from ._errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -356,7 +357,7 @@ def wrap_profile_custody_material(
     """Build one wrapper only inside the existing supervised KDF boundary."""
     if timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
-    if len(dek) != 32:
+    if len(dek) != KEY_SIZE:
         raise ProfileCustodyRecordError("profile custody DEK must contain exactly 32 bytes")
     secret_bytes = validate_profile_password(secret).encode(_UTF_8_ENCODING, errors="strict")
     deadline = time.monotonic() + timeout_seconds

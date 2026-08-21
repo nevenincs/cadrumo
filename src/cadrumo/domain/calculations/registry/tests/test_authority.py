@@ -165,6 +165,12 @@ _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."2025"]
 valid_from = 2025-01-01
 period_selector = {{ year_from = 2025, periods = ["0A"] }}
+# This fixture exists to be a registry tree whose BYTES change, so the cache can
+# be shown to invalidate. It is intended to answer nothing beyond which revision
+# applies -- it declares no formulas and no export layout and is not meant to --
+# so applicability is the rung it is built to support, not a reading of what it
+# happens to contain.
+authority_grade = "applicability"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["{source_ref}"]
 orden_aplicabilidad = ["test-ley-001:art-1"]

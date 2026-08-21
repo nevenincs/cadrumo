@@ -9,7 +9,7 @@ modelo:
           casilla:
             aportaciones-ejercicio:
               help: null
-              label: null
+              label: Az év során teljesített befizetések
             base-retencion-practicada:
               help: null
               label: A levont forrásadó alapja
@@ -18,34 +18,34 @@ modelo:
               label: A forrásadó alapja
             clave-alta:
               help: null
-              label: null
+              label: Nyitási kulcs
             declaracion-complementaria-sustitutiva:
               help: null
               label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: null
-              label: null
+              label: A bevallott személy adóazonosító száma (NIF)
             declarado-nombre:
               help: null
-              label: null
+              label: A bevallott személy vezeték- és keresztneve
             declarante-nif:
               help: null
-              label: null
+              label: A bevalló adóazonosító száma (NIF)
             declarante-razon-social:
               help: null
               label: A bejelentő cégneve
             ejercicio-declaracion:
               help: null
-              label: null
+              label: A bevallás éve
             extincion-plan:
               help: null
-              label: null
+              label: A hosszú távú megtakarítási terv megszűnése
             fecha-apertura:
               help: null
               label: A megnyitás dátuma
             fecha-extincion:
               help: null
-              label: null
+              label: A megszűnés dátuma
             identificador-producto:
               help: null
               label: A szerződött termék azonosítója
@@ -66,19 +66,19 @@ modelo:
               label: Kapcsolattartó személy
             rendimientos-negativos-acumulados:
               help: null
-              label: null
+              label: Halmozott negatív hozamok
             rendimientos-negativos-ejercicio:
               help: null
-              label: null
+              label: Az év során elért negatív hozamok
             rendimientos-negativos-imputables:
               help: null
               label: Betudható negatív hozamok
             rendimientos-positivos-acumulados:
               help: null
-              label: null
+              label: Halmozott pozitív hozamok
             rendimientos-positivos-ejercicio:
               help: null
-              label: null
+              label: Az év során elért pozitív hozamok
             representante-legal-nif:
               help: null
               label: A törvényes képviselő adószáma

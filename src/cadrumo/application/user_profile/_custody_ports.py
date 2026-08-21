@@ -1057,6 +1057,37 @@ def parse_profile_custody_recovery_envelope(payload: bytes) -> ProfileCustodyRec
     return custody.parse_profile_custody_recovery_envelope(payload)
 
 
+#: Per-member ceilings for a capsule directory, re-exported so the restore path
+#: bounds each member with the SAME value the published capsule reader uses
+#: rather than forming a second opinion about the same record.
+PROFILE_CAPSULE_ENVELOPE_MAX_BYTES = custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
+PROFILE_CAPSULE_SENTINEL_MAX_BYTES = custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES
+PROFILE_CAPSULE_RECOVERY_MAX_BYTES = custody.PROFILE_CUSTODY_RECOVERY_MAX_BYTES
+PROFILE_CAPSULE_DATABASE_MAX_BYTES = custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
+
+
+def profile_custody_read_member(path: Path, *, maximum_bytes: int) -> bytes:
+    """Read one capsule member through the anchored, bounded, no-follow primitive.
+
+    The same read the published capsule uses. It matters MORE for the source an
+    operator hands to ``config profile restore``, which is the less trusted of
+    the two: a published capsule lives inside this product's own storage root,
+    while a restore source is a directory from anywhere.
+    """
+    return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
+
+
+def profile_custody_read_optional_member(path: Path, *, maximum_bytes: int) -> bytes | None:
+    """Read an optional capsule member, or prove its absence, in one operation.
+
+    Absence is resolved INSIDE the anchored read rather than by a preceding
+    ``is_file()``. Inspecting a pathname and then reopening it is two
+    operations on a name, not one on a file, and the primitive's own contract
+    says exactly that.
+    """
+    return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
+
+
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
     """Return where a committed capsule keeps its optional recovery wrapper."""
     return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME

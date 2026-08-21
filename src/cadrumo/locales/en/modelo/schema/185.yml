@@ -6,6 +6,14 @@ modelo:
         title: null
       revision:
         2003-2025:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Tax year to which the return refers, in four digits.
+              label: Filing year to which the return relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: 'Character of the return: original, a substitute replacing one
+                filed earlier, or supplementary adding data that was omitted.'
+              label: Return type (original / substitute / supplementary)
           field:
             label: null
         2025-y-siguientes:

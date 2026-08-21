@@ -9,91 +9,105 @@ modelo:
           casilla:
             x-chim6r1ecdgnasr15koj2c0:
               help: null
-              label: null
+              label: Adóazonosító szám (NIF) igénylése
             x-chim6r1ecdgnasr15koj2c8:
               help: null
-              label: null
+              label: Bejelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásába
             x-chim6r1ecdgnasr15koj4c0:
               help: null
-              label: null
+              label: Végleges NIF igénylése ideiglenes NIF birtokában
             x-chim6r1ecdgnasr15koj4c8:
               help: null
-              label: null
+              label: Új NIF-igazolókártya igénylése
             x-chim6r1ecdgnasr15koj4cg:
               help: null
-              label: null
+              label: Adóügyi székhely módosítása (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4co:
               help: null
-              label: null
+              label: Székhely vagy ügyviteli központ módosítása (2A és 2B oldal)
             x-chim6r1ecdgnasr15koj4d0:
               help: null
-              label: null
+              label: Értesítési cím módosítása vagy törlése (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4d8:
               help: null
-              label: null
+              label: Egyéb azonosító adatok vagy domain módosítása (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4dg:
               help: null
-              label: null
+              label: Képviselői adatok módosítása (3. oldal)
             x-chim6r1ecdgnasr15koj4do:
               help: null
-              label: null
+              label: Gazdasági tevékenységekre és telephelyekre vonatkozó adatok módosítása
+                (4. oldal)
             x-chim6r1ecdgnasr15koj4e0:
               help: null
-              label: null
+              label: Nagyvállalati minősítés vagy 6.000.000 eurót meghaladó költségvetésű
+                közigazgatási szerv minősítés módosítása (5. oldal)
             x-chim6r1ecdgnasr15koj4e8:
               help: null
-              label: null
+              label: Be- vagy kijelentkezés a havi visszatérítési nyilvántartásba
+                (5. oldal)
             x-chim6r1ecdgnasr15koj6c0:
               help: null
-              label: null
+              label: Be- vagy kijelentkezés a közösségi adóalanyok nyilvántartásába
+                (5. oldal)
             x-chim6r1ecdgnasr15koj6c8:
               help: null
-              label: null
+              label: Az általános forgalmi adóra vonatkozó adatok módosítása (5. oldal)
             x-chim6r1ecdgnasr15koj6cg:
               help: null
-              label: null
+              label: A személyi jövedelemadóra vonatkozó adatok módosítása (6. oldal)
             x-chim6r1ecdgnasr15koj6co:
               help: null
-              label: null
+              label: A társasági adóra vonatkozó adatok módosítása (6. oldal)
             x-chim6r1ecdgnasr15koj6d0:
               help: null
-              label: null
+              label: A külföldi illetőségűek jövedelemadójára vonatkozó adatok módosítása
+                állandó telephelyek, illetve külföldön alapított, spanyol területen
+                jelen lévő jövedelem-hozzárendelésű szervezetek esetében (6. oldal)
             x-chim6r1ecdgnasr15koj6d8:
               help: null
-              label: null
+              label: A 49/2002. sz. törvény II. címe szerinti különleges adózási rendszer
+                választása vagy arról való lemondás (6. oldal)
             x-chim6r1ecdgnasr15koj6dg:
               help: null
-              label: null
+              label: A levonásokra és előlegfizetésekre vonatkozó adatok módosítása
+                (7. oldal)
             x-chim6r1ecdgnasr15koj6do:
               help: null
-              label: null
+              label: Egyéb adókra vonatkozó adatok módosítása (7. oldal)
             x-chim6r1ecdgnasr15koj6e0:
               help: null
-              label: null
+              label: A közösségi kereskedelem különleges rendszereire vonatkozó adatok
+                módosítása (7. oldal)
             x-chim6r1ecdgnasr15koj6e8:
               help: null
-              label: null
+              label: A tagok, résztvevők vagy közreműködők jegyzékére vonatkozó adatok
+                módosítása (8. oldal)
             x-chim6r1ecdgnasr15koj8c0:
               help: null
-              label: null
+              label: Valamennyi vállalkozási és/vagy szakmai tevékenység megszüntetése
+                (jogi személyek és szervezetek, felszámolás nélkül; inaktív szervezetek)
             x-chim6r1ecdgnasr15koj8cg:
               help: null
-              label: null
+              label: Az AEAT, a TEA és a DGT értesítéseinek fogadására szolgáló telefonszámok
+                és elektronikus címek módosítása vagy törlése (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj8co:
               help: null
-              label: null
+              label: Az áfanyilvántartási könyvek AEAT elektronikus ügyfélkapun keresztüli
+                vezetésének választásáról és az arról való lemondásról szóló bejelentés
+                (5. oldal)
             x-chim6r1ecdgnasr15koj8d0:
               help: null
-              label: null
+              label: NIF helyreállításának kérelmezése
             x-chim6r1ecdgnasr15koj8d8:
               help: null
-              label: null
+              label: A tényleges tulajdonosokra vonatkozó adatok módosítása (10. oldal)
             x-chim6r1ecdgnasr15koj8dg:
               help: null
-              label: null
+              label: Felszámolás alatt álló szervezetekre vonatkozó módosítás
             x-chim6r1ecdgnasr15kojac0:
               help: null
-              label: null
+              label: Kijelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásából
             x-chim6r1eclr6arjk5llmirj4:
               help: null
               label: Nyilvántartási bevallás típusa

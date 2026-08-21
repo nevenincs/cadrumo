@@ -56,7 +56,7 @@ modelo:
               label: Base resta de rendes
             '06':
               help: null
-              label: null
+              label: Base total
             '07':
               help: null
               label: Retencions dividends i participacions

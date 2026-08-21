@@ -13,7 +13,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from .....core.identity import canonical_profile_bucket_id
-from ..crypto import EncryptedBlob, decrypt_record
+from ..crypto import GCM_TAG_SIZE, NONCE_SIZE, EncryptedBlob, decrypt_record
 from ._errors import ProfileCustodyRecordError
 from ._kdf_codec import (
     canonical_frame_bytes as _canonical_frame_bytes,
@@ -26,8 +26,6 @@ from ._records import ProfileCustodyEnvelope
 _PROFILE_CUSTODY_DATA_FORMAT_VERSION: Final = 1
 _PROFILE_CUSTODY_SENTINEL_PURPOSE: Final = "profile-dek-sentinel/v1"
 _PROFILE_CUSTODY_SENTINEL_PROOF: Final = "profile-dek-sentinel-proof/v1"
-_AEAD_NONCE_BYTES: Final = 12
-_AEAD_TAG_BYTES: Final = 16
 
 
 def profile_custody_sentinel_aad(envelope: ProfileCustodyEnvelope) -> bytes:
@@ -96,13 +94,13 @@ class ProfileCustodySentinelRecord(BaseModel):
     @field_validator("nonce_b64")
     @classmethod
     def _validate_nonce(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=_AEAD_NONCE_BYTES)
+        _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
         return value
 
     @field_validator("tag_b64")
     @classmethod
     def _validate_tag(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=_AEAD_TAG_BYTES)
+        _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
         return value
 
     @field_validator("ciphertext_b64")
@@ -130,10 +128,10 @@ class ProfileCustodySentinelRecord(BaseModel):
     def encrypted_blob(self) -> EncryptedBlob:
         """Return the format-neutral AEAD representation after strict validation."""
         return EncryptedBlob(
-            nonce=_decode_canonical_b64(self.nonce_b64, field_name="nonce_b64", expected_bytes=_AEAD_NONCE_BYTES),
+            nonce=_decode_canonical_b64(self.nonce_b64, field_name="nonce_b64", expected_bytes=NONCE_SIZE),
             ciphertext=(
                 _decode_canonical_b64(self.ciphertext_b64, field_name="ciphertext_b64", expected_bytes=None)
-                + _decode_canonical_b64(self.tag_b64, field_name="tag_b64", expected_bytes=_AEAD_TAG_BYTES)
+                + _decode_canonical_b64(self.tag_b64, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
             ),
         )
 

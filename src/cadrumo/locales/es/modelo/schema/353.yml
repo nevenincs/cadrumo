@@ -10,25 +10,27 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Resultado total (sumatorio del resultado de entidades)
             '02':
               help: null
-              label: null
+              label: Cuotas a compensar pendientes de ejercicios anteriores
             '03':
               help: null
-              label: null
+              label: Resultado ([01] - [08])
             '04':
               help: null
-              label: null
+              label: 'A deducir: resultado de las autoliquidaciones anteriores presentadas
+                por el mismo concepto, ejercicio y periodo'
             '05':
               help: null
-              label: null
+              label: Resultado de la autoliquidación ([03] - [04])
             08:
               help: null
-              label: null
+              label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
             09:
               help: null
-              label: null
+              label: Cuotas a compensar de periodos previos pendientes para periodos
+                posteriores ([02] - [08])
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la autoliquidacion

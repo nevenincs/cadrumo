@@ -37,6 +37,14 @@ _KNOWN_ID_TAILS = frozenset(
         "-2022",
         "-2023",
         "-2024",
+        # Coined by this campaign's span splits. Each names a CLOSED range or a
+        # period-scoped half -- modelo 185's 2003-2025, modelo 322 and 353's
+        # 2008-2025, modelo 490's 2022-1t and 2022-2t-4t -- and the marker was
+        # checked against all three before they were admitted here: none reads
+        # as an open-ended claim.
+        "-2025",
+        "-1t",
+        "-2t-4t",
         "esquema-exterior",
         "esquema-importacion",
         "esquema-union",
@@ -73,18 +81,32 @@ def test_no_revision_id_uses_vocabulary_the_marker_has_not_been_checked_against(
     )
 
 
-def test_the_marker_recognises_the_open_ended_ids_the_tree_actually_carries() -> None:
-    """The control: without this the marker could match nothing and every test above passes."""
-    open_ended = [
+def test_the_marker_recognises_every_open_ended_id_the_tree_carries() -> None:
+    """The control: without this the marker could match nothing and every test above passes.
+
+    Stated as a property rather than a tally. This asserted more than fifty
+    recognitions, and the count fell to forty-eight as span splits replaced
+    open-ended revisions with closed ranges -- a number that drops every time
+    the tree is made MORE precise is not a health signal, and re-pinning it each
+    time trains the next reader to bump a constant.
+
+    The property that actually matters is exact: every id spelled
+    ``-y-siguientes`` is an open-ended claim, so the marker must recognise all
+    of them, and there must be some to recognise.
+    """
+    spelled_open = [
         f"{modelo_id}:{revision.id}"
         for modelo_id, revision in _committed_revisions()
-        if revision_id_claims_open_window(str(revision.id))
+        if str(revision.id).endswith("-y-siguientes")
+    ]
+    unrecognised = [
+        subject for subject in spelled_open if not revision_id_claims_open_window(subject.split(":", 1)[1])
     ]
 
-    assert len(open_ended) > 50, (
-        f"the marker recognises only {len(open_ended)} open-ended revision ids, which is far "
-        "below what this tree carries. It has probably stopped matching, and a gate that "
-        "recognises nothing reports no contradictions and reads as health."
+    assert spelled_open, "the tree carries no open-ended revision id at all, so this proves nothing"
+    assert not unrecognised, (
+        "the marker no longer recognises these ids as open-ended claims, so the gate has "
+        "stopped covering them and reports no contradictions there: " + "; ".join(unrecognised)
     )
 
 
@@ -109,21 +131,32 @@ def test_an_uninformative_id_is_neither_refused_nor_cleared() -> None:
     assert failures == []
 
 
-def test_the_gate_names_every_axis_that_closes_a_contradicting_revision() -> None:
-    """A revision closed on both axes reports both, not the first one found."""
+def test_no_committed_revision_contradicts_its_own_id() -> None:
+    """No revision claims an open window its own declarations close.
+
+    This test used to assert the OPPOSITE -- that at least one real revision
+    contradicted itself -- because that was the only proof the gate fired on
+    live data. Its own instruction for the day the tree was repaired was to
+    rewrite it rather than delete it, and the tree is now repaired: every
+    open-ended id agrees with its declared window.
+
+    Rewriting it as the positive property keeps the coverage pointed somewhere
+    useful. The proof that the gate still FIRES lives in the constructed twin
+    below, which closes a real revision and checks it is refused -- so nothing
+    is lost by asserting cleanliness here, and a regression that reintroduces a
+    contradiction is now caught rather than celebrated.
+    """
     contradictions = {
         f"{modelo_id}:{revision.id}": revision_window_closures(revision)
         for modelo_id, revision in _committed_revisions()
         if revision_id_claims_open_window(str(revision.id)) and revision_window_closures(revision)
     }
 
-    assert contradictions, (
-        "no revision contradicts its own id. If the tree was repaired this test should be "
-        "rewritten against a constructed revision rather than deleted, because it is the only "
-        "proof the gate fires on real data."
+    assert not contradictions, (
+        "these revisions claim an open-ended window their own declarations close, on the axes "
+        "named beside each: "
+        + "; ".join(f"{subject}: {', '.join(closures)}" for subject, closures in sorted(contradictions.items()))
     )
-    for subject, closures in contradictions.items():
-        assert closures, subject
 
 
 def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin() -> None:

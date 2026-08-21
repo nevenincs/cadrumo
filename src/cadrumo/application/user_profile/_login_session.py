@@ -67,6 +67,7 @@ from ...core import (
     storage_location,
 )
 from ...core.config import load_settings
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import (
     bounded_canonical_json_bytes,
     reject_duplicate_json_members,
@@ -1280,7 +1281,7 @@ def _publish_fresh_candidate_handover(
     later recovery process can still learn A's identity.
     """
     replacement = BucketPointer(bucket_id=candidate.bucket_id, schema_version=1)
-    planned_pointer = replacement.to_toml().encode("utf-8")
+    planned_pointer = replacement.to_toml().encode(UTF_8_ENCODING)
     handover = _ProfileLoginHandoverJournal.prepare(
         profile_a=retired_bucket_id,
         profile_b=candidate.bucket_id,

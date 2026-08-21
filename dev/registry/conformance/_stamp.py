@@ -991,7 +991,7 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
         (index for index in range(start + 1, len(lines)) if lines[index].startswith("[")),
         len(lines),
     )
-    body = [line for line in lines[start + 1 : end] if not _is_governance_line(line)]
+    body = _without_governance_assignments(lines[start + 1 : end])
     while body and not body[-1].strip():
         body.pop()
     body.extend(f"{key} = {rendered[key]}" for key in GOVERNANCE_KEYS if key in rendered)
@@ -1002,12 +1002,57 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     return newline.join(rebuilt) + newline
 
 
+def _without_governance_assignments(body: list[str]) -> list[str]:
+    """Return ``body`` with every governance assignment removed, bodies included.
+
+    A governance value is a scalar, but a scalar written as a TOML multi-line
+    basic string still occupies several PHYSICAL lines. Dropping only the line
+    that carries the key orphans the remaining prose and the closing delimiter
+    as bare TOML, and a reviewer note conventionally opening ``agent: ...`` then
+    parses as a key with a colon where an equals belongs. That is not
+    hypothetical: it refused every attempt to restamp a revision whose
+    ``reviewed_by`` had been written in the triple-quoted form, while the
+    single-line form beside it stamped cleanly.
+
+    The refusal was the good outcome -- the caller restores the previous bytes
+    rather than leaving a broken manifest -- but it made those revisions
+    permanently unstampable through this writer.
+    """
+    kept: list[str] = []
+    index = 0
+    while index < len(body):
+        if _is_governance_line(body[index]):
+            index += _governance_assignment_length(body, index)
+            continue
+        kept.append(body[index])
+        index += 1
+    return kept
+
+
+def _governance_assignment_length(body: list[str], index: int) -> int:
+    """How many physical lines the governance assignment at ``index`` occupies.
+
+    One, unless its value opens a multi-line basic string that the same line
+    does not also close. An unterminated opener runs to the end of the table
+    rather than past it, so a malformed manifest cannot make this consume the
+    caller's unrelated lines.
+    """
+    _, _, after = body[index].partition("=")
+    if after.count('"""') % 2 == 0:
+        return 1
+    for offset in range(index + 1, len(body)):
+        if '"""' in body[offset]:
+            return offset - index + 1
+    return len(body) - index
+
+
 def _is_governance_line(line: str) -> bool:
-    """Whether a manifest line assigns one of the four governance scalars.
+    """Whether a manifest line OPENS an assignment of one of the four governance scalars.
 
     Anchored at the start of the line so a governance key name appearing inside
-    a continued array element is never mistaken for an assignment; the four keys
-    are scalars, so their assignment is always a single whole line.
+    a continued array element is never mistaken for an assignment. The line is
+    the START of the assignment; :func:`_governance_assignment_length` decides
+    how far it runs.
     """
     stripped = line.lstrip()
     return any(re.match(rf"{key}\s*=", stripped) for key in GOVERNANCE_KEYS)

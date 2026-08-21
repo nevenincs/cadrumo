@@ -97,6 +97,13 @@ def _scan() -> _ScanResult:
                 str(modelo.id),
                 filing_year=scope_year,
                 period=scope_period,
+                # Ask for the rung the revision itself declares. The bindings
+                # architecture is asserted at every rung, so a breadth walk
+                # demanding FILING of an APPLICABILITY revision -- modelo 036's
+                # censal alta/modificacion/baja, filed on AEAT's sede -- refuses
+                # the build and takes the whole scan down with it, scanning
+                # nothing rather than scanning that revision's bindings.
+                grade=modelo.revisions[revision_id].effective_authority_grade,
             )
             revision = snapshot.revision
             revisions_scanned += 1

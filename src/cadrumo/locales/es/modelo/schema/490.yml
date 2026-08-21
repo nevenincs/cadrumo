@@ -498,10 +498,10 @@ modelo:
                 y periodo [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo trimestral (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -1000,10 +1000,10 @@ modelo:
                 y periodo [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo trimestral (1T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -2312,10 +2312,10 @@ modelo:
                 de regularización. 3T [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo trimestral (2T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -3755,10 +3755,10 @@ modelo:
                 de regularización. 3T [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo trimestral (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:

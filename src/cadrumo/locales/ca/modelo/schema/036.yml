@@ -9,91 +9,111 @@ modelo:
           casilla:
             x-chim6r1ecdgnasr15koj2c0:
               help: null
-              label: null
+              label: Sol·licitud de Número d'Identificació Fiscal (NIF)
             x-chim6r1ecdgnasr15koj2c8:
               help: null
-              label: null
+              label: Alta al cens d'empresaris, professionals i retenidors
             x-chim6r1ecdgnasr15koj4c0:
               help: null
-              label: null
+              label: Sol·licitud de NIF definitiu, disposant de NIF provisional
             x-chim6r1ecdgnasr15koj4c8:
               help: null
-              label: null
+              label: Sol·licitud de nova targeta acreditativa del NIF
             x-chim6r1ecdgnasr15koj4cg:
               help: null
-              label: null
+              label: Modificació del domicili fiscal (pàgines 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4co:
               help: null
-              label: null
+              label: Modificació del domicili social o de gestió administrativa (pàgines
+                2A i 2B)
             x-chim6r1ecdgnasr15koj4d0:
               help: null
-              label: null
+              label: Modificació i baixa del domicili a efectes de notificacions (pàgines
+                2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4d8:
               help: null
-              label: null
+              label: Modificació d'altres dades identificatives o de domini (pàgines
+                2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4dg:
               help: null
-              label: null
+              label: Modificació de dades de representants (pàgina 3)
             x-chim6r1ecdgnasr15koj4do:
               help: null
-              label: null
+              label: Modificació de dades relatives a activitats econòmiques i locals
+                (pàgina 4)
             x-chim6r1ecdgnasr15koj4e0:
               help: null
-              label: null
+              label: Modificació de la condició de Gran Empresa o Administració Pública
+                amb pressupost superior a 6.000.000 d'euros (pàgina 5)
             x-chim6r1ecdgnasr15koj4e8:
               help: null
-              label: null
+              label: Sol·licitud d'alta o baixa al registre de devolució mensual (pàgina
+                5)
             x-chim6r1ecdgnasr15koj6c0:
               help: null
-              label: null
+              label: Sol·licitud d'alta o baixa al registre d'operadors intracomunitaris
+                (pàgina 5)
             x-chim6r1ecdgnasr15koj6c8:
               help: null
-              label: null
+              label: Modificació de dades relatives a l'Impost sobre el Valor Afegit
+                (pàgina 5)
             x-chim6r1ecdgnasr15koj6cg:
               help: null
-              label: null
+              label: Modificació de dades relatives a l'Impost sobre la Renda de les
+                Persones Físiques (pàgina 6)
             x-chim6r1ecdgnasr15koj6co:
               help: null
-              label: null
+              label: Modificació de dades relatives a l'Impost sobre Societats (pàgina
+                6)
             x-chim6r1ecdgnasr15koj6d0:
               help: null
-              label: null
+              label: Modificació de dades relatives a l'Impost sobre la Renda de no
+                Residents corresponent a establiments permanents o a entitats en atribució
+                de rendes constituïdes a l'estranger amb presència en territori espanyol
+                (pàgina 6)
             x-chim6r1ecdgnasr15koj6d8:
               help: null
-              label: null
+              label: Opció o renúncia al règim fiscal especial del Títol II de la
+                Llei 49/2002 (pàgina 6)
             x-chim6r1ecdgnasr15koj6dg:
               help: null
-              label: null
+              label: Modificació de dades relatives a retencions i ingressos a compte
+                (pàgina 7)
             x-chim6r1ecdgnasr15koj6do:
               help: null
-              label: null
+              label: Modificació de dades relatives a altres impostos (pàgina 7)
             x-chim6r1ecdgnasr15koj6e0:
               help: null
-              label: null
+              label: Modificació de dades relatives a règims especials del comerç
+                intracomunitari (pàgina 7)
             x-chim6r1ecdgnasr15koj6e8:
               help: null
-              label: null
+              label: Modificació de dades relatives a la relació de socis, membres
+                o partícips (pàgina 8)
             x-chim6r1ecdgnasr15koj8c0:
               help: null
-              label: null
+              label: Deixar d'exercir totes les activitats empresarials i/o professionals
+                (persones jurídiques i entitats, sense liquidació; entitats inactives)
             x-chim6r1ecdgnasr15koj8cg:
               help: null
-              label: null
+              label: Modificació i baixa de dades de telèfons i adreces electròniques
+                per rebre avisos de l'AEAT, TEA i DGT (pàgines 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj8co:
               help: null
-              label: null
+              label: Comunicació d'opció i renúncia a la portada dels llibres registre
+                de l'IVA a través de la Seu electrònica de l'AEAT (pàgina 5)
             x-chim6r1ecdgnasr15koj8d0:
               help: null
-              label: null
+              label: Sol·licitud de rehabilitació del NIF
             x-chim6r1ecdgnasr15koj8d8:
               help: null
-              label: null
+              label: Modificació de dades relatives a titulars reals (pàgina 10)
             x-chim6r1ecdgnasr15koj8dg:
               help: null
-              label: null
+              label: Modificació d'entitats en liquidació
             x-chim6r1ecdgnasr15kojac0:
               help: null
-              label: null
+              label: Baixa del cens d'empresaris, professionals i retenidors
             x-chim6r1eclr6arjk5llmirj4:
               help: null
               label: Tipus de declaració censal

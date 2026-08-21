@@ -473,10 +473,10 @@ modelo:
                 [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the self-assessment relates
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Quarterly period (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -951,10 +951,10 @@ modelo:
                 [18]'
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the self-assessment relates
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Quarterly period (1T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -2190,10 +2190,10 @@ modelo:
                 Q3 [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the self-assessment relates
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Quarterly period (2T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:
@@ -3560,10 +3560,10 @@ modelo:
                 Q3 [84]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Filing year to which the self-assessment relates
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Quarterly period (1T..4T)
           construct:
             modelo-490-autoliquidacion:
               field:

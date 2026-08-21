@@ -432,6 +432,300 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
+#: The two halves of a row whose columns were emitted out of order. The first
+#: line carries LENGTH, TYPE and the description; the second carries the ORDINAL
+#: and POSITION, optionally followed by the casilla reference that belongs to
+#: the description's tail.
+_REVERSED_ROW_TAIL_RE = re.compile(
+    r"^\s*(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<description>\S.*)$",
+    re.IGNORECASE,
+)
+_REVERSED_ROW_HEAD_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*(?P<tail>\[[^\]]*\]\s*)?$",
+)
+
+
+#: A head half carrying description text after its position: ``79 1236 (2 a 6)
+#: [021]``. Admitted only under the continuity constraint below, never on the
+#: pattern alone -- prose beginning with two numbers is common.
+_REVERSED_ROW_HEAD_WITH_TAIL_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<trailing>\S.*)$",
+)
+
+
+def _continues(previous: _PdfRow | None, ordinal: str, offset: int) -> bool:
+    """Whether this ordinal and position resume exactly where ``previous`` ended.
+
+    The same over-determination the glued-ordinal split relies on: the ordinal
+    must follow by one AND the position must resume at the previous row's end.
+    Two independent facts, from a row already read, that must agree -- which is
+    what lets a head half be admitted when description text has bled onto its
+    line and the pattern alone would match prose.
+    """
+    if previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
+        return False
+    return ordinal == str(int(previous.ordinal) + 1) and offset == previous.offset + previous.length
+
+
+def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[str, int]]]:
+    """For each line, the row identities its OWN record already states intact.
+
+    Scoped per record, and that scoping is the whole point. The duplicate guard
+    exists to stop a split row being joined when the design also emits it whole,
+    which is a statement about one record -- but every record restarts at
+    ordinal 1 position 1, so low identities recur throughout a design. Measured
+    on modelo 200's 2010 edition, ``(30, 419)`` is stated intact by 28 different
+    records and ``(7, 28)`` by 34. A design-wide guard therefore refused almost
+    every legitimate join, and did so silently, because a refused join is
+    indistinguishable from no join at all.
+
+    Record boundaries come from the same geometry the parser uses: a row
+    declaring position 1 begins a record, because a fixed-width record is
+    contiguous from its first byte.
+    """
+    boundaries: list[int] = []
+    identities: list[set[tuple[str, int]]] = []
+    current: set[tuple[str, int]] = set()
+    for number, line in enumerate(lines, start=1):
+        parsed = _parse_pdf_row(line, number)
+        if parsed is not None and parsed.offset == 1 and current:
+            identities.append(current)
+            boundaries.append(number - 1)
+            current = set()
+        if parsed is not None and parsed.ordinal is not None:
+            current.add((parsed.ordinal, parsed.offset))
+    identities.append(current)
+
+    frozen = [frozenset(entry) for entry in identities]
+    per_line: list[frozenset[tuple[str, int]]] = []
+    segment = 0
+    for index in range(len(lines)):
+        while segment < len(boundaries) and index >= boundaries[segment]:
+            segment += 1
+        per_line.append(frozen[segment])
+    return per_line
+
+
+def _undouble_struck_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Repair a row whose glyphs the PDF text layer emitted twice.
+
+    Modelo 390's 2015 edition double-strikes some rows: ``4422 662255 1177 NN
+    55.. OOppeerraacciioonneess`` is ``42 625 17 N 5. Operaciones``, every
+    character duplicated while the separating spaces stay single. Eight rows
+    arrive that way and each one is a position the record otherwise reports as
+    dropped.
+
+    The repair is self-verifying, which is what keeps it from being a guess: a
+    line is rewritten ONLY when it does not parse as a row, every token it is
+    built from is an exact pairwise repetition, and the de-doubled result does
+    parse. A line failing any of the three is returned untouched. Nothing here
+    reasons about what the row ought to say -- the doubling either undoes
+    cleanly into a row or it does not.
+
+    Tokens that are not doubled are left alone rather than making the whole line
+    ineligible, because AEAT's own text mixes them: a description can carry a
+    single-struck fragment beside doubled ones.
+    """
+    repaired: list[str] = []
+    for number, line in enumerate(lines, start=1):
+        if _parse_pdf_row(line, number) is not None:
+            repaired.append(line)
+            continue
+        candidate = " ".join(
+            token[::2]
+            if len(token) >= 2 and len(token) % 2 == 0 and all(token[i] == token[i + 1] for i in range(0, len(token), 2))
+            else token
+            for token in line.split(" ")
+        )
+        repaired.append(candidate if candidate != line and _parse_pdf_row(candidate, number) is not None else line)
+    return tuple(repaired)
+
+
+def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Reassemble a row whose PDF columns were emitted in the wrong order.
+
+    Modelo 200's older editions emit some rows as two lines with the columns
+    swapped -- ``17 Num Ret. e ingr. a cuenta ... `` followed by ``30 419
+    [596]`` -- where AEAT's row is ``30 419 17 Num Ret. e ingr. a cuenta ...
+    [596]``. Every one of those positions is otherwise unread, and they are the
+    bulk of modelo 200's reported damage: 592 such pairs across six editions.
+
+    Neither half is a row on its own, and that is the evidence. The first line
+    has a length and a naturaleza but declares no position, so it can state
+    nothing about the record's extent; the second names an ordinal and a
+    position but no width. Only together do they make a field, and each supplies
+    exactly the columns the other lacks -- nothing here is inferred from
+    neighbouring rows or from a sequence.
+
+    A wrong pairing cannot pass quietly: it would place a field at a position
+    some other row already covers, and :func:`contiguity_failure` refuses
+    partial overlap and any extent past the declared total. The join is
+    therefore checked by the same arithmetic that reports the holes it closes.
+    """
+    # A design may emit the SAME row both split and intact. Joining the split
+    # copy would then declare a position the intact row already declares --
+    # harmless to contiguity, which permits containment, and therefore silent:
+    # modelo 200's 2012-2014 editions each gained twelve duplicate importe
+    # fields that way, in records that had no holes at all. So the intact rows
+    # are collected first and a pair claiming one of their (ordinal, position)
+    # identities is left alone.
+    claimed = _row_identities_by_record(lines)
+    joined: list[str] = []
+    index = 0
+    previous_row: _PdfRow | None = None
+    while index < len(lines):
+        line = lines[index]
+        parsed_here = _parse_pdf_row(line, index + 1)
+        if parsed_here is not None:
+            previous_row = parsed_here
+        if index + 1 < len(lines):
+            # The two halves arrive in either order. Swapped -- length, type and
+            # description first -- is how modelo 200's 2010 editions emit some
+            # rows; in natural order the row simply breaks after its position,
+            # leaving ``7 28`` above ``17 Num Deducc...``. Both are one row split
+            # over two lines, and neither half is a row alone, so the same
+            # evidence and the same duplicate guard apply to each.
+            forward_head = _REVERSED_ROW_HEAD_RE.match(line)
+            forward_tail = _REVERSED_ROW_TAIL_RE.match(lines[index + 1])
+            if (
+                forward_head is not None
+                and forward_tail is not None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and (forward_head.group("ordinal"), int(forward_head.group("offset"))) not in claimed[index]
+            ):
+                casilla = (forward_head.group("tail") or "").strip()
+                description = forward_tail.group("description").rstrip()
+                joined.append(
+                    f"{forward_head.group('ordinal')} {forward_head.group('offset')} "
+                    f"{forward_tail.group('length')} {forward_tail.group('type')} "
+                    f"{description}{' ' + casilla if casilla else ''}",
+                )
+                index += 2
+                continue
+            # The head may carry description text bled onto its line. That
+            # pattern alone matches prose, so it is admitted only when the
+            # ordinal and position resume exactly where the last read row ended.
+            tail = _REVERSED_ROW_TAIL_RE.match(line)
+            bled = _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(lines[index + 1])
+            if (
+                tail is not None
+                and bled is not None
+                and _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) is None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and _continues(previous_row, bled.group("ordinal"), int(bled.group("offset")))
+                and (bled.group("ordinal"), int(bled.group("offset"))) not in claimed[index]
+            ):
+                joined.append(
+                    f"{bled.group('ordinal')} {bled.group('offset')} "
+                    f"{tail.group('length')} {tail.group('type')} "
+                    f"{tail.group('description').rstrip()} {bled.group('trailing').strip()}",
+                )
+                index += 2
+                continue
+            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1])
+            if (
+                tail is not None
+                and head is not None
+                and _parse_pdf_row(line, index + 1) is None
+                and _parse_pdf_row(lines[index + 1], index + 2) is None
+                and (head.group("ordinal"), int(head.group("offset"))) not in claimed[index]
+            ):
+                casilla = (head.group("tail") or "").strip()
+                description = tail.group("description").rstrip()
+                joined.append(
+                    f"{head.group('ordinal')} {head.group('offset')} "
+                    f"{tail.group('length')} {tail.group('type')} "
+                    f"{description}{' ' + casilla if casilla else ''}",
+                )
+                index += 2
+                continue
+        joined.append(line)
+        index += 1
+    return tuple(joined)
+
+
+#: A row whose ordinal and position are emitted twice before the rest of the
+#: row: ``99 1592 99 1592 17 Num ...``. The repeat is the evidence -- the line
+#: states the same two numbers twice, so dropping the first pair asserts nothing
+#: the row does not already say about itself.
+_STUTTERED_PDF_ROW_RE = re.compile(
+    r"^(?P<indent>\s*)(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P=ordinal)\s+(?P=offset)\s+(?P<rest>\d.*)$",
+)
+
+
+def _collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Drop a row's duplicated ordinal-and-position prefix.
+
+    Modelo 200's 2010 and 2011 editions emit nine rows this way, and every one
+    of their positions is currently reported as a hole, so the duplication is
+    not cosmetic -- it costs the record the field.
+
+    Deliberately narrow to the SELF-EVIDENCING case. A row may also arrive with
+    genuine leading text, where the tail of a wrapped description spills onto
+    its line, and those cannot be admitted on the line's own evidence: measured
+    across the bundled corpus, lines of that shape include both real rows and
+    prose carrying number sequences, and nothing in the line distinguishes them.
+    A back-reference to the same two numbers has no such ambiguity.
+    """
+    return tuple(
+        f"{match.group('indent')}{match.group('ordinal')} {match.group('offset')} {match.group('rest')}"
+        if (match := _STUTTERED_PDF_ROW_RE.match(line)) is not None
+        else line
+        for line in lines
+    )
+
+
+#: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
+#: the next line. AEAT does this often enough to matter: modelo 202 writes
+#: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
+#: protegida ..." underneath.
+_BARE_COMPACT_PDF_ROW_RE = re.compile(
+    r"^\s*\d+\s+\d+\s+\d+\s+(?:An|Num|N|A)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Reattach a description AEAT wrapped onto the line after its row.
+
+    Done as a pre-pass rather than by loosening the row pattern, and the
+    difference is not cosmetic. Admitting a description-less row creates a field
+    that may never receive one -- the continuation handler only fills the field
+    still under construction, so anything that intervenes leaves it empty and a
+    later validator refuses the whole design. Three modelo 200 editions failed
+    exactly that way when the pattern was loosened. Joining first means every
+    row still reaches the parser complete, and no invariant downstream changes.
+
+    The line consumed must not itself look like a row, a page heading or a
+    record heading: those carry their own meaning and absorbing one would lose a
+    field or a record boundary. A row whose next line offers nothing usable is
+    left exactly as it was, to be reported as the hole it is.
+    """
+    joined: list[str] = []
+    absorbed = False
+    for index, line in enumerate(lines):
+        if absorbed:
+            absorbed = False
+            continue
+        if _BARE_COMPACT_PDF_ROW_RE.match(line) and index + 1 < len(lines):
+            candidate = lines[index + 1]
+            cleaned = _clean_pdf_line(candidate)
+            if (
+                candidate.strip()
+                and _parse_pdf_row(candidate, index + 2) is None
+                and _pdf_page_name(cleaned) is None
+                and _pdf_record_heading_name(cleaned) is None
+                and _pdf_candidate_record_name(cleaned) is None
+            ):
+                joined.append(f"{line.rstrip()} {candidate.strip()}")
+                absorbed = True
+                continue
+        joined.append(line)
+    return tuple(joined)
+
+
 @lru_cache(maxsize=256)
 def _extract_record_design_pdf_cached(
     path: str,
@@ -474,10 +768,11 @@ def _extract_record_design_pdf_stream(
     lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     if _uses_page_record_layout(lines):
         lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
+    lines = _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(lines))
     if not any(line.strip() for line in lines):
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
-        return _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+        return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
     except ValueError as pdfium_exc:
         text_fallback_error = pdfium_exc
         try:
@@ -510,6 +805,96 @@ def _extract_record_design_pdf_stream(
                 skipped=tuple(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
             )
         raise
+
+
+def _read_with_reversed_column_repair(
+    lines: tuple[str, ...],
+    *,
+    source_label: str,
+    corrections: _CorrectionIndex,
+) -> RecordDesignExtraction:
+    """Read the design, retrying with the reversed-column repair only where it can help.
+
+    The repair reassembles a row whose PDF columns were emitted out of order. It
+    recovers a great deal -- roughly 8,800 positions across modelo 200's three
+    oldest editions -- but a design may emit the SAME row both split and intact,
+    and a line-level view cannot tell those apart. Applied unconditionally it
+    added twelve duplicate importe fields to each of modelo 200's 2012-2014
+    editions, which had no unread positions at all, and contiguity permits that
+    as containment, so it would have been silent.
+
+    So the decision is made at DESIGN level, on two exact quantities rather than
+    on a judgement about any line. A design that reports nothing skipped has
+    nothing for this repair to recover and is never offered one -- its first
+    read is what it returns, so a clean design cannot be perturbed. Where
+    something IS skipped, the repaired read is kept only if it skips no more
+    sheets and leaves strictly fewer positions uncovered -- counted across every
+    record the lines produce, including the ones that stay reported, because
+    that is where this repair does its work.
+    """
+    first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+    if not first.skipped:
+        return first
+    repaired_lines = _collapse_stuttered_row_prefix(
+        _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
+    )
+    try:
+        repaired = _extract_pdf_lines(
+            repaired_lines,
+            source_label=source_label,
+            corrections=corrections,
+            repair_glued_rows=True,
+        )
+    except ValueError:
+        return first
+    if len(repaired.skipped) > len(first.skipped):
+        return first
+    before = _unread_positions_over_lines(lines, source_label=source_label, corrections=corrections)
+    after = _unread_positions_over_lines(
+        repaired_lines,
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=True,
+    )
+    return repaired if after < before else first
+
+
+def _unread_positions_over_lines(
+    lines: tuple[str, ...],
+    *,
+    source_label: str,
+    corrections: _CorrectionIndex,
+    repair_glued_rows: bool = False,
+) -> int:
+    """Positions no row covers, counted over EVERY record these lines produce.
+
+    Deliberately measured on the parse state rather than on the finished
+    extraction, and that is the whole reason this function exists. A record
+    whose rows do not tile its extent is reported instead of handed over, so it
+    is absent from ``sheets`` -- and the reversed-column repair recovers rows
+    precisely inside such records, which stay incomplete for other reasons.
+    Every quantity the extraction exposes is therefore identical either side of
+    the repair while thousands of positions differ, which is what made two
+    earlier decision rules read as "no improvement" and leave the repair dead.
+    """
+    state = _PdfParseState(
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=repair_glued_rows,
+    )
+    for number, line in enumerate(lines, start=1):
+        state.feed(line, number)
+    state._close_current_body()
+    total = 0
+    for result in state.results:
+        sheet = result.sheet
+        if sheet.total_positions is None or not sheet.fields:
+            continue
+        covered: set[int] = set()
+        for parsed_field in sheet.fields:
+            covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+        total += len(set(range(1, sheet.total_positions + 1)) - covered)
+    return total
 
 
 def _extract_sheet(worksheet: Worksheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:
@@ -1576,8 +1961,38 @@ def _positive_integer_after(values: tuple[object, ...], label_index: int) -> int
     return None
 
 
+#: The space between LENGTH and TYPE is optional because the PDF text layer
+#: loses it: modelo 100's 2009 through 2011 editions all write
+#: ``5 9 1A Indicador de pagina complementaria`` for a row that is length 1,
+#: type A. Requiring the space dropped the row and reported the byte it
+#: declares -- position 9 -- as a hole in a record that was otherwise whole.
+#:
+#: The split stays unambiguous because length is digits and type is a closed
+#: alternation, so ``1A`` can only be 1 + A. Measured over every bundled PDF
+#: before allowing it, this admits three lines in three designs, all the same
+#: genuine row.
+#: ``Tit`` is a naturaleza in its own right, not a typo. Modelo 100 uses it
+#: for the one-byte code naming WHICH titular an entry belongs to, and the
+#: rows say so themselves: every occurrence ends its description in
+#: "... - Titular" or "... - Contribuyente". Across the six bundled editions
+#: that use it there are 454 such rows and every one declares length 1, which
+#: is what a holder code is.
+#:
+#: Leaving it unrecognised dropped all 454, and because they sit BETWEEN
+#: read rows the loss showed up as scattered single-byte holes -- 12, 192,
+#: 372, 581 in one record alone -- which reads like corpus damage rather
+#: than one missing token.
+#: A trailing period after the type is abbreviation punctuation, not a
+#: different token: modelo 131 writes ``52 464 13 An. Complementaria (7) -
+#: Numero de Justificante anterior``. The narrative path has always accepted
+#: it -- ``_naturaleza_or_none`` strips ' .' before matching -- so this only
+#: brings the compact path into line with the recogniser beside it.
+#:
+#: Three lines in three designs, and they are the whole of modelo 131's
+#: reported damage: each edition lost this one 13-byte row and reported it as
+#: a dropped run at 464-476, 477-489 and 503-515 respectively.
 _COMPACT_PDF_ROW_RE = re.compile(
-    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+(?P<type>An|Num|N|A)\s+(?P<text>.+)$",
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*(?P<type>An|Num|Tit|N|A)\.?\s+(?P<text>.+)$",
     re.IGNORECASE,
 )
 #: A PDF row declaring the physical end of record. Its DESCRIPTION half composes
@@ -1782,6 +2197,10 @@ class _PdfSheetDraft:
     #: design read only BECAUSE of a declaration is never reported as one AEAT
     #: published cleanly.
     applied_corrections: list[RecordDesignSinglePositionCorrection] = field(default_factory=list)
+    #: Rows carrying a length, a naturaleza and a description but NO position,
+    #: paired with the position the row before them implies. The mirror image of
+    #: ``unnamed_candidates``, and admitted by the same containment test.
+    headless_candidates: list[_PdfRow] = field(default_factory=list)
 
     def has_started(self) -> bool:
         """Whether any field of this record body has been seen yet."""
@@ -1824,13 +2243,14 @@ class _PdfSheetDraft:
         ``413-432 CODIGO LEI DEL PERCEPTOR`` with no naturaleza while its
         neighbour ``433-452 Alfanumerico NIF EN EL PAIS...`` carries one.
         """
-        if not self.unnamed_candidates or not self.fields:
+        staged = [*self.unnamed_candidates, *self.headless_candidates]
+        if not staged or not self.fields:
             return
         claimed: set[int] = set()
         for read in self.fields:
             claimed.update(range(read.offset, read.offset + read.length))
         admitted: list[RecordDesignField] = []
-        for candidate in self.unnamed_candidates:
+        for candidate in staged:
             span = range(candidate.offset, candidate.offset + candidate.length)
             if claimed.isdisjoint(span):
                 admitted.append(
@@ -2090,58 +2510,125 @@ class _PdfSheetResult:
 #: belongs to: ``</T200001>`` closes page 1 of modelo 200. AEAT writes it as the
 #: last field of every page record in the designs that head their records with
 #: nothing a heading recogniser can see.
-_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>\d{3})>")
+_PDF_RECORD_END_IDENTIFIER_RE = re.compile(r"</T(?P<modelo>\d{3})(?P<page>[A-Z0-9]{2,5})>")
 #: The same fact stated at the TOP of the record, as the contenido of its
 #: ``Página`` row: ``3 6 3 An Página. OBLIGATORIO Constante "001"``.
-_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>\d{3})"')
+_PDF_PAGE_CONSTANT_RE = re.compile(r'Constante\s*"(?P<page>[A-Z0-9]{2,5})"')
+
+
+#: The widths AEAT writes a página constant in, observed across the bundled
+#: corpus: two digits (modelo 763), three (modelo 200), five (modelo 390's
+#: composite). Four is deliberately absent -- that is an ejercicio.
+_PAGE_CONSTANT_WIDTHS: Final[frozenset[int]] = frozenset({2, 3, 5})
+
+
+def _page_label_from_token(token: str) -> str:
+    """The page a record's página constant names, as the design writes it.
+
+    Most designs write a number directly: modelo 200's ``001``, modelo 763's
+    ``02``. Two shapes are not plain numbers and both are read as AEAT states
+    them.
+
+    Modelo 390's 2015 edition writes a five-digit composite, ``01000`` through
+    ``08000``, where the leading digits are the page and the trailing ``000`` is
+    a sub-counter. That split is not assumed: the design cross-checks it, since
+    the record its running header names ``Pag. 1`` is the record declaring
+    ``Constante "01000"``.
+
+    Modelo 200 writes an ALPHABETIC page for one record -- ``Constante "DID"``,
+    closing ``</T200DID>`` -- and its own vector example lists that record in
+    the page sequence beside the numbered ones
+    (``...017018019019DIDFIN``). There is no number to derive, so the token is
+    the label.
+    """
+    if token.isdigit():
+        if len(token) == 5 and token.endswith("000"):
+            return str(int(token[:2]))
+        return str(int(token))
+    return token
 
 
 def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
     """Name an unheaded record body from the identity it declares about itself.
 
-    Some AEAT designs never head a record with a title. Modelo 200's 2010 orden
-    edition is the worked case: its page records are separated only by a running
-    page header, and each record's identity lives INSIDE the body -- as the
-    ``Constante "006"`` of its Página field, and again as the ``</T200006>``
-    closing identifier AEAT requires as the record's last field.
+    Some AEAT designs never head a record with a title. Each record states which
+    page it is twice: as the ``Constante "006"`` of its Página field, and as the
+    ``</T200006>`` closing identifier AEAT requires as the record's last field.
+    Both are declared required CONTENT, so reading them is recovery rather than
+    guesswork.
 
-    Both are constants AEAT declares as a field's REQUIRED CONTENT, so a body
-    carrying them is stating which page it is; reading them is not a heuristic
-    over prose.
+    The closing identifier is preferred, because it names the modelo as well as
+    the page and a stray constant elsewhere in the body cannot imitate it. It is
+    set aside in exactly one circumstance: when its page component is not as
+    wide as the Página field DECLARES that component to be. The identifier is a
+    concatenation, so a lost digit inside it is silent -- modelo 390's seventh
+    record closes ``</T3900700>``, seven digits where its siblings carry eight,
+    which read as page 700. The field's own length is what exposes that, and
+    where the two disagree without such a width contradiction the identifier is
+    still trusted, because nothing says which side is the corrupt one.
 
     The Página strategy is keyed on GEOMETRY, never on the word "Página". These
     designs are published as PDFs whose text layer does not survive decoding
-    intact -- the label arrives as ``P?gina`` -- so a reader that matched the
+    intact -- the label arrives as ``P?gina`` -- so a reader matching the
     Spanish label would work on the editions that decode cleanly and fail on the
-    ones that do not, which is the opposite of what the corpus needs. AEAT fixes
-    the geometry instead: the modelo constant occupies positions 3-5 and the
-    page constant 6-8, immediately after it. Requiring BOTH is what makes this
-    safe -- a lone three-digit constant elsewhere in a body cannot satisfy it.
+    ones that do not. AEAT fixes the geometry instead: the modelo constant at
+    positions 3-5 and the page constant immediately after it. Requiring BOTH is
+    what makes this safe, since a lone constant elsewhere cannot satisfy it, and
+    the constant must be exactly as wide as its field declares.
 
     Returns ``None`` when the body declares neither identity, leaving it
     unidentified and on the worklist exactly as before. Recovering a name the
     record did not state would be inventing an identity, which is worse than
     reporting the gap.
     """
+    by_offset = {field.offset: field for field in sheet.fields}
+    modelo_field, page_field = by_offset.get(3), by_offset.get(6)
+    declared_page: str | None = None
+    if (
+        modelo_field is not None
+        and page_field is not None
+        and modelo_field.length == 3
+        and _pdf_declared_constant(modelo_field) is not None
+    ):
+        candidate = _pdf_declared_constant(page_field)
+        # Two conditions, and both earn their place. The constant must be as
+        # wide as its own field declares -- that is what lets modelo 763's two
+        # digits, modelo 200's three and modelo 390's five all be read without a
+        # reader-side assumption. And the width must be one AEAT actually uses
+        # for a page: a FOUR-digit constant at this position is an ejercicio,
+        # ``Constante "2011"``, and self-consistency alone would happily read it
+        # as page 2011.
+        if (
+            candidate is not None
+            and len(candidate) == page_field.length
+            and page_field.length in _PAGE_CONSTANT_WIDTHS
+        ):
+            declared_page = candidate
+
     for field in reversed(sheet.fields):
         for text in (field.content, field.description, field.validation):
             if not text:
                 continue
             match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
-            if match is not None:
-                return f"P\u00e1g. {int(match.group('page'))}"
-    by_offset = {field.offset: field for field in sheet.fields}
-    modelo_field, page_field = by_offset.get(3), by_offset.get(6)
-    if (
-        modelo_field is not None
-        and page_field is not None
-        and modelo_field.length == 3
-        and page_field.length == 3
-        and _pdf_declared_constant(modelo_field) is not None
-    ):
-        page = _pdf_declared_constant(page_field)
-        if page is not None:
-            return f"P\u00e1g. {int(page)}"
+            if match is None:
+                continue
+            closing = match.group("page")
+            # The closing identifier is matched anywhere in a field's text, so a
+            # token bled in from a neighbouring record can be picked up. That is
+            # tolerable for a numeric page, which the width check still guards,
+            # but not for an ALPHABETIC one: modelo 200's ``</T200DID>`` appears
+            # in prose inside other records, and reading it there renamed a
+            # 1,618-field record after the token that belongs to a 45-field one.
+            # An alphabetic page is therefore taken only from the Página field,
+            # which geometry anchors.
+            if not closing.isdigit():
+                break
+            if declared_page is not None and len(closing) != len(declared_page):
+                return f"Pág. {_page_label_from_token(declared_page)}"
+            return f"Pág. {_page_label_from_token(closing)}"
+
+    if declared_page is not None:
+        return f"Pág. {_page_label_from_token(declared_page)}"
     return None
 
 
@@ -2176,11 +2663,19 @@ class _PdfParseState:
         "in_table",
         "pending_name",
         "pending_record_name",
+        "repair_glued_rows",
         "results",
         "source_label",
     )
 
-    def __init__(self, *, source_label: str, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> None:
+    def __init__(
+        self,
+        *,
+        source_label: str,
+        corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+        repair_glued_rows: bool = False,
+    ) -> None:
+        self.repair_glued_rows = repair_glued_rows
         self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
         self.in_table: bool = False
@@ -2276,6 +2771,7 @@ class _PdfParseState:
         if self._consume_field_row(line, row_number):
             return
         self._stage_unnamed_position_candidate(line, row_number)
+        self._stage_headless_tail(line, row_number)
         self._consume_field_continuation(line)
 
     def _stage_unnamed_position_candidate(self, line: str, row_number: int) -> None:
@@ -2304,6 +2800,53 @@ class _PdfParseState:
         declared = self.corrections.single_position_corrections.get((self.current.name, candidate.offset))
         if declared is not None and candidate.length == 1:
             self.current.applied_corrections.append(declared)
+
+
+    def _stage_headless_tail(self, line: str, row_number: int) -> None:
+        """Hold a row that kept its length and naturaleza but lost its position.
+
+        A page break can swallow a row's position half outright, leaving only
+        ``17 N Sociedades de garantia reciproca - ...`` with the ``6 11`` above
+        it gone. The position is not guessed from that line: it is taken from
+        where the previous row ENDS, and the candidate is then subject to the
+        same containment test every staged candidate faces -- admitted only if
+        the span it would occupy is one no read row claims.
+
+        That test is what makes this a reading. Three independent facts must
+        agree before such a row appears: the position follows the previous row,
+        the length is the one AEAT printed, and the span is exactly a hole. A
+        fragment that would overlap anything already read is discarded, so a
+        wrapped description restating a field's width can never be admitted.
+        """
+        if self.current is None or not self.repair_glued_rows:
+            return
+        match = _REVERSED_ROW_TAIL_RE.match(line)
+        if match is None or _parse_pdf_row(line, row_number) is not None:
+            return
+        previous = self._last_seen_field()
+        if previous is None:
+            return
+        naturaleza = _naturaleza_or_none(match.group("type"))
+        if naturaleza is None and match.group("type") not in {"An", "Num", "N", "A", "Tit"}:
+            return
+        self.current.headless_candidates.append(
+            _PdfRow(
+                source_row=row_number,
+                ordinal=None,
+                offset=previous.offset + previous.length,
+                length=int(match.group("length")),
+                type_code=match.group("type"),
+                description=match.group("description").strip(),
+            ),
+        )
+
+    def _last_seen_field(self) -> _PdfFieldDraft | RecordDesignField | None:
+        """The most recent field of the body under construction, finished or not."""
+        if self.current is None:
+            return None
+        if self.current.current is not None:
+            return self.current.current
+        return self.current.fields[-1] if self.current.fields else None
 
     def _close_current_body(self) -> None:
         if self.current is None:
@@ -2391,6 +2934,8 @@ class _PdfParseState:
 
     def _consume_field_row(self, line: str, row_number: int) -> bool:
         row = _parse_pdf_row(line, row_number)
+        if row is None and self.repair_glued_rows:
+            row = _split_glued_ordinal_position(line, row_number, previous=self._last_seen_field())
         if row is None:
             return False
         if self.current is None:
@@ -2430,8 +2975,13 @@ def _extract_pdf_lines(
     *,
     source_label: str,
     corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    repair_glued_rows: bool = False,
 ) -> RecordDesignExtraction:
-    state = _PdfParseState(source_label=source_label, corrections=corrections)
+    state = _PdfParseState(
+        source_label=source_label,
+        corrections=corrections,
+        repair_glued_rows=repair_glued_rows,
+    )
     for row_number, raw_line in enumerate(lines, start=1):
         state.feed(_clean_pdf_line(raw_line), row_number)
     return state.finalise()
@@ -2652,6 +3202,63 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         length=end - start + 1,
         type_code=naturaleza,
         description=narrative.group("text").strip(),
+    )
+
+
+#: A row whose ORDINAL and POSITION were run together by the PDF text layer:
+#: ``23 3 Num Modelo. OBLIGATORIO Constante "200"`` is ordinal 2 at position 3,
+#: not ordinal 23. Three leading tokens where a row has four.
+_GLUED_ORDINAL_POSITION_ROW_RE = re.compile(
+    r"^\s*(?P<glued>\d{2,})\s+(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<text>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _split_glued_ordinal_position(
+    line: str,
+    row_number: int,
+    *,
+    previous: _PdfFieldDraft | RecordDesignField | None,
+) -> _PdfRow | None:
+    """Recover a row whose ordinal and position were run together.
+
+    Modelo 200's older editions lose the space after the ordinal for the three
+    identifier rows of most records, writing ``23 3 Num``, ``36 3 An`` and
+    ``49 1 An`` where AEAT declares ordinals 2, 3 and 4 at positions 3, 6 and 9.
+    Thirty-two of the forty holed records in the 2010 edition report the
+    resulting ``3-9`` gap, and it is the single most common hole shape in the
+    corpus.
+
+    A split is admitted ONLY when it is over-determined. ``23`` is read as
+    ordinal 2 and position 3 only if BOTH the ordinal continues the previous
+    row's ordinal by one AND the position resumes exactly where the previous row
+    ended -- two independent facts that must agree, from a row already read
+    rather than from a guess about this one. Any other split, or either
+    constraint failing, returns ``None`` and the gap stays reported.
+
+    This is why the shape was recorded and left alone when it was first met on
+    modelo 100: there the glued row sits alone, with no read row before it to
+    close the constraint, and ``59`` is as readable as ordinal 59. Nothing about
+    the token changed -- what changed is that here the surrounding rows pin it.
+    """
+    if previous is None:
+        return None
+    match = _GLUED_ORDINAL_POSITION_ROW_RE.match(line)
+    if match is None or _parse_pdf_row(line, row_number) is not None:
+        return None
+    glued = match.group("glued")
+    expected_ordinal = None if previous.ordinal is None or not previous.ordinal.isdigit() else int(previous.ordinal) + 1
+    expected_offset = previous.offset + previous.length
+    if expected_ordinal is None or glued != f"{expected_ordinal}{expected_offset}":
+        return None
+    naturaleza = _naturaleza_or_none(match.group("type")) or match.group("type")
+    return _PdfRow(
+        source_row=row_number,
+        ordinal=str(expected_ordinal),
+        offset=expected_offset,
+        length=int(match.group("length")),
+        type_code=match.group("type"),
+        description=match.group("text").strip(),
     )
 
 

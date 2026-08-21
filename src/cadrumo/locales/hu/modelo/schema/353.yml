@@ -9,25 +9,28 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Teljes eredmény (a szervezetek eredményeinek összege)
             '02':
               help: null
-              label: null
+              label: Korábbi évekről áthozott, beszámítandó összegek
             '03':
               help: null
-              label: null
+              label: Eredmény ([01] - [08])
             '04':
               help: null
-              label: null
+              label: 'Levonandó: az ugyanazon jogcímen, évre és időszakra korábban
+                benyújtott önadózások eredménye'
             '05':
               help: null
-              label: null
+              label: Az önadózás eredménye ([03] - [04])
             08:
               help: null
-              label: null
+              label: Korábbi időszakokból származó, ebben az időszakban felhasznált
+                beszámítandó összegek
             09:
               help: null
-              label: null
+              label: Korábbi időszakokból származó, későbbi időszakokra fennmaradó
+                beszámítandó összegek ([02] - [08])
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az önadózás adóéve

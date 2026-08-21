@@ -85,19 +85,15 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
 # They are deleted here rather than left as backlog decoration.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
     {
-        "adapters/outbound/aeat/sede/_declarations_observations.py",
         "adapters/outbound/llm/_cache.py",
         "adapters/outbound/llm/_usage.py",
         "adapters/outbound/storage/_mirror_manifest.py",
         "adapters/persistence/profile/filing_amendments.py",
         "adapters/persistence/storage/crypto/_encrypted_columns.py",
         "adapters/persistence/storage/envelope/_secure_repository.py",
-        "application/filing/_review.py",
-        "application/ledger/_actions_import.py",
         "application/live/_verify.py",
         "application/modelo/_revision_persistence.py",
         "application/repair_integrity.py",
-        "application/user_profile/_lifecycle.py",
         "application/user_profile/_repository.py",
         "application/wizard/_translations.py",
         "application/workflow/_persistence.py",
@@ -118,7 +114,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "domain/manuals/_loader.py",
         "entrypoints/cli/_config/_google.py",
         "entrypoints/cli/_config/_google_sync_calc.py",
-        "entrypoints/cli/_config/_profile_bundle.py",
         "entrypoints/cli/_errors.py",
         "entrypoints/cli/_ledger_classify_cli.py",
         "entrypoints/cli/_stdio.py",

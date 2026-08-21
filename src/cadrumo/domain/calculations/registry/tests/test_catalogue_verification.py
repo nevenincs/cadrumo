@@ -273,12 +273,18 @@ def test_public_model_law_ledger_keeps_unproven_snapshot_inspection_only() -> No
     """A snapshot-shaped value cannot self-attest filing authority."""
     modelos, catalogues = _registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "182")
+    # Build at the rung modelo 182 declares, not the FILING default. Demanding a
+    # filing-grade build in order to prove the ledger reports NOT filing-eligible
+    # is self-contradictory: the build refuses first, and the assertion below --
+    # the actual subject -- never runs.
+    revision = select_revision(modelo, filing_year=2025, period="0A")
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=revision.effective_authority_grade,
     )
 
     ledger = build_model_law_coverage_ledger(snapshot)
@@ -447,12 +453,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
     sit here looking cleared.
     """
     pending: dict[str, str] = {
-        # No declared applicability at all, so no ejercicio can be derived from
-        # the entry itself. Each needs its governing Orden located and an
-        # applies_from established before an epoch can be an honest claim.
-        "enrolled-modelo-038-layout": "declares neither applies_from nor applies_to",
-        "enrolled-modelo-156-layout": "declares neither applies_from nor applies_to",
-        "enrolled-modelo-576-layout": "declares neither applies_from nor applies_to",
         # Two same-ejercicio re-layout PAIRS. A bare year would collide, so each
         # pair needs the sub-year label ruling (which half is early/late, on
         # AEAT's own edition boundary) from the campaign that owns the M303

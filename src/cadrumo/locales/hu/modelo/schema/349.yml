@@ -63,10 +63,11 @@ modelo:
               label: Helyesbített időszak
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
-              label: null
+              label: A helyettesítő adóalany vezeték- és keresztneve vagy cégneve
             x-edqn6t39ehqn8rpedpkmc:
               help: null
-              label: null
+              label: A helyettesítő végső címzett vállalkozó vagy szakember adószáma
+                (NIF)
           construct:
             modelo-349-informative:
               field:

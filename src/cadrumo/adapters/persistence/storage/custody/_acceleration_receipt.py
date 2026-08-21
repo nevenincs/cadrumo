@@ -80,7 +80,7 @@ from .....core.identity import canonical_profile_bucket_id
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
-from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
     DecryptionError,
     EncryptionError,
@@ -121,7 +121,6 @@ enrollment — losing a session record costs one re-login, never data.
 """
 
 _SESSION_KEY_BYTES: Final[int] = 32
-_DEK_BYTES: Final[int] = 32
 _NONCE_BYTES: Final[int] = 12
 _TAG_BYTES: Final[int] = 16
 _AAD_PREFIX: Final[str] = "cadrumo.profile-session.v2"
@@ -160,7 +159,7 @@ class PersistedProfileSession(BaseModel):
     idle_deadline: datetime
     absolute_deadline: datetime
     nonce: bytes = Field(min_length=_NONCE_BYTES, max_length=_NONCE_BYTES)
-    ciphertext: bytes = Field(min_length=_DEK_BYTES, max_length=_DEK_BYTES)
+    ciphertext: bytes = Field(min_length=KEY_SIZE, max_length=KEY_SIZE)
     tag: bytes = Field(min_length=_TAG_BYTES, max_length=_TAG_BYTES)
 
     @field_validator("issued_at", "idle_deadline", "absolute_deadline")
@@ -292,8 +291,8 @@ def wrap_profile_session_dek(
     """
     if len(session_key) != _SESSION_KEY_BYTES:
         raise _encryption_error(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
-    if len(dek) != _DEK_BYTES:
-        raise _encryption_error(f"dek must be exactly {_DEK_BYTES} bytes")
+    if len(dek) != KEY_SIZE:
+        raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
     if custody_generation < 1:
         raise _encryption_error("custody_generation must be a strict positive integer")
     if not dek_epoch:
@@ -342,8 +341,8 @@ def wrap_profile_session_dek(
         idle_deadline=idle_deadline,
         absolute_deadline=absolute_deadline,
         nonce=blob.nonce,
-        ciphertext=blob.ciphertext[:_DEK_BYTES],
-        tag=blob.ciphertext[_DEK_BYTES:],
+        ciphertext=blob.ciphertext[:KEY_SIZE],
+        tag=blob.ciphertext[KEY_SIZE:],
     )
 
 

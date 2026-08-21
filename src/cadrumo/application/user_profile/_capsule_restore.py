@@ -35,9 +35,14 @@ from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ._aggregate import ProfileRestoreAuthority
 from ._custody_ports import (
+    PROFILE_CAPSULE_DATABASE_MAX_BYTES,
+    PROFILE_CAPSULE_ENVELOPE_MAX_BYTES,
+    PROFILE_CAPSULE_RECOVERY_MAX_BYTES,
+    PROFILE_CAPSULE_SENTINEL_MAX_BYTES,
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
     parse_profile_custody_sentinel,
+    profile_custody_read_optional_member,
 )
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
@@ -108,11 +113,19 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
         ProfileCapsuleSourceError: When a required member is missing or will
             not parse as the record it claims to be.
     """
-    envelope = parse_profile_custody_envelope(_require_member(source, _ENVELOPE_RELATIVE, "password envelope"))
-    sentinel = parse_profile_custody_sentinel(_require_member(source, _SENTINEL_RELATIVE, "DEK sentinel"))
-    database_bytes = _require_member(source, _DATABASE_RELATIVE, "profile database")
-    recovery_path = source.joinpath(*_RECOVERY_RELATIVE)
-    recovery = parse_profile_custody_recovery_envelope(recovery_path.read_bytes()) if recovery_path.is_file() else None
+    envelope = parse_profile_custody_envelope(
+        _require_member(source, _ENVELOPE_RELATIVE, "password envelope", PROFILE_CAPSULE_ENVELOPE_MAX_BYTES),
+    )
+    sentinel = parse_profile_custody_sentinel(
+        _require_member(source, _SENTINEL_RELATIVE, "DEK sentinel", PROFILE_CAPSULE_SENTINEL_MAX_BYTES),
+    )
+    database_bytes = _require_member(
+        source, _DATABASE_RELATIVE, "profile database", PROFILE_CAPSULE_DATABASE_MAX_BYTES
+    )
+    recovery_payload = profile_custody_read_optional_member(
+        source.joinpath(*_RECOVERY_RELATIVE), maximum_bytes=PROFILE_CAPSULE_RECOVERY_MAX_BYTES
+    )
+    recovery = None if recovery_payload is None else parse_profile_custody_recovery_envelope(recovery_payload)
     if sentinel.profile_id != envelope.profile_id:
         raise ProfileCapsuleSourceError("capsule source sentinel names a different profile than its envelope")
     if recovery is not None and recovery.profile_id != envelope.profile_id:
@@ -259,12 +272,20 @@ def _outcome(
     )
 
 
-def _require_member(source: Path, relative: tuple[str, ...], subject: str) -> bytes:
-    """Return one required capsule member's bytes, or refuse naming it."""
-    path = source.joinpath(*relative)
-    if not path.is_file():
+def _require_member(source: Path, relative: tuple[str, ...], subject: str, maximum_bytes: int) -> bytes:
+    """Return one required capsule member's bytes, or refuse naming it.
+
+    Reads through the same anchored, bounded, no-follow primitive the PUBLISHED
+    capsule reader uses. This path is the less trusted of the two -- a
+    published capsule sits inside this product's storage root, while a restore
+    source is a directory an operator points at -- and it previously took the
+    weaker read: ``is_file()`` then ``read_bytes()``, which follows a symlink,
+    bounds nothing, and asks about a NAME before reading a FILE.
+    """
+    payload = profile_custody_read_optional_member(source.joinpath(*relative), maximum_bytes=maximum_bytes)
+    if payload is None:
         raise ProfileCapsuleSourceError(f"capsule source is missing its {subject}")
-    return path.read_bytes()
+    return payload
 
 
 __all__ = [

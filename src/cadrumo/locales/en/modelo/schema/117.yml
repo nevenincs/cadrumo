@@ -9,37 +9,46 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Number of recipients from transfers or redemptions of collective
+                investment scheme shares and holdings
             '02':
               help: null
-              label: null
+              label: Base for withholdings and payments on account from transfers
+                or redemptions of collective investment scheme shares and holdings
             '03':
               help: null
-              label: null
+              label: Withholdings and payments on account from transfers or redemptions
+                of collective investment scheme shares and holdings
             '04':
               help: null
-              label: null
+              label: Number of recipients from transfers of subscription rights
             '05':
               help: null
-              label: null
+              label: Base for withholdings and payments on account from transfers
+                of subscription rights
             '06':
               help: null
-              label: null
+              label: Withholdings and payments on account from transfers of subscription
+                rights
             '07':
               help: null
-              label: null
+              label: Base of the payment on account provided for in the nineteenth
+                additional provision of Law 35/2006
             08:
               help: null
-              label: null
+              label: Payment on account provided for in the nineteenth additional
+                provision of Law 35/2006
             09:
               help: null
-              label: null
+              label: 'Total settlement: sum of withholdings, payments on account,
+                advance payments and any adjustment'
             '10':
               help: null
-              label: null
+              label: Amounts payable from earlier returns for the same item, year
+                and period
             '11':
               help: null
-              label: null
+              label: Amount payable
           construct:
             modelo-117-total-liquidacion-calculation:
               field:

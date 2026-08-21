@@ -124,6 +124,7 @@ if TYPE_CHECKING:
     from ._label_head_repository import ProfileLabelHeadRepository
     from ._paths import profile_custody_path
     from ._records import (
+        PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
         PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
         PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION,
         PROFILE_CUSTODY_KDF_ITERATIONS,
@@ -168,7 +169,6 @@ if TYPE_CHECKING:
         PROFILE_CUSTODY_SENTINEL_FILENAME,
         PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
         create_profile_custody_sentinel,
-        read_profile_custody_sentinel,
         write_profile_custody_sentinel,
     )
     from ._sentinel_contract import (
@@ -208,6 +208,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PROFILE_CUSTODY_COMMIT_MAX_BYTES": "._capsule_records",
     "PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION": "._capsule_records",
     "PROFILE_CUSTODY_DELETION_FILENAME": "._capsule_records",
+    "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES": "._filesystem",
     "PROFILE_CUSTODY_ENVELOPE_MAX_BYTES": "._records",
     "PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION": "._records",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES": "._capsule",
@@ -314,7 +315,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "publish_staged_profile_custody_capsule": "._capsule",
     "read_optional_profile_custody_local_record": "._filesystem",
     "read_profile_custody_local_record": "._filesystem",
-    "read_profile_custody_sentinel": "._sentinel",
     "recognize_current_profile_capsule": "._capsule",
     "refuse_hostile_recovery_artifact_destination": "._recovery_artifact",
     "refuse_retired_profile_custody_paths": "._capsule_discovery",
@@ -372,6 +372,7 @@ __all__ = [
     "PROFILE_CUSTODY_COMMIT_FILENAME",
     "PROFILE_CUSTODY_COMMIT_MAX_BYTES",
     "PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION",
+    "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES",
     "PROFILE_CUSTODY_DELETION_FILENAME",
     "PROFILE_CUSTODY_ENVELOPE_MAX_BYTES",
     "PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION",
@@ -489,7 +490,6 @@ __all__ = [
     "publish_staged_profile_custody_capsule",
     "read_optional_profile_custody_local_record",
     "read_profile_custody_local_record",
-    "read_profile_custody_sentinel",
     "recognize_current_profile_capsule",
     "refuse_hostile_recovery_artifact_destination",
     "refuse_retired_profile_custody_paths",

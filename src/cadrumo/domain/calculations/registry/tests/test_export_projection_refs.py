@@ -165,12 +165,34 @@ def test_projection_field_declares_only_the_typed_projection_payload() -> None:
                 "producer_key": FilingProducerKey.PRESENTER_TAX_ID,
             },
         )
-    with pytest.raises(ValidationError, match="loader-hydrated FilingProjectionRef"):
+    # A well-formed raw payload is COMPILED, not refused, and that is deliberate.
+    # These declarations are persisted and re-read, so a guard demanding an
+    # already-typed reference could never admit their own serialised form --
+    # ProjectionEndpointDeclaration's validator says exactly that. The invariant
+    # is that the canonical compiler produced the value, not that the caller
+    # arrived holding one. This assertion used to demand a refusal carrying
+    # "loader-hydrated FilingProjectionRef", a message no code has raised since
+    # the contract changed, so it failed while proving nothing.
+    compiled_from_raw = ExportFieldDefinition.model_validate(
+        _raw_projection_field(
+            reference={
+                "projection_kind": "m303_prorrata_activity",
+                "slot": 1,
+                "field": "cnae",
+                "casilla_id": _PROJECTION_CASILLA,
+            },
+        ),
+    )
+
+    assert compiled_from_raw.projection_ref == reference
+
+    # What must still be refused is a payload the compiler rejects.
+    with pytest.raises(ValidationError):
         ExportFieldDefinition.model_validate(
             _raw_projection_field(
                 reference={
                     "projection_kind": "m303_prorrata_activity",
-                    "slot": 1,
+                    "slot": True,
                     "field": "cnae",
                     "casilla_id": _PROJECTION_CASILLA,
                 },
@@ -408,7 +430,10 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
     )
 
     assert ProjectionEndpointDeclaration.model_validate(compiled).projection_ref == _prorrata_ref()
-    with pytest.raises(ValidationError, match="loader-hydrated FilingProjectionRef"):
+    # Re-reading its own raw payload is the case this model exists to admit: the
+    # declaration is persisted and read back, so the compiler runs on the way in
+    # rather than the model demanding a caller that already holds a typed value.
+    assert (
         ProjectionEndpointDeclaration.model_validate(
             {
                 **compiled,
@@ -419,13 +444,37 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
                     "casilla_id": _PROJECTION_CASILLA,
                 },
             },
+        ).projection_ref
+        == _prorrata_ref()
+    )
+
+    with pytest.raises((ValidationError, RegistryValidationError)):
+        ProjectionEndpointDeclaration.model_validate(
+            {**compiled, "projection_ref": {"projection_kind": "m303_prorrata_activity", "slot": "1"}},
         )
 
 
+#: The module that DEFINES the compiler. Its own ``hydrate_filing_projection_ref``
+#: delegates to it in the same file, which is not a loader reaching for it.
+_COMPILER_HOME = Path("src/cadrumo/core/_filing_projection_ref.py")
+
+
 def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> None:
+    """Only the registry loader and the semantic-map loader compile a projection ref.
+
+    The scan covers ``dev/registry``, not ``scaffold/registry``. The semantic-map
+    loader moved there, and scanning a directory that no longer exists finds
+    nothing while looking exactly like a loader that stopped calling the
+    compiler -- so the expectation named a path no walk could reach.
+
+    The compiler's OWN module is excluded rather than admitted as a third
+    caller: ``hydrate_filing_projection_ref`` delegates to it inside the same
+    file, so counting that would make the definition site look like a consumer
+    and hide whether a real third loader had appeared.
+    """
     root = Path(__file__).resolve().parents[6]
     caller_paths: set[Path] = set()
-    for source_root in (root / "src" / "cadrumo", root / "scaffold" / "registry"):
+    for source_root in (root / "src" / "cadrumo", root / "dev" / "registry"):
         for module_path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("tests",)):
             tree = ast.parse(module_path.read_text(encoding="utf-8"))
             if any(
@@ -438,7 +487,7 @@ def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> 
             ):
                 caller_paths.add(module_path.relative_to(root))
 
-    assert caller_paths == {
+    assert caller_paths - {_COMPILER_HOME} == {
         Path("src/cadrumo/domain/calculations/registry/_loader.py"),
-        Path("scaffold/registry/_semantic_map_loader.py"),
+        Path("dev/registry/pipeline/_semantic_map_loader.py"),
     }

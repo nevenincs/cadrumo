@@ -82,6 +82,7 @@ def _loaded_names() -> set[str]:
             tree = ast.parse(Path(path).read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
             continue
+        own_exports = _module_export_strings(tree)
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
                 loaded.add(node.id)
@@ -89,11 +90,30 @@ def _loaded_names() -> set[str]:
                 loaded.add(node.attr)
             elif isinstance(node, ast.alias):
                 loaded.add(node.asname or node.name.rsplit(".", 1)[-1])
-            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value not in own_exports:
                 # A name reachable only through a lazy __getattr__ mapping or a
-                # dynamic import string is still a use.
+                # dynamic import string is still a use -- EXCEPT where the
+                # string is the module's own __all__ entry. That is the module
+                # declaring what it offers, not anyone taking it, and counting
+                # it made this detector report a name as used because it was
+                # exported. Eight names hid behind that.
                 loaded.add(node.value)
     return loaded
+
+
+def _module_export_strings(tree: ast.Module) -> set[str]:
+    """Return the string members of a module-level ``__all__``."""
+    exported: set[str] = set()
+    for node in tree.body:
+        targets = (
+            node.targets if isinstance(node, ast.Assign) else ([node.target] if isinstance(node, ast.AnnAssign) else [])
+        )
+        if not any(isinstance(target, ast.Name) and target.id == "__all__" for target in targets):
+            continue
+        for element in ast.walk(node):
+            if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                exported.add(element.value)
+    return exported
 
 
 def test_the_facade_actually_exports_something() -> None:
@@ -121,6 +141,46 @@ _EXPORTED_BUT_UNCONSTRUCTED: dict[str, str] = {
         "Named only by a docstring in the CLI payload module that says it projects this class "
         "down to a wire shape. The module imports nothing of the sort, so the stated relationship "
         "is prose rather than code -- recorded here rather than silently trusted."
+    ),
+    "restore_profile_from_source_with_password": (
+        "One of the two capsule-DIRECTORY restore entry points, exercised by two test modules and "
+        "reached from no shipped path: `config profile restore` routes through the capsule/archive "
+        "readers instead. Part of the profile-portability surface another owner is rebuilding, so "
+        "it is recorded rather than retired."
+    ),
+    "restore_profile_from_source_with_recovery_artifact": (
+        "The recovery-credential sibling of the entry point above, in the same state and owned by "
+        "the same rebuild."
+    ),
+    "export_profile_recovery_artifact": (
+        "Writes the portable recovery artifact. Three test modules drive it; no shipped verb does. "
+        "The artifact it produces IS readable -- prove_profile_recovery_artifact is live on the "
+        "restore path -- so this is a missing export door, not a dead format."
+    ),
+    "decrypt_profile_bundle_with_passphrase": (
+        "The read half of the passphrase-encrypted bundle whose write half IS live through the TUI "
+        "manager's export. This is the concrete symbol behind the recorded portability gap: the "
+        "product writes bundles nothing ships to read back."
+    ),
+    "UserProfileSnapshotRepository": (
+        "Filing-time snapshot persistence, covered by three test modules including a strict "
+        "roundtrip, with no production consumer. Unclassified beyond that: whether snapshots are "
+        "written on a live path is a calculations-side question, not one this campaign has "
+        "measured."
+    ),
+    "bound_profile_record_session": (
+        "A record-session helper used by eight TEST modules as their binding fixture and by no "
+        "production caller. That shape -- heavily used by tests, unused by the tree -- is what a "
+        "test-support helper looks like, and its home is likely the tests package rather than the "
+        "boundary; unclassified pending that judgement."
+    ),
+    "censo_unadopted_evidence": (
+        "Censal cotejo helper with no consumer anywhere, tests included. The strongest deletion "
+        "candidate of this set, and left because the censo surface belongs to another campaign."
+    ),
+    "missing_filing_baseline_flags": (
+        "Filing-baseline projection with no consumer anywhere, tests included. Same standing as "
+        "the censo helper above, on the filing side."
     ),
     "register_imported_profile_bundle": (
         "Documents itself as the sanctioned entry point for the operator-facing import verb, and "

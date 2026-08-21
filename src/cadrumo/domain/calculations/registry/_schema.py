@@ -1098,6 +1098,20 @@ class ModeloRevision(RegistryModel):
     revision stays distinguishable from one explicitly graded at that same
     floor; :attr:`effective_authority_grade` is the reading, and
     :attr:`is_graded` the distinction.
+
+    ``export_layouts`` is the AUTHORED form, not the one that ships. A record
+    carrying ``binding_record`` is authored thin on purpose -- its envelope
+    constants only -- and
+    :func:`~._export.derive_export_layouts_from_bindings` materialises the real
+    fields at snapshot build. Modelo 369's ``t36904`` is 9 authored fields and
+    161 derived ones against a design sheet requiring 161; modelo 390's
+    ``page-05`` is 6 and 105. Any consumer comparing a layout against an official
+    record design MUST resolve through that function, which is the stage
+    :func:`~._validate_export_layout_coverage.validate_export_layout_record_coverage`
+    measures. Reading this attribute for that purpose reports every materialised
+    field as an unwritten position: it produced 22 confident false
+    silent-data-loss findings across modelos 369, 390 and 131, twice, in trees
+    that were already stamped and verified.
     """
 
     id: RevisionId

@@ -63,10 +63,10 @@ modelo:
               label: Període rectificat
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
-              label: null
+              label: Cognoms i nom o raó social del subjecte passiu substitut
             x-edqn6t39ehqn8rpedpkmc:
               help: null
-              label: null
+              label: NIF de l'empresari o professional destinatari final substitut
           construct:
             modelo-349-informative:
               field:

@@ -19,6 +19,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
 from ...domain.buckets import (
@@ -456,7 +457,7 @@ class ProfileRecordStore:
             classification=profile_custody_secure_object_namespace().sensitivity,
             schema_version=profile_custody_secure_object_namespace().schema_version,
             written_at=record.updated_at,
-            payload=record.model_dump_json().encode("utf-8"),
+            payload=record.model_dump_json().encode(UTF_8_ENCODING),
             write_provenance=writer.write_provenance(record),
             source_event_id=event_value.event_id,
             expected_revision_id=expected_row_revision_id,

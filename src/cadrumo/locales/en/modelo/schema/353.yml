@@ -9,25 +9,27 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: Total result (sum of the entities' results)
             '02':
               help: null
-              label: null
+              label: Amounts to offset carried forward from earlier years
             '03':
               help: null
-              label: null
+              label: Result ([01] - [08])
             '04':
               help: null
-              label: null
+              label: 'To deduct: result of earlier self-assessments filed for the
+                same item, year and period'
             '05':
               help: null
-              label: null
+              label: Result of the self-assessment ([03] - [04])
             08:
               help: null
-              label: null
+              label: Amounts to offset from earlier periods applied in this period
             09:
               help: null
-              label: null
+              label: Amounts to offset from earlier periods still pending for later
+                periods ([02] - [08])
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the self-assessment relates to

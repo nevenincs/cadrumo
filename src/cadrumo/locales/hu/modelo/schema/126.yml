@@ -9,40 +9,43 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: A levonások és előlegfizetések alapja
             '02':
               help: null
-              label: null
+              label: Levonások és előlegfizetések
             '03':
               help: null
-              label: null
+              label: 'Időbeli elhatárolás: a levonások és előlegfizetések alapja'
             '04':
               help: null
-              label: null
+              label: 'Időbeli elhatárolás: levonások és előlegfizetések'
             '05':
               help: null
-              label: null
+              label: Korábbi évekből származó bevételek
             '06':
               help: null
-              label: null
+              label: Korrekció
             '07':
               help: null
-              label: null
+              label: 'Időbeli elhatárolás: a levonások és előlegfizetések további
+                alapja'
             08:
               help: null
-              label: null
+              label: 'Időbeli elhatárolás: további levonások és előlegfizetések'
             09:
               help: null
-              label: null
+              label: Korábbi évekből származó további bevételek
             '10':
               help: null
-              label: null
+              label: 'Teljes elszámolás: a levonások, előlegfizetések és az esetleges
+                korrekció összege'
             '11':
               help: null
-              label: null
+              label: Ugyanazon jogcímen, évre és időszakra vonatkozó korábbi bevallásokból
+                fizetendő összegek
             '12':
               help: null
-              label: null
+              label: Fizetendő összeg
           construct:
             modelo-126-calculation-construct:
               field:

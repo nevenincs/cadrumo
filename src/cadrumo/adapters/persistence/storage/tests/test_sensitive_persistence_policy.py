@@ -378,11 +378,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "O_EXCL create for that same export, so it can never silently overwrite an existing artifact",
     (
         "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
-        "_read_regular_file",
-        "os.open",
-    ): "read path for the DEK sentinel; writes nothing",
-    (
-        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
         "_write_exclusive_fsynced",
         "os.open",
     ): "O_EXCL create of the DEK sentinel, which proves a key without storing one",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, NamedTuple, Protocol, cast
 
@@ -188,6 +189,30 @@ class SecureObjectRepository:
         already resolved at construction.
         """
         return self._engine
+
+    @contextmanager
+    def guarded_session_scope(self) -> Iterator[Session]:
+        """Yield a session over this repository's engine, session-checked first.
+
+        The counterpart to :attr:`engine` for a sibling plaintext table. Taking
+        the engine directly is the one route into this database that skips
+        :meth:`_check_session_freshness`, which every operation on this
+        repository otherwise applies -- so a caller reading a routing index
+        through a raw scope reads after a session seal, an idle expiry, or a
+        move to another bucket, with nothing to stop it.
+
+        The existing callers are safe only because each happens to perform a
+        guarded load first. That is protection by call ORDER: it holds until
+        someone adds an entry point that reaches the raw read first, and
+        nothing states the ordering or would notice it changing. This method
+        makes the check structural rather than incidental.
+
+        No namespace is passed: a sibling table is not a secure-object
+        namespace, so only the session half of the check applies.
+        """
+        self._check_session_freshness()
+        with session_scope(self._engine) as session:
+            yield session
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""

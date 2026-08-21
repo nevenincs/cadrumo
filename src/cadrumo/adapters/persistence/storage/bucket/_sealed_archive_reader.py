@@ -20,7 +20,7 @@ import json
 import tarfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Final
 
 from .....core.product_identity import PRODUCT_IDENTITY
 from ._export_header import ExportArchiveHeader
@@ -68,15 +68,45 @@ class SealedArchiveContents:
     payload_bytes: bytes
 
 
+#: Largest member this reader will decompress, in bytes.
+#:
+#: A sealed archive is opened ``r:gz``, so the bytes on disk bound nothing: a
+#: small file can expand without limit, and an unbounded ``read()`` on a member
+#: turns an operator-supplied archive into a memory-exhaustion surface. The
+#: input reaches this function from ``config profile restore``, which takes a
+#: path -- an archive can be corrupted, or supplied by someone other than the
+#: operator who wrote it.
+#:
+#: The value is not a guess. The WRITER caps a capsule payload at
+#: ``application.user_profile._capsule_archive._MAX_PAYLOAD_BYTES``, so no
+#: archive this product produced can carry a larger member, and refusing above
+#: that rejects nothing legitimate. The two are held equal by
+#: ``test_sealed_archive_member_bound_matches_the_writer_cap``; a bound that
+#: silently drifted BELOW the writer's cap would refuse real archives, which is
+#: the failure a lone literal here would eventually cause.
+_MAX_MEMBER_BYTES: Final[int] = 512 * 1024 * 1024
+
+
 def _read_member_info(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
-    """Read one already-discovered regular tar member."""
+    """Read one already-discovered regular tar member, bounded.
+
+    Reads one byte past the ceiling rather than trusting ``member.size``: the
+    declared size is attacker-controlled tar metadata, so a bound checked
+    against it would be checking the claim rather than the bytes.
+    """
     extracted = archive.extractfile(member)
     if extracted is None:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: member {member.name!r} is not a regular file",
         )
     with extracted:
-        return extracted.read()
+        payload = extracted.read(_MAX_MEMBER_BYTES + 1)
+    if len(payload) > _MAX_MEMBER_BYTES:
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: member {member.name!r} decompresses beyond the "
+            f"{_MAX_MEMBER_BYTES}-byte ceiling this format's writer can produce",
+        )
+    return payload
 
 
 def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
