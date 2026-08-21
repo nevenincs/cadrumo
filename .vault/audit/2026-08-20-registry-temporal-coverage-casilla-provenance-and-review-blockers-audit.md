@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:85a77cd025944db24b77d21e375477d83677d09c8a377dd5ca1fb6653fb4c657'
+body_hash: 'sha256:502dfed3a888d26ce3bbf9bb457fd2d394ff50e7d6cf246994817a3303048a94'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1273,6 +1273,54 @@ revisions, not a reason to withhold or reverse a review.
 
 Seventh time in this campaign that re-checking changed a conclusion, and the first where
 it exonerated the work rather than implicating it.
+
+
+### m604-is-the-contrary-class-so-it-cannot-be-stamped-with-a-caveat | resolved question | the campaign's own taxonomy answers it
+
+With ``filing_eligible`` shown to authorise nothing at runtime, the natural next question
+was whether m604 could be stamped the way m165, m181 and m270 were -- with its defect
+stated in ``reviewed_by`` rather than left only in this audit, since a reviewed_by
+survives peer capture where a commit message does not.
+
+The answer is no, and this campaign's own ABSENT/CONTRARY taxonomy is what settles it.
+
+**The distinction that decides it.** m165's declared layout is CORRECT for the year it
+covers; it simply does not extend back over the revision's earlier claimed years. That
+is missing evidence -- the ABSENT class -- and a stated limit is the honest treatment.
+m604's layout is present for every year it claims and its numbering **contradicts** the
+official one. Re-measured this iteration: the 2024 diseño prints **37 distinct box
+numbers**, 01 through 37, and the registry's 122 casillas across both revisions declare
+**zero** numeric ``number`` values. The official layout numbers its boxes; the registry
+uses none of them.
+
+That is the CONTRARY class, the same class as m220 and m763, where the corpus states
+something the revision denies. A caveat cannot carry that: stamping m604 would move it
+to ``filing`` scope -- it declares ``fixed_width_export = true`` -- and the export rule
+gates the casilla SET **and its numbering** against the official layout. Asserting
+filing-grade authority over a layout whose numbering contradicts AEAT's is not something
+a ``reviewed_by`` sentence qualifies.
+
+**So all four remaining pending revisions are correctly blocked, and for two distinct
+reasons in the same class:**
+
+| revision | contrary evidence |
+|---|---|
+| m604 2021-2023 | 0 of 43 casillas carry an official box number |
+| m604 2024-y-siguientes | 0 of 79 casillas carry an official box number |
+| m220 2024-y-siguientes | designs prove a 2024/2025 re-layout inside the claimed span |
+| m763 2011-y-siguientes | designs prove a 2012/2015 re-layout; 54 of 64 boxes moved |
+
+**The pending set is at its floor for this campaign.** Every one of the four needs a DATA
+change -- casilla re-numbering for m604, a revision split or an amending-orden citation
+for m220 and m763 -- not a review. Neither is work a review iteration should improvise on
+someone else's freshly authored revisions, and neither is blocked on anything this
+campaign can measure further.
+
+m604 has been static since `11ec8d3bcc`, so the earlier "do not barge, it is in flight"
+reasoning has expired; what remains is that re-numbering 122 casillas is an authoring
+task with its own verification, and the finding is already recorded here and in the
+repeated-box hazard note carried on m222's stamp.
+
 
 ## Recommendations
 
