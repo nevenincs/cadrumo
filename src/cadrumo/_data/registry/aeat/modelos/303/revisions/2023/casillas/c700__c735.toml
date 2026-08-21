@@ -4,7 +4,7 @@
 [[revisions."2023".casillas]]
 id = "700"
 number = "700"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "domestic-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_domestic_current_base"
 continuidad_id = "m303-deducciones-sector-1-domestic-current-base"
@@ -18,7 +18,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "701"
 number = "701"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "domestic-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_domestic_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-domestic-current-cuota"
@@ -32,7 +32,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "702"
 number = "702"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "domestic-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_domestic_investment_base"
 continuidad_id = "m303-deducciones-sector-1-domestic-investment-base"
@@ -46,7 +46,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "703"
 number = "703"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "domestic-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_domestic_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-domestic-investment-cuota"
@@ -60,7 +60,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "704"
 number = "704"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "import-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_import_current_base"
 continuidad_id = "m303-deducciones-sector-1-import-current-base"
@@ -74,7 +74,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "705"
 number = "705"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "import-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_import_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-import-current-cuota"
@@ -88,7 +88,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "706"
 number = "706"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "import-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_import_investment_base"
 continuidad_id = "m303-deducciones-sector-1-import-investment-base"
@@ -102,7 +102,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "707"
 number = "707"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "import-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_import_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-import-investment-cuota"
@@ -116,7 +116,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "708"
 number = "708"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "intra-eu-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_intra_eu_current_base"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-current-base"
@@ -130,7 +130,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "709"
 number = "709"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "intra-eu-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_intra_eu_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-current-cuota"
@@ -144,7 +144,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "710"
 number = "710"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "intra-eu-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_intra_eu_investment_base"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-base"
@@ -158,7 +158,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "711"
 number = "711"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "intra-eu-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_intra_eu_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-cuota"
@@ -172,7 +172,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "712"
 number = "712"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "reagp-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_reagp_base"
 continuidad_id = "m303-deducciones-sector-1-reagp-base"
@@ -186,7 +186,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "713"
 number = "713"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "reagp-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_reagp_cuota"
 continuidad_id = "m303-deducciones-sector-1-reagp-cuota"
@@ -200,7 +200,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "714"
 number = "714"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "rectification-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_rectification_base"
 continuidad_id = "m303-deducciones-sector-1-rectification-base"
@@ -212,7 +212,7 @@ export_refs = ["m303-2023.dp30305.f045"]
 [[revisions."2023".casillas]]
 id = "715"
 number = "715"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "rectification-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_rectification_cuota"
 continuidad_id = "m303-deducciones-sector-1-rectification-cuota"
@@ -225,7 +225,7 @@ export_refs = ["m303-2023.dp30305.f046"]
 [[revisions."2023".casillas]]
 id = "716"
 number = "716"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "investment-regularisation"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "investment_regularisation"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_investment_regularisation"
 continuidad_id = "m303-deducciones-sector-1-investment-regularisation"
@@ -238,7 +238,7 @@ export_refs = ["m303-2023.dp30305.f047"]
 [[revisions."2023".casillas]]
 id = "717"
 number = "717"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_1", "total"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "total"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_1_total"
 continuidad_id = "m303-deducciones-sector-1-total"
@@ -251,7 +251,7 @@ export_refs = ["m303-2023.dp30305.f048"]
 [[revisions."2023".casillas]]
 id = "718"
 number = "718"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "domestic-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_domestic_current_base"
 continuidad_id = "m303-deducciones-sector-2-domestic-current-base"
@@ -265,7 +265,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "719"
 number = "719"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "domestic-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_domestic_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-domestic-current-cuota"
@@ -279,7 +279,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "720"
 number = "720"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "domestic-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_domestic_investment_base"
 continuidad_id = "m303-deducciones-sector-2-domestic-investment-base"
@@ -293,7 +293,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "721"
 number = "721"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "domestic-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_domestic_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-domestic-investment-cuota"
@@ -307,7 +307,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "722"
 number = "722"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "import-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_import_current_base"
 continuidad_id = "m303-deducciones-sector-2-import-current-base"
@@ -321,7 +321,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "723"
 number = "723"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "import-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_import_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-import-current-cuota"
@@ -335,7 +335,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "724"
 number = "724"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "import-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_import_investment_base"
 continuidad_id = "m303-deducciones-sector-2-import-investment-base"
@@ -349,7 +349,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "725"
 number = "725"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "import-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_import_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-import-investment-cuota"
@@ -363,7 +363,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "726"
 number = "726"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "intra-eu-current-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_intra_eu_current_base"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-current-base"
@@ -377,7 +377,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "727"
 number = "727"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "intra-eu-current-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_intra_eu_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-current-cuota"
@@ -391,7 +391,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "728"
 number = "728"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "intra-eu-investment-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_intra_eu_investment_base"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-base"
@@ -405,7 +405,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "729"
 number = "729"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "intra-eu-investment-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_intra_eu_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-cuota"
@@ -419,7 +419,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "730"
 number = "730"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "reagp-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_reagp_base"
 continuidad_id = "m303-deducciones-sector-2-reagp-base"
@@ -433,7 +433,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "731"
 number = "731"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "reagp-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_reagp_cuota"
 continuidad_id = "m303-deducciones-sector-2-reagp-cuota"
@@ -447,7 +447,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley
 [[revisions."2023".casillas]]
 id = "732"
 number = "732"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "rectification-base"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_base"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_rectification_base"
 continuidad_id = "m303-deducciones-sector-2-rectification-base"
@@ -460,7 +460,7 @@ export_refs = ["m303-2023.dp30305.f063"]
 [[revisions."2023".casillas]]
 id = "733"
 number = "733"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "rectification-cuota"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_cuota"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_rectification_cuota"
 continuidad_id = "m303-deducciones-sector-2-rectification-cuota"
@@ -473,7 +473,7 @@ export_refs = ["m303-2023.dp30305.f064"]
 [[revisions."2023".casillas]]
 id = "734"
 number = "734"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "investment-regularisation"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "investment_regularisation"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_investment_regularisation"
 continuidad_id = "m303-deducciones-sector-2-investment-regularisation"
@@ -486,7 +486,7 @@ export_refs = ["m303-2023.dp30305.f065"]
 [[revisions."2023".casillas]]
 id = "735"
 number = "735"
-section = ["iva", "deducciones", "sectores-diferenciados", "sector_2", "total"]
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "total"]
 data_type = "money"
 semantic_role = "m303_deducciones_sector_2_total"
 continuidad_id = "m303-deducciones-sector-2-total"

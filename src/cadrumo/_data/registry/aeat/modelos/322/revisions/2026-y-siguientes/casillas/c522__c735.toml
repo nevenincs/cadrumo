@@ -45,7 +45,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "700"
 number = "700"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 required = false
@@ -57,7 +57,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "701"
 number = "701"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 required = false
@@ -69,7 +69,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "702"
 number = "702"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 required = false
@@ -81,7 +81,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "703"
 number = "703"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 required = false
@@ -93,7 +93,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "704"
 number = "704"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
 required = false
@@ -105,7 +105,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "705"
 number = "705"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
 required = false
@@ -117,7 +117,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "706"
 number = "706"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
 required = false
@@ -129,7 +129,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "707"
 number = "707"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
 required = false
@@ -141,7 +141,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "708"
 number = "708"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -153,7 +153,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "709"
 number = "709"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -165,7 +165,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "710"
 number = "710"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -177,7 +177,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "711"
 number = "711"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -189,7 +189,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "712"
 number = "712"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
 required = false
@@ -201,7 +201,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "713"
 number = "713"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
 required = false
@@ -213,7 +213,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "714"
 number = "714"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -224,7 +224,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "715"
 number = "715"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -235,7 +235,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "716"
 number = "716"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -246,7 +246,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "717"
 number = "717"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -257,7 +257,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "718"
 number = "718"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 required = false
@@ -269,7 +269,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "719"
 number = "719"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 required = false
@@ -281,7 +281,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "720"
 number = "720"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 required = false
@@ -293,7 +293,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "721"
 number = "721"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 required = false
@@ -305,7 +305,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "722"
 number = "722"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
 required = false
@@ -317,7 +317,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "723"
 number = "723"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
 required = false
@@ -329,7 +329,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "724"
 number = "724"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
 required = false
@@ -341,7 +341,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "725"
 number = "725"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
 required = false
@@ -353,7 +353,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "726"
 number = "726"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -365,7 +365,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "727"
 number = "727"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -377,7 +377,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "728"
 number = "728"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -389,7 +389,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "729"
 number = "729"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 required = false
@@ -401,7 +401,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "730"
 number = "730"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
 required = false
@@ -413,7 +413,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "731"
 number = "731"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
 required = false
@@ -425,7 +425,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "732"
 number = "732"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -436,7 +436,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "733"
 number = "733"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -447,7 +447,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "734"
 number = "734"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -458,7 +458,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "735"
 number = "735"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"

@@ -93,7 +93,7 @@ export_refs = ["m184-2025.declarante.f014"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.tipo-entidad"
 number = "147"
-section = ["declarante", "entidad-extranjera"]
+section = ["declarante", "entidad_extranjera"]
 data_type = "text"
 semantic_role = "tipo_entidad_extranjera"
 required = false
@@ -104,7 +104,7 @@ export_refs = ["m184-2025.declarante.f015"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.objeto"
 number = "148"
-section = ["declarante", "entidad-extranjera"]
+section = ["declarante", "entidad_extranjera"]
 data_type = "text"
 semantic_role = "objeto_entidad_extranjera"
 required = false
@@ -115,7 +115,7 @@ export_refs = ["m184-2025.declarante.f016"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.clave-pais"
 number = "149-150"
-section = ["declarante", "entidad-extranjera"]
+section = ["declarante", "entidad_extranjera"]
 data_type = "country_code"
 semantic_role = "clave_pais_entidad_extranjera"
 required = false
@@ -126,7 +126,7 @@ export_refs = ["m184-2025.declarante.f017"]
 [[revisions."2015-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.porcentaje-renta-residentes"
 number = "151-155"
-section = ["declarante", "entidad-extranjera"]
+section = ["declarante", "entidad_extranjera"]
 data_type = "ratio"
 semantic_role = "porcentaje_renta_atribuible_residentes"
 required = false

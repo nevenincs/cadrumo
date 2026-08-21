@@ -131,7 +131,7 @@ export_refs = ["m322-2024.pagina01.f031"]
 [[revisions."2008-2025".casillas]]
 id = "107"
 number = "107"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"

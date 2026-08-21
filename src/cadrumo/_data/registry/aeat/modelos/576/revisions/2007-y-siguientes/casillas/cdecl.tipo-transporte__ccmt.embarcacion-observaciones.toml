@@ -21,7 +21,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.nuevo-usado"
 number = "12"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -32,7 +32,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.lugar-adquisicion"
 number = "13"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -43,7 +43,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.fecha-primera-matriculacion"
 number = "15"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "date"
 required = false
 input_kind = "manual"
@@ -54,7 +54,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-marca"
 number = "16"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -65,7 +65,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-modelo-tipo"
 number = "17"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -76,7 +76,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-bastidor"
 number = "18"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -87,7 +87,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-clasificacion"
 number = "19.1"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -98,7 +98,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-categoria-ce"
 number = "19.2"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -109,7 +109,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-emisiones-co2"
 number = "19.4"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "integer"
 required = false
 input_kind = "manual"
@@ -120,7 +120,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-epigrafe"
 number = "19.5"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -131,7 +131,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.kilometros-horas-uso"
 number = "19.6"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "integer"
 required = false
 input_kind = "manual"
@@ -142,7 +142,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-serie"
 number = "19.7"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -153,7 +153,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-tipo-tarjeta"
 number = "19.8"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -164,7 +164,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-motor"
 number = "20"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -175,7 +175,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-cilindrada"
 number = "21"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "integer"
 required = false
 input_kind = "manual"
@@ -186,7 +186,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.embarcacion-fabricante"
 number = "22"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -197,7 +197,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.embarcacion-modelo"
 number = "23"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -208,7 +208,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.embarcacion-identificacion"
 number = "24"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -219,7 +219,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.embarcacion-eslora"
 number = "25"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "decimal"
 required = false
 input_kind = "manual"
@@ -230,7 +230,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.aeronave-fabricante"
 number = "26"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -241,7 +241,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.aeronave-modelo"
 number = "27"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -252,7 +252,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.aeronave-serie"
 number = "28"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -263,7 +263,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.aeronave-ano-fabricacion"
 number = "29"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "integer"
 required = false
 input_kind = "manual"
@@ -274,7 +274,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.aeronave-peso-maximo-despegue"
 number = "30"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "integer"
 required = false
 input_kind = "manual"
@@ -285,7 +285,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-codigo-itv"
 number = "31"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -428,7 +428,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.vehiculo-observaciones"
 number = "50"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -439,7 +439,7 @@ source_refs = ["enrolled-modelo-576-layout"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "cmt.embarcacion-observaciones"
 number = "51"
-section = ["medio-transporte"]
+section = ["medio_transporte"]
 data_type = "text"
 required = false
 input_kind = "manual"

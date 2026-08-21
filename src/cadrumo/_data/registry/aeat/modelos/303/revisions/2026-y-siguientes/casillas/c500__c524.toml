@@ -24,7 +24,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "501"
 number = "501"
-section = ["iva", "prorrata", "actividad", "fila_1", "operaciones-total"]
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_total"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_1_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-total"
@@ -42,7 +42,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "502"
 number = "502"
-section = ["iva", "prorrata", "actividad", "fila_1", "operaciones-con-derecho"]
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_con_derecho"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_1_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-con-derecho"
@@ -116,7 +116,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "506"
 number = "506"
-section = ["iva", "prorrata", "actividad", "fila_2", "operaciones-total"]
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_total"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_2_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-total"
@@ -134,7 +134,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "507"
 number = "507"
-section = ["iva", "prorrata", "actividad", "fila_2", "operaciones-con-derecho"]
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_con_derecho"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_2_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-con-derecho"
@@ -208,7 +208,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "511"
 number = "511"
-section = ["iva", "prorrata", "actividad", "fila_3", "operaciones-total"]
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_total"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_3_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-total"
@@ -226,7 +226,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "512"
 number = "512"
-section = ["iva", "prorrata", "actividad", "fila_3", "operaciones-con-derecho"]
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_con_derecho"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_3_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-con-derecho"
@@ -300,7 +300,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "516"
 number = "516"
-section = ["iva", "prorrata", "actividad", "fila_4", "operaciones-total"]
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_total"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_4_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-total"
@@ -318,7 +318,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "517"
 number = "517"
-section = ["iva", "prorrata", "actividad", "fila_4", "operaciones-con-derecho"]
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_con_derecho"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_4_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-con-derecho"
@@ -392,7 +392,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "521"
 number = "521"
-section = ["iva", "prorrata", "actividad", "fila_5", "operaciones-total"]
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_total"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_5_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-total"
@@ -410,7 +410,7 @@ source_refs = ["aeat-dr-303-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "522"
 number = "522"
-section = ["iva", "prorrata", "actividad", "fila_5", "operaciones-con-derecho"]
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_con_derecho"]
 data_type = "money"
 semantic_role = "m303_prorrata_actividad_fila_5_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-con-derecho"

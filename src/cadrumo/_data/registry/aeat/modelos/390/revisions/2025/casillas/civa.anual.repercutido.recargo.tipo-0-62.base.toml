@@ -1,7 +1,7 @@
 [[revisions."2025".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-0-62.base"
 number = "665"
-section = ["operaciones-regimen-general", "recargo-equivalencia"]
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
 data_type = "money"
 required = false
 input_kind = "manual"

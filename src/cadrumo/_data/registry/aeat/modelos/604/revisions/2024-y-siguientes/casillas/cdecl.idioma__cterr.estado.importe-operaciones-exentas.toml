@@ -30,7 +30,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-lei"
 number = "sp-codigo-lei"
-section = ["sujeto-pasivo"]
+section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -41,7 +41,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-bic"
 number = "sp-codigo-bic"
-section = ["sujeto-pasivo"]
+section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -52,7 +52,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-via"
 number = "dom-es-tipo-via"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -63,7 +63,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.nombre-via"
 number = "dom-es-nombre-via"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -74,7 +74,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-numeracion"
 number = "dom-es-tipo-numeracion"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -85,7 +85,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.numero-casa"
 number = "dom-es-numero-casa"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -96,7 +96,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.calificador-numero"
 number = "dom-es-calificador-numero"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -107,7 +107,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.bloque"
 number = "dom-es-bloque"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -118,7 +118,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.portal"
 number = "dom-es-portal"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -129,7 +129,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.escalera"
 number = "dom-es-escalera"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -140,7 +140,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.planta"
 number = "dom-es-planta"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -151,7 +151,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.puerta"
 number = "dom-es-puerta"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -162,7 +162,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.complemento"
 number = "dom-es-complemento"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -173,7 +173,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.localidad"
 number = "dom-es-localidad"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -184,7 +184,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-postal"
 number = "dom-es-codigo-postal"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -195,7 +195,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.municipio"
 number = "dom-es-municipio"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -206,7 +206,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-provincia"
 number = "dom-es-codigo-provincia"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -217,7 +217,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.provincia"
 number = "dom-es-provincia"
-section = ["sujeto-pasivo", "domicilio-espana"]
+section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -228,7 +228,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.domicilio"
 number = "dom-ex-domicilio"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -239,7 +239,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.complemento"
 number = "dom-ex-complemento"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -250,7 +250,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.poblacion"
 number = "dom-ex-poblacion"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -261,7 +261,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-postal"
 number = "dom-ex-codigo-postal"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -272,7 +272,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.provincia-region-estado"
 number = "dom-ex-provincia-region-estado"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -283,7 +283,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.pais"
 number = "dom-ex-pais"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -294,7 +294,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-pais"
 number = "dom-ex-codigo-pais"
-section = ["sujeto-pasivo", "domicilio-extranjero"]
+section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -305,7 +305,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.persona-contacto"
 number = "sp-persona-contacto"
-section = ["sujeto-pasivo"]
+section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -316,7 +316,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.telefono-contacto"
 number = "sp-telefono-contacto"
-section = ["sujeto-pasivo"]
+section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -327,7 +327,7 @@ source_refs = ["aeat-dr-604-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "anexo.numero-justificante"
 number = "anexo-numero-justificante"
-section = ["anexo-informativo"]
+section = ["anexo_informativo"]
 data_type = "text"
 required = false
 input_kind = "manual"

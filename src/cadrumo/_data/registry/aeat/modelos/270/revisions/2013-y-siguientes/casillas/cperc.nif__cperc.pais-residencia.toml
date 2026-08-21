@@ -188,7 +188,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "perc.nif-pais-residencia"
 number = "433-452"
-section = ["perceptor", "no-residente"]
+section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_nif_pais_residencia"
 required = false
@@ -200,7 +200,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "perc.fecha-nacimiento"
 number = "453-460"
-section = ["perceptor", "no-residente"]
+section = ["perceptor", "no_residente"]
 data_type = "date"
 semantic_role = "m270_fecha_nacimiento"
 required = false
@@ -219,7 +219,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "perc.lugar-nacimiento"
 number = "461-497"
-section = ["perceptor", "no-residente"]
+section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_lugar_nacimiento"
 required = false
@@ -231,7 +231,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "perc.pais-residencia"
 number = "498-499"
-section = ["perceptor", "no-residente"]
+section = ["perceptor", "no_residente"]
 data_type = "country_code"
 semantic_role = "m270_pais_residencia"
 required = false

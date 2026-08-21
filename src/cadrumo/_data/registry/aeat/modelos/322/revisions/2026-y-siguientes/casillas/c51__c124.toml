@@ -300,7 +300,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "79"
 number = "79"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -311,7 +311,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "80"
 number = "80"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -322,7 +322,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "81"
 number = "81"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -333,7 +333,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "83"
 number = "83"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -356,7 +356,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "86"
 number = "86"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -367,7 +367,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "88"
 number = "88"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -378,7 +378,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "89"
 number = "89"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -389,7 +389,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "90"
 number = "90"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -400,7 +400,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "91"
 number = "91"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -411,7 +411,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "92"
 number = "92"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -422,7 +422,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "93"
 number = "93"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -433,7 +433,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "94"
 number = "94"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -444,7 +444,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "95"
 number = "95"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -455,7 +455,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "96"
 number = "96"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -466,7 +466,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "97"
 number = "97"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -477,7 +477,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "98"
 number = "98"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -488,7 +488,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "99"
 number = "99"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -499,7 +499,7 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2026-y-siguientes".casillas]]
 id = "107"
 number = "107"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"

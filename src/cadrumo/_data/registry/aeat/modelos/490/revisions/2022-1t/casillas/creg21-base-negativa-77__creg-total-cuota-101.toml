@@ -3,7 +3,7 @@
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-77"
 number = "77"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-84"
 number = "84"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -25,7 +25,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-90"
 number = "90"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -36,7 +36,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-96"
 number = "96"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -47,7 +47,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-total-78"
 number = "78"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -58,7 +58,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-total-85"
 number = "85"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -69,7 +69,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-total-91"
 number = "91"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -80,7 +80,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-base-total-97"
 number = "97"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -91,7 +91,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1493"
 number = "79"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -102,7 +102,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1496"
 number = "79-1496"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -113,7 +113,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1499"
 number = "79-1499"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -124,7 +124,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1502"
 number = "79-1502"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -135,7 +135,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-80"
 number = "80"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -146,7 +146,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-86"
 number = "86"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -157,7 +157,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-92"
 number = "92"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -168,7 +168,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-98"
 number = "98"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -179,7 +179,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-81"
 number = "81"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -190,7 +190,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-87"
 number = "87"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -201,7 +201,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-93"
 number = "93"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -212,7 +212,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-99"
 number = "99"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -223,7 +223,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-82"
 number = "82"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -234,7 +234,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-88"
 number = "88"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -245,7 +245,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-94"
 number = "94"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -256,7 +256,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-100"
 number = "100"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -267,7 +267,7 @@ source_refs = ["aeat-dr-490-2021"]
 [[revisions."2022-1t".casillas]]
 id = "reg-total-cuota-101"
 number = "101"
-section = ["490-02"]
+section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
