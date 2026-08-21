@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd7535842f48067894684c0f07ddc9695387c102aa3d2e7fbf608ac235c97163'
+body_hash: 'sha256:df56f1c3ea36e1adf1b1e7ec63976484fb8984722b1133c7bac747913764e24f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4602,3 +4602,45 @@ a test invoking a verb is asserting against whatever door its fixture opened.** 
 easy to write correctly once and then have quietly invalidated by work elsewhere.
 
 Eleven of roughly fifty domain-relevant modules in that directory have now been swept.
+
+### Third out-of-lane batch: fixtures that cannot produce the state they assert
+
+Five more modules; nine failures; the same class as the previous two batches, now with a
+sharper root cause worth naming once.
+
+**`register_cli_profile` completes every profile it registers.** It merges a
+`_REQUIRED_PLACEHOLDERS` map before registering and fills conditional requirements too, so
+a profile seeded through it carries sixteen facts including
+`activities.description = "economic activity"`. Four preflight cases assert the OPPOSITE —
+that readiness is blocked on a missing baseline, that `activity_present` is `False`, that
+the profile is not `configured`. Their fixtures could not produce any of those states, and
+the product was answering correctly throughout.
+
+Measured rather than inferred: registering through that door and reading the record back
+shows the fact present with that exact value; passing it as an empty string yields fifteen
+facts with the field absent.
+
+**The affordance already existed and had not been used.** The door drops falsy facts before
+registering, so `"activities.description": ""` is how a caller declines one of its fills,
+and `complete=False` is how a test whose subject is an unconfigured profile says so — the
+helper's own docstring offers the second and the first falls out of its implementation. No
+helper change was needed; the fixtures simply never expressed their subject. One persona
+additionally asserted two income categories (`capital_inmobiliario,pension`) that its
+fixture only half supplied.
+
+Five of the six cases in that module now pass.
+
+**The sixth is another campaign's, and is handed back rather than quietly rewritten.**
+`test_profile_preflight_names_profile_only_scope_for_m100` asserts a
+`full_modelo_readiness_command` line. That string exists NOWHERE in production — it was
+removed by `d6ae28688d` and replaced with the structured components the output now carries
+(`modelo`, `revision_id`, `filing_year`, `period`), which the test's own failure output
+shows are all correct. Whether composed next-step guidance should return, or the test
+should assert the components, is a decision for whoever made that change. Deleting the
+assertion here would erase the only remaining record that the guidance ever existed.
+
+**Three batches, one conclusion.** Every red in `entrypoints/cli/tests` has been a test
+whose fixture, marker, or locale no longer delivers what its assertions name — never a
+product defect. Sixteen of roughly fifty domain modules are now swept. The recurring cause
+is that this directory holds the end-to-end operator surface and no lane runs it, so
+assumptions inside it are never re-validated by the work that invalidates them.
