@@ -247,7 +247,14 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "Orden HAP/2783/2015 art 1: aprobacion del modelo 151 de declaracion del IRPF para el regimen especial de trabajadores desplazados (impatriados), ejercicio 2015. Disposicion final sexta: el modelo se utiliza por primera vez para la declaracion del periodo impositivo 2015. Fetched via curl, bytes read back from disk before authoring this entry. Superseded in part by Orden HFP/1338/2023 (arts 6-10 derogados por su Disposicion Derogatoria Unica), which replaces this orden as the governing instrument from ejercicio 2023 onward."
+notes = """\
+Orden HAP/2783/2015 art 1: aprobacion del modelo 151 de declaracion del IRPF para el \
+regimen especial de trabajadores desplazados (impatriados), ejercicio 2015. Disposicion \
+final sexta: el modelo se utiliza por primera vez para la declaracion del periodo \
+impositivo 2015. Fetched via curl, bytes read back from disk before authoring this entry. \
+Superseded in part by Orden HFP/1338/2023 (arts 6-10 derogados por su Disposicion \
+Derogatoria Unica), which replaces this orden as the governing instrument from ejercicio \
+2023 onward."""
 required_text = [
     "Aprobación del modelo 151",
     "trabajadores desplazados a territorio español",
@@ -267,7 +274,14 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "full_consolidated"
-notes = "Orden HFP/1338/2023 art 1: aprobacion del modelo 151 actualizado, para contribuyentes del regimen especial de trabajadores, profesionales, emprendedores e inversores desplazados. Disposicion Final Segunda(a): se utiliza por primera vez para la declaracion del ejercicio 2023, presentada en 2024. Disposicion Derogatoria Unica: deroga los articulos 6 a 10 de la Orden HAP/2783/2015. Fetched via curl, bytes read back from disk before authoring this entry. AEAT's own bundled record-design file (01-151-ejercicio-2023-y-siguientes.xls) independently confirms this same 2023 boundary."
+notes = """\
+Orden HFP/1338/2023 art 1: aprobacion del modelo 151 actualizado, para contribuyentes del \
+regimen especial de trabajadores, profesionales, emprendedores e inversores desplazados. \
+Disposicion Final Segunda(a): se utiliza por primera vez para la declaracion del ejercicio \
+2023, presentada en 2024. Disposicion Derogatoria Unica: deroga los articulos 6 a 10 de la \
+Orden HAP/2783/2015. Fetched via curl, bytes read back from disk before authoring this \
+entry. AEAT's own bundled record-design file (01-151-ejercicio-2023-y-siguientes.xls) \
+independently confirms this same 2023 boundary."""
 required_text = [
     "Aprobación del modelo 151",
     "desplazados a territorio español",

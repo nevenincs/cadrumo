@@ -65,7 +65,13 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiacion, reparacion y conservacion, tributos no estatales, contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
+notes = """\
+RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las \
+categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses \
+y gastos de financiacion, reparacion y conservacion, tributos no estatales, \
+contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas \
+de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la \
+seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."""
 required_text = [
     "Gastos deducibles de los rendimientos del capital inmobiliario",
     "intereses de los capitales ajenos",
@@ -126,7 +132,14 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo personalizado de retencion del trabajo, citado por art-80 RIRPF."
+notes = """\
+RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo \
+rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones \
+(art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo \
+personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con \
+vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para \
+contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo \
+personalizado de retencion del trabajo, citado por art-80 RIRPF."""
 required_text = [
     "Tipo de retención",
     "cociente obtenido de dividir la cuota de retención",
@@ -167,7 +180,14 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el regimen de tipos de retencion: regla general personalizada via tablas del art 86; 35 por ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o cientificas. Base reglamentaria de la retencion sobre rendimientos del trabajo en Modelo 111 (trimestral) y Modelo 190 (resumen anual)."
+notes = """\
+RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el \
+regimen de tipos de retencion: regla general personalizada via tablas del art 86; 35 por \
+ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la \
+cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para \
+rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o \
+cientificas. Base reglamentaria de la retencion sobre rendimientos del trabajo en Modelo \
+111 (trimestral) y Modelo 190 (resumen anual)."""
 required_text = [
     "Importe de las retenciones sobre rendimientos del trabajo",
     "35 por ciento",
@@ -346,7 +366,14 @@ effective_from = 2007-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-16
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Provision that ESTABLISHES the pago fraccionado filing window, which article 110 does not: 110 fixes the IMPORTE and 111 fixes the plazo. Read directly from the bundled consolidated RD 439/2007 text, which carries article 111 in full; the separately bundled per-article files stop at 110 and skip 111, which is why the windows on modelos 130 and 131 were previously cited to 110. Q1-Q3 run from the 1st to the 20th of April, July and October; Q4 runs from the 1st to the 30th of January. No human operator has reviewed this entry and reviewed_by records that status honestly."
+notes = """\
+Provision that ESTABLISHES the pago fraccionado filing window, which article 110 does not: \
+110 fixes the IMPORTE and 111 fixes the plazo. Read directly from the bundled consolidated \
+RD 439/2007 text, which carries article 111 in full; the separately bundled per-article \
+files stop at 110 and skip 111, which is why the windows on modelos 130 and 131 were \
+previously cited to 110. Q1-Q3 run from the 1st to the 20th of April, July and October; Q4 \
+runs from the 1st to the 30th of January. No human operator has reviewed this entry and \
+reviewed_by records that status honestly."""
 required_text = [
     "Los tres primeros trimestres, entre el día 1 y el 20 de los meses de abril, julio y octubre",
     "Cuarto trimestre, entre el día 1 y el 30 del mes de enero",
@@ -887,7 +914,14 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.1)."
+notes = """\
+Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que \
+corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay \
+personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: \
+titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y \
+sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). \
+Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, \
+instruccion 2.3.b.1)."""
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -928,7 +962,14 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2023, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.4)."
+notes = """\
+Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie \
+una nueva actividad a partir del 1 de enero de 2023, que no sea de temporada, no ejercida \
+previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 \
+(primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una \
+discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice \
+corrector de temporada (b.2). Cross-checked byte-identical against the bundled \
+orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.4)."""
 required_text = [
     "b.4) Índice corrector por inicio de nuevas actividades.",
     "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2023.",
@@ -1160,7 +1201,14 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.1)."
+notes = """\
+Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que \
+corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay \
+personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: \
+titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y \
+sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). \
+Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, \
+instruccion 2.3.b.1)."""
 required_text = [
     "b.1) Índice corrector para empresas de pequeña dimensión:",
     "Titular persona física.",
@@ -1201,7 +1249,14 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2024, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.4)."
+notes = """\
+Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie \
+una nueva actividad a partir del 1 de enero de 2024, que no sea de temporada, no ejercida \
+previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 \
+(primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una \
+discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice \
+corrector de temporada (b.2). Cross-checked byte-identical against the bundled \
+orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.4)."""
 required_text = [
     "b.4) Índice corrector por inicio de nuevas actividades.",
     "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2024.",
@@ -3685,7 +3740,14 @@ effective_from = 2007-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp"
-notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
+notes = """\
+LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a \
+sistemas de previsión social (planes de pensiones, mutualidades de previsión social, \
+planes de previsión asegurados, planes de previsión social empresarial, seguros de \
+dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas \
+de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. \
+52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator \
+to confirm and re-stamp."""
 required_text = [
     "Reducciones por aportaciones y contribuciones a sistemas de previsión social",    # Operative phrase from apartado 8 (reposición de reducciones indebidas), at 96% of the article. The prior grounding sat
     # inside the first 220 characters, so any truncation of the article
@@ -3706,7 +3768,13 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 52: maximum joint limit for art 51.1-5 reductions. Current consolidated redaction was published 2022-12-24 and is in force from 2023-01-01 after Ley 31/2022 art 62.1; it sets the lesser-of 30 percent / 1,500 EUR limit, employment-plan/autonomo increments, the 8,500 EUR maximum increment cap, 5,000 EUR collective-dependence insurance amount, and five-year carry-forward for unapplied eligible contributions. Grounds M100 pension/prevision-social reductions and casilla 0468/2025 equivalent aggregation."
+notes = """\
+LIRPF art 52: maximum joint limit for art 51.1-5 reductions. Current consolidated \
+redaction was published 2022-12-24 and is in force from 2023-01-01 after Ley 31/2022 art \
+62.1; it sets the lesser-of 30 percent / 1,500 EUR limit, employment-plan/autonomo \
+increments, the 8,500 EUR maximum increment cap, 5,000 EUR collective-dependence insurance \
+amount, and five-year carry-forward for unapplied eligible contributions. Grounds M100 \
+pension/prevision-social reductions and casilla 0468/2025 equivalent aggregation."""
 required_text = [
     "Límite de reducción.",
     "límite máximo conjunto",
@@ -3955,7 +4023,14 @@ effective_from = 2025-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-14; operator to re-stamp"
-notes = "LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para rendimientos del trabajo artísticos y rendimientos netos de actividades económicas artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos excepcionales. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-14 (DA sexagésima); operator to confirm and re-stamp."
+notes = """\
+LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades \
+artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para \
+rendimientos del trabajo artísticos y rendimientos netos de actividades económicas \
+artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. \
+Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos \
+excepcionales. AGENT-AUTHORED, grounded in the bundled authoritative \
+ley-35-2006.html#da-14 (DA sexagésima); operator to confirm and re-stamp."""
 required_text = [
     "Rendimientos de actividades artísticas obtenidos de manera excepcional",
     "se reducirá en un 30 por ciento",
@@ -3975,7 +4050,14 @@ effective_from = 2017-01-21
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dacuadragesimaquinta; operator to re-stamp"
-notes = "LIRPF disposición adicional 45ª: tratamiento fiscal de la devolución de cláusulas suelo. Cuando las cantidades devueltas formaron parte de la base de deducciones previas, se pierde el derecho a esas deducciones y deben sumarse las cantidades indebidamente deducidas a la cuota líquida estatal y autonómica, sin intereses de demora. Base legal específica de las casillas Modelo 100 que marcan la regularización motivada por DA 45ª.2.a) o DA 45ª.3. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dacuadragesimaquinta; operator to confirm and re-stamp."
+notes = """\
+LIRPF disposición adicional 45ª: tratamiento fiscal de la devolución de cláusulas suelo. \
+Cuando las cantidades devueltas formaron parte de la base de deducciones previas, se \
+pierde el derecho a esas deducciones y deben sumarse las cantidades indebidamente \
+deducidas a la cuota líquida estatal y autonómica, sin intereses de demora. Base legal \
+específica de las casillas Modelo 100 que marcan la regularización motivada por DA \
+45ª.2.a) o DA 45ª.3. AGENT-AUTHORED, grounded in the bundled authoritative \
+ley-35-2006.html#dacuadragesimaquinta; operator to confirm and re-stamp."""
 required_text = [
     "Tratamiento fiscal de las cantidades percibidas por la devolución de las cláusulas de limitación de tipos de interés",
     "se perderá el derecho a practicar la deducción",
@@ -4101,7 +4183,13 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
+notes = """\
+LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. \
+Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), \
+ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con \
+dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas \
+0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia \
+numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."""
 required_text = [
     "Deducciones por familia numerosa o personas con discapacidad a cargo",
     "descendiente con discapacidad",
@@ -4121,7 +4209,14 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el procedimiento."
+notes = """\
+LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de \
+retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por \
+ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de \
+cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 \
+por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados \
+en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el \
+procedimiento."""
 required_text = [
     "Importe de los pagos a cuenta",
     "rendimientos del trabajo",
@@ -4580,7 +4675,14 @@ effective_from = 2007-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a11; operator to re-stamp"
-notes = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a11; operator to confirm and re-stamp."
+notes = """\
+LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los \
+contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera \
+el derecho, del capital por los titulares de los elementos, de actividades por quien las \
+realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que \
+obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 \
+(toma de datos ampliada). AGENT-AUTHORED, grounded in the bundled authoritative \
+ley-35-2006.html#a11; operator to confirm and re-stamp."""
 required_text = [
     "Individualización de rentas",
 ]
@@ -5997,7 +6099,13 @@ effective_from = 2018-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html (DA cuadragésima octava); operator to re-stamp"
-notes = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los miembros no es residente en España. Base legal de las casillas de la deducción por unidad familiar de residentes en la UE/EEE en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html (DA cuadragésima octava); operator to confirm and re-stamp."
+notes = """\
+LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas \
+por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico \
+Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los \
+miembros no es residente en España. Base legal de las casillas de la deducción por unidad \
+familiar de residentes en la UE/EEE en Modelo 100. AGENT-AUTHORED, grounded in the bundled \
+authoritative ley-35-2006.html (DA cuadragésima octava); operator to confirm and re-stamp."""
 required_text = [
     "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea",
 ]

@@ -54,7 +54,13 @@ effective_from = 2023-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
-notes = "DL 1/2010 art. 4 (Comunidad de Madrid): deducción por nacimiento o adopción de hijos. Cuantía 721,70 euros por cada hijo nacido o adoptado en la regulación vigente desde el 1 de enero de 2023 (600 euros para nacimientos/adopciones anteriores a esa fecha). La deducción se aplica en el período de nacimiento/adopción y en cada uno de los dos períodos siguientes; sólo para padres que convivan con los hijos; se prorratea por partes iguales cuando el hijo convive con ambos padres y estos tributan de forma individual."
+notes = """\
+DL 1/2010 art. 4 (Comunidad de Madrid): deducción por nacimiento o adopción de hijos. \
+Cuantía 721,70 euros por cada hijo nacido o adoptado en la regulación vigente desde el 1 \
+de enero de 2023 (600 euros para nacimientos/adopciones anteriores a esa fecha). La \
+deducción se aplica en el período de nacimiento/adopción y en cada uno de los dos períodos \
+siguientes; sólo para padres que convivan con los hijos; se prorratea por partes iguales \
+cuando el hijo convive con ambos padres y estos tributan de forma individual."""
 required_text = [
     "Por nacimiento o adopción de hijos",
     "Decreto Legislativo 1/2010, de 21 octubre",

@@ -2710,7 +2710,14 @@ effective_from = 2006-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "LIVA art. 163 nonies makes the dominant entity present the group’s aggregate periodic self-assessments. Those aggregate self-assessments integrate the individual entities’ results and are filed after the individual self-assessments. This is the direct legal basis for Modelo 353’s direct settlement treatment of the same-period Modelo 322 group-member carries. Provenance: prepared from the bundled BOE consolidated text and independently cross-checked against BOE act.php on 2026-08-13. No human operator has reviewed the entry; reviewed_by records that status honestly."
+notes = """\
+LIVA art. 163 nonies makes the dominant entity present the group’s aggregate periodic \
+self-assessments. Those aggregate self-assessments integrate the individual entities’ \
+results and are filed after the individual self-assessments. This is the direct legal \
+basis for Modelo 353’s direct settlement treatment of the same-period Modelo 322 \
+group-member carries. Provenance: prepared from the bundled BOE consolidated text and \
+independently cross-checked against BOE act.php on 2026-08-13. No human operator has \
+reviewed the entry; reviewed_by records that status honestly."""
 required_text = [
     "Artículo 163 nonies. Obligaciones específicas en el régimen especial del grupo de entidades.",
     "Dichas autoliquidaciones agregadas integrarán los resultados de las autoliquidaciones individuales",

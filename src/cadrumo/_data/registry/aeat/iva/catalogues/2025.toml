@@ -302,7 +302,14 @@ category = "unknown"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
-notes = "Classifier sentinel; cannot be emitted as a filing-grade result. Carries no legal basis by design: it names an application-level 'could not classify' state, not a tax treatment, so it has no article to codify. The two citations previously stamped here were both art-164 (sujeto-pasivo declaration/registration duties), which says nothing about an unknown or unclassified state and only manufactured the appearance of grounding. Whether `unknown` belongs in IvaCategory at all is a separate, open, closed-taxonomy design question with consumers; this exemption does not resolve it."
+notes = """\
+Classifier sentinel; cannot be emitted as a filing-grade result. Carries no legal basis by \
+design: it names an application-level 'could not classify' state, not a tax treatment, so \
+it has no article to codify. The two citations previously stamped here were both art-164 \
+(sujeto-pasivo declaration/registration duties), which says nothing about an unknown or \
+unclassified state and only manufactured the appearance of grounding. Whether `unknown` \
+belongs in IvaCategory at all is a separate, open, closed-taxonomy design question with \
+consumers; this exemption does not resolve it."""
 legal_basis_exempt = true
 
 [[regulations]]

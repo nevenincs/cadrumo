@@ -91,7 +91,13 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Autoliquidaciones: declarations in which the obligado tributario performs the calificacion + cuantificacion necessary to determine the deuda tributaria and either pays, claims a refund, or claims compensation. AEAT may verify and comprobar. Where the obligado considers the autoliquidacion has harmed their legitimate interests they may instar la rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa procedure of apartado 4 applies where the tax-specific regulation so establishes."
+notes = """\
+Autoliquidaciones: declarations in which the obligado tributario performs the calificacion \
++ cuantificacion necessary to determine the deuda tributaria and either pays, claims a \
+refund, or claims compensation. AEAT may verify and comprobar. Where the obligado \
+considers the autoliquidacion has harmed their legitimate interests they may instar la \
+rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
+procedure of apartado 4 applies where the tax-specific regulation so establishes."""
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",
     "operaciones de calificación y cuantificación necesarias",
@@ -112,7 +118,13 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed within the original presentation window or extemporaneously while the right to determine the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) are reported as a complementaria for the period of the breach with intereses de demora."
+notes = """\
+Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed \
+within the original presentation window or extemporaneously while the right to determine \
+the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields \
+a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 \
+rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) \
+are reported as a complementaria for the period of the breach with intereses de demora."""
 required_text = [
     "Los obligados tributarios podrán presentar autoliquidaciones complementarias",
     "Las autoliquidaciones complementarias tendrán como finalidad completar o modificar las presentadas con anterioridad",

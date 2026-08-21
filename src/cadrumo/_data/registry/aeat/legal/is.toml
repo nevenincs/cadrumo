@@ -117,7 +117,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
+notes = """\
+LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la \
+deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos \
+intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y \
+extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones \
+a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento \
+juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al \
+resultado contable en M200."""
 required_text = [
     "Gastos no deducibles",
     "retribución de los fondos propios",
@@ -137,7 +144,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores representativos de los fondos propios de entidades residentes y no residentes en territorio espanol. Establece el regimen de participation exemption: dividendos y ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por ciento de participacion sostenida durante un anio, con requisito adicional para no residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las correcciones negativas por dividendos exentos en M200."
+notes = """\
+LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores \
+representativos de los fondos propios de entidades residentes y no residentes en \
+territorio espanol. Establece el regimen de participation exemption: dividendos y \
+ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por \
+ciento de participacion sostenida durante un anio, con requisito adicional para no \
+residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las \
+correcciones negativas por dividendos exentos en M200."""
 required_text = [
     "Exención sobre dividendos",
     "5 por ciento",
@@ -157,7 +171,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas previamente exentas o deducidas). Base sustantiva de las correcciones por rentas-EP-no-residente en M200."
+notes = """\
+LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un \
+establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs \
+no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de \
+al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas \
+negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas \
+previamente exentas o deducidas). Base sustantiva de las correcciones por \
+rentas-EP-no-residente en M200."""
 required_text = [
     "Exención de las rentas obtenidas en el extranjero",
     "establecimiento permanente",
@@ -177,7 +198,13 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base sustantiva de la deduccion por doble imposicion juridica internacional en M200."
+notes = """\
+LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el \
+contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto \
+efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la \
+cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no \
+deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base \
+sustantiva de la deduccion por doble imposicion juridica internacional en M200."""
 required_text = [
     "Deducción para evitar la doble imposición jurídica",
     "menor de las dos cantidades",
@@ -217,7 +244,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de amortizacion de M200, desarrollada en RIS art-3."
+notes = """\
+LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
+amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal \
+art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la \
+Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de \
+elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
+equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
+amortizacion de M200, desarrollada en RIS art-3."""
 required_text = [
     "Correcciones de valor: amortizaciones",
     "depreciación efectiva",
@@ -257,7 +291,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con asistencia mutua equivalente. Base sustantiva de la opcion_de_fraccionamiento_en_supuestos_de_cambios section de M200."
+notes = """\
+LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades \
+residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de \
+salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y \
+valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de \
+fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con \
+asistencia mutua equivalente. Base sustantiva de la \
+opcion_de_fraccionamiento_en_supuestos_de_cambios section de M200."""
 required_text = [
     "Cambios de residencia",
     "diferencia entre el valor de mercado y el valor fiscal",
@@ -317,7 +358,14 @@ effective_from = 2015-07-12
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva (LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion (puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion de M200."
+notes = """\
+RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e \
+inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva \
+(LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion \
+del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion \
+(puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de \
+renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion \
+de M200."""
 required_text = [
     "Amortización de elementos patrimoniales",
     "métodos previstos en el apartado 1 del artículo 12",
@@ -453,7 +501,15 @@ consolidated_as_of = 2023-12-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 6 consolidated text 2023-12-20; pending operator re-stamp"
-notes = "Ley 49/2002 art 6: rentas exentas del Impuesto sobre Sociedades obtenidas por entidades sin fines lucrativos del Título II — donativos y donaciones, cuotas de asociados/colaboradores/benefactores, subvenciones (salvo las que financian explotaciones no exentas), rendimientos del patrimonio mobiliario e inmobiliario, rentas de adquisiciones/transmisiones, rentas de explotaciones económicas exentas del art. 7, y rentas atribuidas/imputadas procedentes de rentas exentas. Grounds the Modelo 200 régimen-especial disminución corrections that exclude exempt income from the base imponible."
+notes = """\
+Ley 49/2002 art 6: rentas exentas del Impuesto sobre Sociedades obtenidas por entidades \
+sin fines lucrativos del Título II — donativos y donaciones, cuotas de \
+asociados/colaboradores/benefactores, subvenciones (salvo las que financian explotaciones \
+no exentas), rendimientos del patrimonio mobiliario e inmobiliario, rentas de \
+adquisiciones/transmisiones, rentas de explotaciones económicas exentas del art. 7, y \
+rentas atribuidas/imputadas procedentes de rentas exentas. Grounds the Modelo 200 \
+régimen-especial disminución corrections that exclude exempt income from the base \
+imponible."""
 required_text = [
     "Artículo 6. Rentas exentas.",
     "Están exentas del Impuesto sobre Sociedades las siguientes rentas obtenidas por entidades sin fines lucrativos",
