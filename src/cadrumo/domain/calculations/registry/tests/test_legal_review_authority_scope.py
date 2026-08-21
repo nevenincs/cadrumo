@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import RevisionReviewStatus
+from .....core import LegalReviewStatus, RevisionReviewStatus
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import ValidatedRegistryAuthority
@@ -17,33 +17,62 @@ from .._snapshot import _check_snapshot_filing_capability, build_validated_snaps
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_authority_refuses_real_m182_pending_revision_before_legal_review_gate() -> None:
-    """M182's operator-reviewed legal refs do not promote its pending revision."""
+def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
+    """M182's operator-reviewed legal refs do not promote the revision itself.
+
+    The inputs are live rather than assumed: the revision is ``agent_reviewed``
+    while all four of its legal refs are ``operator_reviewed``, so if reference
+    review promoted a revision this would yield a filing snapshot. It does not.
+
+    This asserted a ``pending_review`` refusal, which the campaign's own stamping
+    of M182 retired. The pending-review path is not lost -- the parametrized
+    sibling drives it on a mutated copy -- so what this one uniquely covers is
+    the PUBLIC ``authority.snapshot`` accessor rather than
+    ``build_validated_snapshot``, and it now asserts the refusal M182 actually
+    earns today.
+    """
     authority = ValidatedRegistryAuthority.load(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
     )
+    revision = authority.modelo("182").revisions["2007-y-siguientes"]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.legal_refs, "the non-promotion claim needs the revision to cite legal refs at all"
+    assert all(
+        authority.catalogues.legal[ref].review_status is LegalReviewStatus.OPERATOR_REVIEWED
+        for ref in revision.legal_refs
+        if ref in authority.catalogues.legal
+    ), "the claim is about OPERATOR-reviewed references failing to promote the revision"
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2007-y-siguientes is 'pending_review'.*operator_reviewed revision",
+        match=r"modelo 182 revision 2007-y-siguientes declares no export layout",
     ):
         authority.snapshot("182", filing_year=2025, period="0A")
 
 
 @pytest.mark.parametrize(
-    ("review_status", "reviewed_by", "reviewed_at"),
+    ("review_status", "reviewed_by", "reviewed_at", "refusal"),
     (
-        (RevisionReviewStatus.PENDING_REVIEW, None, None),
-        (RevisionReviewStatus.AGENT_REVIEWED, "agent-review", date(2026, 8, 1)),
+        (RevisionReviewStatus.PENDING_REVIEW, None, None, r"is 'pending_review'.*requires a reviewed revision"),
+        # Agent review CLEARS the review gate -- see the sibling gate's docstring
+        # for why demanding operator_reviewed was unreachable -- so M182 is
+        # refused one gate later, for the reason that is actually true of it.
+        (RevisionReviewStatus.AGENT_REVIEWED, "agent-review", date(2026, 8, 1), r"declares no export layout"),
     ),
 )
 def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
     review_status: RevisionReviewStatus,
     reviewed_by: str | None,
     reviewed_at: date | None,
+    refusal: str,
 ) -> None:
-    """Both pending and agent review remain typed non-filing revision states."""
+    """Both pending and agent review remain typed non-filing revision states.
+
+    The claim is unchanged; which gate enforces it is not. Each case now names
+    the refusal it actually earns, so a status silently changing gates is a red
+    test rather than a passing one.
+    """
     authority = ValidatedRegistryAuthority.load(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -62,7 +91,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
 
     with pytest.raises(
         RegistryValidationError,
-        match=rf"modelo 182 revision 2007-y-siguientes is '{review_status.value}'.*operator_reviewed revision",
+        match=rf"modelo 182 revision 2007-y-siguientes {refusal}",
     ):
         build_validated_snapshot(
             mutated_modelo,
