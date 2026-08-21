@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:8944eb898db335156a4522f89610e4872032b41e1a11c3c6abc5fb31a691be67'
+body_hash: 'sha256:172ee854d872e7b9857c02877d3aacda48941850c23bdc26bff574fdf7f5a471'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3935,3 +3935,50 @@ once more in a unit lane and passed on the immediate re-run (1552 passed), along
 one-off `test_preflight_accepts_legal_entity_legal_name_for_export_headers` that also
 cleared. Both consistent with the worktree's known concurrent-I/O flakiness on its backing
 share.
+
+### Retraction: the "four executions per worker" figure was my instrument, not the tree
+
+The previous entry closed by naming the next step — find WHEN the duplicate class is
+created. That step was taken, produced a confident-looking answer, and the answer was
+wrong. Recording it because the failure mode is more useful than the result.
+
+**What was measured.** A `sys.meta_path` finder wrapping the target module's loader
+reported that `cadrumo.core.locks_errors` and `cadrumo.core.locks` each executed FOUR
+times per pytest worker, every execution completing without raising. That neatly
+explained duplicate classes and even suggested a mechanism.
+
+**Why it was wrong.** Logging `sys.modules` state at each execution showed
+`target_in_sysmodules=True` on every one, with 86+ cadrumo modules already loaded. The
+module was already imported each time the wrapped loader ran it again. The finder calls
+`importlib.util.find_spec()` to obtain the real spec, and that call imports the parent
+package and lets the target complete an ordinary import; the wrapped loader then executes
+it a second time and overwrites it. **The probe manufactured the duplication it
+reported.**
+
+**The lesson, and it is the second measurement error in two entries.** The previous one
+sampled identity at moments where the answer was legitimately "identical". This one used
+an instrument that MUTATES the system it measures: a `meta_path` finder is not an
+observer, it is a participant in the mechanism under investigation. The campaign already
+carries the rule "confirm the instrument observed something"; the missing half is
+**confirm the instrument did not CAUSE what it observed** — and the check that caught it
+was cheap, one line of state logged beside the event.
+
+**What survives, and why it is trustworthy.** The duplicate class itself is real and was
+established with pure-observation plugins that install no import hooks and only inspect
+objects already present: interrogating the escaping exception gives `isinstance=False`
+against the facade's class, two distinct ids, and exactly one `locks_errors` entry in
+`sys.modules`. Those measurements are independent of the retracted one.
+
+**What is now unknown again:** the cause of that duplication. The failed-import theory was
+disproved (no execution raised, though that evidence came from the contaminated probe and
+should not be leaned on), and the four-execution theory is withdrawn. A future attempt
+should prefer an observer that cannot participate — for example sampling
+`id(sys.modules["cadrumo.core.locks_errors"].LockAcquisitionError)` at many hook points
+and looking for the value to CHANGE, which requires no import machinery at all.
+
+**Unchanged and worth repeating:** production is not affected. A plain interpreter import
+of the storage facade produces one execution and one class, both shipping lanes are green
+(309 integration, 1552 unit), and the anomaly is confined to `--cov` runs spanning both
+packages. Two iterations have now been spent on it; it is a test-harness curiosity with no
+operator-visible consequence, and it should not be picked up again ahead of work that
+changes what the product does.
