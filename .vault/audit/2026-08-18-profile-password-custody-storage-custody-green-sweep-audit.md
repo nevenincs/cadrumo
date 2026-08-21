@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:08c304c6e2528fc32b42d36bf60761bac509013f72a34b8365b56a1104b66f7a'
+body_hash: 'sha256:85c957ec7018cb3468ae76276391bdc3d233461f44087bb069de3190c24051b3'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4388,3 +4388,53 @@ corrected in the two preceding entries stay corrected: no campaign file appears 
 `test_relative_imports_only` or in the import-hygiene gate. The residual failures in both
 name other packages. Domain lanes green at 311 integration and 1573 unit, with nothing of
 this iteration's in the tree, because nothing needed changing.
+
+### The legal retention floor: a known-cost duplication, now a detected divergence
+
+Reached by finally looking at the domain as an OPERATOR meets it rather than through its
+libraries. `aeat config profile delete` turns out to be well shaped for this CLI's stated
+operator: it never prompts. Without `--yes` it runs the full preflight and emits the
+envelope with nothing destroyed, so a destructive verb is dry-run by default and an agent
+that cannot answer a prompt is never blocked by one.
+
+Two guards run before destruction, and the second carries a candid admission worth acting
+on. `_refuse_erase_inside_the_retention_floor` enforces a LEGAL floor -- the
+Administration's four-year review window (Ley 58/2003 LGT art. 66/67) and the matching
+conservation duty (art. 70.2). Its docstring states the risk and then accepts it:
+
+> A third condition added to the retention contract would reach one site and not the
+> other. ... until that happens the duplication is a known cost, not an invariant.
+
+**Measured, and the duplication is wider than the docstring's "one site and the other".**
+The erase decision is expressed at five production sites in four shapes: three in
+`config_reset.py`, one in `_config_reset_repository.py` (written inverted), and the delete
+verb. Four admit `override_approved`; the verb deliberately does not, because it offers no
+override to record.
+
+The shapes differing is fine and the gate does not fight it. What it pins is the shared
+VOCABULARY: every attribute read while deciding an erase must be a declared term. A new
+term at any single site fails and lists every site, so whoever adds one has to decide, per
+site, whether it belongs. That converts the docstring's known cost into a detected
+divergence without forcing a consolidation this campaign does not own -- the real remedy
+is still the shared function the docstring proposes, and it belongs with the config-reset
+surface.
+
+**The detector needed narrowing twice, and both narrowings are real distinctions rather
+than convenience.** It first flagged constructor calls passing `blocks_erase=` as a
+keyword, which name the floor and decide nothing; requiring a boolean operator excludes
+them, because a keyword never sits inside one. It then flagged the assessment model's own
+validator comparing `self.blocks_erase` against `self.retained_record_count` -- the floor
+checking itself for internal consistency, not a surface deciding an erase. Every real
+decision reads the floor from an assessment handed to it, so a marker read off `self` is
+excluded. Neither exclusion was declared as an exemption; both are properties of what a
+decision IS.
+
+Proven against the real verb, not only a sample: adding a third condition to the delete
+verb alone fails the gate, and the synthetic probes cover both directions. Two
+anti-vacuity assertions guard the population -- at least four sites must be found, and the
+delete verb must be among them -- because a renamed marker would empty the scan and clear
+the tree for free.
+
+**Applied this campaign's own standing recommendation for once, unprompted:** the new file
+was checked against the out-of-lane gates before committing, not after being caught by
+them.
