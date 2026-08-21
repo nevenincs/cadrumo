@@ -433,6 +433,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._registration.ProfileRegistrationConflictError",
+        ErrorCode(
+            code="REFUSED_PROFILE_REGISTRATION_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._registration.ProfileRegistrationError",
         ErrorCode(
             code="REFUSED_PROFILE_REGISTRATION",

@@ -47,6 +47,9 @@ _RETRYABLE_BECAUSE: dict[str, str] = {
     "REFUSED_PROFILE_CUSTODY_DISPLACED_SESSION_RETIREMENT": (
         "a displaced session is still retiring; it completes on its own"
     ),
+    "REFUSED_PROFILE_REGISTRATION_CONFLICT": (
+        "registration lost a custody witness race; re-reading and repeating the identical call succeeds"
+    ),
     "REFUSED_PROFILE_LOGIN_THROTTLED": "the backoff window expires by the clock, with nothing for the operator to do",
 }
 

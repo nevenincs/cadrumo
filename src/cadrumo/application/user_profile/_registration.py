@@ -45,7 +45,10 @@ from ..filing import try_record_filing_retention_snapshot
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import create_profile_custody_registration_material
 from ._custody_service import ProfileCustodyDisplacedSessionRetirementError
-from ._custody_transactions import ProfileCustodyTransactionConflictError
+from ._custody_transactions import (
+    ProfileCustodyDuplicateLabelError,
+    ProfileCustodyTransactionConflictError,
+)
 from ._lifecycle import ProfileCapsuleLifecycle
 from ._recovery_custody import enroll_profile_recovery
 from ._validation import reject_invalid_profile_facts
@@ -70,6 +73,22 @@ registration flow; the policy itself is owned by
 
 class ProfileRegistrationError(CadrumoError):
     """Raised when a registration request cannot be honoured as supplied."""
+
+
+class ProfileRegistrationConflictError(ProfileRegistrationError):
+    """Raised when registration lost a race it can win by simply repeating.
+
+    A custody transaction refuses when the witness it captured no longer
+    matches live state, which a re-read resolves -- so the identical call may
+    succeed. That is a different answer to the operator than "this label is
+    taken", which no retry can change, and the two arrive here as the same
+    exception family because the permanent case is a SUBCLASS of the transient
+    one.
+
+    Split as a subclass for the same reason that one was: every existing
+    handler catching :class:`ProfileRegistrationError` keeps catching this,
+    and only the published code and its retryability differ.
+    """
 
 
 class PassphraseAssessment(BaseModel):
@@ -287,10 +306,19 @@ def register_profile_with_credentials(
                 raise ProfileRegistrationError(
                     translated_message="application.user_profile.errors.registration_displaced_session_not_retired",
                 ) from exc
-            except ProfileCustodyTransactionConflictError as exc:
+            except ProfileCustodyDuplicateLabelError as exc:
                 raise ProfileRegistrationError(
                     translated_message="application.user_profile.errors.profile_already_exists",
                     context={"profile": resolved_label},
+                ) from exc
+            except ProfileCustodyTransactionConflictError as exc:
+                # Caught AFTER its duplicate-label subclass: this is the
+                # stale-witness conflict, which a repeat of the identical call
+                # can win. Reporting it as "that label is taken" tells an agent
+                # operator to pick a different name for a profile that does not
+                # exist.
+                raise ProfileRegistrationConflictError(
+                    translated_message="errors.refused.refused_storage_profile_custody",
                 ) from exc
         finally:
             session.close()
