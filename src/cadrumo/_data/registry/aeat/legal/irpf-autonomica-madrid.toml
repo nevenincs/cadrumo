@@ -26,7 +26,14 @@ effective_from = 2020-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
-notes = "DL 1/2010 art. 2 (Comunidad de Madrid): importes propios del mínimo por descendientes para el cálculo del gravamen autonómico (Ley 22/2009 art. 46.1.a). Para 2020-2021 solo divergen el tercer descendiente (4.400 €) y el cuarto y siguientes (4.950 €); el primero, segundo y el suplemento por descendiente menor de tres años coinciden con los importes generales del art. 58 LIRPF. Desde 2022 (Ley 8/2022, con efectos 1-1-2022) Madrid regula también el primero, segundo y el suplemento menor-de-tres-años con cuantías propias, que se han revisado en ejercicios posteriores (Ley 13/2023, con efectos 1-1-2023)."
+notes = """\
+DL 1/2010 art. 2 (Comunidad de Madrid): importes propios del mínimo por descendientes para el \
+cálculo del gravamen autonómico (Ley 22/2009 art. 46.1.a). Para 2020-2021 solo divergen el tercer \
+descendiente (4.400 €) y el cuarto y siguientes (4.950 €); el primero, segundo y el suplemento por \
+descendiente menor de tres años coinciden con los importes generales del art. 58 LIRPF. Desde 2022 \
+(Ley 8/2022, con efectos 1-1-2022) Madrid regula también el primero, segundo y el suplemento \
+menor-de-tres-años con cuantías propias, que se han revisado en ejercicios posteriores (Ley 13/2023, \
+con efectos 1-1-2023)."""
 required_text = [
     "Comunidad de Madrid",
     "mínimo por descendientes",

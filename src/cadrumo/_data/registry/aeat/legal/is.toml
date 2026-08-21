@@ -90,7 +90,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos section de M200."
+notes = """\
+LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. \
+Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 \
+meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las \
+exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y \
+la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones \
+inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos \
+section de M200."""
 required_text = [
     "pérdida por deterioro del valor",
     "deterioro de los créditos",
@@ -477,7 +484,14 @@ consolidated_as_of = 2023-12-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 7 consolidated text 2023-12-20, apartado 12.º RD-ley 6/2023; pending operator re-stamp"
-notes = "Ley 49/2002 art 7: explotaciones económicas exentas del Impuesto sobre Sociedades cuando se desarrollan en cumplimiento del objeto o finalidad específica de la entidad sin fines lucrativos (acción/asistencia social, hospitalización y asistencia sanitaria, I+D+i del art. 35 LIS, bienes de interés cultural y museos, artes escénicas, espacios naturales protegidos, enseñanza y formación, exposiciones y seminarios, edición, deporte, auxiliares/complementarias hasta el 20%, y escasa relevancia con INCN ≤ 20.000 EUR). Su renta es la renta exenta del art. 6.4.º excluida de la base imponible del Modelo 200."
+notes = """\
+Ley 49/2002 art 7: explotaciones económicas exentas del Impuesto sobre Sociedades cuando se \
+desarrollan en cumplimiento del objeto o finalidad específica de la entidad sin fines lucrativos \
+(acción/asistencia social, hospitalización y asistencia sanitaria, I+D+i del art. 35 LIS, bienes de \
+interés cultural y museos, artes escénicas, espacios naturales protegidos, enseñanza y formación, \
+exposiciones y seminarios, edición, deporte, auxiliares/complementarias hasta el 20%, y escasa \
+relevancia con INCN ≤ 20.000 EUR). Su renta es la renta exenta del art. 6.4.º excluida de la base \
+imponible del Modelo 200."""
 required_text = [
     "Artículo 7. Explotaciones económicas exentas.",
     "Están exentas del Impuesto sobre Sociedades las rentas obtenidas por entidades sin fines lucrativos que procedan de las siguientes explotaciones económicas",
@@ -628,7 +642,14 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-26
 reviewed_by = "operator"
-notes = "LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto sobre Sociedades calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo 202 Art. 40.3 frente a la modalidad Art. 40.2."
+notes = """\
+LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto sobre Sociedades \
+calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La \
+modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya \
+superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. \
+La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos \
+el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo \
+202 Art. 40.3 frente a la modalidad Art. 40.2."""
 required_text = [
     "Los pagos fraccionados también podrán realizarse, a opción del contribuyente, sobre la parte de la base imponible",
     "estarán obligados a aplicar la modalidad a que se refiere este apartado",
@@ -660,7 +681,17 @@ effective_from = 2018-07-05
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-prepared; verified against the bundled consolidated text and the AEAT Modelo 202 clave 33 instructions; pending operator re-stamp"
-notes = "LIS disposición adicional decimocuarta (redacción del art. 71 de la Ley 6/2018, BOE-A-2018-9268): pago fraccionado mínimo de la modalidad del art. 40.3 de la LIS. Para contribuyentes cuyo importe neto de la cifra de negocios en los 12 meses anteriores sea al menos 10 millones de euros, la cantidad a ingresar no podrá ser inferior al 23 por ciento (25 por ciento para las entidades a las que resulte de aplicación el tipo del primer párrafo del apartado 6 del art. 29) del resultado positivo de la cuenta de pérdidas y ganancias de los 3, 9 u 11 primeros meses, minorado en los pagos fraccionados anteriores del mismo período impositivo. Funda la casilla 33 del Modelo 202 La redacción originaria del RDL 2/2016 fue anulada por motivos formales por la STC 78/2020; la STC 175/2025 declaró la redacción de la Ley 6/2018 conforme al principio de capacidad económica. (mínimo a ingresar, CN >= 10 millones euros)."
+notes = """\
+LIS disposición adicional decimocuarta (redacción del art. 71 de la Ley 6/2018, BOE-A-2018-9268): \
+pago fraccionado mínimo de la modalidad del art. 40.3 de la LIS. Para contribuyentes cuyo importe \
+neto de la cifra de negocios en los 12 meses anteriores sea al menos 10 millones de euros, la \
+cantidad a ingresar no podrá ser inferior al 23 por ciento (25 por ciento para las entidades a las \
+que resulte de aplicación el tipo del primer párrafo del apartado 6 del art. 29) del resultado \
+positivo de la cuenta de pérdidas y ganancias de los 3, 9 u 11 primeros meses, minorado en los pagos \
+fraccionados anteriores del mismo período impositivo. Funda la casilla 33 del Modelo 202 La \
+redacción originaria del RDL 2/2016 fue anulada por motivos formales por la STC 78/2020; la STC \
+175/2025 declaró la redacción de la Ley 6/2018 conforme al principio de capacidad económica. (mínimo \
+a ingresar, CN >= 10 millones euros)."""
 required_text = [
     "no podrá ser inferior",
     "23 por ciento",
@@ -1250,7 +1281,15 @@ effective_from = 2025-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2025-12818 excerpt art 3; pending operator re-stamp)"
-notes = "Orden HAC/657/2025 is the approving order for the IS declaration models for períodos impositivos iniciados en 2024; article 3 (pago mediante domiciliación bancaria) names Modelos 200 y 220 together, evidencing that the Modelo 220 (declaración anual del grupo fiscal en régimen de consolidación) is one of the IS declaration models this orden approves. The Modelo 220 filing plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales tras los 6 meses posteriores a la conclusión del período impositivo). The dedicated «Se aprueba el modelo 220» clause of art 1 is not carried by the bundled Modelo-200 excerpt; art 3 is the bundled provision naming 220 verbatim."
+notes = """\
+Orden HAC/657/2025 is the approving order for the IS declaration models for períodos impositivos \
+iniciados en 2024; article 3 (pago mediante domiciliación bancaria) names Modelos 200 y 220 \
+together, evidencing that the Modelo 220 (declaración anual del grupo fiscal en régimen de \
+consolidación) is one of the IS declaration models this orden approves. The Modelo 220 filing plazo \
+is the general IS declaration plazo of art. 124.1 LIS (25 días naturales tras los 6 meses \
+posteriores a la conclusión del período impositivo). The dedicated «Se aprueba el modelo 220» clause \
+of art 1 is not carried by the bundled Modelo-200 excerpt; art 3 is the bundled provision naming 220 \
+verbatim."""
 required_text = [
     "Modelos 200 y 220, mediante domiciliación bancaria",
     "desde el día 1 de julio hasta el 22 de julio de 2025",
@@ -1470,7 +1509,14 @@ effective_from = 2015-10-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized"
-notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente en Ley 44/2015 art 13."
+notes = """\
+Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva \
+especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al \
+menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la \
+reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir \
+acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. \
+La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente \
+en Ley 44/2015 art 13."""
 required_text = [
     "reserva especial",
     "diez por ciento del beneficio líquido",
@@ -1492,7 +1538,14 @@ effective_from = 2023-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "Ley 31/2022 Art. 39: modifica el articulo 29 de la Ley 27/2014 LIS para introducir el tipo reducido del 23 por ciento para entidades cuya cifra de negocios del periodo impositivo inmediato anterior sea inferior a 1 millon de euros (entidades de reducida dimension). Aplicable a periodos impositivos iniciados a partir del 1 de enero de 2023. Las entidades sujetas al tipo general del 25 por ciento que cumplan el umbral de cifra de negocios inferior a 1 millon de euros aplican el tipo ERD del 23 por ciento; las cooperativas fiscalmente protegidas y entidades sin fines lucrativos conservan sus tipos especiales."
+notes = """\
+Ley 31/2022 Art. 39: modifica el articulo 29 de la Ley 27/2014 LIS para introducir el tipo reducido \
+del 23 por ciento para entidades cuya cifra de negocios del periodo impositivo inmediato anterior \
+sea inferior a 1 millon de euros (entidades de reducida dimension). Aplicable a periodos impositivos \
+iniciados a partir del 1 de enero de 2023. Las entidades sujetas al tipo general del 25 por ciento \
+que cumplan el umbral de cifra de negocios inferior a 1 millon de euros aplican el tipo ERD del 23 \
+por ciento; las cooperativas fiscalmente protegidas y entidades sin fines lucrativos conservan sus \
+tipos especiales."""
 required_text = [
     "23 por ciento",
     "cifra de negocios del período impositivo inmediato anterior",

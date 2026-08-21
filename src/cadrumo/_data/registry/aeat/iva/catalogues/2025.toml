@@ -56,14 +56,30 @@ manual_references = []
 legal_reference = "ley-37-1992:art-91"
 quoted_text = ""
 grounding = "unresolved"
-unresolved_reason = "art. 91's ONLY 0% provision is apartado Cuatro, restricted to donativos to Ley 49/2002 entities. The category's apparent claim (name, Axis-A row, classifier hint) is a GENERAL domestic 0% rate. Two candidate readings: (a) the category was meant for the donation case and is named too broadly; (b) it was meant for the temporary alimentos-basicos 0% of RDL 20/2022, which is NOT in the bundled corpus and was not chased. Category intent unrecoverable: notes empty, keys opaque. Exports/intra-community supplies are exentas plenas with their own categories (arts. 21, 25) so they are not the referent. NOT grounded: a real quotation here would make a narrow provision read as authorising a general rate."
+unresolved_reason = """\
+art. 91's ONLY 0% provision is apartado Cuatro, restricted to donativos to Ley 49/2002 entities. The \
+category's apparent claim (name, Axis-A row, classifier hint) is a GENERAL domestic 0% rate. Two \
+candidate readings: (a) the category was meant for the donation case and is named too broadly; (b) \
+it was meant for the temporary alimentos-basicos 0% of RDL 20/2022, which is NOT in the bundled \
+corpus and was not chased. Category intent unrecoverable: notes empty, keys opaque. \
+Exports/intra-community supplies are exentas plenas with their own categories (arts. 21, 25) so they \
+are not the referent. NOT grounded: a real quotation here would make a narrow provision read as \
+authorising a general rate."""
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-24"
 quoted_text = ""
 grounding = "unresolved"
-unresolved_reason = "SECOND unresolved citation on this category, and it deepens the first. art. 24 is 'Exenciones relativas a regimenes aduaneros y fiscales' - zona franca, perfeccionamiento activo, depositos aduaneros. It contains NO zero-rate provision (searched: no 'tipo del 0', no 'tipo cero'). So domestic_zero's two citations point at art. 91 (rates, whose only 0% is the Ley 49/2002 donation case) and art. 24 (customs regimes), which are unrelated to each other and neither of which supports a general domestic zero rate. The pattern suggests the category is a grab-bag rather than a treatment with a legal basis - which strengthens the case that its SCOPE is the defect, not its citations."
+unresolved_reason = """\
+SECOND unresolved citation on this category, and it deepens the first. art. 24 is 'Exenciones \
+relativas a regimenes aduaneros y fiscales' - zona franca, perfeccionamiento activo, depositos \
+aduaneros. It contains NO zero-rate provision (searched: no 'tipo del 0', no 'tipo cero'). So \
+domestic_zero's two citations point at art. 91 (rates, whose only 0% is the Ley 49/2002 donation \
+case) and art. 24 (customs regimes), which are unrelated to each other and neither of which supports \
+a general domestic zero rate. The pattern suggests the category is a grab-bag rather than a \
+treatment with a legal basis - which strengthens the case that its SCOPE is the defect, not its \
+citations."""
 retrieval_date = 2026-04-13
 
 [[regulations]]

@@ -106,7 +106,15 @@ reviewed_by = "agent-review"
 # it match the dispositive-content-signal's "articulo N."/"disposicion ..."
 # vocabulary -- both are the same ordinal-word gap. Leaving the field
 # undeclared is honest rather than forcing a mismatched claim.
-notes = "Orden HAC/96/2003: aprueba los disenos fisicos y logicos del modelo 185, informacion mensual que organos y entidades gestores de la Seguridad Social y las Mutualidades estan obligados a suministrar de sus afiliados o mutualistas. Real predecessor of orden-hac-1197-2025 for M185 -- confirmed by BOE search results and by the derogatoria clause in the 2025 orden repealing this one. Fetched via curl, bytes read back from disk before authoring this entry. The bundled consolidated text is marked [Disposicion derogada] since it is now repealed by orden-hac-1197-2025 effective 2026-01-01, but the operative text through that date is fully present and this entry grounds this modelo's 2003-2025 span, not any period after repeal."
+notes = """\
+Orden HAC/96/2003: aprueba los disenos fisicos y logicos del modelo 185, informacion mensual que \
+organos y entidades gestores de la Seguridad Social y las Mutualidades estan obligados a suministrar \
+de sus afiliados o mutualistas. Real predecessor of orden-hac-1197-2025 for M185 -- confirmed by BOE \
+search results and by the derogatoria clause in the 2025 orden repealing this one. Fetched via curl, \
+bytes read back from disk before authoring this entry. The bundled consolidated text is marked \
+[Disposicion derogada] since it is now repealed by orden-hac-1197-2025 effective 2026-01-01, but the \
+operative text through that date is fully present and this entry grounds this modelo's 2003-2025 \
+span, not any period after repeal."""
 required_text = [
     "modelo 185",
     "órganos y entidades gestores de la Seguridad Social",

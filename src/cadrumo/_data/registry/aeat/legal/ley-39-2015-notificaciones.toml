@@ -25,7 +25,21 @@ effective_from = 2016-10-02
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "Gergely Wootsch <hello@gergely-wootsch.com>"
-notes = "Procedencia de la revision: redactado por agente a partir del ley-39-2015-art-43.html incluido, contrastado con el texto consolidado vivo BOE-A-2015-10565 (los seis apartados del art. 43 verbatim; 'dias habiles' y 'quince dias' comprobados como negativos). Adjudicado personalmente por el operador el 2026-08-13 contra el corpus incluido: el apartado 2 del art. 43 dice literalmente 'se entendera rechazada cuando hayan transcurrido diez dias naturales desde la puesta a disposicion de la notificacion sin que se acceda a su contenido', y ambas frases de required_text coinciden verbatim. Ley 39/2015 art. 43.2: regimen de notificaciones por medios electronicos. Una notificacion electronica se entiende practicada en el momento del acceso a su contenido; cuando es de caracter obligatorio o elegida por el interesado, se entiende rechazada -legalmente servida pese a no haberse accedido- transcurridos diez dias naturales desde la puesta a disposicion sin acceso. El plazo corre desde la puesta a disposicion (fecha_notificacion), no desde el acceso (leida). No se ha comprobado de forma exhaustiva la existencia de un plazo de notificacion mas especifico para un procedimiento AEAT concreto que desplace este regimen general; solo se descartaron RD 1363/2010 (remite al regimen general) y LGT art. 112 (notificacion por comparecencia, supuesto distinto)."
+notes = """\
+Procedencia de la revision: redactado por agente a partir del ley-39-2015-art-43.html incluido, \
+contrastado con el texto consolidado vivo BOE-A-2015-10565 (los seis apartados del art. 43 verbatim; \
+'dias habiles' y 'quince dias' comprobados como negativos). Adjudicado personalmente por el operador \
+el 2026-08-13 contra el corpus incluido: el apartado 2 del art. 43 dice literalmente 'se entendera \
+rechazada cuando hayan transcurrido diez dias naturales desde la puesta a disposicion de la \
+notificacion sin que se acceda a su contenido', y ambas frases de required_text coinciden verbatim. \
+Ley 39/2015 art. 43.2: regimen de notificaciones por medios electronicos. Una notificacion \
+electronica se entiende practicada en el momento del acceso a su contenido; cuando es de caracter \
+obligatorio o elegida por el interesado, se entiende rechazada -legalmente servida pese a no haberse \
+accedido- transcurridos diez dias naturales desde la puesta a disposicion sin acceso. El plazo corre \
+desde la puesta a disposicion (fecha_notificacion), no desde el acceso (leida). No se ha comprobado \
+de forma exhaustiva la existencia de un plazo de notificacion mas especifico para un procedimiento \
+AEAT concreto que desplace este regimen general; solo se descartaron RD 1363/2010 (remite al regimen \
+general) y LGT art. 112 (notificacion por comparecencia, supuesto distinto)."""
 required_text = [
     "se entenderán practicadas en el momento en que se produzca el acceso a su contenido",
     "se entenderá rechazada cuando hayan transcurrido diez días naturales desde la puesta a disposición de la notificación sin que se acceda a su contenido",

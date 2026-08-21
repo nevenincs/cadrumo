@@ -24,7 +24,14 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), M720 (bienes en el extranjero), M193 (capital mobiliario)."
+notes = """\
+LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a \
+AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y \
+justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades \
+de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las \
+declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de \
+retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
+M720 (bienes en el extranjero), M193 (capital mobiliario)."""
 required_text = [
     "Obligaciones de información",
     "trascendencia tributaria",

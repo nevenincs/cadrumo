@@ -9,7 +9,18 @@ orden_aplicabilidad = ["orden-1999-11-18:apartado-cuarto"]
 legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-layout", "aeat-dr-194-2023", "aeat-dr-194-2024"]
 review_status = "agent_reviewed"
-reviewed_by = "agent: inspection-grade review; casillas 01-05 read from ANEXO VIII of the Orden de 18-11-1999 (hoja-resumen, two rows split by sign of the base); deadline window is the NOMINAL 1-31 enero grounded in AEAT's Calendario, because the orden's own plazo articles state 1-20 enero (papel) and 1 enero-20 febrero (soporte) and were never amended; full-Diseno casilla-number coverage inapplicable (design text-parsed in full, numbers nothing); the tipo-2 per-perceptor detail is NOT modelled and no export layout is declared NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design year(s) inside this revision's claimed span, so AEAT's published record designs do not evidence the record layout for the years this revision covers; closing that gap needs AEAT acquisition and is NOT something this review does. Stated because it is not a discriminator: 60 of the 80 revisions stamped before 2026-08-21 carry the same flag and none of them name it."
+reviewed_by = """\
+agent: inspection-grade review; casillas 01-05 read from ANEXO VIII of the Orden de 18-11-1999 \
+(hoja-resumen, two rows split by sign of the base); deadline window is the NOMINAL 1-31 enero \
+grounded in AEAT's Calendario, because the orden's own plazo articles state 1-20 enero (papel) and 1 \
+enero-20 febrero (soporte) and were never amended; full-Diseno casilla-number coverage inapplicable \
+(design text-parsed in full, numbers nothing); the tipo-2 per-perceptor detail is NOT modelled and \
+no export layout is declared NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven \
+reports 0 comparable bundled design year(s) inside this revision's claimed span, so AEAT's published \
+record designs do not evidence the record layout for the years this revision covers; closing that \
+gap needs AEAT acquisition and is NOT something this review does. Stated because it is not a \
+discriminator: 60 of the 80 revisions stamped before 2026-08-21 carry the same flag and none of them \
+name it."""
 reviewed_at = 2026-08-21
 
 [revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]

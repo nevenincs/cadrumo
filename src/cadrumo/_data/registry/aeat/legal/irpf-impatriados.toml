@@ -52,7 +52,15 @@ effective_from = 2025-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from BOE-A-2006-20764#a93 art. 93.2.e).2.º redacción vigente; operator to re-stamp"
-notes = "LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen especial de impatriados (Modelo 151): a la parte de la base liquidable correspondiente a las rentas del art. 25.1.f) TRLIRNR (dividendos, intereses, ganancias patrimoniales del ahorro) se le aplica la escala progresiva del ahorro. Redacción vigente (efectos 1-1-2025, disp. final 7.3 Ley 7/2024, BOE-A-2024-26694): 19% hasta 6.000 €, 21% hasta 50.000 €, 23% hasta 200.000 €, 27% hasta 300.000 € y 30% en adelante; cuotas íntegras acumuladas 1.140 / 10.380 / 44.880 / 71.880. Grounded contra el texto consolidado ley-35-2006.html#a93 (tabla verbatim del BOE). Distinta de la escala general plana del número 1.º (24/47)."
+notes = """\
+LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen especial de impatriados (Modelo 151): a la \
+parte de la base liquidable correspondiente a las rentas del art. 25.1.f) TRLIRNR (dividendos, \
+intereses, ganancias patrimoniales del ahorro) se le aplica la escala progresiva del ahorro. \
+Redacción vigente (efectos 1-1-2025, disp. final 7.3 Ley 7/2024, BOE-A-2024-26694): 19% hasta 6.000 \
+€, 21% hasta 50.000 €, 23% hasta 200.000 €, 27% hasta 300.000 € y 30% en adelante; cuotas íntegras \
+acumuladas 1.140 / 10.380 / 44.880 / 71.880. Grounded contra el texto consolidado \
+ley-35-2006.html#a93 (tabla verbatim del BOE). Distinta de la escala general plana del número 1.º \
+(24/47)."""
 required_text = [
     "a la parte de la base liquidable correspondiente a las rentas",
     "44.880",
@@ -74,7 +82,20 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
 corpus_tier = "provision_excerpt"
-notes = "LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen de impatriados, redacción vigente 2023-01-01 a 2024-12-21 (fecha_vigencia per the legislacion-consolidada open-data API), fijada por el art. 63.3 de la Ley 31/2022, de 23 de diciembre (BOE-A-2022-22128), que modifica el apartado 2.e).2.º con efectos 1-1-2023. Un segundo modificador con el MISMO efecto 1-1-2023, la disposición final 3.5 de la Ley 28/2022 de 21 de diciembre (BOE-A-2022-21739), se publicó DOS DÍAS ANTES -- Ley 31/2022 es el texto final para esa fecha. Confirmado por triple cruce: (1) la nota a pie del art. 93 vigente cita expresamente 'el apartado 2.e).2.º' para BOE-A-2022-22128 pero no para BOE-A-2022-21739; (2) act.php?id=BOE-A-2006-20764&p=20230601 sirve los mismos tramos/cuotas acumuladas (0/1.140/10.380/44.880) que esta redacción; (3) el mismo patrón (Ley 31/2022 art. 63.2 gana sobre Ley 28/2022 en la misma fecha) ya está establecido para la escala general del ahorro hermana en ley-35-2006-art-76-2023.html. Cinco tramos: 19% hasta 6.000, 21% hasta 50.000 (1.140), 23% hasta 200.000 (10.380), 27% hasta 300.000 (44.880), 28% en adelante (71.880) -- idéntico a la redacción 2025 salvo el tipo del último tramo (28% frente a 30% desde Ley 7/2024)."
+notes = """\
+LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen de impatriados, redacción vigente 2023-01-01 \
+a 2024-12-21 (fecha_vigencia per the legislacion-consolidada open-data API), fijada por el art. 63.3 \
+de la Ley 31/2022, de 23 de diciembre (BOE-A-2022-22128), que modifica el apartado 2.e).2.º con \
+efectos 1-1-2023. Un segundo modificador con el MISMO efecto 1-1-2023, la disposición final 3.5 de \
+la Ley 28/2022 de 21 de diciembre (BOE-A-2022-21739), se publicó DOS DÍAS ANTES -- Ley 31/2022 es el \
+texto final para esa fecha. Confirmado por triple cruce: (1) la nota a pie del art. 93 vigente cita \
+expresamente 'el apartado 2.e).2.º' para BOE-A-2022-22128 pero no para BOE-A-2022-21739; (2) \
+act.php?id=BOE-A-2006-20764&p=20230601 sirve los mismos tramos/cuotas acumuladas \
+(0/1.140/10.380/44.880) que esta redacción; (3) el mismo patrón (Ley 31/2022 art. 63.2 gana sobre \
+Ley 28/2022 en la misma fecha) ya está establecido para la escala general del ahorro hermana en \
+ley-35-2006-art-76-2023.html. Cinco tramos: 19% hasta 6.000, 21% hasta 50.000 (1.140), 23% hasta \
+200.000 (10.380), 27% hasta 300.000 (44.880), 28% en adelante (71.880) -- idéntico a la redacción \
+2025 salvo el tipo del último tramo (28% frente a 30% desde Ley 7/2024)."""
 required_text = [
     "apartado 2.e).2º por el art. 63.3 de la Ley 31/2022",
     "44.880",

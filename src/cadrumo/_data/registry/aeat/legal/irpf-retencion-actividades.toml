@@ -64,7 +64,26 @@ legal_refs = ["rd-439-2007:art-95"]
 review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = "RIRPF art 95.1 cuarto parrafo: tipo del 7 por ciento sobre los rendimientos satisfechos a colectivos especificos, arm INDEPENDIENTE del inicio de actividad del segundo parrafo. El texto enumera: a) recaudadores municipales; b) mediadores de seguros que utilicen los servicios de auxiliares externos; c) delegados comerciales de la Sociedad Estatal Loterias y Apuestas del Estado; d) contribuyentes que desarrollen actividades incluidas en los grupos 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y en las agrupaciones 01, 02, 03 y 05 de la seccion tercera de las Tarifas del IAE (RDLeg 1175/1990), o cuya contraprestacion derive de una prestacion de servicios que, por cuenta ajena, quedaria incluida en la relacion laboral especial de artistas de artes escenicas, audiovisuales y musicales y de quienes realizan actividades tecnicas o auxiliares necesarias. PRECISION: la letra d) -- y solo la letra d) -- lleva una prueba de ingresos de DOS partes acumulativas: el volumen de rendimientos integros del conjunto de esas actividades en el ejercicio inmediato anterior debe ser inferior a 15.000 euros Y representar mas del 75 por ciento de la suma de los rendimientos integros de actividades economicas y del trabajo. Las letras a), b) y c) no llevan prueba de ingresos alguna. Los grupos IAE NO son un rango 851-869: son la lista enumerada anterior, que excluye 854, 855, 856, 857, 858, 859, 860, 863, 865, 866, 867 y 868. Esta entrada existe porque el 0,07 no es exclusivo del arm de inicio: sin ella, una retencion del 7 por ciento soportada por un recaudador municipal solo podia citar el parametro del inicio, es decir la provision VECINA y no la que fija el valor, contra registry-calculation-legal-grounding. Contrastado verbatim contra el texto consolidado empaquetado rd-439-2007-art-95.html."
+notes = """\
+RIRPF art 95.1 cuarto parrafo: tipo del 7 por ciento sobre los rendimientos satisfechos a colectivos \
+especificos, arm INDEPENDIENTE del inicio de actividad del segundo parrafo. El texto enumera: a) \
+recaudadores municipales; b) mediadores de seguros que utilicen los servicios de auxiliares \
+externos; c) delegados comerciales de la Sociedad Estatal Loterias y Apuestas del Estado; d) \
+contribuyentes que desarrollen actividades incluidas en los grupos 851, 852, 853, 861, 862, 864 y \
+869 de la seccion segunda y en las agrupaciones 01, 02, 03 y 05 de la seccion tercera de las Tarifas \
+del IAE (RDLeg 1175/1990), o cuya contraprestacion derive de una prestacion de servicios que, por \
+cuenta ajena, quedaria incluida en la relacion laboral especial de artistas de artes escenicas, \
+audiovisuales y musicales y de quienes realizan actividades tecnicas o auxiliares necesarias. \
+PRECISION: la letra d) -- y solo la letra d) -- lleva una prueba de ingresos de DOS partes \
+acumulativas: el volumen de rendimientos integros del conjunto de esas actividades en el ejercicio \
+inmediato anterior debe ser inferior a 15.000 euros Y representar mas del 75 por ciento de la suma \
+de los rendimientos integros de actividades economicas y del trabajo. Las letras a), b) y c) no \
+llevan prueba de ingresos alguna. Los grupos IAE NO son un rango 851-869: son la lista enumerada \
+anterior, que excluye 854, 855, 856, 857, 858, 859, 860, 863, 865, 866, 867 y 868. Esta entrada \
+existe porque el 0,07 no es exclusivo del arm de inicio: sin ella, una retencion del 7 por ciento \
+soportada por un recaudador municipal solo podia citar el parametro del inicio, es decir la \
+provision VECINA y no la que fija el valor, contra registry-calculation-legal-grounding. Contrastado \
+verbatim contra el texto consolidado empaquetado rd-439-2007-art-95.html."""
 
 # Sectoral rates, apartados 4, 5 and 6.1 of the same article. Added 2026-08-07
 # after the M130 retencion advisory showed that grounding only the art. 95.1
@@ -163,7 +182,16 @@ legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
 review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = "Selecciona el tipo profesional del art 95.1 (15 por ciento general, 7 por ciento inicio). El puente es el apartado 2.a): 'se consideraran comprendidos entre los rendimientos de actividades profesionales: a) En general, los derivados del ejercicio de las actividades incluidas en las Secciones Segunda y Tercera de las Tarifas del Impuesto sobre Actividades Economicas'. La Seccion Segunda es la de actividades profesionales, que el M036 codifica como A05 Profesionales, y la Seccion Tercera es la de actividades artisticas, que el M036 codifica como A04 Artisticas y Deportivas. Sin el apartado 2 la correspondencia A04 seria una inferencia; con el es texto. El excerpt empaquetado se extendio con los apartados 2 y 3 en el mismo commit que esta entrada, porque paraba en el apartado 1 y saltaba al 4."
+notes = """\
+Selecciona el tipo profesional del art 95.1 (15 por ciento general, 7 por ciento inicio). El puente \
+es el apartado 2.a): 'se consideraran comprendidos entre los rendimientos de actividades \
+profesionales: a) En general, los derivados del ejercicio de las actividades incluidas en las \
+Secciones Segunda y Tercera de las Tarifas del Impuesto sobre Actividades Economicas'. La Seccion \
+Segunda es la de actividades profesionales, que el M036 codifica como A05 Profesionales, y la \
+Seccion Tercera es la de actividades artisticas, que el M036 codifica como A04 Artisticas y \
+Deportivas. Sin el apartado 2 la correspondencia A04 seria una inferencia; con el es texto. El \
+excerpt empaquetado se extendio con los apartados 2 y 3 en el mismo commit que esta entrada, porque \
+paraba en el apartado 1 y saltaba al 4."""
 
 [parameters."rirpf-art-95:selector-m036-actividades-agricolas-ganaderas"]
 evidence_tier = "legal_authority"
@@ -196,7 +224,18 @@ legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
 review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = "HUECO DECLARADO, no un olvido: el conjunto esta vacio a proposito. El art 95.4.1 fija el 1 por ciento para las actividades ganaderas de engorde de porcino y avicultura especificamente, y la tabla del M036 no llega a ese grano: su codigo ganadero mas fino es B02 Ganadera, con A02 Ganaderia independiente al lado, y ninguno aisla porcino ni avicultura. Un contribuyente acogido al carve-out es indistinguible de cualquier otro ganadero sobre este eje. Se declara vacio en vez de omitirse para que la ausencia sea legible: omitirlo dejaria creer que el eje del M036 particiona el art 95 por completo, que es exactamente la lectura que llevaria a aplicar el 2 por ciento general a un engordador. El discriminante tendria que venir de otra autoridad; el epigrafe IAE es el candidato obvio y no sirve, porque la propia instruccion del M036 dice que el epigrafe solo se cumplimenta 'para las actividades comprendidas dentro de los codigos de actividad A01, A02, A03, A04 y A05', es decir nunca para un filer de la serie B."
+notes = """\
+HUECO DECLARADO, no un olvido: el conjunto esta vacio a proposito. El art 95.4.1 fija el 1 por \
+ciento para las actividades ganaderas de engorde de porcino y avicultura especificamente, y la tabla \
+del M036 no llega a ese grano: su codigo ganadero mas fino es B02 Ganadera, con A02 Ganaderia \
+independiente al lado, y ninguno aisla porcino ni avicultura. Un contribuyente acogido al carve-out \
+es indistinguible de cualquier otro ganadero sobre este eje. Se declara vacio en vez de omitirse \
+para que la ausencia sea legible: omitirlo dejaria creer que el eje del M036 particiona el art 95 \
+por completo, que es exactamente la lectura que llevaria a aplicar el 2 por ciento general a un \
+engordador. El discriminante tendria que venir de otra autoridad; el epigrafe IAE es el candidato \
+obvio y no sirve, porque la propia instruccion del M036 dice que el epigrafe solo se cumplimenta \
+'para las actividades comprendidas dentro de los codigos de actividad A01, A02, A03, A04 y A05', es \
+decir nunca para un filer de la serie B."""
 
 # Activity set for the art. 110.1.c agrarian pago fraccionado. Added 2026-08-07.
 #
@@ -231,7 +270,17 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-1274-2007:art-1"]
 review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = "Codigos del Modelo 036 cuyo volumen de ingresos alimenta la casilla 05 del Modelo 131 (pago fraccionado agrario del art 110.1.c, 2 por ciento, calculado en la casilla 06). B01 Agricola, B02 Ganadera y B03 Forestal son directos; A02 Ganaderia independiente entra porque el art 95.4 la incluye expresamente entre las actividades agricolas y ganaderas y el art 110 no la excluye. Pesquera queda FUERA de este selector pese a que el art 110.1.c la nombra: las instrucciones AEAT del Modelo 131 situan el bloque de la casilla 05 bajo actividades agricolas, ganaderas y forestales y no mencionan pesqueras en ningun punto, porque el Modelo 131 es estimacion objetiva y la pesca no figura en el regimen de modulos. Un consumidor del art 110.1.c fuera de estimacion objetiva necesitaria su propio selector con pesquera y tendria que resolver entonces si B04 Produccion de mejillon queda dentro; aqui no se resuelve."
+notes = """\
+Codigos del Modelo 036 cuyo volumen de ingresos alimenta la casilla 05 del Modelo 131 (pago \
+fraccionado agrario del art 110.1.c, 2 por ciento, calculado en la casilla 06). B01 Agricola, B02 \
+Ganadera y B03 Forestal son directos; A02 Ganaderia independiente entra porque el art 95.4 la \
+incluye expresamente entre las actividades agricolas y ganaderas y el art 110 no la excluye. \
+Pesquera queda FUERA de este selector pese a que el art 110.1.c la nombra: las instrucciones AEAT \
+del Modelo 131 situan el bloque de la casilla 05 bajo actividades agricolas, ganaderas y forestales \
+y no mencionan pesqueras en ningun punto, porque el Modelo 131 es estimacion objetiva y la pesca no \
+figura en el regimen de modulos. Un consumidor del art 110.1.c fuera de estimacion objetiva \
+necesitaria su propio selector con pesquera y tendria que resolver entonces si B04 Produccion de \
+mejillon queda dentro; aqui no se resuelve."""
 
 [parameters."rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"]
 evidence_tier = "legal_authority"
@@ -242,4 +291,11 @@ legal_refs = ["rd-439-2007:art-110"]
 review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
-notes = "Conceptos de ingreso que el art 110.1.c excluye del volumen de ingresos del trimestre: 'excluidas las subvenciones de capital y las indemnizaciones'. Las instrucciones AEAT del Modelo 131 lo enuncian ademas por el lado positivo para la casilla 05: 'incluidas las subvenciones corrientes y excluidas las subvenciones de capital y las indemnizaciones'. La distincion corre DENTRO de las subvenciones -- corriente entra, de capital no -- por lo que ninguna regla basada en la palabra subvencion acierta con las dos. Se declara como parametro para que el conjunto excluido sea dato del registro y no una lista repetida en el codigo."
+notes = """\
+Conceptos de ingreso que el art 110.1.c excluye del volumen de ingresos del trimestre: 'excluidas \
+las subvenciones de capital y las indemnizaciones'. Las instrucciones AEAT del Modelo 131 lo \
+enuncian ademas por el lado positivo para la casilla 05: 'incluidas las subvenciones corrientes y \
+excluidas las subvenciones de capital y las indemnizaciones'. La distincion corre DENTRO de las \
+subvenciones -- corriente entra, de capital no -- por lo que ninguna regla basada en la palabra \
+subvencion acierta con las dos. Se declara como parametro para que el conjunto excluido sea dato del \
+registro y no una lista repetida en el codigo."""

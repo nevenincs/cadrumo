@@ -293,7 +293,20 @@ consolidated_as_of = 2023-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que se dediquen al trafico internacional, operaciones con organismos internacionales y misiones diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE open-data article endpoint (12 redacciones): first vigencia 19930101 by BOE-A-1992-28740 (the law itself), last 20230101 by BOE-A-2022-22128. The article has therefore been in force continuously since 1993 and DID govern every earlier ejercicio; effective_from previously recorded the CURRENT REDACTION's start instead, which made the devengo check refuse correctly-grounded pre-2023 revisions such as modelo 390 2022. Sibling art-21 has an IDENTICAL history -- same first vigencia, same last amending norm -- and records 1993-01-01, so the two entries contradicted each other. effective_from is the article's entry into force; consolidated_as_of carries the bundled excerpt's redaction date, which is what the old value was really describing."
+notes = """\
+LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y \
+servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que \
+se dediquen al trafico internacional, operaciones con organismos internacionales y misiones \
+diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento \
+M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE open-data article endpoint (12 \
+redacciones): first vigencia 19930101 by BOE-A-1992-28740 (the law itself), last 20230101 by \
+BOE-A-2022-22128. The article has therefore been in force continuously since 1993 and DID govern \
+every earlier ejercicio; effective_from previously recorded the CURRENT REDACTION's start instead, \
+which made the devengo check refuse correctly-grounded pre-2023 revisions such as modelo 390 2022. \
+Sibling art-21 has an IDENTICAL history -- same first vigencia, same last amending norm -- and \
+records 1993-01-01, so the two entries contradicted each other. effective_from is the article's \
+entry into force; consolidated_as_of carries the bundled excerpt's redaction date, which is what the \
+old value was really describing."""
 required_text = [
     "Exenciones en las operaciones asimiladas a las exportaciones",
     "los buques aptos para navegar por alta mar",
@@ -313,7 +326,16 @@ consolidated_as_of = 2020-03-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta intracomunitaria en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE open-data article endpoint (6 redacciones): first vigencia 19930101 by BOE-A-1992-28740, last 20200301 by BOE-A-2020-1651. Same authoring inconsistency corrected as on art-22: effective_from had recorded the current redaction's start rather than the article's entry into force. Not blocking any revision today, corrected for consistency so the two do not drift apart again."
+notes = """\
+LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas \
+intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro \
+Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la \
+operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta \
+intracomunitaria en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE \
+open-data article endpoint (6 redacciones): first vigencia 19930101 by BOE-A-1992-28740, last \
+20200301 by BOE-A-2020-1651. Same authoring inconsistency corrected as on art-22: effective_from had \
+recorded the current redaction's start rather than the article's entry into force. Not blocking any \
+revision today, corrected for consistency so the two do not drift apart again."""
 required_text = [
     "Exenciones en las entregas de bienes destinados a otro Estado miembro",
     "expedidos o transportados, por el vendedor, por el adquirente o por un tercero",

@@ -28,7 +28,15 @@ source_refs = [
     "enrolled-modelo-576-layout",
 ]
 review_status = "agent_reviewed"
-reviewed_by = "agent: applicability-grade review; 60 export fields verified to tile positions 1-1517 exactly once with no gap or overlap; 42 casillas against the bundled diseno; deadline absence is the cited event-relative plazo, not an omission; design evidence begins 2008 and filing year 2007 is NOT evidenced NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design year(s) inside this revision's claimed span, so AEAT's published record designs do not evidence the record layout for the years this revision covers; closing that gap needs AEAT acquisition and is NOT something this review does. Stated because it is not a discriminator: 60 of the 80 revisions stamped before 2026-08-21 carry the same flag and none of them name it."
+reviewed_by = """\
+agent: applicability-grade review; 60 export fields verified to tile positions 1-1517 exactly once \
+with no gap or overlap; 42 casillas against the bundled diseno; deadline absence is the cited \
+event-relative plazo, not an omission; design evidence begins 2008 and filing year 2007 is NOT \
+evidenced NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable \
+bundled design year(s) inside this revision's claimed span, so AEAT's published record designs do \
+not evidence the record layout for the years this revision covers; closing that gap needs AEAT \
+acquisition and is NOT something this review does. Stated because it is not a discriminator: 60 of \
+the 80 revisions stamped before 2026-08-21 carry the same flag and none of them name it."""
 reviewed_at = 2026-08-21
 
 [revisions."2007-y-siguientes".family_dispositions.casilla_continuidad_evolutions]

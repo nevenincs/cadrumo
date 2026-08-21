@@ -27,7 +27,28 @@ orden_aplicabilidad = [
     "orden-hac-1504-2024:df-unica",
 ]
 review_status = "agent_reviewed"
-reviewed_by = "agent: applicability-grade review of the monedas virtuales en el extranjero informativa. VERIFIED -- WHEN DUE: orden-hfp-886-2023 art. 4 reads verbatim in the bundled corpus \"La presentacion del modelo 721 ... se realizara entre el 1 de enero y el 31 de marzo del ano siguiente a aquel al que se refiera la informacion a suministrar\", and all three declared windows reproduce it exactly (filing 2023 -> 2024-01-01/2024-03-31, 2024 -> 2025-01-01/2025-03-31, 2025 -> 2026-01-01/2026-03-31), each stored NOMINAL with no pre-shift. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, \"Se aprueba el Modelo 721 «Declaracion informativa sobre monedas virtuales situadas en el extranjero» cuyos disenos fisicos y logicos figuran en el anexo de esta Orden\", and it carries NO year bound, so this revision's open-ended 2023-y-siguientes claim does not outrun its orden; the chain is extended past the founding orden by orden-hac-1504-2024 art. 9 and df-unica, which is why this revision does not share the modelo 200/220 defect. NOT CLAIMED -- independent_check_coverage is 0.0000 meaning NO CLAIM, not zero: no value here was checked against an independent AEAT oracle. NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design year(s) inside this claimed span. The disenos fisicos y logicos exist in the ORDEN'S OWN ANEXO per art. 1 and the revision cites the BOE layouts, but no diseno de registro file is bundled for any year inside the span, so the record layout is not corpus-proven here. Stated because it is not a discriminator: most already-stamped revisions carry this same flag. NOT CLAIMED -- no export layout is declared, neither fixed-width nor xml dictionary, and the per-moneda-virtual detail rows are not modelled; this review reaches scheduling and applicability only, which is exactly what the applicability rung asserts. NOT CLAIMED -- all 3 locales are complete for the 7 labels, but the translated strings were not audited for accuracy."
+reviewed_by = """\
+agent: applicability-grade review of the monedas virtuales en el extranjero informativa. VERIFIED -- \
+WHEN DUE: orden-hfp-886-2023 art. 4 reads verbatim in the bundled corpus "La presentacion del modelo \
+721 ... se realizara entre el 1 de enero y el 31 de marzo del ano siguiente a aquel al que se \
+refiera la informacion a suministrar", and all three declared windows reproduce it exactly (filing \
+2023 -> 2024-01-01/2024-03-31, 2024 -> 2025-01-01/2025-03-31, 2025 -> 2026-01-01/2026-03-31), each \
+stored NOMINAL with no pre-shift. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, "Se \
+aprueba el Modelo 721 «Declaracion informativa sobre monedas virtuales situadas en el extranjero» \
+cuyos disenos fisicos y logicos figuran en el anexo de esta Orden", and it carries NO year bound, so \
+this revision's open-ended 2023-y-siguientes claim does not outrun its orden; the chain is extended \
+past the founding orden by orden-hac-1504-2024 art. 9 and df-unica, which is why this revision does \
+not share the modelo 200/220 defect. NOT CLAIMED -- independent_check_coverage is 0.0000 meaning NO \
+CLAIM, not zero: no value here was checked against an independent AEAT oracle. NOT CLAIMED -- SPAN: \
+test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design year(s) inside \
+this claimed span. The disenos fisicos y logicos exist in the ORDEN'S OWN ANEXO per art. 1 and the \
+revision cites the BOE layouts, but no diseno de registro file is bundled for any year inside the \
+span, so the record layout is not corpus-proven here. Stated because it is not a discriminator: most \
+already-stamped revisions carry this same flag. NOT CLAIMED -- no export layout is declared, neither \
+fixed-width nor xml dictionary, and the per-moneda-virtual detail rows are not modelled; this review \
+reaches scheduling and applicability only, which is exactly what the applicability rung asserts. NOT \
+CLAIMED -- all 3 locales are complete for the 7 labels, but the translated strings were not audited \
+for accuracy."""
 reviewed_at = 2026-08-21
 
 [revisions."2023-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
