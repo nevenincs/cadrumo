@@ -191,20 +191,6 @@ modelo:
                   income
           field:
             label: Modelo 193, tax year 2024
-        2024-y-siguientes:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              label: Total withholding base and advance-payment base
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: Total withholdings and advance payments
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              label: Total number of recipients
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: null
-          field:
-            label: null
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:

@@ -14,40 +14,9 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
-            x-chim6r1ed5mn0rriehiiqt3fehgmo:
-              help: Importe y/o valoración total de los donativos, donaciones y aportaciones
-                declarados. El diseño lo divide en parte entera y parte decimal.
-              label: IMPORTE Y/O VALORACIÓN DE LOS DONATIVOS
-            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: 'Naturaleza del declarante: 1 entidad beneficiaria del Título
-                III de la Ley 49/2002, 2 fundación legalmente reconocida que rinde
-                cuentas, 3 titular o administrador de un patrimonio protegido, 4 partido
-                político, federación o coalición.'
-              label: NATURALEZA DEL DECLARANTE
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: Número de justificante de 13 posiciones que identifica esta declaración.
-              label: NÚMERO DE JUSTIFICANTE DE LA DECLARACIÓN
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: Tipo de soporte en el que se presenta la declaración.
-              label: TIPO DE SOPORTE
-            x-chim6r1eehnn8obc5li6aorcc5p62p3fec:
-              help: Número total de registros de tipo 2 (declarados) incluidos en
-                la declaración.
-              label: NÚMERO TOTAL DE REGISTROS DE DECLARADOS
-            x-ehkn0rpi5phmoobmck:
-              help: Clave del donativo, donación o aportación según el detalle del
-                diseño de registro.
-              label: CLAVE
-            x-ehkn0rpi5phmup39ctniqs3idtr6irj3d5gg:
-              help: Código de dos dígitos de la provincia del declarado.
-              label: CÓDIGO PROVINCIA
-            x-ehkn0rpi5pi6ap3lcdhmirre5lhm6ob1:
-              help: Código de la comunidad autónoma cuya deducción resulta aplicable
-                al donativo.
-              label: DEDUCCIÓN COM. AUTÓNOMA
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
               help: null
               label: NIF del donante (persona fisica, juridica o entidad sin fines
@@ -55,53 +24,18 @@ modelo:
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
               help: null
               label: Apellidos y nombre, o razon social, del donante
-            x-ehkn0rpi5pimkpbicdkm6qbf5li6urj1cdkmurhde9incrr3c5i62:
-              help: Ejercicio de cuatro cifras en que se efectuó la donación revocada.
-              label: EJERCICIO EN QUE SE EFECTUÓ LA DONACIÓN REVOCADA
-            x-ehkn0rpi5pimsbb5edo6aor9ck:
-              help: Indica si el donativo, aportación o disposición se efectuó en
-                especie.
-              label: DONATIVO, APORTACIÓN O DISPOSICIÓN EN ESPECIE
-            x-ehkn0rpi5pkm8pbeehkmcqb3c5hmirre5lh6ipbe:
-              help: Identificación del bien donado, para los donativos en especie.
-              label: IDENTIFICACIÓN DEL BIEN
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
               help: null
               label: Importe del donativo, donacion o aportacion recibida en el ejercicio
                 (sin signo, en euros)
-            x-ehkn0rpi5pn62t3le9gmopbqc4mm8pb3dhgn4ob4ds:
-              help: 'Naturaleza del declarado para las claves A o B: F persona física,
-                J persona jurídica, E entidad en régimen de atribución de rentas.'
-              label: NATURALEZA DEL DECLARADO
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsqb6:
-              help: NIF del titular del patrimonio protegido al que se refiere la
-                aportación o disposición.
-              label: N.I.F. DEL TITULAR DEL PATRIMONIO PROTEGIDO
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsrrdc9p6a:
-              help: Apellidos y nombre del titular del patrimonio protegido.
-              label: APELLIDOS Y NOMBRE DEL TITULAR DEL PATRIMONIO PROTEGIDO
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
               help: null
               label: Porcentaje de deduccion aplicable al donativo (regimen fiscal
                 del donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)
-            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdomm6or1c4:
-              help: Porcentaje de deducción autonómica aplicable. El diseño lo divide
-                en parte entera y parte decimal, y se consignan ceros cuando no tiene.
-              label: '% DE DEDUCCIÓN COM. AUTÓNOMA'
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
               help: null
               label: Indicador de donativo recurrente (donativo plurianual a la misma
                 entidad donataria, dos o mas ejercicios consecutivos)
-            x-ehkn0rpi5pp6as3iclpmarjkc5n78p9ddhimeobc5ln6ipg:
-              help: NIF del representante legal del declarado, cuando el declarado
-                sea menor de edad o esté incapacitado.
-              label: N.I.F. DEL REPRESENTANTE LEGAL
-            x-ehkn0rpi5pp6atjfcdgm6qbfdo:
-              help: Indica que el donativo declarado ha sido revocado.
-              label: REVOCACIÓN
-            x-ehkn0rpi5pq6is3f5lh6ipbe:
-              help: Tipo del bien donado, para los donativos en especie.
-              label: TIPO DE BIEN
           construct:
             modelo-182-informative:
               field:

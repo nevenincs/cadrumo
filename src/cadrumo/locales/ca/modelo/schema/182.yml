@@ -10,40 +10,9 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
-            x-chim6r1ed5mn0rriehiiqt3fehgmo:
-              help: Import i/o valoració total dels donatius, donacions i aportacions
-                declarats. El disseny el divideix en part entera i part decimal.
-              label: IMPORT I/O VALORACIÓ DELS DONATIUS
-            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: 'Naturalesa del declarant: 1 entitat beneficiària del Títol III
-                de la Llei 49/2002, 2 fundació legalment reconeguda que ret comptes,
-                3 titular o administrador d''un patrimoni protegit, 4 partit polític,
-                federació o coalició.'
-              label: NATURALESA DEL DECLARANT
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: Número de justificant de 13 posicions que identifica aquesta declaració.
-              label: NÚMERO DE JUSTIFICANT DE LA DECLARACIÓ
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: Tipus de suport en què es presenta la declaració.
-              label: TIPUS DE SUPORT
-            x-chim6r1eehnn8obc5li6aorcc5p62p3fec:
-              help: Nombre total de registres de tipus 2 (declarats) inclosos en la
-                declaració.
-              label: NOMBRE TOTAL DE REGISTRES DE DECLARATS
-            x-ehkn0rpi5phmoobmck:
-              help: Clau del donatiu, donació o aportació segons el detall del disseny
-                de registre.
-              label: CLAU
-            x-ehkn0rpi5phmup39ctniqs3idtr6irj3d5gg:
-              help: Codi de dos dígits de la província del declarat.
-              label: CODI DE PROVÍNCIA
-            x-ehkn0rpi5pi6ap3lcdhmirre5lhm6ob1:
-              help: Codi de la comunitat autònoma la deducció de la qual resulta aplicable
-                al donatiu.
-              label: DEDUCCIÓ COM. AUTÒNOMA
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
               help: null
               label: NIF del donant (persona física, jurídica o entitat sense finalitats
@@ -51,53 +20,18 @@ modelo:
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
               help: null
               label: Cognoms i nom, o raó social, del donant
-            x-ehkn0rpi5pimkpbicdkm6qbf5li6urj1cdkmurhde9incrr3c5i62:
-              help: Exercici de quatre xifres en què es va efectuar la donació revocada.
-              label: EXERCICI EN QUÈ ES VA EFECTUAR LA DONACIÓ REVOCADA
-            x-ehkn0rpi5pimsbb5edo6aor9ck:
-              help: Indica si el donatiu, aportació o disposició es va efectuar en
-                espècie.
-              label: DONATIU, APORTACIÓ O DISPOSICIÓ EN ESPÈCIE
-            x-ehkn0rpi5pkm8pbeehkmcqb3c5hmirre5lh6ipbe:
-              help: Identificació del bé donat, per als donatius en espècie.
-              label: IDENTIFICACIÓ DEL BÉ
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
               help: null
               label: Import del donatiu, donació o aportació rebuda en l'exercici
                 (sense signe, en euros)
-            x-ehkn0rpi5pn62t3le9gmopbqc4mm8pb3dhgn4ob4ds:
-              help: 'Naturalesa del declarat per a les claus A o B: F persona física,
-                J persona jurídica, E entitat en règim d''atribució de rendes.'
-              label: NATURALESA DEL DECLARAT
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsqb6:
-              help: NIF del titular del patrimoni protegit a què es refereix l'aportació
-                o disposició.
-              label: NIF DEL TITULAR DEL PATRIMONI PROTEGIT
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsrrdc9p6a:
-              help: Cognoms i nom del titular del patrimoni protegit.
-              label: COGNOMS I NOM DEL TITULAR DEL PATRIMONI PROTEGIT
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
               help: null
               label: Percentatge de deducció aplicable al donatiu (règim fiscal del
                 donant, art. 68.3 LIRPF / règim especial Llei 49/2002)
-            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdomm6or1c4:
-              help: Percentatge de deducció autonòmica aplicable. El disseny el divideix
-                en part entera i part decimal, i s'hi consignen zeros quan no en té.
-              label: '% DE DEDUCCIÓ COM. AUTÒNOMA'
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
               help: null
               label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
                 entitat donatària, dos o més exercicis consecutius)
-            x-ehkn0rpi5pp6as3iclpmarjkc5n78p9ddhimeobc5ln6ipg:
-              help: NIF del representant legal del declarat, quan el declarat sigui
-                menor d'edat o estigui incapacitat.
-              label: NIF DEL REPRESENTANT LEGAL
-            x-ehkn0rpi5pp6atjfcdgm6qbfdo:
-              help: Indica que el donatiu declarat ha estat revocat.
-              label: REVOCACIÓ
-            x-ehkn0rpi5pq6is3f5lh6ipbe:
-              help: Tipus del bé donat, per als donatius en espècie.
-              label: TIPUS DE BÉ
           construct:
             modelo-182-informative:
               field:

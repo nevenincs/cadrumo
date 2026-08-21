@@ -187,20 +187,6 @@ modelo:
                 title: Model 193 resum anual de retencions sobre capital mobiliari
           field:
             label: Model 193, exercici 2024
-        2024-y-siguientes:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              label: Base total de retencions i ingressos a compte
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: Retencions i ingressos a compte totals
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              label: Nombre total de perceptors
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: null
-          field:
-            label: null
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:

@@ -186,20 +186,6 @@ modelo:
                 title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
           field:
             label: 193-as modelo, 2024. adóév
-        2024-y-siguientes:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              label: A visszatartások és előlegfizetések teljes alapja
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: A visszatartások és előlegfizetések teljes összege
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              label: A kedvezményezettek teljes száma
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: null
-          field:
-            label: null
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:

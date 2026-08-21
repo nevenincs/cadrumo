@@ -10,41 +10,9 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return refers to
-            x-chim6r1ed5mn0rriehiiqt3fehgmo:
-              help: Total amount and/or valuation of the declared donations, gifts
-                and contributions. The design splits it into an integer and a decimal
-                part.
-              label: AMOUNT AND/OR VALUATION OF THE DONATIONS
-            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: 'Nature of the declarant: 1 entity benefiting under Title III
-                of Law 49/2002, 2 legally recognised foundation that reports accounts,
-                3 holder or administrator of a protected estate, 4 political party,
-                federation or coalition.'
-              label: NATURE OF THE DECLARANT
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: Thirteen-position receipt number identifying this return.
-              label: RECEIPT NUMBER OF THE RETURN
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Type of return (original / replacement / supplementary)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: Medium on which the return is submitted.
-              label: MEDIUM TYPE
-            x-chim6r1eehnn8obc5li6aorcc5p62p3fec:
-              help: Total number of type 2 (reported person) records included in the
-                return.
-              label: TOTAL NUMBER OF REPORTED-PERSON RECORDS
-            x-ehkn0rpi5phmoobmck:
-              help: Code of the donation, gift or contribution, per the record design's
-                list.
-              label: CODE
-            x-ehkn0rpi5phmup39ctniqs3idtr6irj3d5gg:
-              help: Two-digit code of the reported person's province.
-              label: PROVINCE CODE
-            x-ehkn0rpi5pi6ap3lcdhmirre5lhm6ob1:
-              help: Code of the autonomous community whose deduction applies to the
-                donation.
-              label: AUTONOMOUS-COMMUNITY DEDUCTION
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
               help: null
               label: Donor's NIF (individual, legal entity, or the reference non-profit
@@ -52,54 +20,18 @@ modelo:
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
               help: null
               label: Donor's surname and first name, or company name
-            x-ehkn0rpi5pimkpbicdkm6qbf5li6urj1cdkmurhde9incrr3c5i62:
-              help: Four-digit year in which the revoked donation was made.
-              label: YEAR IN WHICH THE REVOKED DONATION WAS MADE
-            x-ehkn0rpi5pimsbb5edo6aor9ck:
-              help: Indicates whether the donation, contribution or disposal was made
-                in kind.
-              label: DONATION, CONTRIBUTION OR DISPOSAL IN KIND
-            x-ehkn0rpi5pkm8pbeehkmcqb3c5hmirre5lh6ipbe:
-              help: Identification of the donated asset, for donations in kind.
-              label: IDENTIFICATION OF THE ASSET
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
               help: null
               label: Amount of the donation or contribution received in the tax year
                 (unsigned, in euros)
-            x-ehkn0rpi5pn62t3le9gmopbqc4mm8pb3dhgn4ob4ds:
-              help: 'Nature of the reported person for codes A or B: F natural person,
-                J legal person, E income-attribution entity.'
-              label: NATURE OF THE REPORTED PERSON
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsqb6:
-              help: NIF of the holder of the protected estate the contribution or
-                disposal relates to.
-              label: NIF OF THE PROTECTED-ESTATE HOLDER
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsrrdc9p6a:
-              help: Surnames and first name of the protected-estate holder.
-              label: SURNAMES AND FIRST NAME OF THE PROTECTED-ESTATE HOLDER
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
               help: null
               label: Deduction percentage applicable to the donation (donor's tax
                 regime, art. 68.3 LIRPF / special regime Ley 49/2002)
-            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdomm6or1c4:
-              help: Applicable autonomous-community deduction percentage. The design
-                splits it into an integer and a decimal part, filled with zeros when
-                absent.
-              label: '% OF AUTONOMOUS-COMMUNITY DEDUCTION'
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
               help: null
               label: Recurring donation indicator (multi-year donation to the same
                 donee entity, two or more consecutive tax years)
-            x-ehkn0rpi5pp6as3iclpmarjkc5n78p9ddhimeobc5ln6ipg:
-              help: NIF of the reported person's legal representative, where that
-                person is a minor or lacks capacity.
-              label: NIF OF THE LEGAL REPRESENTATIVE
-            x-ehkn0rpi5pp6atjfcdgm6qbfdo:
-              help: Indicates that the declared donation has been revoked.
-              label: REVOCATION
-            x-ehkn0rpi5pq6is3f5lh6ipbe:
-              help: Type of the donated asset, for donations in kind.
-              label: ASSET TYPE
           construct:
             modelo-182-informative:
               field:
