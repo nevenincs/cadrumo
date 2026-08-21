@@ -53,8 +53,23 @@ from ._filesystem_primitives import (
 
 PROFILE_CUSTODY_DATA_MAX_ENTRIES: Final = 1024
 PROFILE_CUSTODY_DATA_FILE_MAX_BYTES: Final = 64 * 1024 * 1024
-_LOCAL_RECORD_REPLACE_ATTEMPTS: Final = 8
-_LOCAL_RECORD_REPLACE_RETRY_SECONDS: Final = 0.01
+_LOCAL_RECORD_REPLACE_BUDGET_SECONDS: Final = 1.0
+"""How long a local-record replacement waits out readers holding the leaf open.
+
+Stated as a deadline rather than an attempt count: what has to be outlasted is a
+span of contention, and an attempt count silently shortens the wait whenever the
+poll interval changes. A reader's handle lives microseconds; a denying ACL never
+clears, and Windows reports both as ``ERROR_ACCESS_DENIED``, so the budget is
+the only thing that separates them.
+
+Sized by what losing costs. This path carries the login handover witness, and an
+exhausted budget is not a delay -- it refuses the login. Under eight concurrent
+readers the previous eighty-millisecond budget exhausted on roughly one write in
+ten, so the wait is longer than a reader needs and far shorter than a failure
+costs the operator.
+"""
+
+_LOCAL_RECORD_REPLACE_POLL_SECONDS: Final = 0.01
 
 
 @dataclass(slots=True)
@@ -319,13 +334,14 @@ def write_profile_custody_local_record(path: Path, payload: bytes, *, publish_on
             return
         from .....core.atomic_write import atomic_write_hardened_bytes
 
-        for attempt in range(_LOCAL_RECORD_REPLACE_ATTEMPTS):
+        deadline = time.monotonic() + _LOCAL_RECORD_REPLACE_BUDGET_SECONDS
+        while True:
             try:
                 atomic_write_hardened_bytes(path, payload, mode=0o600)
             except PermissionError as exc:
-                if attempt == _LOCAL_RECORD_REPLACE_ATTEMPTS - 1:
+                if time.monotonic() >= deadline:
                     raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-                time.sleep(_LOCAL_RECORD_REPLACE_RETRY_SECONDS)
+                time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
             except OSError as exc:
                 raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
             else:
