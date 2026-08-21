@@ -471,38 +471,61 @@ modelo:
               help: null
               label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de la bonificación prevista
+                en el art. 34 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe correspondiente a la bonificación
+                prevista en el art. 26 de la Ley 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                no integrado en la base imponible (art. 17.2 LIS)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe excluido por operaciones
+                de quita o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Parte integrada en la base imponible
+                por operaciones de quita o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Parte integrada en la base imponible
+                a nivel cuota por operaciones de quita o espera (sólo cooperativas)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de la minoración correspondiente
+                a las rentas que tengan derecho a la bonificación art. 33 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe no computable por aplicación
+                del régimen fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de renta exenta de las entidades
+                que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Rentas de reversión de deterioros
+                que se integran en la base imponible
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe correspondiente a la reserva
+                para inversiones en Canarias
           construct:
             modelo-202-2023-2024-foundation:
               field:
@@ -668,38 +691,61 @@ modelo:
               label: Mod. 40.3 LIS - Correcciones por Impuesto Complementario (IC)
                 - Aumentos
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de la bonificación prevista
+                en el art. 34 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe correspondiente a la bonificación
+                prevista en el art. 26 de la Ley 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                no integrado en la base imponible (art. 17.2 LIS)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe excluido por operaciones
+                de quita o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Parte integrada en la base imponible
+                por operaciones de quita o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Parte integrada en la base imponible
+                a nivel cuota por operaciones de quita o espera (sólo cooperativas)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de la minoración correspondiente
+                a las rentas que tengan derecho a la bonificación art. 33 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe no computable por aplicación
+                del régimen fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe de renta exenta de las entidades
+                que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Rentas de reversión de deterioros
+                que se integran en la base imponible
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado.
+              label: Información adicional (5) - Importe correspondiente a la reserva
+                para inversiones en Canarias
           construct:
             modelo-202-foundation:
               field:

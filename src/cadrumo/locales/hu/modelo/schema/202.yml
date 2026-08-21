@@ -540,38 +540,61 @@ modelo:
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
                 tartalék (LIS 105. cikk) - Csökkenések
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS 34. cikke szerinti kedvezmény
+                összege
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A 19/1994 törvény 26. cikke szerinti
+                kedvezménynek megfelelő összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Követelés-beszámítással történő tőke-
+                vagy sajáttőke-emelés miatt kizárt, az adóalapba be nem számított
+                összeg (LIS 17.2. cikk)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Adósságelengedési vagy halasztási
+                ügyletek miatt kizárt összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba beszámított rész adósságelengedési
+                vagy halasztási ügyletek után
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba adóösszeg szintjén beszámított
+                rész adósságelengedési ügyletek után (csak szövetkezetek)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS 33. cikke szerinti kedvezményre
+                jogosult jövedelem csökkentésének összege
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A ZEC adórendszer alkalmazása miatt
+                figyelmen kívül hagyandó összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS VII. cím XIV. fejezete szerinti
+                különös adórendszert alkalmazó szervezetek adómentes jövedelme
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba beszámított értékvesztés-visszaírásból
+                származó jövedelem
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
+                megfelelő összeg
           construct:
             modelo-202-2023-2024-foundation:
               field:
@@ -763,38 +786,61 @@ modelo:
               label: A LIS 40.3. cikke szerinti módszer - Kiegészítő adó (IC) szerinti
                 korrekciók - Növekedések
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS 34. cikke szerinti kedvezmény
+                összege
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A 19/1994 törvény 26. cikke szerinti
+                kedvezménynek megfelelő összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Követelés-beszámítással történő tőke-
+                vagy sajáttőke-emelés miatt kizárt, az adóalapba be nem számított
+                összeg (LIS 17.2. cikk)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Adósságelengedési vagy halasztási
+                ügyletek miatt kizárt összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba beszámított rész adósságelengedési
+                vagy halasztási ügyletek után
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba adóösszeg szintjén beszámított
+                rész adósságelengedési ügyletek után (csak szövetkezetek)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS 33. cikke szerinti kedvezményre
+                jogosult jövedelem csökkentésének összege
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A ZEC adórendszer alkalmazása miatt
+                figyelmen kívül hagyandó összeg
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A LIS VII. cím XIV. fejezete szerinti
+                különös adórendszert alkalmazó szervezetek adómentes jövedelme
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - Az adóalapba beszámított értékvesztés-visszaírásból
+                származó jövedelem
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: A részletfizetési elszámolás kiegészítő információs blokkjában
+                bevallott összeg.
+              label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
+                megfelelő összeg
           construct:
             modelo-202-foundation:
               field:
