@@ -17,7 +17,9 @@ here. Behavioural coverage of the two gates themselves already lives in
 
 from __future__ import annotations
 
+import ast
 import inspect
+import textwrap
 
 import pytest
 
@@ -39,13 +41,13 @@ def test_both_read_paths_route_through_the_one_envelope_gate() -> None:
     iter_source = inspect.getsource(SecureBoundRepository._iter_validated_rows)
 
     for name, source in (("load", load_source), ("_iter_validated_rows", iter_source)):
-        assert "_validate_envelope(" in source, f"{name} does not route through the shared envelope gate"
+        assert _calls(source, "_validate_envelope"), f"{name} does not route through the shared envelope gate"
         assert "model_validate_json(" not in source, f"{name} parses the envelope itself instead of delegating"
         assert "classification is not" not in source, f"{name} re-implements the classification gate"
         assert "schema_version !=" not in source, f"{name} re-implements the schema-version gate"
 
     gate_source = inspect.getsource(SecureBoundRepository._validate_envelope)
-    assert "model_validate_json(" in gate_source
+    assert _calls(gate_source, "model_validate_json")
     assert "classification is not" in gate_source
     assert "schema_version !=" in gate_source
 
@@ -122,3 +124,41 @@ def test_sensitivity_and_schema_version_are_the_gate_inputs() -> None:
 
     assert "self.sensitivity" in gate_source
     assert "self.schema_version" in gate_source
+
+
+def _calls(source: str, callee: str) -> bool:
+    """Whether ``source`` actually CALLS ``callee``, not merely mentions it.
+
+    A membership test on source text passes when the name appears in a
+    docstring or a comment, so a surface that stopped delegating while keeping
+    its prose reads as compliant. That is the mention-versus-containment hole:
+    the check answers "does this code discuss the shared path" when the
+    property is "does this code take it".
+    """
+    tree = ast.parse(textwrap.dedent(source))
+    return any(
+        isinstance(node, ast.Call)
+        and (
+            (isinstance(node.func, ast.Attribute) and node.func.attr == callee)
+            or (isinstance(node.func, ast.Name) and node.func.id == callee)
+        )
+        for node in ast.walk(tree)
+    )
+
+
+def test_the_delegation_check_rejects_a_docstring_mention() -> None:
+    """DISCRIMINATING: the shape the text check waved through.
+
+    A surface that stops calling the shared path but keeps a sentence naming
+    it is exactly what this gate exists to catch, and exactly what a
+    membership test cannot tell apart from a call.
+    """
+    calling = "def load(self, key):\n    return self._validate_envelope(self._fetch(key))\n"
+    mentioning = (
+        "def load(self, key):\n"
+        '    """Validation happens in _validate_envelope( ) elsewhere."""\n'
+        "    return self._fetch(key)\n"
+    )
+
+    assert _calls(calling, "_validate_envelope")
+    assert not _calls(mentioning, "_validate_envelope")

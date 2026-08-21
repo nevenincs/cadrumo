@@ -31,10 +31,28 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _CUSTODY_PACKAGE = Path(__file__).resolve().parent.parent
 _FLAG = "O_NOFOLLOW"
+
+
+def _custody_modules() -> tuple[Path, ...]:
+    """Return every non-test module in the package, subpackages included.
+
+    Recursive by construction. The sibling gate in this package was made
+    recursive one pass earlier and this one was left on ``glob("*.py")`` --
+    fixing the instance rather than the class, which is the failure this
+    campaign keeps recording. The two scans matched only because the package
+    has no subpackages.
+    """
+    return tuple(
+        path
+        for path in scan_directory(_CUSTODY_PACKAGE, pattern="*.py", recursive=True)
+        if "tests" not in path.parts and "__pycache__" not in path.parts
+    )
 
 
 def _requests_the_flag(node: ast.AST) -> bool:
@@ -84,7 +102,7 @@ def _posix_gated(scope: ast.FunctionDef | ast.AsyncFunctionDef, function_name: s
 def _unguarded_nofollow_sites() -> tuple[str, ...]:
     """Return every function requesting the flag without a platform gate."""
     offenders: list[str] = []
-    for path in sorted(_CUSTODY_PACKAGE.glob("*.py")):
+    for path in _custody_modules():
         source = path.read_text(encoding="utf-8")
         if _FLAG not in source:
             continue
@@ -107,7 +125,7 @@ def test_the_scan_finds_real_nofollow_sites() -> None:
     perfectly. Requiring the walk to still FIND uses of the flag separates a
     clean package from a blind instrument.
     """
-    with_flag = [path.name for path in _CUSTODY_PACKAGE.glob("*.py") if _FLAG in path.read_text(encoding="utf-8")]
+    with_flag = [path.name for path in _custody_modules() if _FLAG in path.read_text(encoding="utf-8")]
 
     assert len(with_flag) >= 3, f"the scan sees {_FLAG} in only {with_flag}; it is not reading the package"
 

@@ -28,6 +28,8 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 #: Ceilings that must have exactly one defining module in this package.
@@ -61,7 +63,9 @@ def _custody_modules() -> tuple[Path, ...]:
     subpackage would have silently narrowed every check built on it.
     """
     return tuple(
-        path for path in _CUSTODY_PACKAGE.rglob("*.py") if "tests" not in path.parts and "__pycache__" not in path.parts
+        path
+        for path in scan_directory(_CUSTODY_PACKAGE, pattern="*.py", recursive=True)
+        if "tests" not in path.parts and "__pycache__" not in path.parts
     )
 
 
@@ -82,7 +86,7 @@ def _defining_modules(name: str) -> tuple[str, ...]:
 
 def test_the_scan_finds_the_real_package() -> None:
     """ANTI-VACUITY: an empty scan would report every ceiling as single-homed."""
-    modules = sorted(path.name for path in _CUSTODY_PACKAGE.glob("*.py"))
+    modules = sorted(path.name for path in _custody_modules())
 
     assert len(modules) > 10, f"the custody package scan found only {len(modules)} modules"
     assert "_filesystem.py" in modules, "the scan is not seeing the module that owns these ceilings"
