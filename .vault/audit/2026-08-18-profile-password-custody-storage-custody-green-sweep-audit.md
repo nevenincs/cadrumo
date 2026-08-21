@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:435236f0b01ae40679ab252a51f56c41869d671c5eb67511340610c43bdffbb5'
+body_hash: 'sha256:b8a3329d0dcd2ed183d50f397279c918043fbaf0f43c758205a23c64c73bcb78'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4477,3 +4477,43 @@ red is the expected outcome.
 The module docstring was rewritten in the same change. Leaving prose that declares a door
 uncovered after covering it is the same stale-citation defect this campaign corrected in an
 always-on rule two entries ago.
+
+### A healthy storage report that never examined permissions, and a red test the lanes could not see
+
+Swept the previous entry's shape — an operator notice whose ABSENCE is asserted and whose
+presence is not — across the domain's notice codes. Of the seven custody and storage
+advisories checked, **six had no test reference at all**. The sharpest is
+`storage_root_mode_unenforced`.
+
+**What it guards.** `config storage check` computes `healthy` from its issue list. On a host
+that cannot enforce the storage root's mode, that list is empty because the permission axis
+was never EXAMINED — the emitting comment says so exactly: "a different claim from
+examined-and-clean". Run here, the envelope reads `healthy: true`, `issues: []`,
+`root_mode_enforced: false`. The advisory is the only thing standing between "permissions
+are fine" and "permissions were not looked at", for the root that holds this application's
+financial data at rest. Nothing asserted it fired.
+
+Gated as a biconditional against the flag rather than as a platform assertion, so the test
+stays honest on a POSIX host where the axis IS enforced and the notice must stay silent.
+Proven by diverting the advisory while leaving the file valid: both new tests fail, and
+they pass again on restore.
+
+**A red storage test the domain lanes structurally cannot reach.** Adding the tests
+surfaced two pre-existing failures in the same file — `storage reclaim`'s durable-area
+refusal — which were confirmed pre-existing by running the file at HEAD. The file lives in
+`entrypoints/cli/tests`, and the lanes cover `entrypoints/cli/_config`, so this is the
+out-of-lane pattern for a third time.
+
+The cause is worth stating because the test was not wrong about the product: it asserts the
+raw enum token (`state`, `exports`) appears in the refusal prose, and area names are now
+TRANSLATED, so the operator sees "estado" and "exportaciones". The refusal was naming the
+area correctly all along, in the operator's language. The substantive assertions — that the
+reclaim refuses and the durable content survives — passed throughout; only the prose read
+failed. Fixed by pinning `--output-language en` for that assertion, which is the convention
+the file's own sibling text assertions already use. **A test that reads a value out of
+localised prose is asserting against a translation, and must pin the language or read the
+payload instead.**
+
+Absorbed rather than deferred: it is a storage-surface test, red, in this campaign's
+domain. It is not a "locale failure belonging to another campaign" — the locale work is
+correct and the assertion was language-dependent.
