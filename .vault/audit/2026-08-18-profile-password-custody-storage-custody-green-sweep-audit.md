@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7d05e5dc90a3e84d07770a94e402966f02670bba104dc22a6731ccff7338a780'
+body_hash: 'sha256:681f09e947ccb20e3c51a21e0c605c01803a921d165302b0909f13ea1c7665b2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3590,3 +3590,74 @@ by making the predicate answer `True` for any `PermissionError` — two tests fa
 write gate's anti-tautology case puts a directory at the pointer path: unremovable, so a
 retry that absorbed the error class outright would report a logout that silently left the
 profile selected.
+
+### A concurrent sweep committed production code mid-probe, disabling a live guard
+
+**The incident, recorded because the method caused it.** Proving a gate bites requires
+breaking the production code and observing the failure. The standing discipline is to
+break it from OUTSIDE the repo — a scratchpad pytest plugin — so no tracked file is ever
+mutated. That is not always possible: when the guard under test is an inline conditional
+in a module, the only way to weaken it is to edit the file.
+
+While that window was open, roughly three seconds, a peer's sweep committed the working
+tree. It captured `_capsule_record.py` carrying `if False:` in place of the assertion
+that an initial profile record is exactly revision one without a predecessor. A live
+integrity guard shipped disabled on `main`, in a commit whose message announced coverage
+for that very authority.
+
+It was caught only because the follow-up `git status` showed the file as modified when it
+should have been clean, and the diff was read rather than assumed to be the restore.
+Restored in `68e08b020c`; the full file was then re-checked for residue from the other two
+probes, both of which had been restored before their own sweeps.
+
+Two durable rules follow:
+
+- **After every break-and-restore, diff the file against HEAD rather than trusting the
+  restore.** The restore itself is reliable; what is not reliable is that HEAD still
+  matches it afterwards. In this worktree the danger is not a failed restore but a sweep
+  landing between the break and the restore.
+- **Prefer a weakening that cannot be committed silently.** An outside-the-repo patch is
+  first choice. Where the edit is unavoidable, the safest shape is one that BREAKS
+  COLLECTION rather than one that quietly passes — a swept syntax error is loud and fixed
+  in minutes, whereas `if False:` is valid Python that ships a disabled guard and reds
+  nothing until someone writes the test that catches it.
+
+The gate landed in the same sweep, so the tree was self-correcting in principle; but it
+was the human check, not the gate, that noticed.
+
+### The session guards that make a profile record un-substitutable were unexercised
+
+Found by ranking modules on how many of their UNCOVERED lines are `raise` statements —
+the refinement of the earlier "parser coverage is acceptance-biased" finding, made
+possible only because the coverage instrument itself was repaired two entries ago.
+`_capsule_record.py` was the purest signal: 26 of 27 uncovered lines were refusals.
+
+The count alone overstated the gap, and the selector was checked before the population
+was blamed. A `test_capsule_record.py` already existed and already tested substantial
+refusals — tampered provenance, a different envelope, a changed DEK epoch, a mismatched
+lineage on restore. What it never reached were the SESSION-level guards:
+
+- `encryption_key` refusing once the session is retired. `close` zeroises the DEK in
+  place and leaves the object intact, so a retired authority cannot be told from a live
+  one by inspection. Without the refusal the caller does not get an error — it gets
+  thirty-two zero bytes and encrypts the profile record with them.
+- `assert_initial_record` refusing a mid-chain record as the start of a chain, which
+  would let a capsule be created already carrying history it never performed.
+- `assert_replacement` refusing a successor that does not descend from the record it
+  claims to replace.
+
+The record model already refuses internally impossible shapes, so the tests cover only
+what it cannot see: whether a well-formed record belongs to THIS session and THIS chain.
+The sharp case is a **fork** — correct revision, a real predecessor digest, a consistent
+content digest, valid in isolation and wrong only in context. Accepting it would splice a
+foreign branch onto the profile's history and drop the current record silently.
+
+Each guard was weakened separately, and each weakening failed EXACTLY ONE test. Dropping
+the predecessor-digest half while keeping the revision check failed only the fork test and
+left the skipped-revision test green, which is the proof that the fork test pins the digest
+comparison rather than riding on its neighbour.
+
+Remaining on this axis, unactioned: `custody/_filesystem.py` (90 uncovered refusal lines),
+`_acceleration_receipt.py` (40) and `_capsule.py` (30). The same caveat applies — the raw
+count is a lead, not a verdict, and the existing tests must be read before concluding the
+refusals are unreached.
