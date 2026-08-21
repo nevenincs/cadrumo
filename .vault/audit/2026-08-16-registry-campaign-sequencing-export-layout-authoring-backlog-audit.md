@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa5d11a4eb721ed8479c66998b5a6fab7a5933863c55511118ebace61fb5d60a'
+body_hash: 'sha256:1b0c037badddbd5f184b2d448b77d0e1f5faebc68db396697090e73802966068'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -7968,3 +7968,90 @@ Twenty-six skipped records, from 302 when this line of work began. Modelo 200's
 2010 and 2011 editions hold most of what remains. The recorded cases stand:
 modelo 349 and 180's visual charts where AEAT draws no box, modelo 100's lone
 glued byte and its page-break artefact, modelo 131's spilled-column byte.
+
+## Tick: where the design-reading line stops, and why
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed at tick
+start, and last tick's double-strike repair confirmed at 30 passed.
+
+### The remaining twenty-six, classified
+
+Twenty-six skipped records remain, from 302 when this line of work began. I read
+every remaining shape rather than sampling, and none is a reader gap. Each is
+content AEAT's text layer lost, and each fails a different way:
+
+**The row that lost its LENGTH as well as its position** (3 records across 2
+modelo 200 designs). AEAT prints `An C Indicador de pagina complementaria.` --
+type, complementaria marker and description, with no ordinal, no position and no
+width. The position follows from the previous row ending at 9. The LENGTH does
+not follow from anything: sizing the field to the hole would be fitting it to
+the gap it is meant to close, which is circular rather than corroborating.
+
+This corrects a conflation in my own earlier notes. When I reopened the
+"lost both numbers" case two ticks ago and fixed it by staging headless tails,
+that fix applied to rows where AEAT PRINTED the length -- `17 N Sociedades de
+garantia reciproca ...` -- and the hole merely confirmed it. Three independent
+facts agreed there. Here only one does, and the two shapes were being carried
+under one description.
+
+**The row whose tail carries leading text** (`(1) [020] 17 Num Reg.reserva ...`
+above `79 1236 (2 a 6) [021]`). The bled-head rule admits a head with trailing
+text under continuity; this is the mirror, and admitting a tail with LEADING
+text has no equivalent constraint, because nothing in the fragment ties it to
+its neighbour.
+
+**The row with no tail line at all** (modelo 390, `13 132` alone between rows 12
+and 14). Its length is derivable -- the next row starts at 149 -- and that is
+genuine contiguity rather than circularity. But the description is simply absent
+from the text layer, and a field without one is refused by the sheet validator.
+Recovering it would mean writing the description myself.
+
+The honest summary is that the parser now reads everything the corpus states.
+What remains needs the declared-correction sidecar, which is the sanctioned
+route precisely because it demands a human-authored, sourced statement of what
+AEAT published -- and that is a registry authoring act, not a reader change.
+
+### Modelo 190, and a test asserting something the schema forbids
+
+With the reader line at its stopping point, I took modelo 190's four failures.
+Three were the split pattern this campaign keeps meeting, and one was different
+in kind.
+
+**Two stale revision ids.** `modelo.revisions["2024-y-siguientes"]` appears
+twice, and that revision stopped existing when the span was split into `2024`
+and `2025-y-siguientes`. Both lookups raised before reaching any assertion, so
+the guidance/layout source separation and the live-register host gate were
+unchecked in BOTH revisions rather than one. Now iterated over every revision,
+with a floor asserting something was actually examined.
+
+**A cross-revision deadline expectation.** The construct was asserted to
+reference both `modelo-190-2024-0a` and `modelo-190-2025-0a`. The split moved
+each window into the revision it governs, and the registry is right: each
+construct references its own, and both windows carry exactly the dates the test
+already expected. Parametrised over the two ejercicios so every window, date and
+grounding reference stays asserted where the registry declares it.
+
+Worth recording: my first parametrisation passed 2025 for the 2024 window and
+resolved the wrong revision. `build_snapshot(filing_year=...)` selects by TAX
+year, while a window's own `filing_year` field is the year it is FILED -- 2025
+for the 2024 ejercicio. Two fields, one name, opposite meanings.
+
+**An expectation the schema cannot satisfy.** The fourth asserted the construct
+links a `verification` surface. `ApplicationLink.surface` is a closed Literal --
+calculation, filing, review, approval, reconciliation, export, deadline, portal,
+extractor, workflow, communication, payer_delivery -- and `verification` is not
+in it. No registry data declares one either: zero across every bundled modelo.
+
+That is not a data gap waiting to be filled; it is an assertion that could never
+have passed, and reading it as a gap would have led to authoring registry data
+the schema rejects. Removed, with the reason recorded beside it. If a
+verification surface is wanted it is a schema decision with its own grounding.
+
+**test_modelo_190_registry: 4 failed -> 7 passed.** Dropping a deadline window
+reds three cases; dropping an application link reds three. Both probes run from
+outside the repo.
+
+### Verified against
+
+Design corpus unchanged this tick at 26 skipped records, 200 complete, 0 errors.
+Generated-tree gates 30 passed at tick start. Authority CLEAN.
