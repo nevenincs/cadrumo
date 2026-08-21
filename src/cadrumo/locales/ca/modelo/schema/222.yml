@@ -313,6 +313,73 @@ modelo:
               help: null
               label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra /
                 art. 40.3 base imposable)
+            x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import exclòs per operacions d'augment
+                de capital o fons propis per compensació de crèdits no integrat en
+                la base imposable (art. 17.2 LIS)
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qobiegmj6d0:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import de la bonificació prevista
+                a l'art. 34 LIS
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qr35f4mj2e9d64sjid0:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import corresponent a la bonificació
+                prevista a l'art. 26 de la Llei 19/1994
+            x-d5n6crpedlkmsrric5hmirre5lh6urj9cpkm6ob3d5nmsbb1e9q2qcpj:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import de la minoració corresponent
+                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
+            x-d5n6crpee5qmit315lin6s35e9giqqbde1nn4t355lingorcelkm8ro:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import exclòs per operacions de quitament
+                o espera
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqoj1edig:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Part integrada en la base imposable
+                per operacions de quitament o espera
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqorldtq62:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Part integrada en la base imposable
+                a nivell de quota per operacions de quitament o espera (només cooperatives)
+            x-d5n6crpee9imeqbdcln2quj5ccmmsrpdcdnmqs3lehgm4r35:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import no computable per aplicació
+                del règim fiscal de la ZEC
+            x-d5n6crpee9imst315lingpbeehgiqor1e0mngqbm5lq6it1depkmi:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import de renda exempta de les entitats
+                que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
+            x-d5n6crpee9in6pbiepgiqqbeepin4sr9dtn6aspdcdgmsobid5gn6:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Import corresponent a la reserva
+                per a inversions a Canàries
+            x-d5n6crpee9incpbiedkmurhdchin8pbid5nn4rrj:
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat del grup fiscal. Casella sense número imprès
+                al disseny oficial.
+              label: Informació addicional (6) - Rendes de reversió de deterioraments
+                que s'integren en la base imposable
           construct:
             modelo-222-declaration-construct:
               field:

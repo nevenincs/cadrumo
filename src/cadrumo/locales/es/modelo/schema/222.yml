@@ -328,6 +328,73 @@ modelo:
               help: null
               label: Modalidad del pago fraccionado (art. 40.2 cuota íntegra / art.
                 40.3 base imponible)
+            x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                no integrado en la base imponible (art. 17.2 LIS)
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qobiegmj6d0:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe de la bonificación prevista
+                en el art. 34 LIS
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qr35f4mj2e9d64sjid0:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe correspondiente a la bonificación
+                prevista en el art. 26 de la Ley 19/1994
+            x-d5n6crpedlkmsrric5hmirre5lh6urj9cpkm6ob3d5nmsbb1e9q2qcpj:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe de la minoración correspondiente
+                a las rentas que tengan derecho a la bonificación art. 33 LIS
+            x-d5n6crpee5qmit315lin6s35e9giqqbde1nn4t355lingorcelkm8ro:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe excluido por operaciones
+                de quita o espera
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqoj1edig:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Parte integrada en la base imponible
+                por operaciones de quita o espera
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqorldtq62:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Parte integrada en la base imponible
+                a nivel cuota por operaciones de quita o espera (sólo cooperativas)
+            x-d5n6crpee9imeqbdcln2quj5ccmmsrpdcdnmqs3lehgm4r35:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe no computable por aplicación
+                del régimen fiscal de la ZEC
+            x-d5n6crpee9imst315lingpbeehgiqor1e0mngqbm5lq6it1depkmi:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe de renta exenta de las entidades
+                que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
+            x-d5n6crpee9in6pbiepgiqqbeepin4sr9dtn6aspdcdgmsobid5gn6:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Importe correspondiente a la reserva
+                para inversiones en Canarias
+            x-d5n6crpee9incpbiedkmurhdchin8pbid5nn4rrj:
+              help: Importe declarado en el bloque de informacion adicional de la
+                liquidacion del pago fraccionado del grupo fiscal. Casilla sin numero
+                de casilla impreso en el diseno oficial.
+              label: Información adicional (6) - Rentas de reversión de deterioros
+                que se integran en la base imponible
           construct:
             modelo-222-declaration-construct:
               field:

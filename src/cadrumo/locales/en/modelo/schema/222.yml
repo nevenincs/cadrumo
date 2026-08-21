@@ -313,6 +313,74 @@ modelo:
               help: null
               label: Instalment payment method (art. 40.2 gross tax liability / art.
                 40.3 taxable base)
+            x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount excluded for capital or equity
+                increases by set-off of claims not integrated into the tax base (art.
+                17.2 LIS)
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qobiegmj6d0:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount of the allowance under art.
+                34 LIS
+            x-d5n6crpec9nmsqb6d5hm2or9dtn2qr35f4mj2e9d64sjid0:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount corresponding to the allowance
+                under art. 26 of Law 19/1994
+            x-d5n6crpedlkmsrric5hmirre5lh6urj9cpkm6ob3d5nmsbb1e9q2qcpj:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount of the reduction for income
+                entitled to the allowance under art. 33 LIS
+            x-d5n6crpee5qmit315lin6s35e9giqqbde1nn4t355lingorcelkm8ro:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount excluded for debt-relief
+                or deferral arrangements
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqoj1edig:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Part integrated into the tax base
+                for debt-relief or deferral arrangements
+            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqorldtq62:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Part integrated into the tax base
+                at liability level for debt-relief or deferral arrangements (cooperatives
+                only)
+            x-d5n6crpee9imeqbdcln2quj5ccmmsrpdcdnmqs3lehgm4r35:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount not countable through application
+                of the ZEC tax regime
+            x-d5n6crpee9imst315lingpbeehgiqor1e0mngqbm5lq6it1depkmi:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount of exempt income of entities
+                applying the special tax regime of Chapter XIV of Title VII LIS
+            x-d5n6crpee9in6pbiepgiqqbeepin4sr9dtn6aspdcdgmsobid5gn6:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Amount corresponding to the Canary
+                Islands investment reserve
+            x-d5n6crpee9incpbiedkmurhdchin8pbid5nn4rrj:
+              help: Amount declared in the additional-information block of the tax
+                group's instalment payment settlement. The official design prints
+                no box number for this slot.
+              label: Additional information (6) - Income from reversal of impairments
+                integrated into the tax base
           construct:
             modelo-222-declaration-construct:
               field:
