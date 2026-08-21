@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:362397a8924a73479465aeea02d6fad31575f135f47a145138468ef2c1616f58'
+body_hash: 'sha256:9e78179322153ba2698668394416393a888d4881df21c2eaaf5378cda3564abc'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -981,7 +981,6 @@ statement records only that somebody looked.
 **Pre-shift remediation: 4 of 7** (m165, m181, m270, m345). m180, m190 and m193 remain,
 all on stamped revisions.
 
-
 ### m190-and-m193-cite-a-superseded-twenty-day-plazo | high | the date is pre-shifted AND the article establishing it is not cited
 
 Completing the pre-shift remediation meant checking m180, m190 and m193. All three carry
@@ -1029,7 +1028,6 @@ entirely, so its 31-January nominal is currently ungrounded rather than mis-grou
 an article genuinely stating its January close, verified verbatim before the change). The
 remaining three are now known to need acquisition first, which is a better answer than
 the count suggested.
-
 
 ## Recommendations
 

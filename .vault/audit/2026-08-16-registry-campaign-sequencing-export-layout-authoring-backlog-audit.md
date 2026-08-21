@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c400a47ff65efc25055a85ed38833f42ff8566e717e22a103cd6ef51711d2c1'
+body_hash: 'sha256:74c82f441663046943196244e2841f48da57b6457b21df1694895eb02423645c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10071,3 +10071,33 @@ fixed. Re-measured exhaustively: every `source_ref` reachable from that revision
 (casillas, layout, and every record field) is `aeat-dr-151-2015`, and the string
 `151-2023` appears nowhere in its tree. The note now records the resolution
 rather than a stale warning, so the next reader does not go looking.
+
+### A regression that was not one: modelo 345's nominal close
+
+The registry suite went 19 -> 20 during this tick, and the newly-failing test was
+modelo **345**, not 185. It was not mine and it was not a defect: a peer had
+just landed `registry(m345): restore the nominal close, and record why the
+pre-shift argument fails`, moving the stored close from AEAT's published
+operational date back to the statutory one, and the test still asserted the old
+convention.
+
+Their reasoning holds and is worth preserving here. Measured both ways:
+
+```
+stored 2026-01-31 -> adjusted 2026-02-02, shifted=True,  reason='sabado'
+stored 2026-02-02 -> adjusted 2026-02-02, shifted=False, reason='business_day'
+```
+
+Both give the operator 2 February, because the calendar passes `closes_on`
+through `shift_deadline`. The pre-shifted form additionally reports that no
+shift occurred and that 2 February is the ordinary business-day deadline -- a
+false statement -- and it discards the statutory 31 January entirely.
+
+So the test was corrected rather than the data. It now asserts BOTH halves: the
+stored value is the nominal 2026-01-31, and the shift derives 2026-02-02 with
+`shifted=True` and `shift_reason='sabado'`. That pair is strictly stronger than
+either previous version, because the two storage forms are indistinguishable on
+the operator-facing date alone -- which is exactly why the old single-value
+assertion could be satisfied by the false-provenance value. Flipping its
+constant would have been the easy fix and would have re-encoded the defect the
+peer had just removed.
