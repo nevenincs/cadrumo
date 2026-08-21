@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d14da12dc315535e619b1848e26d362fdae9081378162fd2f25aa789b9f9ce6'
+body_hash: 'sha256:0c400a47ff65efc25055a85ed38833f42ff8566e717e22a103cd6ef51711d2c1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9970,3 +9970,104 @@ measurement's first-match pick, not necessarily what the revision cites, and it
 carries the same smell as the 151/2023 item above. Confirm the cited ref against
 the revision before authoring, because a layout grounded in the wrong year's
 diseño is the defect this campaign keeps finding.
+
+## Modelo 185: the first export layout authored off the worklist
+
+The six sequencing items re-measured clean again at HEAD, so this tick took the
+first item of the replacement queue: modelo 185, smallest of the ten with a
+bundled design. The filing-capability worklist is **14 -> 13**, and the enrolled
+generated-tree gate is **30 -> 32**.
+
+### The blocker was prose, not a missing artefact
+
+Modelo 185's casilla fragment carried, as its reason for declaring only two
+header casillas: *"No numbered form casilla is invented -- no authoritative
+Modelo 185 diseño de registro is bundled."* That is false. `aeat-dr-185-2026` is
+bundled, is listed in **this revision's own `source_refs`**, and loads through
+the real IR as 2 records and 36 fields, both exactly 500 bytes: Tipo 1
+declarante and Tipo 2 declarado, the latter carrying número de afiliación,
+pluriactividad, and situación / régimen / días de alta / tipo jornada for the
+declared month and the two preceding it.
+
+The sibling revision's blocker is REAL and stays: `2003-2025` has only
+`enrolled-modelo-185-layout-2003`, a `form_spec`, and no `record_design` of any
+era. One revision was authorable; the other genuinely needs acquisition. The
+worklist now shows exactly that split.
+
+This is the failure mode the orchestration rule names -- prose describing the
+old state as pending, outliving the state. It cost nothing to check and would
+have kept the modelo off the queue indefinitely.
+
+### What grounded each decision
+
+Nothing here was inferred from a sibling modelo. The authoring table was
+verified against the design before a byte was written: 36 rows, every
+`offset`/`length` equal to the design's, both records contiguous 1..500, zero
+mismatches. The registry then refused three separate premises of mine in turn,
+and each refusal was taken as the answer rather than worked around:
+
+- **Twelve singleton `semantic_role` failures.** I had given the three month
+  columns distinct roles (`situacion_mes_1`, `_2`, ...). The role names WHAT a
+  value is; the month is a coordinate the casilla id already carries. Sharing
+  one role across the three months cleared all twelve and is the more truthful
+  model.
+- **`allowed_values must be explicitly empty outside an enumeration rule`.** I
+  had enumerated 01..12 on the PERÍODO rule, which the `two-digit-month` policy
+  already constrains. The enumeration moved into the decision statement, where
+  it documents without duplicating.
+- **`render profile must cover exactly the eligible blank numeric fields`,**
+  naming declarante rows 42 and 48. Those are the two fields the design leaves
+  untyped. Their own text decides them: the teléfono field's label reads
+  *"Campo numérico de 9 posiciones"* (digit-string, 9), and the 40-position
+  apellidos field is name text, so it takes `mistyped-alphanumeric-text` with
+  zero digits.
+
+The `number` convention needed no judgement call in the end: modelo 184 keeps
+`ejercicio` and `tipo-declaracion` symbolic while giving every design-backed
+casilla an offset span, which is precisely what 185's existing pair already had.
+So the 19 new casillas took offset spans and the existing two were left alone --
+no renumber, no locale-key churn.
+
+Every render-profile rule is `reviewed_policy` rather than `official_source`,
+for a structural reason worth recording: `OfficialSourceEvidence` requires a
+`source_cell`, and this design's IR carries `source_cell = None` throughout, so
+no rule here CAN claim a cell. Modelo 184 sits on the same shape for the same
+reason. It also means the evidence set is empty and the design binary is never
+re-read during render.
+
+### What check mode passing does and does not mean
+
+Modelo 185 needed no `_CHECK_MODE_PENDING` entry: check mode PASSES for it,
+where it refuses for all fifteen other enrolled trees. That is not a claim that
+185 is filing-ready, and it should not be read as one. Every enrolled tree
+including 185 is `agent_reviewed`; the difference is that 185 is
+**applicability** grade while the other fifteen are **filing** grade, and check
+mode's filing-completeness validation only bites on the latter. What 185's pass
+establishes is narrower and still worth having: an applicability-grade revision
+carrying a fully generated layout validates end to end through the real loader
+and authority.
+
+Promoting 185 to filing grade is deliberately NOT done here. It is a tax-review
+judgement against official sources, and the revision's own review (committed
+this morning) scoped itself to "scheduling and applicability only". Leaving the
+worklist means the application can now EMIT modelo 185; it does not mean the
+grade ladder has moved.
+
+### Help strings, because 185 is a modelo that has them
+
+The 19 new casillas added 19 `.label` and 19 `.help` keys. Only 276 of the
+tree's 23,352 modelo-schema help keys are populated, so blank help would have
+been unremarkable -- except that 185 already populated help for both its
+existing casillas, as do the sibling small informativas 187, 188, 194 and 296.
+Leaving 19 blank would have made this the one partly-documented modelo of its
+size. Locale parity therefore returns to its exact pre-existing **872**: a whole
+modelo's layout landed net-neutral on the backlog rather than adding to it.
+
+### One stale note corrected in passing
+
+`_CHECK_MODE_PENDING` still warned that 151/2015-2022 "cites the 2023 diseño on
+six casillas ... left for its owner" -- sequencing item 2, which a peer has since
+fixed. Re-measured exhaustively: every `source_ref` reachable from that revision
+(casillas, layout, and every record field) is `aeat-dr-151-2015`, and the string
+`151-2023` appears nowhere in its tree. The note now records the resolution
+rather than a stale warning, so the next reader does not go looking.
