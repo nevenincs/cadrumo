@@ -308,38 +308,62 @@ modelo:
               label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
                 105 LIS) - Decreases
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount of the allowance under art.
+                34 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount corresponding to the allowance
+                under art. 26 of Law 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount excluded for capital or equity
+                increases by set-off of claims not integrated into the tax base (art.
+                17.2 LIS)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount excluded for debt-relief
+                or deferral arrangements
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Part integrated into the tax base
+                for debt-relief or deferral arrangements
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Part integrated into the tax base
+                at liability level for debt-relief or deferral arrangements (cooperatives
+                only)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount of the reduction for income
+                entitled to the allowance under art. 33 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount not countable through application
+                of the ZEC tax regime
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount of exempt income of entities
+                applying the special tax regime of Chapter XIV of Title VII LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Income from reversal of impairments
+                integrated into the tax base
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: Amount declared in the additional-information block of the instalment
+                payment settlement.
+              label: Additional information (5) - Amount corresponding to the Canary
+                Islands investment reserve
           construct:
             modelo-202-2019-2022-foundation:
               field:

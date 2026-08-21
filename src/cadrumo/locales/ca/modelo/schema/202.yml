@@ -293,38 +293,61 @@ modelo:
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Disminucions
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import de la bonificació prevista
+                a l'art. 34 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import corresponent a la bonificació
+                prevista a l'art. 26 de la Llei 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import exclòs per operacions d'augment
+                de capital o fons propis per compensació de crèdits no integrat en
+                la base imposable (art. 17.2 LIS)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import exclòs per operacions de quitament
+                o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Part integrada en la base imposable
+                per operacions de quitament o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Part integrada en la base imposable
+                a nivell de quota per operacions de quitament o espera (només cooperatives)
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import de la minoració corresponent
+                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import no computable per aplicació
+                del règim fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import de renda exempta de les entitats
+                que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Rendes de reversió de deterioraments
+                que s'integren en la base imposable
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: null
-              label: null
+              help: Import declarat al bloc d'informació addicional de la liquidació
+                del pagament fraccionat.
+              label: Informació addicional (5) - Import corresponent a la reserva
+                per a inversions a Canàries
           construct:
             modelo-202-2019-2022-foundation:
               field:

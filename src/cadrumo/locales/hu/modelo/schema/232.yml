@@ -16,140 +16,185 @@ modelo:
         2016-2017:
           casilla:
             vinculada-1-fjo:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Természetes / jogi / egyéb személy (F/J/O)
             vinculada-1-importe:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Az ügylet összege
             vinculada-1-ingreso-pago:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Bevétel vagy kifizetés
             vinculada-1-metodo-valoracion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Értékelési módszer
             vinculada-1-nif:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - A kapcsolt személy vagy szervezet NIF száma
             vinculada-1-provincia-pais:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Tartomány- vagy országkód
             vinculada-1-razon-social:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Vezetéknév és utónév vagy cégnév
             vinculada-1-tipo-operacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - Az ügylet típusa
             vinculada-1-tipo-vinculacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                1 - A kapcsolat típusa
             vinculada-2-fjo:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Természetes / jogi / egyéb személy (F/J/O)
             vinculada-2-importe:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Az ügylet összege
             vinculada-2-ingreso-pago:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Bevétel vagy kifizetés
             vinculada-2-metodo-valoracion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Értékelési módszer
             vinculada-2-nif:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - A kapcsolt személy vagy szervezet NIF száma
             vinculada-2-provincia-pais:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Tartomány- vagy országkód
             vinculada-2-razon-social:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Vezetéknév és utónév vagy cégnév
             vinculada-2-tipo-operacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - Az ügylet típusa
             vinculada-2-tipo-vinculacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                2 - A kapcsolat típusa
             vinculada-3-fjo:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Természetes / jogi / egyéb személy (F/J/O)
             vinculada-3-importe:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Az ügylet összege
             vinculada-3-ingreso-pago:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Bevétel vagy kifizetés
             vinculada-3-metodo-valoracion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Értékelési módszer
             vinculada-3-nif:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - A kapcsolt személy vagy szervezet NIF száma
             vinculada-3-provincia-pais:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Tartomány- vagy országkód
             vinculada-3-razon-social:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Vezetéknév és utónév vagy cégnév
             vinculada-3-tipo-operacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - Az ügylet típusa
             vinculada-3-tipo-vinculacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                3 - A kapcsolat típusa
             vinculada-4-fjo:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Természetes / jogi / egyéb személy (F/J/O)
             vinculada-4-importe:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Az ügylet összege
             vinculada-4-ingreso-pago:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Bevétel vagy kifizetés
             vinculada-4-metodo-valoracion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Értékelési módszer
             vinculada-4-nif:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - A kapcsolt személy vagy szervezet NIF száma
             vinculada-4-provincia-pais:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Tartomány- vagy országkód
             vinculada-4-razon-social:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Vezetéknév és utónév vagy cégnév
             vinculada-4-tipo-operacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - Az ügylet típusa
             vinculada-4-tipo-vinculacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                4 - A kapcsolat típusa
             vinculada-5-fjo:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Természetes / jogi / egyéb személy (F/J/O)
             vinculada-5-importe:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Az ügylet összege
             vinculada-5-ingreso-pago:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Bevétel vagy kifizetés
             vinculada-5-metodo-valoracion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Értékelési módszer
             vinculada-5-nif:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - A kapcsolt személy vagy szervezet NIF száma
             vinculada-5-provincia-pais:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Tartomány- vagy országkód
             vinculada-5-razon-social:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Vezetéknév és utónév vagy cégnév
             vinculada-5-tipo-operacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - Az ügylet típusa
             vinculada-5-tipo-vinculacion:
-              help: null
-              label: null
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
+              label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
+                5 - A kapcsolat típusa
             x-chim6r1ecdn62p8:
               help: null
               label: A főtevékenység NACE-kódja

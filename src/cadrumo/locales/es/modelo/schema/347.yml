@@ -8,21 +8,26 @@ modelo:
         2008-y-siguientes:
           casilla:
             x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: ARRENDAMIENTO LOCAL NEGOCIO
             x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: OPERACIÓN CON BIENES VINCULADOS O DESTINADOS A VINCULARSE AL
+                RÉGIMEN DE DEPÓSITO DISTINTO DEL ADUANERO
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
               help: null
               label: Clave de operacion con la contraparte (A=entregas/prestaciones,
                 B=adquisiciones/recepciones, ...)
             x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: OPERACIONES RÉGIMEN ESPECIAL CRITERIO DE CAJA IVA
             x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: EJERCICIO
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
               help: null
               label: Importe de operaciones con la contraparte en primer trimestre
@@ -36,112 +41,148 @@ modelo:
               help: null
               label: Importe de operaciones con la contraparte en cuarto trimestre
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE ANUAL DE LAS OPERACIONES
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE ANUAL DE LAS OPERACIONES DEVENGADAS CONFORME AL CRITERIO
+                DE CAJA DEL IVA
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE PERCIBIDO EN METÁLICO
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE PERCIBIDO POR TRANSMISIONES DE INMUEBLES SUJETAS A IVA
+                PRIMER TRIMESTRE
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE PERCIBIDO POR TRANSMISIONES DE INMUEBLES SUJETAS A IVA
+                SEGUNDO TRIMESTRE
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE PERCIBIDO POR TRANSMISIONES DE INMUEBLES SUJETAS A IVA
+                TERCER TRIMESTRE
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE PERCIBIDO POR TRANSMISIONES DE INMUEBLES SUJETAS A IVA
+                CUARTO TRIMESTRE
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE ANUAL PERCIBIDO POR TRANSMISIONES DE INMUEBLES SUJETAS
+                A IVA
             x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: OPERACIÓN CON INVERSIÓN DEL SUJETO PASIVO
             x-cdnmst3ic5o62sjkckn6sqb6:
               help: null
               label: NIF de la contraparte declarada
             x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NIF OPERADOR COMUNITARIO
             x-cdnmst3ic5o62sjkckn6srrdc9p6a:
               help: null
               label: Nombre o razon social de la contraparte declarada
             x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NÚMERO DE CONVOCATORIA BDNS
             x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: OPERACIÓN SEGURO
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
               help: null
               label: Codigo de pais de la contraparte (ISO 3166-1 alfa-2; vacio para
                 contrapartes nacionales)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NIF DEL REPRESENTANTE LEGAL
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
             x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE TOTAL ANUAL DE LAS OPERACIONES
             x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE TOTAL DE LAS OPERACIONES DE ARRENDAMIENTO DE LOCALES
+                DE NEGOCIO
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: APELLIDOS Y NOMBRE
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
               help: Campo numérico de 9 posiciones. Teléfono de la persona con quien
                 relacionarse consignada por el declarante.
               label: Teléfono de la persona con quien relacionarse
             x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NIF DEL REPRESENTANTE LEGAL
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
             x-chim6r1eehkn0rpdednn0rriehig:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: TIPO DE SOPORTE
             x-chim6r1eehnn8obc5lkmsrblclh6opbj:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NÚMERO TOTAL DE INMUEBLES
             x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NÚMERO TOTAL DE PERSONAS Y ENTIDADES
             x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NIF DEL ARRENDATARIO
             x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL ARRENDATARIO
             x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: DIRECCIÓN DEL INMUEBLE
             x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: IMPORTE DE LA OPERACION
             x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: REFERENCIA CATASTRAL
             x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: NIF DEL REPRESENTANTE LEGAL
             x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
-              help: null
-              label: null
+              help: Dato declarado en el modelo 347, declaracion anual de operaciones
+                con terceras personas.
+              label: SITUACIÓN DEL INMUEBLE
           construct:
             modelo-347-informative:
               field:

@@ -16,140 +16,160 @@ modelo:
         2016-2017:
           casilla:
             vinculada-1-fjo:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Persona física
+                / jurídica / altra (F/J/O)
             vinculada-1-importe:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Import de l'operació
             vinculada-1-ingreso-pago:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Ingrés o pagament
             vinculada-1-metodo-valoracion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Mètode de valoració
             vinculada-1-nif:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - NIF de la persona
+                o entitat vinculada
             vinculada-1-provincia-pais:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Codi de província
+                o país
             vinculada-1-razon-social:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Cognoms i nom
+                o raó social
             vinculada-1-tipo-operacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Tipus d'operació
             vinculada-1-tipo-vinculacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 1 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 1 - Tipus de vinculació
             vinculada-2-fjo:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Persona física
+                / jurídica / altra (F/J/O)
             vinculada-2-importe:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Import de l'operació
             vinculada-2-ingreso-pago:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Ingrés o pagament
             vinculada-2-metodo-valoracion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Mètode de valoració
             vinculada-2-nif:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - NIF de la persona
+                o entitat vinculada
             vinculada-2-provincia-pais:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Codi de província
+                o país
             vinculada-2-razon-social:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Cognoms i nom
+                o raó social
             vinculada-2-tipo-operacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Tipus d'operació
             vinculada-2-tipo-vinculacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 2 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 2 - Tipus de vinculació
             vinculada-3-fjo:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Persona física
+                / jurídica / altra (F/J/O)
             vinculada-3-importe:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Import de l'operació
             vinculada-3-ingreso-pago:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Ingrés o pagament
             vinculada-3-metodo-valoracion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Mètode de valoració
             vinculada-3-nif:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - NIF de la persona
+                o entitat vinculada
             vinculada-3-provincia-pais:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Codi de província
+                o país
             vinculada-3-razon-social:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Cognoms i nom
+                o raó social
             vinculada-3-tipo-operacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Tipus d'operació
             vinculada-3-tipo-vinculacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 3 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 3 - Tipus de vinculació
             vinculada-4-fjo:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Persona física
+                / jurídica / altra (F/J/O)
             vinculada-4-importe:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Import de l'operació
             vinculada-4-ingreso-pago:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Ingrés o pagament
             vinculada-4-metodo-valoracion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Mètode de valoració
             vinculada-4-nif:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - NIF de la persona
+                o entitat vinculada
             vinculada-4-provincia-pais:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Codi de província
+                o país
             vinculada-4-razon-social:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Cognoms i nom
+                o raó social
             vinculada-4-tipo-operacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Tipus d'operació
             vinculada-4-tipo-vinculacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 4 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 4 - Tipus de vinculació
             vinculada-5-fjo:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Persona física
+                / jurídica / altra (F/J/O)
             vinculada-5-importe:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Import de l'operació
             vinculada-5-ingreso-pago:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Ingrés o pagament
             vinculada-5-metodo-valoracion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Mètode de valoració
             vinculada-5-nif:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - NIF de la persona
+                o entitat vinculada
             vinculada-5-provincia-pais:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Codi de província
+                o país
             vinculada-5-razon-social:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Cognoms i nom
+                o raó social
             vinculada-5-tipo-operacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Tipus d'operació
             vinculada-5-tipo-vinculacion:
-              help: null
-              label: null
+              help: Dada de l'operació vinculada número 5 declarada al model 232.
+              label: Operacions amb persones o entitats vinculades 5 - Tipus de vinculació
             x-chim6r1ecdn62p8:
               help: null
               label: C.N.A.E. de l'activitat principal
