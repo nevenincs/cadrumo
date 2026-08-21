@@ -209,10 +209,16 @@ def _hold_transaction_lock_in_sibling(
 
 
 def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result_queue: Any) -> None:
-    """Perform a production pointer write in an independent interpreter."""
+    """Perform a production pointer write in an independent interpreter.
+
+    ``ready`` is published once the interpreter is up and the pointer
+    transaction is the only work left, so a caller timing "did the sibling get
+    in?" measures the lock rather than the seconds a spawn spends importing.
+    """
     from ....core import BucketPointer
     from .._profile_pointer_transaction import active_profile_pointer_transaction
 
+    result_queue.put("ready")
     with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
         pointer_transaction.write(BucketPointer(bucket_id=bucket_id_text, schema_version=1))
     result_queue.put("written")
@@ -905,8 +911,14 @@ def test_pointer_cas_and_active_pointer_writer_share_one_root_lock(tmp_path: Pat
         with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
             captured = ProfileCustodyPointerSnapshot.capture(tmp_path)
             writer.start()
+
+            # Opened only after the sibling reports ready: timed from start()
+            # this window closed before a spawned interpreter could finish
+            # importing, so it passed with the root lock removed entirely and
+            # proved nothing about exclusion.
+            assert result_queue.get(timeout=20) == "ready"
             with pytest.raises(Empty):
-                result_queue.get(timeout=0.25)
+                result_queue.get(timeout=2.0)
             compare_and_swap_profile_pointer(root=tmp_path, expected=captured, replacement=None)
 
         assert result_queue.get(timeout=20) == "written"
