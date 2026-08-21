@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:900421090b06869f63f831df12a74a16f7677135f9e1fdb82bf68ffa1fc87c4b'
+body_hash: 'sha256:90da7a99fe546a22fe583e9d67e0dcc68944a78125ccf9cae69e7c4d6db3b35f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3349,3 +3349,36 @@ attributed until re-running twice, both fully green (1521). The worktree's known
 concurrent-I/O flakiness explains them, and the new test writes a real SQLite database,
 which is exactly the shape that would deserve suspicion — so it was confirmed rather than
 assumed away.
+
+### A test that passed for the wrong reason, caught by breaking the code
+
+The last uncovered region of `_master_key` was `_provider_enter` — the entry path that
+CALLS the canary. Covering it completes the guard end to end: previously the link between
+"the operator entered the unsecured provider" and "the canary ran" rested on a structural
+gate asserting the call exists in the source. 67% → 91% for the module, 86% → 92% for the
+package.
+
+**The second assertion was wrong first, and how it was caught is the finding.** It used a
+`with` block and asserted the context-var was clear after refusal. It passed — and it
+passed with the unwind REMOVED. Rather than accept the green as proof, the break was
+investigated: `__enter__` raising means `__exit__` never runs, and the `with` statement
+dropped every reference, so CPython finalised the `activate_session` generator and its
+`finally` reset the binding. **The test was measuring refcounting, not the guard.**
+
+Rewritten to call `__enter__` directly and hold the provider, asserting what only the
+unwind does — the session detached and the bookkeeping cleared. With the unwind removed
+the published-key session is left bound, attached and **unsealed**: refused at the door
+while the door stands open, so every later column read in that context decrypts under a
+key anyone can read. That is now the reported failure.
+
+**Generalisable, and the sharpest version of this campaign's recurring theme:** proving a
+gate bites is not a formality to complete, it is a measurement that can come back
+NEGATIVE and must then be believed. The break produced a green run; the tempting reading
+was "the patch did not take effect", and checking showed the patch was installed and the
+property held anyway — for a reason that had nothing to do with the code under test.
+Garbage collection is a plausible accomplice for any teardown assertion, and it is
+invisible in a passing test.
+
+The corrected docstring records the earlier version and why it was insufficient. A
+passing assertion that passes for the wrong reason is harder to notice the second time,
+because by then it has a history of being green.
