@@ -18,9 +18,9 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
+source_refs = ["enrolled-modelo-165-procedure"]
 
 [[revisions."2013-y-siguientes".deadline_windows]]
 id = "modelo-165-2026-0a"
