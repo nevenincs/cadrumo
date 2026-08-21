@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:306056ea3758ccab8d17d6965da0b9d5b38a2afb08aa8795a91d4c4b1a72ed20'
+body_hash: 'sha256:4727d29d50c0391536886e56e9c55f66ba7b9196629816a8f3df5b639c23f60c'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -496,6 +496,52 @@ converge on anything.
 revisions at the year their cited orden actually approves, or cite the orden that
 approves the later models -- and to revisit m200's existing stamp, which asserts a
 review of an applicability claim that outruns its own evidence.
+
+
+### the-missing-is-orden-is-identified-orden-hac-529-2026 | high | the gate's prescribed FIX resolves to a specific BOE disposition, verified against its own text
+
+The previous finding left the IS pair (m200, m220) asserting open-ended applicability
+from 2024 on an orden the catalogue *noted* was 2024-only. That premise is now confirmed
+against the PRIMARY SOURCE rather than the note: the bundled
+``orden-hac-657-2025.html`` excerpt reads **"períodos impositivos iniciados entre el 1
+de enero y el 31 de diciembre de 2024"** -- an explicitly bounded range, not an
+open-ended one.
+
+The span gate's remediation for both revisions is *"acquire and cite the BOE orden that
+authorises the later layout"*. **That orden exists and is identified:**
+
+> **Orden HAC/529/2026, de 7 de mayo** -- BOE-A-2026-11583, BOE núm. 131, 29 May 2026.
+> `https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-11583`
+
+Verified against the disposition's own text, not a search summary:
+
+| provision | verbatim |
+|---|---|
+| art. 1.1 | "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025" |
+| art. 1.1.a).2.º | "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales" |
+| art. 6.3 | "el Modelo 220 ... se presentará dentro del plazo correspondiente a la declaración en régimen de tributación individual de la entidad representante del grupo fiscal o entidad cabeza de grupo" |
+
+**Art. 1.1.a).2.º is stronger evidence than anything currently bundled for m220.** The
+existing ``orden-hac-657-2025:art-3`` entry records its own limitation: *"The dedicated
+«Se aprueba el modelo 220» clause of art 1 is not carried by the bundled Modelo-200
+excerpt; art 3 is the bundled provision naming 220 verbatim."* The 2026 orden carries
+exactly that dedicated approving clause. Whoever enrols it gets a **more specific**
+proof for m220 than the 2024 chain has -- and per the standing rule, the approving
+most-specific article is proof while distribution is only evidence.
+
+Art. 6.3 also confirms no plazo correction is owed: m220's window derives from the
+representative entity's individual IS plazo, which is the ``ley-27-2014:art-124``
+the registry already cites.
+
+**Deliberately NOT landed here, and why.** Enrolling this means bundling the corpus
+HTML, adding the legal entries, and then bounding ``2024-y-siguientes`` on BOTH m200 and
+m220 while opening 2025 revisions to carry the 2025 windows. The last part is a
+structural change to a peer-stamped revision holding 3462 casillas, and bounding without
+opening would strand the existing ``filing_year = 2025`` windows. That is a dedicated
+action with its own verification, not a loop tick. What this iteration removes is the
+research: the fix is now a lookup with a verified citation and three verbatim
+provisions, rather than an open acquisition question.
+
 
 ## Recommendations
 
