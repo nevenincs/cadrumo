@@ -44,8 +44,8 @@ def _register_in_sibling(tmp_path_text: str, barrier, results: Queue) -> None:
     """Register the shared label from a separate process, reporting the outcome."""
     from pathlib import Path as _Path
 
-    from cadrumo.application.user_profile import register_profile_with_credentials
-    from cadrumo.tests.secure_sql import isolated_profile_storage_root
+    from ....tests.secure_sql import isolated_profile_storage_root
+    from .. import register_profile_with_credentials
 
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)):
         barrier.wait()
