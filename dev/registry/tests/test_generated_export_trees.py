@@ -101,6 +101,12 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # above. Modelo 185 is monthly, so its period is a month code rather than
     # the annual "0A" every other row here carries.
     _GeneratedTree("185", "2025-y-siguientes", "aeat-dr-185-2026", "2026", 2026, "01"),
+    # The revision spans 2007-y-siguientes and the bundle carries two designs for
+    # it, 2024 and 2025. They are structurally identical -- same 17+26 fields, same
+    # offsets and widths, both 250 bytes -- and differ only in the RECURRENCIA
+    # wording, so the span gate does not report a re-layout here. The row names the
+    # CURRENT design, matching the revision's open end.
+    _GeneratedTree("182", "2007-y-siguientes", "aeat-dr-182-2025", "2025", 2025, "0A"),
 )
 
 

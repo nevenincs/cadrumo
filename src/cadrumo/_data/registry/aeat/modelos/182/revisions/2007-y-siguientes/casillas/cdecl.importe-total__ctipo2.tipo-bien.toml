@@ -1,0 +1,238 @@
+# Modelo 182 record-detail casillas, authored from the bundled official
+# diseno de registro `aeat-dr-182-2025` -- 2 records, 43 fields, both exactly
+# 250 bytes. Grounded in orden-eha-3021-2007 art 1 and ley-35-2006 art 68.3,
+# the refs the revision's pre-existing casillas already carry.
+#
+# The design splits three logical amounts into an ENTERO and a DECIMAL leaf
+# (`79-83 % DE DEDUCCION` = `79-81 ENTERO` + `82-83 DECIMAL`). Such a casilla
+# is declared once, numbered over the whole official span, and lists both
+# rendered halves in export_refs.
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "decl.tipo-soporte"
+number = "58"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_soporte"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarante.f006"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "decl.numero-justificante"
+number = "108-120"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "numero_justificante"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarante.f009"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "decl.total-declarados"
+number = "136-144"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "total_declarados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarante.f012"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "decl.importe-total"
+number = "145-159"
+section = ["declarante"]
+data_type = "money"
+semantic_role = "importe_total_donativos"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarante.f013", "m182-2025.declarante.f014"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "decl.naturaleza-declarante"
+number = "160"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "naturaleza_declarante"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarante.f015"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.representante-legal-nif"
+number = "27-35"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f006"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.codigo-provincia"
+number = "76-77"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "province_code"
+semantic_role = "codigo_provincia"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f008"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.clave"
+number = "78"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "clave_donativo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f009"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.en-especie"
+number = "97"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "donativo_en_especie"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f014"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.deduccion-ccaa"
+number = "98-99"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "deduccion_ccaa"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f015"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.porcentaje-deduccion-ccaa"
+number = "100-104"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "ratio"
+semantic_role = "porcentaje_deduccion_ccaa"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f016", "m182-2025.declarado.f017"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.naturaleza-declarado"
+number = "105"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "naturaleza_declarado"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f018"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.revocacion"
+number = "106"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "revocacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f019"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.ejercicio-donacion-revocada"
+number = "107-110"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "year"
+semantic_role = "ejercicio_revocada"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f020"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.tipo-bien"
+number = "111"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "tipo_bien"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f021"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.identificacion-bien"
+number = "112-131"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "text"
+semantic_role = "identificacion_bien"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f022"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.patrimonio-protegido-nif"
+number = "133-141"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "nif"
+semantic_role = "patrimonio_titular_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f024"]
+
+[[revisions."2007-y-siguientes".casillas]]
+id = "tipo2.patrimonio-protegido-nombre"
+number = "142-181"
+segmento = "182-2-declarado"
+section = ["declarado", "donante"]
+data_type = "name"
+semantic_role = "patrimonio_titular_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+export_refs = ["m182-2025.declarado.f025"]

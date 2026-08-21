@@ -1,0 +1,344 @@
+schema_version = 1
+fragment_id = "declarado"
+modelo = "182"
+design_epoch = "2025"
+source_ref = "aeat-dr-182-2025"
+source_sha256 = "90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831"
+
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 172
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f002"
+kind = "literal"
+literal = "182"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 174
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 176
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 179
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f005"
+kind = "casilla"
+casilla_id = "tipo2.donante-nif"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 182
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f006"
+kind = "casilla"
+casilla_id = "tipo2.representante-legal-nif"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 208
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f007"
+kind = "casilla"
+casilla_id = "tipo2.donante-nombre"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 237
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f008"
+kind = "casilla"
+casilla_id = "tipo2.codigo-provincia"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 247
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f009"
+kind = "casilla"
+casilla_id = "tipo2.clave"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 287
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f010"
+kind = "casilla"
+casilla_id = "tipo2.porcentaje-deduccion"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 349
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f011"
+kind = "casilla"
+casilla_id = "tipo2.porcentaje-deduccion"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 352
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f012"
+kind = "casilla"
+casilla_id = "tipo2.importe-donado"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 377
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f013"
+kind = "casilla"
+casilla_id = "tipo2.importe-donado"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 379
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f014"
+kind = "casilla"
+casilla_id = "tipo2.en-especie"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 381
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f015"
+kind = "casilla"
+casilla_id = "tipo2.deduccion-ccaa"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 394
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f016"
+kind = "casilla"
+casilla_id = "tipo2.porcentaje-deduccion-ccaa"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 429
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f017"
+kind = "casilla"
+casilla_id = "tipo2.porcentaje-deduccion-ccaa"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 432
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f018"
+kind = "casilla"
+casilla_id = "tipo2.naturaleza-declarado"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 435
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f019"
+kind = "casilla"
+casilla_id = "tipo2.revocacion"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 443
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f020"
+kind = "casilla"
+casilla_id = "tipo2.ejercicio-donacion-revocada"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 457
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f021"
+kind = "casilla"
+casilla_id = "tipo2.tipo-bien"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 463
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f022"
+kind = "casilla"
+casilla_id = "tipo2.identificacion-bien"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 474
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f023"
+kind = "casilla"
+casilla_id = "tipo2.recurrencia"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 484
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f024"
+kind = "casilla"
+casilla_id = "tipo2.patrimonio-protegido-nif"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 512
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f025"
+kind = "casilla"
+casilla_id = "tipo2.patrimonio-protegido-nombre"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 528
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m182-2025.declarado.f026"
+kind = "filler"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 534
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Declarado"

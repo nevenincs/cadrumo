@@ -1,0 +1,331 @@
+[[revisions.2007-y-siguientes.export_layouts]]
+id = 'generated-modelo-182-2007-y-siguientes-fichero'
+
+[[revisions.2007-y-siguientes.export_layouts.records]]
+id = 'm182-declarante'
+record_type = 'declarante'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '1'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '182'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f003'
+offset = 5
+length = 4
+kind = 'casilla'
+casilla_id = 'decl.ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f005'
+offset = 18
+length = 40
+kind = 'header'
+producer_key = 'taxpayer.surnames_or_legal_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f006'
+offset = 58
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.tipo-soporte'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f007'
+offset = 59
+length = 9
+kind = 'header'
+producer_key = 'contact_person.phone'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f008'
+offset = 68
+length = 40
+kind = 'header'
+producer_key = 'contact_person.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f009'
+offset = 108
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.numero-justificante'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f010'
+offset = 121
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.tipo-declaracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f011'
+offset = 123
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f012'
+offset = 136
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.total-declarados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f013'
+offset = 145
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.importe-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f014'
+offset = 158
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.importe-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f015'
+offset = 160
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.naturaleza-declarante'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f016'
+offset = 161
+length = 77
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[[revisions.2007-y-siguientes.export_layouts.records.fields]]
+id = 'm182-2025.declarante.f017'
+offset = 238
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3021-2007:art-1',
+    'ley-35-2006:art-68.3',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-182-2025']
+
+[revisions.2007-y-siguientes.export_layouts.records.row_field_casilla_ids]
