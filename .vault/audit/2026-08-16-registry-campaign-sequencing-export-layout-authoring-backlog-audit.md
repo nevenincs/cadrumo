@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f16ed5a1e06cf843727e768f0200eabbd62851fb4641a0cca0b1272618fbb3f7'
+body_hash: 'sha256:8fa83616d4b466c2369040c74ddc919e068bffd1d02df33630e38143f4076661'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8430,3 +8430,97 @@ meant to carry.
 ### Still open
 
 Four cross-year spans awaiting splits, modelo 184's the smallest and now scoped.
+
+## Authority-grade overclaim: five gate modules demanded FILING of applicability revisions
+
+Five failing modules shared one root cause, not five. Each built a snapshot at
+the `RegistryAuthorityGrade.FILING` default while the revision under it declares
+`authority_grade = "applicability"`, so the build refused before the assertion
+that was the actual subject ever ran.
+
+The corpus splits 95 revisions into 62 `filing` and 33 `applicability`, 14 of the
+latter still `pending_review`. `filing` grade requires a reviewed revision, so
+every caller defaulting to FILING dies on the first unreviewed applicability
+revision it reaches.
+
+### `test_binding_coverage_breadth.py` — the walk scanned nothing
+
+The breadth walk asked FILING of every modelo and aborted at modelo 036, so the
+bindings invariant it exists to prove was never established anywhere. It now
+requests `modelo.revisions[revision_id].effective_authority_grade` — the rung the
+revision itself declares. Coverage went from an aborted scan to **58 modelos,
+95 revisions, 698 bound casillas, 9,146 bindings, zero violations**.
+
+Disproved by bending one bound casilla to a binding id that exists nowhere,
+patched at the snapshot boundary from outside the repo: exactly
+`test_every_bound_casilla_resolves_to_an_existing_binding` reds, the other two
+stay green.
+
+### `test_censo_modelo_registry_data.py`, `test_catalogue_verification.py`
+
+The censo helper and the model-law-ledger test now derive the rung from the
+law-selected revision rather than hardcoding it, so a later promotion of 036 or
+182 carries without an edit. The ledger case was self-contradictory as written:
+it demanded a filing-grade build in order to assert the ledger reports NOT
+filing-eligible.
+
+Confirmed a lowered claim rather than a dodged check — modelo 036 builds at
+`applicability` and `calculation` and **still refuses at `filing`** on its
+`pending_review` status.
+
+### `test_authority.py` — a fixture predating the required declaration
+
+The synthetic modelo 999 tree declared no `authority_grade`. Declared
+`applicability`: it exists to be a registry tree whose bytes change so the cache
+can be shown to invalidate, and is not intended to compute or file.
+
+Two of its three invalidation tests were disproved by freezing
+`collect_registry_identity_fingerprints`. The third survived that control, which
+looked like a vacuous test and is not: registry identity and source evidence are
+two separate cache keys, and freezing `collect_source_evidence_fingerprints`
+instead reds it. The control was mis-scoped, not the test.
+
+### Stale pending map, cleared
+
+`enrolled-modelo-038-layout`, `-156-`, `-576-` sat in the record-design epoch
+pending map reading "declares neither applies_from nor applies_to". All three now
+declare both (epochs 2024, 2003, 2008). The map's own stale-detection reported
+this correctly; the entries were removed.
+
+## Modelo 038 pre-June-2024 layout gap — recorded, not fixed
+
+`test_supported_period_matrix_has_applicable_record_design_sources` reports
+**17 uncovered monthly periods**: all twelve of 2023 plus January to May 2024.
+That set is exactly the era before the enrolled design's `applies_from =
+2024-06-01`, with nothing after it — a fully explained boundary, not a scatter.
+
+The `applies_from` is correctly grounded and must not be widened: Orden
+HAC/646/2024 approved the change and AEAT states it applies first to "la
+declaración correspondiente a junio de 2024, a presentar en julio de 2024".
+Revision `2002-y-siguientes` schedules from 2002; only the post-June-2024 design
+is bundled.
+
+`_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS` does **not** fit. Its three entries
+are designs that PREDATE the period and still govern forward (a 2025 design
+covering 2026). Modelo 038's gap runs the other way — the bundled design
+postdates the periods — so an exception entry would assert the 2024 layout
+governed 2023, which is false.
+
+**Reason for recording:** closing it needs a superseded official AEAT design this
+repository does not bundle. Authoring a pre-2024 layout claim from anything else
+is exactly the ungrounded-provenance failure the campaign's grounding rule
+forbids.
+
+**Recommendation:** treat it as the same cross-year-span work as modelo 184 —
+acquire the pre-2024 design, then split `2002-y-siguientes` at the 2024-06-01
+Orden boundary, landing the registry data, revision rename and enrolment change
+together.
+
+### A narrowing rejected on measurement
+
+The tempting fix was to scope the matrix gate to filing-grade revisions, since a
+record design backs filing and modelo 038 declares applicability. Measured
+first: that filter drops **27 of 128 matrix entries across 9 revisions**, and 8
+of those 9 currently PASS. It would discard working coverage rather than false
+positives, and modelo 220's applicability revision is already carried
+deliberately in the publication-bound exception map. Rejected.
