@@ -106,68 +106,90 @@ modelo:
                 and a decimal part.
               label: Expenses / excess negative income
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Depreciation
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Leases and royalties
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Operating consumption
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Financial expenses
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Staff costs
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Other tax-deductible expenses
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Provisions
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Repairs and maintenance
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Independent professional services
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Utilities
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Economic-activity expenses. Tax-deductible levies
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Depreciation of movable assets
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Depreciation of the property
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Amounts accrued by third parties
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Maintenance and repair
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Interest and other financing costs
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Outstanding interest and repair
+                or maintenance costs
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Other deductible expenses
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Insurance premiums
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Doubtful balances
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: null
-              label: null
+              help: Tax-deductible expense declared in modelo 184's entity record.
+                The design splits it into an integer and a decimal part.
+              label: Real-estate capital expenses. Levies and surcharges
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
               help: Field declared on modelo 184, the informative return of income-attribution
                 entities.

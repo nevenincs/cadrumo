@@ -108,68 +108,91 @@ modelo:
                 entera y parte decimal.
               label: Gastos / exceso de rentas negativas
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Amortizaciones
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Arrendamientos y cánones
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Consumos de explotación
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Gastos financieros
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Gastos de personal
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Otros gastos fiscalmente deducibles
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Provisiones
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Reparaciones y conservación
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Servicios profesionales independientes
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Suministros
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos de actividades económicas. Tributos fiscalmente deducibles
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Amortización de bienes muebles
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Amortización del inmueble
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Cantidades devengadas por terceros
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Conservación y reparación
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Intereses y demás gastos de
+                financiación
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Intereses y gastos de reparación
+                y conservación pendientes
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Otros gastos deducibles
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Primas de seguros
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Saldos de dudoso cobro
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: null
-              label: null
+              help: Gasto fiscalmente deducible declarado en el registro de entidad
+                del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              label: Gastos del capital inmobiliario. Tributos y recargos
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
               help: Dato declarado en el modelo 184, declaracion informativa de entidades
                 en regimen de atribucion de rentas.

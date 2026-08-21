@@ -108,68 +108,90 @@ modelo:
                 részre bontja.
               label: Költségek / negatív jövedelem többlete
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Értékcsökkenés
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Bérleti díjak és jogdíjak
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Működési anyagfelhasználás
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Pénzügyi ráfordítások
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Személyi jellegű ráfordítások
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Egyéb adózásban levonható költségek
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Céltartalékok
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Javítás és karbantartás
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Független szakmai szolgáltatások
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Közüzemi szolgáltatások
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Gazdasági tevékenység költségei. Adózásban levonható adók
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Ingóságok értékcsökkenése
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Az ingatlan értékcsökkenése
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Harmadik felek által elszámolt összegek
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Karbantartás és javítás
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Kamatok és egyéb finanszírozási költségek
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Függő kamatok, javítási és karbantartási
+                költségek
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Egyéb levonható költségek
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Biztosítási díjak
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Kétes követelések
             x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: null
-              label: null
+              help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
+                koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+              label: Ingatlantőke költségei. Adók és pótlékok
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
               help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
                 bevallott adat.
