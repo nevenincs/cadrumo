@@ -15232,8 +15232,10 @@ modelo:
               label: Inversiones anticipadas 2023. Pendiente de dotar RIC al final
                 del período
             '1501':
+              help: Casilla 1501 del modelo 200, ejercicio 2024.
               label: Valor nominal total de la participación [1501]
             '1502':
+              help: Casilla 1502 del modelo 200, ejercicio 2024.
               label: Valor en libros (en el activo de la declarante) de la participación
                 [1502]
             '1503':

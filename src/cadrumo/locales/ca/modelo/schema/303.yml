@@ -683,6 +683,8 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: Casella 107 del model 303, exercici 2022.
             '11':
               help: null
               label: null
@@ -701,6 +703,14 @@ modelo:
             '124':
               help: null
               label: null
+            '125':
+              help: Casella 125 del model 303, exercici 2022.
+            '126':
+              help: Casella 126 del model 303, exercici 2022.
+            '127':
+              help: Casella 127 del model 303, exercici 2022.
+            '128':
+              help: Casella 128 del model 303, exercici 2022.
             '13':
               help: null
               label: null
@@ -812,12 +822,62 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: Casella 500 del model 303, exercici 2022.
+            '501':
+              help: Casella 501 del model 303, exercici 2022.
+            '502':
+              help: Casella 502 del model 303, exercici 2022.
+            '503':
+              help: Casella 503 del model 303, exercici 2022.
+            '504':
+              help: Casella 504 del model 303, exercici 2022.
+            '505':
+              help: Casella 505 del model 303, exercici 2022.
+            '506':
+              help: Casella 506 del model 303, exercici 2022.
+            '507':
+              help: Casella 507 del model 303, exercici 2022.
+            '508':
+              help: Casella 508 del model 303, exercici 2022.
+            '509':
+              help: Casella 509 del model 303, exercici 2022.
             '51':
               help: null
               label: null
+            '510':
+              help: Casella 510 del model 303, exercici 2022.
+            '511':
+              help: Casella 511 del model 303, exercici 2022.
+            '512':
+              help: Casella 512 del model 303, exercici 2022.
+            '513':
+              help: Casella 513 del model 303, exercici 2022.
+            '514':
+              help: Casella 514 del model 303, exercici 2022.
+            '515':
+              help: Casella 515 del model 303, exercici 2022.
+            '516':
+              help: Casella 516 del model 303, exercici 2022.
+            '517':
+              help: Casella 517 del model 303, exercici 2022.
+            '518':
+              help: Casella 518 del model 303, exercici 2022.
+            '519':
+              help: Casella 519 del model 303, exercici 2022.
             '52':
               help: null
               label: null
+            '520':
+              help: Casella 520 del model 303, exercici 2022.
+            '521':
+              help: Casella 521 del model 303, exercici 2022.
+            '522':
+              help: Casella 522 del model 303, exercici 2022.
+            '523':
+              help: Casella 523 del model 303, exercici 2022.
+            '524':
+              help: Casella 524 del model 303, exercici 2022.
             '53':
               help: null
               label: null
@@ -863,9 +923,81 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: Casella 700 del model 303, exercici 2022.
+            '701':
+              help: Casella 701 del model 303, exercici 2022.
+            '702':
+              help: Casella 702 del model 303, exercici 2022.
+            '703':
+              help: Casella 703 del model 303, exercici 2022.
+            '704':
+              help: Casella 704 del model 303, exercici 2022.
+            '705':
+              help: Casella 705 del model 303, exercici 2022.
+            '706':
+              help: Casella 706 del model 303, exercici 2022.
+            '707':
+              help: Casella 707 del model 303, exercici 2022.
+            '708':
+              help: Casella 708 del model 303, exercici 2022.
+            '709':
+              help: Casella 709 del model 303, exercici 2022.
             '71':
               help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de la liquidació
+            '710':
+              help: Casella 710 del model 303, exercici 2022.
+            '711':
+              help: Casella 711 del model 303, exercici 2022.
+            '712':
+              help: Casella 712 del model 303, exercici 2022.
+            '713':
+              help: Casella 713 del model 303, exercici 2022.
+            '714':
+              help: Casella 714 del model 303, exercici 2022.
+            '715':
+              help: Casella 715 del model 303, exercici 2022.
+            '716':
+              help: Casella 716 del model 303, exercici 2022.
+            '717':
+              help: Casella 717 del model 303, exercici 2022.
+            '718':
+              help: Casella 718 del model 303, exercici 2022.
+            '719':
+              help: Casella 719 del model 303, exercici 2022.
+            '720':
+              help: Casella 720 del model 303, exercici 2022.
+            '721':
+              help: Casella 721 del model 303, exercici 2022.
+            '722':
+              help: Casella 722 del model 303, exercici 2022.
+            '723':
+              help: Casella 723 del model 303, exercici 2022.
+            '724':
+              help: Casella 724 del model 303, exercici 2022.
+            '725':
+              help: Casella 725 del model 303, exercici 2022.
+            '726':
+              help: Casella 726 del model 303, exercici 2022.
+            '727':
+              help: Casella 727 del model 303, exercici 2022.
+            '728':
+              help: Casella 728 del model 303, exercici 2022.
+            '729':
+              help: Casella 729 del model 303, exercici 2022.
+            '730':
+              help: Casella 730 del model 303, exercici 2022.
+            '731':
+              help: Casella 731 del model 303, exercici 2022.
+            '732':
+              help: Casella 732 del model 303, exercici 2022.
+            '733':
+              help: Casella 733 del model 303, exercici 2022.
+            '734':
+              help: Casella 734 del model 303, exercici 2022.
+            '735':
+              help: Casella 735 del model 303, exercici 2022.
             '74':
               help: null
               label: null
@@ -878,6 +1010,42 @@ modelo:
             '77':
               help: null
               label: null
+            '79':
+              help: Casella 79 del model 303, exercici 2022.
+            '80':
+              help: Casella 80 del model 303, exercici 2022.
+            '81':
+              help: Casella 81 del model 303, exercici 2022.
+            '83':
+              help: Casella 83 del model 303, exercici 2022.
+            '84':
+              help: Casella 84 del model 303, exercici 2022.
+            '86':
+              help: Casella 86 del model 303, exercici 2022.
+            '88':
+              help: Casella 88 del model 303, exercici 2022.
+            '89':
+              help: Casella 89 del model 303, exercici 2022.
+            '90':
+              help: Casella 90 del model 303, exercici 2022.
+            '91':
+              help: Casella 91 del model 303, exercici 2022.
+            '92':
+              help: Casella 92 del model 303, exercici 2022.
+            '93':
+              help: Casella 93 del model 303, exercici 2022.
+            '94':
+              help: Casella 94 del model 303, exercici 2022.
+            '95':
+              help: Casella 95 del model 303, exercici 2022.
+            '96':
+              help: Casella 96 del model 303, exercici 2022.
+            '97':
+              help: Casella 97 del model 303, exercici 2022.
+            '98':
+              help: Casella 98 del model 303, exercici 2022.
+            '99':
+              help: Casella 99 del model 303, exercici 2022.
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -954,7 +1122,7 @@ modelo:
               help: null
               label: null
           field:
-            label: null
+            label: Model 303, exercici 2022
         '2023':
           casilla:
             '01':

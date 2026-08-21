@@ -8,104 +8,147 @@ modelo:
         2009-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: Casella 966-976 del model 308, exercici 2009.
               label: Devolució - SWIFT-BIC
             x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Casella 932-965 del model 308, exercici 2009.
               label: Devolució - IBAN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Casella 119-178 del model 308, exercici 2009.
               label: NMT - Adquirent - Cognoms o Raó social
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Casella 110-118 del model 308, exercici 2009.
               label: Mitjans de transport nous (NMT) - Adquirent - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Casella 179-198 del model 308, exercici 2009.
               label: NMT - Adquirent - Nom
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Casella 199-200 del model 308, exercici 2009.
               label: NMT - Adquirent - País
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Casella 638-641 del model 308, exercici 2009.
               label: NMT - Aeronaus - Any de fabricació
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Casella 496-535 del model 308, exercici 2009.
               label: NMT - Aeronaus - Fabricant
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Casella 536-615 del model 308, exercici 2009.
               label: NMT - Aeronaus - Marca
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Casella 642-651 del model 308, exercici 2009.
               label: NMT - Aeronaus - Pes màxim d'enlairament
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Casella 616-637 del model 308, exercici 2009.
               label: NMT - Aeronaus - Núm. de sèrie
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Casella 491-495 del model 308, exercici 2009.
               label: NMT - Embarcacions - Eslora màxima
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Casella 349-388 del model 308, exercici 2009.
               label: NMT - Embarcacions - Fabricant
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Casella 469-490 del model 308, exercici 2009.
               label: NMT - Embarcacions - Identificació
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Casella 389-468 del model 308, exercici 2009.
               label: NMT - Embarcacions - Tipus
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: Casella 781-797 del model 308, exercici 2009.
               label: NMT - Liquidació - IVA a retornar art. 21.4º, párrafo 2º LIVA
                 [20]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: Casella 730-746 del model 308, exercici 2009.
               label: NMT - Liquidació - IVA a retornar per lliuraments intracomunitaris
                 [07]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: Casella 747-763 del model 308, exercici 2009.
               label: NMT - Liquidació - IVA a retornar per activitat de transport
                 [18]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Casella 674-690 del model 308, exercici 2009.
               label: NMT - Liquidació - IVA suportat [03]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: Casella 764-780 del model 308, exercici 2009.
               label: NMT - Liquidació - IVA suportat art. 21.4º, párrafo 2º LIVA [19]
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Casella 713-729 del model 308, exercici 2009.
               label: NMT - Liquidació - Màxim a retornar [06]
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Casella 652-668 del model 308, exercici 2009.
               label: NMT - Liquidació - Preu d'adquisició [01]
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Casella 691-707 del model 308, exercici 2009.
               label: NMT - Liquidació - Preu de venda [04]
             x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Casella 669-673 del model 308, exercici 2009.
               label: NMT - Liquidació - Tipus (%) [02]
             x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Casella 708-712 del model 308, exercici 2009.
               label: NMT - Liquidació - Tipus (%) [05]
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Casella 321-342 del model 308, exercici 2009.
               label: NMT - Vehicles - Núm. id. bastidor
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Casella 343-348 del model 308, exercici 2009.
               label: NMT - Vehicles - Classificació
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Casella 201-240 del model 308, exercici 2009.
               label: NMT - Vehicles - Marca
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Casella 281-320 del model 308, exercici 2009.
               label: NMT - Vehicles - Model (denominació comercial)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Casella 241-280 del model 308, exercici 2009.
               label: NMT - Vehicles - Tipus
             x-chim6r1edpnmqojick:
+              help: Casella 83-102 del model 308, exercici 2009.
               label: Identificació - Nom
             x-chim6r1ee1in4qbfchng:
               help: Dada declarada al model 308, presa del disseny de registre oficial.
               label: Meritació. Període
             x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Casella 798-814 del model 308, exercici 2009.
               label: Règim Espec. recàrrec equival. (RERE) - Liquidació - Base Imposable
                 [08]
             x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Casella 837-853 del model 308, exercici 2009.
               label: RERE - Liquidació - Base Imposable [11]
             x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Casella 876-892 del model 308, exercici 2009.
               label: RERE - Liquidació - Base Imposable [14]
             x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Casella 820-836 del model 308, exercici 2009.
               label: RERE - Liquidació - Quota [10]
             x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Casella 859-875 del model 308, exercici 2009.
               label: RERE - Liquidació - Quota [13]
             x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Casella 898-914 del model 308, exercici 2009.
               label: RERE - Liquidació - Quota [16]
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: Casella 915-931 del model 308, exercici 2009.
               label: RERE - Liquidació - IVA a retornar [17]
             x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Casella 815-819 del model 308, exercici 2009.
               label: RERE - Liquidació - Tipus (%) [09]
             x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Casella 854-858 del model 308, exercici 2009.
               label: RERE - Liquidació - Tipus (%) [12]
             x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Casella 893-897 del model 308, exercici 2009.
               label: RERE - Liquidació - Tipus (%) [15]
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella 13 del model 308, exercici 2009.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               help: null
               label: Tipus de sol·licitud (recàrrec d'equivalència / art. 30 bis /
                 art. 21.4 / subjecte passiu ocasional / règim simplificat de transport)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Casella 109 del model 308, exercici 2009.
               label: Tipus de tributació segons el subjecte passiu
           construct:
             modelo-308-iva-solicitud-devolucion:

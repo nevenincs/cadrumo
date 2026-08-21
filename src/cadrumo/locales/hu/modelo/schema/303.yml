@@ -693,6 +693,8 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: A 303-es modelo 107. rovata, 2022. adóév.
             '11':
               help: null
               label: null
@@ -711,6 +713,14 @@ modelo:
             '124':
               help: null
               label: null
+            '125':
+              help: A 303-es modelo 125. rovata, 2022. adóév.
+            '126':
+              help: A 303-es modelo 126. rovata, 2022. adóév.
+            '127':
+              help: A 303-es modelo 127. rovata, 2022. adóév.
+            '128':
+              help: A 303-es modelo 128. rovata, 2022. adóév.
             '13':
               help: null
               label: null
@@ -822,12 +832,62 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: A 303-es modelo 500. rovata, 2022. adóév.
+            '501':
+              help: A 303-es modelo 501. rovata, 2022. adóév.
+            '502':
+              help: A 303-es modelo 502. rovata, 2022. adóév.
+            '503':
+              help: A 303-es modelo 503. rovata, 2022. adóév.
+            '504':
+              help: A 303-es modelo 504. rovata, 2022. adóév.
+            '505':
+              help: A 303-es modelo 505. rovata, 2022. adóév.
+            '506':
+              help: A 303-es modelo 506. rovata, 2022. adóév.
+            '507':
+              help: A 303-es modelo 507. rovata, 2022. adóév.
+            '508':
+              help: A 303-es modelo 508. rovata, 2022. adóév.
+            '509':
+              help: A 303-es modelo 509. rovata, 2022. adóév.
             '51':
               help: null
               label: null
+            '510':
+              help: A 303-es modelo 510. rovata, 2022. adóév.
+            '511':
+              help: A 303-es modelo 511. rovata, 2022. adóév.
+            '512':
+              help: A 303-es modelo 512. rovata, 2022. adóév.
+            '513':
+              help: A 303-es modelo 513. rovata, 2022. adóév.
+            '514':
+              help: A 303-es modelo 514. rovata, 2022. adóév.
+            '515':
+              help: A 303-es modelo 515. rovata, 2022. adóév.
+            '516':
+              help: A 303-es modelo 516. rovata, 2022. adóév.
+            '517':
+              help: A 303-es modelo 517. rovata, 2022. adóév.
+            '518':
+              help: A 303-es modelo 518. rovata, 2022. adóév.
+            '519':
+              help: A 303-es modelo 519. rovata, 2022. adóév.
             '52':
               help: null
               label: null
+            '520':
+              help: A 303-es modelo 520. rovata, 2022. adóév.
+            '521':
+              help: A 303-es modelo 521. rovata, 2022. adóév.
+            '522':
+              help: A 303-es modelo 522. rovata, 2022. adóév.
+            '523':
+              help: A 303-es modelo 523. rovata, 2022. adóév.
+            '524':
+              help: A 303-es modelo 524. rovata, 2022. adóév.
             '53':
               help: null
               label: null
@@ -875,10 +935,82 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: A 303-es modelo 700. rovata, 2022. adóév.
+            '701':
+              help: A 303-es modelo 701. rovata, 2022. adóév.
+            '702':
+              help: A 303-es modelo 702. rovata, 2022. adóév.
+            '703':
+              help: A 303-es modelo 703. rovata, 2022. adóév.
+            '704':
+              help: A 303-es modelo 704. rovata, 2022. adóév.
+            '705':
+              help: A 303-es modelo 705. rovata, 2022. adóév.
+            '706':
+              help: A 303-es modelo 706. rovata, 2022. adóév.
+            '707':
+              help: A 303-es modelo 707. rovata, 2022. adóév.
+            '708':
+              help: A 303-es modelo 708. rovata, 2022. adóév.
+            '709':
+              help: A 303-es modelo 709. rovata, 2022. adóév.
             '71':
               help: A 303-es modelón bevallott adat, a hivatalos nyomtatványtervből
                 véve.
               label: Az elszámolás eredménye
+            '710':
+              help: A 303-es modelo 710. rovata, 2022. adóév.
+            '711':
+              help: A 303-es modelo 711. rovata, 2022. adóév.
+            '712':
+              help: A 303-es modelo 712. rovata, 2022. adóév.
+            '713':
+              help: A 303-es modelo 713. rovata, 2022. adóév.
+            '714':
+              help: A 303-es modelo 714. rovata, 2022. adóév.
+            '715':
+              help: A 303-es modelo 715. rovata, 2022. adóév.
+            '716':
+              help: A 303-es modelo 716. rovata, 2022. adóév.
+            '717':
+              help: A 303-es modelo 717. rovata, 2022. adóév.
+            '718':
+              help: A 303-es modelo 718. rovata, 2022. adóév.
+            '719':
+              help: A 303-es modelo 719. rovata, 2022. adóév.
+            '720':
+              help: A 303-es modelo 720. rovata, 2022. adóév.
+            '721':
+              help: A 303-es modelo 721. rovata, 2022. adóév.
+            '722':
+              help: A 303-es modelo 722. rovata, 2022. adóév.
+            '723':
+              help: A 303-es modelo 723. rovata, 2022. adóév.
+            '724':
+              help: A 303-es modelo 724. rovata, 2022. adóév.
+            '725':
+              help: A 303-es modelo 725. rovata, 2022. adóév.
+            '726':
+              help: A 303-es modelo 726. rovata, 2022. adóév.
+            '727':
+              help: A 303-es modelo 727. rovata, 2022. adóév.
+            '728':
+              help: A 303-es modelo 728. rovata, 2022. adóév.
+            '729':
+              help: A 303-es modelo 729. rovata, 2022. adóév.
+            '730':
+              help: A 303-es modelo 730. rovata, 2022. adóév.
+            '731':
+              help: A 303-es modelo 731. rovata, 2022. adóév.
+            '732':
+              help: A 303-es modelo 732. rovata, 2022. adóév.
+            '733':
+              help: A 303-es modelo 733. rovata, 2022. adóév.
+            '734':
+              help: A 303-es modelo 734. rovata, 2022. adóév.
+            '735':
+              help: A 303-es modelo 735. rovata, 2022. adóév.
             '74':
               help: null
               label: null
@@ -891,6 +1023,42 @@ modelo:
             '77':
               help: null
               label: null
+            '79':
+              help: A 303-es modelo 79. rovata, 2022. adóév.
+            '80':
+              help: A 303-es modelo 80. rovata, 2022. adóév.
+            '81':
+              help: A 303-es modelo 81. rovata, 2022. adóév.
+            '83':
+              help: A 303-es modelo 83. rovata, 2022. adóév.
+            '84':
+              help: A 303-es modelo 84. rovata, 2022. adóév.
+            '86':
+              help: A 303-es modelo 86. rovata, 2022. adóév.
+            '88':
+              help: A 303-es modelo 88. rovata, 2022. adóév.
+            '89':
+              help: A 303-es modelo 89. rovata, 2022. adóév.
+            '90':
+              help: A 303-es modelo 90. rovata, 2022. adóév.
+            '91':
+              help: A 303-es modelo 91. rovata, 2022. adóév.
+            '92':
+              help: A 303-es modelo 92. rovata, 2022. adóév.
+            '93':
+              help: A 303-es modelo 93. rovata, 2022. adóév.
+            '94':
+              help: A 303-es modelo 94. rovata, 2022. adóév.
+            '95':
+              help: A 303-es modelo 95. rovata, 2022. adóév.
+            '96':
+              help: A 303-es modelo 96. rovata, 2022. adóév.
+            '97':
+              help: A 303-es modelo 97. rovata, 2022. adóév.
+            '98':
+              help: A 303-es modelo 98. rovata, 2022. adóév.
+            '99':
+              help: A 303-es modelo 99. rovata, 2022. adóév.
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -968,7 +1136,7 @@ modelo:
               help: null
               label: null
           field:
-            label: null
+            label: 303-as modelo, 2022. adóév
         '2023':
           casilla:
             '01':

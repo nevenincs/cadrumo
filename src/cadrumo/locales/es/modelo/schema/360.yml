@@ -12,59 +12,86 @@ modelo:
         2010-y-siguientes:
           casilla:
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc8:
+              help: Casilla 2004-2043 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 1. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc9g:
+              help: Casilla 3066-3105 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 10. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qcg:
+              help: Casilla 2122-2161 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 2. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qco:
+              help: Casilla 2240-2279 del modelo 360, ejercicio 2010.
               label: 7. Anexos.3. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd0:
+              help: Casilla 2358-2397 del modelo 360, ejercicio 2010.
               label: 7. Anexos.4. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd8:
+              help: Casilla 2476-2515 del modelo 360, ejercicio 2010.
               label: 7. Anexos.5. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdg:
+              help: Casilla 2594-2633 del modelo 360, ejercicio 2010.
               label: 7. Anexos.6. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdo:
+              help: Casilla 2712-2751 del modelo 360, ejercicio 2010.
               label: 7. Anexos.7. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe0:
+              help: Casilla 2830-2869 del modelo 360, ejercicio 2010.
               label: 7. Anexos.8. Descripción
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe8:
+              help: Casilla 2948-2987 del modelo 360, ejercicio 2010.
               label: 7. Anexos.9. Descripción
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64:
+              help: Casilla 1986-2001 del modelo 360, ejercicio 2010.
               label: 7. Anexos.1. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64o0:
+              help: Casilla 3048-3063 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 10. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd68:
+              help: Casilla 2104-2119 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 2. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6c:
+              help: Casilla 2222-2237 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 3. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6g:
+              help: Casilla 2340-2355 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 4. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6k:
+              help: Casilla 2458-2473 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 5. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6o:
+              help: Casilla 2576-2591 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 6. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6s:
+              help: Casilla 2694-2709 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 7. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd70:
+              help: Casilla 2812-2827 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 8. Nº de registro
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd74:
+              help: Casilla 2930-2945 del modelo 360, ejercicio 2010.
               label: 7. Anexos. 9. Nº de registro
             x-chim6r1ec9gmsor1e9kmubb2d5hg:
+              help: Casilla 1972-1982 del modelo 360, ejercicio 2010.
               label: 6. Datos bancarios. Titular de la cuenta. Banco-BIC
             x-chim6r1ec9gmsor1e9kmubb3c5m6ip31cg:
+              help: Casilla 1937-1937 del modelo 360, ejercicio 2010.
               label: 6. Datos bancarios. Titular de la cuenta. En calidad de (Solicitante
                 / representante) Solicitante
             x-chim6r1ec9gmsor1e9kmubb4d5r6isr1:
+              help: Casilla 1983-1985 del modelo 360, ejercicio 2010.
               label: 6. Datos bancarios. Titular de la cuenta. Divisa
             x-chim6r1ec9gmsor1e9kmubb9c9gms:
+              help: Casilla 1938-1971 del modelo 360, ejercicio 2010.
               label: 6. Datos bancarios. Titular de la cuenta. IBAN
             x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
+              help: Casilla 1912-1936 del modelo 360, ejercicio 2010.
               label: 6. Datos bancarios. Titular de la cuenta. Nombre
             x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
+              help: Casilla 18-18 del modelo 360, ejercicio 2010.
               label: Nivel de calidad de datos
             x-chim6r1ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: Casilla 25-25 del modelo 360, ejercicio 2010.
               label: 1. Causa de presentación. Solicitud de devolución o modificación
                 de una solicitud de devolución
             x-chim6r1ecll6asj3d5hmiro:
@@ -74,407 +101,592 @@ modelo:
               help: null
               label: Estado miembro de devolución donde se soportaron las cuotas
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
+              help: Casilla 27-42 del modelo 360, ejercicio 2010.
               label: 1. En caso de modificación. Número de registro de la declaración
                 anterior
             x-chim6r1edto32bb2c5pma:
+              help: Casilla 2698-2712 del modelo 360, ejercicio 2010.
               label: 1. Base imponible
             x-chim6r1edto32bb3dti6iprf5kog:
+              help: Casilla 78-87 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5koj0:
+              help: Casilla 2436-2445 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5kp0:
+              help: Casilla 340-349 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5kpg:
+              help: Casilla 602-611 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5kq0:
+              help: Casilla 864-873 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5kqg:
+              help: Casilla 1126-1135 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5kr0:
+              help: Casilla 1388-1397 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5krg:
+              help: Casilla 1650-1659 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5ks0:
+              help: Casilla 1912-1921 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3dti6iprf5ksg:
+              help: Casilla 2174-2183 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: código'
             x-chim6r1edto32bb3elnn8o8:
+              help: Casilla 2713-2727 del modelo 360, ejercicio 2010.
               label: 1. Cuota IVA
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kog:
+              help: Casilla 90-339 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5koj0:
+              help: Casilla 2448-2697 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kp0:
+              help: Casilla 352-601 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kpg:
+              help: Casilla 614-863 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kq0:
+              help: Casilla 876-1125 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kqg:
+              help: Casilla 1138-1387 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kr0:
+              help: Casilla 1400-1649 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5krg:
+              help: Casilla 1662-1911 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ks0:
+              help: Casilla 1924-2173 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ksg:
+              help: Casilla 2186-2435 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto32bb4d5r6isr1:
+              help: Casilla 2748-2750 del modelo 360, ejercicio 2010.
               label: 1. Divisa
             x-chim6r1edto32bb6c5hn8tbic4:
+              help: Casilla 20-69 del modelo 360, ejercicio 2010.
               label: 1. Número factura o doc. Importación
             x-chim6r1edto32bb6clhmgo8:
+              help: Casilla 70-77 del modelo 360, ejercicio 2010.
               label: 1. Fecha de emisión factura o doc. Importación
             x-chim6r1edto32bb9chkmurb15kog:
+              help: Casilla 88-89 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15koj0:
+              help: Casilla 2446-2447 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15kp0:
+              help: Casilla 350-351 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15kpg:
+              help: Casilla 612-613 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15kq0:
+              help: Casilla 874-875 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15kqg:
+              help: Casilla 1136-1137 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15kr0:
+              help: Casilla 1398-1399 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15krg:
+              help: Casilla 1660-1661 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15ks0:
+              help: Casilla 1922-1923 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9chkmurb15ksg:
+              help: Casilla 2184-2185 del modelo 360, ejercicio 2010.
               label: '1. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto32bb9dlo6usjkck:
+              help: Casilla 2733-2747 del modelo 360, ejercicio 2010.
               label: 1. Importe solicitado a devolver
             x-chim6r1edto32bbeelmmasjf:
+              help: Casilla 11-15 del modelo 360, ejercicio 2010.
               label: 1. Número de operación
             x-chim6r1edto32bbge9nn4sj1ehgg:
+              help: Casilla 2728-2732 del modelo 360, ejercicio 2010.
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Dato declarado en el modelo 360, tomado del diseno de registro
                 oficial.
               label: Datos del proveedor. Dirección
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Casilla 2821-2945 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. Apellidos
                 y nombre o denominación social
             x-chim6r1edto32bbge9nncpb5chnn4bbeepgn8:
+              help: Casilla 2754-2768 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
+              help: Casilla 3109-3110 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. País
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
               help: Dato declarado en el modelo 360, tomado del diseno de registro
                 oficial.
               label: Datos del proveedor. País emisor del NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Casilla 2769-2770 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. País
                 emisor de la Referencia Fiscal
             x-chim6r1edto32bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Casilla 2771-2820 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. Referencia
                 Fiscal (si carece de NVAT)
             x-chim6r1edto32bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Casilla 3094-3108 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. Teléfono
             x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
+              help: Casilla 2751-2751 del modelo 360, ejercicio 2010.
               label: 1. Indicador de simplificada
             x-chim6r1edto32bbkd5o6u:
+              help: Casilla 17-19 del modelo 360, ejercicio 2010.
               label: Presentación en pruebas
             x-chim6r1edto34bb2c5pma:
+              help: Casilla 5798-5812 del modelo 360, ejercicio 2010.
               label: 2. Base imponible
             x-chim6r1edto34bb3dti6iprf5kog:
+              help: Casilla 3178-3187 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5koj0:
+              help: Casilla 5536-5545 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5kp0:
+              help: Casilla 3440-3449 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5kpg:
+              help: Casilla 3702-3711 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5kq0:
+              help: Casilla 3964-3973 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5kqg:
+              help: Casilla 4226-4235 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5kr0:
+              help: Casilla 4488-4497 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5krg:
+              help: Casilla 4750-4759 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5ks0:
+              help: Casilla 5012-5021 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3dti6iprf5ksg:
+              help: Casilla 5274-5283 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: código'
             x-chim6r1edto34bb3elnn8o8:
+              help: Casilla 5813-5827 del modelo 360, ejercicio 2010.
               label: 2. Cuota IVA
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kog:
+              help: Casilla 3190-3439 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5koj0:
+              help: Casilla 5548-5797 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kp0:
+              help: Casilla 3452-3701 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kpg:
+              help: Casilla 3714-3963 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kq0:
+              help: Casilla 3976-4225 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kqg:
+              help: Casilla 4238-4487 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kr0:
+              help: Casilla 4500-4749 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5krg:
+              help: Casilla 4762-5011 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ks0:
+              help: Casilla 5024-5273 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ksg:
+              help: Casilla 5286-5535 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: descripción'
             x-chim6r1edto34bb4d5r6isr1:
+              help: Casilla 5848-5850 del modelo 360, ejercicio 2010.
               label: 2. Divisa
             x-chim6r1edto34bb6c5hn8tbic4:
+              help: Casilla 3120-3169 del modelo 360, ejercicio 2010.
               label: 2. Número factura o doc. Importación
             x-chim6r1edto34bb6clhmgo8:
+              help: Casilla 3170-3177 del modelo 360, ejercicio 2010.
               label: 2. Fecha de emisión factura o doc. Importación
             x-chim6r1edto34bb9chkmurb15kog:
+              help: Casilla 3188-3189 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15koj0:
+              help: Casilla 5546-5547 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15kp0:
+              help: Casilla 3450-3451 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15kpg:
+              help: Casilla 3712-3713 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15kq0:
+              help: Casilla 3974-3975 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15kqg:
+              help: Casilla 4236-4237 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15kr0:
+              help: Casilla 4498-4499 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15krg:
+              help: Casilla 4760-4761 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15ks0:
+              help: Casilla 5022-5023 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9chkmurb15ksg:
+              help: Casilla 5284-5285 del modelo 360, ejercicio 2010.
               label: '2. Bienes y servicios adquiridos: idioma de la descripción'
             x-chim6r1edto34bb9dlo6usjkck:
+              help: Casilla 5833-5847 del modelo 360, ejercicio 2010.
               label: 2. Importe solicitado a devolver
             x-chim6r1edto34bbeelmmasjf:
+              help: Casilla 3111-3115 del modelo 360, ejercicio 2010.
               label: 2. Número de operación
             x-chim6r1edto34bbge9nn4sj1ehgg:
+              help: Casilla 5828-5832 del modelo 360, ejercicio 2010.
               label: 2. Prorrata %
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: Casilla 6046-6193 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. Dirección
             x-chim6r1edto34bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Casilla 5921-6045 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. Apellidos
                 y nombre o denominación social
             x-chim6r1edto34bbge9nncpb5chnn4bbeepgn8:
+              help: Casilla 5854-5868 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6:
+              help: Casilla 6209-6210 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. País
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: Casilla 5852-5853 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. País
                 emisor del NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Casilla 5869-5870 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. País
                 emisor de la Referencia Fiscal
             x-chim6r1edto34bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Casilla 5871-5920 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. Referencia
                 Fiscal (si carece de NVAT)
             x-chim6r1edto34bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Casilla 6194-6208 del modelo 360, ejercicio 2010.
               label: 2. Datos del proveeedor de bienes/prestador de servicios. Teléfono
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
+              help: Casilla 5851-5851 del modelo 360, ejercicio 2010.
               label: 2. Indicador de simplificada
             x-chim6r1edto34bbkd5o6u:
               help: Dato declarado en el modelo 360, tomado del diseno de registro
                 oficial.
               label: Tipo de operación
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
+              help: Casilla 17-17 del modelo 360, ejercicio 2010.
               label: Presentación en pruebas
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
+              help: Casilla 26-26 del modelo 360, ejercicio 2010.
               label: 1. Comunicación de la prorrata definitiva de un ejercicio anterior
             x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
+              help: Casilla 1253-1352 del modelo 360, ejercicio 2010.
               label: 3. Representante. Email
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Casilla 1119-1127 del modelo 360, ejercicio 2010.
               label: 3. Representante. NIF
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Casilla 1128-1252 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apellidos y nombre o denominación social
             x-chim6r1ee9in0sj5edimst31dpq6abbkclm6apjfdpng:
+              help: Casilla 1353-1367 del modelo 360, ejercicio 2010.
               label: 3. Representante. Teléfono
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisorfchkmerpde1nn6t31dg:
+              help: Casilla 1816-1820 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apartado de Correos en España. Código Postal
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisr3fcdgmoqb4c5i0:
+              help: Casilla 1786-1815 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apartado de Correos en España. Localidad /
                 Población (si es distinta de municipio)
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrbldpkm6qbgd5ng:
+              help: Casilla 1821-1850 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apartado de Correos en España. Nombre del municipio
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrjldlin4ro:
+              help: Casilla 1776-1785 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apartado de Correos en España. Número
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chniss3idtr6irj3d5gg:
+              help: Casilla 1851-1852 del modelo 360, ejercicio 2010.
               label: 3. Representante. Apartado de Correos en España. Provincia
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
+              help: Casilla 1434-1436 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Bloque
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: Casilla 1431-1433 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Calificador del número
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
+              help: Casilla 1519-1523 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. C. Postal
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dtmn0r35dlimst3f:
+              help: Casilla 1449-1488 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Complemento domicilio
                 (ej. Urbanización, Pol. Ind, C.C...)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
+              help: Casilla 1440-1442 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Escalera
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
+              help: Casilla 1489-1518 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Localidad / Población
                 (si es distinta de municipio)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjdeln6ior9e1kmu:
+              help: Casilla 1524-1553 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Nombre del municipio
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjedtmm4sj55lr6io8:
+              help: Casilla 1373-1422 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Nombre de la vía pública
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjeelmmasjf5lhm2sr1:
+              help: Casilla 1426-1430 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Número de casa / KM
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdhgmst31:
+              help: Casilla 1443-1445 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Planta
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
+              help: Casilla 1437-1439 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Portal
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
+              help: Casilla 1554-1555 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Provincia
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgelin4t31:
+              help: Casilla 1446-1448 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Puerta
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbeelmmasjf:
+              help: Casilla 1423-1425 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Tipo Número
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbmd5gg:
+              help: Casilla 1368-1372 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en España. Tipo de vía
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpecdnm8qb7dsmn0rrjehgmo:
+              help: Casilla 1734-1743 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. C. Postal (ZIP)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpechnmqqb3d5m6iro:
+              help: Casilla 1556-1703 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. Domicilio
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
+              help: Casilla 1774-1775 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. Pais
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
+              help: Casilla 1704-1733 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. Localidad / Población
                 (si es distinta de municipio)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee9imeqbfdo:
+              help: Casilla 1744-1773 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. Provincia/ Región/
                 Estado
             x-chim6r1eednmoqb3d5q62rjkckmm8pbccljm2or9dtn0:
+              help: Casilla 797-798 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Delegación de solicitantes establecidos en Canarias,
                 Ceuta o Melilla
             x-chim6r1eednmoqb3d5q62rjkckmmarb1d5m0:
+              help: Casilla 194-293 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Email
             x-chim6r1eednmoqb3d5q62rjkckmmasrkc5h6opb3d5i6u:
+              help: Casilla 794-794 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Establecido en el territorio de aplicación del
                 IVA
             x-chim6r1eednmoqb3d5q62rjkckmmgob3d5imsp315lj6usj1dg:
+              help: Casilla 795-796 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Hacienda Foral de establecimiento
             x-chim6r1eednmoqb3d5q62rjkckmn8pbcclj6urjf:
+              help: Casilla 294-308 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Teléfono
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5phmup39ctniqs3fedq62r0:
+              help: Casilla 757-761 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Apartado de correos en España. Código Postal
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pm6uor1dhkm8ob4:
+              help: Casilla 727-756 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Apartado de correos en España. Localidad / Población
                 (si es distinta de municipio)
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pmnarj9cdkn0qbf:
+              help: Casilla 762-791 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Apartado de correos en España. Nombre del Municipio
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pn7arb5e9ng:
+              help: Casilla 717-726 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Apartado de correos en España. Número del apartado
                 de correos
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5po74rrmd5n66qb1:
+              help: Casilla 792-793 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Apartado de correos en España. Provincia
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
+              help: Casilla 375-377 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Bloque
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
+              help: Casilla 372-374 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Calificador del número
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
+              help: Casilla 460-464 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. C. Postal
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rrde1m6arb5dpq6u:
+              help: Casilla 390-429 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Complemento domicilio (ej.
                 Urbanización, Pol. Ind, C.C...)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
+              help: Casilla 381-383 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Escalera
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
+              help: Casilla 430-459 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Localidad / Población (si
                 es distinta de municipio)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6qtbed5hmis39ds:
+              help: Casilla 465-494 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Nombre del municipio
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6srrdc9p6abbmd5gg:
+              help: Casilla 314-363 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Nombre de la vía pública
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6stbdclp6ubb3c5pm2:
+              help: Casilla 367-371 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Número de casa / KM
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70r31dpq62:
+              help: Casilla 384-386 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Planta
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
+              help: Casilla 378-380 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Portal
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
+              help: Casilla 495-496 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Provincia
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70tb5e9q62:
+              help: Casilla 387-389 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Puerta
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmmstbdclp6u:
+              help: Casilla 364-366 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España.Tipo Número
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmncqb1:
+              help: Casilla 309-313 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en España. Tipo de vía
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisorfchkmerpde1nn6t31dg:
+              help: Casilla 675-684 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. C. Postal (ZIP)
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisp3fdlkm6qbcd5ng:
+              help: Casilla 497-644 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. Domicilio
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
+              help: Casilla 715-716 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. Pais
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
+              help: Casilla 645-674 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. Población / Ciudad
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nissj5ctkmurg:
+              help: Casilla 685-714 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. Provincia/ Región/
                 Estado
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2:
+              help: Casilla 799-803 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 1. Clasificación de actividades
                 económicas (NACE revisión 2) a 4 dígitos. Reglamento (EC) 1174/2009
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2c0:
+              help: Casilla 1087-1091 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 10. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj4:
+              help: Casilla 831-835 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 2. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj6:
+              help: Casilla 863-867 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 3. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj8:
+              help: Casilla 895-899 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 4. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmja:
+              help: Casilla 927-931 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 5. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjc:
+              help: Casilla 959-963 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 6. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmje:
+              help: Casilla 991-995 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 7. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjg:
+              help: Casilla 1023-1027 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 8. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmji:
+              help: Casilla 1055-1059 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 9. Código NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h:
+              help: Casilla 806-830 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 1. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h60:
+              help: Casilla 1094-1118 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 10. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9i:
+              help: Casilla 838-862 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 2. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9j:
+              help: Casilla 870-894 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 3. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9k:
+              help: Casilla 902-926 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 4. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9l:
+              help: Casilla 934-958 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 5. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9m:
+              help: Casilla 966-990 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 6. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9n:
+              help: Casilla 998-1022 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 7. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9o:
+              help: Casilla 1030-1054 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 8. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9p:
+              help: Casilla 1062-1086 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 9. Código NACE. Descripción
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h:
+              help: Casilla 804-805 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 1. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h60:
+              help: Casilla 1092-1093 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 10. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9i:
+              help: Casilla 836-837 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 2. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9j:
+              help: Casilla 868-869 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 3. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9k:
+              help: Casilla 900-901 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 4. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9l:
+              help: Casilla 932-933 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 5. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9m:
+              help: Casilla 964-965 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 6. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9n:
+              help: Casilla 996-997 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 7. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9o:
+              help: Casilla 1028-1029 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 8. Código NACE. Descripción. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9p:
+              help: Casilla 1060-1061 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 9. Código NACE. Descripción. Idioma
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
               help: null

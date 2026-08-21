@@ -12,103 +12,138 @@ modelo:
                 it into an integer and a decimal part.
               label: Base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Box 121 of modelo 193, tax year 2024.
               label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
               label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Box 235 of modelo 193, tax year 2024.
               label: NATURE OF THE DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Box 108-120 of modelo 193, tax year 2024.
               label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Box 123-135 of modelo 193, tax year 2024.
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Box 68-107 of modelo 193, tax year 2024.
               label: SURNAMES AND FIRST NAME
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Box 59-67 of modelo 193, tax year 2024.
               label: TELEPHONE
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Box 175-189 of modelo 193, tax year 2024.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
               label: Withholdings and payments on account
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Box 122 of modelo 193, tax year 2024.
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Box 136-144 of modelo 193, tax year 2024.
               label: TOTAL NUMBER OF RECIPIENTS
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Amount of expenses
             x-ctgn6t3f5pn6ipg:
+              help: Box 18-26 of modelo 193, tax year 2024.
               label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Box 27-35 of modelo 193, tax year 2024.
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Box 36-75 of modelo 193, tax year 2024.
               label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
             x-e1in4opec9gn6p8:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Base for withholdings and payments on account
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Box 314 of modelo 193, tax year 2024.
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Box 92 of modelo 193, tax year 2024.
               label: RECEIPT CODE
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Box 79 of modelo 193, tax year 2024.
               label: CODE KEY
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Box 339 of modelo 193, tax year 2024.
               label: MARKET CODE
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Box 97-116 of modelo 193, tax year 2024.
               label: SECURITIES ACCOUNT CODE / LOAN TRANSACTION NUMBER
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Box 80-91 of modelo 193, tax year 2024.
               label: ISSUER CODE
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Compensations
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Box 118-121 of modelo 193, tax year 2024.
               label: ACCRUAL YEAR
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Box 331-338 of modelo 193, tax year 2024.
               label: ACCRUAL DATE
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Box 209-216 of modelo 193, tax year 2024.
               label: LOAN START DATE
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Box 217-224 of modelo 193, tax year 2024.
               label: LOAN MATURITY DATE
             x-e1in4opectgn4obeehkm2so:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Guarantees
             x-e1in4opedlim8qb1chnn4:
+              help: Box 76 of modelo 193, tax year 2024.
               label: INTERMEDIARY RECIPIENT
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Box 93-94 of modelo 193, tax year 2024.
               label: NATURE
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Box 208 of modelo 193, tax year 2024.
               label: NATURE OF THE DECLARANT
             x-e1in4opedpkmc:
+              help: Box 18-26 of modelo 193, tax year 2024.
               label: NIF OF THE RECIPIENT
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Box 322-330 of modelo 193, tax year 2024.
               label: NIF OF THE PREVIOUS PAYER
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Box 27-35 of modelo 193, tax year 2024.
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-e1in4opedpnmqojick:
+              help: Box 36-75 of modelo 193, tax year 2024.
               label: SURNAMES AND FIRST NAME, COMPANY NAME OR DENOMINATION OF THE
                 RECIPIENT
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Box 315-321 of modelo 193, tax year 2024.
               label: SEQUENCE NUMBER
             x-e1in4opee1gmero:
+              help: Box 95 of modelo 193, tax year 2024.
               label: PAYMENT
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Box 182-192 of modelo 193, tax year 2024.
               label: PENALTIES
             x-e1in4opee1imsp39cln78p8:
+              help: Box 117 of modelo 193, tax year 2024.
               label: OUTSTANDING
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Box 123-135 of modelo 193, tax year 2024.
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
             x-e1in4opee1nn4or5dpq62qj5:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Withholding %
             x-e1in4opee1p6utj9dphmio8:
+              help: Box 77-78 of modelo 193, tax year 2024.
               label: PROVINCE CODE
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Perceptor field declared on modelo 193. The design splits amounts
@@ -129,6 +164,7 @@ modelo:
               label: Withholdings and payments on account paid in. Provincial Council
                 of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 249-261 of modelo 193, tax year 2024.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
@@ -143,8 +179,10 @@ modelo:
               label: Withholdings and payments on account paid in. Chartered Community
                 of Navarre
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Box 96 of modelo 193, tax year 2024.
               label: CODE TYPE
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Box 122 of modelo 193, tax year 2024.
               label: RECEIPT TYPE
         2024-y-siguientes:
           casilla:
@@ -167,105 +205,141 @@ modelo:
                 it into an integer and a decimal part.
               label: Base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Box 121 of modelo 193, tax year 2025.
               label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
               label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Box 235 of modelo 193, tax year 2025.
               label: NATURE OF THE DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Box 108-120 of modelo 193, tax year 2025.
               label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Box 123-135 of modelo 193, tax year 2025.
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Box 68-107 of modelo 193, tax year 2025.
               label: SURNAMES AND FIRST NAME
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Box 59-67 of modelo 193, tax year 2025.
               label: TELEPHONE
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Box 175-189 of modelo 193, tax year 2025.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
               label: Withholdings and payments on account
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Box 122 of modelo 193, tax year 2025.
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Box 136-144 of modelo 193, tax year 2025.
               label: TOTAL NUMBER OF RECIPIENTS
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Amount of expenses
             x-ctgn6t3f5pn6ipg:
+              help: Box 18-26 of modelo 193, tax year 2025.
               label: NIF OF THE TAXPAYER
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Box 27-35 of modelo 193, tax year 2025.
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Box 36-75 of modelo 193, tax year 2025.
               label: SURNAMES AND FIRST NAME OF THE TAXPAYER OR DENOMINATION
             x-e1in4opec9gn6p8:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Base for withholdings and payments on account
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Box 314 of modelo 193, tax year 2025.
               label: CEUTA OR MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Box 92 of modelo 193, tax year 2025.
               label: RECEIPT CODE
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Box 79 of modelo 193, tax year 2025.
               label: CODE KEY
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Box 339 of modelo 193, tax year 2025.
               label: MARKET CODE
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Box 97-116 of modelo 193, tax year 2025.
               label: SECURITIES ACCOUNT CODE / LOAN TRANSACTION NUMBER
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Box 80-91 of modelo 193, tax year 2025.
               label: ISSUER CODE
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Compensations
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Box 118-121 of modelo 193, tax year 2025.
               label: ACCRUAL YEAR
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Box 331-338 of modelo 193, tax year 2025.
               label: ACCRUAL DATE
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Box 209-216 of modelo 193, tax year 2025.
               label: LOAN START DATE
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Box 217-224 of modelo 193, tax year 2025.
               label: LOAN MATURITY DATE
             x-e1in4opectgn4obeehkm2so:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Guarantees
             x-e1in4oped5pmirg:
+              help: Box 193-204 of modelo 193, tax year 2025.
               label: ISIN CODE
             x-e1in4opedlim8qb1chnn4:
+              help: Box 76 of modelo 193, tax year 2025.
               label: INTERMEDIARY RECIPIENT
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Box 93-94 of modelo 193, tax year 2025.
               label: NATURE
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Box 208 of modelo 193, tax year 2025.
               label: NATURE OF THE DECLARANT
             x-e1in4opedpkmc:
+              help: Box 18-26 of modelo 193, tax year 2025.
               label: NIF OF THE RECIPIENT
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Box 322-330 of modelo 193, tax year 2025.
               label: NIF OF THE PREVIOUS PAYER
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Box 27-35 of modelo 193, tax year 2025.
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-e1in4opedpnmqojick:
+              help: Box 36-75 of modelo 193, tax year 2025.
               label: SURNAMES AND FIRST NAME, COMPANY NAME OR DENOMINATION OF THE
                 RECIPIENT
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Box 315-321 of modelo 193, tax year 2025.
               label: SEQUENCE NUMBER
             x-e1in4opee1gmero:
+              help: Box 95 of modelo 193, tax year 2025.
               label: PAYMENT
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Box 182-192 of modelo 193, tax year 2025.
               label: PENALTIES
             x-e1in4opee1imsp39cln78p8:
+              help: Box 117 of modelo 193, tax year 2025.
               label: OUTSTANDING
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Box 123-135 of modelo 193, tax year 2025.
               label: IDENTIFYING NUMBER OF THE PREVIOUS RETURN
             x-e1in4opee1nn4or5dpq62qj5:
               help: Perceptor field declared on modelo 193. The design splits amounts
                 into an integer and a decimal part.
               label: Withholding %
             x-e1in4opee1p6utj9dphmio8:
+              help: Box 77-78 of modelo 193, tax year 2025.
               label: PROVINCE CODE
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Perceptor field declared on modelo 193. The design splits amounts
@@ -286,6 +360,7 @@ modelo:
               label: Withholdings and payments on account paid in. Provincial Council
                 of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 249-261 of modelo 193, tax year 2025.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
@@ -300,6 +375,8 @@ modelo:
               label: Withholdings and payments on account paid in. Chartered Community
                 of Navarre
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Box 96 of modelo 193, tax year 2025.
               label: CODE TYPE
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Box 122 of modelo 193, tax year 2025.
               label: RECEIPT TYPE

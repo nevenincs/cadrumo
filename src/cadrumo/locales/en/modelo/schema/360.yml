@@ -8,59 +8,86 @@ modelo:
         2010-y-siguientes:
           casilla:
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc8:
+              help: Box 2004-2043 of modelo 360, tax year 2010.
               label: 7. Annexes. 1. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc9g:
+              help: Box 3066-3105 of modelo 360, tax year 2010.
               label: 7. Annexes. 10. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qcg:
+              help: Box 2122-2161 of modelo 360, tax year 2010.
               label: 7. Annexes. 2. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qco:
+              help: Box 2240-2279 of modelo 360, tax year 2010.
               label: 7. Annexes. 3. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd0:
+              help: Box 2358-2397 of modelo 360, tax year 2010.
               label: 7. Annexes. 4. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd8:
+              help: Box 2476-2515 of modelo 360, tax year 2010.
               label: 7. Annexes. 5. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdg:
+              help: Box 2594-2633 of modelo 360, tax year 2010.
               label: 7. Annexes. 6. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdo:
+              help: Box 2712-2751 of modelo 360, tax year 2010.
               label: 7. Annexes. 7. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe0:
+              help: Box 2830-2869 of modelo 360, tax year 2010.
               label: 7. Annexes. 8. description
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe8:
+              help: Box 2948-2987 of modelo 360, tax year 2010.
               label: 7. Annexes. 9. description
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64:
+              help: Box 1986-2001 of modelo 360, tax year 2010.
               label: 7. Annexes. 1. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64o0:
+              help: Box 3048-3063 of modelo 360, tax year 2010.
               label: 7. Annexes. 10. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd68:
+              help: Box 2104-2119 of modelo 360, tax year 2010.
               label: 7. Annexes. 2. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6c:
+              help: Box 2222-2237 of modelo 360, tax year 2010.
               label: 7. Annexes. 3. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6g:
+              help: Box 2340-2355 of modelo 360, tax year 2010.
               label: 7. Annexes. 4. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6k:
+              help: Box 2458-2473 of modelo 360, tax year 2010.
               label: 7. Annexes. 5. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6o:
+              help: Box 2576-2591 of modelo 360, tax year 2010.
               label: 7. Annexes. 6. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6s:
+              help: Box 2694-2709 of modelo 360, tax year 2010.
               label: 7. Annexes. 7. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd70:
+              help: Box 2812-2827 of modelo 360, tax year 2010.
               label: 7. Annexes. 8. Registration number
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd74:
+              help: Box 2930-2945 of modelo 360, tax year 2010.
               label: 7. Annexes. 9. Registration number
             x-chim6r1ec9gmsor1e9kmubb2d5hg:
+              help: Box 1972-1982 of modelo 360, tax year 2010.
               label: 6. Bank details. Account holder. Bank-BIC
             x-chim6r1ec9gmsor1e9kmubb3c5m6ip31cg:
+              help: Box 1937-1937 of modelo 360, tax year 2010.
               label: 6. Bank details. Account holder. Acting as (Applicant / representative)
                 Applicant
             x-chim6r1ec9gmsor1e9kmubb4d5r6isr1:
+              help: Box 1983-1985 of modelo 360, tax year 2010.
               label: 6. Bank details. Account holder. Currency
             x-chim6r1ec9gmsor1e9kmubb9c9gms:
+              help: Box 1938-1971 of modelo 360, tax year 2010.
               label: 6. Bank details. Account holder. IBAN
             x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
+              help: Box 1912-1936 of modelo 360, tax year 2010.
               label: 6. Bank details. Account holder. Name
             x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
+              help: Box 18-18 of modelo 360, tax year 2010.
               label: Data quality level
             x-chim6r1ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: Box 25-25 of modelo 360, tax year 2010.
               label: 1. Reason for filing. Refund application or amendment of a refund
                 application
             x-chim6r1ecll6asj3d5hmiro:
@@ -70,400 +97,585 @@ modelo:
               help: null
               label: Member State of refund where the tax was borne
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
+              help: Box 27-42 of modelo 360, tax year 2010.
               label: 1. In case of amendment. Registration number of the previous
                 return
             x-chim6r1edto32bb2c5pma:
+              help: Box 2698-2712 of modelo 360, tax year 2010.
               label: 1. Taxable base
             x-chim6r1edto32bb3dti6iprf5kog:
+              help: Box 78-87 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5koj0:
+              help: Box 2436-2445 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5kp0:
+              help: Box 340-349 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5kpg:
+              help: Box 602-611 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5kq0:
+              help: Box 864-873 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5kqg:
+              help: Box 1126-1135 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5kr0:
+              help: Box 1388-1397 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5krg:
+              help: Box 1650-1659 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5ks0:
+              help: Box 1912-1921 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3dti6iprf5ksg:
+              help: Box 2174-2183 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: code'
             x-chim6r1edto32bb3elnn8o8:
+              help: Box 2713-2727 of modelo 360, tax year 2010.
               label: 1. VAT amount
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kog:
+              help: Box 90-339 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5koj0:
+              help: Box 2448-2697 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kp0:
+              help: Box 352-601 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kpg:
+              help: Box 614-863 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kq0:
+              help: Box 876-1125 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kqg:
+              help: Box 1138-1387 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kr0:
+              help: Box 1400-1649 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5krg:
+              help: Box 1662-1911 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ks0:
+              help: Box 1924-2173 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ksg:
+              help: Box 2186-2435 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: description'
             x-chim6r1edto32bb4d5r6isr1:
+              help: Box 2748-2750 of modelo 360, tax year 2010.
               label: 1. Currency
             x-chim6r1edto32bb6c5hn8tbic4:
+              help: Box 20-69 of modelo 360, tax year 2010.
               label: 1. Invoice or import doc. number
             x-chim6r1edto32bb6clhmgo8:
+              help: Box 70-77 of modelo 360, tax year 2010.
               label: 1. Issue date of the invoice or import doc.
             x-chim6r1edto32bb9chkmurb15kog:
+              help: Box 88-89 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15koj0:
+              help: Box 2446-2447 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15kp0:
+              help: Box 350-351 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15kpg:
+              help: Box 612-613 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15kq0:
+              help: Box 874-875 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15kqg:
+              help: Box 1136-1137 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15kr0:
+              help: Box 1398-1399 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15krg:
+              help: Box 1660-1661 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15ks0:
+              help: Box 1922-1923 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9chkmurb15ksg:
+              help: Box 2184-2185 of modelo 360, tax year 2010.
               label: '1. Goods and services acquired: language of the description'
             x-chim6r1edto32bb9dlo6usjkck:
+              help: Box 2733-2747 of modelo 360, tax year 2010.
               label: 1. Amount requested for refund
             x-chim6r1edto32bbeelmmasjf:
+              help: Box 11-15 of modelo 360, tax year 2010.
               label: 1. Transaction number
             x-chim6r1edto32bbge9nn4sj1ehgg:
+              help: Box 2728-2732 of modelo 360, tax year 2010.
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Field declared on modelo 360, taken from the official record design.
               label: Supplier details. Address
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Box 2821-2945 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. Surnames
                 and first name or company name
             x-chim6r1edto32bbge9nncpb5chnn4bbeepgn8:
+              help: Box 2754-2768 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
+              help: Box 3109-3110 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. Country
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
               help: Field declared on modelo 360, taken from the official record design.
               label: Supplier details. NVAT issuing country
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Box 2769-2770 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. Country
                 issuing the Tax Reference
             x-chim6r1edto32bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Box 2771-2820 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. Tax
                 Reference (if there is no NVAT)
             x-chim6r1edto32bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Box 3094-3108 of modelo 360, tax year 2010.
               label: 1. Details of the supplier of goods / provider of services. Telephone
             x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
+              help: Box 2751-2751 of modelo 360, tax year 2010.
               label: 1. Simplified indicator
             x-chim6r1edto32bbkd5o6u:
+              help: Box 17-19 of modelo 360, tax year 2010.
               label: Test submission
             x-chim6r1edto34bb2c5pma:
+              help: Box 5798-5812 of modelo 360, tax year 2010.
               label: 2. Taxable base
             x-chim6r1edto34bb3dti6iprf5kog:
+              help: Box 3178-3187 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5koj0:
+              help: Box 5536-5545 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5kp0:
+              help: Box 3440-3449 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5kpg:
+              help: Box 3702-3711 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5kq0:
+              help: Box 3964-3973 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5kqg:
+              help: Box 4226-4235 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5kr0:
+              help: Box 4488-4497 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5krg:
+              help: Box 4750-4759 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5ks0:
+              help: Box 5012-5021 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3dti6iprf5ksg:
+              help: Box 5274-5283 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: code'
             x-chim6r1edto34bb3elnn8o8:
+              help: Box 5813-5827 of modelo 360, tax year 2010.
               label: 2. VAT amount
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kog:
+              help: Box 3190-3439 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5koj0:
+              help: Box 5548-5797 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kp0:
+              help: Box 3452-3701 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kpg:
+              help: Box 3714-3963 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kq0:
+              help: Box 3976-4225 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kqg:
+              help: Box 4238-4487 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kr0:
+              help: Box 4500-4749 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5krg:
+              help: Box 4762-5011 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ks0:
+              help: Box 5024-5273 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ksg:
+              help: Box 5286-5535 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: description'
             x-chim6r1edto34bb4d5r6isr1:
+              help: Box 5848-5850 of modelo 360, tax year 2010.
               label: 2. Currency
             x-chim6r1edto34bb6c5hn8tbic4:
+              help: Box 3120-3169 of modelo 360, tax year 2010.
               label: 2. Invoice or import doc. number
             x-chim6r1edto34bb6clhmgo8:
+              help: Box 3170-3177 of modelo 360, tax year 2010.
               label: 2. Issue date of the invoice or import doc.
             x-chim6r1edto34bb9chkmurb15kog:
+              help: Box 3188-3189 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15koj0:
+              help: Box 5546-5547 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15kp0:
+              help: Box 3450-3451 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15kpg:
+              help: Box 3712-3713 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15kq0:
+              help: Box 3974-3975 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15kqg:
+              help: Box 4236-4237 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15kr0:
+              help: Box 4498-4499 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15krg:
+              help: Box 4760-4761 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15ks0:
+              help: Box 5022-5023 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9chkmurb15ksg:
+              help: Box 5284-5285 of modelo 360, tax year 2010.
               label: '2. Goods and services acquired: language of the description'
             x-chim6r1edto34bb9dlo6usjkck:
+              help: Box 5833-5847 of modelo 360, tax year 2010.
               label: 2. Amount requested for refund
             x-chim6r1edto34bbeelmmasjf:
+              help: Box 3111-3115 of modelo 360, tax year 2010.
               label: 2. Transaction number
             x-chim6r1edto34bbge9nn4sj1ehgg:
+              help: Box 5828-5832 of modelo 360, tax year 2010.
               label: 2. Prorrata %
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: Box 6046-6193 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Address
             x-chim6r1edto34bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Box 5921-6045 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Surnames
                 and first name or company name
             x-chim6r1edto34bbge9nncpb5chnn4bbeepgn8:
+              help: Box 5854-5868 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6:
+              help: Box 6209-6210 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Country
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: Box 5852-5853 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Country
                 issuing the NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Box 5869-5870 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Country
                 issuing the Tax Reference
             x-chim6r1edto34bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Box 5871-5920 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Tax
                 Reference (if there is no NVAT)
             x-chim6r1edto34bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Box 6194-6208 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Telephone
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
+              help: Box 5851-5851 of modelo 360, tax year 2010.
               label: 2. Simplified indicator
             x-chim6r1edto34bbkd5o6u:
               help: Field declared on modelo 360, taken from the official record design.
               label: Type of transaction
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
+              help: Box 17-17 of modelo 360, tax year 2010.
               label: Test submission
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
+              help: Box 26-26 of modelo 360, tax year 2010.
               label: 1. Notification of the definitive prorrata for an earlier year
             x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
+              help: Box 1253-1352 of modelo 360, tax year 2010.
               label: 3. Representative. Email
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Box 1119-1127 of modelo 360, tax year 2010.
               label: 3. Representative. NIF
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Box 1128-1252 of modelo 360, tax year 2010.
               label: 3. Representative. Surnames and first name or company name
             x-chim6r1ee9in0sj5edimst31dpq6abbkclm6apjfdpng:
+              help: Box 1353-1367 of modelo 360, tax year 2010.
               label: 3. Representative. Telephone
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisorfchkmerpde1nn6t31dg:
+              help: Box 1816-1820 of modelo 360, tax year 2010.
               label: 3. Representative. PO box in Spain. Postcode
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisr3fcdgmoqb4c5i0:
+              help: Box 1786-1815 of modelo 360, tax year 2010.
               label: 3. Representative. PO box in Spain. Locality / Town (if different
                 from the municipality)
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrbldpkm6qbgd5ng:
+              help: Box 1821-1850 of modelo 360, tax year 2010.
               label: 3. Representative. PO box in Spain. Municipality name
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrjldlin4ro:
+              help: Box 1776-1785 of modelo 360, tax year 2010.
               label: 3. Representative. PO box in Spain. Number
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chniss3idtr6irj3d5gg:
+              help: Box 1851-1852 of modelo 360, tax year 2010.
               label: 3. Representative. PO box in Spain. Province
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
+              help: Box 1434-1436 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Block
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: Box 1431-1433 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Number qualifier
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
+              help: Box 1519-1523 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Postcode
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dtmn0r35dlimst3f:
+              help: Box 1449-1488 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Additional address detail
                 (e.g. Urbanización, Pol. Ind, C.C...)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
+              help: Box 1440-1442 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Stairway
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
+              help: Box 1489-1518 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Locality / Town (if different
                 from the municipality)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjdeln6ior9e1kmu:
+              help: Box 1524-1553 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Municipality name
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjedtmm4sj55lr6io8:
+              help: Box 1373-1422 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Street name
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjeelmmasjf5lhm2sr1:
+              help: Box 1426-1430 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. House number / KM
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdhgmst31:
+              help: Box 1443-1445 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Floor
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
+              help: Box 1437-1439 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Entrance
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
+              help: Box 1554-1555 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Province
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgelin4t31:
+              help: Box 1446-1448 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Door
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbeelmmasjf:
+              help: Box 1423-1425 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Number type
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbmd5gg:
+              help: Box 1368-1372 of modelo 360, tax year 2010.
               label: 3. Representative. Address in Spain. Street type
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpecdnm8qb7dsmn0rrjehgmo:
+              help: Box 1734-1743 of modelo 360, tax year 2010.
               label: 3. Representative. Address abroad. Postcode (ZIP)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpechnmqqb3d5m6iro:
+              help: Box 1556-1703 of modelo 360, tax year 2010.
               label: 3. Representative. Address abroad. Address
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
+              help: Box 1774-1775 of modelo 360, tax year 2010.
               label: 3. Representative. Address abroad. Country
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
+              help: Box 1704-1733 of modelo 360, tax year 2010.
               label: 3. Representative. Address abroad. Locality / Town (if different
                 from the municipality)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee9imeqbfdo:
+              help: Box 1744-1773 of modelo 360, tax year 2010.
               label: 3. Representative. Address abroad. Province / Region / State
             x-chim6r1eednmoqb3d5q62rjkckmm8pbccljm2or9dtn0:
+              help: Box 797-798 of modelo 360, tax year 2010.
               label: 2. Applicant. Office for applicants established in the Canary
                 Islands, Ceuta or Melilla
             x-chim6r1eednmoqb3d5q62rjkckmmarb1d5m0:
+              help: Box 194-293 of modelo 360, tax year 2010.
               label: 2. Applicant. Email
             x-chim6r1eednmoqb3d5q62rjkckmmasrkc5h6opb3d5i6u:
+              help: Box 794-794 of modelo 360, tax year 2010.
               label: 2. Applicant. Established in the VAT territory
             x-chim6r1eednmoqb3d5q62rjkckmmgob3d5imsp315lj6usj1dg:
+              help: Box 795-796 of modelo 360, tax year 2010.
               label: 2. Applicant. Foral Treasury of establishment
             x-chim6r1eednmoqb3d5q62rjkckmn8pbcclj6urjf:
+              help: Box 294-308 of modelo 360, tax year 2010.
               label: 2. Applicant. Telephone
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5phmup39ctniqs3fedq62r0:
+              help: Box 757-761 of modelo 360, tax year 2010.
               label: 2. Applicant. PO box in Spain. Postcode
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pm6uor1dhkm8ob4:
+              help: Box 727-756 of modelo 360, tax year 2010.
               label: 2. Applicant. PO box in Spain. Locality / Town (if different
                 from the municipality)
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pmnarj9cdkn0qbf:
+              help: Box 762-791 of modelo 360, tax year 2010.
               label: 2. Applicant. PO box in Spain. Municipality name
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pn7arb5e9ng:
+              help: Box 717-726 of modelo 360, tax year 2010.
               label: 2. Applicant. PO box in Spain. PO box number
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5po74rrmd5n66qb1:
+              help: Box 792-793 of modelo 360, tax year 2010.
               label: 2. Applicant. PO box in Spain. Province
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
+              help: Box 375-377 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Block
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
+              help: Box 372-374 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Number qualifier
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
+              help: Box 460-464 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Postcode
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rrde1m6arb5dpq6u:
+              help: Box 390-429 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Additional address detail (e.g.
                 Urbanización, Pol. Ind, C.C...)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
+              help: Box 381-383 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Stairway
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
+              help: Box 430-459 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Locality / Town (if different
                 from the municipality)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6qtbed5hmis39ds:
+              help: Box 465-494 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Municipality name
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6srrdc9p6abbmd5gg:
+              help: Box 314-363 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Street name
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6stbdclp6ubb3c5pm2:
+              help: Box 367-371 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. House number / KM
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70r31dpq62:
+              help: Box 384-386 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Floor
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
+              help: Box 378-380 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Entrance
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
+              help: Box 495-496 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Province
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70tb5e9q62:
+              help: Box 387-389 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Door
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmmstbdclp6u:
+              help: Box 364-366 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Number type
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmncqb1:
+              help: Box 309-313 of modelo 360, tax year 2010.
               label: 2. Applicant. Address in Spain. Street type
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisorfchkmerpde1nn6t31dg:
+              help: Box 675-684 of modelo 360, tax year 2010.
               label: 2. Applicant. Address abroad. Postcode (ZIP)
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisp3fdlkm6qbcd5ng:
+              help: Box 497-644 of modelo 360, tax year 2010.
               label: 2. Applicant. Address abroad. Address
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
+              help: Box 715-716 of modelo 360, tax year 2010.
               label: 2. Applicant. Address abroad. Country
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
+              help: Box 645-674 of modelo 360, tax year 2010.
               label: 2. Applicant. Address abroad. Town / City
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nissj5ctkmurg:
+              help: Box 685-714 of modelo 360, tax year 2010.
               label: 2. Applicant. Address abroad. Province / Region / State
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2:
+              help: Box 799-803 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 1. Classification of economic activities
                 (NACE revision 2) to 4 digits. Regulation (EC) 1174/2009
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2c0:
+              help: Box 1087-1091 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 10. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj4:
+              help: Box 831-835 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 2. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj6:
+              help: Box 863-867 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 3. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj8:
+              help: Box 895-899 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 4. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmja:
+              help: Box 927-931 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 5. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjc:
+              help: Box 959-963 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 6. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmje:
+              help: Box 991-995 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 7. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjg:
+              help: Box 1023-1027 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 8. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmji:
+              help: Box 1055-1059 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 9. NACE code
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h:
+              help: Box 806-830 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 1. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h60:
+              help: Box 1094-1118 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 10. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9i:
+              help: Box 838-862 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 2. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9j:
+              help: Box 870-894 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 3. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9k:
+              help: Box 902-926 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 4. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9l:
+              help: Box 934-958 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 5. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9m:
+              help: Box 966-990 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 6. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9n:
+              help: Box 998-1022 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 7. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9o:
+              help: Box 1030-1054 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 8. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9p:
+              help: Box 1062-1086 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 9. NACE code. description
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h:
+              help: Box 804-805 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 1. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h60:
+              help: Box 1092-1093 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 10. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9i:
+              help: Box 836-837 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 2. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9j:
+              help: Box 868-869 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 3. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9k:
+              help: Box 900-901 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 4. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9l:
+              help: Box 932-933 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 5. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9m:
+              help: Box 964-965 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 6. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9n:
+              help: Box 996-997 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 7. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9o:
+              help: Box 1028-1029 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 8. NACE code. description. Language
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9p:
+              help: Box 1060-1061 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 9. NACE code. description. Language
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
               help: null

@@ -8,59 +8,86 @@ modelo:
         2010-y-siguientes:
           casilla:
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc8:
+              help: Casella 2004-2043 del model 360, exercici 2010.
               label: 7. Annexos. 1. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc9g:
+              help: Casella 3066-3105 del model 360, exercici 2010.
               label: 7. Annexos. 10. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qcg:
+              help: Casella 2122-2161 del model 360, exercici 2010.
               label: 7. Annexos. 2. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qco:
+              help: Casella 2240-2279 del model 360, exercici 2010.
               label: 7. Annexos. 3. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd0:
+              help: Casella 2358-2397 del model 360, exercici 2010.
               label: 7. Annexos. 4. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd8:
+              help: Casella 2476-2515 del model 360, exercici 2010.
               label: 7. Annexos. 5. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdg:
+              help: Casella 2594-2633 del model 360, exercici 2010.
               label: 7. Annexos. 6. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdo:
+              help: Casella 2712-2751 del model 360, exercici 2010.
               label: 7. Annexos. 7. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe0:
+              help: Casella 2830-2869 del model 360, exercici 2010.
               label: 7. Annexos. 8. descripció
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe8:
+              help: Casella 2948-2987 del model 360, exercici 2010.
               label: 7. Annexos. 9. descripció
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64:
+              help: Casella 1986-2001 del model 360, exercici 2010.
               label: 7. Annexos. 1. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64o0:
+              help: Casella 3048-3063 del model 360, exercici 2010.
               label: 7. Annexos. 10. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd68:
+              help: Casella 2104-2119 del model 360, exercici 2010.
               label: 7. Annexos. 2. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6c:
+              help: Casella 2222-2237 del model 360, exercici 2010.
               label: 7. Annexos. 3. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6g:
+              help: Casella 2340-2355 del model 360, exercici 2010.
               label: 7. Annexos. 4. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6k:
+              help: Casella 2458-2473 del model 360, exercici 2010.
               label: 7. Annexos. 5. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6o:
+              help: Casella 2576-2591 del model 360, exercici 2010.
               label: 7. Annexos. 6. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6s:
+              help: Casella 2694-2709 del model 360, exercici 2010.
               label: 7. Annexos. 7. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd70:
+              help: Casella 2812-2827 del model 360, exercici 2010.
               label: 7. Annexos. 8. Núm. de registre
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd74:
+              help: Casella 2930-2945 del model 360, exercici 2010.
               label: 7. Annexos. 9. Núm. de registre
             x-chim6r1ec9gmsor1e9kmubb2d5hg:
+              help: Casella 1972-1982 del model 360, exercici 2010.
               label: 6. Dades bancàries. Titular del compte. Banc-BIC
             x-chim6r1ec9gmsor1e9kmubb3c5m6ip31cg:
+              help: Casella 1937-1937 del model 360, exercici 2010.
               label: 6. Dades bancàries. Titular del compte. En qualitat de (Sol·licitant
                 / representant) Sol·licitant
             x-chim6r1ec9gmsor1e9kmubb4d5r6isr1:
+              help: Casella 1983-1985 del model 360, exercici 2010.
               label: 6. Dades bancàries. Titular del compte. Divisa
             x-chim6r1ec9gmsor1e9kmubb9c9gms:
+              help: Casella 1938-1971 del model 360, exercici 2010.
               label: 6. Dades bancàries. Titular del compte. IBAN
             x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
+              help: Casella 1912-1936 del model 360, exercici 2010.
               label: 6. Dades bancàries. Titular del compte. Nom
             x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
+              help: Casella 18-18 del model 360, exercici 2010.
               label: Nivell de qualitat de dades
             x-chim6r1ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: Casella 25-25 del model 360, exercici 2010.
               label: 1. Causa de presentació. Sol·licitud de devolució o modificació
                 d'una sol·licitud de devolució
             x-chim6r1ecll6asj3d5hmiro:
@@ -70,401 +97,586 @@ modelo:
               help: null
               label: Estat membre de devolució on es van suportar les quotes
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
+              help: Casella 27-42 del model 360, exercici 2010.
               label: 1. En cas de modificació. Número de registre de la declaració
                 anterior
             x-chim6r1edto32bb2c5pma:
+              help: Casella 2698-2712 del model 360, exercici 2010.
               label: 1. Base imposable
             x-chim6r1edto32bb3dti6iprf5kog:
+              help: Casella 78-87 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5koj0:
+              help: Casella 2436-2445 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5kp0:
+              help: Casella 340-349 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5kpg:
+              help: Casella 602-611 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5kq0:
+              help: Casella 864-873 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5kqg:
+              help: Casella 1126-1135 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5kr0:
+              help: Casella 1388-1397 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5krg:
+              help: Casella 1650-1659 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5ks0:
+              help: Casella 1912-1921 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3dti6iprf5ksg:
+              help: Casella 2174-2183 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: codi'
             x-chim6r1edto32bb3elnn8o8:
+              help: Casella 2713-2727 del model 360, exercici 2010.
               label: 1. Quota IVA
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kog:
+              help: Casella 90-339 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5koj0:
+              help: Casella 2448-2697 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kp0:
+              help: Casella 352-601 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kpg:
+              help: Casella 614-863 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kq0:
+              help: Casella 876-1125 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kqg:
+              help: Casella 1138-1387 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kr0:
+              help: Casella 1400-1649 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5krg:
+              help: Casella 1662-1911 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ks0:
+              help: Casella 1924-2173 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ksg:
+              help: Casella 2186-2435 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4d5r6isr1:
+              help: Casella 2748-2750 del model 360, exercici 2010.
               label: 1. Divisa
             x-chim6r1edto32bb6c5hn8tbic4:
+              help: Casella 20-69 del model 360, exercici 2010.
               label: 1. Número de factura o doc. d'importació
             x-chim6r1edto32bb6clhmgo8:
+              help: Casella 70-77 del model 360, exercici 2010.
               label: 1. Data d'emissió de la factura o doc. d'importació
             x-chim6r1edto32bb9chkmurb15kog:
+              help: Casella 88-89 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15koj0:
+              help: Casella 2446-2447 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15kp0:
+              help: Casella 350-351 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15kpg:
+              help: Casella 612-613 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15kq0:
+              help: Casella 874-875 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15kqg:
+              help: Casella 1136-1137 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15kr0:
+              help: Casella 1398-1399 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15krg:
+              help: Casella 1660-1661 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15ks0:
+              help: Casella 1922-1923 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9chkmurb15ksg:
+              help: Casella 2184-2185 del model 360, exercici 2010.
               label: '1. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto32bb9dlo6usjkck:
+              help: Casella 2733-2747 del model 360, exercici 2010.
               label: 1. Import sol·licitat a retornar
             x-chim6r1edto32bbeelmmasjf:
+              help: Casella 11-15 del model 360, exercici 2010.
               label: 1. Número d'operació
             x-chim6r1edto32bbge9nn4sj1ehgg:
+              help: Casella 2728-2732 del model 360, exercici 2010.
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Dada declarada al model 360, presa del disseny de registre oficial.
               label: Dades del proveïdor. Adreça
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Casella 2821-2945 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. Cognoms
                 i nom o denominació social
             x-chim6r1edto32bbge9nncpb5chnn4bbeepgn8:
+              help: Casella 2754-2768 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
+              help: Casella 3109-3110 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. País
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
               help: Dada declarada al model 360, presa del disseny de registre oficial.
               label: Dades del proveïdor. País emissor del NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Casella 2769-2770 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. País emissor
                 de la Referència Fiscal
             x-chim6r1edto32bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Casella 2771-2820 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. Referència
                 Fiscal (si no té NVAT)
             x-chim6r1edto32bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Casella 3094-3108 del model 360, exercici 2010.
               label: 1. Dades del proveïdor de béns / prestador de serveis. Telèfon
             x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
+              help: Casella 2751-2751 del model 360, exercici 2010.
               label: 1. Indicador de simplificada
             x-chim6r1edto32bbkd5o6u:
+              help: Casella 17-19 del model 360, exercici 2010.
               label: Presentació en proves
             x-chim6r1edto34bb2c5pma:
+              help: Casella 5798-5812 del model 360, exercici 2010.
               label: 2. Base imposable
             x-chim6r1edto34bb3dti6iprf5kog:
+              help: Casella 3178-3187 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5koj0:
+              help: Casella 5536-5545 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5kp0:
+              help: Casella 3440-3449 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5kpg:
+              help: Casella 3702-3711 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5kq0:
+              help: Casella 3964-3973 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5kqg:
+              help: Casella 4226-4235 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5kr0:
+              help: Casella 4488-4497 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5krg:
+              help: Casella 4750-4759 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5ks0:
+              help: Casella 5012-5021 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3dti6iprf5ksg:
+              help: Casella 5274-5283 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: codi'
             x-chim6r1edto34bb3elnn8o8:
+              help: Casella 5813-5827 del model 360, exercici 2010.
               label: 2. Quota IVA
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kog:
+              help: Casella 3190-3439 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5koj0:
+              help: Casella 5548-5797 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kp0:
+              help: Casella 3452-3701 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kpg:
+              help: Casella 3714-3963 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kq0:
+              help: Casella 3976-4225 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kqg:
+              help: Casella 4238-4487 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kr0:
+              help: Casella 4500-4749 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5krg:
+              help: Casella 4762-5011 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ks0:
+              help: Casella 5024-5273 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ksg:
+              help: Casella 5286-5535 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4d5r6isr1:
+              help: Casella 5848-5850 del model 360, exercici 2010.
               label: 2. Divisa
             x-chim6r1edto34bb6c5hn8tbic4:
+              help: Casella 3120-3169 del model 360, exercici 2010.
               label: 2. Número de factura o doc. d'importació
             x-chim6r1edto34bb6clhmgo8:
+              help: Casella 3170-3177 del model 360, exercici 2010.
               label: 2. Data d'emissió de la factura o doc. d'importació
             x-chim6r1edto34bb9chkmurb15kog:
+              help: Casella 3188-3189 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15koj0:
+              help: Casella 5546-5547 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15kp0:
+              help: Casella 3450-3451 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15kpg:
+              help: Casella 3712-3713 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15kq0:
+              help: Casella 3974-3975 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15kqg:
+              help: Casella 4236-4237 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15kr0:
+              help: Casella 4498-4499 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15krg:
+              help: Casella 4760-4761 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15ks0:
+              help: Casella 5022-5023 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9chkmurb15ksg:
+              help: Casella 5284-5285 del model 360, exercici 2010.
               label: '2. Béns i serveis adquirits: idioma de la descripció'
             x-chim6r1edto34bb9dlo6usjkck:
+              help: Casella 5833-5847 del model 360, exercici 2010.
               label: 2. Import sol·licitat a retornar
             x-chim6r1edto34bbeelmmasjf:
+              help: Casella 3111-3115 del model 360, exercici 2010.
               label: 2. Número d'operació
             x-chim6r1edto34bbge9nn4sj1ehgg:
+              help: Casella 5828-5832 del model 360, exercici 2010.
               label: 2. Prorrata %
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: Casella 6046-6193 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. Adreça
             x-chim6r1edto34bbge9nncpb5chnn4bbedtmm4sj5:
+              help: Casella 5921-6045 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. Cognoms
                 i nom o denominació social
             x-chim6r1edto34bbge9nncpb5chnn4bbeepgn8:
+              help: Casella 5854-5868 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6:
+              help: Casella 6209-6210 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. País
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: Casella 5852-5853 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. País emissor
                 del NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: Casella 5869-5870 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. País emissor
                 de la Referència Fiscal
             x-chim6r1edto34bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: Casella 5871-5920 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. Referència
                 Fiscal (si no té NVAT)
             x-chim6r1edto34bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: Casella 6194-6208 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. Telèfon
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
+              help: Casella 5851-5851 del model 360, exercici 2010.
               label: 2. Indicador de simplificada
             x-chim6r1edto34bbkd5o6u:
               help: Dada declarada al model 360, presa del disseny de registre oficial.
               label: Tipus d'operació
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
+              help: Casella 17-17 del model 360, exercici 2010.
               label: Presentació en proves
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
+              help: Casella 26-26 del model 360, exercici 2010.
               label: 1. Comunicació de la prorrata definitiva d'un exercici anterior
             x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
+              help: Casella 1253-1352 del model 360, exercici 2010.
               label: 3. Representant. Correu electrònic
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Casella 1119-1127 del model 360, exercici 2010.
               label: 3. Representant. NIF
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Casella 1128-1252 del model 360, exercici 2010.
               label: 3. Representant. Cognoms i nom o denominació social
             x-chim6r1ee9in0sj5edimst31dpq6abbkclm6apjfdpng:
+              help: Casella 1353-1367 del model 360, exercici 2010.
               label: 3. Representant. Telèfon
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisorfchkmerpde1nn6t31dg:
+              help: Casella 1816-1820 del model 360, exercici 2010.
               label: 3. Representant. Apartat de Correus a Espanya. Codi Postal
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisr3fcdgmoqb4c5i0:
+              help: Casella 1786-1815 del model 360, exercici 2010.
               label: 3. Representant. Apartat de Correus a Espanya. Localitat / Població
                 (si és diferent del municipi)
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrbldpkm6qbgd5ng:
+              help: Casella 1821-1850 del model 360, exercici 2010.
               label: 3. Representant. Apartat de Correus a Espanya. Nom del municipi
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrjldlin4ro:
+              help: Casella 1776-1785 del model 360, exercici 2010.
               label: 3. Representant. Apartat de Correus a Espanya. Número
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chniss3idtr6irj3d5gg:
+              help: Casella 1851-1852 del model 360, exercici 2010.
               label: 3. Representant. Apartat de Correus a Espanya. Província
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
+              help: Casella 1434-1436 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Bloc
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: Casella 1431-1433 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Qualificador del número
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
+              help: Casella 1519-1523 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. C. Postal
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dtmn0r35dlimst3f:
+              help: Casella 1449-1488 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Complement del domicili (ex.
                 Urbanización, Pol. Ind, C.C...)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
+              help: Casella 1440-1442 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Escala
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
+              help: Casella 1489-1518 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Localitat / Població (si és
                 diferent del municipi)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjdeln6ior9e1kmu:
+              help: Casella 1524-1553 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Nom del municipi
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjedtmm4sj55lr6io8:
+              help: Casella 1373-1422 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Nom de la via pública
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjeelmmasjf5lhm2sr1:
+              help: Casella 1426-1430 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Número de casa / KM
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdhgmst31:
+              help: Casella 1443-1445 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Planta
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
+              help: Casella 1437-1439 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Portal
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
+              help: Casella 1554-1555 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Província
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgelin4t31:
+              help: Casella 1446-1448 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Porta
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbeelmmasjf:
+              help: Casella 1423-1425 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Tipus de número
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbmd5gg:
+              help: Casella 1368-1372 del model 360, exercici 2010.
               label: 3. Representant. Adreça a Espanya. Tipus de via
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpecdnm8qb7dsmn0rrjehgmo:
+              help: Casella 1734-1743 del model 360, exercici 2010.
               label: 3. Representant. Adreça a l'estranger. C. Postal (ZIP)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpechnmqqb3d5m6iro:
+              help: Casella 1556-1703 del model 360, exercici 2010.
               label: 3. Representant. Adreça a l'estranger. Domicili
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
+              help: Casella 1774-1775 del model 360, exercici 2010.
               label: 3. Representant. Adreça a l'estranger. País
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
+              help: Casella 1704-1733 del model 360, exercici 2010.
               label: 3. Representant. Adreça a l'estranger. Localitat / Població (si
                 és diferent del municipi)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee9imeqbfdo:
+              help: Casella 1744-1773 del model 360, exercici 2010.
               label: 3. Representant. Adreça a l'estranger. Província / Regió / Estat
             x-chim6r1eednmoqb3d5q62rjkckmm8pbccljm2or9dtn0:
+              help: Casella 797-798 del model 360, exercici 2010.
               label: 2. Sol·licitant. Delegació de sol·licitants establerts a Canàries,
                 Ceuta o Melilla
             x-chim6r1eednmoqb3d5q62rjkckmmarb1d5m0:
+              help: Casella 194-293 del model 360, exercici 2010.
               label: 2. Sol·licitant. Correu electrònic
             x-chim6r1eednmoqb3d5q62rjkckmmasrkc5h6opb3d5i6u:
+              help: Casella 794-794 del model 360, exercici 2010.
               label: 2. Sol·licitant. Establert en el territori d'aplicació de l'IVA
             x-chim6r1eednmoqb3d5q62rjkckmmgob3d5imsp315lj6usj1dg:
+              help: Casella 795-796 del model 360, exercici 2010.
               label: 2. Sol·licitant. Hisenda Foral d'establiment
             x-chim6r1eednmoqb3d5q62rjkckmn8pbcclj6urjf:
+              help: Casella 294-308 del model 360, exercici 2010.
               label: 2. Sol·licitant. Telèfon
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5phmup39ctniqs3fedq62r0:
+              help: Casella 757-761 del model 360, exercici 2010.
               label: 2. Sol·licitant. Apartat de Correus a Espanya. Codi Postal
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pm6uor1dhkm8ob4:
+              help: Casella 727-756 del model 360, exercici 2010.
               label: 2. Sol·licitant. Apartat de Correus a Espanya. Localitat / Població
                 (si és diferent del municipi)
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pmnarj9cdkn0qbf:
+              help: Casella 762-791 del model 360, exercici 2010.
               label: 2. Sol·licitant. Apartat de Correus a Espanya. Nom del municipi
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pn7arb5e9ng:
+              help: Casella 717-726 del model 360, exercici 2010.
               label: 2. Sol·licitant. Apartat de Correus a Espanya. Número de l'apartat
                 de correus
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5po74rrmd5n66qb1:
+              help: Casella 792-793 del model 360, exercici 2010.
               label: 2. Sol·licitant. Apartat de Correus a Espanya. Província
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
+              help: Casella 375-377 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Bloc
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
+              help: Casella 372-374 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Qualificador del número
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
+              help: Casella 460-464 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. C. Postal
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rrde1m6arb5dpq6u:
+              help: Casella 390-429 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Complement del domicili (ex.
                 Urbanización, Pol. Ind, C.C...)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
+              help: Casella 381-383 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Escala
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
+              help: Casella 430-459 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Localitat / Població (si és
                 diferent del municipi)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6qtbed5hmis39ds:
+              help: Casella 465-494 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Nom del municipi
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6srrdc9p6abbmd5gg:
+              help: Casella 314-363 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Nom de la via pública
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6stbdclp6ubb3c5pm2:
+              help: Casella 367-371 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Número de casa / KM
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70r31dpq62:
+              help: Casella 384-386 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Planta
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
+              help: Casella 378-380 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Portal
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
+              help: Casella 495-496 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Província
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70tb5e9q62:
+              help: Casella 387-389 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Porta
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmmstbdclp6u:
+              help: Casella 364-366 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Tipus de número
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmncqb1:
+              help: Casella 309-313 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a Espanya. Tipus de via
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisorfchkmerpde1nn6t31dg:
+              help: Casella 675-684 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a l'estranger. C. Postal (ZIP)
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisp3fdlkm6qbcd5ng:
+              help: Casella 497-644 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a l'estranger. Domicili
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
+              help: Casella 715-716 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a l'estranger. País
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
+              help: Casella 645-674 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a l'estranger. Població / Ciutat
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nissj5ctkmurg:
+              help: Casella 685-714 del model 360, exercici 2010.
               label: 2. Sol·licitant. Adreça a l'estranger. Província / Regió / Estat
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2:
+              help: Casella 799-803 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 1. Classificació d'activitats econòmiques
                 (NACE revisió 2) a 4 dígits. Reglament (CE) 1174/2009
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2c0:
+              help: Casella 1087-1091 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 10. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj4:
+              help: Casella 831-835 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 2. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj6:
+              help: Casella 863-867 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 3. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj8:
+              help: Casella 895-899 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 4. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmja:
+              help: Casella 927-931 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 5. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjc:
+              help: Casella 959-963 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 6. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmje:
+              help: Casella 991-995 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 7. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjg:
+              help: Casella 1023-1027 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 8. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmji:
+              help: Casella 1055-1059 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 9. Codi NACE
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h:
+              help: Casella 806-830 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 1. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h60:
+              help: Casella 1094-1118 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 10. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9i:
+              help: Casella 838-862 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 2. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9j:
+              help: Casella 870-894 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 3. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9k:
+              help: Casella 902-926 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 4. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9l:
+              help: Casella 934-958 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 5. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9m:
+              help: Casella 966-990 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 6. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9n:
+              help: Casella 998-1022 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 7. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9o:
+              help: Casella 1030-1054 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 8. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9p:
+              help: Casella 1062-1086 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 9. Codi NACE. descripció
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h:
+              help: Casella 804-805 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 1. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h60:
+              help: Casella 1092-1093 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 10. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9i:
+              help: Casella 836-837 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 2. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9j:
+              help: Casella 868-869 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 3. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9k:
+              help: Casella 900-901 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 4. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9l:
+              help: Casella 932-933 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 5. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9m:
+              help: Casella 964-965 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 6. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9n:
+              help: Casella 996-997 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 7. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9o:
+              help: Casella 1028-1029 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 8. Codi NACE. descripció. Idioma
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9p:
+              help: Casella 1060-1061 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 9. Codi NACE. descripció. Idioma
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
               help: null

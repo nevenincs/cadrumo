@@ -677,6 +677,8 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: Box 107 of modelo 303, tax year 2022.
             '11':
               help: null
               label: null
@@ -695,6 +697,14 @@ modelo:
             '124':
               help: null
               label: null
+            '125':
+              help: Box 125 of modelo 303, tax year 2022.
+            '126':
+              help: Box 126 of modelo 303, tax year 2022.
+            '127':
+              help: Box 127 of modelo 303, tax year 2022.
+            '128':
+              help: Box 128 of modelo 303, tax year 2022.
             '13':
               help: null
               label: null
@@ -806,12 +816,62 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: Box 500 of modelo 303, tax year 2022.
+            '501':
+              help: Box 501 of modelo 303, tax year 2022.
+            '502':
+              help: Box 502 of modelo 303, tax year 2022.
+            '503':
+              help: Box 503 of modelo 303, tax year 2022.
+            '504':
+              help: Box 504 of modelo 303, tax year 2022.
+            '505':
+              help: Box 505 of modelo 303, tax year 2022.
+            '506':
+              help: Box 506 of modelo 303, tax year 2022.
+            '507':
+              help: Box 507 of modelo 303, tax year 2022.
+            '508':
+              help: Box 508 of modelo 303, tax year 2022.
+            '509':
+              help: Box 509 of modelo 303, tax year 2022.
             '51':
               help: null
               label: null
+            '510':
+              help: Box 510 of modelo 303, tax year 2022.
+            '511':
+              help: Box 511 of modelo 303, tax year 2022.
+            '512':
+              help: Box 512 of modelo 303, tax year 2022.
+            '513':
+              help: Box 513 of modelo 303, tax year 2022.
+            '514':
+              help: Box 514 of modelo 303, tax year 2022.
+            '515':
+              help: Box 515 of modelo 303, tax year 2022.
+            '516':
+              help: Box 516 of modelo 303, tax year 2022.
+            '517':
+              help: Box 517 of modelo 303, tax year 2022.
+            '518':
+              help: Box 518 of modelo 303, tax year 2022.
+            '519':
+              help: Box 519 of modelo 303, tax year 2022.
             '52':
               help: null
               label: null
+            '520':
+              help: Box 520 of modelo 303, tax year 2022.
+            '521':
+              help: Box 521 of modelo 303, tax year 2022.
+            '522':
+              help: Box 522 of modelo 303, tax year 2022.
+            '523':
+              help: Box 523 of modelo 303, tax year 2022.
+            '524':
+              help: Box 524 of modelo 303, tax year 2022.
             '53':
               help: null
               label: null
@@ -857,9 +917,81 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: Box 700 of modelo 303, tax year 2022.
+            '701':
+              help: Box 701 of modelo 303, tax year 2022.
+            '702':
+              help: Box 702 of modelo 303, tax year 2022.
+            '703':
+              help: Box 703 of modelo 303, tax year 2022.
+            '704':
+              help: Box 704 of modelo 303, tax year 2022.
+            '705':
+              help: Box 705 of modelo 303, tax year 2022.
+            '706':
+              help: Box 706 of modelo 303, tax year 2022.
+            '707':
+              help: Box 707 of modelo 303, tax year 2022.
+            '708':
+              help: Box 708 of modelo 303, tax year 2022.
+            '709':
+              help: Box 709 of modelo 303, tax year 2022.
             '71':
               help: Field declared on modelo 303, taken from the official record design.
               label: Result of the settlement
+            '710':
+              help: Box 710 of modelo 303, tax year 2022.
+            '711':
+              help: Box 711 of modelo 303, tax year 2022.
+            '712':
+              help: Box 712 of modelo 303, tax year 2022.
+            '713':
+              help: Box 713 of modelo 303, tax year 2022.
+            '714':
+              help: Box 714 of modelo 303, tax year 2022.
+            '715':
+              help: Box 715 of modelo 303, tax year 2022.
+            '716':
+              help: Box 716 of modelo 303, tax year 2022.
+            '717':
+              help: Box 717 of modelo 303, tax year 2022.
+            '718':
+              help: Box 718 of modelo 303, tax year 2022.
+            '719':
+              help: Box 719 of modelo 303, tax year 2022.
+            '720':
+              help: Box 720 of modelo 303, tax year 2022.
+            '721':
+              help: Box 721 of modelo 303, tax year 2022.
+            '722':
+              help: Box 722 of modelo 303, tax year 2022.
+            '723':
+              help: Box 723 of modelo 303, tax year 2022.
+            '724':
+              help: Box 724 of modelo 303, tax year 2022.
+            '725':
+              help: Box 725 of modelo 303, tax year 2022.
+            '726':
+              help: Box 726 of modelo 303, tax year 2022.
+            '727':
+              help: Box 727 of modelo 303, tax year 2022.
+            '728':
+              help: Box 728 of modelo 303, tax year 2022.
+            '729':
+              help: Box 729 of modelo 303, tax year 2022.
+            '730':
+              help: Box 730 of modelo 303, tax year 2022.
+            '731':
+              help: Box 731 of modelo 303, tax year 2022.
+            '732':
+              help: Box 732 of modelo 303, tax year 2022.
+            '733':
+              help: Box 733 of modelo 303, tax year 2022.
+            '734':
+              help: Box 734 of modelo 303, tax year 2022.
+            '735':
+              help: Box 735 of modelo 303, tax year 2022.
             '74':
               help: null
               label: null
@@ -872,6 +1004,42 @@ modelo:
             '77':
               help: null
               label: null
+            '79':
+              help: Box 79 of modelo 303, tax year 2022.
+            '80':
+              help: Box 80 of modelo 303, tax year 2022.
+            '81':
+              help: Box 81 of modelo 303, tax year 2022.
+            '83':
+              help: Box 83 of modelo 303, tax year 2022.
+            '84':
+              help: Box 84 of modelo 303, tax year 2022.
+            '86':
+              help: Box 86 of modelo 303, tax year 2022.
+            '88':
+              help: Box 88 of modelo 303, tax year 2022.
+            '89':
+              help: Box 89 of modelo 303, tax year 2022.
+            '90':
+              help: Box 90 of modelo 303, tax year 2022.
+            '91':
+              help: Box 91 of modelo 303, tax year 2022.
+            '92':
+              help: Box 92 of modelo 303, tax year 2022.
+            '93':
+              help: Box 93 of modelo 303, tax year 2022.
+            '94':
+              help: Box 94 of modelo 303, tax year 2022.
+            '95':
+              help: Box 95 of modelo 303, tax year 2022.
+            '96':
+              help: Box 96 of modelo 303, tax year 2022.
+            '97':
+              help: Box 97 of modelo 303, tax year 2022.
+            '98':
+              help: Box 98 of modelo 303, tax year 2022.
+            '99':
+              help: Box 99 of modelo 303, tax year 2022.
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -948,7 +1116,7 @@ modelo:
               help: null
               label: null
           field:
-            label: null
+            label: Modelo 303, tax year 2022
         '2023':
           casilla:
             '01':

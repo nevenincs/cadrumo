@@ -8,103 +8,146 @@ modelo:
         2009-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: Box 966-976 of modelo 308, tax year 2009.
               label: Refund - SWIFT-BIC
             x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Box 932-965 of modelo 308, tax year 2009.
               label: Refund - IBAN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the request relates
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Box 119-178 of modelo 308, tax year 2009.
               label: NMT - Acquirer - Surnames or company name
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Box 110-118 of modelo 308, tax year 2009.
               label: New means of transport (NMT) - Acquirer - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Box 179-198 of modelo 308, tax year 2009.
               label: NMT - Acquirer - First name
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Box 199-200 of modelo 308, tax year 2009.
               label: NMT - Acquirer - Country
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Box 638-641 of modelo 308, tax year 2009.
               label: NMT - Aircraft - Year of manufacture
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Box 496-535 of modelo 308, tax year 2009.
               label: NMT - Aircraft - Manufacturer
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Box 536-615 of modelo 308, tax year 2009.
               label: NMT - Aircraft - Make
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Box 642-651 of modelo 308, tax year 2009.
               label: NMT - Aircraft - Maximum take-off weight
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Box 616-637 of modelo 308, tax year 2009.
               label: NMT - Aircraft - Serial no.
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Box 491-495 of modelo 308, tax year 2009.
               label: NMT - Vessels - Maximum length
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Box 349-388 of modelo 308, tax year 2009.
               label: NMT - Vessels - Manufacturer
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Box 469-490 of modelo 308, tax year 2009.
               label: NMT - Vessels - Identification
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Box 389-468 of modelo 308, tax year 2009.
               label: NMT - Vessels - Type
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: Box 781-797 of modelo 308, tax year 2009.
               label: NMT - Settlement - VAT to refund art. 21.4º, párrafo 2º LIVA
                 [20]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: Box 730-746 of modelo 308, tax year 2009.
               label: NMT - Settlement - VAT to refund on intra-Community supplies
                 [07]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: Box 747-763 of modelo 308, tax year 2009.
               label: NMT - Settlement - VAT to refund on transport activity [18]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Box 674-690 of modelo 308, tax year 2009.
               label: NMT - Settlement - Input VAT [03]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: Box 764-780 of modelo 308, tax year 2009.
               label: NMT - Settlement - Input VAT art. 21.4º, párrafo 2º LIVA [19]
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Box 713-729 of modelo 308, tax year 2009.
               label: NMT - Settlement - Maximum refundable [06]
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Box 652-668 of modelo 308, tax year 2009.
               label: NMT - Settlement - Acquisition price [01]
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Box 691-707 of modelo 308, tax year 2009.
               label: NMT - Settlement - Sale price [04]
             x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Box 669-673 of modelo 308, tax year 2009.
               label: NMT - Settlement - Rate (%) [02]
             x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Box 708-712 of modelo 308, tax year 2009.
               label: NMT - Settlement - Rate (%) [05]
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Box 321-342 of modelo 308, tax year 2009.
               label: NMT - Vehicles - Chassis id. no.
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Box 343-348 of modelo 308, tax year 2009.
               label: NMT - Vehicles - Classification
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Box 201-240 of modelo 308, tax year 2009.
               label: NMT - Vehicles - Make
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Box 281-320 of modelo 308, tax year 2009.
               label: NMT - Vehicles - Model (commercial name)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Box 241-280 of modelo 308, tax year 2009.
               label: NMT - Vehicles - Type
             x-chim6r1edpnmqojick:
+              help: Box 83-102 of modelo 308, tax year 2009.
               label: Identification - First name
             x-chim6r1ee1in4qbfchng:
               help: Field declared on modelo 308, taken from the official record design.
               label: Accrual. Period
             x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Box 798-814 of modelo 308, tax year 2009.
               label: Special equivalence surcharge regime (SESR) - Settlement - Taxable
                 base [08]
             x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Box 837-853 of modelo 308, tax year 2009.
               label: SESR - Settlement - Taxable base [11]
             x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Box 876-892 of modelo 308, tax year 2009.
               label: SESR - Settlement - Taxable base [14]
             x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Box 820-836 of modelo 308, tax year 2009.
               label: SESR - Settlement - Tax amount [10]
             x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Box 859-875 of modelo 308, tax year 2009.
               label: SESR - Settlement - Tax amount [13]
             x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Box 898-914 of modelo 308, tax year 2009.
               label: SESR - Settlement - Tax amount [16]
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: Box 915-931 of modelo 308, tax year 2009.
               label: SESR - Settlement - VAT to refund [17]
             x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Box 815-819 of modelo 308, tax year 2009.
               label: SESR - Settlement - Rate (%) [09]
             x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Box 854-858 of modelo 308, tax year 2009.
               label: SESR - Settlement - Rate (%) [12]
             x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Box 893-897 of modelo 308, tax year 2009.
               label: SESR - Settlement - Rate (%) [15]
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box 13 of modelo 308, tax year 2009.
               label: Return type
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               help: null
               label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
                 occasional taxable person / simplified transport regime)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Box 109 of modelo 308, tax year 2009.
               label: Taxation type by taxable person
           construct:
             modelo-308-iva-solicitud-devolucion:

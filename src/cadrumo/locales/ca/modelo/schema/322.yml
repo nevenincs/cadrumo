@@ -858,9 +858,9 @@ modelo:
           construct:
             modelo-322-iva-grupo-individual:
               field:
-                title: null
+                title: Model 322 IVA grup d'entitats, model individual
           field:
-            label: null
+            label: Model 322, exercicis 2008 a 2025
         2026-y-siguientes:
           casilla:
             '01':
@@ -1700,6 +1700,6 @@ modelo:
           construct:
             modelo-322-iva-grupo-individual:
               field:
-                title: null
+                title: Model 322 IVA grup d'entitats, model individual
           field:
-            label: null
+            label: Model 322, exercicis 2026 i següents

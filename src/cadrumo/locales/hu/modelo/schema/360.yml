@@ -8,59 +8,86 @@ modelo:
         2010-y-siguientes:
           casilla:
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc8:
+              help: A 360-es modelo 2004-2043. rovata, 2010. adóév.
               label: 7. Mellékletek. 1. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc9g:
+              help: A 360-es modelo 3066-3105. rovata, 2010. adóév.
               label: 7. Mellékletek. 10. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qcg:
+              help: A 360-es modelo 2122-2161. rovata, 2010. adóév.
               label: 7. Mellékletek. 2. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qco:
+              help: A 360-es modelo 2240-2279. rovata, 2010. adóév.
               label: 7. Mellékletek. 3. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd0:
+              help: A 360-es modelo 2358-2397. rovata, 2010. adóév.
               label: 7. Mellékletek. 4. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd8:
+              help: A 360-es modelo 2476-2515. rovata, 2010. adóév.
               label: 7. Mellékletek. 5. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdg:
+              help: A 360-es modelo 2594-2633. rovata, 2010. adóév.
               label: 7. Mellékletek. 6. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdo:
+              help: A 360-es modelo 2712-2751. rovata, 2010. adóév.
               label: 7. Mellékletek. 7. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe0:
+              help: A 360-es modelo 2830-2869. rovata, 2010. adóév.
               label: 7. Mellékletek. 8. leírás
             x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe8:
+              help: A 360-es modelo 2948-2987. rovata, 2010. adóév.
               label: 7. Mellékletek. 9. leírás
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64:
+              help: A 360-es modelo 1986-2001. rovata, 2010. adóév.
               label: 7. Mellékletek. 1. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd64o0:
+              help: A 360-es modelo 3048-3063. rovata, 2010. adóév.
               label: 7. Mellékletek. 10. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd68:
+              help: A 360-es modelo 2104-2119. rovata, 2010. adóév.
               label: 7. Mellékletek. 2. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6c:
+              help: A 360-es modelo 2222-2237. rovata, 2010. adóév.
               label: 7. Mellékletek. 3. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6g:
+              help: A 360-es modelo 2340-2355. rovata, 2010. adóév.
               label: 7. Mellékletek. 4. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6k:
+              help: A 360-es modelo 2458-2473. rovata, 2010. adóév.
               label: 7. Mellékletek. 5. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6o:
+              help: A 360-es modelo 2576-2591. rovata, 2010. adóév.
               label: 7. Mellékletek. 6. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd6s:
+              help: A 360-es modelo 2694-2709. rovata, 2010. adóév.
               label: 7. Mellékletek. 7. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd70:
+              help: A 360-es modelo 2812-2827. rovata, 2010. adóév.
               label: 7. Mellékletek. 8. Nyilvántartási szám
             x-chim6r1ec5n6au3f5lp6apr9edq74rpd74:
+              help: A 360-es modelo 2930-2945. rovata, 2010. adóév.
               label: 7. Mellékletek. 9. Nyilvántartási szám
             x-chim6r1ec9gmsor1e9kmubb2d5hg:
+              help: A 360-es modelo 1972-1982. rovata, 2010. adóév.
               label: 6. Bankszámlaadatok. Számlatulajdonos. Bank-BIC
             x-chim6r1ec9gmsor1e9kmubb3c5m6ip31cg:
+              help: A 360-es modelo 1937-1937. rovata, 2010. adóév.
               label: 6. Bankszámlaadatok. Számlatulajdonos. Minőség (Kérelmező / képviselő)
                 Kérelmező
             x-chim6r1ec9gmsor1e9kmubb4d5r6isr1:
+              help: A 360-es modelo 1983-1985. rovata, 2010. adóév.
               label: 6. Bankszámlaadatok. Számlatulajdonos. Pénznem
             x-chim6r1ec9gmsor1e9kmubb9c9gms:
+              help: A 360-es modelo 1938-1971. rovata, 2010. adóév.
               label: 6. Bankszámlaadatok. Számlatulajdonos. IBAN
             x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
+              help: A 360-es modelo 1912-1936. rovata, 2010. adóév.
               label: 6. Bankszámlaadatok. Számlatulajdonos. Név
             x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
+              help: A 360-es modelo 18-18. rovata, 2010. adóév.
               label: Adatminőségi szint
             x-chim6r1ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: A 360-es modelo 25-25. rovata, 2010. adóév.
               label: 1. A benyújtás oka. Visszatérítési kérelem vagy annak módosítása
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -69,401 +96,586 @@ modelo:
               help: null
               label: A visszatérítés szerinti tagállam, ahol az adót megfizették
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
+              help: A 360-es modelo 27-42. rovata, 2010. adóév.
               label: 1. Módosítás esetén. Az előző bevallás nyilvántartási száma
             x-chim6r1edto32bb2c5pma:
+              help: A 360-es modelo 2698-2712. rovata, 2010. adóév.
               label: 1. Adóalap
             x-chim6r1edto32bb3dti6iprf5kog:
+              help: A 360-es modelo 78-87. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5koj0:
+              help: A 360-es modelo 2436-2445. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5kp0:
+              help: A 360-es modelo 340-349. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5kpg:
+              help: A 360-es modelo 602-611. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5kq0:
+              help: A 360-es modelo 864-873. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5kqg:
+              help: A 360-es modelo 1126-1135. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5kr0:
+              help: A 360-es modelo 1388-1397. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5krg:
+              help: A 360-es modelo 1650-1659. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5ks0:
+              help: A 360-es modelo 1912-1921. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3dti6iprf5ksg:
+              help: A 360-es modelo 2174-2183. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto32bb3elnn8o8:
+              help: A 360-es modelo 2713-2727. rovata, 2010. adóév.
               label: 1. Áfaösszeg
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kog:
+              help: A 360-es modelo 90-339. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5koj0:
+              help: A 360-es modelo 2448-2697. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kp0:
+              help: A 360-es modelo 352-601. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kpg:
+              help: A 360-es modelo 614-863. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kq0:
+              help: A 360-es modelo 876-1125. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kqg:
+              help: A 360-es modelo 1138-1387. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5kr0:
+              help: A 360-es modelo 1400-1649. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5krg:
+              help: A 360-es modelo 1662-1911. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ks0:
+              help: A 360-es modelo 1924-2173. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4clpm6sj9e1hmirre5ksg:
+              help: A 360-es modelo 2186-2435. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto32bb4d5r6isr1:
+              help: A 360-es modelo 2748-2750. rovata, 2010. adóév.
               label: 1. Pénznem
             x-chim6r1edto32bb6c5hn8tbic4:
+              help: A 360-es modelo 20-69. rovata, 2010. adóév.
               label: 1. Számla vagy importokmány száma
             x-chim6r1edto32bb6clhmgo8:
+              help: A 360-es modelo 70-77. rovata, 2010. adóév.
               label: 1. A számla vagy importokmány kiállításának dátuma
             x-chim6r1edto32bb9chkmurb15kog:
+              help: A 360-es modelo 88-89. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15koj0:
+              help: A 360-es modelo 2446-2447. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15kp0:
+              help: A 360-es modelo 350-351. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15kpg:
+              help: A 360-es modelo 612-613. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15kq0:
+              help: A 360-es modelo 874-875. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15kqg:
+              help: A 360-es modelo 1136-1137. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15kr0:
+              help: A 360-es modelo 1398-1399. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15krg:
+              help: A 360-es modelo 1660-1661. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15ks0:
+              help: A 360-es modelo 1922-1923. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9chkmurb15ksg:
+              help: A 360-es modelo 2184-2185. rovata, 2010. adóév.
               label: '1. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto32bb9dlo6usjkck:
+              help: A 360-es modelo 2733-2747. rovata, 2010. adóév.
               label: 1. Visszatérítésre igényelt összeg
             x-chim6r1edto32bbeelmmasjf:
+              help: A 360-es modelo 11-15. rovata, 2010. adóév.
               label: 1. Ügylet száma
             x-chim6r1edto32bbge9nn4sj1ehgg:
+              help: A 360-es modelo 2728-2732. rovata, 2010. adóév.
               label: 1. Arányosítás %-a
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
                 véve.
               label: Szállítói adatok. Cím
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
+              help: A 360-es modelo 2821-2945. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Vezetéknév
                 és utónév vagy cégnév
             x-chim6r1edto32bbge9nncpb5chnn4bbeepgn8:
+              help: A 360-es modelo 2754-2768. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
+              help: A 360-es modelo 3109-3110. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Ország
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
               help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
                 véve.
               label: Szállítói adatok. Az NVAT kibocsátó országa
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: A 360-es modelo 2769-2770. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Az adóhivatkozást
                 kiadó ország
             x-chim6r1edto32bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: A 360-es modelo 2771-2820. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Adóhivatkozás
                 (NVAT hiányában)
             x-chim6r1edto32bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: A 360-es modelo 3094-3108. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Telefon
             x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
+              help: A 360-es modelo 2751-2751. rovata, 2010. adóév.
               label: 1. Egyszerűsített jelző
             x-chim6r1edto32bbkd5o6u:
+              help: A 360-es modelo 17-19. rovata, 2010. adóév.
               label: Teszt benyújtás
             x-chim6r1edto34bb2c5pma:
+              help: A 360-es modelo 5798-5812. rovata, 2010. adóév.
               label: 2. Adóalap
             x-chim6r1edto34bb3dti6iprf5kog:
+              help: A 360-es modelo 3178-3187. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5koj0:
+              help: A 360-es modelo 5536-5545. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5kp0:
+              help: A 360-es modelo 3440-3449. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5kpg:
+              help: A 360-es modelo 3702-3711. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5kq0:
+              help: A 360-es modelo 3964-3973. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5kqg:
+              help: A 360-es modelo 4226-4235. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5kr0:
+              help: A 360-es modelo 4488-4497. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5krg:
+              help: A 360-es modelo 4750-4759. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5ks0:
+              help: A 360-es modelo 5012-5021. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3dti6iprf5ksg:
+              help: A 360-es modelo 5274-5283. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: kód'
             x-chim6r1edto34bb3elnn8o8:
+              help: A 360-es modelo 5813-5827. rovata, 2010. adóév.
               label: 2. Áfaösszeg
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kog:
+              help: A 360-es modelo 3190-3439. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5koj0:
+              help: A 360-es modelo 5548-5797. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kp0:
+              help: A 360-es modelo 3452-3701. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kpg:
+              help: A 360-es modelo 3714-3963. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kq0:
+              help: A 360-es modelo 3976-4225. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kqg:
+              help: A 360-es modelo 4238-4487. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5kr0:
+              help: A 360-es modelo 4500-4749. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5krg:
+              help: A 360-es modelo 4762-5011. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ks0:
+              help: A 360-es modelo 5024-5273. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4clpm6sj9e1hmirre5ksg:
+              help: A 360-es modelo 5286-5535. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: leírás'
             x-chim6r1edto34bb4d5r6isr1:
+              help: A 360-es modelo 5848-5850. rovata, 2010. adóév.
               label: 2. Pénznem
             x-chim6r1edto34bb6c5hn8tbic4:
+              help: A 360-es modelo 3120-3169. rovata, 2010. adóév.
               label: 2. Számla vagy importokmány száma
             x-chim6r1edto34bb6clhmgo8:
+              help: A 360-es modelo 3170-3177. rovata, 2010. adóév.
               label: 2. A számla vagy importokmány kiállításának dátuma
             x-chim6r1edto34bb9chkmurb15kog:
+              help: A 360-es modelo 3188-3189. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15koj0:
+              help: A 360-es modelo 5546-5547. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15kp0:
+              help: A 360-es modelo 3450-3451. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15kpg:
+              help: A 360-es modelo 3712-3713. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15kq0:
+              help: A 360-es modelo 3974-3975. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15kqg:
+              help: A 360-es modelo 4236-4237. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15kr0:
+              help: A 360-es modelo 4498-4499. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15krg:
+              help: A 360-es modelo 4760-4761. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15ks0:
+              help: A 360-es modelo 5022-5023. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9chkmurb15ksg:
+              help: A 360-es modelo 5284-5285. rovata, 2010. adóév.
               label: '2. Beszerzett termékek és szolgáltatások: a leírás nyelve'
             x-chim6r1edto34bb9dlo6usjkck:
+              help: A 360-es modelo 5833-5847. rovata, 2010. adóév.
               label: 2. Visszatérítésre igényelt összeg
             x-chim6r1edto34bbeelmmasjf:
+              help: A 360-es modelo 3111-3115. rovata, 2010. adóév.
               label: 2. Ügylet száma
             x-chim6r1edto34bbge9nn4sj1ehgg:
+              help: A 360-es modelo 5828-5832. rovata, 2010. adóév.
               label: 2. Arányosítás %-a
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              help: A 360-es modelo 6046-6193. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Cím
             x-chim6r1edto34bbge9nncpb5chnn4bbedtmm4sj5:
+              help: A 360-es modelo 5921-6045. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Vezetéknév
                 és utónév vagy cégnév
             x-chim6r1edto34bbge9nncpb5chnn4bbeepgn8:
+              help: A 360-es modelo 5854-5868. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. NVAT
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6:
+              help: A 360-es modelo 6209-6210. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Ország
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              help: A 360-es modelo 5852-5853. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Az NVAT-t
                 kiadó ország
             x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              help: A 360-es modelo 5869-5870. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Az adóhivatkozást
                 kiadó ország
             x-chim6r1edto34bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              help: A 360-es modelo 5871-5920. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Adóhivatkozás
                 (NVAT hiányában)
             x-chim6r1edto34bbge9nncpb5chnn4bbkclm6apjfdpng:
+              help: A 360-es modelo 6194-6208. rovata, 2010. adóév.
               label: 2. A termékértékesítő / szolgáltatásnyújtó adatai. Telefon
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
+              help: A 360-es modelo 5851-5851. rovata, 2010. adóév.
               label: 2. Egyszerűsített jelző
             x-chim6r1edto34bbkd5o6u:
               help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
                 véve.
               label: Az ügylet típusa
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
+              help: A 360-es modelo 17-17. rovata, 2010. adóév.
               label: Teszt benyújtás
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
+              help: A 360-es modelo 26-26. rovata, 2010. adóév.
               label: 1. Korábbi adóév végleges arányosításának bejelentése
             x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
+              help: A 360-es modelo 1253-1352. rovata, 2010. adóév.
               label: 3. Képviselő. E-mail
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: A 360-es modelo 1119-1127. rovata, 2010. adóév.
               label: 3. Képviselő. NIF
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: A 360-es modelo 1128-1252. rovata, 2010. adóév.
               label: 3. Képviselő. Vezetéknév és utónév vagy cégnév
             x-chim6r1ee9in0sj5edimst31dpq6abbkclm6apjfdpng:
+              help: A 360-es modelo 1353-1367. rovata, 2010. adóév.
               label: 3. Képviselő. Telefon
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisorfchkmerpde1nn6t31dg:
+              help: A 360-es modelo 1816-1820. rovata, 2010. adóév.
               label: 3. Képviselő. Postafiók Spanyolországban. Irányítószám
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisr3fcdgmoqb4c5i0:
+              help: A 360-es modelo 1786-1815. rovata, 2010. adóév.
               label: 3. Képviselő. Postafiók Spanyolországban. Helység / Település
                 (ha eltér a településtől)
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrbldpkm6qbgd5ng:
+              help: A 360-es modelo 1821-1850. rovata, 2010. adóév.
               label: 3. Képviselő. Postafiók Spanyolországban. Település neve
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrjldlin4ro:
+              help: A 360-es modelo 1776-1785. rovata, 2010. adóév.
               label: 3. Képviselő. Postafiók Spanyolországban. Szám
             x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chniss3idtr6irj3d5gg:
+              help: A 360-es modelo 1851-1852. rovata, 2010. adóév.
               label: 3. Képviselő. Postafiók Spanyolországban. Tartomány
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
+              help: A 360-es modelo 1434-1436. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Épületblokk
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: A 360-es modelo 1431-1433. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Házszám kiegészítő
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
+              help: A 360-es modelo 1519-1523. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Irányítószám
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dtmn0r35dlimst3f:
+              help: A 360-es modelo 1449-1488. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Kiegészítő címadat (pl. Urbanización,
                 Pol. Ind, C.C...)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
+              help: A 360-es modelo 1440-1442. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Lépcső
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
+              help: A 360-es modelo 1489-1518. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Helység / Település (ha eltér
                 a településtől)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjdeln6ior9e1kmu:
+              help: A 360-es modelo 1524-1553. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Település neve
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjedtmm4sj55lr6io8:
+              help: A 360-es modelo 1373-1422. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Közterület neve
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjeelmmasjf5lhm2sr1:
+              help: A 360-es modelo 1426-1430. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Házszám / km
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdhgmst31:
+              help: A 360-es modelo 1443-1445. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Emelet
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
+              help: A 360-es modelo 1437-1439. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Lépcsőház
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
+              help: A 360-es modelo 1554-1555. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Tartomány
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgelin4t31:
+              help: A 360-es modelo 1446-1448. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Ajtó
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbeelmmasjf:
+              help: A 360-es modelo 1423-1425. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Házszám típusa
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbmd5gg:
+              help: A 360-es modelo 1368-1372. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Közterület jellege
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpecdnm8qb7dsmn0rrjehgmo:
+              help: A 360-es modelo 1734-1743. rovata, 2010. adóév.
               label: 3. Képviselő. Külföldi cím. Irányítószám (ZIP)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpechnmqqb3d5m6iro:
+              help: A 360-es modelo 1556-1703. rovata, 2010. adóév.
               label: 3. Képviselő. Külföldi cím. Lakcím
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
+              help: A 360-es modelo 1774-1775. rovata, 2010. adóév.
               label: 3. Képviselő. Külföldi cím. Ország
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
+              help: A 360-es modelo 1704-1733. rovata, 2010. adóév.
               label: 3. Képviselő. Külföldi cím. Helység / Település (ha eltér a településtől)
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee9imeqbfdo:
+              help: A 360-es modelo 1744-1773. rovata, 2010. adóév.
               label: 3. Képviselő. Külföldi cím. Tartomány / Régió / Állam
             x-chim6r1eednmoqb3d5q62rjkckmm8pbccljm2or9dtn0:
+              help: A 360-es modelo 797-798. rovata, 2010. adóév.
               label: 2. Kérelmező. A Kanári-szigeteken, Ceutában vagy Melillában letelepedett
                 kérelmezők hivatala
             x-chim6r1eednmoqb3d5q62rjkckmmarb1d5m0:
+              help: A 360-es modelo 194-293. rovata, 2010. adóév.
               label: 2. Kérelmező. E-mail
             x-chim6r1eednmoqb3d5q62rjkckmmasrkc5h6opb3d5i6u:
+              help: A 360-es modelo 794-794. rovata, 2010. adóév.
               label: 2. Kérelmező. Az áfa területi hatálya alatt letelepedett
             x-chim6r1eednmoqb3d5q62rjkckmmgob3d5imsp315lj6usj1dg:
+              help: A 360-es modelo 795-796. rovata, 2010. adóév.
               label: 2. Kérelmező. A letelepedés szerinti foral adóhatóság
             x-chim6r1eednmoqb3d5q62rjkckmn8pbcclj6urjf:
+              help: A 360-es modelo 294-308. rovata, 2010. adóév.
               label: 2. Kérelmező. Telefon
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5phmup39ctniqs3fedq62r0:
+              help: A 360-es modelo 757-761. rovata, 2010. adóév.
               label: 2. Kérelmező. Postafiók Spanyolországban. Irányítószám
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pm6uor1dhkm8ob4:
+              help: A 360-es modelo 727-756. rovata, 2010. adóév.
               label: 2. Kérelmező. Postafiók Spanyolországban. Helység / Település
                 (ha eltér a településtől)
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pmnarj9cdkn0qbf:
+              help: A 360-es modelo 762-791. rovata, 2010. adóév.
               label: 2. Kérelmező. Postafiók Spanyolországban. Település neve
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pn7arb5e9ng:
+              help: A 360-es modelo 717-726. rovata, 2010. adóév.
               label: 2. Kérelmező. Postafiók Spanyolországban. Postafiók száma
             x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5po74rrmd5n66qb1:
+              help: A 360-es modelo 792-793. rovata, 2010. adóév.
               label: 2. Kérelmező. Postafiók Spanyolországban. Tartomány
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
+              help: A 360-es modelo 375-377. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Épületblokk
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
+              help: A 360-es modelo 372-374. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Házszám kiegészítő
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
+              help: A 360-es modelo 460-464. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Irányítószám
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rrde1m6arb5dpq6u:
+              help: A 360-es modelo 390-429. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Kiegészítő címadat (pl. Urbanización,
                 Pol. Ind, C.C...)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
+              help: A 360-es modelo 381-383. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Lépcső
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
+              help: A 360-es modelo 430-459. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Helység / Település (ha eltér
                 a településtől)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6qtbed5hmis39ds:
+              help: A 360-es modelo 465-494. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Település neve
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6srrdc9p6abbmd5gg:
+              help: A 360-es modelo 314-363. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Közterület neve
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6stbdclp6ubb3c5pm2:
+              help: A 360-es modelo 367-371. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Házszám / km
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70r31dpq62:
+              help: A 360-es modelo 384-386. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Emelet
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
+              help: A 360-es modelo 378-380. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Lépcsőház
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
+              help: A 360-es modelo 495-496. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Tartomány
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70tb5e9q62:
+              help: A 360-es modelo 387-389. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Ajtó
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmmstbdclp6u:
+              help: A 360-es modelo 364-366. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Házszám típusa
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmncqb1:
+              help: A 360-es modelo 309-313. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Közterület jellege
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisorfchkmerpde1nn6t31dg:
+              help: A 360-es modelo 675-684. rovata, 2010. adóév.
               label: 2. Kérelmező. Külföldi cím. Irányítószám (ZIP)
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisp3fdlkm6qbcd5ng:
+              help: A 360-es modelo 497-644. rovata, 2010. adóév.
               label: 2. Kérelmező. Külföldi cím. Lakcím
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
+              help: A 360-es modelo 715-716. rovata, 2010. adóév.
               label: 2. Kérelmező. Külföldi cím. Ország
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
+              help: A 360-es modelo 645-674. rovata, 2010. adóév.
               label: 2. Kérelmező. Külföldi cím. Település / Város
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nissj5ctkmurg:
+              help: A 360-es modelo 685-714. rovata, 2010. adóév.
               label: 2. Kérelmező. Külföldi cím. Tartomány / Régió / Állam
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2:
+              help: A 360-es modelo 799-803. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 1. Gazdasági tevékenységek osztályozása
                 (NACE 2. változat) 4 számjegyig. 1174/2009/EK rendelet
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2c0:
+              help: A 360-es modelo 1087-1091. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 10. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj4:
+              help: A 360-es modelo 831-835. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 2. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj6:
+              help: A 360-es modelo 863-867. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 3. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj8:
+              help: A 360-es modelo 895-899. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 4. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmja:
+              help: A 360-es modelo 927-931. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 5. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjc:
+              help: A 360-es modelo 959-963. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 6. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmje:
+              help: A 360-es modelo 991-995. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 7. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjg:
+              help: A 360-es modelo 1023-1027. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 8. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmji:
+              help: A 360-es modelo 1055-1059. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 9. NACE-kód
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h:
+              help: A 360-es modelo 806-830. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 1. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h60:
+              help: A 360-es modelo 1094-1118. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 10. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9i:
+              help: A 360-es modelo 838-862. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 2. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9j:
+              help: A 360-es modelo 870-894. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 3. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9k:
+              help: A 360-es modelo 902-926. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 4. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9l:
+              help: A 360-es modelo 934-958. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 5. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9m:
+              help: A 360-es modelo 966-990. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 6. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9n:
+              help: A 360-es modelo 998-1022. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 7. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9o:
+              help: A 360-es modelo 1030-1054. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 8. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9p:
+              help: A 360-es modelo 1062-1086. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 9. NACE-kód. leírás
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h:
+              help: A 360-es modelo 804-805. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 1. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h60:
+              help: A 360-es modelo 1092-1093. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 10. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9i:
+              help: A 360-es modelo 836-837. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 2. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9j:
+              help: A 360-es modelo 868-869. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 3. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9k:
+              help: A 360-es modelo 900-901. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 4. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9l:
+              help: A 360-es modelo 932-933. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 5. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9m:
+              help: A 360-es modelo 964-965. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 6. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9n:
+              help: A 360-es modelo 996-997. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 7. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9o:
+              help: A 360-es modelo 1028-1029. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 8. NACE-kód. leírás. Nyelv
             x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9p:
+              help: A 360-es modelo 1060-1061. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 9. NACE-kód. leírás. Nyelv
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
               help: null

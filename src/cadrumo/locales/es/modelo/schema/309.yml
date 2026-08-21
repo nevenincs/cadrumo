@@ -9,134 +9,190 @@ modelo:
         2004-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
+              help: Casilla 982-998 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - A deducir [23]
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
+              help: Casilla 1088-1147 del modelo 309, ejercicio 2004.
               label: Adjudicatario (4) - Apellidos o Denominación Social
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
+              help: Casilla 1079-1087 del modelo 309, ejercicio 2004.
               label: Adjudicatario (4) - NIF
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
+              help: Casilla 1148-1167 del modelo 309, ejercicio 2004.
               label: Adjudicatario (4) - Nombre
             x-chim6r1ec5in4rrec5r6abb1dpng:
+              help: Casilla 639-642 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Aeronaves - Año fabricación
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              help: Casilla 497-536 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Aeronaves - Fabricante
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              help: Casilla 537-616 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Aeronaves - Marca - Tipo
                 - Modelo
             x-chim6r1ec5in4rrec5r6abbgclpmu:
+              help: Casilla 643-652 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Aeronaves - Peso máximo
                 despegue (en Kg.)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              help: Casilla 617-638 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Aeronaves - Nº Serie
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casilla 1016 del modelo 309, ejercicio 2004.
               label: Declaración complementaria (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              help: Casilla 965-981 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Total cuota devengada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              help: Casilla 492-496 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Embarcaciones - Eslora
                 máxima
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              help: Casilla 350-389 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Embarcaciones - Fabricante
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              help: Casilla 470-491 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Embarcaciones - Identificación
                 (Nº construcción)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              help: Casilla 390-469 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Embarcaciones - Tipo-Modelo
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              help: Casilla 201 del modelo 309, ejercicio 2004.
               label: 'Hecho imponible (6):'
             x-chim6r1ed5h62rg:
+              help: Casilla 1030-1063 del modelo 309, ejercicio 2004.
               label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: Casilla 1017-1029 del modelo 309, ejercicio 2004.
               label: Número de justificante de la declaración anterior (9)
             x-chim6r1edpnmqojick:
+              help: Casilla 83-102 del modelo 309, ejercicio 2004.
               label: Identificación (1) - Nombre
             x-chim6r1ee1in4qbfchng:
               help: Dato declarado en el modelo 309, tomado del diseno de registro
                 oficial.
               label: Devengo. Periodo
             x-chim6r1ee9iiqoj1ediiqc9g:
+              help: Casilla 809-825 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Base imponible [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
+              help: Casilla 848-864 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Base imponible [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
+              help: Casilla 887-903 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Base imponible [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
+              help: Casilla 926-942 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Base imponible [19]
             x-chim6r1ee9iiqorldtq62b9h68:
+              help: Casilla 831-847 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Cuota [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
+              help: Casilla 870-886 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Cuota [15]
             x-chim6r1ee9iiqorldtq62b9h70:
+              help: Casilla 909-925 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Cuota [18]
             x-chim6r1ee9iiqorldtq62b9i64:
+              help: Casilla 948-964 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Cuota [21]
             x-chim6r1ee9iiqt39e1niqc9h:
+              help: Casilla 826-830 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Tipo % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
+              help: Casilla 865-869 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Tipo % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
+              help: Casilla 904-908 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Tipo % [17]
             x-chim6r1ee9iiqt39e1niqchg:
+              help: Casilla 943-947 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Recargo equivalencia - Tipo % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
+              help: Casilla 999-1015 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Resultado a ingresar [22]-[23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
+              help: Casilla 653-669 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Base imponible [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
+              help: Casilla 731-747 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Base imponible [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
+              help: Casilla 770-786 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Base imponible [07]
             x-chim6r1ee9jiqoj1ediiqchl:
+              help: Casilla 692-708 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Base imponible [25]
             x-chim6r1ee9jiqorldtq62b9g6c:
+              help: Casilla 675-691 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Cuota [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
+              help: Casilla 753-769 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Cuota [06]
             x-chim6r1ee9jiqorldtq62b9g74:
+              help: Casilla 792-808 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Cuota [09]
             x-chim6r1ee9jiqorldtq62b9i6s:
+              help: Casilla 714-730 del modelo 309, ejercicio 2004.
               label: Liquidación (8) -Régimen General - Cuota [27]
             x-chim6r1ee9jiqt39e1niqc1i:
+              help: Casilla 670-674 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Tipo % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
+              help: Casilla 748-752 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Tipo % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
+              help: Casilla 787-791 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Tipo % [08]
             x-chim6r1ee9jiqt39e1niqchm:
+              help: Casilla 709-713 del modelo 309, ejercicio 2004.
               label: Liquidación (8) - Régimen General - Tipo % [26]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              help: Casilla 200 del modelo 309, ejercicio 2004.
               label: 'Situación tributaria (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla 13 del modelo 309, ejercicio 2004.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Tipo de trigger (medios de transporte nuevos / régimen agricola
                 / recargo de equivalencia / ejecucion forzosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              help: Casilla 118-177 del modelo 309, ejercicio 2004.
               label: Transmitente (3) - Apellidos o Denominación Social
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              help: Casilla 109-117 del modelo 309, ejercicio 2004.
               label: Transmitente (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
+              help: Casilla 1064-1078 del modelo 309, ejercicio 2004.
               label: Transmitente (3)- NIF-IVA
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              help: Casilla 178-197 del modelo 309, ejercicio 2004.
               label: Transmitente (3) - Nombre
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              help: Casilla 198-199 del modelo 309, ejercicio 2004.
               label: Transmitente (3) - País
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              help: Casilla 322-343 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Vehículos - Nº identificación
                 (bastidor)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              help: Casilla 344-349 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Vehículos - Clasificación
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              help: Casilla 202-241 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Vehículos - Marca
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              help: Casilla 282-321 del modelo 309, ejercicio 2004.
               label: 'Características y datos técnicos (7) - Vehículos - Modelo (denominación
                 comercial):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              help: Casilla 242-281 del modelo 309, ejercicio 2004.
               label: Características y datos técnicos (7) - Vehículos - Tipo
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null

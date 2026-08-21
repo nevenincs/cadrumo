@@ -862,9 +862,9 @@ modelo:
           construct:
             modelo-322-iva-grupo-individual:
               field:
-                title: null
+                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
-            label: null
+            label: 322-es modelo, 2008-2025. adóévek
         2026-y-siguientes:
           casilla:
             '01':
@@ -1712,6 +1712,6 @@ modelo:
           construct:
             modelo-322-iva-grupo-individual:
               field:
-                title: null
+                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
-            label: null
+            label: 322-es modelo, 2026. adóévtől

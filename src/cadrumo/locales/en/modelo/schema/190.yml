@@ -246,6 +246,7 @@ modelo:
               label: Withholdings and payments on account paid in. Provincial Council
                 of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 323-335 of modelo 190, tax year 2024.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE
@@ -545,6 +546,7 @@ modelo:
               label: Withholdings and payments on account paid in. Provincial Council
                 of Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 323-335 of modelo 190, tax year 2025.
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
                 FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
                 OF NAVARRE

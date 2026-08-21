@@ -259,6 +259,7 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Diputació Foral de
                 Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casella 323-335 del model 190, exercici 2024.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -573,6 +574,7 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Diputació Foral de
                 Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casella 323-335 del model 190, exercici 2025.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:

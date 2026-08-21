@@ -1755,8 +1755,10 @@ modelo:
               label: Annex. Transfer of shares or units in collective investment undertakings.
                 NIF of the investment company or fund
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: Box 03 of modelo 151, tax year 2025.
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: Box 01 of modelo 151, tax year 2025.
               label: Start of the modelo and page identifier
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
               help: Field of modelo 151's annex for transfers of shares or units in

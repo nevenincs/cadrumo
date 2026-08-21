@@ -15211,8 +15211,10 @@ modelo:
               label: Inversiones anticipadas 2023. Pendent de dotar RIC al final del
                 període
             '1501':
+              help: Casella 1501 del model 200, exercici 2024.
               label: Valor nominal total de la participació [1501]
             '1502':
+              help: Casella 1502 del model 200, exercici 2024.
               label: Valor en llibres (en l'actiu de la declarant) de la participació
                 [1502]
             '1503':

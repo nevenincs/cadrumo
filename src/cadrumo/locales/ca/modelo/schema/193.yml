@@ -12,102 +12,137 @@ modelo:
                 el divideix en part entera i part decimal.
               label: Base de retencions i ingressos a compte
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casella 121 del model 193, exercici 2024.
               label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarat en el registre de declarant del model 193. El disseny
                 el divideix en part entera i part decimal.
               label: Despeses deduïbles (art. 26.1.a Llei 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casella 235 del model 193, exercici 2024.
               label: NATURALESA DEL DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Casella 108-120 del model 193, exercici 2024.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Casella 123-135 del model 193, exercici 2024.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Casella 68-107 del model 193, exercici 2024.
               label: COGNOMS I NOM
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Casella 59-67 del model 193, exercici 2024.
               label: TELÈFON
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Casella 175-189 del model 193, exercici 2024.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declarat en el registre de declarant del model 193. El disseny
                 el divideix en part entera i part decimal.
               label: Retencions i ingressos a compte
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Casella 122 del model 193, exercici 2024.
               label: TIPUS DE PERCEPCIÓ
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Casella 136-144 del model 193, exercici 2024.
               label: NOMBRE TOTAL DE PERCEPTORS
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Import de despeses
             x-ctgn6t3f5pn6ipg:
+              help: Casella 18-26 del model 193, exercici 2024.
               label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Casella 27-35 del model 193, exercici 2024.
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Casella 36-75 del model 193, exercici 2024.
               label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
             x-e1in4opec9gn6p8:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Base de retencions i ingressos a compte
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Casella 314 del model 193, exercici 2024.
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Casella 92 del model 193, exercici 2024.
               label: CLAU DE PERCEPCIÓ
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Casella 79 del model 193, exercici 2024.
               label: CLAU CODI
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Casella 339 del model 193, exercici 2024.
               label: CLAU DE MERCAT
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Casella 97-116 del model 193, exercici 2024.
               label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Casella 80-91 del model 193, exercici 2024.
               label: CODI EMISSOR
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Compensacions
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Casella 118-121 del model 193, exercici 2024.
               label: EXERCICI DE MERITACIÓ
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Casella 331-338 del model 193, exercici 2024.
               label: DATA DE MERITACIÓ
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Casella 209-216 del model 193, exercici 2024.
               label: DATA D'INICI DEL PRÉSTEC
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Casella 217-224 del model 193, exercici 2024.
               label: DATA DE VENCIMENT DEL PRÉSTEC
             x-e1in4opectgn4obeehkm2so:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Garanties
             x-e1in4opedlim8qb1chnn4:
+              help: Casella 76 del model 193, exercici 2024.
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Casella 93-94 del model 193, exercici 2024.
               label: NATURALESA
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casella 208 del model 193, exercici 2024.
               label: NATURALESA DEL DECLARANT
             x-e1in4opedpkmc:
+              help: Casella 18-26 del model 193, exercici 2024.
               label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Casella 322-330 del model 193, exercici 2024.
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Casella 27-35 del model 193, exercici 2024.
               label: NIF DEL REPRESENTANT LEGAL
             x-e1in4opedpnmqojick:
+              help: Casella 36-75 del model 193, exercici 2024.
               label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Casella 315-321 del model 193, exercici 2024.
               label: NÚMERO D'ORDRE
             x-e1in4opee1gmero:
+              help: Casella 95 del model 193, exercici 2024.
               label: PAGAMENT
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Casella 182-192 del model 193, exercici 2024.
               label: PENALITZACIONS
             x-e1in4opee1imsp39cln78p8:
+              help: Casella 117 del model 193, exercici 2024.
               label: PENDENT
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Casella 123-135 del model 193, exercici 2024.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
             x-e1in4opee1nn4or5dpq62qj5:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: '% de retenció'
             x-e1in4opee1p6utj9dphmio8:
+              help: Casella 77-78 del model 193, exercici 2024.
               label: CODI DE PROVÍNCIA
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
@@ -127,6 +162,7 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Diputació Foral de
                 Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casella 249-261 del model 193, exercici 2024.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -140,8 +176,10 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Casella 96 del model 193, exercici 2024.
               label: TIPUS DE CODI
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Casella 122 del model 193, exercici 2024.
               label: TIPUS DE PERCEPCIÓ
         2024-y-siguientes:
           casilla:
@@ -164,104 +202,140 @@ modelo:
                 el divideix en part entera i part decimal.
               label: Base de retencions i ingressos a compte
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casella 121 del model 193, exercici 2025.
               label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarat en el registre de declarant del model 193. El disseny
                 el divideix en part entera i part decimal.
               label: Despeses deduïbles (art. 26.1.a Llei 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casella 235 del model 193, exercici 2025.
               label: NATURALESA DEL DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Casella 108-120 del model 193, exercici 2025.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Casella 123-135 del model 193, exercici 2025.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Casella 68-107 del model 193, exercici 2025.
               label: COGNOMS I NOM
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Casella 59-67 del model 193, exercici 2025.
               label: TELÈFON
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Casella 175-189 del model 193, exercici 2025.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declarat en el registre de declarant del model 193. El disseny
                 el divideix en part entera i part decimal.
               label: Retencions i ingressos a compte
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Casella 122 del model 193, exercici 2025.
               label: TIPUS DE PERCEPCIÓ
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Casella 136-144 del model 193, exercici 2025.
               label: NOMBRE TOTAL DE PERCEPTORS
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Import de despeses
             x-ctgn6t3f5pn6ipg:
+              help: Casella 18-26 del model 193, exercici 2025.
               label: NIF DEL CONTRIBUENT
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Casella 27-35 del model 193, exercici 2025.
               label: NIF DEL REPRESENTANT LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Casella 36-75 del model 193, exercici 2025.
               label: COGNOMS I NOM DEL CONTRIBUENT O DENOMINACIÓ
             x-e1in4opec9gn6p8:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Base de retencions i ingressos a compte
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Casella 314 del model 193, exercici 2025.
               label: CEUTA O MELILLA / ILLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Casella 92 del model 193, exercici 2025.
               label: CLAU DE PERCEPCIÓ
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Casella 79 del model 193, exercici 2025.
               label: CLAU CODI
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Casella 339 del model 193, exercici 2025.
               label: CLAU DE MERCAT
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Casella 97-116 del model 193, exercici 2025.
               label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Casella 80-91 del model 193, exercici 2025.
               label: CODI EMISSOR
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Compensacions
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Casella 118-121 del model 193, exercici 2025.
               label: EXERCICI DE MERITACIÓ
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Casella 331-338 del model 193, exercici 2025.
               label: DATA DE MERITACIÓ
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Casella 209-216 del model 193, exercici 2025.
               label: DATA D'INICI DEL PRÉSTEC
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Casella 217-224 del model 193, exercici 2025.
               label: DATA DE VENCIMENT DEL PRÉSTEC
             x-e1in4opectgn4obeehkm2so:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: Garanties
             x-e1in4oped5pmirg:
+              help: Casella 193-204 del model 193, exercici 2025.
               label: CODI ISIN
             x-e1in4opedlim8qb1chnn4:
+              help: Casella 76 del model 193, exercici 2025.
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Casella 93-94 del model 193, exercici 2025.
               label: NATURALESA
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casella 208 del model 193, exercici 2025.
               label: NATURALESA DEL DECLARANT
             x-e1in4opedpkmc:
+              help: Casella 18-26 del model 193, exercici 2025.
               label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Casella 322-330 del model 193, exercici 2025.
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Casella 27-35 del model 193, exercici 2025.
               label: NIF DEL REPRESENTANT LEGAL
             x-e1in4opedpnmqojick:
+              help: Casella 36-75 del model 193, exercici 2025.
               label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DEL PERCEPTOR
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Casella 315-321 del model 193, exercici 2025.
               label: NÚMERO D'ORDRE
             x-e1in4opee1gmero:
+              help: Casella 95 del model 193, exercici 2025.
               label: PAGAMENT
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Casella 182-192 del model 193, exercici 2025.
               label: PENALITZACIONS
             x-e1in4opee1imsp39cln78p8:
+              help: Casella 117 del model 193, exercici 2025.
               label: PENDENT
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Casella 123-135 del model 193, exercici 2025.
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ ANTERIOR
             x-e1in4opee1nn4or5dpq62qj5:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
               label: '% de retenció'
             x-e1in4opee1p6utj9dphmio8:
+              help: Casella 77-78 del model 193, exercici 2025.
               label: CODI DE PROVÍNCIA
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
@@ -281,6 +355,7 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Diputació Foral de
                 Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casella 249-261 del model 193, exercici 2025.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
                 FORALS DEL PAÍS BASC I A LA COMUNITAT FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -294,6 +369,8 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Casella 96 del model 193, exercici 2025.
               label: TIPUS DE CODI
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Casella 122 del model 193, exercici 2025.
               label: TIPUS DE PERCEPCIÓ

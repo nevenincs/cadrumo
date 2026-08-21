@@ -1761,8 +1761,10 @@ modelo:
               label: Annex. Transmissió d'accions o participacions d'IIC. NIF de la
                 societat o fons d'inversió
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: Casella 03 del model 151, exercici 2025.
               label: Model
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: Casella 01 del model 151, exercici 2025.
               label: Inici de l'identificador de model i pàgina
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
               help: Dada de l'annex de transmissio d'accions o participacions d'IIC

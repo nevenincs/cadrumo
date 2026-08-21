@@ -15316,8 +15316,10 @@ modelo:
               label: Inversiones anticipadas 2023. A RIC-hez az időszak végén még
                 hozzárendelendő összeg
             '1501':
+              help: A 200-es modelo 1501. rovata, 2024. adóév.
               label: A részesedés teljes névértéke [1501]
             '1502':
+              help: A 200-es modelo 1502. rovata, 2024. adóév.
               label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
                 [1502]
             '1503':

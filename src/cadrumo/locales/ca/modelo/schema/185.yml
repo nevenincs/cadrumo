@@ -16,7 +16,7 @@ modelo:
                 presentada abans, o complementària que afegeix dades omeses.'
               label: Tipus de declaració (originària / substitutiva / complementària)
           field:
-            label: null
+            label: Model 185 (orden-hac-96-2003), exercicis 2003 a 2025
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

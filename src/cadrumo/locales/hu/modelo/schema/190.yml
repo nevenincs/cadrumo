@@ -262,6 +262,7 @@ modelo:
                 az összegeket egész és tizedes részre bontja.
               label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: A 190-es modelo 323-335. rovata, 2024. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -578,6 +579,7 @@ modelo:
                 az összegeket egész és tizedes részre bontja.
               label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: A 190-es modelo 323-335. rovata, 2025. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:

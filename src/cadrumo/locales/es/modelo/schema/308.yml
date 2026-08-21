@@ -11,105 +11,148 @@ modelo:
         2009-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: Casilla 966-976 del modelo 308, ejercicio 2009.
               label: Devolución - SWIFT-BIC
             x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Casilla 932-965 del modelo 308, ejercicio 2009.
               label: Devolución - IBAN
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Casilla 119-178 del modelo 308, ejercicio 2009.
               label: MTN - Adquirente - Apellidos ó Razón social
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Casilla 110-118 del modelo 308, ejercicio 2009.
               label: Medios transporte nuevos (MTN) - Adquirente - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Casilla 179-198 del modelo 308, ejercicio 2009.
               label: MTN - Adquirente - Nombre
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Casilla 199-200 del modelo 308, ejercicio 2009.
               label: MTN - Adquirente - País
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Casilla 638-641 del modelo 308, ejercicio 2009.
               label: MTN - Aeronaves - Año fabricación
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Casilla 496-535 del modelo 308, ejercicio 2009.
               label: MTN - Aeronaves - Fabricante
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Casilla 536-615 del modelo 308, ejercicio 2009.
               label: MTN - Aeronaves - Marca
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Casilla 642-651 del modelo 308, ejercicio 2009.
               label: MTN - Aeronaves - Peso máximo despegue
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Casilla 616-637 del modelo 308, ejercicio 2009.
               label: MTN - Aeronaves - Nº serie
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Casilla 491-495 del modelo 308, ejercicio 2009.
               label: MTN - Embarcaciones - Eslora máxima
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Casilla 349-388 del modelo 308, ejercicio 2009.
               label: MTN - Embarcaciones - Fabricante
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Casilla 469-490 del modelo 308, ejercicio 2009.
               label: MTN - Embarcaciones - Identificación
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Casilla 389-468 del modelo 308, ejercicio 2009.
               label: MTN - Embarcaciones - Tipo
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: Casilla 781-797 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - IVA a devolver art. 21.4º, párrafo 2º LIVA
                 [20]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: Casilla 730-746 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - IVA a devolver por entregas intracomunitarias
                 [07]
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: Casilla 747-763 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - IVA a devolver actividad de transporte[18]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Casilla 674-690 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - IVA soportado [03]
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: Casilla 764-780 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - IVA soportado art. 21.4º, párrafo 2º LIVA
                 [19]
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Casilla 713-729 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - Máximo a devolver [06]
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Casilla 652-668 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - Precio Adquisición [01]
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Casilla 691-707 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - Precio de venta [04]
             x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Casilla 669-673 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - Tipo (%) [02]
             x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Casilla 708-712 del modelo 308, ejercicio 2009.
               label: MTN - Liquidación - Tipo (%) [05]
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Casilla 321-342 del modelo 308, ejercicio 2009.
               label: MTN - Vehículos - Nº Id. Bastidor
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Casilla 343-348 del modelo 308, ejercicio 2009.
               label: MTN - Vehículos - Clasificación
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Casilla 201-240 del modelo 308, ejercicio 2009.
               label: MTN - Vehículos - Marca
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Casilla 281-320 del modelo 308, ejercicio 2009.
               label: MTN - Vehículos - Modelo (denominación comercial)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Casilla 241-280 del modelo 308, ejercicio 2009.
               label: MTN - Vehículos - Tipo
             x-chim6r1edpnmqojick:
+              help: Casilla 83-102 del modelo 308, ejercicio 2009.
               label: Identificación - Nombre
             x-chim6r1ee1in4qbfchng:
               help: Dato declarado en el modelo 308, tomado del diseno de registro
                 oficial.
               label: Devengo. Periodo
             x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Casilla 798-814 del modelo 308, ejercicio 2009.
               label: Rég. Espec. recargo equival. (REQ) - Liquidación - Base Imponible
                 [08]
             x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Casilla 837-853 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Base Imponible [11]
             x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Casilla 876-892 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Base Imponible [14]
             x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Casilla 820-836 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Cuota [10]
             x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Casilla 859-875 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Cuota [13]
             x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Casilla 898-914 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Cuota [16]
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: Casilla 915-931 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - IVA a devolver [17]
             x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Casilla 815-819 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Tipo (%) [09]
             x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Casilla 854-858 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Tipo (%) [12]
             x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Casilla 893-897 del modelo 308, ejercicio 2009.
               label: REQ - Liquidación - Tipo (%) [15]
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla 13 del modelo 308, ejercicio 2009.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               help: null
               label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
                 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Casilla 109 del modelo 308, ejercicio 2009.
               label: Tipo de tributación según el sujeto pasivo
           construct:
             modelo-308-iva-solicitud-devolucion:

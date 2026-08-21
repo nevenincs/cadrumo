@@ -265,6 +265,7 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
                 de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casilla 323-335 del modelo 190, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -582,6 +583,7 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
                 de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casilla 323-335 del modelo 190, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:

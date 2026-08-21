@@ -480,9 +480,9 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 tax on certain digital services, self-assessment
           field:
-            label: null
+            label: Modelo 490, tax year 2021
         2022-1t:
           casilla:
             490-01-declaracion-complementaria-995:
@@ -958,9 +958,9 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 tax on certain digital services, self-assessment
           field:
-            label: null
+            label: Modelo 490, tax year 2022, period 1T
         2022-2t-4t:
           casilla:
             490-01-declaracion-complementaria-1054:
@@ -2197,9 +2197,9 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 tax on certain digital services, self-assessment
           field:
-            label: null
+            label: Modelo 490, tax year 2022, periods 2T to 4T
         2023-y-siguientes:
           casilla:
             490-01-declaracion-complementaria-1054:
@@ -3567,6 +3567,6 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 tax on certain digital services, self-assessment
           field:
-            label: null
+            label: Modelo 490, tax years 2023 onwards

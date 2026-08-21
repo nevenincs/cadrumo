@@ -15480,8 +15480,10 @@ modelo:
               label: Inversiones anticipadas 2023. RIC allocation outstanding at the
                 end of the period
             '1501':
+              help: Box 1501 of modelo 200, tax year 2024.
               label: Total nominal value of the holding [1501]
             '1502':
+              help: Box 1502 of modelo 200, tax year 2024.
               label: Book value of the holding (in the declarant's assets) [1502]
             '1503':
               help: Box 1503 of the annual corporate income tax return, modelo 200.

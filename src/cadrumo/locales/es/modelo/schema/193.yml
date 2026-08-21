@@ -14,102 +14,137 @@ modelo:
                 diseno lo divide en parte entera y parte decimal.
               label: Base de retenciones e ingresos a cuenta
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casilla 121 del modelo 193, ejercicio 2024.
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
               label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casilla 235 del modelo 193, ejercicio 2024.
               label: NATURALEZA DEL DECLARANTE
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Casilla 108-120 del modelo 193, ejercicio 2024.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACION
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Casilla 123-135 del modelo 193, ejercicio 2024.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Casilla 68-107 del modelo 193, ejercicio 2024.
               label: APELLIDOS Y NOMBRE
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Casilla 59-67 del modelo 193, ejercicio 2024.
               label: TELÉFONO
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Casilla 175-189 del modelo 193, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
               label: Retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Casilla 122 del modelo 193, ejercicio 2024.
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Casilla 136-144 del modelo 193, ejercicio 2024.
               label: NÚMERO TOTAL DE PERCEPTORES
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Importe de gastos
             x-ctgn6t3f5pn6ipg:
+              help: Casilla 18-26 del modelo 193, ejercicio 2024.
               label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Casilla 27-35 del modelo 193, ejercicio 2024.
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Casilla 36-75 del modelo 193, ejercicio 2024.
               label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
             x-e1in4opec9gn6p8:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Base de retenciones e ingresos a cuenta
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Casilla 314 del modelo 193, ejercicio 2024.
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Casilla 92 del modelo 193, ejercicio 2024.
               label: CLAVE DE PERCEPCIÓN
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Casilla 79 del modelo 193, ejercicio 2024.
               label: CLAVE CÓDIGO
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Casilla 339 del modelo 193, ejercicio 2024.
               label: CLAVE DE MERCADO
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Casilla 97-116 del modelo 193, ejercicio 2024.
               label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Casilla 80-91 del modelo 193, ejercicio 2024.
               label: CÓDIGO EMISOR
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Compensaciones
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Casilla 118-121 del modelo 193, ejercicio 2024.
               label: EJERCICIO DEVENGO
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Casilla 331-338 del modelo 193, ejercicio 2024.
               label: FECHA DE DEVENGO
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Casilla 209-216 del modelo 193, ejercicio 2024.
               label: FECHA DE INICIO DEL PRÉSTAMO
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Casilla 217-224 del modelo 193, ejercicio 2024.
               label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
             x-e1in4opectgn4obeehkm2so:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Garantías
             x-e1in4opedlim8qb1chnn4:
+              help: Casilla 76 del modelo 193, ejercicio 2024.
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Casilla 93-94 del modelo 193, ejercicio 2024.
               label: NATURALEZA
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casilla 208 del modelo 193, ejercicio 2024.
               label: NATURALEZA DEL DECLARANTE
             x-e1in4opedpkmc:
+              help: Casilla 18-26 del modelo 193, ejercicio 2024.
               label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Casilla 322-330 del modelo 193, ejercicio 2024.
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Casilla 27-35 del modelo 193, ejercicio 2024.
               label: NIF DEL REPRESENTANTE LEGAL
             x-e1in4opedpnmqojick:
+              help: Casilla 36-75 del modelo 193, ejercicio 2024.
               label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Casilla 315-321 del modelo 193, ejercicio 2024.
               label: NÚMERO DE ORDEN
             x-e1in4opee1gmero:
+              help: Casilla 95 del modelo 193, ejercicio 2024.
               label: PAGO
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Casilla 182-192 del modelo 193, ejercicio 2024.
               label: PENALIZACIONES
             x-e1in4opee1imsp39cln78p8:
+              help: Casilla 117 del modelo 193, ejercicio 2024.
               label: PENDIENTE
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Casilla 123-135 del modelo 193, ejercicio 2024.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
             x-e1in4opee1nn4or5dpq62qj5:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: '% de retención'
             x-e1in4opee1p6utj9dphmio8:
+              help: Casilla 77-78 del modelo 193, ejercicio 2024.
               label: CÓDIGO PROVINCIA
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
@@ -130,6 +165,7 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
                 de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casilla 249-261 del modelo 193, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -143,8 +179,10 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
                 Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Casilla 96 del modelo 193, ejercicio 2024.
               label: TIPO CÓDIGO
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Casilla 122 del modelo 193, ejercicio 2024.
               label: TIPO DE PERCEPCIÓN
         2024-y-siguientes:
           casilla:
@@ -167,104 +205,140 @@ modelo:
                 diseno lo divide en parte entera y parte decimal.
               label: Base de retenciones e ingresos a cuenta
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casilla 121 del modelo 193, ejercicio 2025.
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
               label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casilla 235 del modelo 193, ejercicio 2025.
               label: NATURALEZA DEL DECLARANTE
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
+              help: Casilla 108-120 del modelo 193, ejercicio 2025.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACION
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
+              help: Casilla 123-135 del modelo 193, ejercicio 2025.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Casilla 68-107 del modelo 193, ejercicio 2025.
               label: APELLIDOS Y NOMBRE
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Casilla 59-67 del modelo 193, ejercicio 2025.
               label: TELÉFONO
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
+              help: Casilla 175-189 del modelo 193, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
               label: Retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Casilla 122 del modelo 193, ejercicio 2025.
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Casilla 136-144 del modelo 193, ejercicio 2025.
               label: NÚMERO TOTAL DE PERCEPTORES
             x-ctgn6t3f5pkmqs3fe9q6a:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Importe de gastos
             x-ctgn6t3f5pn6ipg:
+              help: Casilla 18-26 del modelo 193, ejercicio 2025.
               label: NIF DEL CONTRIBUYENTE
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              help: Casilla 27-35 del modelo 193, ejercicio 2025.
               label: NIF DEL REPRESENTANTE LEGAL
             x-ctgn6t3f5pn6urb2e9ig:
+              help: Casilla 36-75 del modelo 193, ejercicio 2025.
               label: APELLIDOS Y NOMBRE DEL CONTRIBUYENTE O DENOMINACIÓN
             x-e1in4opec9gn6p8:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Base de retenciones e ingresos a cuenta
             x-e1in4opecdinat315lmmar39dhm62:
+              help: Casilla 314 del modelo 193, ejercicio 2025.
               label: CEUTA O MELILLA / ISLA DE LA PALMA
             x-e1in4opecdm62tj5:
+              help: Casilla 92 del modelo 193, ejercicio 2025.
               label: CLAVE DE PERCEPCIÓN
             x-e1in4opecdm62tj55lhmup39ctng:
+              help: Casilla 79 del modelo 193, ejercicio 2025.
               label: CLAVE CÓDIGO
             x-e1in4opecdm62tj55lmmasj3c5i6u:
+              help: Casilla 339 del modelo 193, ejercicio 2025.
               label: CLAVE DE MERCADO
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
+              help: Casilla 97-116 del modelo 193, ejercicio 2025.
               label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
+              help: Casilla 80-91 del modelo 193, ejercicio 2025.
               label: CÓDIGO EMISOR
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Compensaciones
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Casilla 118-121 del modelo 193, ejercicio 2025.
               label: EJERCICIO DEVENGO
             x-e1in4opecpim6q315li6atj5dpjmu:
+              help: Casilla 331-338 del modelo 193, ejercicio 2025.
               label: FECHA DE DEVENGO
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
+              help: Casilla 209-216 del modelo 193, ejercicio 2025.
               label: FECHA DE INICIO DEL PRÉSTAMO
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
+              help: Casilla 217-224 del modelo 193, ejercicio 2025.
               label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
             x-e1in4opectgn4obeehkm2so:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: Garantías
             x-e1in4oped5pmirg:
+              help: Casilla 193-204 del modelo 193, ejercicio 2025.
               label: CÓDIGO ISIN
             x-e1in4opedlim8qb1chnn4:
+              help: Casilla 76 del modelo 193, ejercicio 2025.
               label: PERCEPTOR MEDIADOR
             x-e1in4opedpgn8tbic5m6auj1:
+              help: Casilla 93-94 del modelo 193, ejercicio 2025.
               label: NATURALEZA
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
+              help: Casilla 208 del modelo 193, ejercicio 2025.
               label: NATURALEZA DEL DECLARANTE
             x-e1in4opedpkmc:
+              help: Casilla 18-26 del modelo 193, ejercicio 2025.
               label: NIF DEL PERCEPTOR
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
+              help: Casilla 322-330 del modelo 193, ejercicio 2025.
               label: NIF DEL PAGADOR ANTERIOR
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              help: Casilla 27-35 del modelo 193, ejercicio 2025.
               label: NIF DEL REPRESENTANTE LEGAL
             x-e1in4opedpnmqojick:
+              help: Casilla 36-75 del modelo 193, ejercicio 2025.
               label: APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR
             x-e1in4opedpqmqpbidsmmusj4cln0:
+              help: Casilla 315-321 del modelo 193, ejercicio 2025.
               label: NÚMERO DE ORDEN
             x-e1in4opee1gmero:
+              help: Casilla 95 del modelo 193, ejercicio 2025.
               label: PAGO
             x-e1in4opee1imsobcd5t62or9dtn6aso:
+              help: Casilla 182-192 del modelo 193, ejercicio 2025.
               label: PENALIZACIONES
             x-e1in4opee1imsp39cln78p8:
+              help: Casilla 117 del modelo 193, ejercicio 2025.
               label: PENDIENTE
             x-e1in4opee1in4or5e1hmirreclpg:
+              help: Casilla 123-135 del modelo 193, ejercicio 2025.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR
             x-e1in4opee1nn4or5dpq62qj5:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
               label: '% de retención'
             x-e1in4opee1p6utj9dphmio8:
+              help: Casilla 77-78 del modelo 193, ejercicio 2025.
               label: CÓDIGO PROVINCIA
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
@@ -285,6 +359,7 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
                 de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Casilla 249-261 del modelo 193, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
@@ -298,6 +373,8 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
                 Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
+              help: Casilla 96 del modelo 193, ejercicio 2025.
               label: TIPO CÓDIGO
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
+              help: Casilla 122 del modelo 193, ejercicio 2025.
               label: TIPO DE PERCEPCIÓN

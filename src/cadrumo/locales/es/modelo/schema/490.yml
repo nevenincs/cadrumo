@@ -505,9 +505,10 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 impuesto sobre determinados servicios digitales,
+                  autoliquidación
           field:
-            label: null
+            label: Modelo 490, ejercicio 2021
         2022-1t:
           casilla:
             490-01-declaracion-complementaria-995:
@@ -1007,9 +1008,10 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 impuesto sobre determinados servicios digitales,
+                  autoliquidación
           field:
-            label: null
+            label: Modelo 490, ejercicio 2022, período 1T
         2022-2t-4t:
           casilla:
             490-01-declaracion-complementaria-1054:
@@ -2319,9 +2321,10 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 impuesto sobre determinados servicios digitales,
+                  autoliquidación
           field:
-            label: null
+            label: Modelo 490, ejercicio 2022, períodos 2T a 4T
         2023-y-siguientes:
           casilla:
             490-01-declaracion-complementaria-1054:
@@ -3762,6 +3765,7 @@ modelo:
           construct:
             modelo-490-autoliquidacion:
               field:
-                title: null
+                title: Modelo 490 impuesto sobre determinados servicios digitales,
+                  autoliquidación
           field:
-            label: null
+            label: Modelo 490, ejercicios 2023 y siguientes

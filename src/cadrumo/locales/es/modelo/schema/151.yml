@@ -1765,8 +1765,10 @@ modelo:
               label: Anexo. Transmisión de acciones o participaciones de IIC. NIF
                 de la sociedad o fondo de inversión
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: Casilla 03 del modelo 151, ejercicio 2025.
               label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: Casilla 01 del modelo 151, ejercicio 2025.
               label: Inicio del identificador de modelo y página
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
               help: Dato del anexo de transmision de acciones o participaciones de
