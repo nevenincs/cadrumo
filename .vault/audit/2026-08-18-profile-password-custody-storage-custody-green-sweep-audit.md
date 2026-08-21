@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd808fa152c17c61ddbb9d94bd545eda706472506fe7b13b0f78ca0d0222af90'
+body_hash: 'sha256:f5bb3e9e10a81d03bc6d22494d4044fdc849d36f6dfaa17d8e5a6bbbba0a4167'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4831,3 +4831,34 @@ Three consecutive entries have now found that a claim about coverage did not sur
 probed: a gap that was already covered, a control that no longer discriminated, and an
 exclusion window that measured the wrong thing. In each case the probe cost minutes and the
 belief would have persisted indefinitely.
+
+### The spawn-race window was a pattern, not an incident
+
+The previous entry fixed one exclusion window that measured process startup instead of the
+lock. Sweeping the domain for the shape — a negative timing assertion opened immediately
+after a spawn — found exactly one more, and it was the same defect.
+
+`test_pointer_cas_and_active_pointer_writer_share_one_root_lock` asserts that a sibling
+cannot write the active pointer while the custody transaction lock is held. Its window
+opened at `writer.start()` and closed 250 ms later. With the root lock removed from the
+transaction lock entirely, it passed **3 out of 3**. Repaired the same way — the writer
+publishes `ready` once its interpreter is up and the pointer transaction is all that
+remains — it now fails **3 out of 3** with the lock removed and passes with it restored.
+
+Both tests kept assertions that were always real and are untouched: the first proves the
+lock is released after its holder is terminated, and the second proves a stale-witness
+compare-and-swap is refused with the pointer unchanged. In each case the vacuous assertion
+sat between load-bearing ones, which is part of why it survived — the test as a whole was
+demonstrably doing something.
+
+**The sweep also bounded the pattern.** Only two negative timing windows exist in the
+domain's tests. Two other short timeouts (`exclusive_file_lock(timeout=0.0)` and
+`timeout=0.1`) are a different shape and correct: they bound the CALL UNDER TEST, asserting
+a non-blocking acquire refuses promptly, rather than racing a window against setup the test
+performed itself. The distinction is whether the timeout constrains the subject or merely
+outlasts the scaffolding.
+
+**Lane note.** One integration failure appeared in a file this change does not touch,
+`test_status_notices_wiring`. It passed in isolation and on an immediate re-run of the full
+lane, and the file's last commit is a peer's; recorded as transient rather than triaged as
+a regression, consistent with this worktree's known concurrent-I/O flakiness.
