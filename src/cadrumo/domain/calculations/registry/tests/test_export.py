@@ -37,7 +37,7 @@ from .._export import (
     export_fields_overlap,
 )
 from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
-from ._loader_directory_mode_support import _committed_modelo
+from ._loader_directory_mode_support import _committed_modelo, _committed_registry_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -322,8 +322,18 @@ def test_binding_export_selector_rejects_layout_less_revision() -> None:
         {"fact": "operator_count", "record": "m347_declarante_summary", "rectification_scope": "any"},
         source=BindingSourceKind.COLLECTIBLE_INVOICE,
     )
-    layout_less_revision = _committed_modelo("200").revisions["2024-y-siguientes"]
-    assert layout_less_revision.export_layouts == ()
+    # A revision that genuinely declares no export layout, FOUND rather than
+    # pinned. This named modelo 200's 2024-y-siguientes, which was layout-less
+    # when the test was written and has since had its generated export tree
+    # authored, so the precondition became false and the selector was never
+    # reached. Fourteen bundled revisions still declare none, so the real-site
+    # proof survives without naming any one of them.
+    layout_less_revision = next(
+        revision
+        for modelo in _committed_registry_modelos()
+        for revision in modelo.revisions.values()
+        if not revision.export_layouts
+    )
 
     with pytest.raises(RegistryValidationError, match="is not export-eligible"):
         binding_export_selector(binding, revision=layout_less_revision)
