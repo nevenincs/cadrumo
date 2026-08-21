@@ -212,7 +212,15 @@ class TestReclaimUsesAreaVocabulary:
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "operator.bin"
             marker.write_bytes(b"preserve")
-            result = invoke_cached_cli(["config", "storage", "reclaim", area.value, "--yes"])
+            # The language is pinned because the assertion below reads the AREA
+            # name out of prose. Area names are translated, so an unpinned run
+            # renders "estado" / "exportaciones" and the raw token never appears
+            # -- the refusal was naming the area correctly all along, in the
+            # operator's language. The sibling text assertions above pin it for
+            # the same reason.
+            result = invoke_cached_cli(
+                ["config", "storage", "reclaim", area.value, "--yes", "--output-language", "en"]
+            )
 
         assert result.exit_code != 0
         assert marker.read_bytes() == b"preserve"
@@ -240,3 +248,65 @@ class TestReclaimUsesAreaVocabulary:
         assert envelope["result"]["removed_entries"] == 1
         assert "category" not in _all_keys(envelope["result"])
         assert not (target / "cached.bin").exists()
+
+
+class TestCheckSaysWhenThePermissionAxisWasNotExamined:
+    """A clean storage report must not imply permissions were checked.
+
+    ``config storage check`` reports ``healthy`` from its issue list. On a host
+    where the root's mode cannot be enforced, that list is empty because the
+    permission axis was never EXAMINED -- a different claim from examined and
+    clean, and the one an operator would otherwise read off a green report.
+
+    The storage root holds this application's financial data at rest, so
+    "permissions are fine" and "permissions were not looked at" are not
+    interchangeable answers. The advisory is the only thing separating them,
+    and nothing asserted it fired.
+
+    Written as a biconditional rather than a platform assertion: whichever way
+    the host answers, the notice must agree with the flag. That keeps the test
+    honest on a POSIX host where the axis IS enforced, where it asserts the
+    notice stays silent.
+    """
+
+    _ADVISORY = "storage_root_mode_unenforced"
+
+    def test_the_advisory_tracks_the_enforcement_flag(self, tmp_path) -> None:
+        """DISCRIMINATING: a green report must disclose an unexamined axis."""
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
+            result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
+
+        envelope = json.loads(result.output)
+        enforced = envelope["result"]["root_mode_enforced"]
+        codes = {notice["code"] for notice in envelope.get("notices", [])}
+
+        assert (self._ADVISORY in codes) is not enforced, (
+            f"root_mode_enforced={enforced} but the advisory presence was "
+            f"{self._ADVISORY in codes}; an operator reading this report cannot tell "
+            "whether the permission axis was examined or merely skipped"
+        )
+
+    def test_a_healthy_report_can_still_have_skipped_the_permission_axis(self, tmp_path) -> None:
+        """The claim the advisory exists to prevent, asserted directly.
+
+        ``healthy`` is computed from the issue list, and an unexamined axis
+        contributes no issues. So health and permission-safety are independent,
+        and this pins that reading one as the other is wrong wherever the axis
+        is unenforced.
+        """
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
+            result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
+
+        envelope = json.loads(result.output)
+        payload = envelope["result"]
+        codes = {notice["code"] for notice in envelope.get("notices", [])}
+
+        if not payload["root_mode_enforced"]:
+            assert payload["healthy"] is True
+            assert payload["issues"] == []
+            assert self._ADVISORY in codes, (
+                "the report is healthy with no issues while the permission axis was "
+                "never examined, and nothing tells the operator so"
+            )
