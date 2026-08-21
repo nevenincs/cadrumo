@@ -15483,6 +15483,38 @@ modelo:
               label: Total nominal value of the holding [1501]
             '1502':
               label: Book value of the holding (in the declarant's assets) [1502]
+            '1503':
+              help: Box 1503 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. Income
+                from dividends received in the declared year
+            '1504':
+              help: Box 1504 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. a)
+                Value correction included in the year's profit and loss
+            '1506':
+              help: Box 1506 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. c)
+                Removal of the accounting impairment included in profit and loss (art.
+                13.2.b LIS)
+            '1507':
+              help: Box 1507 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. f)
+                Effect of the valuation correction on the year's tax base
+            '1508':
+              help: Box 1508 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. g)
+                Balance of tax corrections outstanding at year end (art. 12.3 RDL
+                4/2004)
+            '1809':
+              help: Box 1809 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. d)
+                Removal of the impairment of securities representing holdings in capital
+                or equity (art. 15.k LIS)
+            '1810':
+              help: Box 1810 of the annual corporate income tax return, modelo 200.
+              label: Direct holdings in other entities. Valuation corrections. e)
+                Adjustment for the decrease in value arising from the fair-value criterion
+                (art. 15.l LIS)
             '2231':
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision

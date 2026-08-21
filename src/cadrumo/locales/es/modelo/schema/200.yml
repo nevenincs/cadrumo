@@ -15236,6 +15236,45 @@ modelo:
             '1502':
               label: Valor en libros (en el activo de la declarante) de la participación
                 [1502]
+            '1503':
+              help: Casilla 1503 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                Ingresos por dividendos recibidos en el ejercicio declarado
+            '1504':
+              help: Casilla 1504 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                a) Corrección de valor incluida en pérdidas y ganancias del ejercicio
+            '1506':
+              help: Casilla 1506 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                c) Eliminación del deterioro contable incluido en pérdidas y ganancias
+                (art. 13.2.b LIS)
+            '1507':
+              help: Casilla 1507 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                f) Efecto de la corrección valorativa en la base imponible del ejercicio
+            '1508':
+              help: Casilla 1508 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                g) Saldo de correcciones fiscales pendientes a fin de ejercicio (art.
+                12.3 RDL 4/2004)
+            '1809':
+              help: Casilla 1809 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                d) Eliminación del deterioro de valores representativos de participación
+                en el capital o fondos propios (art. 15.k LIS)
+            '1810':
+              help: Casilla 1810 de la declaracion anual del Impuesto sobre Sociedades,
+                modelo 200.
+              label: Participaciones directas en otras entidades. Correcciones valorativas.
+                e) Ajuste por la disminución de valor originada por el criterio de
+                valor razonable (art. 15.l LIS)
             '2231':
               help: null
               label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)

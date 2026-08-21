@@ -15215,6 +15215,45 @@ modelo:
             '1502':
               label: Valor en llibres (en l'actiu de la declarant) de la participació
                 [1502]
+            '1503':
+              help: Casella 1503 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                Ingressos per dividends rebuts en l'exercici declarat
+            '1504':
+              help: Casella 1504 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                a) Correcció de valor inclosa en pèrdues i guanys de l'exercici
+            '1506':
+              help: Casella 1506 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                c) Eliminació del deteriorament comptable inclòs en pèrdues i guanys
+                (art. 13.2.b LIS)
+            '1507':
+              help: Casella 1507 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                f) Efecte de la correcció valorativa en la base imposable de l'exercici
+            '1508':
+              help: Casella 1508 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                g) Saldo de correccions fiscals pendents a fi d'exercici (art. 12.3
+                RDL 4/2004)
+            '1809':
+              help: Casella 1809 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                d) Eliminació del deteriorament de valors representatius de participació
+                en el capital o fons propis (art. 15.k LIS)
+            '1810':
+              help: Casella 1810 de la declaracio anual de l'Impost sobre Societats,
+                model 200.
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                e) Ajust per la disminució de valor originada pel criteri de valor
+                raonable (art. 15.l LIS)
             '2231':
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -

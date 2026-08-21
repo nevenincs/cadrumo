@@ -15320,6 +15320,37 @@ modelo:
             '1502':
               label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
                 [1502]
+            '1503':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1503. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                A bevallott évben kapott osztalékból származó bevétel
+            '1504':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1504. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                a) Az év eredménykimutatásában szereplő értékkorrekció
+            '1506':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1506. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                c) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
+                (LIS 13.2.b cikk)
+            '1507':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1507. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                f) Az értékelési korrekció hatása az év adóalapjára
+            '1508':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1508. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                g) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
+            '1809':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1809. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                d) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+                értékvesztésének kiszűrése (LIS 15.k cikk)
+            '1810':
+              help: A 200-as modelo eves tarsasagi adobevallasanak 1810. rovata.
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                e) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
+                cikk)
             '2231':
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1
