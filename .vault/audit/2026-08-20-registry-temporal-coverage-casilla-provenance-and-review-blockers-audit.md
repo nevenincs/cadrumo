@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:679823afd96c9b2516061ee6251bfa0b42dd348ee7450e982619ec13352748fe'
+body_hash: 'sha256:362397a8924a73479465aeea02d6fad31575f135f47a145138468ef2c1616f58'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -980,6 +980,56 @@ statement records only that somebody looked.
 
 **Pre-shift remediation: 4 of 7** (m165, m181, m270, m345). m180, m190 and m193 remain,
 all on stamped revisions.
+
+
+### m190-and-m193-cite-a-superseded-twenty-day-plazo | high | the date is pre-shifted AND the article establishing it is not cited
+
+Completing the pre-shift remediation meant checking m180, m190 and m193. All three carry
+the bare stamp token ``agent-prepared-pending-operator`` -- no scope statement -- so
+correcting their data would falsify nothing. But reading their cited plazo articles
+verbatim, rather than trusting the earlier regex sweep, changed the picture.
+
+**The earlier sweep over-claimed, and this corrects it.** Iteration 30 classified these
+as simply "pre-shifted" on a regex that matched *"mes de enero"* anywhere in the cited
+corpus. Read properly:
+
+| revision | cited article | what it actually says |
+|---|---|---|
+| m190 | ``orden-eha-3127-2009:art-1`` | *"se realizará en los **primeros veinte días naturales** del mes de enero de cada año"* |
+| m190 | ``rd-439-2007:art-108`` | *"deberá presentar en los **primeros veinte días naturales** del mes de enero"* |
+| m193 | ``orden-eha-3377-2011:art-1`` | *"durante los **veinte primeros días naturales** del mes de enero siguiente"* |
+| m180 | ``orden-hfp-1284-2023:art-7`` | entry-into-force text about a FEBRUARY autoliquidación -- not m180's plazo at all |
+
+Every one of those states a **20 January** close. The windows store 2026-02-02.
+
+**The stored date is nevertheless right, and AEAT's own bundled calendar proves it.**
+``calendario-contribuyente-2026-hasta-2-febrero.html`` lists, under that heading:
+*"Resumen anual 2025: 180, 188, 190, 193, 193-S, 194, 196, 270"*. An operational date of
+2 February 2026 is the Saturday shift of a **31 January** nominal; a 20 January nominal
+falls on a Tuesday and would need no shift at all, and AEAT would list these under a
+January heading.
+
+So there are TWO defects stacked, not one:
+
+1. The window stores the pre-shifted 2026-02-02 instead of the nominal 2026-01-31.
+2. The article cited as establishing that plazo states twenty days and is **superseded**.
+   The provision that actually establishes the current 31-January close is cited nowhere
+   in these revisions.
+
+**Nothing was changed.** Fixing only the date would leave a window storing 31 January
+while its own ``legal_refs`` state 20 January -- a visible contradiction, and the
+grounding rule requires the provision that establishes the value, which is not in the
+bundled corpus. Resolving it needs the amending orden acquired and enrolled, exactly as
+the m185/2003-2025 case did, and that is a dedicated action rather than a loop tick.
+
+m180 needs its own reading: the article cited for its plazo is about something else
+entirely, so its 31-January nominal is currently ungrounded rather than mis-grounded.
+
+**Pre-shift remediation stands at 4 of 7** (m165, m181, m270, m345 -- each of which cited
+an article genuinely stating its January close, verified verbatim before the change). The
+remaining three are now known to need acquisition first, which is a better answer than
+the count suggested.
+
 
 ## Recommendations
 
