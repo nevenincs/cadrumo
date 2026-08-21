@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:03d4821b2e7c9579d8c38ad454e7f00765c2d0124d78cda28d852e8c7d6c91f9'
+body_hash: 'sha256:caa569c562c582e1a7ea46ed1e7c5d31d06a6dbae806f00ddfe526039716c5e5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4073,3 +4073,40 @@ Measured alongside it, and NOT actioned for the same reason: 51 of custody's 145
 and 53 of storage's 261 have no consumer outside their own package. That is over-exposure
 rather than dead code — the implementations are all used internally — and it is the same
 shape as the deferred `user_profile` over-export item.
+
+### The deletion guards were unwired-proof, but the wiring itself had nothing watching it
+
+The previous entry covered the deletion protocol's five adapter functions. That work
+proves what each guard does WHEN CALLED. It says nothing about whether the live path calls
+them, and the distinction turned out to be the whole remaining risk.
+
+`_remove_delete_capsule` in `_custody_service.py` calls
+`verify_profile_custody_deletion_tombstone` immediately before
+`remove_profile_custody_deletion_tombstone`. The verification is unconditional and
+adjacent — the wiring is correct today. What was missing is anything that keeps it that
+way.
+
+**Measured, not assumed:** removing that single verify call from the live delete step
+leaves ALL TWELVE adapter tests green. They exercise the verifier and the remover in
+isolation, so nothing in them can observe that the product stopped calling one before the
+other. A refactor dropping that line would ship a tree deletion nobody checked, against a
+fully green suite.
+
+The invariant is lexical — the verification appears earlier in the same function body — so
+it is asserted against the source rather than by observing a run, which would have to
+reach the destructive step before it could report anything.
+
+**Both halves of the proof were taken, because the campaign has already been burned by
+each.** The detector was driven over synthetic source carrying the shape (it flags an
+unguarded removal and accepts a verified one), AND the gate was run against the real
+service with the verify call actually deleted, where it fails naming
+`_custody_service.py:780`. The synthetic half alone proves only that the detector works;
+the earlier lesson was that a detector correct on a sample can still never reach the real
+site. The gate also asserts that the call site it found is in `_custody_service.py`, so an
+empty scan cannot pass as a clean one.
+
+**Scope, stated deliberately.** This pins one pairing rather than a general "every
+destructive call needs a matching verification" rule. The general form needs its own
+inventory of what counts as destructive and what counts as verifying it, and a rule that
+cannot enumerate its own subjects is the kind that passes vacuously. One protocol, one
+ordering, one gate.
