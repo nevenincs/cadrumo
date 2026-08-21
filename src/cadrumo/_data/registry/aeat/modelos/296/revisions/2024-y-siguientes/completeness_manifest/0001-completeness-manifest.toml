@@ -1,0 +1,29 @@
+# Calculation-completeness manifest for the two summary casillas modelo 296
+# carries from modelo 216.
+#
+# Required because this revision became calculation-bearing: casillas 02 and 03
+# now consume the `relation_prefill` slots its two `periodic_to_annual_summary`
+# relations materialise, which previously stood unconsumed. The closure is
+# exactly those two; casilla 04 (retenciones ingresadas) has no modelo 216
+# source declared and stays operator input, so it is not part of it.
+#
+# The pairing is the standard periodic-to-annual shape and is semantically
+# exact rather than positional: modelo 216 casilla 10 is
+# `irnr_retencion_base_total` and feeds 296's `irnr_resumen_base`; modelo 216
+# casilla 13 is `irnr_retencion_cuota_total` and feeds `irnr_resumen_retenciones`.
+#
+# `number` restates each casilla's own declared number and neither declares a
+# segmento, because modelo 296's casillas declare none.
+
+[revisions."2024-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-296-2024"
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-296-2024", "boe-modelo-296-form-layout"]
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
