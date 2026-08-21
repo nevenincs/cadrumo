@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:445fff8d21ed0837c412f80dd8f175466676122d2609e787504628e3b0f46dd6'
+body_hash: 'sha256:4a77cae550fb6fe8ec393db7eecdd30e7b83ce63590bc91b1ceced292e460fe3'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -890,6 +890,50 @@ is what happened here.
 
 Nothing was stamped this iteration. m165, m181 and m270 now have their byte-extent half
 verified clean, which is the expensive part of a filing-scope review.
+
+
+### ten-windows-store-a-pre-shifted-close-and-m345-regressed | high | the defect recorded as corrected on m345 is present again
+
+Reviewing m165 for a filing-scope stamp surfaced its middle window closing **2026-02-02**
+while its siblings close 2025-01-31 and 2027-01-31. ``orden-hap-2455-2013`` art. 4 states
+the nominal plazo verbatim: *"La presentación de esta declaración informativa se realizará
+en el mes de enero de cada año"*. The nominal close is 31 January every year;
+2026-01-31 is a Saturday, and 2026-02-02 is its operational shift -- a stored pre-shift,
+which the standing rule forbids outright.
+
+**The file proves its own convention against itself.** Its 2026 window stores
+**2027-01-31, a Sunday**, nominally. Only the middle window was shifted, and only it
+carried an extra ``source_ref`` naming AEAT's Calendario del Contribuyente -- which
+publishes the OPERATIONAL date. Grounding in the calendar is correct only where the
+orden is silent on its plazo. Here it is not silent.
+
+**Round-trip proof that the pre-shift was unnecessary as well as wrong:**
+``shift_deadline(2026-01-31, modelo="165")`` returns ``adjusted_close_date=2026-02-02,
+shifted=True, shift_reason='sabado'``. Storing the nominal date loses nothing -- the date
+AEAT publishes is derived WITH its reason instead of stored without one.
+
+**Measured across the tree: TEN revisions store ``closes_on = 2026-02-02``.** Each
+window's cited articles were checked against the bundled corpus for a stated January
+close:
+
+| verdict | revisions |
+|---|---|
+| orden STATES a January plazo -- pre-shifted | m165 (fixed), m180, m181, m190, m193, m270, **m345** |
+| no cited article states a January close -- needs separate assessment | m194, m296, m490 |
+
+m194 deserves its own note: its orden states *1-20 enero* (papel) and *1 enero-20
+febrero* (soporte), so 2026-02-02 matches neither nominal range.
+
+**m345 is the sharp part.** The standing record names "200, 220 and 345" as the three
+revisions that stored pre-shifted dates and *were corrected*. m345 is pre-shifted again
+today. Either the correction never covered this window, or a later sweep reintroduced
+it -- the 2026-02-02 dates trace to `d96f06910b`, a deadline-window sweep across the
+informativa modelos. A defect recorded as closed is present in shipped tax data.
+
+Only m165 was fixed: it was the revision under review and is unstamped. The other six
+pre-shifted windows sit on stamped revisions, where changing the data changes what the
+stamp attests to, and are left as a single clean follow-up with the evidence above.
+
 
 ## Recommendations
 
