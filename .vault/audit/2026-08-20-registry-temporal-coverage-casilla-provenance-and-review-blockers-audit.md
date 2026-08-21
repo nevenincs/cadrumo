@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:202e949b025598696e3da4744de05be51dcb008ccf638342de00c09f7415555e'
+body_hash: 'sha256:6db246becedf56ae11b35f7b5f7dbc6fa606a25d6fed487336d0ce9262e03764'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1136,6 +1136,53 @@ campaign refuses. What is removed is the research -- the acquisition target is n
 **m194** stores 2026-02-02 while its orden states *1-20 enero* (papel) and *1 enero-20
 febrero* (soporte). The stored date matches **neither**, so this is not a pre-shift of
 either nominal and needs its own ruling rather than a mechanical correction.
+
+
+### CLOSED-the-pre-shifted-deadline-sweep-ten-of-ten | resolved | one symptom, three root causes, and a habit worth naming
+
+All ten windows that stored ``closes_on = 2026-02-02`` are corrected. Verified by
+re-scan: **no window in the tree stores that date any more.** The symptom was uniform;
+the causes were not.
+
+| root cause | revisions | what was wrong |
+|---|---|---|
+| date only | m165, m181, m270, m345, m490 | the cited article genuinely states the plazo; only the stored date was pre-shifted |
+| **approving-clause habit** | m185, m190, m193, m296 | the window cited the article that APPROVES the modelo; the establishing text was bundled and uncited |
+| orden superseded in practice | m194, m180 | the orden's own ranges no longer govern; AEAT's calendar is the only statement, and the NOMINAL behind it was not stored |
+
+**The middle group is the finding worth carrying.** Counting m194, **five** windows cited
+an approving clause as the grounding for a deadline. In four of those the correct
+provision was already on disk, merely uncited -- apartado Tercero, artículo 5 twice,
+artículo 11. That is a systematic authoring habit, not five coincidences: whoever
+authored these reached for the article that names the modelo rather than the one that
+states the timing.
+
+**The third group is the subtler one.** m194 and m180 each carry an orden stating plazos
+(20 days for papel, 1 enero-20 febrero for soporte and telemática) that AEAT no longer
+applies -- its calendar publishes 2 February 2026, the Saturday shift of 31 January,
+matching neither. Calendar grounding is what the standing rule permits there, but the
+calendar publishes the OPERATIONAL date, and storing that destroys the reason. Both now
+store the nominal with the full reasoning recorded in the window file, including the
+explicit statement that no article is cited as establishing the plazo because none in
+the bundled corpus does.
+
+**Method notes worth keeping.**
+
+- The repair recipe for the approving-clause group is fixed and repeatable: carve a
+  single-provision excerpt on the ``orden-hac-96-2003-primero.html`` convention,
+  generate the sidecar pair through ``dev.docs.preprocess.write_sidecar`` (the registry
+  REFUSES a legal reference whose extracted sidecar is missing -- that refusal is how the
+  requirement was discovered), enrol with a ``required_text`` drawn from the source,
+  repoint, de-shift. ``verify_legal_reference`` passed on every one.
+- The construct-covers-window containment rule fires per-revision, not universally: m190
+  and m193 needed their construct updated, m296 did not.
+- m180 splits its windows one file per year while every other modelo in the sweep used a
+  single file. An assertion caught the wrong file being targeted; without it the edit
+  would have silently no-opped on the wrong year.
+- Two of this campaign's own artefacts were corrected in the process: the m576 stamp's
+  "cited event-relative plazo" wording, and the m194 stamp, which asserted a nominal
+  1-31 enero window while the data stored 2 February.
+
 
 ## Recommendations
 
