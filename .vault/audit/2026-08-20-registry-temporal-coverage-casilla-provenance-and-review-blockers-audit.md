@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a5fc8d083963b381c3194e3c7a1ac42195e5dc9d0a8ac6656ccd8dabdf0f2b78'
+body_hash: 'sha256:d405411674da000e2aeb61d610a544ef4f4d106267dfc9beab8166bf4f0b3ba4'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -592,6 +592,46 @@ deliberately widening the pattern and then disbelieving the wider result.
 No revision was stamped or altered on this sweep. What it establishes is narrow and
 honest: the IS pair is the only confirmable instance, and the remaining 38 need a
 per-family reading of how each orden states its temporal scope, not another regex.
+
+
+### no-diseno-published-at-all-is-not-what-it-says | medium | three instances now; the modelo is reproduced in the orden's own anexo
+
+The standing inventory groups m136 and m721 under *"NEEDS AEAT ACQUISITION -- no diseño
+published at all"*. Checked against the approving ordenes themselves, that premise is
+narrower than its wording in every case examined:
+
+| modelo | approving clause | what it says |
+|---|---|---|
+| 721 | ``orden-hfp-886-2023`` art. 1 | "Se aprueba el Modelo 721 ... cuyos **diseños físicos y lógicos figuran en el anexo** de esta Orden" |
+| 136 | ``orden-hap-70-2013`` art. 5 | "Se aprueba el modelo 136 ... que **se reproduce en el anexo II** de esta Orden" |
+| 220 | ``orden-hac-529-2026`` art. 1.1.a).2.º | names the modelo directly (found in the previous iteration) |
+
+In each case AEAT DID publish the design -- inside the orden that approves it. What is
+missing is a bundled **diseño de registro file**, the machine-readable record layout
+distributed separately on the sede for telematic filing. Those are different artefacts
+and the gap between them is the whole difference between "AEAT published nothing" and
+"we have not bundled the DR file".
+
+The span gate states its own version precisely and does not overreach: for m136 it
+reports *"single-year span, no design is bundled for its own filing year at all --
+ABSENT, so no comparison is possible"*. **Bundled**, not published. The inventory's
+paraphrase is what drifted.
+
+This matters for triage, not just wording. "No diseño published" reads as an external
+blocker nobody can clear; "no DR file bundled" is an acquisition task with a known
+source, and for the applicability rung it is a stated limit rather than a blocker at
+all -- which is why both revisions could be honestly reviewed this iteration.
+
+**m136/2026 and m721/2023-y-siguientes were stamped** on verbatim corpus verification of
+both applicability-rung claims, each naming this limit in its ``reviewed_by``. Census
+81/0/14 -> 83/0/12 across the two iterations, 95 rows, clean load, neither flipping
+scope to filing.
+
+Worth noting for m136 specifically: ``orden-hap-70-2013`` art. 7 states the plazo AND
+then continues into the vencimiento-coincidence clause. That is the orden itself
+requiring the nominal-store / shift-at-read split the campaign settled on earlier -- the
+convention is not merely a repo choice, it is what the source wording demands.
+
 
 ## Recommendations
 
