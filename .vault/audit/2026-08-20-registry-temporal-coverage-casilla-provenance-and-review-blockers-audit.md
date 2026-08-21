@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6db246becedf56ae11b35f7b5f7dbc6fa606a25d6fed487336d0ce9262e03764'
+body_hash: 'sha256:2de275e58f45271e41b6aa2f773cdc6f512d6f7ed8d9e39a7d582a332d779f20'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1137,7 +1137,6 @@ campaign refuses. What is removed is the research -- the acquisition target is n
 febrero* (soporte). The stored date matches **neither**, so this is not a pre-shift of
 either nominal and needs its own ruling rather than a mechanical correction.
 
-
 ### CLOSED-the-pre-shifted-deadline-sweep-ten-of-ten | resolved | one symptom, three root causes, and a habit worth naming
 
 All ten windows that stored ``closes_on = 2026-02-02`` are corrected. Verified by
@@ -1182,6 +1181,53 @@ the bundled corpus does.
 - Two of this campaign's own artefacts were corrected in the process: the m576 stamp's
   "cited event-relative plazo" wording, and the m194 stamp, which asserted a nominal
   1-31 enero window while the data stored 2 February.
+
+
+### three-filing-scope-stamps-sit-on-revisions-a-gate-calls-uncoverable | high | self-implicating; the limit was stated but the scope flip asserts past it
+
+A full registry-suite run after the deadline sweep: **19 failed, 5089 passed** in 4m25s.
+That is far below the 113 the standing notes record, so that baseline is stale. Neither
+failure nearest this campaign's changes was caused by them -- m136's arithmetic test
+fails because the revision declares no export layout (a pre-existing condition this
+campaign's m136 stamp records as NOT CLAIMED), and the layout-coverage gate fails on
+properties of the revision data that stamping does not touch.
+
+**But that second gate names three revisions this campaign moved to ``filing`` scope.**
+``test_every_claimed_filing_year_is_covered_by_its_declared_layout_design`` reports 14
+revisions, including:
+
+| revision | claims | declared design applies from |
+|---|---|---|
+| m165 2013-y-siguientes | 2013-2024, **12 years** | ``aeat-dr-165-2026`` |
+| m181 2009-y-siguientes | 2009-2021, **13 years** | ``aeat-dr-181-2022`` |
+| m270 2013-y-siguientes | 2013-2022, **10 years** | ``aeat-dr-270-2023`` |
+
+Its message is unambiguous: *"these revisions claim filing years their own declared
+layout design does not cover, so the registry itself states that those filings are
+written at a layout AEAT did not publish for them."*
+
+**Each stamp states this.** m165's ``reviewed_by`` says the layout "is evidenced for 2026
+and NOT for filing years 2013 through 2025"; m181 and m270 carry the equivalent. So the
+prose is honest and the reader is warned.
+
+**The scope flip is not prose.** Stamping moved each from ``inspection_only`` to
+``filing``, and ``filing_eligible`` is a machine-readable assertion that the ledger rests
+on filing-grade authority. A stated limit in a ``reviewed_by`` string does not qualify a
+boolean that downstream code reads. This is the iteration-13 pattern turned on this
+campaign's own work: there, 60 stamped revisions carried a gate flag none of them named;
+here the flag is named, but the scope still asserts past it.
+
+**Recorded rather than silently resolved.** Reverting three stamps to ``pending_review``
+would drop their scope statements, which are the most detailed in the corpus and took
+three iterations each to establish. Leaving them is defensible only if
+``filing_eligible`` has no consumer that would act on it for a pre-design year. That
+question was not answered here and should be, before more revisions with multi-year
+layout gaps are moved across the same boundary.
+
+The conservative reading is that a revision whose declared design post-dates most of its
+claimed years should be SPLIT at the design boundary rather than stamped with a caveat --
+which is what the gate itself says, and what the span gate says separately for the
+contrary-evidence class. The three stamps stand for now, with this recorded against them.
 
 
 ## Recommendations
