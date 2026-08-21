@@ -83,16 +83,22 @@ class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
 
 
 @cache
-def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
-
-
-@cache
 def _revision(modelo_id: str) -> ModeloRevision:
-    """The committed revision governing each modelo's IVA ledger bindings."""
-    if modelo_id == "303":
-        return _m303_revision()
-    return resources().modelos.get(modelo_id).revisions["2010-y-siguientes"]
+    """The committed revision governing each modelo's IVA ledger bindings.
+
+    Resolved from ``(modelo, filing_year, period)`` through the authority for
+    BOTH modelos rather than indexed by a literal id. Modelo 390 was reached by
+    ``revisions["2010-y-siguientes"]``, a revision the span split retired into
+    four exact-year ones, so this raised ``KeyError`` instead of screening
+    anything. Modelo 303 is quarterly and 390 annual, which is the only
+    difference between them here.
+    """
+    period = "1T" if modelo_id == "303" else "0A"
+    return resources().modelos.authority.snapshot(
+        modelo_id,
+        filing_year=_Q1_2025.filing_year,
+        period=period,
+    ).revision
 
 
 def _row(category: IvaCategory) -> IvaLedgerObservation:
@@ -226,7 +232,7 @@ def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
     """The real Modelo 303 revision routes base, cuota and recargo -- no advisory."""
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00", recargo="52.00"))
 
-    assert unrouted_ledger_iva_quantities(_m303_revision(), rows) == ()
+    assert unrouted_ledger_iva_quantities(_revision("303"), rows) == ()
 
 
 def test_a_revision_drawing_no_base_surfaces_the_whole_base() -> None:
@@ -236,7 +242,7 @@ def test_a_revision_drawing_no_base_surfaces_the_whole_base() -> None:
     so every row carrying it is uncovered. Modelo 390 was the standing real
     instance until the annual-form campaign declared its base boxes.
     """
-    revision = _revision_without_fact(_m303_revision(), "base_amount_sum")
+    revision = _revision_without_fact(_revision("303"), "base_amount_sum")
     rows = _observations(
         _sale("s-1", base="1000.00", iva="210.00"),
         _sale("s-2", base="2000.00", iva="420.00"),
@@ -257,7 +263,7 @@ def test_the_row_screen_stays_silent_on_the_same_defect() -> None:
     because both rows are still consumed by the cuota bindings -- so without the
     quantity screen the undrawn base imponible has a clean screen on both sides.
     """
-    revision = _revision_without_fact(_m303_revision(), "base_amount_sum")
+    revision = _revision_without_fact(_revision("303"), "base_amount_sum")
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00"))
 
     assert unsupported_ledger_iva_observations(revision, rows) == ()
@@ -271,7 +277,7 @@ def test_a_quantity_the_rows_do_not_carry_raises_nothing() -> None:
     no recargo. Without this the screen would fire on every taxpayer who simply
     sells to no recargo-regime retailer.
     """
-    revision = _revision_without_fact(_m303_revision(), "recargo_amount_sum")
+    revision = _revision_without_fact(_revision("303"), "recargo_amount_sum")
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00"))
 
     assert unrouted_ledger_iva_quantities(revision, rows) == ()
@@ -294,7 +300,7 @@ def test_no_iva_fact_is_excluded_as_an_alternative_measure(fact: str, expected_t
     stands in for another, so dropping ANY of the three loses a real amount and
     every one of them must report.
     """
-    revision = _revision_without_fact(_m303_revision(), fact)
+    revision = _revision_without_fact(_revision("303"), fact)
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00", recargo="52.00"))
 
     unrouted = unrouted_ledger_iva_quantities(revision, rows)
@@ -310,7 +316,7 @@ def test_the_screen_reads_the_revision_it_is_given() -> None:
     every test above. This one fails it: the same rows must report differently
     against a revision that draws the fact and one that does not.
     """
-    committed = _m303_revision()
+    committed = _revision("303")
     stripped = _revision_without_fact(committed, "base_amount_sum")
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00"))
 
@@ -339,7 +345,7 @@ def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
                 modelo="303",
                 filing_year=2025,
                 period=_Q1_2025,
-                revision=_revision_without_fact(_m303_revision(), "base_amount_sum"),
+                revision=_revision_without_fact(_revision("303"), "base_amount_sum"),
             ),
         )
 
@@ -370,7 +376,7 @@ def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Pat
                 modelo="303",
                 filing_year=2025,
                 period=_Q1_2025,
-                revision=_m303_revision(),
+                revision=_revision("303"),
             ),
         )
 
@@ -495,7 +501,7 @@ def test_a_partitioned_fact_is_screened_per_row_not_per_revision() -> None:
     """
     rows = _observations(_third_country_import())
 
-    unrouted = unrouted_ledger_iva_quantities(_m303_revision(), rows)
+    unrouted = unrouted_ledger_iva_quantities(_revision("303"), rows)
 
     assert [entry.fact for entry in unrouted] == ["base_amount_sum"]
     assert unrouted[0].total == Decimal("1000.00")
@@ -513,8 +519,8 @@ def test_the_row_screen_is_silent_on_the_partitioned_gap() -> None:
     """
     rows = _observations(_third_country_import())
 
-    assert unsupported_ledger_iva_observations(_m303_revision(), rows) == ()
-    assert unrouted_ledger_iva_quantities(_m303_revision(), rows) != ()
+    assert unsupported_ledger_iva_observations(_revision("303"), rows) == ()
+    assert unrouted_ledger_iva_quantities(_revision("303"), rows) != ()
 
 
 def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> None:
@@ -526,7 +532,7 @@ def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> No
     are both fully covered on the committed revision and must stay silent.
     """
     sale = _observations(_sale("dom-sale", base="1000.00", iva="210.00"))
-    assert unrouted_ledger_iva_quantities(_m303_revision(), sale) == ()
+    assert unrouted_ledger_iva_quantities(_revision("303"), sale) == ()
 
 
 @pytest.mark.parametrize("modelo_id", ["303", "390"])
@@ -595,7 +601,7 @@ def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) 
                 modelo="303",
                 filing_year=2025,
                 period=_Q1_2025,
-                revision=_m303_revision(),
+                revision=_revision("303"),
             ),
         )
 

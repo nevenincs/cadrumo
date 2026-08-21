@@ -69,7 +69,9 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     assert {window.id for window in revision.deadline_windows} == {"modelo-345-2025-0a"}
     assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 2, 2)}
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
-    assert {link.surface for link in revision.application_links} == {"filing", "deadline"}
+    # "export" joined the surfaces when this campaign authored the modelo's
+    # export layout; the link set is a consequence of that, not a drift.
+    assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}
     assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-345-anual"}
 
     stale_refs = {"enrolled-modelo-345-procedure", "enrolled-modelo-345-layout"}

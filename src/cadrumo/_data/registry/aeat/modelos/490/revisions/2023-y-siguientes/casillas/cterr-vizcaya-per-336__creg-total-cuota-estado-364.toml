@@ -3,7 +3,7 @@
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-336"
 number = "336"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-357"
 number = "357"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -25,7 +25,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-295"
 number = "295"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -36,7 +36,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-316"
 number = "316"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -47,7 +47,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-337"
 number = "337"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -58,7 +58,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-358"
 number = "358"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -69,7 +69,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-296"
 number = "296"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -80,7 +80,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-317"
 number = "317"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -91,7 +91,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-338"
 number = "338"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -102,7 +102,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-359"
 number = "359"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -113,7 +113,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-297"
 number = "297"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -124,7 +124,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-318"
 number = "318"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -135,7 +135,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-339"
 number = "339"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -146,7 +146,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-360"
 number = "360"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -157,7 +157,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-298"
 number = "298"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -168,7 +168,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-319"
 number = "319"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -179,7 +179,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-340"
 number = "340"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -190,7 +190,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-361"
 number = "361"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -201,7 +201,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-299"
 number = "299"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -212,7 +212,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-320"
 number = "320"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -223,7 +223,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-341"
 number = "341"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -234,7 +234,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-362"
 number = "362"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -245,7 +245,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-total-cuota-363"
 number = "363"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -256,7 +256,7 @@ source_refs = ["aeat-dr-490-2023"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-total-cuota-estado-364"
 number = "364"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"

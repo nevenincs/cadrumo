@@ -7,13 +7,132 @@ modelo:
       revision:
         2004-y-siguientes:
           casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              label: Liquidació (8) - A deduir [23]
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
+              label: Adjudicatari (4) - Cognoms o Denominació Social
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
+              label: Adjudicatari (4) - NIF
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
+              label: Adjudicatari (4) - Nom
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              label: Característiques i dades tècniques (7) - Aeronaus - Any de fabricació
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              label: Característiques i dades tècniques (7) - Aeronaus - Fabricant
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              label: Característiques i dades tècniques (7) - Aeronaus - Marca - Tipus
+                - Model
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              label: Característiques i dades tècniques (7) - Aeronaus - Pes màxim
+                d'enlairament (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              label: Característiques i dades tècniques (7) - Aeronaus - Núm. de sèrie
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Declaració complementària (9)
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              label: Característiques i dades tècniques (7) - Embarcacions - Eslora
+                màxima
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              label: Característiques i dades tècniques (7) - Embarcacions - Fabricant
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              label: Característiques i dades tècniques (7) - Embarcacions - Identificació
+                (Núm. construcció)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              label: Característiques i dades tècniques (7) - Embarcacions - Tipus-Model
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              label: 'Fet imposable (6):'
+            x-chim6r1ed5h62rg:
+              label: IBAN (10)
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Número de justificant de la declaració anterior (9)
+            x-chim6r1edpnmqojick:
+              label: Identificació (1) - Nom
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              label: Liquidació (8) - Resultat a ingressar [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              label: Liquidació (8) - Règim General - Base imposable [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              label: Liquidació (8) - Règim General - Base imposable [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              label: Liquidació (8) - Règim General - Base imposable [07]
+            x-chim6r1ee9jiqoj1ediiqchl:
+              label: Liquidació (8) - Règim General - Base imposable [25]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              label: Liquidació (8) - Règim General - Quota [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              label: Liquidació (8) - Règim General - Quota [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              label: Liquidació (8) - Règim General - Quota [09]
+            x-chim6r1ee9jiqorldtq62b9i6s:
+              label: Liquidació (8) - Règim General - Quota [27]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              label: Liquidació (8) - Règim General - Tipus % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              label: Liquidació (8) - Règim General - Tipus % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              label: Liquidació (8) - Règim General - Tipus % [08]
+            x-chim6r1ee9jiqt39e1niqchm:
+              label: Liquidació (8) - Règim General - Tipus % [26]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              label: 'Situació tributària (5):'
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Tipus de declaració
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
                 / recàrrec d'equivalència / execució forçosa)
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              label: Transmitent (3) - Cognoms o Denominació Social
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              label: Transmitent (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
+              label: Transmitent (3) - NIF-IVA
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              label: Transmitent (3) - Nom
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              label: Transmitent (3) - País
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              label: Característiques i dades tècniques (7) - Vehicles - Núm. identificació
+                (bastidor)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              label: Característiques i dades tècniques (7) - Vehicles - Classificació
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              label: Característiques i dades tècniques (7) - Vehicles - Marca
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              label: 'Característiques i dades tècniques (7) - Vehicles - Model (denominació
+                comercial):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              label: Característiques i dades tècniques (7) - Vehicles - Tipus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: Quota d'IVA autorepercutida en adquisicions intracomunitàries

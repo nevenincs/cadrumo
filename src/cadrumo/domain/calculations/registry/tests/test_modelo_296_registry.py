@@ -51,9 +51,23 @@ def test_modelo_296_declares_no_formula() -> None:
 
 
 def test_modelo_296_casilla_set_is_the_printed_box_set() -> None:
-    """02, 03 and 04 are declared; 01 is produced by the export declarante header."""
+    """02, 03 and 04 are declared; 01 is produced by the export declarante header.
+
+    The input kinds are not uniform and the split is the point. This revision
+    declares two ``periodic_to_annual_summary`` relations onto ``relation_prefill``
+    slots, and nothing consumed them -- a prior-period value carried into a slot
+    with no reader, which the cross-period consumption gate reports as inert. 02
+    and 03 now consume them, so they are BOUND; 04 has no modelo 216 source
+    declared and stays operator input.
+    """
     modelo, _ = _load_modelo_296()
     revision = modelo.revisions["2024-y-siguientes"]
+    by_id = {str(casilla.id): casilla for casilla in revision.casillas}
 
-    assert tuple(str(casilla.id) for casilla in revision.casillas) == ("02", "03", "04")
-    assert all(casilla.input_kind.value == "manual" for casilla in revision.casillas)
+    assert tuple(by_id) == ("02", "03", "04")
+    assert by_id["02"].binding == "modelo-296-prev-216-base-retenciones"
+    assert by_id["03"].binding == "modelo-296-prev-216-retenciones-total"
+    assert by_id["02"].input_kind.value == "bound"
+    assert by_id["03"].input_kind.value == "bound"
+    assert by_id["04"].input_kind.value == "manual"
+    assert by_id["04"].binding is None

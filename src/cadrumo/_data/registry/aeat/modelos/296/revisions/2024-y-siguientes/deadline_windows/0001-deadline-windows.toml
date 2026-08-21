@@ -4,7 +4,7 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-01-31
+closes_on = 2026-02-02
 legal_refs = ["orden-eha-3290-2008:art-6"]
-source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
 

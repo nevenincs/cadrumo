@@ -263,6 +263,12 @@ def _minimal_revision(
         review_status="agent_reviewed",
         reviewed_by="codex test fixture",
         reviewed_at=date(2026, 7, 1),
+        # Same reasoning one rung further: an undeclared authority_grade is itself
+        # a refusal now, and it lands before the referential assertions too. These
+        # fixtures are built to carry casilla and binding REFERENCES, not to
+        # compute amounts or back a filing, so applicability is the rung they are
+        # intended to support rather than a reading of what they contain.
+        authority_grade="applicability",
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),

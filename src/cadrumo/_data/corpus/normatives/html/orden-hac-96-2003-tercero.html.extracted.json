@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-96-2003-tercero.html",
+  "source_sha256": "7de26a67cbb955356bfd3b4885041e722e46d0b08f49dd35d99a582534506102",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La información mensual, modelo 185, a que se refiere el apartado anterior se presentará ante el Departamento de Informática Tributaria de la Agencia Estatal de Administración Tributaria en el plazo de los diez días naturales siguientes a la finalización del mes a que se refiera la información.",
+      "title": "Tercero. Lugar y plazo de presentación de la información mensual.",
+      "section": "Tercero. Lugar y plazo de presentación de la información mensual.",
+      "anchor": null
+    }
+  ]
+}

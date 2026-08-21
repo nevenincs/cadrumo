@@ -93,15 +93,14 @@ _KNOWN_PAIRINGS: Final[frozenset[tuple[str, str, str]]] = frozenset(
         ("390", "2025", "iva.anual.repercutido.recargo.general"),
         ("390", "2025", "iva.anual.repercutido.recargo.reducido"),
         ("390", "2025", "iva.anual.repercutido.recargo.super-reducido"),
-        # row #135 / #134 -- the soportado split beside a starved [48].
-        ("390", "2022", "iva.anual.soportado.interiores"),
-        ("390", "2022", "iva.anual.soportado.importaciones"),
-        ("390", "2023", "iva.anual.soportado.interiores"),
-        ("390", "2023", "iva.anual.soportado.importaciones"),
-        ("390", "2024", "iva.anual.soportado.interiores"),
-        ("390", "2024", "iva.anual.soportado.importaciones"),
-        ("390", "2025", "iva.anual.soportado.interiores"),
-        ("390", "2025", "iva.anual.soportado.importaciones"),
+        # row #135 / #134 -- the soportado split beside a starved [48] -- is
+        # REMOVED because its fix landed, and the removal was confirmed to be a
+        # fix rather than a blinded detector, which is the failure this pin's own
+        # message warns about. Casilla 48
+        # (`iva.anual.soportado.interiores.base`) keeps its binding AND now
+        # carries an export ref in all four revisions, so it is fed rather than
+        # unbound; the two aliases still own their export fields, so the detector
+        # can still see the shape it looks for. Only the starvation ended.
     },
 )
 

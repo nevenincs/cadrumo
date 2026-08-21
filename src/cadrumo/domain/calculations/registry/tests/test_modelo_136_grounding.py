@@ -108,7 +108,16 @@ def test_modelo_136_formula_graph_matches_current_form_rows() -> None:
     assert cuota.target_casilla_id == "05"
     assert cuota.expression.op == "percent"
     assert cuota.expression.args[0].casilla_id == "04"
-    assert cuota.expression.args[1].literal == Decimal("20")
+    # The 20% rate is a registry PARAMETER now, not a formula literal, which is
+    # where a year-versioned regulatory value belongs -- a literal bakes it into
+    # the call site and cannot move when the rate does. Asserting the reference
+    # alone would be weaker than the literal it replaced, so the indirection is
+    # followed: the named parameter must exist on this revision and resolve to 20.
+    rate_ref = cuota.expression.args[1].parameter
+    assert rate_ref == "irpf.lottery_prize_special_levy_rate"
+    assert cuota.expression.args[1].literal is None, "the rate must not be declared twice"
+    parameter = next(item for item in revision.parameters if item.id == rate_ref)
+    assert {value.value for value in parameter.values} == {Decimal("20")}
     assert {citation.source_ref for citation in cuota.source_citations} == {
         "boe-lirpf-lottery-prize-special-levy",
         "boe-modelo-136-current-form-text",

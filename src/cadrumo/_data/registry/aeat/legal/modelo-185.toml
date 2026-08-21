@@ -82,6 +82,24 @@ applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf"
 review_status = "reviewed"
 
+[legal."orden-hac-96-2003:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-96-2003-tercero.html#tercero"
+document_id = "BOE-A-2003-1911"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
+published_at = 2003-01-30
+effective_from = 2003-01-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-21
+reviewed_by = "agent-review (verbatim against the bundled disposicion Tercero excerpt)"
+notes = "Disposicion Tercero is the provision that ESTABLISHES the modelo 185 monthly plazo for filings governed by this orden: la informacion mensual se presentara en el plazo de los diez dias naturales siguientes a la finalizacion del mes a que se refiera la informacion. Disposicion Primero, cited as orden-hac-96-2003:art-1, approves the disenos fisicos y logicos and states no timing, so it cannot ground a deadline window."
+required_text = [
+    "en el plazo de los diez días naturales siguientes a la finalización del mes",
+]
+
 [legal."orden-hac-96-2003:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -106,7 +124,15 @@ reviewed_by = "agent-review"
 # it match the dispositive-content-signal's "articulo N."/"disposicion ..."
 # vocabulary -- both are the same ordinal-word gap. Leaving the field
 # undeclared is honest rather than forcing a mismatched claim.
-notes = "Orden HAC/96/2003: aprueba los disenos fisicos y logicos del modelo 185, informacion mensual que organos y entidades gestores de la Seguridad Social y las Mutualidades estan obligados a suministrar de sus afiliados o mutualistas. Real predecessor of orden-hac-1197-2025 for M185 -- confirmed by BOE search results and by the derogatoria clause in the 2025 orden repealing this one. Fetched via curl, bytes read back from disk before authoring this entry. The bundled consolidated text is marked [Disposicion derogada] since it is now repealed by orden-hac-1197-2025 effective 2026-01-01, but the operative text through that date is fully present and this entry grounds this modelo's 2003-2025 span, not any period after repeal."
+notes = """\
+Orden HAC/96/2003: aprueba los disenos fisicos y logicos del modelo 185, informacion mensual que \
+organos y entidades gestores de la Seguridad Social y las Mutualidades estan obligados a suministrar \
+de sus afiliados o mutualistas. Real predecessor of orden-hac-1197-2025 for M185 -- confirmed by BOE \
+search results and by the derogatoria clause in the 2025 orden repealing this one. Fetched via curl, \
+bytes read back from disk before authoring this entry. The bundled consolidated text is marked \
+[Disposicion derogada] since it is now repealed by orden-hac-1197-2025 effective 2026-01-01, but the \
+operative text through that date is fully present and this entry grounds this modelo's 2003-2025 \
+span, not any period after repeal."""
 required_text = [
     "modelo 185",
     "órganos y entidades gestores de la Seguridad Social",

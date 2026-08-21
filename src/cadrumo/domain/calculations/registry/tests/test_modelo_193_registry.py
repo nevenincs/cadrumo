@@ -125,7 +125,10 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
     # The 2024 window moved to the revision that owns the 2024 ejercicio; this
     # snapshot is the 2025-y-siguientes revision and carries its own only.
     expected_windows = {
-        "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+        # Closes 2 February, not 31 January: 31 January 2026 is a Saturday and
+        # AEAT's Calendario del Contribuyente 2026 lists modelo 193 under
+        # "Hasta el 2 de febrero". The rule-derived date closed it early.
+        "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 2, 2)),
     }
     assert set(windows) == set(expected_windows)
     for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():

@@ -56,7 +56,16 @@ effective_from = 2012-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Recargos del periodo ejecutivo. Three mutually incompatible surcharge types, each computed on the whole of the debt left unpaid in periodo voluntario: recargo ejecutivo at cinco por ciento when the debt is settled in full before the providencia de apremio is notified; recargo de apremio reducido at 10 por ciento when the debt and the surcharge itself are settled before the art-62.5 deadline for apremiadas debts expires; recargo de apremio ordinario at 20 por ciento in every other case. Only the ordinario is compatible with intereses de demora; where the ejecutivo or the reducido is exigible, intereses accrued since the start of the periodo ejecutivo are not demanded. The article states NO deadline of its own: the reducido window is a cross-reference to art-62.5, so a deadline quoted here would be grounded in art-62 and not in this article."
+notes = """\
+Recargos del periodo ejecutivo. Three mutually incompatible surcharge types, each computed on the \
+whole of the debt left unpaid in periodo voluntario: recargo ejecutivo at cinco por ciento when the \
+debt is settled in full before the providencia de apremio is notified; recargo de apremio reducido \
+at 10 por ciento when the debt and the surcharge itself are settled before the art-62.5 deadline for \
+apremiadas debts expires; recargo de apremio ordinario at 20 por ciento in every other case. Only \
+the ordinario is compatible with intereses de demora; where the ejecutivo or the reducido is \
+exigible, intereses accrued since the start of the periodo ejecutivo are not demanded. The article \
+states NO deadline of its own: the reducido window is a cross-reference to art-62.5, so a deadline \
+quoted here would be grounded in art-62 and not in this article."""
 required_text = [
     "El recargo ejecutivo será del cinco por ciento",
     "El recargo de apremio reducido será del 10 por ciento",

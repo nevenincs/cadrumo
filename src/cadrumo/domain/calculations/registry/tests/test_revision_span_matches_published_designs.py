@@ -136,7 +136,6 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import date
-import pathlib
 from functools import cache, lru_cache
 from itertools import combinations, pairwise
 from pathlib import Path
@@ -930,7 +929,7 @@ def _corpus_path_by_source_ref() -> dict[str, str]:
     }
 
 
-@lru_cache(maxsize=None)
+@cache
 def _design_fingerprint_for_ref(ref: str) -> tuple[object, ...] | None:
     """The fingerprint of the design a source ref names, or ``None`` if it names none.
 

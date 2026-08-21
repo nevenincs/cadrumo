@@ -66,7 +66,14 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion. The severity axis: leve where the base is 3.000 euros or less, or greater without ocultacion; grave where the base exceeds 3.000 euros and there is ocultacion; muy grave where medios fraudulentos were used. Incorrect books or registers push the infraction off leve above a 10 per cent incidence and make it grave between 10 and 50 per cent. Unremitted retenciones make it grave at 50 per cent or less of the base and muy grave above. Nominal bands: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, each graduated under art-187 and reduced under art-188."
+notes = """\
+Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion. The severity \
+axis: leve where the base is 3.000 euros or less, or greater without ocultacion; grave where the \
+base exceeds 3.000 euros and there is ocultacion; muy grave where medios fraudulentos were used. \
+Incorrect books or registers push the infraction off leve above a 10 per cent incidence and make it \
+grave between 10 and 50 per cent. Unremitted retenciones make it grave at 50 per cent or less of the \
+base and muy grave above. Nominal bands: leve 50 por ciento, grave 50 al 100 por ciento, muy grave \
+100 al 150 por ciento, each graduated under art-187 and reduced under art-188."""
 required_text = [
     "La sanción por infracción leve consistirá en multa pecuniaria proporcional del 50 por ciento",
     "La sanción por infracción grave consistirá en multa pecuniaria proporcional del 50 al 100 por ciento",

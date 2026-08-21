@@ -3,7 +3,7 @@
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-331"
 number = "331"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-352"
 number = "352"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -25,7 +25,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-290"
 number = "290"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -36,7 +36,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-311"
 number = "311"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -47,7 +47,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-332"
 number = "332"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -58,7 +58,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-353"
 number = "353"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -69,7 +69,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-291"
 number = "291"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -80,7 +80,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-312"
 number = "312"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -91,7 +91,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-333"
 number = "333"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -102,7 +102,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-354"
 number = "354"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -113,7 +113,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-292"
 number = "292"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -124,7 +124,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-313"
 number = "313"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -135,7 +135,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-334"
 number = "334"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -146,7 +146,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-355"
 number = "355"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -157,7 +157,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-293"
 number = "293"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -168,7 +168,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-314"
 number = "314"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -179,7 +179,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-335"
 number = "335"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -190,7 +190,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-356"
 number = "356"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -201,7 +201,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-294"
 number = "294"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -212,7 +212,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-315"
 number = "315"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -223,7 +223,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-336"
 number = "336"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -234,7 +234,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-357"
 number = "357"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -245,7 +245,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-295"
 number = "295"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -256,7 +256,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-316"
 number = "316"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -267,7 +267,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-337"
 number = "337"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -278,7 +278,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-358"
 number = "358"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -289,7 +289,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-298"
 number = "298"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -300,7 +300,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-319"
 number = "319"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -311,7 +311,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-340"
 number = "340"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -322,7 +322,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-361"
 number = "361"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -333,7 +333,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-299"
 number = "299"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -344,7 +344,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-320"
 number = "320"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -355,7 +355,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-341"
 number = "341"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -366,7 +366,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-362"
 number = "362"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -377,7 +377,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-total-cuota-363"
 number = "363"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -388,7 +388,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-total-cuota-estado-364"
 number = "364"
-section = ["490-03"]
+section = ["490_03"]
 data_type = "money"
 required = false
 input_kind = "manual"

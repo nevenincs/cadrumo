@@ -862,6 +862,13 @@ def _first_snapshot(modelo: ModeloDefinition, catalogues: RegistryCatalogues):
                 source_root=bundled_path(),
                 filing_year=year,
                 period=revision.period_selector.periods[0],
+                # The rung this revision declares, not the FILING default. These
+                # guards read live cross-references and planned operations, which
+                # every rung carries; demanding FILING refuses an
+                # applicability-grade modelo -- 036 declares no export layout --
+                # with a RegistryValidationError the loop below does not catch,
+                # so one such modelo aborted the whole walk.
+                grade=revision.effective_authority_grade,
             )
         except RegistrySnapshotError:
             continue

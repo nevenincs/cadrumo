@@ -87,7 +87,18 @@ consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "RDL 6/2024 art. 1: objeto y ambito de aplicacion de las medidas DANA. Apartado 1 fija el ambito por remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. Apartado 4 declara el anexo MUTABLE: puede modificarse mediante Acuerdo de Consejo de Ministros. Esa mutabilidad es la razon de que la geografia se cite siempre con consolidated_as_of y nunca se transcriba como lista fija. PROVENANCIA DE LA CORRECCION. El propio apartado 4 lleva la nota de consolidacion que lo vincula a la correccion de errores BOE-A-2024-24097; required_text la exige literalmente, de modo que un corpus que perdiera esa nota no podria satisfacer esta entrada. PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre el texto consolidado empaquetado (documento BOE integro, sha256 0a5bb40f2098905ec11d5b3c1cef1870ca9406a95f134e3150d88f35221b3228), cotejada contra el texto en vigor servido por boe.es el 2026-08-13. No la ha revisado un operador humano; reviewed_by lo declara asi."
+notes = """\
+RDL 6/2024 art. 1: objeto y ambito de aplicacion de las medidas DANA. Apartado 1 fija el ambito por \
+remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
+Apartado 4 declara el anexo MUTABLE: puede modificarse mediante Acuerdo de Consejo de Ministros. Esa \
+mutabilidad es la razon de que la geografia se cite siempre con consolidated_as_of y nunca se \
+transcriba como lista fija. PROVENANCIA DE LA CORRECCION. El propio apartado 4 lleva la nota de \
+consolidacion que lo vincula a la correccion de errores BOE-A-2024-24097; required_text la exige \
+literalmente, de modo que un corpus que perdiera esa nota no podria satisfacer esta entrada. \
+PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre el texto consolidado empaquetado \
+(documento BOE integro, sha256 0a5bb40f2098905ec11d5b3c1cef1870ca9406a95f134e3150d88f35221b3228), \
+cotejada contra el texto en vigor servido por boe.es el 2026-08-13. No la ha revisado un operador \
+humano; reviewed_by lo declara asi."""
 required_text = [
     "en los municipios incluidos en el anexo de esta norma entre el 28 de octubre y el 4 de noviembre de 2024",
     "El anexo que acompaña a este real decreto-ley podrá ser modificado mediante Acuerdo de Consejo de Ministros",
@@ -108,7 +119,18 @@ consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "RDL 6/2024 anexo: listado de terminos municipales afectados por la DANA. Es la UNICA autoridad de la geografia; RDL 7/2024 art. 11 se remite a el en lugar de enumerar. El listado consolidado carga 78 entradas. consolidated_as_of fecha esas bytes: el anexo es modificable por Acuerdo de Consejo de Ministros conforme al art. 1 apartado 4, asi que una lista sin fecha seria una instantanea disfrazada de norma. required_text ancla tres puntos que discriminan esta version concreta: el titulo del listado, la entrada 43 con su salvedad territorial literal (Loriguilla, solo nucleo urbano junto A3, que ninguna otra redaccion comparte) y la entrada 78, que cierra la lista. Una lista recortada o ampliada por la cola deja de satisfacer la tercera frase. NOTA SOBRE LA ENTRADA 78. Benicull de Xuquer rompe el orden alfabetico del resto del anexo; se conserva tal cual porque asi lo publica el BOE, y no se reordena. article se deja sin declarar a proposito: un anexo no es un articulo, y section lo identifica sin inventar numeracion."
+notes = """\
+RDL 6/2024 anexo: listado de terminos municipales afectados por la DANA. Es la UNICA autoridad de la \
+geografia; RDL 7/2024 art. 11 se remite a el en lugar de enumerar. El listado consolidado carga 78 \
+entradas. consolidated_as_of fecha esas bytes: el anexo es modificable por Acuerdo de Consejo de \
+Ministros conforme al art. 1 apartado 4, asi que una lista sin fecha seria una instantanea \
+disfrazada de norma. required_text ancla tres puntos que discriminan esta version concreta: el \
+titulo del listado, la entrada 43 con su salvedad territorial literal (Loriguilla, solo nucleo \
+urbano junto A3, que ninguna otra redaccion comparte) y la entrada 78, que cierra la lista. Una \
+lista recortada o ampliada por la cola deja de satisfacer la tercera frase. NOTA SOBRE LA ENTRADA \
+78. Benicull de Xuquer rompe el orden alfabetico del resto del anexo; se conserva tal cual porque \
+asi lo publica el BOE, y no se reordena. article se deja sin declarar a proposito: un anexo no es un \
+articulo, y section lo identifica sin inventar numeracion."""
 required_text = [
     "Listado de municipios afectados por la DANA",
     "Loriguilla - sólo núcleo urbano junto A3",
@@ -127,7 +149,20 @@ effective_from = 2024-11-07
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Correccion de errores del RDL 6/2024 (BOE num. 280, de 20 de noviembre de 2024). Rectifica la parte expositiva y los articulos 1.4, 8.1, 24.1, 25.1, 46.1 y 47; NO toca el anexo, de modo que la geografia publicada el 6 de noviembre sigue siendo la corregida. effective_from se fija en la entrada en vigor del RDL 6/2024 y no en la fecha de publicacion de la correccion, porque una correccion de errores no crea una regla nueva: restituye lo que la norma decia desde su origen. kind se declara real_decreto_ley porque el instrumento corregido lo es y la correccion forma parte de su texto oficial; el vocabulario cerrado del catalogo no tiene un termino propio para una correccion de errores, y forzar uno ajeno seria peor que declarar el rango del instrumento al que pertenece. permalink apunta a doc.php porque el BOE no consolida las correcciones de errores: el documento se publica una vez y no se enmienda, de modo que su vista consolidada no existe y act.php redirige. PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre las bytes oficiales empaquetadas (sha256 28c6fdfe50979482faeaef79b5793068e767a0a3f0b531c4d049bf059d7215ab). No la ha revisado un operador humano."
+notes = """\
+Correccion de errores del RDL 6/2024 (BOE num. 280, de 20 de noviembre de 2024). Rectifica la parte \
+expositiva y los articulos 1.4, 8.1, 24.1, 25.1, 46.1 y 47; NO toca el anexo, de modo que la \
+geografia publicada el 6 de noviembre sigue siendo la corregida. effective_from se fija en la \
+entrada en vigor del RDL 6/2024 y no en la fecha de publicacion de la correccion, porque una \
+correccion de errores no crea una regla nueva: restituye lo que la norma decia desde su origen. kind \
+se declara real_decreto_ley porque el instrumento corregido lo es y la correccion forma parte de su \
+texto oficial; el vocabulario cerrado del catalogo no tiene un termino propio para una correccion de \
+errores, y forzar uno ajeno seria peor que declarar el rango del instrumento al que pertenece. \
+permalink apunta a doc.php porque el BOE no consolida las correcciones de errores: el documento se \
+publica una vez y no se enmienda, de modo que su vista consolidada no existe y act.php redirige. \
+PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre las bytes oficiales empaquetadas \
+(sha256 28c6fdfe50979482faeaef79b5793068e767a0a3f0b531c4d049bf059d7215ab). No la ha revisado un \
+operador humano."""
 required_text = [
     "Advertidos errores en el Real Decreto-ley 6/2024, de 5 de noviembre",
     "artículo 1, apartado 4, última línea",
@@ -148,7 +183,25 @@ consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "RDL 7/2024 art. 11 apartado 2: reduccion del 25 por ciento de la cuota devengada por operaciones corrientes del regimen especial simplificado del IVA correspondiente al ano 2024. POR QUE UNA ENTRADA PROPIA. El articulo 11 ya esta citado en el catalogo del IRPF como real-decreto-ley-7-2024:art-11, y esa entrada fundamenta el APARTADO 1, que reduce el rendimiento neto de modulos del IRPF. Comparten el porcentaje pero no la magnitud ni el impuesto, asi que una sola entrada para ambos haria que una cita del IVA descansara sobre frases del IRPF. Esta entrada se identifica por el apartado, siguiendo la granularidad ya usada en el catalogo (trlirnr-rdleg-5-2004:art-13.1, ley-58-2003:art-27.2). ALCANCE. El apartado declara que la reduccion se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reduccion trimestral repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las dos lecturas. GEOGRAFIA. El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remision desapareciera del texto. APLICABILIDAD. Cuando la reduccion rige no lo dice este articulo sino la disposicion final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, y effective_from se toma de alli en lugar de deducirse. PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre el texto consolidado empaquetado (documento BOE integro, sha256 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejada contra el texto en vigor servido por boe.es el 2026-08-13. No la ha revisado un operador humano."
+notes = """\
+RDL 7/2024 art. 11 apartado 2: reduccion del 25 por ciento de la cuota devengada por operaciones \
+corrientes del regimen especial simplificado del IVA correspondiente al ano 2024. POR QUE UNA \
+ENTRADA PROPIA. El articulo 11 ya esta citado en el catalogo del IRPF como \
+real-decreto-ley-7-2024:art-11, y esa entrada fundamenta el APARTADO 1, que reduce el rendimiento \
+neto de modulos del IRPF. Comparten el porcentaje pero no la magnitud ni el impuesto, asi que una \
+sola entrada para ambos haria que una cita del IVA descansara sobre frases del IRPF. Esta entrada se \
+identifica por el apartado, siguiendo la granularidad ya usada en el catalogo \
+(trlirnr-rdleg-5-2004:art-13.1, ley-58-2003:art-27.2). ALCANCE. El apartado declara que la reduccion \
+se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reduccion trimestral \
+repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las \
+dos lecturas. GEOGRAFIA. El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que \
+required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remision \
+desapareciera del texto. APLICABILIDAD. Cuando la reduccion rige no lo dice este articulo sino la \
+disposicion final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, \
+y effective_from se toma de alli en lugar de deducirse. PROVENANCIA DE LA REVISION. Entrada \
+preparada por agente sobre el texto consolidado empaquetado (documento BOE integro, sha256 \
+13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejada contra el texto en vigor \
+servido por boe.es el 2026-08-13. No la ha revisado un operador humano."""
 required_text = [
     "estén acogidos al régimen especial simplificado",
     "los términos municipales citados en el anexo del Real Decreto-ley 6/2024",
@@ -170,7 +223,17 @@ consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "RDL 7/2024 disposicion final decimocuarta: entrada en vigor. La norma entra en vigor el dia siguiente al de su publicacion en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de noviembre de 2024, que es el effective_from de esta entrada y el que toma prestado la entrada del articulo 11 apartado 2. La misma disposicion acota hasta el 31 de diciembre de 2024 unicamente las medidas del articulo 42.1.e) y 4, materia laboral ajena al IVA, de modo que no cierra la vigencia de la reduccion del articulo 11.2. Esta entrada existe para que la aplicabilidad de la reduccion se lea de la norma y no se infiera del articulo que la establece. PROVENANCIA DE LA REVISION. Entrada preparada por agente sobre el texto consolidado empaquetado (sha256 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6). No la ha revisado un operador humano."
+notes = """\
+RDL 7/2024 disposicion final decimocuarta: entrada en vigor. La norma entra en vigor el dia \
+siguiente al de su publicacion en el BOE; publicada el 12 de noviembre de 2024, rige desde el 13 de \
+noviembre de 2024, que es el effective_from de esta entrada y el que toma prestado la entrada del \
+articulo 11 apartado 2. La misma disposicion acota hasta el 31 de diciembre de 2024 unicamente las \
+medidas del articulo 42.1.e) y 4, materia laboral ajena al IVA, de modo que no cierra la vigencia de \
+la reduccion del articulo 11.2. Esta entrada existe para que la aplicabilidad de la reduccion se lea \
+de la norma y no se infiera del articulo que la establece. PROVENANCIA DE LA REVISION. Entrada \
+preparada por agente sobre el texto consolidado empaquetado (sha256 \
+13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6). No la ha revisado un operador \
+humano."""
 required_text = [
     "Disposición final decimocuarta. Entrada en vigor.",
     "Este real decreto-ley entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado»",
@@ -189,4 +252,11 @@ legal_refs = [
 review_status = "reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Reduccion del 25 por ciento de la cuota devengada por operaciones corrientes del regimen especial simplificado del IVA correspondiente al ano 2024, para sujetos pasivos que desarrollen actividades en los terminos municipales del anexo del RDL 6/2024. Se aplica al calculo de la CUOTA ANUAL de 2024, no a cada cuota trimestral. Los tres legal_refs son las tres piezas que la medida necesita y ninguna es prescindible: el apartado que fija el porcentaje, la disposicion final que dice desde cuando rige, y el anexo que dice donde. Esta entrada NO enumera municipios; quien resuelva la aplicabilidad debe leer el anexo citado con su consolidated_as_of."
+notes = """\
+Reduccion del 25 por ciento de la cuota devengada por operaciones corrientes del regimen especial \
+simplificado del IVA correspondiente al ano 2024, para sujetos pasivos que desarrollen actividades \
+en los terminos municipales del anexo del RDL 6/2024. Se aplica al calculo de la CUOTA ANUAL de \
+2024, no a cada cuota trimestral. Los tres legal_refs son las tres piezas que la medida necesita y \
+ninguna es prescindible: el apartado que fija el porcentaje, la disposicion final que dice desde \
+cuando rige, y el anexo que dice donde. Esta entrada NO enumera municipios; quien resuelva la \
+aplicabilidad debe leer el anexo citado con su consolidated_as_of."""

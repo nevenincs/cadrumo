@@ -66,7 +66,16 @@ effective_from = 2017-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Aplazamiento y fraccionamiento del pago. Debts in periodo voluntario or ejecutivo may be deferred on request where the obligado's economic-financial situation transitorily prevents payment. Apartado 2 lists the debts that may NOT be deferred (retenciones and ingresos a cuenta among them) and provides that a request over such a debt is inadmitted. A deferral request filed in periodo voluntario prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de entidad de credito or certificado de seguro de caucion the interest demanded is the interes legal rather than the interes de demora; this article fixes neither rate, both being set annually by the LPGE."
+notes = """\
+Aplazamiento y fraccionamiento del pago. Debts in periodo voluntario or ejecutivo may be deferred on \
+request where the obligado's economic-financial situation transitorily prevents payment. Apartado 2 \
+lists the debts that may NOT be deferred (retenciones and ingresos a cuenta among them) and provides \
+that a request over such a debt is inadmitted. A deferral request filed in periodo voluntario \
+prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. \
+Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de \
+entidad de credito or certificado de seguro de caucion the interest demanded is the interes legal \
+rather than the interes de demora; this article fixes neither rate, both being set annually by the \
+LPGE."""
 required_text = [
     "cuando su situación económico-financiera le impida, de forma transitoria, efectuar el pago",
     "deberán garantizarse en los términos previstos en el artículo 82",
@@ -88,7 +97,15 @@ effective_from = 2023-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Garantias para el aplazamiento y fraccionamiento de la deuda. The preferred security is an aval solidario de entidad de credito or sociedad de garantia reciproca, or a certificado de seguro de caucion. Where the obligado shows it cannot obtain one, hipoteca, prenda, fianza personal y solidaria or another sufficient security is accepted, and the Administracion may instead adopt medidas cautelares in substitution. Apartado 2 allows total or partial dispensation of the garantia, including where the debts fall below a threshold the article expressly leaves to the normativa tributaria to fix; the amount is therefore NOT established here and must be cited to the Orden that fixes it."
+notes = """\
+Garantias para el aplazamiento y fraccionamiento de la deuda. The preferred security is an aval \
+solidario de entidad de credito or sociedad de garantia reciproca, or a certificado de seguro de \
+caucion. Where the obligado shows it cannot obtain one, hipoteca, prenda, fianza personal y \
+solidaria or another sufficient security is accepted, and the Administracion may instead adopt \
+medidas cautelares in substitution. Apartado 2 allows total or partial dispensation of the garantia, \
+including where the debts fall below a threshold the article expressly leaves to the normativa \
+tributaria to fix; the amount is therefore NOT established here and must be cited to the Orden that \
+fixes it."""
 required_text = [
     "aval solidario de entidad de crédito o sociedad de garantía recíproca o certificado de seguro de caución",
     "Podrá dispensarse total o parcialmente al obligado tributario de la constitución de las garantías",

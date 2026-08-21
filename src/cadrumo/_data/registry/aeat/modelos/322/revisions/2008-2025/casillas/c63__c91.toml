@@ -91,7 +91,7 @@ export_refs = ["m322-2024.pagina02.f012"]
 [[revisions."2008-2025".casillas]]
 id = "700"
 number = "700"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -103,7 +103,7 @@ export_refs = ["m322-2024.pagina04.f028"]
 [[revisions."2008-2025".casillas]]
 id = "701"
 number = "701"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -115,7 +115,7 @@ export_refs = ["m322-2024.pagina04.f029"]
 [[revisions."2008-2025".casillas]]
 id = "702"
 number = "702"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -127,7 +127,7 @@ export_refs = ["m322-2024.pagina04.f030"]
 [[revisions."2008-2025".casillas]]
 id = "703"
 number = "703"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -139,7 +139,7 @@ export_refs = ["m322-2024.pagina04.f031"]
 [[revisions."2008-2025".casillas]]
 id = "704"
 number = "704"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
 data_type = "money"
 required = false
@@ -151,7 +151,7 @@ export_refs = ["m322-2024.pagina04.f032"]
 [[revisions."2008-2025".casillas]]
 id = "705"
 number = "705"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
 data_type = "money"
 required = false
@@ -163,7 +163,7 @@ export_refs = ["m322-2024.pagina04.f033"]
 [[revisions."2008-2025".casillas]]
 id = "706"
 number = "706"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
 data_type = "money"
 required = false
@@ -175,7 +175,7 @@ export_refs = ["m322-2024.pagina04.f034"]
 [[revisions."2008-2025".casillas]]
 id = "707"
 number = "707"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
 data_type = "money"
 required = false
@@ -187,7 +187,7 @@ export_refs = ["m322-2024.pagina04.f035"]
 [[revisions."2008-2025".casillas]]
 id = "708"
 number = "708"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -199,7 +199,7 @@ export_refs = ["m322-2024.pagina04.f036"]
 [[revisions."2008-2025".casillas]]
 id = "709"
 number = "709"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -222,7 +222,7 @@ export_refs = ["m322-2024.pagina02.f013"]
 [[revisions."2008-2025".casillas]]
 id = "710"
 number = "710"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -234,7 +234,7 @@ export_refs = ["m322-2024.pagina04.f038"]
 [[revisions."2008-2025".casillas]]
 id = "711"
 number = "711"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -246,7 +246,7 @@ export_refs = ["m322-2024.pagina04.f039"]
 [[revisions."2008-2025".casillas]]
 id = "712"
 number = "712"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
 data_type = "money"
 required = false
@@ -258,7 +258,7 @@ export_refs = ["m322-2024.pagina04.f040"]
 [[revisions."2008-2025".casillas]]
 id = "713"
 number = "713"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
 data_type = "money"
 required = false
@@ -270,7 +270,7 @@ export_refs = ["m322-2024.pagina04.f041"]
 [[revisions."2008-2025".casillas]]
 id = "714"
 number = "714"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -281,7 +281,7 @@ export_refs = ["m322-2024.pagina04.f042"]
 [[revisions."2008-2025".casillas]]
 id = "715"
 number = "715"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -292,7 +292,7 @@ export_refs = ["m322-2024.pagina04.f043"]
 [[revisions."2008-2025".casillas]]
 id = "716"
 number = "716"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -303,7 +303,7 @@ export_refs = ["m322-2024.pagina04.f044"]
 [[revisions."2008-2025".casillas]]
 id = "717"
 number = "717"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -314,7 +314,7 @@ export_refs = ["m322-2024.pagina04.f045"]
 [[revisions."2008-2025".casillas]]
 id = "718"
 number = "718"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -326,7 +326,7 @@ export_refs = ["m322-2024.pagina04.f046"]
 [[revisions."2008-2025".casillas]]
 id = "719"
 number = "719"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -349,7 +349,7 @@ export_refs = ["m322-2024.pagina02.f014"]
 [[revisions."2008-2025".casillas]]
 id = "720"
 number = "720"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -361,7 +361,7 @@ export_refs = ["m322-2024.pagina04.f048"]
 [[revisions."2008-2025".casillas]]
 id = "721"
 number = "721"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
 data_type = "money"
 required = false
@@ -373,7 +373,7 @@ export_refs = ["m322-2024.pagina04.f049"]
 [[revisions."2008-2025".casillas]]
 id = "722"
 number = "722"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
 data_type = "money"
 required = false
@@ -385,7 +385,7 @@ export_refs = ["m322-2024.pagina04.f050"]
 [[revisions."2008-2025".casillas]]
 id = "723"
 number = "723"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
 data_type = "money"
 required = false
@@ -397,7 +397,7 @@ export_refs = ["m322-2024.pagina04.f051"]
 [[revisions."2008-2025".casillas]]
 id = "724"
 number = "724"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
 data_type = "money"
 required = false
@@ -409,7 +409,7 @@ export_refs = ["m322-2024.pagina04.f052"]
 [[revisions."2008-2025".casillas]]
 id = "725"
 number = "725"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
 data_type = "money"
 required = false
@@ -421,7 +421,7 @@ export_refs = ["m322-2024.pagina04.f053"]
 [[revisions."2008-2025".casillas]]
 id = "726"
 number = "726"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -433,7 +433,7 @@ export_refs = ["m322-2024.pagina04.f054"]
 [[revisions."2008-2025".casillas]]
 id = "727"
 number = "727"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -445,7 +445,7 @@ export_refs = ["m322-2024.pagina04.f055"]
 [[revisions."2008-2025".casillas]]
 id = "728"
 number = "728"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -457,7 +457,7 @@ export_refs = ["m322-2024.pagina04.f056"]
 [[revisions."2008-2025".casillas]]
 id = "729"
 number = "729"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
 data_type = "money"
 required = false
@@ -469,7 +469,7 @@ export_refs = ["m322-2024.pagina04.f057"]
 [[revisions."2008-2025".casillas]]
 id = "730"
 number = "730"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
 data_type = "money"
 required = false
@@ -481,7 +481,7 @@ export_refs = ["m322-2024.pagina04.f058"]
 [[revisions."2008-2025".casillas]]
 id = "731"
 number = "731"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
 data_type = "money"
 required = false
@@ -493,7 +493,7 @@ export_refs = ["m322-2024.pagina04.f059"]
 [[revisions."2008-2025".casillas]]
 id = "732"
 number = "732"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -504,7 +504,7 @@ export_refs = ["m322-2024.pagina04.f060"]
 [[revisions."2008-2025".casillas]]
 id = "733"
 number = "733"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -515,7 +515,7 @@ export_refs = ["m322-2024.pagina04.f061"]
 [[revisions."2008-2025".casillas]]
 id = "734"
 number = "734"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -526,7 +526,7 @@ export_refs = ["m322-2024.pagina04.f062"]
 [[revisions."2008-2025".casillas]]
 id = "735"
 number = "735"
-section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -583,7 +583,7 @@ export_refs = ["m322-2024.pagina02.f007"]
 [[revisions."2008-2025".casillas]]
 id = "79"
 number = "79"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -594,7 +594,7 @@ export_refs = ["m322-2024.pagina03.f031"]
 [[revisions."2008-2025".casillas]]
 id = "80"
 number = "80"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -605,7 +605,7 @@ export_refs = ["m322-2024.pagina03.f019"]
 [[revisions."2008-2025".casillas]]
 id = "81"
 number = "81"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -616,7 +616,7 @@ export_refs = ["m322-2024.pagina03.f020"]
 [[revisions."2008-2025".casillas]]
 id = "83"
 number = "83"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -639,7 +639,7 @@ export_refs = ["m322-2024.pagina03.f024"]
 [[revisions."2008-2025".casillas]]
 id = "86"
 number = "86"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -650,7 +650,7 @@ export_refs = ["m322-2024.pagina03.f026"]
 [[revisions."2008-2025".casillas]]
 id = "88"
 number = "88"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -661,7 +661,7 @@ export_refs = ["m322-2024.pagina03.f033"]
 [[revisions."2008-2025".casillas]]
 id = "89"
 number = "89"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -672,7 +672,7 @@ export_refs = ["m322-2024.pagina03.f015"]
 [[revisions."2008-2025".casillas]]
 id = "90"
 number = "90"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -683,7 +683,7 @@ export_refs = ["m322-2024.pagina03.f016"]
 [[revisions."2008-2025".casillas]]
 id = "91"
 number = "91"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"

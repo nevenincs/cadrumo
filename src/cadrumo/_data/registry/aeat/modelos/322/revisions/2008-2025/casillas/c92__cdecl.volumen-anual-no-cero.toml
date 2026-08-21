@@ -3,7 +3,7 @@
 [[revisions."2008-2025".casillas]]
 id = "92"
 number = "92"
-section = ["iva", "tributacion-territorio"]
+section = ["iva", "tributacion_territorio"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -14,7 +14,7 @@ export_refs = ["m322-2024.pagina03.f018"]
 [[revisions."2008-2025".casillas]]
 id = "93"
 number = "93"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -25,7 +25,7 @@ export_refs = ["m322-2024.pagina03.f021"]
 [[revisions."2008-2025".casillas]]
 id = "94"
 number = "94"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -36,7 +36,7 @@ export_refs = ["m322-2024.pagina03.f022"]
 [[revisions."2008-2025".casillas]]
 id = "95"
 number = "95"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -47,7 +47,7 @@ export_refs = ["m322-2024.pagina03.f027"]
 [[revisions."2008-2025".casillas]]
 id = "96"
 number = "96"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -58,7 +58,7 @@ export_refs = ["m322-2024.pagina03.f028"]
 [[revisions."2008-2025".casillas]]
 id = "97"
 number = "97"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -69,7 +69,7 @@ export_refs = ["m322-2024.pagina03.f029"]
 [[revisions."2008-2025".casillas]]
 id = "98"
 number = "98"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -80,7 +80,7 @@ export_refs = ["m322-2024.pagina03.f030"]
 [[revisions."2008-2025".casillas]]
 id = "99"
 number = "99"
-section = ["iva", "resumen-anual", "operaciones"]
+section = ["iva", "resumen_anual", "operaciones"]
 data_type = "money"
 required = false
 input_kind = "manual"

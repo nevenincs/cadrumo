@@ -53,7 +53,12 @@ from .redaction import ALWAYS_REDACT_KEY_TERMS, redact_for_log
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
-_STANDARD_LOG_RECORD_FIELDS = frozenset(logging.makeLogRecord({}).__dict__)
+# Built directly rather than through ``logging.makeLogRecord``, which dispatches
+# via the process-global record factory. This set is the redaction filter's
+# exemption list, so any field an installed factory adds would enrol itself as
+# "standard" and escape scrubbing. Calling the factory here also re-enters this
+# module through the observability layer while it is still initialising.
+_STANDARD_LOG_RECORD_FIELDS = frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__)
 _EXCEPTION_FORMATTER = logging.Formatter()
 
 SCRUB_FIELD_PATTERNS: tuple[str, ...] = (

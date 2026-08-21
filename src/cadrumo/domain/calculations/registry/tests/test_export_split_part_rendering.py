@@ -60,6 +60,26 @@ _UNADJUDICATED_REPEATED_SLOTS: dict[tuple[str, str, str], str] = {
     ("390", "modelo-390-page-06", "iva.anual.suma-resultados"): (
         "two 17-position slots carrying one annual figure; same open question as its page siblings"
     ),
+    # The two Modelo 200 entries are a DIFFERENT shape from the 390 ones above,
+    # and the distinction is why neither can take a part policy. A part policy
+    # declares which PART of one value a slot carries. AEAT prints one casilla
+    # number against slots holding SEPARATE figures here, so splitting one value
+    # across them would file a number into a category the taxpayer is not in.
+    # Read from the design's own labels, not inferred from the offsets.
+    ("200", "m200-page-045", "00199"): (
+        "two adjacent 17-position slots the design labels 'Perdidas fiscales a compensar [00199] "
+        "Aplicable a IIC financieras' and '... Aplicable a IIC inmobiliarias' -- distinct figures "
+        "for distinct institution types sharing one printed number, not two parts of one value. "
+        "Needs a casilla per institution type in the generator's semantic map, which is a "
+        "filing-grade modelling change to a generator-owned tree, not a part policy"
+    ),
+    ("200", "m200-page-015b", "00103"): (
+        "three 7-position 'Tipo de gravamen 2025' slots the design attaches to three separate "
+        "deduction blocks -- 'Deducciones doble imposicion interna', the same 'DT 23.1 LIS' "
+        "variant, and 'Deducciones doble imposicion internacional RDLeg. 4/2004'. Whether one "
+        "entity can carry three different rates across those blocks is a tax review, and the "
+        "same generator-owned-tree constraint applies"
+    ),
 }
 
 

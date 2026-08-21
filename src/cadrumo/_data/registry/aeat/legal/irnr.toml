@@ -105,7 +105,14 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+notes = """\
+TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de \
+establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, \
+sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por \
+diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 \
+permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en \
+Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y \
+gastos_deducibles."""
 required_text = ["importe integro", "sin que sean de aplicacion los porcentajes multiplicadores ni las reducciones", "vinculo economico directo e indisociable"]
 
 [legal."trlirnr-rdleg-5-2004:art-25.1.a"]
@@ -121,7 +128,14 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
+notes = """\
+TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin \
+mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 \
+por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE \
+con efectivo intercambio de informacion tributaria, lo que motiva la fila \
+tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores \
+numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg \
+5/2004 original."""
 required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen sera el 19 por ciento", "residentes en otro Estado miembro de la Union Europea o del Espacio Economico Europeo"]
 
 [legal."trlirnr-rdleg-5-2004:art-25.1.b"]
@@ -233,7 +247,14 @@ effective_from = 2012-10-18
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
-notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/interest M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate notice)."
+notes = """\
+Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest \
+whose beneficial owner is a resident of the other state may be taxed only in that other \
+state (source-state exemption). Row-level authority for the DE/interest M210 treaty \
+override (kind=exempt). Agent-prepared grounding cross-checked against the BOE \
+consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects \
+the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate \
+notice)."""
 required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
 
 [legal."convenio-es-de-2011:art-12"]
@@ -559,7 +580,17 @@ consolidated_as_of = 2026-06-23
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-09
 reviewed_by = "read verbatim from the bundled consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
-notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. Texto consolidado según las modificaciones de la Orden HAC/56/2024 art 4.2 (BOE-A-2024-1772) y la Orden HAC/623/2026 art 1.2 (BOE-A-2026-13573). The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
+notes = """\
+Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento \
+permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): \
+la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, \
+julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el \
+trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. Texto \
+consolidado según las modificaciones de la Orden HAC/56/2024 art 4.2 (BOE-A-2024-1772) y la Orden \
+HAC/623/2026 art 1.2 (BOE-A-2026-13573). The resultado/tipo-dependent annual plazos (arrendamiento \
+a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; \
+imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 \
+abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."""
 required_text = [
     "Plazo de presentación de las autoliquidaciones del Impuesto por las rentas obtenidas en España sin mediación de establecimiento permanente",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior",

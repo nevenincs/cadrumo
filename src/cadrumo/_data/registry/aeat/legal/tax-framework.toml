@@ -74,7 +74,23 @@ consolidated_as_of = 2026-08-08
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-review"
-notes = """LIVA art. 3 apartado Tres: the ASSIMILATION limb, and a separate entry from apartado Dos because it rules the opposite way. Apartado Dos carves territories OUT of the interior del pais; apartado Tres brings three territories that lie outside every Member State IN, by declaring that operations with Monaco, the Isle of Man and the United Kingdom sovereign base areas of Akrotiri and Dhekelia have the same consideration as operations with France, the United Kingdom and Cyprus respectively. Citing apartado Dos for an assimilation would name the provision that does the reverse. The anchored unit is the WHOLE article, because #a3 is the finest anchor the consolidated document offers and apartado Tres cannot be sliced further; the required_text below is chosen to occur only inside this apartado, so a match cannot be satisfied by apartado Uno or Dos. Current redaction: apartados 2 and 3 were last modified by art. 1.Uno of Ley 28/2014 (BOE-A-2014-12329), in force from 2015-01-01. ASSIMILATION IS RELATIVE, NOT ABSOLUTE, and that is the whole reason it is modelled as a pointer rather than as a scope. The article fixes what each territory is assimilated TO, never what that parent establishes -- so the Isle of Man followed the United Kingdom into and then out of the Community without this article changing a word, and Monaco follows France for as long as France is a Member State. A row recording a fixed scope here would have been correct in 2015 and wrong from 2021 while still reading as grounded."""
+notes = """\
+LIVA art. 3 apartado Tres: the ASSIMILATION limb, and a separate entry from apartado Dos because it \
+rules the opposite way. Apartado Dos carves territories OUT of the interior del pais; apartado Tres \
+brings three territories that lie outside every Member State IN, by declaring that operations with \
+Monaco, the Isle of Man and the United Kingdom sovereign base areas of Akrotiri and Dhekelia have \
+the same consideration as operations with France, the United Kingdom and Cyprus respectively. Citing \
+apartado Dos for an assimilation would name the provision that does the reverse. The anchored unit \
+is the WHOLE article, because #a3 is the finest anchor the consolidated document offers and apartado \
+Tres cannot be sliced further; the required_text below is chosen to occur only inside this apartado, \
+so a match cannot be satisfied by apartado Uno or Dos. Current redaction: apartados 2 and 3 were \
+last modified by art. 1.Uno of Ley 28/2014 (BOE-A-2014-12329), in force from 2015-01-01. \
+ASSIMILATION IS RELATIVE, NOT ABSOLUTE, and that is the whole reason it is modelled as a pointer \
+rather than as a scope. The article fixes what each territory is assimilated TO, never what that \
+parent establishes -- so the Isle of Man followed the United Kingdom into and then out of the \
+Community without this article changing a word, and Monaco follows France for as long as France is a \
+Member State. A row recording a fixed scope here would have been correct in 2015 and wrong from 2021 \
+while still reading as grounded."""
 required_text = [
     "las operaciones efectuadas con el Principado de Mónaco, con la Isla de Man y con las zonas de soberanía del Reino Unido en Akrotiri y Dhekelia",
     "tendrán la misma consideración que las efectuadas, respectivamente, con Francia, el Reino Unido y Chipre",

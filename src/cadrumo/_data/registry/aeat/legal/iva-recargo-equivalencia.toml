@@ -33,7 +33,14 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-review"
-notes = "LIVA art 158: sujetos pasivos del recargo de equivalencia. Apartado 1o obliga al proveedor que efectua la entrega sometida al recargo. Apartado 2o obliga al propio comerciante minorista acogido al regimen especial en sus adquisiciones intracomunitarias de bienes, en sus importaciones, y en los supuestos de inversion del sujeto pasivo del articulo 84 apartado uno numero 2o. Es la base por la que un recargo de equivalencia puede existir tanto en una entrega interior repercutida como en una adquisicion intracomunitaria, una importacion o una operacion con inversion del sujeto pasivo. Texto cotejado contra el consolidado vivo del BOE el 2026-08-05."
+notes = """\
+LIVA art 158: sujetos pasivos del recargo de equivalencia. Apartado 1o obliga al proveedor que \
+efectua la entrega sometida al recargo. Apartado 2o obliga al propio comerciante minorista acogido \
+al regimen especial en sus adquisiciones intracomunitarias de bienes, en sus importaciones, y en los \
+supuestos de inversion del sujeto pasivo del articulo 84 apartado uno numero 2o. Es la base por la \
+que un recargo de equivalencia puede existir tanto en una entrega interior repercutida como en una \
+adquisicion intracomunitaria, una importacion o una operacion con inversion del sujeto pasivo. Texto \
+cotejado contra el consolidado vivo del BOE el 2026-08-05."""
 required_text = [
     "Sujetos pasivos del recargo de equivalencia",
     "adquisiciones intracomunitarias de bienes e importaciones",

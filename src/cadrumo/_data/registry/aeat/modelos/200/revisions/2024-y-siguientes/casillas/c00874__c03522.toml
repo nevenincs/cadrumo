@@ -34,7 +34,7 @@ export_refs = ["m200-2025.dp200018.f0050"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01180"
 number = "01180"
-section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
 required = false
@@ -45,7 +45,7 @@ export_refs = ["m200-2025.dp200018.f0052"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01195"
 number = "01195"
-section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"
 required = false
@@ -122,7 +122,7 @@ export_refs = ["m200-2025.dp200018.f0059"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01871"
 number = "01871"
-section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_evento_especial"
 required = false
@@ -463,7 +463,7 @@ export_refs = ["m200-2025.dp200018.f0089"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02371"
 number = "02371"
-section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_evento_especial"
 required = false
@@ -474,7 +474,7 @@ export_refs = ["m200-2025.dp200018.f0045"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02372"
 number = "02372"
-section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
 required = false
@@ -485,7 +485,7 @@ export_refs = ["m200-2025.dp200018.f0046"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02373"
 number = "02373"
-section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"
 required = false
@@ -892,7 +892,7 @@ export_refs = ["m200-2025.dp200018.f0128"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03484"
 number = "03484"
-section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_evento_especial"
 required = false
@@ -903,7 +903,7 @@ export_refs = ["m200-2025.dp200018.f0129"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03485"
 number = "03485"
-section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
 required = false
@@ -914,7 +914,7 @@ export_refs = ["m200-2025.dp200018.f0130"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03486"
 number = "03486"
-section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_quincuagesimo_aniversario_del_teatre_lliure"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"
 required = false
@@ -958,7 +958,7 @@ export_refs = ["m200-2025.dp200018.f0134"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03493"
 number = "03493"
-section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_evento_especial"
 required = false
@@ -969,7 +969,7 @@ export_refs = ["m200-2025.dp200018.f0135"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03494"
 number = "03494"
-section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
 required = false
@@ -980,7 +980,7 @@ export_refs = ["m200-2025.dp200018.f0136"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03495"
 number = "03495"
-section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de_"]
+section = ["deducc_para_incentivar_determ_actividades", "2025_75_a_edicion_del_festival_musica_y_danza_de"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"
 required = false

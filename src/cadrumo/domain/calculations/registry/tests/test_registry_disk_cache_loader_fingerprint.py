@@ -270,9 +270,20 @@ def test_selector_models_contribute_types_the_schema_annotations_cannot_see() ->
     schema_only = _derived_markers((ModeloDefinition, RegistryCatalogues))
     full = _derived_markers()
 
-    assert "cadrumo.domain.iva._schema.IvaCategory" not in schema_only
-    assert _marker_of(Modelo) not in schema_only
-    assert "cadrumo.domain.iva._schema.IvaCategory" in full
+    # The claim is that the table CONTRIBUTES types the annotations cannot see,
+    # so assert that contribution rather than pinning which types it is. This
+    # named `Modelo`, and a peer adding `SourceReference.period_selector` made it
+    # reachable from `RegistryCatalogues` by annotation alone -- a hole CLOSING,
+    # which is the good direction, yet it reddened a test whose subject was
+    # unaffected. A type migrating into annotation reach must not look like the
+    # table having stopped contributing.
+    table_only = full - schema_only
+    assert schema_only < full, "the selector table contributed nothing the annotations miss"
+    assert table_only, "the table-only contribution is empty; the polymorphic hole is unclosed or unreachable"
+    # IvaCategory is the named specimen because the selector families embed it
+    # and no schema annotation reaches it; it is asserted on both sides so a
+    # derivation that simply returned everything would not satisfy this.
+    assert "cadrumo.domain.iva._schema.IvaCategory" in table_only
     assert _marker_of(Modelo) in full
 
 

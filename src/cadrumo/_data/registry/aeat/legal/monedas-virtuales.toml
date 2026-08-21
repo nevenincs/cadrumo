@@ -172,7 +172,19 @@ effective_from = 2023-04-25
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "operator"
-notes = "RGAT art 42 quater, anadido por el art. 3.9 del Real Decreto 249/2023, de 4 de abril (BOE-A-2023-8576; BOE 5 abril 2023; en vigor 25 abril 2023): obligacion de informar sobre monedas virtuales situadas en el extranjero custodiadas por tercero. Desarrolla reglamentariamente la DA-18 letra d de la LGT (= DA-10 de la Ley 11/2021). Apartado 5.d fija el umbral inicial de 50.000 EUR; apartado 6 parrafo segundo fija la re-declaracion si el saldo conjunto crece mas de 20.000 EUR respecto de la ultima declaracion presentada. Habilita el Modelo 721. Cross-checked against the live BOE consolidated-legislation API (bloque a4-3) on 2026-08-07; corpus excerpt completed from a 1033-byte para-1-only stub to the full article (paras 1-7 plus the amending footnote), replacing a fabricated sentence that appeared in no BOE text. The prior published_at/effective_from carried the Modelo 721 form-approval Orden's dates rather than those of the amending Real Decreto, and are corrected here. Operator sign-off 2026-08-08 on the agent-fetched verification recorded above; the underlying text was retrieved from the BOE API, not hand-authored."
+notes = """\
+RGAT art 42 quater, anadido por el art. 3.9 del Real Decreto 249/2023, de 4 de abril \
+(BOE-A-2023-8576; BOE 5 abril 2023; en vigor 25 abril 2023): obligacion de informar sobre monedas \
+virtuales situadas en el extranjero custodiadas por tercero. Desarrolla reglamentariamente la DA-18 \
+letra d de la LGT (= DA-10 de la Ley 11/2021). Apartado 5.d fija el umbral inicial de 50.000 EUR; \
+apartado 6 parrafo segundo fija la re-declaracion si el saldo conjunto crece mas de 20.000 EUR \
+respecto de la ultima declaracion presentada. Habilita el Modelo 721. Cross-checked against the live \
+BOE consolidated-legislation API (bloque a4-3) on 2026-08-07; corpus excerpt completed from a \
+1033-byte para-1-only stub to the full article (paras 1-7 plus the amending footnote), replacing a \
+fabricated sentence that appeared in no BOE text. The prior published_at/effective_from carried the \
+Modelo 721 form-approval Orden's dates rather than those of the amending Real Decreto, and are \
+corrected here. Operator sign-off 2026-08-08 on the agent-fetched verification recorded above; the \
+underlying text was retrieved from the BOE API, not hand-authored."""
 required_text = [
     "no superen, conjuntamente, los 50.000 euros",
     "hubiese experimentado un incremento superior a 20.000 euros respecto del que determinó la presentación de la última declaración",

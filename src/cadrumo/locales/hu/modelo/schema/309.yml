@@ -7,13 +7,131 @@ modelo:
       revision:
         2004-y-siguientes:
           casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              label: Elszámolás (8) - Levonandó [23]
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
+              label: Vevő (4) - Vezetéknév vagy cégnév
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
+              label: Vevő (4) - NIF
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
+              label: Vevő (4) - Név
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
+                - Modell
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
+                felszállótömeg (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Kiegészítő bevallás (9)
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
+                hossz
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
+                (építési szám)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              label: 'Adóköteles tényállás (6):'
+            x-chim6r1ed5h62rg:
+              label: IBAN (10)
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Az előző bevallás igazolószáma (9)
+            x-chim6r1edpnmqojick:
+              label: Azonosítás (1) - Név
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
+            x-chim6r1ee9jiqoj1ediiqchl:
+              label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
+            x-chim6r1ee9jiqorldtq62b9i6s:
+              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
+            x-chim6r1ee9jiqt39e1niqchm:
+              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              label: 'Adójogi helyzet (5):'
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              label: Átruházó (3) - Vezetéknév vagy cégnév
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              label: Átruházó (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
+              label: Átruházó (3) - NIF-IVA
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              label: Átruházó (3) - Név
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              label: Átruházó (3) - Ország
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              label: Jellemzők és műszaki adatok (7) - Járművek - Márka
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
+                megnevezés):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén

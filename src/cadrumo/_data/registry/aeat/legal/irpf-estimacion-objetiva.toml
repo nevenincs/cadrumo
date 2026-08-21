@@ -36,7 +36,15 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "agent-authored; grounded in bundled authoritative corpus; operator to re-stamp"
-notes = "LIRPF DT 32ª: límites para la aplicación del método de estimación objetiva en los ejercicios 2016 a 2024. Para esos ejercicios, las magnitudes de 150.000 y 75.000 euros del art. 31.1.3ª.b.a' quedan fijadas en 250.000 y 125.000 euros, y la magnitud de 150.000 euros del art. 31.1.3ª.c (volumen de compras) queda fijada en 250.000 euros. La guía oficial AEAT Renta 2025 incluida en el corpus declara aplicables esos mismos límites cuantitativos excluyentes a 2025 y 2026; la puerta de aviso consume esta referencia sólo para la ventana 2016-2026. Grounded against the bundled authoritative ley-35-2006.html (#dttrigesimasegunda) and the bundled AEAT Renta 2025 manual; agent-authored entry pending operator re-stamp."
+notes = """\
+LIRPF DT 32ª: límites para la aplicación del método de estimación objetiva en los ejercicios 2016 a \
+2024. Para esos ejercicios, las magnitudes de 150.000 y 75.000 euros del art. 31.1.3ª.b.a' quedan \
+fijadas en 250.000 y 125.000 euros, y la magnitud de 150.000 euros del art. 31.1.3ª.c (volumen de \
+compras) queda fijada en 250.000 euros. La guía oficial AEAT Renta 2025 incluida en el corpus \
+declara aplicables esos mismos límites cuantitativos excluyentes a 2025 y 2026; la puerta de aviso \
+consume esta referencia sólo para la ventana 2016-2026. Grounded against the bundled authoritative \
+ley-35-2006.html (#dttrigesimasegunda) and the bundled AEAT Renta 2025 manual; agent-authored entry \
+pending operator re-stamp."""
 required_text = [
     "método de estimación objetiva en los ejercicios 2016 a 2024",
     "quedan fijadas en 250.000 y 125.000 euros",

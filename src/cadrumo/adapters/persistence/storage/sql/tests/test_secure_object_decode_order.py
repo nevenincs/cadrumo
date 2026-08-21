@@ -18,7 +18,9 @@ real AEAD, real stored-metadata corruption. Nothing is mocked.
 
 from __future__ import annotations
 
+import ast
 import inspect
+import textwrap
 
 import pytest
 
@@ -184,7 +186,9 @@ def test_both_read_surfaces_route_through_the_one_decode_core() -> None:
 
     for surface in (codec.secure_object_record_from_row, codec.secure_object_list_item_from_raw_row):
         source = inspect.getsource(surface)
-        assert "decode_secure_object_row(" in source, f"{surface.__name__} does not route through the decode core"
+        assert _calls(source, "decode_secure_object_row"), (
+            f"{surface.__name__} does not route through the decode core"
+        )
         for reimplemented in (
             "decrypt_secure_object_payload(",
             "secure_object_payload_aad(",
@@ -301,3 +305,40 @@ def test_an_untampered_namespace_still_scans_clean(tmp_path: Path) -> None:
 
     assert len(outcomes) == 2
     assert [item for item in outcomes if isinstance(item, SecureObjectUnreadable)] == []
+
+
+def _calls(source: str, callee: str) -> bool:
+    """Whether ``source`` actually CALLS ``callee``, not merely mentions it.
+
+    A membership test on source text passes when the name appears in a
+    docstring or comment, so a surface that stopped delegating while keeping
+    its prose reads as compliant.
+    """
+    tree = ast.parse(textwrap.dedent(source))
+    return any(
+        isinstance(node, ast.Call)
+        and (
+            (isinstance(node.func, ast.Attribute) and node.func.attr == callee)
+            or (isinstance(node.func, ast.Name) and node.func.id == callee)
+        )
+        for node in ast.walk(tree)
+    )
+
+
+def test_the_delegation_check_rejects_a_docstring_mention() -> None:
+    """DISCRIMINATING: a mention is not a call.
+
+    The positive half of this gate asserted that the shared routine's NAME
+    appeared in the surface's source. A surface that stopped calling it and
+    kept a sentence naming it passed -- which is the regression the gate is
+    for.
+    """
+    calling = "def surface(row):\n    return shared_routine(row)\n"
+    mentioning = (
+        "def surface(row):\n"
+        '    """Delegates to shared_routine( ) in the core."""\n'
+        "    return row\n"
+    )
+
+    assert _calls(calling, "shared_routine")
+    assert not _calls(mentioning, "shared_routine")

@@ -1,10 +1,25 @@
+# The close date is READ from AEAT's own Calendario del Contribuyente, not derived
+# from the statutory "durante el mes de enero" rule.
+#
+# It was declared 2026-01-31, which is the rule's date and a SATURDAY. AEAT's
+# published calendar for 2026 lists "Declaracion anual 2025: 345" under the
+# heading "Hasta el 2 de febrero" -- the following Monday -- so the rule-derived
+# date closes the window two days early and would present a filer with a deadline
+# that has not arrived. Writing a deadline from the rule rather than the
+# published calendar is the filing-grade harm this registry's other deadline
+# families already warn about; the bundled calendar is now cited as the source
+# the date is read from.
+
 [[revisions."2025".deadline_windows]]
 id = "modelo-345-2025-0a"
 filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-01-31
+closes_on = 2026-02-02
 legal_refs = ["orden-hfp-823-2022:art-4"]
-source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-base-order"]
-
+source_refs = [
+    "aeat-modelo-345-deadlines",
+    "boe-modelo-345-base-order",
+    "aeat-calendario-contribuyente-2026-hasta-2-febrero",
+]

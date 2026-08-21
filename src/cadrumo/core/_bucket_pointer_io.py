@@ -24,6 +24,8 @@ while sharing the same pointer precedence.
 
 from __future__ import annotations
 
+import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,8 +37,11 @@ from typing import TYPE_CHECKING
 # stay importable from the earliest point in core's own initialisation.
 from ._bucket_pointer import BucketPointer
 from ._fsync import fsync_parent_dir
+from ._windows_contention import is_windows_contention
 
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
+    from collections.abc import Callable
+
     from .errors import CadrumoError
 
 
@@ -59,6 +64,64 @@ def pointer_path(root: Path) -> Path:
     from ._storage_taxonomy import StorageCategory, storage_location
 
     return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
+
+
+_POINTER_READ_RETRY_SECONDS = 1.0
+"""Budget for waiting out a concurrent writer's replace/clear of the pointer.
+
+A peer's handle on the pointer lives microseconds; a denying ACL does not
+clear at all. As in :mod:`core._lockfile_unlink`, the budget is the
+discriminator rather than the error code -- and here it has to be, because the
+read side carries no ``winerror`` to test.
+"""
+
+_POINTER_READ_POLL_SECONDS = 0.02
+
+_POINTER_WRITE_RETRY_SECONDS = 1.0
+"""Budget for a write or removal a foreign reader's handle is blocking."""
+
+
+def _read_pointer_bytes(target: Path) -> bytes | None:
+    """Read ``target``, tolerating a concurrent writer's replace or clear.
+
+    The pointer is rewritten by :func:`restore_pointer` (write-then-rename) and
+    removed by :func:`clear_pointer`, and this read sits on the ``Settings()``
+    bootstrap path -- so any process starting up while another switches profile
+    reads a file that is being replaced underneath it. Two failures follow, both
+    measured on Windows under concurrent access:
+
+    - The file vanishes between the caller's ``is_file()`` and the open, which
+      raised :exc:`FileNotFoundError` from a function documented to answer
+      ``None`` for an absent pointer.
+    - The open is refused while a writer holds the file, as
+      :exc:`PermissionError`. Unlike the removal path in
+      :mod:`core._lockfile_unlink`, this one arrives with ``winerror`` unset,
+      so contention cannot be told from a denying ACL by inspection; a bounded
+      wait separates them instead, and a genuine denial outlasts it and raises.
+
+    Retried on Windows only. POSIX has no sharing-violation class, so an
+    ``EACCES`` there is genuine and propagates on the first attempt.
+
+    Args:
+        target: The pointer file to read.
+
+    Returns:
+        The file's bytes, or ``None`` when it is absent.
+
+    Raises:
+        OSError: For any read failure that is not a concurrent writer, and for
+            a refusal that outlasts :data:`_POINTER_READ_RETRY_SECONDS`.
+    """
+    deadline = time.monotonic() + (_POINTER_READ_RETRY_SECONDS if sys.platform == "win32" else 0.0)
+    while True:
+        try:
+            return target.read_bytes()
+        except FileNotFoundError:
+            return None
+        except PermissionError:
+            if sys.platform != "win32" or time.monotonic() >= deadline:
+                raise
+            time.sleep(_POINTER_READ_POLL_SECONDS)
 
 
 def read_pointer(root: Path) -> BucketPointer | None:
@@ -87,8 +150,10 @@ def read_pointer(root: Path) -> BucketPointer | None:
     target = pointer_path(root)
     if not target.is_file():
         return None
-    text = target.read_text(encoding="utf-8")
-    return BucketPointer.from_toml(text)
+    raw = _read_pointer_bytes(target)
+    if raw is None:
+        return None
+    return BucketPointer.from_toml(raw.decode("utf-8"))
 
 
 def capture_pointer(root: Path) -> bytes | None:
@@ -103,11 +168,41 @@ def capture_pointer(root: Path) -> bytes | None:
     Raises:
         OSError: If the pointer exists but cannot be read.
     """
-    target = pointer_path(root)
-    try:
-        return target.read_bytes()
-    except FileNotFoundError:
-        return None
+    return _read_pointer_bytes(pointer_path(root))
+
+
+def _await_uncontended(operation: Callable[[], None]) -> None:
+    """Run ``operation``, waiting out a peer reader's open handle on Windows.
+
+    The mirror of :func:`_read_pointer_bytes`. Every process resolves the
+    pointer as it starts, and those readers do NOT hold the custody root lock
+    that serialises writers -- so a switch or a logout can be refused by a
+    foreign reader the lock does not cover. Measured under a concurrent reader:
+    ``ERROR_SHARING_VIOLATION`` on the replace and the unlink, and
+    ``ERROR_ACCESS_DENIED`` once a delete was already pending.
+
+    Unlike the read side, these refusals carry a ``winerror``, so contention is
+    identified by code AND bounded by the budget rather than by the budget
+    alone. A refusal that outlasts the budget raises, so a denying ACL is still
+    reported rather than waited on forever.
+
+    Args:
+        operation: The write or removal to attempt; must be safe to repeat.
+
+    Raises:
+        OSError: For any failure that is not Windows contention, and for
+            contention outlasting :data:`_POINTER_WRITE_RETRY_SECONDS`.
+    """
+    deadline = time.monotonic() + _POINTER_WRITE_RETRY_SECONDS
+    while True:
+        try:
+            operation()
+        except PermissionError as exc:
+            if not is_windows_contention(exc) or time.monotonic() >= deadline:
+                raise
+            time.sleep(_POINTER_READ_POLL_SECONDS)
+            continue
+        return
 
 
 def clear_pointer(root: Path) -> None:
@@ -124,7 +219,7 @@ def clear_pointer(root: Path) -> None:
     """
     target = pointer_path(root)
     try:
-        target.unlink()
+        _await_uncontended(target.unlink)
     except FileNotFoundError:
         return
 
@@ -152,7 +247,8 @@ def restore_pointer(root: Path, captured: bytes | None) -> None:
     # ``write_pointer`` below.
     from .atomic_write import atomic_write_hardened_bytes
 
-    atomic_write_hardened_bytes(pointer_path(root), captured)
+    target = pointer_path(root)
+    _await_uncontended(lambda: atomic_write_hardened_bytes(target, captured))
 
 
 def resolve_active_bucket_id() -> str | None:
