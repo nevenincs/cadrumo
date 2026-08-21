@@ -194,6 +194,7 @@
     "modelo.schema.100.revision.2025.casilla.1528.label": "Hungarian uses the established loanword 'index' for this AEAT index label; the paired Hungarian help renders indexet, while es.yml remains the official Spanish source 'Índice'.",
     "modelo.schema.100.revision.2025.casilla.1531.label": "Hungarian uses the established loanword 'index' for this AEAT index label; the paired Hungarian help renders indexet, while es.yml remains the official Spanish source 'Índice'.",
     "modelo.schema.100.revision.2025.casilla.1534.label": "Hungarian uses the established loanword 'index' for this AEAT index label; the paired Hungarian help renders indexet, while es.yml remains the official Spanish source 'Índice'.",
+    "modelo.schema.309.revision.2004-y-siguientes.casilla.x-chim6r1ed5h62rg.label": "IBAN is an international standard term (ISO 13616) and is spelled identically in Spanish and Hungarian; the box marker (10) is AEAT's own numbering, so the whole label coincides. Not an untranslated string.",
     "topic.sii.title": "SII is the AEAT acronym (Suministro Inmediato de Informacion); no Hungarian equivalent term exists.",
     "topic.verifactu.title": "VERI*FACTU is the AEAT brand name for the invoicing regulation; not translated.",
     "untranslated_pending": "The hu locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nHungarian translations and removes entries from this allowlist.\n",
