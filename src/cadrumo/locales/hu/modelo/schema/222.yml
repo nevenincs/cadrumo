@@ -7,6 +7,302 @@ modelo:
       revision:
         2025-y-siguientes:
           casilla:
+            '01':
+              help: Az adócsoport részletfizetési elszámolásának 01. rovata (Mod.
+                40.2 LIS).
+              label: Mod. 40.2 LIS - A részletfizetés alapja
+            '02':
+              help: Az adócsoport részletfizetési elszámolásának 02. rovata (Mod.
+                40.2 LIS).
+              label: Mod. 40.2 LIS - Az előző bevallás eredménye (csak ha az kiegészítő)
+            '03':
+              help: Az adócsoport részletfizetési elszámolásának 03. rovata (Mod.
+                40.2 LIS).
+              label: Mod. 40.2 LIS - Fizetendő
+            '04':
+              help: Az adócsoport részletfizetési elszámolásának 04. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Az egyedi számviteli eredmények összege (IS és
+                IC után)
+            '05':
+              help: Az adócsoport részletfizetési elszámolásának 05. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Társasági adó (IS) korrekció - Növelések
+            '06':
+              help: Az adócsoport részletfizetési elszámolásának 06. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Társasági adó (IS) korrekció - Csökkentések
+            '07':
+              help: Az adócsoport részletfizetési elszámolásának 07. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A számviteli eredmény további korrekciói, a korábbi
+                évek negatív adóalapjának beszámítása kivételével - Növelések
+            08:
+              help: Az adócsoport részletfizetési elszámolásának 08. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A számviteli eredmény további korrekciói, a korábbi
+                évek negatív adóalapjának beszámítása kivételével - Csökkentések
+            '10':
+              help: Az adócsoport részletfizetési elszámolásának 10. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Az egyedi adóalapok összege a korábbi időszakok
+                negatív alapjainak beszámítása előtt
+            '11':
+              help: Az adócsoport részletfizetési elszámolásának 11. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Belső eredmények halasztásának korrekciói és
+                egyéb konszolidációs korrekciók - Növelések
+            '12':
+              help: Az adócsoport részletfizetési elszámolásának 12. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Belső eredmények halasztásának korrekciói és
+                egyéb konszolidációs korrekciók - Csökkentések
+            '13':
+              help: Az adócsoport részletfizetési elszámolásának 13. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Előzetes adóalap
+            '14':
+              help: Az adócsoport részletfizetési elszámolásának 14. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoport korábbi időszaki negatív adóalapjainak
+                beszámítása
+            '15':
+              help: Az adócsoport részletfizetési elszámolásának 15. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoporthoz csatlakozás előtti szervezetek vagy
+                csoportok negatív adóalapjainak beszámítása (LIS 67. és 74.3. cikk)
+            '16':
+              help: Az adócsoport részletfizetési elszámolásának 16. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - A részletfizetés alapja
+            '17':
+              help: Az adócsoport részletfizetési elszámolásának 17. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - Százalék
+            '18':
+              help: Az adócsoport részletfizetési elszámolásának 18. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - Előzetes eredmény
+            '19':
+              help: Az adócsoport részletfizetési elszámolásának 19. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A részletfizetés alapja
+            '20':
+              help: Az adócsoport részletfizetési elszámolásának 20. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Alap 1. kulcshoz
+            '21':
+              help: Az adócsoport részletfizetési elszámolásának 21. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Százalék 1
+            '22':
+              help: Az adócsoport részletfizetési elszámolásának 22. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Részletfizetés összege
+                1
+            '23':
+              help: Az adócsoport részletfizetési elszámolásának 23. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Alap 2. kulcshoz
+            '24':
+              help: Az adócsoport részletfizetési elszámolásának 24. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Százalék 2
+            '25':
+              help: Az adócsoport részletfizetési elszámolásának 25. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Részletfizetés összege
+                2
+            '26':
+              help: Az adócsoport részletfizetési elszámolásának 26. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Előzetes eredmény
+            '27':
+              help: Az adócsoport részletfizetési elszámolásának 27. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A számított időszakra jutó
+                kedvezmények (összesen)
+            '28':
+              help: Az adócsoport részletfizetési elszámolásának 28. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A számított időszak jövedelmére
+                alkalmazott levonások és előlegfizetések (összesen)
+            '29':
+              help: Az adócsoport részletfizetési elszámolásának 29. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Közös területen végzett
+                ügyletek aránya (%)
+            '30':
+              help: Az adócsoport részletfizetési elszámolásának 30. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A számított időszakra a
+                közös területen teljesített korábbi részletfizetések (összesen)
+            '31':
+              help: Az adócsoport részletfizetési elszámolásának 31. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Az előző bevallás eredménye
+                (csak ha az kiegészítő)
+            '32':
+              help: Az adócsoport részletfizetési elszámolásának 32. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Eredmény
+            '33':
+              help: Az adócsoport részletfizetési elszámolásának 33. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) - Minimálisan fizetendő (csak 10 millió
+                euró vagy afölötti nettó árbevételű vállalkozásoknak)
+            '34':
+              help: Az adócsoport részletfizetési elszámolásának 34. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Fizetendő összeg
+            '35':
+              help: Az adócsoport részletfizetési elszámolásának 35. rovata (Mod.
+                40.3 LIS).
+              label: Kiegészítő információ (6) - Az időszak konszolidált eredménye
+            '37':
+              help: Az adócsoport részletfizetési elszámolásának 37. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Az értékcsökkenési ráfordítás 30%-ának visszafordítása
+                (a kisvállalkozások kivételével) - Csökkentések
+            '38':
+              help: Az adócsoport részletfizetési elszámolásának 38. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - ÖSSZESEN - Növelések
+            '39':
+              help: Az adócsoport részletfizetési elszámolásának 39. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - ÖSSZESEN - Csökkentések
+            '42':
+              help: Az adócsoport részletfizetési elszámolásának 42. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A csoport korábbi időszaki
+                negatív adóösszegeinek beszámítása (csak szövetkezetek)
+            '43':
+              help: Az adócsoport részletfizetési elszámolásának 43. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A csoporthoz csatlakozás
+                előtti egyedi negatív adóösszegek beszámítása (csak szövetkezetek)
+            '44':
+              help: Az adócsoport részletfizetési elszámolásának 44. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoport LIS 11.12. cikke szerinti céltartalékai
+            '45':
+              help: Az adócsoport részletfizetési elszámolásának 45. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoporthoz csatlakozás előtt egyedi vagy csoportszinten
+                keletkezett LIS 11.12. cikk szerinti céltartalékok (LIS 67. és 74.3.
+                cikk)
+            '46':
+              help: Az adócsoport részletfizetési elszámolásának 46. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A tőkésítési tartalék elégtelen alap miatt fel
+                nem használt maradványa
+            '47':
+              help: Az adócsoport részletfizetési elszámolásának 47. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Kiegyenlítési tartalék (LIS 105. cikk), csak
+                a kisvállalkozói kedvezményekre jogosult és a különös kulcsot alkalmazó
+                csoportoknak (LIS 101. cikk)
+            '48':
+              help: Az adócsoport részletfizetési elszámolásának 48. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Kiegyenlítési tartalék (LIS 105. cikk), csak
+                a kisvállalkozói kedvezményekre jogosult és a különös kulcsot alkalmazó
+                csoportoknak (LIS 101. cikk) - Csökkentések
+            '49':
+              help: Az adócsoport részletfizetési elszámolásának 49. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - A csoport LIS 11.12. cikke
+                szerinti céltartalékai (LIS 4. záró rendelkezés)
+            '50':
+              help: Az adócsoport részletfizetési elszámolásának 50. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - A csoporthoz csatlakozás
+                előtt keletkezett LIS 11.12. cikk szerinti céltartalékok (LIS 4. záró
+                rendelkezés)
+            '51':
+              help: Az adócsoport részletfizetési elszámolásának 51. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - A csoport korábbi időszaki
+                negatív adóösszegeinek beszámítása (csak szövetkezetek)
+            '52':
+              help: Az adócsoport részletfizetési elszámolásának 52. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - Kvótává alakított kiegyenlítési
+                tartalék (LIS 105. cikk), csak a kisvállalkozói feltételeknek megfelelő
+                csoportoknak - Növelések
+            '53':
+              help: Az adócsoport részletfizetési elszámolásának 53. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - Kvótává alakított kiegyenlítési
+                tartalék (LIS 105. cikk), csak a kisvállalkozói feltételeknek megfelelő
+                csoportoknak - Csökkentések
+            '54':
+              help: Az adócsoport részletfizetési elszámolásának 54. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A csoport LIS 11.12. cikke
+                szerinti céltartalékai (LIS 4. záró rendelkezés)
+            '55':
+              help: Az adócsoport részletfizetési elszámolásának 55. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) - Kiegyenlítési tartalék (LIS 105. cikk),
+                csak a kisvállalkozói kedvezményekre jogosult csoportoknak - Növelések
+            '56':
+              help: Az adócsoport részletfizetési elszámolásának 56. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) - Kiegyenlítési tartalék (LIS 105. cikk),
+                csak a kisvállalkozói kedvezményekre jogosult csoportoknak - Csökkentések
+            '57':
+              help: Az adócsoport részletfizetési elszámolásának 57. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - A csoporthoz csatlakozás
+                előtt keletkezett LIS 11.12. cikk szerinti céltartalékok (LIS 4. záró
+                rendelkezés)
+            '58':
+              help: Az adócsoport részletfizetési elszámolásának 58. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.1) Általános eset - A csoporthoz csatlakozás
+                előtti egyedi negatív adóösszegek beszámítása (csak szövetkezetek)
+            '59':
+              help: Az adócsoport részletfizetési elszámolásának 59. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoport adóalapjának megállapításához szükséges
+                kiigazítások (LIS 19. kiegészítő rendelkezés) - Növelések
+            '60':
+              help: Az adócsoport részletfizetési elszámolásának 60. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - A csoport adóalapjának megállapításához szükséges
+                kiigazítások (LIS 19. kiegészítő rendelkezés) - Csökkentések
+            '61':
+              help: Az adócsoport részletfizetési elszámolásának 61. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Alap 3. kulcshoz
+            '62':
+              help: Az adócsoport részletfizetési elszámolásának 62. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Százalék 3
+            '63':
+              help: Az adócsoport részletfizetési elszámolásának 63. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Részletfizetés összege
+                3
+            '64':
+              help: Az adócsoport részletfizetési elszámolásának 64. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Alap 4. kulcshoz
+            '65':
+              help: Az adócsoport részletfizetési elszámolásának 65. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Százalék 4
+            '66':
+              help: Az adócsoport részletfizetési elszámolásának 66. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - B.2) Különös esetek - Részletfizetés összege
+                4
+            '67':
+              help: Az adócsoport részletfizetési elszámolásának 67. rovata (Mod.
+                40.3 LIS).
+              label: Mod. 40.3 LIS - Kiegészítő adó (IC) korrekció - Növelések
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A részletfizetés vonatkozási éve
