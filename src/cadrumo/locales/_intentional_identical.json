@@ -68,6 +68,12 @@
     "modelo.schema.180.revision.2019-2022.casilla.x-e1in4opedpkmc.label": "Catalan renders this identically: 'NIF' is the Spanish tax-identifier acronym AEAT publishes untranslated, and 'del perceptor' is the same in Catalan.",
     "modelo.schema.180.revision.2023-y-siguientes.casilla.x-e1in4opedpkmc.label": "Catalan renders this identically: 'NIF' is the Spanish tax-identifier acronym AEAT publishes untranslated, and 'del perceptor' is the same in Catalan.",
     "modelo.schema.309.revision.2004-y-siguientes.casilla.x-chim6r1ed5h62rg.label": "IBAN is an international standard term (ISO 13616) and is spelled identically in Spanish and Catalan; the box marker (10) is AEAT's own numbering, so the whole label coincides. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto32bb4d5r6isr1.label": "'Divisa' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto32bbge9nn4sj1ehgg.label": "'Prorrata %' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4.label": "'Indicador de simplificada' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto34bb4d5r6isr1.label": "'Divisa' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto34bbge9nn4sj1ehgg.label": "'Prorrata %' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4.label": "'Indicador de simplificada' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
     "topic.sii.title": "official AEAT system acronym (Suministro Inmediato de Informacion), never Catalanised",
     "topic.verifactu.title": "official AEAT system brand name (VERI*FACTU), never Catalanised",
     "untranslated_pending": "The ca locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nCatalan translations and removes entries from this allowlist.\n",
@@ -76,7 +82,9 @@
     "wizard.choices.iva": "AEAT tax name (IVA), never Catalanised"
   },
   "en": {
-    "modelo.schema.151.revision.2025-y-siguientes.casilla.x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0.label": "'Modelo' is the AEAT form-type noun this project keeps in Spanish by naming rule rather than translating, so the label coincides with its source. Not an untranslated string."
+    "modelo.schema.151.revision.2025-y-siguientes.casilla.x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0.label": "'Modelo' is the AEAT form-type noun this project keeps in Spanish by naming rule rather than translating, so the label coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto32bbge9nn4sj1ehgg.label": "'Prorrata %' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string.",
+    "modelo.schema.360.revision.2010-y-siguientes.casilla.x-chim6r1edto34bbge9nn4sj1ehgg.label": "'Prorrata %' is spelled identically in this language and Spanish; the label is that term plus AEAT's own row ordinal, so it coincides with its source. Not an untranslated string."
   },
   "es": {
     "application.filing.review.stale_reasons.unknown": "pure %{reason} placeholder passthrough, no literal words to translate",

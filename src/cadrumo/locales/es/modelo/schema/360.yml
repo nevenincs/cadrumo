@@ -11,39 +11,487 @@ modelo:
       revision:
         2010-y-siguientes:
           casilla:
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc8:
+              label: 7. Anexos. 1. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qc9g:
+              label: 7. Anexos. 10. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qcg:
+              label: 7. Anexos. 2. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qco:
+              label: 7. Anexos.3. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd0:
+              label: 7. Anexos.4. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qd8:
+              label: 7. Anexos.5. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdg:
+              label: 7. Anexos.6. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qdo:
+              label: 7. Anexos.7. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe0:
+              label: 7. Anexos.8. Descripción
+            x-chim6r1ec5n6au3f5li6asr3e9kn0or9dtn2qe8:
+              label: 7. Anexos.9. Descripción
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd64:
+              label: 7. Anexos.1. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd64o0:
+              label: 7. Anexos. 10. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd68:
+              label: 7. Anexos. 2. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd6c:
+              label: 7. Anexos. 3. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd6g:
+              label: 7. Anexos. 4. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd6k:
+              label: 7. Anexos. 5. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd6o:
+              label: 7. Anexos. 6. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd6s:
+              label: 7. Anexos. 7. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd70:
+              label: 7. Anexos. 8. Nº de registro
+            x-chim6r1ec5n6au3f5lp6apr9edq74rpd74:
+              label: 7. Anexos. 9. Nº de registro
+            x-chim6r1ec9gmsor1e9kmubb2d5hg:
+              label: 6. Datos bancarios. Titular de la cuenta. Banco-BIC
+            x-chim6r1ec9gmsor1e9kmubb3c5m6ip31cg:
+              label: 6. Datos bancarios. Titular de la cuenta. En calidad de (Solicitante
+                / representante) Solicitante
+            x-chim6r1ec9gmsor1e9kmubb4d5r6isr1:
+              label: 6. Datos bancarios. Titular de la cuenta. Divisa
+            x-chim6r1ec9gmsor1e9kmubb9c9gms:
+              label: 6. Datos bancarios. Titular de la cuenta. IBAN
+            x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
+              label: 6. Datos bancarios. Titular de la cuenta. Nombre
+            x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
+              label: Nivel de calidad de datos
+            x-chim6r1ecdgnasr15lo74pbjcln78ob3d5nms:
+              label: 1. Causa de presentación. Solicitud de devolución o modificación
+                de una solicitud de devolución
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
               help: null
               label: Estado miembro de devolución donde se soportaron las cuotas
+            x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
+              label: 1. En caso de modificación. Número de registro de la declaración
+                anterior
+            x-chim6r1edto32bb2c5pma:
+              label: 1. Base imponible
+            x-chim6r1edto32bb3dti6iprf5kog:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5koj0:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5kp0:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5kpg:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5kq0:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5kqg:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5kr0:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5krg:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3dti6iprf5ks0:
+              label: 6. Datos bancarios. Titular de la cuenta. Nombre
+            x-chim6r1edto32bb3dti6iprf5ksg:
+              label: '1. Bienes y servicios adquiridos: código'
+            x-chim6r1edto32bb3elnn8o8:
+              label: 1. Cuota IVA
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kog:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5koj0:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kp0:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kpg:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kq0:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kqg:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5kr0:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5krg:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5ks0:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4clpm6sj9e1hmirre5ksg:
+              label: '1. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto32bb4d5r6isr1:
+              label: 1. Divisa
+            x-chim6r1edto32bb6c5hn8tbic4:
+              label: 1. Número factura o doc. Importación
+            x-chim6r1edto32bb6clhmgo8:
+              label: 1. Fecha de emisión factura o doc. Importación
+            x-chim6r1edto32bb9chkmurb15kog:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15koj0:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15kp0:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15kpg:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15kq0:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15kqg:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15kr0:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15krg:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15ks0:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9chkmurb15ksg:
+              label: '1. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto32bb9dlo6usjkck:
+              label: 1. Importe solicitado a devolver
+            x-chim6r1edto32bbeelmmasjf:
+              label: Versión del diseño de registro 000100
+            x-chim6r1edto32bbge9nn4sj1ehgg:
+              label: 1. Prorrata %
+            x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. Apellidos
+                y nombre o denominación social
+            x-chim6r1edto32bbge9nncpb5chnn4bbeepgn8:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. NVAT
+            x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. País
+            x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. País
+                emisor de la Referencia Fiscal
+            x-chim6r1edto32bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. Referencia
+                Fiscal (si carece de NVAT)
+            x-chim6r1edto32bbge9nncpb5chnn4bbkclm6apjfdpng:
+              label: 1. Datos del proveeedor de bienes/prestador de servicios. Teléfono
+            x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
+              label: 1. Indicador de simplificada
+            x-chim6r1edto32bbkd5o6u:
+              label: Presentación en pruebas
+            x-chim6r1edto34bb2c5pma:
+              label: 2. Base imponible
+            x-chim6r1edto34bb3dti6iprf5kog:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5koj0:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5kp0:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5kpg:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5kq0:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5kqg:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5kr0:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5krg:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5ks0:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3dti6iprf5ksg:
+              label: '2. Bienes y servicios adquiridos: código'
+            x-chim6r1edto34bb3elnn8o8:
+              label: 2. Cuota IVA
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kog:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5koj0:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kp0:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kpg:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kq0:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kqg:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5kr0:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5krg:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5ks0:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4clpm6sj9e1hmirre5ksg:
+              label: '2. Bienes y servicios adquiridos: descripción'
+            x-chim6r1edto34bb4d5r6isr1:
+              label: 2. Divisa
+            x-chim6r1edto34bb6c5hn8tbic4:
+              label: 2. Número factura o doc. Importación
+            x-chim6r1edto34bb6clhmgo8:
+              label: 2. Fecha de emisión factura o doc. Importación
+            x-chim6r1edto34bb9chkmurb15kog:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15koj0:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15kp0:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15kpg:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15kq0:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15kqg:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15kr0:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15krg:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15ks0:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9chkmurb15ksg:
+              label: '2. Bienes y servicios adquiridos: idioma de la descripción'
+            x-chim6r1edto34bb9dlo6usjkck:
+              label: 2. Importe solicitado a devolver
+            x-chim6r1edto34bbeelmmasjf:
+              label: 2. Número de operación
+            x-chim6r1edto34bbge9nn4sj1ehgg:
+              label: 2. Prorrata %
+            x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. Dirección
+            x-chim6r1edto34bbge9nncpb5chnn4bbedtmm4sj5:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. Apellidos
+                y nombre o denominación social
+            x-chim6r1edto34bbge9nncpb5chnn4bbeepgn8:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. NVAT
+            x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. País
+            x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. País
+                emisor del NVAT
+            x-chim6r1edto34bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. País
+                emisor de la Referencia Fiscal
+            x-chim6r1edto34bbge9nncpb5chnn4bbiclj6asj5dphmio9dcpkn6or1dg:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. Referencia
+                Fiscal (si carece de NVAT)
+            x-chim6r1edto34bbge9nncpb5chnn4bbkclm6apjfdpng:
+              label: 2. Datos del proveeedor de bienes/prestador de servicios. Teléfono
+            x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
+              label: 2. Indicador de simplificada
+            x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
+              label: Presentación en pruebas
+            x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
+              label: 1. Comunicación de la prorrata definitiva de un ejercicio anterior
+            x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
+              label: 3. Representante. Email
+            x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              label: 3. Representante. NIF
+            x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              label: 3. Representante. Apellidos y nombre o denominación social
+            x-chim6r1ee9in0sj5edimst31dpq6abbkclm6apjfdpng:
+              label: 3. Representante. Teléfono
+            x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisorfchkmerpde1nn6t31dg:
+              label: 3. Representante. Apartado de Correos en España. Código Postal
+            x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisr3fcdgmoqb4c5i0:
+              label: 3. Representante. Apartado de Correos en España. Localidad /
+                Población (si es distinta de municipio)
+            x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrbldpkm6qbgd5ng:
+              label: 3. Representante. Apartado de Correos en España. Nombre del municipio
+            x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chnisrjldlin4ro:
+              label: 3. Representante. Apartado de Correos en España. Número
+            x-chim6r1ee9in0sj5edimst31dpq6abj1e1gn4t31chniss3idtr6irj3d5gg:
+              label: 3. Representante. Apartado de Correos en España. Provincia
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
+              label: 3. Representante. Dirección en España. Bloque
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: 3. Representante. Dirección en España. Calificador del número
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
+              label: 3. Representante. Dirección en España. C. Postal
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dtmn0r35dlimst3f:
+              label: 3. Representante. Dirección en España. Complemento domicilio
+                (ej. Urbanización, Pol. Ind, C.C...)
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
+              label: 3. Representante. Dirección en España. Escalera
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
+              label: 3. Representante. Dirección en España. Localidad / Población
+                (si es distinta de municipio)
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjdeln6ior9e1kmu:
+              label: 3. Representante. Dirección en España. Nombre del municipio
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjedtmm4sj55lr6io8:
+              label: 3. Representante. Dirección en España. Nombre de la vía pública
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjeelmmasjf5lhm2sr1:
+              label: 3. Representante. Dirección en España. Número de casa / KM
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdhgmst31:
+              label: 3. Representante. Dirección en España. Planta
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
+              label: 3. Representante. Dirección en España. Portal
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
+              label: 3. Representante. Dirección en España. Provincia
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgelin4t31:
+              label: 3. Representante. Dirección en España. Puerta
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbeelmmasjf:
+              label: 3. Representante. Dirección en España. Tipo Número
+            x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjkd5o6ubbmd5gg:
+              label: 3. Representante. Dirección en España. Tipo de vía
+            x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpecdnm8qb7dsmn0rrjehgmo:
+              label: 3. Representante. Dirección en el extranjero. C. Postal (ZIP)
+            x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpechnmqqb3d5m6iro:
+              label: 3. Representante. Dirección en el extranjero. Domicilio
+            x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
+              label: 3. Representante. Dirección en el extranjero. Pais
+            x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
+              label: 3. Representante. Dirección en el extranjero. Localidad / Población
+                (si es distinta de municipio)
+            x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee9imeqbfdo:
+              label: 3. Representante. Dirección en el extranjero. Provincia/ Región/
+                Estado
+            x-chim6r1eednmoqb3d5q62rjkckmm8pbccljm2or9dtn0:
+              label: 2. Solicitante. Delegación de solicitantes establecidos en Canarias,
+                Ceuta o Melilla
+            x-chim6r1eednmoqb3d5q62rjkckmmarb1d5m0:
+              label: 2. Solicitante. Email
+            x-chim6r1eednmoqb3d5q62rjkckmmasrkc5h6opb3d5i6u:
+              label: 2. Solicitante. Establecido en el territorio de aplicación del
+                IVA
+            x-chim6r1eednmoqb3d5q62rjkckmmgob3d5imsp315lj6usj1dg:
+              label: 2. Solicitante. Hacienda Foral de establecimiento
+            x-chim6r1eednmoqb3d5q62rjkckmn8pbcclj6urjf:
+              label: 2. Solicitante. Teléfono
+            x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5phmup39ctniqs3fedq62r0:
+              label: 2. Solicitante. Apartado de correos en España. Código Postal
+            x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pm6uor1dhkm8ob4:
+              label: 2. Solicitante. Apartado de correos en España. Localidad / Población
+                (si es distinta de municipio)
+            x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pmnarj9cdkn0qbf:
+              label: 2. Solicitante. Apartado de correos en España. Nombre del Municipio
+            x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5pn7arb5e9ng:
+              label: 2. Solicitante. Apartado de correos en España. Número del apartado
+                de correos
+            x-chim6r1eednmoqb3d5q62rjkckn62s31e9q62p3f5po74rrmd5n66qb1:
+              label: 2. Solicitante. Apartado de correos en España. Provincia
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
+              label: 2. Solicitante. Dirección en España. Bloque
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
+              label: 2. Solicitante. Dirección en España. Calificador del número
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
+              label: 2. Solicitante. Dirección en España. C. Postal
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rrde1m6arb5dpq6u:
+              label: 2. Solicitante. Dirección en España. Complemento domicilio (ej.
+                Urbanización, Pol. Ind, C.C...)
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
+              label: 2. Solicitante. Dirección en España. Escalera
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
+              label: 2. Solicitante. Dirección en España. Localidad / Población (si
+                es distinta de municipio)
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6qtbed5hmis39ds:
+              label: 2. Solicitante. Dirección en España. Nombre del municipio
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6srrdc9p6abbmd5gg:
+              label: 2. Solicitante. Dirección en España. Nombre de la vía pública
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6stbdclp6ubb3c5pm2:
+              label: 2. Solicitante. Dirección en España. Número de casa / KM
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70r31dpq62:
+              label: 2. Solicitante. Dirección en España. Planta
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
+              label: 2. Solicitante. Dirección en España. Portal
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
+              label: 2. Solicitante. Dirección en España. Provincia
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70tb5e9q62:
+              label: 2. Solicitante. Dirección en España. Puerta
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmmstbdclp6u:
+              label: 2. Solicitante. Dirección en España.Tipo Número
+            x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon78qbgdsmncqb1:
+              label: 2. Solicitante. Dirección en España. Tipo de vía
+            x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisorfchkmerpde1nn6t31dg:
+              label: 2. Solicitante. Dirección en el extranjero. C. Postal (ZIP)
+            x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nisp3fdlkm6qbcd5ng:
+              label: 2. Solicitante. Dirección en el extranjero. Domicilio
+            x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
+              label: 2. Solicitante. Dirección en el extranjero. Pais
+            x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
+              label: 2. Solicitante. Dirección en el extranjero. Población / Ciudad
+            x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9nissj5ctkmurg:
+              label: 2. Solicitante. Dirección en el extranjero. Provincia/ Región/
+                Estado
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2:
+              label: 2. Solicitante. Actividades. 1. Clasificación de actividades
+                económicas (NACE revisión 2) a 4 dígitos. Reglamento (EC) 1174/2009
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj2c0:
+              label: 2. Solicitante. Actividades. 10. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj4:
+              label: 2. Solicitante. Actividades. 2. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj6:
+              label: 2. Solicitante. Actividades. 3. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmj8:
+              label: 2. Solicitante. Actividades. 4. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmja:
+              label: 2. Solicitante. Actividades. 5. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjc:
+              label: 2. Solicitante. Actividades. 6. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmje:
+              label: 2. Solicitante. Actividades. 7. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmjg:
+              label: 2. Solicitante. Actividades. 8. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmji:
+              label: 2. Solicitante. Actividades. 9. Código NACE
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h:
+              label: 2. Solicitante. Actividades. 1. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9h60:
+              label: 2. Solicitante. Actividades. 10. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9i:
+              label: 2. Solicitante. Actividades. 2. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9j:
+              label: 2. Solicitante. Actividades. 3. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9k:
+              label: 2. Solicitante. Actividades. 4. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9l:
+              label: 2. Solicitante. Actividades. 5. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9m:
+              label: 2. Solicitante. Actividades. 6. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9n:
+              label: 2. Solicitante. Actividades. 7. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9o:
+              label: 2. Solicitante. Actividades. 8. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmm8pbjcdp6is33d5nmsb9p:
+              label: 2. Solicitante. Actividades. 9. Código NACE. Descripción
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h:
+              label: 2. Solicitante. Actividades. 1. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9h60:
+              label: 2. Solicitante. Actividades. 10. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9i:
+              label: 2. Solicitante. Actividades. 2. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9j:
+              label: 2. Solicitante. Actividades. 3. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9k:
+              label: 2. Solicitante. Actividades. 4. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9l:
+              label: 2. Solicitante. Actividades. 5. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9m:
+              label: 2. Solicitante. Actividades. 6. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9n:
+              label: 2. Solicitante. Actividades. 7. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9o:
+              label: 2. Solicitante. Actividades. 8. Código NACE. Descripción. Idioma
+            x-chim6r1eednmoqb3d5q62rjkckn6sob3ckmmip39dtmm2b9p:
+              label: 2. Solicitante. Actividades. 9. Código NACE. Descripción. Idioma
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Declaración de no haber entregado bienes
+                ni servicios
             x-chincrrcelhmirre5pi6itj9edgg:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Divisa
             x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Importe solicitado
             x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Número de documentos de importación
             x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Número de facturas
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Período. Fecha fin del período
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
               help: null
-              label: null
+              label: 4. Devolución solicitada. Período. Fecha inicio del período
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
               help: null
-              label: null
+              label: 5. Modificación Prorrata año anterior. Prorrata definitiva
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               help: null
-              label: null
+              label: 5. Modificación Prorrata año anterior. Ejercicio
           construct:
             modelo-360-iva-devolucion-ue:
               field:
