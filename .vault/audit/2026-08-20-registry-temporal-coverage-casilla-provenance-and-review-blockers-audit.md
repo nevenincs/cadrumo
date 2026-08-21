@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e78179322153ba2698668394416393a888d4881df21c2eaaf5378cda3564abc'
+body_hash: 'sha256:1e9af6079e42700f213807498c627f5d77c195d166a83c48f19811a1795a2c09'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1028,6 +1028,66 @@ entirely, so its 31-January nominal is currently ungrounded rather than mis-grou
 an article genuinely stating its January close, verified verbatim before the change). The
 remaining three are now known to need acquisition first, which is a better answer than
 the count suggested.
+
+
+### CORRECTION-the-m190-m193-plazo-is-not-superseded-it-is-mis-cited | high | supersedes the previous finding; the defect is narrower and different in kind
+
+**The previous finding on this page is wrong and this supersedes it.** It reported that
+m190 and m193 cite a *superseded* twenty-day plazo. They do not. The twenty-day rule and
+the thirty-one-day rule are **both in the same article of the same orden**, and the
+earlier regex stopped at the first sentence.
+
+``orden-eha-3127-2009`` **artículo 5** reads in full in the bundled consolidated text:
+
+> *"la presentación del resumen anual de retenciones e ingresos a cuenta, modelo 190, se
+> realizará en los primeros veinte días naturales del mes de enero de cada año ...
+> **No obstante, el plazo de presentación será el comprendido entre el 1 de enero y el 31
+> de enero** del año siguiente ... cuando la declaración se presente de alguna de las
+> siguientes formas: a) En impreso generado mediante ... el módulo de impresión
+> desarrollado por la Agencia Estatal de Administración Tributaria ... b) En soporte
+> directamente legible por ordenador. c) Por [vía telemática] ..."*
+
+``orden-eha-3377-2011`` artículo 5 carries the same construction for m193: *"cuando la
+presentación se realice por vía telemática ... la presentación se realizará entre el 1 de
+enero y el 31 de enero del año siguiente"*.
+
+The twenty-day rule is the base case; the thirty-one-day rule is the exception, and its
+conditions cover **every modern filing form**. So the 31-January nominal these windows
+imply is correct and IS established by the cited orden. AEAT's bundled calendar agrees,
+listing both modelos under "hasta el 2 de febrero" for 2026.
+
+**The real defect is narrower and of a different kind: the wrong article is cited.**
+
+| revision | cites | plazo actually in |
+|---|---|---|
+| m190 2025-y-siguientes | ``orden-eha-3127-2009:art-1`` | **artículo 5** |
+| m193 2025-y-siguientes | ``orden-eha-3377-2011:art-1`` | **artículo 5** |
+
+In both cases artículo 1 is the approving clause and states no timing -- the identical
+shape already found and fixed on m185/2003-2025, where the windows cited the approving
+apartado rather than the one establishing the plazo. Neither ``art-5`` is enrolled in the
+legal catalogue.
+
+So these windows carry **two** defects after all, but not the two previously reported:
+the stored date is pre-shifted (2026-02-02 for a 31 January nominal), and the article
+cited as grounding it does not contain the plazo. Both are fixable without acquisition,
+since the text is already bundled -- unlike the acquisition case the superseded reading
+implied.
+
+**m180 is unaffected by this correction.** ``orden-hfp-1284-2023`` contains no
+"1 de enero y el 31 de enero" clause at all, so its 31-January nominal remains
+ungrounded rather than mis-cited, and needs its own reading.
+
+**Nothing was changed this iteration.** The remediation is now fully specified: carve
+artículo 5 excerpts for both ordenes following the ``orden-hac-96-2003-tercero.html``
+precedent, generate their sidecars through ``dev.docs.preprocess.write_sidecar``, enrol
+``orden-eha-3127-2009:art-5`` and ``orden-eha-3377-2011:art-5``, repoint the windows, and
+de-shift both dates to 2026-01-31.
+
+This is the sixth time in this campaign that re-checking overturned a plausible earlier
+conclusion, and the second time the overturned conclusion was one already written into
+this document.
+
 
 ## Recommendations
 
