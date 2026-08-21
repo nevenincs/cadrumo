@@ -206,10 +206,29 @@ def _revision_divergences(
             )
         )
         if uncovered:
+            # Report BOTH bounds and the presentation years actually compared. The
+            # message previously printed only `apply only from {min(starts)}`, which
+            # omitted `applies_to` -- the half that does the work -- and printed the
+            # EJERCICIO years while comparing the PRESENTATION years the arrears
+            # correction above derives. Four of this check's entries then read as
+            # self-contradictory (a claimed year at or after the design's start), and
+            # a reader triaging the list judges them spurious and discounts the rest.
+            spans = ", ".join(
+                f"{ref} ({windows[ref][0]}-{windows[ref][1] if windows[ref][1] is not None else 'open'})"
+                for ref in declared
+            )
+            presented = sorted(
+                {
+                    presentation_year
+                    for year in uncovered
+                    for presentation_year in _presentation_calendar_years(year, windows_by_filing_year)
+                }
+            )
             divergences.append(
-                f"modelo {modelo_id} revision {revision_id!r} claims filing year(s) "
-                f"{uncovered[0]}-{uncovered[-1]} ({len(uncovered)} year(s)) but its declared "
-                f"layout design(s) {declared} apply only from {min(starts)}"
+                f"modelo {modelo_id} revision {revision_id!r} claims ejercicio(s) "
+                f"{uncovered[0]}-{uncovered[-1]} ({len(uncovered)} year(s)), presented in "
+                f"calendar year(s) {presented[0]}-{presented[-1]}, which fall outside its "
+                f"declared layout design(s) {spans}"
             )
     return compared, divergences
 
