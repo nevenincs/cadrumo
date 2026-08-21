@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:681f09e947ccb20e3c51a21e0c605c01803a921d165302b0909f13ea1c7665b2'
+body_hash: 'sha256:52195ae183c140a46e103cfcdae8a40f6d201dfe68f7ce976cdb691db1093b8e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3661,3 +3661,48 @@ Remaining on this axis, unactioned: `custody/_filesystem.py` (90 uncovered refus
 `_acceleration_receipt.py` (40) and `_capsule.py` (30). The same caveat applies — the raw
 count is a lead, not a verdict, and the existing tests must be read before concluding the
 refusals are unreached.
+
+### The swept-probe hazard is now structural rather than a resolution to be careful
+
+The previous entry recorded, as prose, two rules for surviving a sweep that lands
+mid-probe. Prose is what the campaign already had; the incident happened anyway. This
+entry replaces the second half of it with a gate.
+
+**Measured first, and the measurement decided the design.** Ruff accepts both
+`if False:` and `if True:` under this project's own configuration — verified by running
+it against a file carrying them, not by reading rules. The weakened module also imports,
+type-checks, and passes every test that does not specifically exercise the disabled
+branch. That is precisely what makes the shape dangerous: a swept SYNTAX error is loud
+and fixed in minutes, while a swept constant condition is valid Python that reds nothing.
+
+An AST scan of the whole package found **zero** `if <constant>:` — production and test
+alike — and 34 `while True:` loops, which are the idiomatic infinite loops throughout the
+substrate's retry and poll paths. So the gate is hard-cut with **no allowlist**: there is
+nothing to exempt, the worklist is recomputed on every run, and `while True:` is
+deliberately excluded while a FALSY `while` is refused alongside the `if`.
+
+**The anti-tautology proof needed no edit window, which is the point.** This gate exists
+because proving a gate bites can require weakening a tracked file; proving THIS one that
+way would have re-opened the exact hazard. Instead the detector is driven over sample
+sources carrying the shape, so its emptiness is shown to be the tree's property rather
+than the scanner's.
+
+A synthetic probe alone was not accepted as sufficient — a detector can be correct on a
+hand-written sample and never meet the shape in the wild. Two further proofs were taken:
+
+- The detector was run over the **actual content of the commit that shipped the disabled
+  guard**, recovered from git rather than by re-editing anything, and reported the
+  neutered condition at its real line; the restored content reports clean, and the
+  incident file is confirmed inside the scanned set. This proof is deliberately NOT
+  committed as a test: a commit SHA in source is process history, which the source-hygiene
+  rule forbids.
+- The committed gate instead asserts that the scan meets real `while True:` loops in this
+  package and excludes them, so the green result means the detector looked and decided,
+  not that it never encountered the shape.
+
+**Scope, stated honestly.** This catches one shape: a branch a literal already decided. It
+does not catch a guard weakened by deleting a clause, inverting a comparison, or returning
+early — those are undecidable in general. It is worth having anyway because it is the
+shape a probe actually takes, it costs one AST walk, and it converts the recurring
+worktree hazard from a discipline every agent must remember into a failure the suite
+reports.
