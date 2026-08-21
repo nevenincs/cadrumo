@@ -193,9 +193,16 @@ def _hold_transaction_lock_in_sibling(
     release_event: Any,
     result_queue: Any,
 ) -> None:
-    """Take the actual root-before-profile lock in a separate process."""
+    """Take the actual root-before-profile lock in a separate process.
+
+    ``ready`` is published once the interpreter is up and the lock call is the
+    only thing left to do. Without it a caller timing "did the sibling acquire?"
+    is timing a Windows spawn plus a cadrumo import -- seconds of startup that
+    swallow any window short enough to be a useful contention probe.
+    """
     from .._custody_repository import profile_custody_transaction_lock
 
+    result_queue.put("ready")
     with profile_custody_transaction_lock(Path(root_text), UUID(profile_id_text)):
         result_queue.put("locked")
         release_event.wait(30)
@@ -852,10 +859,18 @@ def test_transaction_lock_serializes_siblings_and_releases_after_process_death(t
     )
     first.start()
     try:
+        assert result_queue.get(timeout=20) == "ready"
         assert result_queue.get(timeout=20) == "locked"
+
+        # The exclusion window opens only after the sibling reports itself
+        # ready, so it measures the LOCK rather than the seconds a spawned
+        # interpreter spends importing before it can even attempt one. Timed
+        # from `second.start()` this assertion was satisfied by startup latency
+        # and passed with the root lock removed entirely.
         second.start()
+        assert result_queue.get(timeout=20) == "ready"
         with pytest.raises(Empty):
-            result_queue.get(timeout=0.25)
+            result_queue.get(timeout=2.0)
 
         first.terminate()
         first.join(10)
