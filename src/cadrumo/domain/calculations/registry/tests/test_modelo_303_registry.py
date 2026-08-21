@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -177,25 +177,52 @@ def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None
     assert rev_old.period_selector.year_to == 2022
     assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
 
+    # The span is carried per revision rather than assumed to run January to
+    # December. The 2024 pair is a MID-YEAR split -- AEAT re-laid the form from
+    # period 09 / 3T -- so its two revisions meet at 31 August / 1 September, and
+    # that boundary is the whole content of the split. Asserting a uniform
+    # 1 January - 31 December span erased it and reddened on the revision the
+    # split created.
     expected_selectors = {
         "2023": (
+            date(2023, 1, 1),
+            date(2023, 12, 31),
             2023,
             ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
         ),
-        "2024-hasta-08-y-2t": (2024, ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08")),
-        "2024-desde-09-y-3t": (2024, ("3T", "4T", "09", "10", "11", "12")),
+        "2024-hasta-08-y-2t": (
+            date(2024, 1, 1),
+            date(2024, 8, 31),
+            2024,
+            ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08"),
+        ),
+        "2024-desde-09-y-3t": (
+            date(2024, 9, 1),
+            date(2024, 12, 31),
+            2024,
+            ("3T", "4T", "09", "10", "11", "12"),
+        ),
         "2025": (
+            date(2025, 1, 1),
+            date(2025, 12, 31),
             2025,
             ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
         ),
     }
-    for revision_id, (year, periods) in expected_selectors.items():
+    for revision_id, (valid_from, valid_to, year, periods) in expected_selectors.items():
         revision = modelo.revisions[revision_id]
-        assert revision.valid_from == date(year, 1, 1)
-        assert revision.valid_to == date(year, 12, 31)
+        assert revision.valid_from == valid_from
+        assert revision.valid_to == valid_to
         assert revision.period_selector.year_from == year
         assert revision.period_selector.year_to == year
         assert revision.period_selector.periods == periods
+
+    # The two 2024 revisions must MEET, with no gap and no overlap: the day one
+    # ends is the day before the other begins.
+    early = modelo.revisions["2024-hasta-08-y-2t"]
+    late = modelo.revisions["2024-desde-09-y-3t"]
+    assert early.valid_to is not None
+    assert late.valid_from - early.valid_to == timedelta(days=1)
 
     rev_current = modelo.revisions["2026-y-siguientes"]
     assert rev_current.valid_from == date(2026, 1, 1)

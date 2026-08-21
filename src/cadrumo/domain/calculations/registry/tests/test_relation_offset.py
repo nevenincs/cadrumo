@@ -87,7 +87,24 @@ def test_zero_offset_rejected() -> None:
         _relation(source_period_offset_from_target=0)
 
 
-def test_unknown_period_format_rejected_at_resolution() -> None:
-    relation = _relation(target_periods=("ANUAL",), source_period_offset_from_target=-1)
+def test_unknown_period_format_rejected_at_construction_and_at_resolution() -> None:
+    """An uninterpretable period is refused when DECLARED, and the backstop still holds.
+
+    This drove ``derive_offset_source_period`` with ``"ANUAL"`` and expected the
+    resolution-time refusal. ``RelationDefinition.target_periods`` now validates
+    the period grammar, so the relation cannot be built at all -- the invariant
+    moved to build time, which is the direction the registry's binding rules ask
+    for and a strictly earlier catch.
+
+    The resolve-time check remains as a backstop, and a backstop nothing can
+    reach through the type is exactly the kind that rots unnoticed, so it is
+    still exercised -- on a model built through ``model_construct``, which skips
+    validation and is the only way an uninterpretable period reaches it now.
+    """
+    with pytest.raises(ValidationError, match="invalid period code 'ANUAL'"):
+        _relation(target_periods=("ANUAL",), source_period_offset_from_target=-1)
+
+    valid = _relation(target_periods=("0A",), source_period_offset_from_target=-1)
+    unvalidated = valid.model_construct(**{**valid.__dict__, "target_periods": ("ANUAL",)})
     with pytest.raises(RegistryValidationError, match="cannot interpret target period"):
-        derive_offset_source_period(relation, target_period="ANUAL")
+        derive_offset_source_period(unvalidated, target_period="ANUAL")

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import get_args
-
 from datetime import date
 from decimal import Decimal
+from typing import get_args
 
 import pytest
 
