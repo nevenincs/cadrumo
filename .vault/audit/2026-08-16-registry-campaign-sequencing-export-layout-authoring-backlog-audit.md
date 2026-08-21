@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f63b3183f72be41a40d93c221962669ca8a90d1dcfbbae64c228f0531d77718'
+body_hash: 'sha256:a8b7ef711ce99ffcdd5220d2d9dd66f7ef1a95115794be956bc6ee6e283db28c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10102,79 +10102,123 @@ assertion could be satisfied by the false-provenance value. Flipping its
 constant would have been the easy fix and would have re-encoded the defect the
 peer had just removed.
 
-## Modelo 182: the second layout off the worklist
+## Modelo 182: authored, then reverted, and what that exposed about the worklist
 
-Worklist **13 -> 12**; enrolled generated-tree gate **32 -> 34**. The six
-sequencing items re-measured clean once more before starting.
+I authored modelo 182's full export layout this tick -- 18 casillas, 24 numeric
+rules, 43 map entries, labels and help in four locales -- took it off the
+worklist, and then **reverted all of it**. The layout was wrong to build, and
+the way it was wrong matters more than the work.
 
-### Two designs, one revision, and why that is not a re-layout
+### The evidence I read too late
 
-Modelo 182's single `2007-y-siguientes` revision cites BOTH `aeat-dr-182-2024`
-and `aeat-dr-182-2025`, which has the shape of the span defect this campaign
-keeps finding. Measured field by field, it is not one: the two designs carry the
-same 17 + 26 fields at the same offsets and widths, both exactly 250 bytes, and
-the ONLY difference in the whole pair is the wording of `RECURRENCIA DONATIVOS`
-at declarado position 132 -- 2024's "en favor de dicha entidad por importe igual
-o superior" against 2025's "en favor de una misma entidad, por un importe en
-este ejercicio y el del periodo impositivo anterior ... al del ejercicio
-inmediato anterior". A clarification of the recurrencia test, not a relayout.
-`test_revision_span_matches_published_designs` agrees: it reports 184, 200, 322
-and 347, and does not report 182.
+Modelo 182's `revision.toml` opens with the reason for its grade:
 
-So one map serves both, and the enrollment row names `aeat-dr-182-2025` -- the
-current design, matching the revision's open end.
+> Applicability grade: the donativos declaration is filed by the entity
+> RECEIVING the donation, not by the donor claiming the deduction, so this
+> application's taxpayer is the subject of the declaration rather than its filer.
 
-### The design's own text decided three things I would otherwise have guessed
+and its review, stamped the same morning, states plainly: *"NOT CLAIMED -- no
+export layout is declared and the tipo-2 per-donor detail rows are not
+modelled."* The missing layout is a grounded product decision, not an authoring
+gap. Building it gave the application the ability to emit a return it should
+never file.
 
-The IR exposes the ENTERO/DECIMAL leaves of a split amount with NO parent text,
-so positions 79-83 and 100-104 arrive as bare "Parte entera:" / "Parte decimal:"
-with nothing naming the field. The design's extracted text carries the
-position-keyed headings that name them:
+The tree said so loudly and I did not hear it until the suite went 19 -> 27.
+Eight gates broke, and their shape is the tell: modelo 182 is not merely
+un-authored, it is the **worked example** of grade-scoping.
+`test_modelo_182_is_applicability_grade_and_is_not_asked_for_a_layout` asserts
+`not revision.export_layouts` on the real tree, and three
+`test_legal_review_authority_scope` cases use m182 as their canonical revision
+that declares no layout. When a modelo is load-bearing as an EXAMPLE OF ABSENCE,
+filling the absence breaks the thing it was demonstrating.
+
+A middle path -- keep the 18 casillas, drop only the layout -- was considered and
+rejected. The peer's same-day review enumerates *"VERIFIED: 7 casillas"*; a
+revision carrying 25 would make that stamp silently false. Full revert was the
+only option that leaves the tree matching its own review.
+
+### Six of the thirteen worklist entries deliberately never emit
+
+The lesson generalises, and screening every remaining worklist revision's own
+prose took one command. Six carry the same class of decision:
+
+| modelo | the revision's own words |
+|---|---|
+| 182 | filed by the entity RECEIVING the donation, not the donor |
+| 194 | filed by the financial institution |
+| 188 | declared by the insurer, never by the beneficiary |
+| 187 | filed by the managing company or depositary, never by the participant |
+| 840 | administered municipally, not a return this application emits |
+| 036 | read through censo synchronisation rather than produced |
+
+Five more are acquisition-blocked with no bundled design at all (038, 136, 721,
+763, and modelo 185's `2003-2025` predecessor). That leaves **two** revisions on
+the worklist that are genuinely un-authored: modelo 222 and modelo 220.
+
+Last tick's table called ten of these "authorable now", ordered by field count.
+That ordering measured the DESIGN and never asked whether the application is the
+filer, so it counted six never-emit revisions as work. The corrected reading is
+2 authorable, 6 by-design, 5 blocked -- and the cheap check that produces it is
+reading the revision's own comment BEFORE reading the design.
+
+### The worklist gate and the grade scoping disagree, and neither is wrong
+
+`test_filing_capability_worklist` is sanctioned to fail permanently and forbids
+excusing any modelo; `test_export_exemption_declared` holds that modelo 182 is
+correctly excused from being asked for a layout because of its grade. Both are
+right about their own question -- one counts what the application cannot emit,
+the other governs what the build may demand -- but the worklist's message reads
+as a to-do list, and six of its thirteen lines are not to-dos. That is what sent
+me down this path, and it will send the next agent down it too.
+
+Resolving it is not a change I can make: the worklist gate explicitly forbids
+narrowing, allowlisting, or excusing, and a "deliberately never emits" axis is
+exactly the excuse it refuses. It needs an operator ruling on whether the
+capability worklist should distinguish *cannot yet* from *shall not*. Recorded
+here rather than acted on, per the standing rule on decisions that are not mine.
+
+**Nothing of modelo 182 survives in the tree.** Export tree, casilla fragment,
+mappings, render profile, enrollment row, export application link, the seven
+`export_refs` and all 36 locale keys were removed; authority is CLEAN, locale
+parity is back to 872 with zero modelo 182 keys, and the 42 tests across the four
+affected modules pass. The worklist is back to 13.
+
+### A flag on modelo 185
+
+Modelo 185, authored last tick, is *cotizaciones de afiliados y mutualistas* --
+filed by the mutualidad about its afiliados. That has the same shape as the six
+above, and if the application's taxpayer is an afiliado rather than a mutualidad,
+185's layout is the same mistake. Two things make it a flag rather than a second
+revert: 185's revision states NO not-our-filer position (its stated reason for
+declaring no layout was that no diseño was bundled, which was false and is what I
+corrected), and the modelo is filed by an entity this application may plausibly
+represent. It needs the same operator ruling as the worklist question, and it
+should not be quietly assumed correct because it is green.
+
+### The nominal-close sweep claims a second test: modelo 190
+
+Same shape as modelo 345 last tick, and it will keep happening while the sweep
+runs. A peer landed `registry(m190): ground the deadline in the article that
+establishes it, and de-shift it`, and `test_modelo_190_registry` still asserted
+the pre-shifted 2 February.
+
+Two changes ride in that commit, and a test that only chased the date would have
+missed the second: the 2026 window's close moved to the nominal 31 January AND
+its grounding moved from `orden-eha-3127-2009:art-1`, which approves the modelo,
+to `art-5`, which establishes the plazo. The two windows now carry DIFFERENT
+legal refs, so the pinned single tuple could not survive either.
+
+The test now parametrises both the refs and the shift outcome per window, and
+asserts the derived operational date beside the stored one:
 
 ```
-79-83   Numérico  % DE DEDUCCIÓN          (79-81 ENTERO, 82-83 DECIMAL)
-84-96   Numérico  IMPORTE O VALORACIÓN DEL DONATIVO
-100-104 Numérico  % DE DEDUCCIÓN COM. AUTÓNOMA
+2024 window  closes 2025-01-31  ->  2025-01-31  shifted=False  business_day
+2025 window  closes 2026-01-31  ->  2026-02-02  shifted=True   sabado
 ```
 
-Each split pair binds ONE casilla across two export fields -- the shape modelo
-347 already uses for `contraparte.importe-metalico` -- numbered over the whole
-official span rather than over one half. The same text supplied both
-enumerations verbatim: recurrencia is exactly "1"/"2", and naturaleza del
-declarante is 1-4.
-
-**A guess that the tree caught.** The first draft of the authoring table carried
-`ley-49-2002:art-24` and `rd-1270-2003:art-6` as legal_refs. Those are plausible
-for donativos -- Ley 49/2002 is the mecenazgo regime the design itself cites in
-its clave text -- and they are NOT what this revision cites, which is
-`orden-eha-3021-2007:art-1` and `ley-35-2006:art-68.3`. Reading the refs off the
-revision's own casillas rather than reasoning about which law "should" apply is
-the only safe move here, and plausibility is exactly what makes the wrong answer
-dangerous.
-
-### SELLO ELECTRONICO is filler, on precedent and on the standing rule
-
-Modelo 182 declares an Alfanumérico `SELLO ELECTRONICO` at 238-250. Two
-precedents exist: modelo 296 maps its seal through a `header` producer key, and
-modelo 347 -- the same Tipo 1 / Tipo 2 informativa shape, with the identical
-Alfanumérico `SELLO ELECTRONICO` field at its own 488-500 -- maps it `filler`.
-Filler is right here. `producer_key` is validated against the `FilingProducerKey`
-enum, so the header route means adding a core member AND either a producer or an
-entry in the modelo's unsupported-producer inventory; and the seal is applied by
-AEAT's presentation channel, which this application never reaches, so there is no
-value to produce. Inventing a producer key for a value that cannot exist would be
-the shim, not the fix.
-
-### What the profile validator refused
-
-As with 185, the refusals were taken as answers. `amount_fractional_digits`
-requires zero integer digits and POSITIVE decimal digits, so a fractional half
-carries its width in `decimal_digits` -- the first draft put every width in
-`integer_digits` and was refused on three rules at once. The two untyped
-(`No consta`) declarante slots resolve from their own labels exactly as 185's
-did: "TELEFONO : Campo numerico de 9 posiciones" is a nine-digit string, and the
-40-position contact name is text.
-
-18 casillas, 24 numeric rules, 43 map entries, and 18 labels plus 18 help strings
-in four locales. Locale parity is unchanged at **872** -- the second modelo in a
-row to land net-neutral on the backlog.
+Its existing calendar-citation invariant needed no edit and is worth noting as a
+piece of design that survived the policy change: it requires a window whose close
+is NOT a statutory month-end to cite the AEAT calendar it was moved by. Under
+nominal storage every close IS a month-end, so the rule holds vacuously on both
+windows rather than contradicting them -- an invariant written as a biconditional
+on the data, not as a pinned date.
