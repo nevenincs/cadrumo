@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:89038d52ede4c13b41d517a2d87ecd92e171c49c46fc6e80ac85eded4e54ed9c'
+body_hash: 'sha256:d23560e71defe8b5fa1344523ce78b94acef86d163df80be87c706e381dc700b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10448,3 +10448,12 @@ is byte-identical to modelo 202's -- same 15 rows, same widths, same
 descriptions, differing only in the closing tag `</T2220...>` against
 `</T2020...>` -- so its records fragment can be copied from 202's with the sheet
 and rows substituted.
+
+### One casing rule, caught by its own gate
+
+The eleven new casillas first declared `section = ["informacion-adicional"]`.
+`test_schema_hygiene::test_section_parts_are_snake_case` reds on kebab-case, so
+the section is `informacion_adicional`. Worth noting only because the localization
+key is derived from the casilla ID and not from the section: the 88 label and
+help strings survived the correction untouched, and backlog and parity stayed at
+378 and 872 across it.
