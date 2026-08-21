@@ -137,8 +137,9 @@ profile-fact resolver.
   re-encrypts, then separately rewrites the manifest label — re-implementing the
   cross-store atomicity the repository holds.
 
-Enforced by `dev/import_hygiene_scan.py` and
-`src/cadrumo/tests/test_import_hygiene_gate.py`. Source: ADRs
+Enforced by `dev/quality/import_hygiene_scan.py` and
+`dev/tests/test_import_hygiene_gate.py` -- both outside the `src/` test lanes, so
+run them explicitly. Source: ADRs
 `2026-07-01-import-centralization-adr`, `2026-06-05-test-topology-refactor-adr`,
 `2026-06-03-cli-workflow-redesign-adr`,
 `2026-06-14-bindings-interface-hardening-adr` (decisions E, F).
