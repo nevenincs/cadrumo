@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dc02d89c63a16f52d17c84bcbdf5bf695b4a0d4f8e71d65a7ef3cf46936e9627'
+body_hash: 'sha256:900421090b06869f63f831df12a74a16f7677135f9e1fdb82bf68ffa1fc87c4b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3309,3 +3309,43 @@ behavioural, and it produces false positives for exactly the same reason. Covera
 selects by EXECUTION, which is the one signal none of the name-based instruments can
 fake, and it found both a dead file and an unexecuted safety property that eight passes
 of name-based sweeping had walked past.
+
+### The strongest guard in the domain had never judged anything
+
+Following coverage as the selector into `_master_key`, at 62% with the tax-id extraction
+and refusal lines among the gaps.
+
+The canary has five existing branch tests, and **every one of them ends earlier in the
+function** than the decision: no database, no rows, an unreadable file, an undecryptable
+payload, the `unsecured` label bucket. Each is a legitimate early exit, and together they
+looked like coverage of the guard. What they never reach is the path where a stored
+profile is decrypted and its tax id judged — which is the only path that decides whether
+a real taxpayer's records may be opened under a published deterministic key.
+
+So what actually stood behind that guard was a structural gate asserting the CALL exists
+(added earlier in this campaign) and unit tests of the predicate in isolation. Both are
+useful and neither executes the integration. **A set of branch tests can cover a function
+thoroughly while never once reaching its verdict.**
+
+Now driven end to end: the envelope is encrypted through the same `EncryptedBytes` column
+the repository binds with — so the bytes on disk are produced the way production produces
+them, not by a fixture's own idea of the format — stored as a real row, and read back
+under an active unsecured session. The two cases differ in exactly one value. A real NIF
+refuses; a synthetic one is admitted, which is not decoration: without it, a canary that
+raised on ANY decryptable row would satisfy the refusal while making the unsecured
+backend unusable for the throwaway data it exists to serve. Proven by neutering the
+recogniser — the real case reds, the synthetic one still passes. 62% → 67%.
+
+`_provider_enter` remains the uncovered region and is recorded as the next candidate on
+this axis.
+
+**Generalisable:** when a function is guarded by several tests that all exercise its
+EARLY EXITS, the guard is untested. Early exits are easy to construct and the decision is
+not, so a test suite drifts toward them naturally — and the resulting coverage reads as
+thorough precisely because there are so many cases.
+
+A note on this pass's method: five unit failures appeared after the change and were NOT
+attributed until re-running twice, both fully green (1521). The worktree's known
+concurrent-I/O flakiness explains them, and the new test writes a real SQLite database,
+which is exactly the shape that would deserve suspicion — so it was confirmed rather than
+assumed away.
