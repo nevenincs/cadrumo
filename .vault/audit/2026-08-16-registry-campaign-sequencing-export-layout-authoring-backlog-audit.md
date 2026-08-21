@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:558cb80de7a5e72624967ae7cfb9fdfa11857480f19d2abea26a06504193bc5d'
+body_hash: 'sha256:0e831a88c77446a94e237b575510e6b4f7c5f0d25201cca22c79f03ea0f25965'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9058,3 +9058,60 @@ the test reds with `DID NOT RAISE`.
 
 Cluster: 8 failed → **39 passed**. Authority CLEAN, generated-tree gates 30
 passed, ruff clean.
+
+### The rest of the tree, and the measured state
+
+The seven `modelos/` notes were the gate's scope; the same measurement found 81
+more over-cap lines under `legal/` and `iva/`. They are all prose keys — `notes`
+(79) and `unresolved_reason` (2) — so no `required_text` legal excerpt, whose
+value is matched against corpus text, was touched. Wrapped through the identical
+verify-before-write procedure: 22 files, 81 lines.
+
+**Lines over 600 characters across the whole registry tree: 88 → 0.**
+
+Registry suite: **50 failed, 5,044 passed** (from 58 / 5,036). Eight fixed, none
+newly failing, on a real per-test diff — both logs pass the integrity check (58
+`FAILED` lines against 58, 50 against 50). Authority CLEAN.
+
+## Seven more: a tightened id type, and two grounding suites parametrized over a year the registry stopped covering
+
+### Readable fixture labels are not TransactionIds
+
+Three `test_ledger_renta_gastos_estimacion_directa_binding` failures passed
+labels like `"tx-ss"` where `TransactionId` is content-addressed — exactly 64 hex
+characters. The labels are for reading, not identity: no assertion in the module
+compares an id. The helper now derives the id from the label, so the call sites
+keep their names and get real ids, and the derivation is clock-free so a fixture
+is the same id on every run.
+
+### `[2020, 2024]` outlived the revision that made 2020 resolve
+
+Four grounding failures — casilla 43's bienes-de-inversión chapter and casilla
+44's prorrata chapter — raised `NoRevisionForPeriodError` rather than checking
+any grounding. The parametrization carried its own explanation:
+
+```
+# 2020 resolves to the 2022 revision; 2024 to its early-2024 revision.
+@pytest.mark.parametrize("year", [2020, 2024])
+```
+
+True before the span split gave the 2022 revision an exact-year selector, false
+after. The comment is the tell: a pinned scope that needs a sentence explaining
+which revision it lands on is one rename from landing somewhere else.
+
+All six committed M303 revisions declare both casillas, so the scopes are now
+DERIVED from the revisions themselves. Resolution stays law-determined —
+`(modelo, filing_year, period)` through `select_revision` — and the result is
+asserted to land on the revision the scope came from, so a selector change reds
+rather than silently re-targeting. The period is read per revision because
+`2024-desde-09-y-3t` does not carry 1T. Coverage went from 8 cases to **24**.
+
+**The control was wrong before the tests were.** Stripping arts. 105-110 from
+casillas 43 and 44 reddened only 18 of 24; six prorrata cases still passed. Not a
+weakness in them — the prorrata chapter is arts. **104 and 105**, and 104 was
+missing from the strip set, so the "does not stand on the generic framework
+alone" assertion legitimately still found its provision. With 104 added, all 24
+red.
+
+Cluster: 7 failed → **31 passed**. Authority CLEAN, generated-tree gates 30
+passed.
