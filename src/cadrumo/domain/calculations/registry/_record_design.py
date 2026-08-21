@@ -506,6 +506,41 @@ def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[st
     return per_line
 
 
+def _undouble_struck_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Repair a row whose glyphs the PDF text layer emitted twice.
+
+    Modelo 390's 2015 edition double-strikes some rows: ``4422 662255 1177 NN
+    55.. OOppeerraacciioonneess`` is ``42 625 17 N 5. Operaciones``, every
+    character duplicated while the separating spaces stay single. Eight rows
+    arrive that way and each one is a position the record otherwise reports as
+    dropped.
+
+    The repair is self-verifying, which is what keeps it from being a guess: a
+    line is rewritten ONLY when it does not parse as a row, every token it is
+    built from is an exact pairwise repetition, and the de-doubled result does
+    parse. A line failing any of the three is returned untouched. Nothing here
+    reasons about what the row ought to say -- the doubling either undoes
+    cleanly into a row or it does not.
+
+    Tokens that are not doubled are left alone rather than making the whole line
+    ineligible, because AEAT's own text mixes them: a description can carry a
+    single-struck fragment beside doubled ones.
+    """
+    repaired: list[str] = []
+    for number, line in enumerate(lines, start=1):
+        if _parse_pdf_row(line, number) is not None:
+            repaired.append(line)
+            continue
+        candidate = " ".join(
+            token[::2]
+            if len(token) >= 2 and len(token) % 2 == 0 and all(token[i] == token[i + 1] for i in range(0, len(token), 2))
+            else token
+            for token in line.split(" ")
+        )
+        repaired.append(candidate if candidate != line and _parse_pdf_row(candidate, number) is not None else line)
+    return tuple(repaired)
+
+
 def _rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Reassemble a row whose PDF columns were emitted in the wrong order.
 
@@ -801,7 +836,7 @@ def _read_with_reversed_column_repair(
     if not first.skipped:
         return first
     repaired_lines = _collapse_stuttered_row_prefix(
-        _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(lines)),
+        _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
     )
     try:
         repaired = _extract_pdf_lines(

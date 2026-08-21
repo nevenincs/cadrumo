@@ -77,13 +77,21 @@ def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
     assert catalogues.sources["aeat-dr-190-2025"].evidence_tier == "layout_authority"
     assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
     assert catalogues.sources["boe-modelo-190-2025-amendment"].evidence_tier == "layout_authority"
-    revision = modelo.revisions["2024-y-siguientes"]
-    for formula in revision.formulas:
-        for citation in formula.source_citations:
-            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
-    for binding in revision.bindings:
-        for citation in binding.source_citations:
-            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    # Every revision, rather than one named id. The id pinned here stopped
+    # existing when modelo 190's span was split into "2024" and
+    # "2025-y-siguientes", and the lookup raised before reaching any assertion --
+    # so the separation this test exists to prove went unchecked in BOTH.
+    checked = 0
+    for revision in modelo.revisions.values():
+        for formula in revision.formulas:
+            for citation in formula.source_citations:
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+                checked += 1
+        for binding in revision.bindings:
+            for citation in binding.source_citations:
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+                checked += 1
+    assert checked, "no formula or binding citation was checked, so this proves nothing"
 
 
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
@@ -120,7 +128,29 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     } <= linked_surfaces
 
 
-def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
+@pytest.mark.parametrize(
+    ("filing_year", "window_id", "expected"),
+    [
+        (2025, "modelo-190-2024-0a", (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31))),
+        (2026, "modelo-190-2025-0a", (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31))),
+    ],
+)
+def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
+    filing_year: int, window_id: str, expected: tuple[int, str, date, date]
+) -> None:
+    """Each filing year resolves the revision that declares ITS deadline window.
+
+    Written when modelo 190 held both windows in one revision, this asserted a
+    construct referencing both and a revision declaring both. The span was later
+    split into "2024" and "2025-y-siguientes", which moved each window into the
+    revision it governs -- the windows did not change, and neither did their
+    dates, but the single-revision expectation could no longer hold.
+
+    Parametrising over the two filing years keeps every window, date and
+    grounding reference asserted while letting the registry declare each where
+    it belongs. A future split moves a window between revisions without making
+    this test wrong.
+    """
     modelo, catalogues = _committed_modelo("190")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
@@ -128,7 +158,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year,
         period="0A",
     )
     revision = snapshot.revision
@@ -145,40 +175,42 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
     assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
 
-    assert construct.deadline_windows == ("modelo-190-2024-0a", "modelo-190-2025-0a")
+    assert construct.deadline_windows == (window_id,)
     assert construct.filing_schedules == ("modelo-190-anual",)
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
     assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
     assert schedule.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
 
-    expected_windows = {
-        "modelo-190-2024-0a": (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
-        "modelo-190-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
-    }
-    assert set(windows) == set(expected_windows)
-    for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
-        window = windows[window_id]
-        assert window.filing_year == filing_year
-        assert str(window.period) == period
-        assert window.period_kind == "annual"
-        assert window.opens_on == opens_on
-        assert window.closes_on == closes_on
-        assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
-        assert window.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+    assert set(windows) == {window_id}
+    window = windows[window_id]
+    expected_filing_year, expected_period, opens_on, closes_on = expected
+    assert window.filing_year == expected_filing_year
+    assert str(window.period) == expected_period
+    assert window.period_kind == "annual"
+    assert window.opens_on == opens_on
+    assert window.closes_on == closes_on
+    assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+    assert window.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
     modelo, _ = _committed_modelo("190")
-    revision = modelo.revisions["2024-y-siguientes"]
-    filed_read = next(ref for ref in revision.live_cross_references if ref.id == "modelo-190-filed-declarations-read")
+    declared = [
+        ref
+        for revision in modelo.revisions.values()
+        for ref in revision.live_cross_references
+        if ref.id == "modelo-190-filed-declarations-read"
+    ]
 
-    assert filed_read.surface == "authenticated_read_surface"
-    assert filed_read.requires_authentication is True
-    assert filed_read.requires_aeat_authorization is True
-    assert filed_read.synthetic_data_allowed is False
-    assert _WWW6_HOST in filed_read.allowed_hosts
-    assert set(filed_read.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}
+    assert declared, "no revision declares the filed-declarations read surface"
+    for filed_read in declared:
+        assert filed_read.surface == "authenticated_read_surface"
+        assert filed_read.requires_authentication is True
+        assert filed_read.requires_aeat_authorization is True
+        assert filed_read.synthetic_data_allowed is False
+        assert _WWW6_HOST in filed_read.allowed_hosts
+        assert set(filed_read.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
