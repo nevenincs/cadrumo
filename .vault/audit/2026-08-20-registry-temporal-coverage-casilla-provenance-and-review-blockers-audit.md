@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:67f497434fa5db0416dc313ff1189ba11c370a1d106d576d6ecf187fe0817caf'
+body_hash: 'sha256:ae0b600cf5a29e9c082bf5604a0349251cd7e49c798dc8c10848853b37c91ba2'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -439,6 +439,65 @@ control is what separates this from a test that merely detects a broken function
 campaign's work. Nothing was lost, because the entire scope statement lives INSIDE the
 ``reviewed_by`` string rather than in the commit message. That is the whole reason the
 standing instruction puts it there, and this is the clearest demonstration yet.
+
+
+### every-pending-revision-is-applicability-grade | high | most of the inventory measures them against a rung they do not claim, and m220 still fails on its own
+
+**Measured: all 14 remaining ``pending_review`` revisions declare
+``authority_grade = "applicability"``.** Not one claims calculation or filing.
+
+The owning authority (``core/_authority_grade.py``) defines that rung as *"The revision
+knows when the modelo is due and to whom it applies. Scheduling and deadline reach
+only."* Casilla coverage against a full diseño, export layouts and formulas belong to
+the rungs above. Registry build validation already accepts all 14 at their declared
+rung -- the tree loads clean with ``required_coverage_gap_rows 0``.
+
+So the standing inventory's largest group -- *"NEEDS CASILLA AUTHORING AT SCALE: 220
+(7682), 763 (143), 840 (108), 222 (63), 604 x2"* -- is measuring several of these
+against a bar they never asserted. m220's own prose says so plainly: *"a
+scheduling/applicability-grade revision carrying declaration-header casillas only; the
+money-closure casillas of the group declaration are deferred until an authoritative
+Modelo 220 diseño de registro is bundled, so no casilla number is fabricated."* That is
+a principled deferral with the anti-fabrication rationale recorded, not a gap.
+
+**The reframing does not clear the set, and m220 is the proof.** Two separate brakes:
+
+1. **Five of the 14 declare an export layout** (m165, m181, m270, m604 x2,
+   ``fixed_width_export=true``). Stamping those flips their derived scope to FILING, so
+   the applicability argument does not reach them at all.
+2. **m220 fails at the applicability rung itself.** Its ``orden_aplicabilidad`` cites
+   only ``orden-hac-657-2025:art-3``, which the legal catalogue records as the approving
+   order *"for the IS declaration models for períodos impositivos iniciados en 2024"*.
+   The revision is nevertheless ``2024-y-siguientes`` with ``year_from = 2024`` and no
+   ``year_to``, and it carries a live ``filing_year = 2025`` deadline window. It asserts
+   applicability for 2025 and beyond on the authority of an orden approving only 2024's
+   models. That is not a filing-rung concern -- "to whom it applies" is exactly what the
+   rung claims, so this blocks its own stamp.
+
+The span gate reaches the same conclusion independently and in stronger terms:
+*"modelo 220: NO LEGAL EVIDENCE OF REVISION RECORDED -- this modelo's entire revision
+history cites only the founding orden; no amending or superseding orden is recorded
+anywhere in the bundled legal catalogue"*, plus *"spans 1 corpus-evidenced re-layout,
+needs 2 revisions -- 2024/2025, 4524 of 7466 shared boxes moved"*.
+
+**And modelo 200 carries the identical shape while already stamped.**
+m200/2024-y-siguientes is ``agent_reviewed`` as of 2026-08-19 with the same open-ended
+``2024-y-siguientes`` id, the same ``year_from = 2024`` and no ``year_to``, the same live
+2025 window, the same lone ``orden-hac-657-2025`` citation, and the same
+"NO LEGAL EVIDENCE OF REVISION RECORDED" verdict from the gate. **Two revisions, one
+evidence state, opposite review statuses.**
+
+That is the third instance this campaign of the same governance pattern, and the
+clearest: the pending/reviewed boundary does not track evidence. It records which
+revisions someone has looked at. Driving the pending count down cannot fix that, because
+the count was never measuring it -- which is why "clear the set" keeps failing to
+converge on anything.
+
+**m220 was NOT stamped.** The honest next action for the IS pair is to bound both
+revisions at the year their cited orden actually approves, or cite the orden that
+approves the later models -- and to revisit m200's existing stamp, which asserts a
+review of an applicability claim that outruns its own evidence.
+
 
 ## Recommendations
 
