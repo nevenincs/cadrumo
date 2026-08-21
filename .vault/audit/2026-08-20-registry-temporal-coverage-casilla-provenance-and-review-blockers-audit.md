@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3636f524786743d85fe166f45df130f6079ffacddc8dc08f293414d8c7ffd58'
+body_hash: 'sha256:6900c1fc635d8dcad4d137efa1719b3e6f6dae4825ea830311d968aa19544f07'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -392,6 +392,55 @@ box-number regex against Modelo 200's five-digit boxes, which switched the box-o
 and box-set signals off while reporting nothing wrong. Its note is the general lesson:
 *"Agreement between two instruments sharing one blind spot is worth nothing, and unlike
 a wrong answer it offers nothing to notice."*
+
+
+### a-multiline-reviewer-note-made-a-revision-unstampable | medium | fixed; the writer's own docstring stated the assumption that made it wrong
+
+Acting on the previous finding meant amending four stamps this campaign wrote to name
+the span limit they omitted. Two took the amendment. Two refused, identically:
+
+```
+invalid TOML: expected an equals, found a colon at line 10 column 6
+```
+
+The refusal was deterministic and independent of the new text -- a four-word probe
+string reproduced it exactly. The manifest on disk parsed fine and the full registry
+loaded clean, so the message described the CANDIDATE the writer had just produced.
+
+``_apply_governance`` edits whole ``key = value`` lines so a hand-authored manifest
+stays reviewable, and ``_is_governance_line`` documented the assumption that broke it:
+*"the four keys are scalars, so their assignment is always a single whole line."* A
+scalar written as a TOML multi-line basic string still occupies several PHYSICAL lines.
+Dropping only the line carrying the key orphaned the prose and the closing delimiter,
+and a reviewer note conventionally opening ``agent: ...`` then parses as a key with a
+colon where an equals belongs -- column 6, every time.
+
+That is why two of four worked: m187 and m576 carried single-line ``"..."`` values,
+m188 and m194 carried triple-quoted ones. **m188 and m194 were permanently unstampable
+through the only sanctioned writer**, and nothing said so; the campaign had simply
+never tried to restamp a revision whose note was long enough to have been wrapped.
+
+The refusal was the GOOD outcome. The verb validates before writing and restores the
+previous bytes on failure, exactly as its docstring promises, so neither manifest was
+left broken. The defect was that the value became unreplaceable rather than merely
+awkward.
+
+Fixed in ``dev/registry/conformance/_stamp.py``: ``_without_governance_assignments``
+walks the table and skips each assignment's full span, and
+``_governance_assignment_length`` stops at the closing delimiter so an unterminated
+opener runs to the end of the table rather than consuming unrelated declarations.
+
+**Proven by neutralising it**, not by assertion: with the old one-line filter restored,
+the two multi-line tests fail with precisely the production error (``Expected '=' after
+a key ... at line 2, column 6``) while the single-line control keeps passing. The
+control is what separates this from a test that merely detects a broken function.
+
+**Capture note.** The four amended manifests were committed by a peer as
+`4a115aabe2` before this session could commit them -- the twelfth capture of this
+campaign's work. Nothing was lost, because the entire scope statement lives INSIDE the
+``reviewed_by`` string rather than in the commit message. That is the whole reason the
+standing instruction puts it there, and this is the clearest demonstration yet.
+
 
 ## Recommendations
 
