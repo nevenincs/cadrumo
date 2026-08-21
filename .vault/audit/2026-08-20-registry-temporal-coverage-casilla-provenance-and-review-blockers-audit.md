@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:87d4be240e19c36235d3cb24761b54bf5ff493cde23fc6e5888967355267f4c3'
+body_hash: 'sha256:33742c02681fb6e8ef1f60fbc2b1a55d9fa0afc7a60c8ef95df7b7ff1a31b636'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -735,6 +735,60 @@ the loader carries them and a future reader does not depend on a sentence.
 
 **Remaining: 6** -- m036, m122, m490 x3, m604/2021-2023. Three are stamped by another
 hand (m122, m490 x3) and two are pending (m036, m604). None were touched.
+
+
+### span-verdicts-split-into-absent-and-contrary-evidence | high | 69 are missing evidence; 6 are evidence AGAINST the revision, and 4 of those 6 are stamped
+
+Earlier iterations treated "span-flagged" as one population of 74 and concluded it
+cannot discriminate reviewed from pending. True, but too coarse. Parsing the 80 verdict
+lines the two span gates emit splits them into classes that mean opposite things:
+
+| class | count | what the gate found |
+|---|---|---|
+| **ABSENT** | 69 | no comparable bundled design falls inside the span, so NO comparison was possible |
+| **CONTRARY** | 6 | bundled designs **prove** a re-layout crosses the claimed span |
+| NO LEGAL EVIDENCE | 5 | the modelo's whole history cites only its founding orden |
+
+**That distinction decides reviewability at the applicability rung.** An ABSENT verdict
+is missing evidence: the revision may be right, nothing bundled can say. It is honestly
+handled as a stated limit, which is how m182, m721, m136, m840 and m036 were each
+stamped. A CONTRARY verdict is evidence AGAINST the revision's own structure -- the gate
+asserts "needs 2 revisions" and names the boundary year. Stamping that is reviewing a
+structure the corpus contradicts, not merely one it cannot confirm.
+
+**The six with contrary evidence:**
+
+| revision | boundary | review status |
+|---|---|---|
+| m184 2015-y-siguientes | 2023/2025 | agent_reviewed |
+| m200 2024-y-siguientes | 2024/2025 | agent_reviewed |
+| m220 2024-y-siguientes | 2024/2025 | pending |
+| m322 2008-2025 | -- | agent_reviewed |
+| m347 2008-y-siguientes | -- | agent_reviewed |
+| m763 2011-y-siguientes | 2012/2015 | pending |
+
+**Four of the six are already stamped.** m763's case is stark: 54 of 64 shared boxes
+moved between the 2012 and 2015 designs, 63 boxes were ADDED, and the record set itself
+changed -- while the revision claims 2011 onward on the single founding
+``orden-eha-1881-2011`` with no amending orden recorded anywhere in the catalogue.
+
+**m763 was NOT stamped, for consistency with the m220 refusal**, even though both its
+applicability-rung claims verify cleanly: art. 4 reads *"será trimestral y se efectuará
+durante el mes siguiente a la finalización de cada trimestre natural del año"* and all
+eight declared windows reproduce it exactly, with 4T rolling into January. Two of those
+closing dates -- 2026-01-31 and 2027-01-31 -- fall on a Saturday and a Sunday and are
+stored NOMINAL, which demonstrates the nominal-store convention is actively honoured
+here rather than accidentally satisfied.
+
+What blocks m763 is not its plazo or its approving clause but the contested span. The
+reviewable half being sound is exactly why the class distinction matters: without it,
+this revision looks stampable.
+
+**Consequence for the remaining pending set:** of the 10 still pending, the two carrying
+contrary evidence (m220, m763) are structurally contested and should be split or have
+their amending orden cited before review, not stamped with a limit. The rest are ABSENT
+cases where a stated limit is the honest treatment.
+
 
 ## Recommendations
 
