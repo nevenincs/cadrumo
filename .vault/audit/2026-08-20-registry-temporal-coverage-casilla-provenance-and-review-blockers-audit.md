@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e9af6079e42700f213807498c627f5d77c195d166a83c48f19811a1795a2c09'
+body_hash: 'sha256:bec82a99d01146982b292bdd03ce2bc040b5223f5b3b1767fbd5ac1859340426'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1029,7 +1029,6 @@ an article genuinely stating its January close, verified verbatim before the cha
 remaining three are now known to need acquisition first, which is a better answer than
 the count suggested.
 
-
 ### CORRECTION-the-m190-m193-plazo-is-not-superseded-it-is-mis-cited | high | supersedes the previous finding; the defect is narrower and different in kind
 
 **The previous finding on this page is wrong and this supersedes it.** It reported that
@@ -1087,7 +1086,6 @@ de-shift both dates to 2026-01-31.
 This is the sixth time in this campaign that re-checking overturned a plausible earlier
 conclusion, and the second time the overturned conclusion was one already written into
 this document.
-
 
 ## Recommendations
 
