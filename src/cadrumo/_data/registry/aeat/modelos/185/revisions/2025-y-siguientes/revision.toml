@@ -31,3 +31,31 @@ source_refs = [
     "enrolled-modelo-185-layout",
     "aeat-dr-185-2026",
 ]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review of the declaracion informativa mensual de cotizaciones \
+de afiliados y mutualistas. VERIFIED -- WHEN DUE: orden-hac-1197-2025 art. 4 reads \
+verbatim in the bundled corpus \"La presentacion del modelo 185 ... tendra caracter \
+mensual, y se realizara en el plazo de los diez dias naturales siguientes a la \
+finalizacion del mes al que se refiera la declaracion\", and the declared windows close on \
+the 10th of the month following each declared month, reproducing it exactly and stored \
+NOMINAL. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, \"Se aprueba el \
+modelo 185, «Declaracion informativa mensual de cotizaciones de afiliados y mutualistas», \
+cuyos disenos de registro figuran en el anexo\", carrying no year bound; the legal entry's \
+effective_from of 2026-01-01 matches this revision's valid_from exactly, and the sibling \
+revision 2003-2025 closes on 2025-12-31, so the pair is gap-free and overlap-free at the \
+boundary. NOTED, NOT FIXED -- the revision id reads 2025-y-siguientes while valid_from is \
+2026-01-01. The id names the ORDEN's year (HAC/1197/2025, de 21 de octubre) rather than \
+the coverage year. Revision resolution is law-determined from dates and never from the id \
+string, so this is a naming defect and not a resolution one, but it is misleading to a \
+reader and is NOT corrected by this review. NOT CLAIMED -- independent_check_coverage is \
+n/a: NO CLAIM, not zero. NOT CLAIMED -- SPAN: \
+test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design \
+year(s) inside this claimed span. That is an ABSENCE of comparable evidence rather than \
+evidence against the revision, unlike the contrary-evidence class the same gate reports \
+for m220 and m763; closing it needs AEAT acquisition and is not something this review \
+does. NOT CLAIMED -- this revision declares 2 casillas and the anexo's record detail is \
+not modelled; no export layout of either kind is declared. This review reaches scheduling \
+and applicability only, which is what the applicability rung asserts. NOT CLAIMED -- all 3 \
+locales are complete for the 2 labels, but the strings were not audited for accuracy."""
+reviewed_at = 2026-08-21
