@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:995fd35d3527b20c10a04f4a87ae57e8f741523a78c61be2e26f8fef60781ab0'
+body_hash: 'sha256:5edb8cf848678e6e882d9bb3066d3bfb673ff0e105bcc6c4d594d9d9c4e4d230'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3478,3 +3478,69 @@ not suppress it. That signature points at two distinct class objects of the same
 rather than a locking defect, which would make it a module-identity problem in the
 harness. Not yet confirmed; recorded with the evidence so the next reader starts from the
 measurement rather than the symptom.
+
+### The active-profile pointer read crashed a process starting mid-switch
+
+The previous entry left fixed-order lock failures open with a hypothesis about
+duplicate class objects. That hypothesis was WRONG, and reading the actual traceback
+rather than trusting it produced the real defect.
+
+`read_pointer` (`core/_bucket_pointer_io.py`) sits on the `Settings()` bootstrap path —
+every process resolves the active-profile pointer as it starts. A peer switching profile
+rewrites that file through write-then-rename and clears it through `unlink`. Two failures
+follow, both measured here rather than reasoned about:
+
+- **A TOCTOU on the absence guard.** The function checked `is_file()` and then opened the
+  path. When a concurrent clear lands between the two, it raised `FileNotFoundError` from
+  a function whose documented contract answers `None` for an absent pointer.
+- **A refused open under contention**, as `PermissionError`. This is the one that crashed
+  the test's child process during import.
+
+Measured against the real functions: over ~48,000 reads racing a real restore/clear
+cycle, 278 `PermissionError` and 1 `FileNotFoundError`. After the fix, zero.
+
+**The measurement overturned the obvious fix twice.** First, a race harness showed 72,727
+concurrent reads of an `os.replace`-d file with ZERO read failures — the reader is fine;
+it is the WRITER's replace that Windows refuses. So the read-side failure was not the
+replace window, and a fix aimed there would have addressed nothing. Second, the existing
+canonical helper for exactly these Windows codes (`core/_lockfile_unlink.py`) discriminates
+transient contention from a denying ACL by `winerror` in `{5, 32}` — but the read-side
+`PermissionError` arrives with **`winerror` unset**, so that discriminator does not apply
+here. Only a bounded wait separates the two cases on this path, which is the same
+reasoning that module already ratifies in prose: the retry budget is the discriminator,
+not the code.
+
+Two constraints shaped the fix. `_bucket_pointer_io` cannot import `core.logging` — the
+module's own comments document that doing so recreates the Settings bootstrap cycle — so
+the retry is stdlib-only and cannot reuse `unlink_lockfile`, which does import it. And the
+retry is Windows-gated: POSIX has no sharing-violation class, so an `EACCES` there is
+genuine and propagates on the first attempt.
+
+Gated by a REAL race against the real IO functions rather than an injected exception,
+because the failure is a property of the filesystem under contention and an injected
+error would only re-assert the handler. The race carries an anti-vacuity guard — it
+asserts the reader observed BOTH a written and a cleared pointer, so a run where the
+threads never overlapped fails instead of passing green. A third test pins that tolerating
+the race did not become tolerating everything: absence is still `None`, and a malformed
+pointer still raises.
+
+**Still open, and now known to be a different bug.** The writer half of the same window is
+unfixed: `restore_pointer` and `clear_pointer` lose to a reader's open handle with
+`winerror` 32 and 5 (426 and 115 occurrences in the same 8-second race). In production
+those run under the custody root lock, but a foreign reader — any process bootstrapping
+Settings — does not take that lock and can block them. `unlink_lockfile` already solves
+exactly this shape but cannot be imported here, which is the tension to resolve.
+
+**Also still open:** `test_substrate_smoke.py`'s two lock tests fail only under
+`-p no:randomly` combined with `--cov`, and are green in isolation, in both shipping
+lanes, and under fixed order without coverage. The signature is an expected
+`LockAcquisitionError` escaping a `pytest.raises` that names it, which would mean two
+distinct class objects of that name; the class has one canonical home behind a lazy
+re-export, so that is unexplained. Bisecting a cross-file interaction costs several full
+runs and it reproduces only in a diagnostic configuration, so it is recorded rather than
+chased. Both shipping lanes stay green.
+
+**Method note:** the pre-existing core failures were confirmed pre-existing by reverting
+this change and re-running the same seven gates, not by inspecting whether the offending
+lines looked related. They are all `datetime` clock-seam and registry-parity gates owned
+by other campaigns.
