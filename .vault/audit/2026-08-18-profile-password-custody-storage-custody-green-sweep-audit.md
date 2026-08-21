@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5bb3e9e10a81d03bc6d22494d4044fdc849d36f6dfaa17d8e5a6bbbba0a4167'
+body_hash: 'sha256:e0bc6aa9ec94e7c16889ce6ed96c089460cc6ba3144de753339653a3c495be49'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4862,3 +4862,36 @@ outlasts the scaffolding.
 `test_status_notices_wiring`. It passed in isolation and on an immediate re-run of the full
 lane, and the file's last commit is a peer's; recorded as transient rather than triaged as
 a regression, consistent with this worktree's known concurrent-I/O flakiness.
+
+### Custody transactions are globally serialised, and the per-profile lock is not what does it
+
+With the root lock now pinned by three tests, the obvious next question was whether its
+partner earns its place. `profile_custody_transaction_lock` takes the ROOT lock, then a
+lock named for the profile, and holds both for the span.
+
+**Measured by removing it:** dropping the per-profile acquisition while keeping the root
+lock fails exactly two tests -- both in `test_custody_lock_order`, which assert the pair's
+order and its naming -- while **321 others pass**. Nothing observes any exclusion it
+provides, because it is only ever acquired inside that one function with the root lock
+already held, so it can never contend.
+
+The architectural consequence is the part worth having, and it was not written down
+anywhere: **there is no per-profile concurrency in custody.** Two transactions for
+DIFFERENT profiles exclude each other exactly as two for the same profile do, and a long
+transaction on one profile blocks every other. Several concurrency tests in this domain
+read as though per-profile isolation were being exercised; what they actually exercise is
+a global serialisation point.
+
+Recorded at the site rather than only here, because a function that names a per-profile
+lock reads as a promise of per-profile concurrency that the root lock does not deliver, and
+the next reader meets the code before the audit.
+
+**Not removed.** The order is the deadlock-safety rule -- a future path taking both must
+take them this way round -- and the order gate is live, which the probe confirmed by being
+the only thing that failed. Redundant-for-exclusion is not the same as unnecessary, and
+deleting a lock to simplify a protocol whose whole purpose is ordering would trade a
+documented invariant for nothing.
+
+Also verified in passing: `profile_custody_local_lock` is the general file-lock PRIMITIVE,
+not "the per-profile lock" -- the root lock itself is built on it, as are the journal,
+receipt, evidence and session locks. Only one call site uses it for the per-profile path.
