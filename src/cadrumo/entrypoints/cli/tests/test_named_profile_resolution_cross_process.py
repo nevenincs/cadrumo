@@ -64,6 +64,7 @@ def _envelope_result(stdout: str) -> dict[str, object]:
     return result
 
 
+@pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
 def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: Path) -> None:
     """``config profile show NAME`` finds a record another process persisted.
 
@@ -104,6 +105,7 @@ def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: P
     assert result.get("display_name") == _LABEL
 
 
+@pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
 def test_the_named_and_active_paths_agree_about_the_same_record(tmp_path: Path) -> None:
     """The two resolution paths report the same record, not two answers.
 
