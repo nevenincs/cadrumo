@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:8fa83616d4b466c2369040c74ddc919e068bffd1d02df33630e38143f4076661'
+body_hash: 'sha256:380c56d867736ce4d973e38dd1e3af2e7af9a017dbf11936d6dca42af84430ef'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8524,3 +8524,71 @@ first: that filter drops **27 of 128 matrix entries across 9 revisions**, and 8
 of those 9 currently PASS. It would discard working coverage rather than false
 positives, and modelo 220's applicability revision is already carried
 deliberately in the publication-bound exception map. Rejected.
+
+## The whole queue re-verified by measurement, and the wrong-stage trap sprung a second time
+
+Items 1 to 6 were re-measured from the tree rather than read off this document.
+All six hold.
+
+- **1, modelo 184 casilla 77** — the empty-set arm is in the code as recorded
+  (`if diseno_pairs and segmento is not None and not matched`), so a design that
+  prints zero bracketed tags abstains instead of refusing.
+- **2, modelo 151** — the six anexo "transmisión de participaciones en IIC"
+  casillas now sit under `2025-y-siguientes`, whose design IS the 2023 edition.
+- **3 and 4, modelos 193 and 720** — records emit their design's declared total.
+- **5 and 6, modelos 369 and 390** — see below. They hold, but only against the
+  right measurement.
+
+### I reproduced the retracted 369/390 finding from scratch, and it is still wrong
+
+`tmp/registry-measure/gapsweep.py` reported **22 records swallowing DATA
+positions** across modelos 390, 369 and 131 — modelo 390's `page-05` at 1,326
+unwritten positions, modelo 369's `t36904` at 1,248. The design pairing was
+right (`t36904` ↔ sheet `T36904 Un`, declared total 1423 = max covered), the
+descriptions read as real data ("A - Nº unidades Módulo 1", "1. Declarante.
+País", "Importe pagado"), and a sibling-record control confirmed no other record
+covered those offsets.
+
+Every part of it was right except the stage, which made it the most credible
+wrong answer this campaign has produced — twice, because this is the same
+finding the correction earlier in this document already retracted.
+
+**A record carrying `binding_record` is authored THIN on purpose.** It declares
+its envelope constants and lets `derive_export_layouts_from_bindings`
+materialise the real fields at snapshot build — the stage the registry-build
+gate `validate_export_layout_record_coverage` actually measures:
+
+```
+                          authored        derived     design requires
+369 union t36904      9 fields/158 B   161/1406 B          161
+390/2024  page-05     6 fields/ 40 B   105/1369 B          106
+131/2024  dpa         6 fields/ 24 B    67/ 406 B            -
+```
+
+The registry-build gate returns **0 failures** for all three, and its per-sheet
+decisions are correct rather than accidentally quiet: `T36904 Un` belongs to the
+layout, requires 161 positions, and joins to `modelo-369-union-t36904` by
+declared constants. Nothing was being skipped.
+
+### The instrument was the defect, and it is fixed
+
+`gapsweep.py` read `rev.export_layouts` — the authored form — and reported every
+materialised field as an unwritten DATA position. It now reads
+`derive_export_layouts_from_bindings(rev)`, and its docstring carries the trap
+rather than leaving the next reader to find it:
+
+```
+records whose gaps swallow DATA positions: 22   (authored stage, both wrong runs)
+records whose gaps swallow DATA positions:  0   (derived stage)
+```
+
+Zero is the disproving control. All 22 were stage artifacts, and modelo 131 —
+which is not a queue item and would have been reported as a fresh discovery —
+was an artifact too.
+
+**What generalises.** A pairing that is right, arithmetic that is right and a
+design read that is right do not add up to a finding if the object measured is
+not the one that ships. The tell was available and ignored twice: the authored
+records were implausibly thin (6 fields for a 106-field sheet) in trees the
+campaign had already stamped and verified. Implausible thinness in verified
+territory should read as "wrong object" before it reads as "found a defect".

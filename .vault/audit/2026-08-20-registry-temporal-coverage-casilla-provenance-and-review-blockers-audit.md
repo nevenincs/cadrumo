@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6900c1fc635d8dcad4d137efa1719b3e6f6dae4825ea830311d968aa19544f07'
+body_hash: 'sha256:67f497434fa5db0416dc313ff1189ba11c370a1d106d576d6ecf187fe0817caf'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -393,7 +393,6 @@ and box-set signals off while reporting nothing wrong. Its note is the general l
 *"Agreement between two instruments sharing one blind spot is worth nothing, and unlike
 a wrong answer it offers nothing to notice."*
 
-
 ### a-multiline-reviewer-note-made-a-revision-unstampable | medium | fixed; the writer's own docstring stated the assumption that made it wrong
 
 Acting on the previous finding meant amending four stamps this campaign wrote to name
@@ -440,7 +439,6 @@ control is what separates this from a test that merely detects a broken function
 campaign's work. Nothing was lost, because the entire scope statement lives INSIDE the
 ``reviewed_by`` string rather than in the commit message. That is the whole reason the
 standing instruction puts it there, and this is the clearest demonstration yet.
-
 
 ## Recommendations
 
