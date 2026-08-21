@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:2404578a260a699dc195ed4ff5750937c9eddeb8a2c8e42f0438d9ee3c8ad5f4'
+body_hash: 'sha256:995fd35d3527b20c10a04f4a87ae57e8f741523a78c61be2e26f8fef60781ab0'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3417,3 +3417,64 @@ concurrent-I/O flakiness on its backing share explains it, and the isolation che
 run precisely because these new tests write real SQLite databases and that name would be
 the first thing to suspect. Recorded rather than dismissed: one occurrence is noise, two
 is a candidate, and the next reader should not have to re-derive that it was checked.
+
+### The redaction exemption list was defined by process-global state
+
+`core/logging.py:56` built the set naming which log-record fields the scrubber skips:
+
+    _STANDARD_LOG_RECORD_FIELDS = frozenset(logging.makeLogRecord({}).__dict__)
+
+`SecretScrubbingFilter` (`core/logging.py:397`) scrubs every field on a record EXCEPT
+those in that set, which makes it an exemption list rather than an inventory. And
+`logging.makeLogRecord` does not build a plain record — it dispatches through the
+**process-global** `_logRecordFactory`. Any field an installed factory adds therefore
+enrolled ITSELF as "standard" and was skipped by the scrubber. The exemption was widened
+by global state that anything in the process, including a third-party library, can set,
+and nothing in the redaction suite could see it: those tests all run in a process where
+the factory state happens to be benign.
+
+Fixed by constructing the record directly. With no factory installed the two expressions
+yield an identical key set, so the normal case is unchanged — measured, not assumed.
+
+**The same call was also an import cycle.** Line 56 runs at module scope, so it invoked
+the factory during the module's own initialisation. Cadrumo's factory reaches the
+observability layer, which imports straight back into the half-built module and fails on
+`attach_run_sink`. The deferred-import defence inside the factory (`core/logging.py:442`,
+with a comment naming this exact hazard) assumes the factory is only ever called AFTER
+initialisation — and line 56 was the one call that broke that assumption. A deferred
+import defends against a late caller; it cannot defend against its own module calling it
+early.
+
+The durable lesson: **a set named for a closed vocabulary, but built through an
+extensible hook, is not an inventory of that vocabulary — it is whatever the hook
+currently produces.** Where such a set governs what is EXEMPT from a safety pass, the
+hook becomes a way to opt out of that pass. Look for the pattern wherever "standard",
+"builtin" or "known" fields are derived at runtime rather than declared.
+
+Both halves are gated in `core/tests/test_redaction_exemption_set_is_stdlib_only.py`
+through a real subprocess import, because the condition is "a factory was installed
+BEFORE this module initialised" and that cannot be staged in a process where it is
+already imported. The first attempt at the cycle half was NOT discriminating — its probe
+factory added a field but imported nothing, so it passed against the defective code. Only
+cadrumo's real factory reaches observability, and the test now installs that one; both
+halves were then confirmed to fail against the old expression and pass against the new.
+
+**How it was found:** not by looking for it. A coverage run crashed, and the crash was
+investigated instead of worked around. The instrument failing was the finding.
+
+### Open: lock tests fail under fixed ordering, and it pre-dates this work
+
+Running the unit lane with `-p no:randomly` fails deterministically (reproduced twice)
+where the random-order lane is green. Without coverage,
+`test_custody_transactions.py::test_pointer_cas_and_active_pointer_writer_share_one_root_lock`
+fails; with coverage, two different lock tests in `test_substrate_smoke.py` fail instead.
+Every failure so far is a LOCK test.
+
+Verified pre-existing: the same failure reproduces with HEAD's `logging.py` restored in
+place, so it is not a consequence of the fix above. In `test_file_lock_serializes_writers`
+the captured log shows the production lock behaving exactly as designed — acquired, timed
+out, released — and the expected `LockAcquisitionError` raised, yet `pytest.raises` did
+not suppress it. That signature points at two distinct class objects of the same name
+rather than a locking defect, which would make it a module-identity problem in the
+harness. Not yet confirmed; recorded with the evidence so the next reader starts from the
+measurement rather than the symptom.
