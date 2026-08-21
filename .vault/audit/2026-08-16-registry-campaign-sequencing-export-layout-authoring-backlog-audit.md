@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c14e616489f60e7d3deaaca1b50d51054e3e8cfb937482e9cce143da4cfea0b'
+body_hash: 'sha256:1d0a0765437e342715cda9f96fa0fcd0bfbe75012b8f0281df84a742cf92dd1f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8908,3 +8908,85 @@ This is the second occurrence of the fault `aeat-local-execution` names, both in
 this campaign and both mine. The current log is a full capture: 64 `FAILED` lines
 against a 64-failure summary, which is the cheap check that the log is whole and
 is worth running before trusting any comparison built on one.
+
+## The export cluster: two mutations that had stopped biting, and two real slot conflicts
+
+Six failures across `test_export`, `test_export_exemption_declared` and
+`test_export_split_part_rendering`, three distinct causes.
+
+### The exemption mutations asserted a promise the gate never made
+
+Both anti-tautology proofs walked EVERY casilla carrying an
+`export_exemption_reason`, stripped or re-labelled it, and demanded the gate red.
+Nine of the sixty bundled reason-carrying casillas are outside the gate's
+population, so it stayed silent and the proofs failed:
+
+```
+184/2015-y-siguientes  decl.persona-relacion        manual, NOT in the completeness manifest
+353/2008-2025          eight bound iva.* casillas   in the manifest, neither required nor computed
+```
+
+The gate governs manifest entries that are unaddressed, not `internal_only`, and
+either formula-bearing or required. A casilla outside that carries a reason as
+DOCUMENTATION; stripping it should not red anything.
+
+Rather than re-deriving that predicate in the test, where it would drift from the
+gate, each such casilla now proves its own case: if stripping does not red, the
+gate must also be **silent about it unmutated**. A casilla the gate really
+governs cannot satisfy that, because the gate would name it either way. Proven by
+silencing `_gate` entirely: both mutations red on their `> 0` floors rather than
+escaping through the new branch.
+
+### Two guards released by this campaign's own work
+
+`test_binding_export_selector_rejects_layout_less_revision` and
+`test_the_modelo_200_envelope_discriminante_stays_an_unmodelled_literal` both
+rested on modelo 200 declaring no export layout. It declares one now.
+
+The first only needed a layout-less revision, and fourteen still exist, so the
+subject is FOUND rather than pinned.
+
+The second is the more interesting one. Its premise made "exactly one authority
+for the discriminante literal" true by there being none, and the campaign
+authoring the envelope is precisely the event it was watching for. With the
+envelope present the real question is live, and the answer is structural:
+`FilingEnvelopePrefixFieldDeclaration` carries `role` and `length` and nothing
+else, so a declaration reserves the byte and can never fill it —
+`_ENVELOPE_GRAMMAR_LITERALS` stays the single authority by construction. Fourteen
+bundled envelopes declare the slot, all of width 1. Proven by adding a
+value-bearing field to that model: the guard reds naming it.
+
+### Modelo 200 writes one casilla into slots that hold different figures
+
+Two genuine registry defects, and the design settles what to do about them:
+
+```
+DP200045  @880  Perdidas fiscales a compensar [00199] Aplicable a IIC financieras
+          @897  Perdidas fiscales a compensar [00199] Aplicable a IIC inmobiliarias
+DP200015B @585  Deducciones doble imposicion interna - Tipo de gravamen 2025 [00103]
+          @1452 ... (DT 23.1 LIS) - Tipo de gravamen 2025 [00103]
+          @2349 Deducciones doble imposicion internacional RDLeg. 4/2004 - ... [00103]
+```
+
+AEAT prints ONE casilla number against slots carrying SEPARATE figures. The
+gate offers "author the part policies" as the fix, and here that would be
+actively wrong: a part policy asserts a slot carries one PART of a single value,
+so applying it would file the financieras figure into the inmobiliarias slot.
+
+**Reason for recording rather than fixing:** the correct shape is a casilla per
+institution type and per deduction block, which lives in the generator's semantic
+map for a generator-owned tree, and whether one entity can carry three different
+tipos de gravamen across those blocks is a tax review. Both entries are in the
+reason-bearing register, which `test_no_unadjudicated_entry_is_stale` removes the
+moment the split lands. The module's own note says deciding these "needs the page
+design read, which is a separate job" — that read is done and is recorded above.
+
+Cluster: 6 failed → **146 passed**. Authority CLEAN, generated-tree gates 30
+passed.
+
+### Measured state, on two logs that are both whole
+
+Registry suite: **58 failed, 5,036 passed** (from 64 / 5,030). Six fixed, **none
+newly failing** — and this time that is a real per-test diff rather than the
+summary arithmetic, because both logs pass the integrity check the previous entry
+introduced: 64 `FAILED` lines against a 64-failure summary, 58 against 58.

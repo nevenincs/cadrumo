@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:d405411674da000e2aeb61d610a544ef4f4d106267dfc9beab8166bf4f0b3ba4'
+body_hash: 'sha256:aad7fa4163e094a3c09d321bb20ca14c2ab93278567dc80ee17d13f1c2a9bc79'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -593,7 +593,6 @@ No revision was stamped or altered on this sweep. What it establishes is narrow 
 honest: the IS pair is the only confirmable instance, and the remaining 38 need a
 per-family reading of how each orden states its temporal scope, not another regex.
 
-
 ### no-diseno-published-at-all-is-not-what-it-says | medium | three instances now; the modelo is reproduced in the orden's own anexo
 
 The standing inventory groups m136 and m721 under *"NEEDS AEAT ACQUISITION -- no diseño
@@ -631,7 +630,6 @@ Worth noting for m136 specifically: ``orden-hap-70-2013`` art. 7 states the plaz
 then continues into the vencimiento-coincidence clause. That is the orden itself
 requiring the nominal-store / shift-at-read split the campaign settled on earlier -- the
 convention is not merely a repo choice, it is what the source wording demands.
-
 
 ## Recommendations
 
