@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:bec82a99d01146982b292bdd03ce2bc040b5223f5b3b1767fbd5ac1859340426'
+body_hash: 'sha256:b0c0b9196380395b758b31f71b6e3ebefc316972df40080ddb1fce74229a9851'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1086,6 +1086,58 @@ de-shift both dates to 2026-01-31.
 This is the sixth time in this campaign that re-checking overturned a plausible earlier
 conclusion, and the second time the overturned conclusion was one already written into
 this document.
+
+
+### the-approving-clause-habit-eight-of-ten-windows-corrected | high | four windows cited the approving article; the establishing text was bundled every time
+
+The ten windows storing ``closes_on = 2026-02-02`` are now resolved to eight corrections
+and two open cases, and the corrections fall into two distinct kinds.
+
+**Kind one -- date only.** m165, m181, m270, m345 and m490 each already cited an article
+that genuinely states its plazo; only the stored date was pre-shifted. m490 is the
+clearest: ``orden-hac-590-2021`` art. 3 says *"durante el mes siguiente al
+correspondiente periodo trimestral natural"*, and seven of its eight windows close on
+the following month-end -- including 4T 2026 at **2027-01-31, a Sunday, stored
+unshifted**. Only 4T 2025 deviated.
+
+**Kind two -- the approving-clause habit.** Four windows cited the article that APPROVES
+the modelo instead of the one that establishes its plazo, and in every case the correct
+text was **already bundled and merely uncited**:
+
+| revision | cited (approval) | plazo actually in |
+|---|---|---|
+| m185 2003-2025 | apartado Primero | apartado **Tercero** |
+| m190 2025-y-siguientes | artículo 1 | artículo **5** |
+| m193 2025-y-siguientes | artículo 1 | artículo **5** |
+| m296 2024-y-siguientes | artículo 6 | artículo **11** |
+
+Four instances of one shape is a systematic authoring habit, not coincidence. Each was
+repaired the same way: carve a single-provision excerpt following the
+``orden-hac-96-2003-primero.html`` convention, generate the sidecar pair through
+``dev.docs.preprocess.write_sidecar`` (the registry refuses a legal reference whose
+sidecar is missing), enrol the article with a ``required_text`` drawn from the source,
+repoint the window, de-shift the date. ``verify_legal_reference`` passes on all four.
+
+m190 and m193 additionally tripped the construct-covers-window containment rule; m296
+did not. Worth knowing that the rule fires per-revision rather than universally.
+
+**Two remain open, and they are genuinely different from the eight.**
+
+**m180** is the only one whose plazo text is NOT bundled anywhere. Its window cites
+``orden-hfp-1284-2023:art-7`` (entry-into-force text about a February autoliquidación),
+``orden-hap-1732-2014:art-2`` (a general enabling clause) and ``rd-439-2007:art-100`` --
+none states a plazo. The base instrument is the **Orden de 20 de noviembre de 2000**
+(BOE-A-2000-21430), whose anexo VI carries m180's diseños; only a modelo-115 excerpt of
+that orden is bundled. It has since been amended by **Orden HFP/1351/2021**
+(BOE-A-2021-20004). The date was NOT changed: a search summary reports the original 2000
+text as 1 January to 20 February for telematic filing, but that predates the amendments,
+and setting a filing deadline from a search summary is exactly the fabrication this
+campaign refuses. What is removed is the research -- the acquisition target is now named.
+
+**m194** stores 2026-02-02 while its orden states *1-20 enero* (papel) and *1 enero-20
+febrero* (soporte). The stored date matches **neither**, so this is not a pre-shift of
+either nominal and needs its own ruling rather than a mechanical correction.
+
 
 ## Recommendations
 
