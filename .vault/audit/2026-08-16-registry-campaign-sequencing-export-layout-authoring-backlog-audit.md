@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1b0c037badddbd5f184b2d448b77d0e1f5faebc68db396697090e73802966068'
+body_hash: 'sha256:976c74a52212ec38a83dd3be22c07f1c210423136d22ef0773ba38808114d269'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8055,3 +8055,153 @@ outside the repo.
 
 Design corpus unchanged this tick at 26 skipped records, 200 complete, 0 errors.
 Generated-tree gates 30 passed at tick start. Authority CLEAN.
+
+## Tick: the revision-id vocabulary, and a spanning detector that cannot see a same-year split
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed.
+Registry domain suite re-measured at **102 failed / 4988 passed**, from 109/4901.
+
+### The vocabulary gate, answered rather than silenced
+
+`test_revision_id_window_agreement` reported five revision ids carrying a tail
+its marker had never been checked against -- `185:2003-2025`, `322:2008-2025`,
+`353:2008-2025`, `490:2022-1t`, `490:2022-2t-4t`, all coined by this campaign's
+own span splits. The gate's instruction is to classify each rather than leave it
+unmatched, because "an unmatched id and a compliant one look identical from
+here".
+
+Checked each against the marker before admitting it: none reads as an open-ended
+claim, which is correct -- every one names a closed range or a period-scoped
+half. Added with that reasoning beside them.
+
+### A floor that fell as the tree got better
+
+The same module asserted the marker recognises MORE THAN FIFTY open-ended ids.
+It recognises forty-eight. Nothing broke: span splits replace open-ended
+revisions with closed ranges, so the count drops every time the tree becomes
+more precise. A threshold that falls as the work succeeds is not a health
+signal, and re-pinning it each time teaches the next reader to bump a constant.
+
+Replaced with the property it was standing in for, which is exact: every id
+spelled `-y-siguientes` IS an open-ended claim, so the marker must recognise all
+of them, and there must be some. Breaking the marker still reds it.
+
+### A test that required the tree to be broken
+
+`test_the_gate_names_every_axis_that_closes_a_contradicting_revision` asserted
+at least one real revision contradicts its own id -- it was the only proof the
+gate fired on live data. There are now zero. Its own docstring anticipated this
+and said to rewrite rather than delete it, so it now asserts the positive
+property: no committed revision contradicts its own id. The constructed twin
+below still proves the gate fires, so nothing is lost, and a regression that
+reintroduces a contradiction is caught rather than celebrated.
+
+**test_revision_id_window_agreement: 3 failed -> 6 passed.** Breaking the marker
+reds three; reintroducing a contradiction reds exactly the rewritten test.
+
+### The detector cannot see a split that happened inside one year
+
+`test_revision_span_split_progress` reports eight revisions spanning a design
+re-layout and untracked. Reading each boundary rather than the count separates
+them cleanly:
+
+- **184:2015-y-siguientes, 200:2024-y-siguientes, 322:2008-2025,
+  347:2008-y-siguientes** report CROSS-year boundaries -- (2024,2025),
+  (2022,2023), (2009,2010) and so on. These are the four genuine two-design
+  revisions this audit already records as needing splits.
+- **303:2024-hasta-08-y-2t, 303:2024-desde-09-y-3t, 490:2022-1t,
+  490:2022-2t-4t** report a boundary within ONE year -- (2024,2024) and
+  (2022,2022).
+
+Those four are false positives, and they matter because I reported the modelo
+303 halves as fixed several ticks ago. That fix did land: each half declares its
+own half-year and cites exactly one design. The detector pairs bundled designs
+by FILING YEAR, and both 2024 modelo 303 designs carry filing year 2024, so any
+revision touching that year reports a boundary no matter how precisely it is
+scoped. The same is true of modelo 490's two 2022 halves.
+
+Recorded rather than fixed, and the reason is the bookkeeping set itself:
+`_KNOWN_SPANNING` records spans that are "known and owned", so adding four false
+positives to it would assert they are real spans awaiting a split, which is the
+opposite of what the evidence says. And removing its one landed entry
+(`303:2022`) in isolation trips the module's own instruction to delete itself
+with the last entry -- correct only if the tree were clean, which it is not
+while the four genuine spans remain.
+
+The fix belongs in the detector: a boundary between two designs of the same
+filing year is not a re-layout the revision spans when the revision's period
+selector already picks one of them. That is a change to `_boundaries_for` with
+its own control, and it is the next piece of work rather than a bookkeeping
+edit.
+
+## Tick: the mid-year claim, and a design bundled twice
+
+Queue items 1-6 green. Authority CLEAN. Generated-tree gates 30 passed.
+
+### A revision that covers half a year should not claim both its designs
+
+Last tick's finding was that the span detector reports a `(2024, 2024)` boundary
+for modelo 303's two 2024 halves and a `(2022, 2022)` one for modelo 490's, even
+though each half covers exactly one design. The cause is in
+`_designs_claimed_by`: it claims designs by YEAR, and AEAT splits an ejercicio
+mid-course by publishing two designs that share a coverage year, so both halves
+receive both designs.
+
+The same-year key is NOT a bug -- the module documents it as a mid-course split
+and keys on the design file precisely so that boundary stays visible. What was
+wrong is which designs a half-year revision claims.
+
+Each half states its own answer twice over: the revision id names its months,
+and its `source_refs` name one design. The design filenames say the same thing --
+`hasta-periodos-08-y-2t` beside `a-partir-de-periodos-09-y-3t`. So a revision
+whose whole span sits inside one year and covers less than all of it now claims
+only the design it cites for that year.
+
+Deliberately narrow, and the narrowing is the control. A revision covering a
+whole year, several years or an open-ended span is untouched, so the genuine
+cross-year spans this gate exists to find keep reporting: modelo 184 (2023,
+2025), modelo 200 (2024, 2025), modelo 322 (2022, 2023) and modelo 347 (2009,
+2010). **Spanning revisions: 8 -> 5**, and the three that went are the three
+false positives -- both modelo 490 halves and one modelo 303 half.
+
+Two things had to be got right that looked trivial. The catalogue records a
+corpus-RELATIVE path while the design walk yields absolute ones, so comparing
+them as strings matched nothing and looked exactly like a revision citing no
+design at all. Keyed on the file name instead.
+
+### The fourth false positive, and why it is not the detector's fault
+
+`303:2024-desde-09-y-3t` still reports. Its citation resolves to
+`...-381-kb-xls.xlsx` while the design walk yields `...-381-kb-x.xlsx`, so the
+name match fails -- and the reason is that **the corpus bundles that design
+twice**:
+
+    04-...-actualizado-29-11-24-381-kb-x.xlsx
+    04-...-actualizado-29-11-24-381-kb-xls.xlsx
+
+Both exist, each with its own `.extracted.json` and `.extracted.md`. The
+catalogue cites the `-xls` one; the walk reads the `-x` one. So the revision is
+compared against a duplicate of its own design, which is also why a mid-course
+half appears to span.
+
+Recorded rather than deleted, and the reason is what the file IS: bundled
+AEAT evidence with content-addressed sidecars. Removing one copy is an
+irreversible act on the corpus, the two files may not be byte-identical, and
+which is canonical is a question for whoever bundled them -- the catalogue's
+citation is evidence but not proof that the other is spurious. A duplicate that
+is read is visible in this finding; a deleted one that turned out to differ
+would not be.
+
+### Verified against
+
+The same six tests fail in these two modules as before the change -- name for
+name, no new failure -- while the spanning population dropped from eight to
+five. Generated-tree gates 30 passed. Authority CLEAN.
+
+### Still open
+
+Four genuine cross-year spans (184, 200, 322, 347) awaiting their splits, one
+false positive blocked behind the duplicated modelo 303 design, and the
+bookkeeping set `_KNOWN_SPANNING` still carrying `303:2022` whose split has
+landed -- left alone because removing its last entry trips the module's own
+instruction to delete itself, which is correct only once the tree is clean.
