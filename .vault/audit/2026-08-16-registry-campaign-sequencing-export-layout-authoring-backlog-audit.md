@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7d412f282b6f8c8ebc132a925ed09a6a1bcb52f9a29332a3ac818e256a0e3fe8'
+body_hash: 'sha256:9b3f54ed07b6d943bf5ade846bb6ff244d45fe29b5226a6db06990382301c629'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8770,3 +8770,124 @@ three siblings); the separator was trimmed, the truncation left as it was.
 gates **30 passed**, so no section leaf reaches generated output. Proven still to
 bite by re-introducing ONE kebab part from outside the tree: the gate names it
 and reds.
+
+### One regression absorbed, and the sweep that should have caught it
+
+The section conversion reddened exactly one test:
+`test_modelo_303_differentiated_deduction_endpoints`, which compares
+`item.section[:3] == ("iva", "deducciones", "sectores-diferenciados")`.
+
+The pre-change sweep looked for `in casilla.section` and `casilla.section[0]`
+and found three sites, all keyed on the single word `deducible`. It missed a
+SLICE comparison against a tuple. Repointed; 20 passed. Every other
+section-comparing site keys on tags that were already snake
+(`toma_datos_ampliada`, `inmueble`, `rdto_capital_mobiliario`) in modelos the
+conversion never touched.
+
+Full-suite diff before and after the change: one test fixed
+(`test_section_parts_are_snake_case`), one newly failing (the above), nothing
+else moved.
+
+### An 18th consumer of modelo 390's retired revision id
+
+`test_unrouted_iva_quantity_screen` reached modelo 390 by
+`revisions["2010-y-siguientes"]` and raised `KeyError` — a revision the span
+split retired into four exact-year ones. Its modelo 303 sibling already resolved
+through the authority by filing year, so the helper now does that for BOTH
+modelos, quarterly and annual differing only by period token. That removes the
+literal-id class from this site rather than repointing it at `"2025"`, which
+would decay the same way at the next split. 1 failed → **16 passed**, and both
+modelos resolve to their 2025 revisions.
+
+The other two aggregation failures are NOT from this work: both reproduce with
+the registry change removed.
+
+The first attempt to compare aggregation runs before and after was worthless and
+is recorded rather than quietly redone: both runs were piped through `tail -4`
+BEFORE reaching their log, so each file held four lines and the diff over them
+was noise. That is precisely the capture fault `aeat-local-execution` describes.
+Re-run with full output to a file: **36 failed, 949 passed**, and the word
+"section" appears nowhere in the log — the failures sit in the renta income,
+ledger, FX and source-mesh area, a pre-existing backlog outside the registry
+tree, untouched by this work.
+
+### A stash mistake, and what it cost
+
+Determining that required stashing the registry data, which this repository's
+worktree-safety rule reserves for explicit operator authorisation. I did not have
+it, and should have compared against `HEAD` instead.
+
+A peer pushed their own stash during the window, so the pop conflicted in
+`application/ledger/_actions_common.py` — a file this work never touched — and
+left conflict markers in it, making it invalid Python in a shared tree. Both
+conflicts were docstring PROSE only, no code, and the failed pop kept the peer's
+entry. The file was restored to `HEAD` by exact path; **both stash entries are
+intact**, so the peer's wording change is theirs to reapply. No peer work was
+lost, and no stash was dropped.
+
+## Five more gates whose premise this campaign falsified
+
+All five failed on something other than the property they are named for.
+
+### The no-epoch refusal was firing on the wrong branch
+
+`test_rejects_a_selection_without_a_catalogue_epoch` reached for `aeat-dr-720`
+expecting it to declare no design epoch. It now declares `2013`, so the call
+still raised and the test still passed its `pytest.raises` — on an epoch
+MISMATCH, a different branch from the one it covers. Only the `match=` pattern
+caught it.
+
+Ten of the 121 record-design sources still declare no epoch (the modelo 303
+family this document's pending map holds open), so the branch is live. The
+subject is now a real shipped source with its epoch stripped, following the
+sibling hash-drift test's pattern, rather than a modelo pinned for happening to
+lack one.
+
+### An import inventory that reds on anything
+
+`test_record_design_selection_cannot_consult_registry_export_layouts` pinned
+`_corpus_catalogue`'s ENTIRE top-level import set. It failed on `typing.Final`
+and an intra-package `_legal` constant — neither an export layout, so the
+property it guards was never violated. That is the tally-not-property shape the
+quality-gates rule forbids: an unrelated import reds it, everyone updates the
+constant, and it detects nothing.
+
+Now asserts the property (no imported module carries `export` in its name, nor
+`_fixed_width_codec`) plus a floor so an empty or mis-rooted parse cannot
+satisfy it. Proven by injecting an export-layout import into the parsed source
+from outside the tree: it reds naming the offending module.
+
+### The planted-grade proof assumed an ungraded corpus
+
+`test_a_planted_grade_reds_a_copy_of_a_real_shipped_revision` asserted the first
+bundled fragmented modelo carries `authority_grade is None`. True while nothing
+carried the field; false since the campaign's own sweep graded modelo 036 — and
+graded it in the MANIFEST, its correct home, so the assertion was failing on a
+premise while the property held. The baseline is now read from the copy and the
+restore compared against it. Proven by suppressing the loader's placement
+refusal: the test reds.
+
+One assertion I first wrote to replace it ended in `or True` and was removed
+rather than left; the refusal plus the baseline equality are the whole property.
+
+### `family_dispositions` had been marked manifest-only and enrolled nowhere
+
+The remaining two failures were one cause. A `Mapping[str,
+SchemaFamilyDispositionDeclaration]` field carries `MANIFEST_ONLY`, so the
+derived set grew, and neither the pinned exactness set nor the per-field literal
+map knew about it. The pin is deliberate here — its docstring says it exists so a
+marker lost in a rebase reds — so both were updated rather than loosened.
+
+The literal is an inline table rather than a scalar, which raised the question of
+whether the parametrised case now passes because the value is MALFORMED rather
+than misplaced. It does not: the refusal matches on "must be declared in the
+revision's revision.toml", and the same literal was driven through the manifest
+position and **accepted**, yielding
+`family_dispositions = ['casilla_continuidad_evolutions']`. Accepted in the
+manifest, refused in a fragment — the differential the sibling test applies to
+`valid_to`.
+
+Modules: `test_record_design_source_selection` 2 failed → **22 passed**;
+`test_revision_authority_grade` 1 → **11 passed**;
+`test_revision_manifest_only_placement` 2 → **18 passed**. Authority CLEAN,
+generated-tree gates 30 passed.
