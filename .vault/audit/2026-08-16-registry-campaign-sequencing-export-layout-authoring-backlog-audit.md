@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4a1c8cab3ed9de772a910f4b014a6a5d7f59264a894f9de17b1108a0dbdb81d7'
+body_hash: 'sha256:3b98ad8a7f3b053a90ce40ec772dea9b64d03d9896891218a8ce03d4c02000d3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10800,3 +10800,55 @@ elsewhere in this document", not "this cannot be grounded".
 **Still blank and correctly so:** 64 modelo 190 casillas whose offsets the prose
 never names in guillemets, modelo 184's 21 group-shared, and modelo 193's 11
 with no covering heading.
+
+## AEAT names a sub-field three different ways, and one of them is unquoted
+
+Last tick's prose insight generalised, but not by reusing last tick's pattern.
+AEAT's designs name a sub-field beneath a group heading in at least three
+conventions, and which one a design uses is a property of that document:
+
+```
+modelo 190   223 «< 3 anos. N.º Total»: Numero de descendientes ...
+modelo 184   266-277. GASTOS DE PERSONAL
+modelo 184   440-450.SALDOS DE DUDOSO COBRO.        <- no space after the period
+```
+
+The guillemet reader written for 190 returns nothing on 184, and the reverse
+holds too. Reading all three lifts modelo 184's last 21 casillas -- the
+group-shared set left blank last tick under "DETALLE DE GASTOS RENDIMIENTOS DE
+ACTIVIDADES ECONOMICAS", which covers eleven separate expense lines in one
+table row. **Modelo 184 is now fully resolved.** Backlog **186 -> 165**.
+
+### The first version of the reader was quietly wrong
+
+Counting quote characters suggested modelo 184 carried 16 quoted names. It
+carries none: the straight-quote branch was matching stray quotation marks in
+running prose and returning `('04', ',')` and `('03', 'o')`. The count looked
+like evidence and was noise.
+
+A name now has to be plausible before it is accepted -- three letters minimum,
+and either two words or a fully upper-case run -- and must not be a bare type
+word or a split half. That filter is what turned 7 garbage entries into 22 real
+ones on the same document.
+
+**And a truncation that would have shipped.** The unquoted form is line-anchored,
+so a heading that wraps arrives cut: "TRIBUTOS FISCALMENTE" without
+"DEDUCIBLES", "OTROS GASTOS FISCALMENTE" without it either. Three of the 21
+would have shipped naming a different concept than the design does. Joining an
+upper-case continuation line repairs them, and the no-space variant
+(`440-450.SALDOS`) accounts for the twenty-first.
+
+### What made this safe to apply positionally
+
+The join here is by offset span, which is the join that has produced every
+mislabel this campaign has found. What makes it checkable is that these
+casillas carry meaningful ids: `gastos-personal` resolves to GASTOS DE PERSONAL,
+`suministros` to SUMINISTROS, `primas-seguros` to PRIMAS DE SEGUROS, and so on
+for all 21 independently. Twenty-one agreements between two sources that were
+never derived from each other is a much stronger signal than any single lookup,
+and it is available precisely because someone named the casillas well.
+
+Where a design carries no such prose the casillas stay blank: 64 modelo 190
+offsets the prose never names, modelo 193's 11, and the remaining 322, 202 and
+200 sets, whose designs yield 2 to 6 prose names each against 11 to 14
+unresolved casillas.
