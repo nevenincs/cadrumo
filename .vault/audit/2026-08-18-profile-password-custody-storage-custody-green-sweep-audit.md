@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9271349c09c0dbc21a96f4366e05466dfb22ce5305da565fe46bbcee91f6d32c'
+body_hash: 'sha256:1ba36ed914d3427181510320d70d9444e38bf948563d660b953d7bb8c2efc5a1'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3199,3 +3199,37 @@ A companion note on completeness: a scan that is correct only because of the cur
 directory layout is not correct, it is lucky. `glob` versus `rglob` is invisible until
 the day it matters, and by then the check has been quietly narrower than its name for
 some time.
+
+### The lesson applied to gates this campaign did not write
+
+Replaying mention-versus-containment beyond this campaign's own gates found **three**
+pre-existing ones with the same hole. Each asserts that a surface routes through a shared
+core by testing whether the routine's NAME appears in its source:
+
+* `_validate_envelope(` — `envelope/test_secure_bound_envelope_gates`
+* `decode_secure_object_row(` — `sql/test_secure_object_decode_order`
+* `probe_row_decryptability(` — `sql/test_secure_object_integrity_agreement`
+
+A surface that stops delegating but keeps a sentence naming the routine passes all three.
+Demonstrated rather than argued: substituting a `load()` whose only reference to the gate
+is a docstring, the old text check accepted it and the new one names it.
+
+**The negative halves are deliberately left as text checks**, and that asymmetry is the
+judgement worth recording. `assert "decrypt_secure_object_payload(" not in source` uses
+the presence of a name as evidence of RE-IMPLEMENTATION — so a comment mentioning it
+fails safe, refusing something harmless, rather than passing something dangerous.
+Tightening those to AST calls would trade a tolerable false positive for a real hole.
+The same textual technique is right in one direction and wrong in the other, which is why
+"replace text checks with AST checks" would have been the wrong rule to apply
+mechanically.
+
+Also closed here: an inconsistency of this campaign's own making. The no-follow gate was
+still scanning with `glob("*.py")` after its sibling in the same package was made
+recursive one pass earlier — fixing the instance and not the class, which is the failure
+these notes keep recording. Both now route through the project's canonical
+`scan_directory(recursive=True)` rather than a raw pathlib glob, so they inherit the
+convention instead of restating it.
+
+**Generalisable:** a technique is not right or wrong on its own, only in a direction.
+Before sweeping a fix across siblings, check which way each instance fails — the ones
+that fail safe may be correct exactly as they are.
