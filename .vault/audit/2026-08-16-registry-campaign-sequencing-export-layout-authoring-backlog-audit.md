@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4ca2243df88876562975eca981bd21183cbe98eccbc9b1f9bd8b4a18c3408d28'
+body_hash: 'sha256:99c7176ec7cc14b2101f6a1cb51e8b57c271d2adeff75647dd2c11126d605fab'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9739,3 +9739,53 @@ is no complete label to read.
 
 `dev/locales` parity is still red on its pre-existing drift, and moved the right
 way: **1,210 -> 1,165** missing codebase keys.
+
+## Modelo 360: the instructional text was wrapping a label, not replacing it
+
+Two ticks ago modelo 360's design text was rejected wholesale as unusable, and
+that judgement was right about the TEXT and wrong about the LABEL. Its design
+prints `<row ordinal>. <LABEL> <annotations>`, where the annotations are the
+filing instructions:
+
+```
+1. Base imponible obligatorio                     ->  1. Base imponible
+1. Divisa obligatorio ISO 4127 (Nota 3)           ->  1. Divisa
+1. Indicador de simplificada obligatorio "0" "1"  ->  1. Indicador de simplificada
+1. Bienes y servicios adquiridos: código. Igual campo 8
+                                                  ->  1. Bienes y servicios adquiridos: código
+```
+
+Stripping the annotation families -- `obligatorio`, `(Nota N)`, an ISO standard,
+a Directive article, `Igual campo N`, quoted allowed-value runs, and the
+field-shape notes `espacios` / `N decimales` / `, por defecto` -- recovers **223
+of 224** labels. The one that does not survive is genuinely truncated
+(`"P" Adquisición de`), and two more are `Reservado AEAT` filler.
+
+**This is the only modelo whose SPANISH label is derived rather than copied.**
+Everywhere else the design prints the label and Spanish is transcribed verbatim.
+Here the label is recovered from instructional text, which is a weaker claim, so
+it is worth saying plainly rather than leaving the two cases looking alike.
+
+**221 labels authored. Unresolved Spanish labels 722 -> 501.**
+
+### Two defects the output review caught, both would have shipped silently
+
+* **Two casillas would have shared one translated label.** The design nests a
+  second ordinal inside the label -- `Actividades. 5. Código NACE` -- and the
+  first composer discarded bare digits as non-terms. Spanish kept the `5.`;
+  the translations did not, so `5. Código NACE` and `6. Código NACE` rendered
+  identically in all three languages. Inner ordinals are now carried through
+  verbatim.
+* **The separator was being rewritten.** `Bienes y servicios adquiridos: código`
+  came back as `Goods and services acquired. code`. Separators are now preserved
+  from the source rather than rejoined with a fixed `". "`.
+
+**The check that now holds both**: the number of DUPLICATE label texts is
+identical in all four catalogues (55 each). The translations distinguish exactly
+what the Spanish distinguishes -- no more, and no less. A dropped ordinal or a
+flattened separator moves that number apart immediately.
+
+Eight deliberate identities recorded (`Prorrata %`, `Divisa`, `Indicador de
+simplificada` -- cognates carrying only AEAT's row ordinal). `dev/locales` parity
+remains red on its pre-existing drift and improved again: **1,165 -> 953**
+missing codebase keys.
