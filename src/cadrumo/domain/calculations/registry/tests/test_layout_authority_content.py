@@ -77,14 +77,28 @@ def _norm_text_layout_claims() -> dict[str, SourceReference]:
     }
 
 
-def test_the_anchor_source_still_carries_the_properties_it_is_named_for() -> None:
-    """The named cohort member is still a norm-text HTML layout-authority claim.
+def test_the_last_false_layout_authority_claim_has_been_retiered() -> None:
+    """``enrolled-modelo-186-layout`` was the cohort's final member, and it is resolved.
 
-    Without this, retiering the anchor would silently turn the cohort
-    assertions below into statements about an empty set.
+    This asserted the anchor still claimed ``layout_authority``, so that
+    retiering it could not quietly turn the cohort assertions into statements
+    about an empty set. The anchor's own comment named the condition: it was the
+    one remaining false claim, held as the anchor "until that lands, at which
+    point this constant needs another swap". It has landed.
+
+    There is nothing to swap to, because the cohort is now EMPTY -- which is the
+    outcome the gate existed to drive, not a failure. So this records the
+    resolution and the sibling below asserts the emptiness; the vacuity the
+    anchor guarded against is covered instead by
+    ``test_every_acceptance_is_driven_by_content_the_file_actually_carries``,
+    which strips the evidence from every accepted file and requires each to flip
+    to refused across the whole population rather than one specimen.
     """
     source = _bundled_sources()[_ANCHOR_SOURCE_ID]
-    assert source.evidence_tier == "layout_authority"
+    assert source.evidence_tier == "official_source_guidance", (
+        "the last false layout-authority claim was retiered; if it is claiming "
+        "layout authority again, the retier has been reverted"
+    )
     assert source.corpus_path.startswith("corpus/normatives/")
     assert source.corpus_path.endswith(".html")
 
@@ -114,13 +128,28 @@ def test_every_reported_claim_is_one_whose_file_carries_no_layout() -> None:
 
 
 def test_the_gate_reports_the_cohort_it_was_built_for() -> None:
-    """The anchor is named, with a cause that says what to do about it."""
+    """No norm-text claim now stands over an excerpt, and the message still says what to do.
+
+    The cohort this gate was built for is empty: 78 norm-text layout-authority
+    claims, none reported. The report's WORDING is still pinned, because an empty
+    cohort would otherwise let the guidance rot unnoticed -- so it is driven over
+    a constructed claim rather than a corpus member that no longer exists.
+    """
     claims = _norm_text_layout_claims()
-    failures = validate_layout_authority_content(claims, source_root=bundled_path())
-    matching = [failure for failure in failures if _ANCHOR_SOURCE_ID in failure]
-    assert matching, f"{_ANCHOR_SOURCE_ID} declares layout authority over an excerpt and must be reported"
-    assert "carries no annex section" in matching[0]
-    assert "retier this source" in matching[0]
+    assert claims, "no norm-text layout-authority claims at all; the gate is measuring nothing"
+    assert validate_layout_authority_content(claims, source_root=bundled_path()) == []
+
+    honest = claims[_HONEST_SOURCE_ID]
+    over_an_excerpt = honest.model_copy(
+        update={"corpus_path": _bundled_sources()[_ANCHOR_SOURCE_ID].corpus_path},
+    )
+    reported = validate_layout_authority_content(
+        {_HONEST_SOURCE_ID: over_an_excerpt},
+        source_root=bundled_path(),
+    )
+    assert reported, "a layout-authority claim over an excerpt must still be reported"
+    assert "carries no annex section" in reported[0]
+    assert "retier this source" in reported[0]
 
 
 def test_an_honest_layout_authority_is_not_reported() -> None:
