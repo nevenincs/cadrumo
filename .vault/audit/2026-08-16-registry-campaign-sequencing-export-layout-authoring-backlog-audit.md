@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee9a97496c124a815edf71f31f38259642bf5e0dc76e093985108d1b6e8b69dc'
+body_hash: 'sha256:e3aae124fe377be190c327306e9ada31a809a60972ff07e2ef7dfbffc65af574'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10676,3 +10676,78 @@ string, where the condition belongs.
 the split-half class and are deliberately left blank: they need the block heading
 read out of the design's position-keyed text, the way modelo 222's boxes were,
 and a blank is visibly missing where a wrong label is not.
+
+## Six modelo 184 labels were showing the wrong record's field name
+
+The offset-vs-sheet defect that cost 106 modelo 151 labels was not fully cleared.
+Modelo 184's socio (tipo3) record shares offsets with the declarante and entidad
+records, and six of its casillas carried whichever sheet was walked first:
+
+| casilla | its own sheet says | it was labelled | taken from |
+|---|---|---|---|
+| `tipo3.miembro-nif` | NIF DEL MIEMBRO | DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE | declarante |
+| `tipo3.miembro-nombre` | APELLIDOS Y NOMBRE ... DEL MIEMBRO | DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE | entidad |
+| `tipo3.codigo-provincia` | CÓDIGO PROVINCIA | CLAVE | entidad |
+| `tipo3.miembro-a-31-diciembre` | MIEMBRO A 31 DICIEMBRE | RÉGIMEN DETERMINACIÓN RENDIMIENTOS | entidad |
+| `tipo3.dias-miembro` | NÚMERO DÍAS MIEMBRO | TIPO DE ACTIVIDAD | entidad |
+| `tipo3.naturaleza-inmueble` | NATURALEZA DEL INMUEBLE | N.I.F. DEL REPRESENTANTE | declarante |
+
+This is worse than the blanks the campaign has been filling: a blank shows as
+missing, and `miembro-nif` labelled "DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE"
+reads as correct.
+
+**The control is the `taken from` column, and it is what makes the sweep safe.**
+Eight casillas differ from their own sheet's text; six of them are provably some
+OTHER sheet's text at the same offset, and two -- `tipo2.renta-atribuible-importe`
+and `tipo2.ingresos-integros` -- name no other sheet at all. Those two are the
+curated labels this campaign deliberately kept ticks ago because they read better
+than the design's raw uppercase. Without asking "is this some other sheet's
+wording?", a sweep would have overwritten both with worse text while fixing the
+six. After the correction the sweep reports zero labels taking another sheet's
+wording.
+
+## Reading the block heading above a split pair
+
+An ENTERO/DECIMAL leaf says which half of a number it holds and never what the
+number is. The name is in the block heading the design prints above the pair, as
+a position-keyed line:
+
+```
+160-171 Numerico IMPORTE INTEGRO
+160-169 Parte entera del importe, si no tiene contenido
+170-171 Parte decimal del importe, si no tiene contenido
+```
+
+So the heading is found by asking which declared RANGE contains the casilla's
+WHOLE span -- not its first half -- and taking the NARROWEST such range, because
+a page-level range contains the span too and would name the page. Positions
+repeat across record types, so the index is scoped into record sections split at
+each "TIPO DE REGISTRO" line, and the design's own `corpus_path` selects the
+file rather than a filename guess.
+
+**Validated before use, against labels already known good:** 45 agree, 8
+disagree -- and reading the 8 is what surfaced the six mislabels above. A method
+checked against known-good data does not merely prove itself; it audits the data
+it is checked against.
+
+### A shared heading names the block, not the field
+
+Applied to modelo 184's 32 split-half casillas the method finds a heading for all
+32, and **21 of them are the same heading**: "DETALLE DE GASTOS RENDIMIENTOS DE
+ACTIVIDADES ECONOMICAS" sits above eleven separate expense lines, "DETALLE DE
+GASTOS / RENDIMIENTOS DEL CAPITAL" above ten more. Narrowest-covering-range
+returns it for every one of them, so writing it would have labelled eleven
+distinct expenses identically and none of them correctly.
+
+The filter is one casilla to one heading: a heading that more than one casilla
+resolves to is a GROUP heading and is dropped. This is the same shape that
+stopped modelo 190 earlier in this campaign, where the design's field at @223+6
+is "HIJOS Y OTROS DESCENDIENTES." over four casillas with distinct meanings --
+recorded then as a reason to leave 190 alone, and now a reusable rule rather
+than a one-off observation.
+
+**17 labels authored**, backlog **249 -> 232**: eleven modelo 184 split-halves
+with distinct headings, and three modelo 193 declarante totals across both its
+revisions. The 21 modelo 184 group-shared and the 11 modelo 193 casillas with no
+covering heading stay blank on the standing basis that a wrong label is worse
+than a missing one.
