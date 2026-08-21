@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf77c9da28dd091dd04cf79c1cbffbdb3aaa13701808a53b88d84ca386a88be1'
+body_hash: 'sha256:68750fd550a7973e418d93e5193e4eab2b117f10987f786faee99f7e231801fa'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3770,3 +3770,57 @@ without consulting `winerror`, so it also waits out a genuine ACL denial for eig
 milliseconds before reporting it. That is a mild inefficiency rather than a safety hole,
 but it is a third home for one concept and the natural consumer of the shared predicate.
 Not changed here because it is a live custody write path and deserves its own iteration.
+
+### The handover-journal write budget was sized by nothing, and it exhausted
+
+Opened as the consolidation item deferred by the previous entry: `_filesystem.py` keeps
+its own Windows contention retry, a third home for the concept centralised in
+`core/_windows_contention.py`. **That consolidation was measured and then rejected**, and
+the measurement is the useful part.
+
+The refusals this retry absorbs all arrive as `winerror 5` — and a genuinely denying ACL
+on the same call arrives as `winerror 5` too, confirmed by holding a handle open and by
+the module's own prior reasoning. So the shared predicate CANNOT discriminate on this
+path: importing it would add a dependency without adding a decision. The codes remain
+centralised for the callers that can use them; this caller's discriminator is the budget,
+exactly as the shared module's docstring already says. A consolidation that makes two
+call sites look alike while one of them cannot use the shared judgement is worse than the
+duplication it removes.
+
+Investigating that near-worthless item is what surfaced a real one.
+
+**The budget could not survive the contention it exists for.** It was eight attempts ten
+milliseconds apart — eighty milliseconds total, an attempt count with no stated
+justification. Measured against concurrent readers of the same record:
+
+| readers | writes ok | exhausted | worst write |
+|---|---|---|---|
+| 1 | 1056 | 0 | 207 ms |
+| 3 | 397 | 0 | 398 ms |
+| 8 | 119 | **14** | 852 ms |
+
+Roughly one write in ten failed at eight readers, and none failed at three — which is why
+the shortfall was invisible to every test that did not apply real pressure. The
+consequence is not a slow login: `_login_session.py` funnels this failure into
+`_refuse_handover_journal`, so an exhausted budget REFUSES the login.
+
+Restated as a deadline rather than an attempt count, because what has to be outlasted is
+a span of contention, and an attempt count silently shortens the wait whenever the poll
+interval is tuned. Sized by what losing costs — the principle already recorded when the
+pointer budgets were set, applied here to the consumer whose loss is most expensive and
+whose budget was smallest. After: zero exhaustions at eight readers. At sixteen, two
+remain; nothing bounded survives unbounded pressure, and that is stated rather than
+tuned away.
+
+**The gate is deterministic rather than a stress test.** A test that races N readers and
+asserts nothing failed would flake on a loaded machine and prove nothing on a fast one.
+Instead a real handle is held for an interval longer than the retired budget and well
+inside the current one, then released on a timer: the write succeeds if and only if the
+budget outlasts the hold. Both directions are pinned, because a budget fails two ways —
+too short refuses a login that only needed to wait, and unbounded hangs forever on a
+denial that never clears. The second test holds the handle permanently and requires the
+write to give up and report.
+
+Proven by restoring the eighty-millisecond value: the outlast test fails with the exact
+production error, while the bounded test stays green because it should refuse under
+either budget.
