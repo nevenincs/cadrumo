@@ -19,7 +19,42 @@ source_refs = [
     "enrolled-modelo-165-layout",
     "aeat-dr-165-2026",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the certificaciones a socios de entidades de nueva o reciente creacion \
+informativa. DISCLOSURE -- this review follows a correction made in the SAME action by the \
+same agent: the filing-year-2025 window stored closes_on 2026-02-02, the OPERATIONAL date \
+for a 31 January falling on a Saturday, which the nominal-store rule forbids. It was \
+corrected to 2026-01-31 and its aeat-calendario source_ref dropped to match its siblings; \
+shift_deadline(2026-01-31, modelo=\"165\") returns 2026-02-02 with shift_reason 'sabado', \
+so nothing was lost. VERIFIED -- WHEN DUE: orden-hap-2455-2013 art. 4 reads verbatim in \
+the bundled corpus \"La presentacion de esta declaracion informativa se realizara en el \
+mes de enero de cada ano en relacion con la suscripcion de acciones o participaciones en \
+el ano inmediato anterior\", and all three windows now close 31 January nominally \
+(2025-01-31 Friday, 2026-01-31 Saturday, 2027-01-31 Sunday) -- two of the three fall on a \
+weekend and are stored unshifted, which is the convention demonstrated rather than merely \
+asserted. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, \"Se aprueba el \
+modelo de declaracion 165 «Declaracion informativa de certificaciones individuales \
+emitidas a los socios o participes de entidades de nueva o reciente creacion»\", carrying \
+no year bound, so the open-ended 2013-y-siguientes claim does not outrun its orden. \
+VERIFIED -- EXPORT LAYOUT: modelo-165-fichero-2026, format fixed_width, two records. \
+modelo-165-declarante carries 16 offset-bearing fields and modelo-165-socio carries 11, \
+and each tiles positions 1..500 exactly once with NO gap and NO overlap. The registry \
+loader rejects overlapping ranges but does NOT check full tiling, so the gap half was \
+measured here rather than inherited from validation. SCOPE FLIP ACKNOWLEDGED -- this \
+revision declares an export layout, so agent review moves its derived authority scope from \
+inspection_only to filing. The layout above is what that scope now rests on. NOT CLAIMED \
+-- SPAN: the gate reports 0 comparable bundled design year(s) inside this claimed span. \
+The bundled design is aeat-dr-165-2026 and the revision covers 2013 onward, so the layout \
+is evidenced for 2026 and NOT for filing years 2013 through 2025; if AEAT re-laid out the \
+record during those years nothing bundled would show it. This is the ABSENT class, an \
+absence of comparable evidence, not the contrary-evidence class the same gate reports for \
+m220 and m763. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero; no \
+value here was checked against an independent AEAT oracle. NOT CLAIMED -- 18 casillas are \
+declared and construct_evidence_rows is 0, so no construct evidence was measured either \
+way. NOT CLAIMED -- all 3 locales are complete, but the strings were not audited for \
+accuracy."""
+reviewed_at = 2026-08-21
 
 [revisions."2013-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
