@@ -1,0 +1,474 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "185"
+design_epoch = "2026"
+source_ref = "aeat-dr-185-2026"
+source_sha256 = "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 17
+ordinal = "1"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-1"
+decision_statement = "One digit carrying the constant 1; the design reads \"Constante numero '1'.\""
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 17
+ordinal = "1"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["185"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+ordinal = "2"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-2"
+decision_statement = "Three digits carrying the constant 185; the design reads \"Constante '185'.\""
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+ordinal = "2"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+ordinal = "3"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-5"
+decision_statement = "The design reads \"Las cuatro cifras del ejercicio al que corresponde la declaracion.\""
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+ordinal = "3"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+ordinal = "8"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-108"
+decision_statement = "The design reads \"Campo de contenido numerico de 13 posiciones\" carrying a sequential declaration identifier."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+ordinal = "8"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal = "10"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-123"
+decision_statement = "The prior declaration's identifier, same 13-position numeric shape, written only for a complementaria or sustitutiva."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal = "10"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 80
+ordinal = "11"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-136"
+decision_statement = "The design enumerates the natural month as a two-digit code, \"01 Enero\" through \"12 Diciembre\". The two-digit-month policy carries that constraint, so allowed_values stays empty as the schema requires outside an enumeration rule."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 80
+ordinal = "11"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 101
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarante-138"
+decision_statement = "The design reads \"el numero total de declarados para este declarante (Numero de registros tipo 2)\"."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 101
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 120
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-1"
+decision_statement = "One digit carrying the constant 2; the design reads \"Constante '2'\"."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 120
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["185"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 122
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-2"
+decision_statement = "Three digits carrying the constant 185; the design reads \"Constante '185'.\""
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 122
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 124
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-5"
+decision_statement = "The design reads \"Consignar lo contenido en estas mismas posiciones del registro de tipo 1.\""
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 124
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 192
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-91"
+decision_statement = "Days of alta in the declared month, \"alineados a la derecha y cumplimentados a ceros por la izquierda\"."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 192
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3", "4"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 197
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-93"
+decision_statement = "The design enumerates the jornada claves \"0 Sin valor 1 Completa 2 Parcial >= 50% 3 Parcial < 50% 4 Inaplicable\"."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 197
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 243
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-96"
+decision_statement = "Days of alta in month -1, on the same right-aligned zero-filled convention."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 243
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3", "4"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 247
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-98"
+decision_statement = "The jornada claves for month -1, enumerated identically by the design."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 247
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 292
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-101"
+decision_statement = "Days of alta in month -2, on the same right-aligned zero-filled convention."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 292
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3", "4"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 296
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m185-declarado-103"
+decision_statement = "The jornada claves for month -2, enumerated identically by the design."
+justification = "Grounded in the bundled official diseno de registro aeat-dr-185-2026, which states this field's width and content directly at the anchored row. The design carries no source_cell, so the statement is reproduced here rather than cross-checked against a cell, matching the form modelo 184 uses for the same design shape."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 296
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+

@@ -1,0 +1,187 @@
+schema_version = 1
+fragment_id = "declarante"
+modelo = "185"
+design_epoch = "2026"
+source_ref = "aeat-dr-185-2026"
+source_sha256 = "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae"
+
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f001"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 17
+ordinal = "1"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f002"
+kind = "literal"
+literal = "185"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+ordinal = "2"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f003"
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+ordinal = "3"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 24
+ordinal = "4"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f005"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 35
+ordinal = "5"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f006"
+kind = "filler"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 37
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f007"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 42
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f008"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 48
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f009"
+kind = "casilla"
+casilla_id = "decl.numero-justificante"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+ordinal = "8"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f010"
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+ordinal = "9"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f011"
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal = "10"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f012"
+kind = "casilla"
+casilla_id = "decl.periodo"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 80
+ordinal = "11"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f013"
+kind = "casilla"
+casilla_id = "decl.total-registros"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 101
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m185-2026.declarante.f014"
+kind = "filler"
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-185-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 104
+ordinal = "13"
+record_identity = "Tipo 1 - Registro De Declarante"
