@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0ab790249913a0ef8f8fe99e5d30a7357a210355a131b0f066012a3405770a8c'
+body_hash: 'sha256:cb14e08477483eccf56459eebc2fb9f4f7ab6e1e20bf0639c4bbb4c8873c213d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9418,3 +9418,81 @@ train operators to ignore it.
 `test_remote_state_guard`'s snapshot helper joined the applicability-grade
 family — it caught `RegistrySnapshotError` while the grade refusal raises
 `RegistryValidationError`, so one applicability modelo aborted the whole walk.
+
+### Measured state
+
+Registry suite: **22 failed, 5,088 passed** (from 30 / 5,080). Eight fixed, none
+newly failing, on integrity-checked logs (30 `FAILED` lines against 30, 22
+against 22). Authority CLEAN, generated-tree gates 30 passed, ruff clean.
+
+The remaining 22 are now almost entirely singletons; the only cluster left is
+`test_revision_span_matches_published_designs` (4), which is design-acquisition
+blocked along with the 88 ungroundable weekend deadlines.
+
+## The Spanish casilla-label backlog is 1,798, not 50
+
+`test_every_casilla_label_resolves_in_the_mandatory_spanish_source` printed
+`unresolved[:50]` with nothing marking it as a slice. The real count is **1,798**
+casillas across the tree — 151/2025-y-siguientes alone carries 622, then 360
+(224), 322 (220 + 199), 184 (82), 190 (58 + 52), 309 (57), 193 (53 + 52).
+
+A diagnostic that understates its own subject by 36x is worse than a long list,
+because the reader sizes the work from it — this one was read as a fifty-casilla
+tail-end job. It now states the count and says it is showing the first fifty.
+
+**Reason it is recorded rather than authored here:** 1,798 casillas is 7,192
+strings once the parity gate's four catalogues are counted, and `aeat-locales-cli`
+forbids both escapes that would make it quick — the en/es-only shortcut and the
+`_intentional_identical` mute button. Spanish is groundable from each modelo's
+own design, but Catalan and Hungarian are filing-grade product text that should
+not be produced hastily at the end of a long tick. It is the largest single
+authoring unit left in the campaign and wants its own sequence.
+
+## Three ratchets and carve-outs, each corrected at its own boundary
+
+### A second copy of `DEFERRED_SOURCE_KINDS` had drifted from it
+
+`test_binding_source_kind_taxonomy` reported `withholding296` as "an orphan or
+typo". It is neither: production's `DEFERRED_SOURCE_KINDS` defers it deliberately.
+The test kept its OWN carve-out — a hand-written empty frozenset annotated
+"currently empty" — which stayed empty when the member was deferred.
+
+Now derived as `DEFERRED_SOURCE_KINDS - declared`, which is the same concept the
+prose described and cannot drift. The disjointness assertion that guarded the
+hand-written set became a tautology under derivation (the subtraction makes the
+intersection empty by construction) and was replaced rather than left standing:
+what still bites is that production's deferral list names only real members.
+
+### A self-clearing pin cleared, and the clearing was checked
+
+`test_fed_alias_beside_starved_box` reported eight pinned pairings whose fix had
+landed. Its own message warns that "a change that emptied MORE than its own entry
+blinded the detector rather than fixing a mis-declaration", so that was checked
+before removing them: the two `iva.anual.soportado` aliases STILL own their
+export fields in all four modelo 390 revisions, so the detector can still see the
+shape; casilla 48 keeps its binding AND now carries an export ref. Fed, not
+unbound. The twelve `recargo` pairings still report and stay pinned.
+
+### The continuity ratchet moved for authoring, not for lost stamps
+
+Fifteen modelos diverged upward, 1,540 -> 2,606. The gate offers two readings,
+and they were distinguished before it was touched:
+
+- modelos 490, 322, 714 and 190 carry **zero** `continuidad_id` stamps of any
+  kind, so nothing could have been lost there;
+- across the whole modelos tree the set of `continuidad_id` lines is IDENTICAL to
+  its state forty commits back — 1,283 distinct lines, none gone. The 515 removed
+  and 515 added lines in that diff are whole-file rewrites, which is why the
+  counts match exactly.
+
+So the +1,066 is this campaign's own casilla authoring arriving un-reviewed,
+which the gate's message calls legitimate. Baseline raised with that reasoning
+recorded beside it.
+
+**Both of this tick's first controls were mis-scoped, and both were re-run.**
+Stripping stamps through `_committed_registry_tree` left the ratchet green
+because it reads TOML from disk with `tomllib`, not through the loaded tree;
+patched there, it reds 2,606 -> 3,899. The same mistake was made earlier in the
+campaign against the cross-period consumption gate. The lesson is not "check the
+loader" but that a control which does not red is a statement about the CONTROL
+until its reach is proven.

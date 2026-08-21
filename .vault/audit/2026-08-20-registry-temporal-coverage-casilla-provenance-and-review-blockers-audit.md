@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f34a44fbdca8734ddbd8f37592fc6924b1f749f503dcc790d36d356b98a39f0'
+body_hash: 'sha256:65ccfef9972b4d8972823c72ef86aa26412a342a7435e480df715fa912d6c636'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -788,7 +788,6 @@ contrary evidence (m220, m763) are structurally contested and should be split or
 their amending orden cited before review, not stamped with a limit. The rest are ABSENT
 cases where a stated limit is the honest treatment.
 
-
 ### m185-2003-2025-deadline-windows-cite-the-approving-apartado-not-the-plazo | medium | the file's own two comments contradict each other about which orden grounds them
 
 m185/2003-2025 carries 12 monthly deadline windows closing on the 10th of the following
@@ -838,7 +837,6 @@ bundled corpus HTML files then found **zero** that fail UTF-8 decoding, which
 contradicts it. The two observations were not reconciled, so no encoding finding is
 asserted here -- only the note that anyone carving an excerpt from that file should read
 the result back before trusting it.
-
 
 ## Recommendations
 
