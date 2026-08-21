@@ -1922,6 +1922,24 @@ required_text = [
     "Ambos diseños, físicos y lógicos, figuran en el anexo II",
 ]
 
+[legal."orden-eha-3127-2009:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3127-2009-art-5.html#a5"
+document_id = "BOE-A-2009-18567"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a5"
+published_at = 2009-11-23
+effective_from = 2010-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-21
+reviewed_by = "agent-review (verbatim against the bundled articulo 5 excerpt)"
+notes = "Articulo 5 ESTABLISHES the modelo 190 plazo. It states a twenty-natural-day base rule and then, in the same article, the «No obstante» exception giving 1 to 31 January whenever the declaration is filed by print module, by soporte directamente legible por ordenador, or telematically -- every form in current use. Articulo 1, previously cited by the deadline windows, approves the modelo and states no timing, so it cannot ground a deadline."
+required_text = [
+    "el plazo de presentación será el comprendido entre el 1 de enero y el 31 de enero",
+]
+
 [legal."orden-eha-3127-2009:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
