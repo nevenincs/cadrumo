@@ -27,12 +27,20 @@ def _modelos_by_id() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
 def _snapshot(period: str = "alta") -> RegistrySnapshot:
     modelos, catalogues = _modelos_by_id()
     modelo = modelos["036"]
+    # Modelo 036 declares `authority_grade = applicability`: its censal
+    # alta/modificacion/baja is filed on AEAT's sede and produces no fichero
+    # here, so it is not intended to reach filing and its revision is not
+    # reviewed to that rung. Ask for the rung the law-selected revision itself
+    # declares rather than the FILING default, and a later promotion of 036
+    # carries here without an edit.
+    revision = select_revision(modelo, filing_year=2025, period=period)
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
         filing_year=2025,
         period=period,
+        grade=revision.effective_authority_grade,
     )
 
 
