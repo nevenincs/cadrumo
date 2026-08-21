@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d345ac099b7d996f2617ee01bc762487c0d478ec750c6f0440b73d25d1daec8'
+body_hash: 'sha256:679823afd96c9b2516061ee6251bfa0b42dd348ee7450e982619ec13352748fe'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -933,7 +933,6 @@ Only m165 was fixed: it was the revision under review and is unstamped. The othe
 pre-shifted windows sit on stamped revisions, where changing the data changes what the
 stamp attests to, and are left as a single clean follow-up with the evidence above.
 
-
 ### the-pre-shift-argument-measured-and-refuted | high | the stored shift protects nobody and fabricates a false reason
 
 m345 was storing a pre-shifted close again, after being listed in the standing record as
@@ -981,7 +980,6 @@ statement records only that somebody looked.
 
 **Pre-shift remediation: 4 of 7** (m165, m181, m270, m345). m180, m190 and m193 remain,
 all on stamped revisions.
-
 
 ## Recommendations
 
