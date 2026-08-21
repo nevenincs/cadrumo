@@ -33,8 +33,9 @@ modelo:
               help: null
               label: SZERVEZET TÍPUSA
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Nettó árbevétel
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: null
               label: A BEVALLÁS AZONOSÍTÓ SZÁMA
@@ -65,8 +66,9 @@ modelo:
               help: null
               label: ADÓZÁS A TÁRSASÁGI ADÓ RENDSZERÉBEN
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: A levonás alapja / összeg
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: null
               label: AZ ÁTVEVŐ MEGNEVEZÉSE VAGY CÉGNEVE / A KOLLEKTÍV BEFEKTETÉSI
@@ -98,11 +100,13 @@ modelo:
               help: null
               label: Év
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Nyereség / veszteség
             x-ehkn0rpi5pjm2srkdtpg:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Költségek / negatív jövedelem többlete
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
               help: null
               label: null
@@ -172,8 +176,9 @@ modelo:
               label: Bruttó bevétel / esedékessé vált hozamok összege / számviteli
                 eredmény
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Csökkentés százaléka
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: KATASZTERI HIVATKOZÁS
@@ -188,8 +193,9 @@ modelo:
               label: A hozzárendelhető jövedelem / az entitás tagjának hozzárendelhető
                 nettó hozam összege (előjel nélkül, tizedesvessző nélkül, euróban)
             x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Levonások és előlegfizetések
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: AZ INGATLAN ELHELYEZKEDÉSE
@@ -204,11 +210,13 @@ modelo:
               help: null
               label: LAP TÍPUSA
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Beszerzési, jegyzési vagy könyv szerinti érték
             x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: 'Nettó eszközérték / kiigazítások: növelések'
             x-ehkn0rpj5phmoobmck:
               help: null
               label: KÓD
@@ -223,14 +231,14 @@ modelo:
               help: null
               label: RÉSZTVEVŐ TÍPUSÁNAK KÓDJA
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
-              label: KÓD
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: Tartománykód
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
               label: AZ INGATLAN BÉRBEADÁSÁNAK VAGY HASZNÁLAT ÁTENGEDÉSÉNEK NAPJAI
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: null
-              label: TEVÉKENYSÉG TÍPUSA
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: Tagsági napok száma
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: null
               label: A SZERVEZET TAGJÁNAK ADÓÜGYI CÍME
@@ -238,20 +246,21 @@ modelo:
               help: null
               label: ÖSSZEG (HOZAM / LEVONÁS / KEDVEZMÉNY)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: null
-              label: A HOZAM MEGÁLLAPÍTÁSÁNAK RENDSZERE
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: Tag december 31-én
             x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: null
-              label: A BEVALLÓ MEGNEVEZÉSE VAGY CÉGNEVE
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: A tag NIF száma
             x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: null
-              label: A BEVALLÓ MEGNEVEZÉSE VAGY CÉGNEVE
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: A tag vezetékneve és utóneve, cégneve vagy megnevezése
             x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: null
-              label: A KÉPVISELŐ N.I.F. SZÁMA
+              help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+              label: Az ingatlan jellege
             x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Részesedés százaléka
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: null
               label: AZ INGATLAN TULAJDONI HÁNYADA
@@ -259,8 +268,9 @@ modelo:
               help: null
               label: LEVONHATÓ CÉLTARTALÉKOK ÉS NEHEZEN IGAZOLHATÓ KÖLTSÉGEK
             x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Csökkentés
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: KATASZTERI HIVATKOZÁS
@@ -269,8 +279,9 @@ modelo:
               label: MEZŐGAZDASÁGI, ÁLLATTENYÉSZTÉSI ÉS ERDŐGAZDÁLKODÁSI TEVÉKENYSÉG
                 CSÖKKENTETT NETTÓ HOZAMA TÁRGYI ADÓALAP-MEGÁLLAPÍTÁS SZERINT
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: null
-              label: null
+              help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
+                részre bontja.
+              label: Objektív megállapítás szerinti tevékenységek előzetes nettó hozama
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
               help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
                 bevallott adat.

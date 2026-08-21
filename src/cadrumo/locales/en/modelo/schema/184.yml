@@ -33,8 +33,9 @@ modelo:
               help: null
               label: ENTITY TYPE
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Net turnover
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: null
               label: IDENTIFYING NUMBER OF THE RETURN
@@ -64,8 +65,9 @@ modelo:
               help: null
               label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Deduction base / amount
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: null
               label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
@@ -96,11 +98,13 @@ modelo:
               help: null
               label: Year
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Gains / losses
             x-ehkn0rpi5pjm2srkdtpg:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Expenses / excess negative income
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
               help: null
               label: null
@@ -169,8 +173,9 @@ modelo:
                 entities.
               label: Gross income / amount of accrued returns / accounting result
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Reduction percentage
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: CADASTRAL REFERENCE
@@ -185,8 +190,9 @@ modelo:
               label: Amount of income attributable / net return attributable to the
                 entity member (unsigned, no decimal comma, in euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Withholdings and payments on account
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: LOCATION OF THE PROPERTY
@@ -201,11 +207,13 @@ modelo:
               help: null
               label: SHEET TYPE
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Acquisition, subscription or book value
             x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: 'Net asset value / adjustments: increases'
             x-ehkn0rpj5phmoobmck:
               help: null
               label: CODE
@@ -220,15 +228,15 @@ modelo:
               help: null
               label: PARTICIPANT TYPE CODE
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
-              label: CODE
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: Province code
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
               label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF
                 THE PROPERTY
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: null
-              label: ACTIVITY TYPE
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: Number of days as a member
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: null
               label: TAX ADDRESS OF THE ENTITY MEMBER
@@ -236,20 +244,22 @@ modelo:
               help: null
               label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: null
-              label: RETURN DETERMINATION REGIME
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: Member as at 31 December
             x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: null
-              label: NAME OR COMPANY NAME OF THE DECLARANT
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: NIF of the member
             x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: null
-              label: NAME OR COMPANY NAME OF THE DECLARANT
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: Surnames and first name, company name or denomination of the
+                member
             x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: null
-              label: N.I.F. OF THE REPRESENTATIVE
+              help: Field of the member declared in modelo 184's type 3 record.
+              label: Nature of the property
             x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Participation percentage
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: null
               label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
@@ -257,8 +267,9 @@ modelo:
               help: null
               label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
             x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Reduction
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: CADASTRAL REFERENCE
@@ -267,8 +278,9 @@ modelo:
               label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY
                 ACTIVITIES UNDER OBJECTIVE ASSESSMENT
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: null
-              label: null
+              help: Amount declared on modelo 184. The design splits it into an integer
+                and a decimal part.
+              label: Prior net return of activities under objective assessment
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
               help: Field declared on modelo 184, the informative return of income-attribution
                 entities.

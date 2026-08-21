@@ -7,8 +7,16 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               label: SUPPLEMENTARY OR REPLACEMENT RETURN
+            x-chim6r1ectgn6t3fecmn8rrkc5m0:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURE OF THE DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -21,6 +29,10 @@ modelo:
               label: TELEPHONE
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Withholdings and payments on account
             x-chim6r1eedqn6t39ehqn8qbmc4:
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
@@ -105,8 +117,16 @@ modelo:
             label: null
         2025-y-siguientes:
           casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               label: SUPPLEMENTARY OR REPLACEMENT RETURN
+            x-chim6r1ectgn6t3fecmn8rrkc5m0:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURE OF THE DECLARANT
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -119,6 +139,10 @@ modelo:
               label: TELEPHONE
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: Total declared in modelo 193's declarante record. The design splits
+                it into an integer and a decimal part.
+              label: Withholdings and payments on account
             x-chim6r1eedqn6t39ehqn8qbmc4:
               label: RECEIPT TYPE
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:

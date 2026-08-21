@@ -33,8 +33,9 @@ modelo:
               help: null
               label: TIPUS D'ENTITAT
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Import net de la xifra de negocis
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: null
               label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
@@ -64,8 +65,9 @@ modelo:
               help: null
               label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Base de la deducció / import
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: null
               label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
@@ -97,11 +99,13 @@ modelo:
               help: null
               label: Any
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Guanys / pèrdues
             x-ehkn0rpi5pjm2srkdtpg:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Despeses / excés de rendes negatives
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
               help: null
               label: null
@@ -171,8 +175,9 @@ modelo:
               label: Ingressos íntegres / import de rendiments meritats / resultat
                 comptable
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Percentatge de reducció
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: REFERÈNCIA CADASTRAL
@@ -187,8 +192,9 @@ modelo:
               label: Import de la renda atribuïble / rendiment net atribuïble al membre
                 de l'entitat (sense signe, sense coma decimal, en euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Retencions i ingressos a compte
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: SITUACIÓ DE L'IMMOBLE
@@ -203,11 +209,13 @@ modelo:
               help: null
               label: TIPUS DE FULL
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Valor d'adquisició, subscripció o comptable
             x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: 'Valor liquidatiu / ajustos: augments'
             x-ehkn0rpj5phmoobmck:
               help: null
               label: CLAU
@@ -222,14 +230,14 @@ modelo:
               help: null
               label: CLAU TIPUS DE PARTÍCIP
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
-              label: CLAU
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: Codi de província
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
               label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: null
-              label: TIPUS D'ACTIVITAT
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: Nombre de dies com a membre
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: null
               label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
@@ -237,20 +245,21 @@ modelo:
               help: null
               label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: null
-              label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: Membre a 31 de desembre
             x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: null
-              label: DENOMINACIÓ O RAÓ SOCIAL DEL DECLARANT
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: NIF del membre
             x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: null
-              label: DENOMINACIÓ O RAÓ SOCIAL DEL DECLARANT
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: Cognoms i nom, raó social o denominació del membre
             x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: null
-              label: N.I.F. DEL REPRESENTANT
+              help: Dada del membre declarat en el registre de tipus 3 del model 184.
+              label: Naturalesa de l'immoble
             x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Percentatge de participació
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: null
               label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
@@ -258,8 +267,9 @@ modelo:
               help: null
               label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
             x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Reducció
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: REFERÈNCIA CADASTRAL
@@ -268,8 +278,9 @@ modelo:
               label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
                 EN ESTIMACIÓ OBJECTIVA
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: null
-              label: null
+              help: Import declarat al model 184. El disseny el divideix en part entera
+                i part decimal.
+              label: Rendiment net previ d'activitats en estimació objectiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
               help: Dada declarada al model 184, declaracio informativa d'entitats
                 en regim d'atribucio de rendes.

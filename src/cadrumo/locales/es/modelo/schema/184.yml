@@ -34,8 +34,9 @@ modelo:
               help: null
               label: TIPO DE ENTIDAD
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Importe neto de la cifra de negocios
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: null
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN
@@ -65,8 +66,9 @@ modelo:
               help: null
               label: TRIBUTACIÓN EN RÉGIMEN DEL IMPUESTO SOBRE SOCIEDADES
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Base de la deducción / importe
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: null
               label: DENOMINACIÓN O RAZÓN SOCIAL DEL CESIONARIO / DENOMINACIÓN DE
@@ -98,11 +100,13 @@ modelo:
               help: null
               label: Año
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Ganancias / pérdidas
             x-ehkn0rpi5pjm2srkdtpg:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Gastos / exceso de rentas negativas
             x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
               help: null
               label: null
@@ -172,8 +176,9 @@ modelo:
               label: Ingresos íntegros / importe de rendimientos devengados / resultado
                 contable
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Porcentaje de reducción
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: REFERENCIA CATASTRAL
@@ -188,8 +193,9 @@ modelo:
               label: Importe de la renta atribuible / rendimiento neto atribuible
                 al miembro de la entidad (sin signo, sin coma decimal, en euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Retenciones e ingresos a cuenta
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: SITUACIÓN DEL INMUEBLE
@@ -204,11 +210,13 @@ modelo:
               help: null
               label: TIPO DE HOJA
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Valor de adquisición, suscripción o contable
             x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: 'Valor liquidativo / ajustes: aumentos'
             x-ehkn0rpj5phmoobmck:
               help: null
               label: CLAVE
@@ -223,15 +231,17 @@ modelo:
               help: null
               label: CLAVE TIPO DE PARTÍCIPE
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
-              label: CLAVE
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: Código provincia
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: null
               label: NÚMERO DE DÍAS DE ARRENDAMIENTO O CESIÓN DE USO Y DISFRUTE DEL
                 INMUEBLE
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: null
-              label: TIPO DE ACTIVIDAD
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: Número de días como miembro
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: null
               label: DOMICILIO FISCAL DEL MIEMBRO DE LA ENTIDAD
@@ -239,20 +249,25 @@ modelo:
               help: null
               label: IMPORTE (RENDIMIENTO / RETENCIÓN / DEDUCCIÓN)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: null
-              label: RÉGIMEN DETERMINACIÓN RENDIMIENTOS
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: Miembro a 31 de diciembre
             x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: null
-              label: DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: NIF del miembro
             x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: null
-              label: DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: Apellidos y nombre, razón social o denominación del miembro
             x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: null
-              label: N.I.F. DEL REPRESENTANTE
+              help: Dato del miembro declarado en el registro de tipo 3 del modelo
+                184.
+              label: Naturaleza del inmueble
             x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Porcentaje de participación
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: null
               label: PORCENTAJE DE TITULARIDAD DEL INMUEBLE
@@ -260,8 +275,9 @@ modelo:
               help: null
               label: PROVISIONES DEDUCIBLES Y GASTOS DE DIFÍCIL JUSTIFICACIÓN
             x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Reducción
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: null
               label: REFERENCIA CATASTRAL
@@ -270,8 +286,9 @@ modelo:
               label: RENDIMIENTO NETO MINORADO DE ACTIVIDADES AGRÍCOLAS, GANADERAS
                 Y FORESTALES EN ESTIMACIÓN OBJETIVA
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: null
-              label: null
+              help: Importe declarado en el modelo 184. El diseno lo divide en parte
+                entera y parte decimal.
+              label: Rendimiento neto previo de actividades en estimación objetiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
               help: Dato declarado en el modelo 184, declaracion informativa de entidades
                 en regimen de atribucion de rentas.

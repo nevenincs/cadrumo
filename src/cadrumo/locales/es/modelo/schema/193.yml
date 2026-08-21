@@ -9,8 +9,16 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Base de retenciones e ingresos a cuenta
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+            x-chim6r1ectgn6t3fecmn8rrkc5m0:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALEZA DEL DECLARANTE
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -23,6 +31,10 @@ modelo:
               label: TELÉFONO
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
@@ -105,8 +117,16 @@ modelo:
             label: Modelo 193 ejercicio 2024 y siguientes
         2025-y-siguientes:
           casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Base de retenciones e ingresos a cuenta
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+            x-chim6r1ectgn6t3fecmn8rrkc5m0:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               label: NATURALEZA DEL DECLARANTE
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -119,6 +139,10 @@ modelo:
               label: TELÉFONO
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: Total declarado en el registro de declarante del modelo 193. El
+                diseno lo divide en parte entera y parte decimal.
+              label: Retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
               label: TIPO DE PERCEPCIÓN
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
