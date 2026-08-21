@@ -149,13 +149,10 @@ modelo:
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
               label: Total withholding base and advance-payment base
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
               label: Total withholdings and advance payments
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
               label: Total number of recipients
           construct:
             modelo-193-annual-summary:

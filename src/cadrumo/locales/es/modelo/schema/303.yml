@@ -733,16 +733,7 @@ modelo:
             '10':
               help: null
               label: null
-            '108':
-              help: null
-              label: null
-            '109':
-              help: null
-              label: null
             '11':
-              help: null
-              label: null
-            '111':
               help: null
               label: null
             '12':
@@ -769,55 +760,10 @@ modelo:
             '15':
               help: null
               label: null
-            '150':
-              help: null
-              label: null
-            '151':
-              help: null
-              label: null
-            '152':
-              help: null
-              label: null
-            '153':
-              help: null
-              label: null
-            '154':
-              help: null
-              label: null
-            '155':
-              help: null
-              label: null
-            '156':
-              help: null
-              label: null
-            '157':
-              help: null
-              label: null
-            '158':
-              help: null
-              label: null
             '16':
               help: null
               label: null
-            '165':
-              help: null
-              label: null
-            '166':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
             '17':
-              help: null
-              label: null
-            '170':
               help: null
               label: null
             '18':
@@ -1098,16 +1044,10 @@ modelo:
             '107':
               help: null
               label: null
-            '108':
-              help: null
-              label: null
             '109':
               help: null
               label: null
             '11':
-              help: null
-              label: null
-            '111':
               help: null
               label: null
             '12':
@@ -1176,22 +1116,7 @@ modelo:
             '16':
               help: null
               label: null
-            '165':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
             '17':
-              help: null
-              label: null
-            '170':
               help: null
               label: null
             '18':
@@ -2346,16 +2271,10 @@ modelo:
             '107':
               help: null
               label: null
-            '108':
-              help: null
-              label: null
             '109':
               help: null
               label: null
             '11':
-              help: null
-              label: null
-            '111':
               help: null
               label: null
             '12':
@@ -2424,25 +2343,7 @@ modelo:
             '16':
               help: null
               label: null
-            '165':
-              help: null
-              label: null
-            '166':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
             '17':
-              help: null
-              label: null
-            '170':
               help: null
               label: null
             '18':

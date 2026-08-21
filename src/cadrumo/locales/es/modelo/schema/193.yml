@@ -149,13 +149,10 @@ modelo:
         2024-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
               label: Base retenciones e ingresos a cuenta total
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
               label: Retenciones e ingresos a cuenta total
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
               label: Número total de perceptores
           construct:
             modelo-193-annual-summary:
