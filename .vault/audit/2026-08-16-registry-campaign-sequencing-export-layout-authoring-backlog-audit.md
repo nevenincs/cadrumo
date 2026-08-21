@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4fab38a0c86a18465715a5eb397276404d8b505158454ff4eae79d1a319a64ed'
+body_hash: 'sha256:f6bda8f061d7565839daed4535a76dde0f609171e283236b0fa2f6d574b8d94b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11082,3 +11082,171 @@ modelo 220 blocker already recorded: a revision carries one export layout, so
 splitting a span needs the BOE orden that fixes each boundary. Recorded rather
 than fixed because each split is filing-grade and needs its establishing orden
 acquired, not inferred from the design diff.
+
+## Tick: the locale catalogue axis closed, and the scanner shape that kept it red
+
+Queue position: all six items re-measured against their OWN gates rather than
+memory, both lanes. `test_export_record_extent_within_its_design`,
+`test_diseno_coverage_geometry_recovery`,
+`test_declared_box_numbers_exist_in_the_design` and
+`test_export_layout_record_coverage` report 29 passed in the default lane and 3
+passed under `-m integration`. Authority CLEAN; 34 generated-tree gates pass.
+The queue is closed on evidence, not recollection.
+
+### 76 orphaned catalogue keys removed, with the control that mattered
+
+The remaining `codebase_extra` broke down as 103 `docs.*`, 36 modelo 182, 29
+modelo 390, 15 `mcp.*`, 6 modelo 151, 5 modelo 193, 3 `cli.help.*`. Every one
+of the 76 modelo keys was confirmed orphaned: no live casilla, construct or
+revision declares it.
+
+The control that decided the removal was whether any of them is a CONTINUITY
+key that live casillas fall back to -- removing one of those would blank real
+labels on boxes that do exist. All 76 are revision-scoped and zero are
+reachable by any live casilla, so the removal loses nothing.
+
+### The extras that must NOT be removed
+
+`docs.*` and `mcp.*` are live keys with real consumers: `docs.*` is read by
+`dev/docs/casilla_reference.py` through a `docs_chrome(...)` helper. The
+scanner walks `src/cadrumo` for `tr("literal")` call sites, so a key consumed
+by `dev/` tooling or reached through a helper is invisible to it and reports as
+extra. The audit already excludes those two namespaces from the gate's own
+count, which is why the gate said 79 where the audit said 197.
+
+### The gates-overlap trap, and the third shape
+
+That left exactly three: `cli.help.missing_argument`, `.missing_option`,
+`.missing_parameter`. These are required in all four catalogues by
+`entrypoints/cli/tests/test_framework_localisation_catalogue_coverage.py`, and
+reported as extra by parity. Both available moves were wrong -- deleting them
+reds the framework gate and leaves a Spanish operator half an English refusal;
+keeping them reds parity. That is the oscillation tell the quality rules
+describe, and it means neither fix is right.
+
+The third shape was to teach the scanner what it could not see. It already
+models several indirections (f-strings, ALL-CAPS constants, aliased calls,
+error constructors, and dict registries confirmed by flow into a translator).
+What it lacked is the ROW TABLE: `_MISSING_PARAMETER_PREFIXES` is a tuple of
+equal-width tuples whose second COLUMN is the key and whose siblings are the
+framework's English source strings, iterated as
+`for prefix, key, default, _ in TABLE` and reaching `tr(key)`. The dict shape's
+"every value is a dotted key" test is exactly wrong here, because the sibling
+columns are prose by design.
+
+The signal used instead is positional -- every row all-string, equal width, and
+at least one index where EVERY row carries a key-shaped string -- confirmed by
+the same discipline the dict shape uses: the table must actually be iterated
+into a translator sink. Shape alone would admit any table of string tuples.
+
+Proven by control, not by the happy path: the same table NOT read by `tr`
+yields no keys, a prose table read by `tr` yields none, and an anchor test
+fails if those three keys ever become literal `tr("...")` calls, which would
+leave the discovery test passing for a reason unrelated to the shape it covers.
+
+### Measured after
+
+* `codebase_missing` 0, `codebase_extra` 197 -> 118, every remaining one a live
+  key in the two namespaces the gate excludes by design.
+* locale suite 534 passed, 0 failed -- green, including both honesty gates,
+  parity, the audit gates and the framework-localisation gate.
+* authority CLEAN; casilla label Spanish source coverage 2 passed.
+
+### Still open
+
+The four `test_revision_span_matches_published_designs` findings stand
+unchanged and are the next candidate: modelo 184 `2015-y-siguientes` needs 2
+revisions, modelo 200 `2024-y-siguientes` 2, modelo 322 `2008-2025` 3, modelo
+347 `2008-y-siguientes` 3. Each split needs the BOE orden that fixes its
+boundary acquired rather than inferred from the design diff, which is why these
+remain recorded rather than fixed.
+
+## Tick: modelo 184's re-layout boundary, grounded and legally anchored
+
+Queue position: the six queue items were re-verified closed last tick against
+their own gates in both lanes. The first OPEN red is the span gate, and its
+first finding is modelo 184 -- queue item 1's modelo -- so that is the item.
+Re-measured this tick: authority CLEAN, 34 generated-tree gates pass, span gate
+4 failed.
+
+### The earlier deferral was wrong, and this corrects it
+
+The previous record deferred the four span findings on the grounds that each
+split needs "the BOE orden that fixes its boundary acquired, not inferred from
+the design diff". For modelo 184 that was over-cautious: the orden is already
+bundled. `corpus/normatives/html/orden-hac-1430-2025.html` ships in the repo,
+and its **artículo cuarto** modifies precisely Orden HAP/2250/2015, the modelo
+184 orden.
+
+### What the norm says, and what the parser sees
+
+Artículo cuarto, apartado Uno introduces «NÚMERO TOTAL DE REGISTROS DE ENTIDAD»
+at positions 221-229 of tipo de registro 1 and shifts BLANCOS to 230-487.
+Apartado Dos rewrites the SUBCLAVE value list at 94-95 of tipo 2 without moving
+it.
+
+Reading both bundled designs through the SAME parser the generator authors
+layouts from -- not through the PDF text, which is what the generator would
+actually consume -- gives 139 fields for the 2023 design against 140 for 2025,
+with exactly one structural delta: `@221` BLANCOS (len 267) becomes the new
+field (len 9), and BLANCOS reappears at `@230-487`. That is the span gate's
+"2 added at 221 and 230, 1 removed at 221", stated three independent ways.
+
+Two further entries flagged in the socio record at `@203` and `@214` are NOT a
+re-layout: same offset, same length, identical `content`, differing only in
+where the PDF line-wrapped the description. Checking that mattered -- had they
+been real, the split would have had to carry a second record's delta.
+
+The boundary itself is fixed by the orden rather than by the design cover page:
+it "será aplicable, por primera vez, a las declaraciones informativas
+correspondientes al ejercicio 2025" for modelo 184. So the split is
+2015-2024 / 2025-y-siguientes, and that is AEAT's own statement.
+
+### What was authored
+
+`orden-hac-1430-2025:art-4` in the legal catalogue (BOE-A-2025-25389, BOE núm.
+298 of 2025-12-12, in force the following day), stamped `agent_reviewed` with
+the pending-operator token -- the legal catalogue is a human-reviewed
+filing-grade surface and an agent may not sign it off.
+
+Every `required_text` phrase was checked against the corpus file's actual bytes
+before writing, and the authoring script REFUSES to write an entry whose
+evidence cannot match. That check earned itself twice over: the file spells the
+range `221‑229` with a NON-BREAKING hyphen, so the obvious plain-hyphen
+spelling is absent from the corpus entirely, and `correspondientes al ejercicio
+2025` is not contiguous in the raw HTML because markup splits it.
+
+### Proven to bite
+
+A clean authority load is only the positive half -- it cannot separate "checked
+and matched" from "never checked". Re-validating the loaded reference with an
+in-memory mutation (no tracked file edited) shows the gate refusing a phrase
+the corpus lacks, and refusing the plain-hyphen `221-229`. The non-breaking
+spelling is doing real work rather than decorating the entry.
+
+### Deliberately NOT done
+
+The new reference was not added to revision `2015-y-siguientes`. That revision
+emits the 2025 layout today, so citing the 2025 orden there would describe what
+it emits -- but the orden does not govern 2015-2024 filings, and a legal_ref
+that does not establish the value for the period it is attached to is the
+grounding defect the calculation-grounding rule names. It belongs on the 2025
+revision the split creates, not on the over-broad one.
+
+### The split, fully specified for execution
+
+* The generator carries only a `2025` epoch (`dev/registry/mappings/modelo_184`
+  and the matching render profile), while BOTH design sources are registered
+  (`aeat-dr-184-2025`, `aeat-dr-184-2023-2024`). The published tree's
+  provenance reads `"design_epoch":"2025"`, so revision `2015-y-siguientes`
+  emits the 2025 byte layout for every year from 2015 -- the prior-year
+  wrong-offset harm the gate names, present in the tree today.
+* The design source declares its epoch as `2023`, NOT `2023-2024`; requesting
+  the latter is refused by the resolver.
+* Remaining work: author the `2023` epoch mapping and render profile
+  (re-anchored to the 2023 design's rows, since anchors are `source_row` and
+  `ordinal` keyed), generate and check the tree, publish it as revision
+  `2015-2024`, narrow the existing revision to `2025-y-siguientes` and attach
+  `orden-hac-1430-2025:art-4` there.
+
+Modelos 200, 322 and 347 carry the same class of finding and are untouched.

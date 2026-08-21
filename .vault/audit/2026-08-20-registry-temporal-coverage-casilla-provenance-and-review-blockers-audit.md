@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:bb1df439f12d3264e5a3cd95988fa7a18aede47ec766a403ccc44ddb42ac9552'
+body_hash: 'sha256:41a2643c44c52d1bdc89b2fe2db8530cb83f1aa2941db6c4b1b965c805594932'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1536,7 +1536,6 @@ records one false-positive class removed by reading presentation years instead o
 assuming an offset; this may be a second one hiding on the upper bound rather than the
 lower.
 
-
 ### the-layout-coverage-list-triaged-eleven-are-citation-defects-fourteen-need-acquisition | high | and the arrears pattern is now unmistakable
 
 The question the previous finding left open -- whether the arrears-bounds entries are a
@@ -1582,7 +1581,6 @@ hands, and the per-revision relayout check above is a precondition for four of t
 eleven. What this iteration removes is the ambiguity: the list is no longer sixteen
 undifferentiated failures but eleven citation fixes with the evidence already on disk and
 fourteen acquisitions, and the arrears off-by-one explains why they all look alike.
-
 
 ## Recommendations
 
