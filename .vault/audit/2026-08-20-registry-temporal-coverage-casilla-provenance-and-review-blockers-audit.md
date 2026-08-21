@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e695beba296f0974262d1407b0572a256de2b75fba08c54bccca4bcf72b4663'
+body_hash: 'sha256:2298ee5e6f21bde55e28ddbd35baf7bfeb45b9b9a8f6b35aed0519308991aaf7'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1227,6 +1227,54 @@ The conservative reading is that a revision whose declared design post-dates mos
 claimed years should be SPLIT at the design boundary rather than stamped with a caveat --
 which is what the gate itself says, and what the span gate says separately for the
 contrary-evidence class. The three stamps stand for now, with this recorded against them.
+
+
+### RESOLVED-filing_eligible-has-no-runtime-consumer | resolved | the scope flip reclassifies gaps into the stricter bucket, it authorises nothing
+
+The previous finding left one question open: whether ``filing_eligible`` has a consumer
+that would act on it for a filing year the declared design does not cover. It was worth
+asking and the answer is no. This corrects that finding's implication.
+
+**Every consumer is in the reporting layer.** ``filing_eligible`` is read only in
+``application/registry/_conformance.py`` and ``domain/calculations/registry/_coverage.py``.
+No filing, draft or export path reads it -- those go through the export completeness
+gate and ``ValidatedRegistryAuthority``, which are separate mechanisms. Stamping a
+revision does not authorise producing a filing for any year.
+
+**And the polarity runs the safe way.** The two properties are complements over the same
+set:
+
+```
+filing_gaps     = gaps if     filing_eligible else ()
+inspection_gaps = gaps if not filing_eligible else ()
+```
+
+The gaps are RECLASSIFIED, never hidden and never invented. Moving a revision to
+``filing`` shifts its gaps out of the inspection bucket and into the filing bucket --
+the stricter, more visible one. A stamp therefore subjects a revision to a harsher
+reading of the same evidence, which is the opposite of the risk the previous finding
+implied.
+
+m165, m181 and m270 each carry ``construct_evidence_rows = 0`` and
+``required_coverage_gap_rows`` stayed 0 tree-wide across all three stamps, so there were
+no gaps to reclassify in either direction.
+
+**What remains genuinely open is the DATA, not the review status.**
+``test_every_claimed_filing_year_is_covered_by_its_declared_layout_design`` fails on 14
+revisions because their declared design post-dates most of their claimed years. That
+failure is a property of the registry data and stands whether a revision is stamped or
+pending -- it was failing on all 14 before any of this campaign's stamps and still is.
+The three stamps neither caused nor worsened it; they simply state it where the other
+eleven do not.
+
+The conservative remediation named earlier -- SPLIT such a revision at its design
+boundary rather than let one revision claim years two layouts cover -- is still the right
+answer, and it is now clear that it is a data fix owed by whoever authors those
+revisions, not a reason to withhold or reverse a review.
+
+Seventh time in this campaign that re-checking changed a conclusion, and the first where
+it exonerated the work rather than implicating it.
+
 
 ## Recommendations
 
