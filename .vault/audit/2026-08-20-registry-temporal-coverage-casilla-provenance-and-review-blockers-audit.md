@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:a1becd59f03e4bfebd8ec3d719aaeacfc645f5059519d38cad28ba1fb9dd5a34'
+body_hash: 'sha256:149162ed48feb74b00ced9ed5d3825f109b2f3768b9ce3bee3f83445ef971263'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1630,6 +1630,55 @@ Eighth time in this campaign that re-checking overturned a conclusion, and the t
 where the overturned conclusion was already written into this document. The check that
 caught it -- compare the actual designs rather than infer from another gate's silence --
 is the same one that should have been run before the claim was made.
+
+
+### TWO-SHIPPED-RULES-CONFLICT-the-citation-class-is-empty | high | the registry forbids the citation the layout gate demands
+
+Attempting the three "safe" citation fixes produced the finding the previous four
+iterations of analysis could not. **The fix is refused by the registry's own validation:**
+
+> ``modelo 714 revision 2024 cites sources outside their applicability window:
+> source 'aeat-dr-714-2025' applies_from 2025-01-01 is after revision valid_to
+> 2024-12-31``
+
+So two shipped rules are in direct conflict:
+
+| rule | demands |
+|---|---|
+| ``test_every_claimed_filing_year_is_covered_by_its_declared_layout_design`` | the revision cite a design covering its PRESENTATION year (ejercicio N filed in N+1) |
+| registry source-applicability validation | the revision cite NO source whose ``applies_from`` is after its ``valid_to`` (N) |
+
+**For any arrears-filed modelo these are mutually unsatisfiable.** The presentation year
+is by construction after ``valid_to``, so the design that covers it is by construction
+forbidden. No citation can satisfy both.
+
+**That empties the class.** The triage went eleven citation defects, then three after the
+byte-comparison, and now **zero**: not one of the 25 divergences is fixable by adding a
+source ref. Every one requires something else --
+
+- extend the design source's ``applies_to`` to cover the presentation year, which is a
+  source-metadata change and would make ``aeat-dr-714-2024`` claim authority into 2025;
+- re-bound the revision's ``valid_to`` to its presentation window rather than its
+  ejercicio, which changes what the revision means;
+- or have the layout gate accept that a design authoritative for ejercicio N is the right
+  layout for a filing presented in N+1, which is arguably the true semantics and would
+  retire most of the 25.
+
+The third reading deserves weight. A diseño published for ejercicio 2024 IS the layout a
+2024 filing is written in, whenever it is presented. On that reading the gate's
+presentation-year comparison is measuring the wrong thing for arrears returns, and the
+registry validation is right. The module's own docstring already records ONE correction
+in this exact area -- it stopped comparing ejercicio numbers to calendar dates after a
+false-positive sweep -- so a second correction on the same axis is plausible rather than
+heretical.
+
+**Method note, and it is the point.** Four iterations reasoned about this class from
+gate output, design comparisons and span verdicts, and each refined the answer without
+reaching it. Ten minutes of actually attempting the edit produced a single error message
+that settled it. The attempt was cheap, fully reverted -- ``git checkout`` on the modelo
+directory, 24 m714 tests passing again -- and it is now recorded so nobody else spends
+four iterations on the same reasoning.
+
 
 ## Recommendations
 
