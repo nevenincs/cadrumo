@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4a77cae550fb6fe8ec393db7eecdd30e7b83ce63590bc91b1ceced292e460fe3'
+body_hash: 'sha256:133c8f5f828f99620a17a66a6c2077905c999fde4d8c3b9e0c66781984159b8d'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -891,7 +891,6 @@ is what happened here.
 Nothing was stamped this iteration. m165, m181 and m270 now have their byte-extent half
 verified clean, which is the expensive part of a filing-scope review.
 
-
 ### ten-windows-store-a-pre-shifted-close-and-m345-regressed | high | the defect recorded as corrected on m345 is present again
 
 Reviewing m165 for a filing-scope stamp surfaced its middle window closing **2026-02-02**
@@ -933,7 +932,6 @@ informativa modelos. A defect recorded as closed is present in shipped tax data.
 Only m165 was fixed: it was the revision under review and is unstamped. The other six
 pre-shifted windows sit on stamped revisions, where changing the data changes what the
 stamp attests to, and are left as a single clean follow-up with the evidence above.
-
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:168c5d4e7663c0255df06b042987de566497ca6ed7cef2efd7782e468c00d0a3'
+body_hash: 'sha256:4ca2243df88876562975eca981bd21183cbe98eccbc9b1f9bd8b4a18c3408d28'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9681,3 +9681,61 @@ remaining list, which is correct rather than a regression.
 not touched by it: 732+ em dashes in modelo **200**'s `.help` values, and
 codebase-missing `gasto193` keys. This work wrote only modelo 151 `.label` keys
 and introduced zero em dashes.
+
+## Modelo 322: the join was on the wrong key, and fixing it unlocked 419 labels
+
+Modelo 322 sat at 419 unlabelled casillas across two revisions with only ~99
+reachable, and that number was the tell rather than the ceiling. Its casillas are
+numbered `01`..`107` -- the numbers AEAT PRINTS ON THE FORM -- not byte offsets,
+so the offset join used for modelos 151, 308 and 309 was simply asking the wrong
+question. The design prints those same numbers as `[nnn]` markers inside its
+field descriptions.
+
+```
+                       offset-matched    box-matched
+322/2008-2025                     52            179
+322/2026-y-siguientes             47            189
+```
+
+The box join is specific to modelo 322 -- measured across the rest of the
+backlog, every other modelo still numbers by offset and gains nothing from it --
+so it is a second join to reach for when the first returns implausibly little,
+not a replacement.
+
+**340 labels authored across the two revisions.** Unresolved Spanish labels
+**1,082 -> 722**, authority CLEAN, and zero of the 340 produced a string
+identical to its Spanish source.
+
+### Two structures that would have corrupted the output
+
+Modelo 322's labels carry things modelo 151's did not, and both were found by
+inspecting output rather than by the labels failing:
+
+* **Inline sum expressions.** `Suma de deducciones ([701] + [703] + ... + [716])`
+  holds box references INSIDE parentheses. Stripping them the way a trailing
+  `[nnn]` marker is stripped moves them to the end of the label and silently
+  rewrites the formula. They are now held out verbatim and restored in place.
+* **Legal citations and abbreviations split mid-term.**
+  `Regularización cuotas art. 80.Cinco.5ª LIVA` and
+  `Compensación régimen especial A.G. y P` were being cut at their internal
+  periods, producing fragments like `80.Cinco.5ª LIVA` and `y P` as if they were
+  terms.
+
+**The guard is an invariant, not an inspection.** Every composed label must carry
+the same box references, in the same order, as its Spanish source. It reported
+**zero rejects** on the final run, which is what makes the sum-expression
+restoration trustworthy rather than assumed.
+
+**One of my own fixes was too broad and its output said so.** Blocking a split
+after any uppercase letter -- meant to protect `A.G.` -- also blocked
+`IVA DEDUCIBLE. ...`, leaving half the corpus unsplit and 180 of 360 labels
+unrendered. Narrowed to a LONE capital, which is what an abbreviation actually
+looks like: 180 -> 293, and the remaining twenty terms were added from what the
+design prints, after generation reported them.
+
+Twenty labels remain unauthored: their design text is genuinely truncated
+(`Total volumen de operaciones (Art`, `... (excepto adq. intracom.)`), so there
+is no complete label to read.
+
+`dev/locales` parity is still red on its pre-existing drift, and moved the right
+way: **1,210 -> 1,165** missing codebase keys.
