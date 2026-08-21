@@ -32,13 +32,13 @@ def _manifest(reviewed_by_block: str) -> str:
 
 
 def test_a_multiline_reviewer_note_is_replaced_whole() -> None:
-    from .._stamp import _apply_governance
+    from ..conformance._stamp import _apply_governance
 
     text = _manifest('reviewed_by = """\nagent: first line; second clause\nand a third\n"""\n')
 
     rewritten = _apply_governance(
         text,
-        '"2019-y-siguientes"',
+        "2019-y-siguientes",
         {"review_status": '"agent_reviewed"', "reviewed_by": '"agent: replacement"'},
     )
 
@@ -51,13 +51,13 @@ def test_a_multiline_reviewer_note_is_replaced_whole() -> None:
 
 def test_a_single_line_reviewer_note_is_still_replaced() -> None:
     """The control. A fix that only handled the multi-line form would pass the test above."""
-    from .._stamp import _apply_governance
+    from ..conformance._stamp import _apply_governance
 
     text = _manifest('reviewed_by = "agent: one line"\n')
 
     rewritten = _apply_governance(
         text,
-        '"2019-y-siguientes"',
+        "2019-y-siguientes",
         {"review_status": '"agent_reviewed"', "reviewed_by": '"agent: replacement"'},
     )
 
@@ -68,7 +68,7 @@ def test_a_single_line_reviewer_note_is_still_replaced() -> None:
 
 def test_neighbouring_declarations_survive_the_removal() -> None:
     """The span must stop at the closing delimiter, not run on into the rest of the table."""
-    from .._stamp import _apply_governance
+    from ..conformance._stamp import _apply_governance
 
     text = (
         f"{_HEADER}\n"
@@ -77,7 +77,7 @@ def test_neighbouring_declarations_survive_the_removal() -> None:
         'legal_refs = ["orden-1999-11-17:apartado-quinto"]\n'
     )
 
-    rewritten = _apply_governance(text, '"2019-y-siguientes"', {"reviewed_by": '"agent: replacement"'})
+    rewritten = _apply_governance(text, "2019-y-siguientes", {"reviewed_by": '"agent: replacement"'})
 
     parsed = tomllib.loads(rewritten)["revisions"]["2019-y-siguientes"]
     assert parsed["authority_grade"] == "applicability"
