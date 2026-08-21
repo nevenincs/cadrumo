@@ -24,6 +24,8 @@ while sharing the same pointer precedence.
 
 from __future__ import annotations
 
+import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -61,6 +63,61 @@ def pointer_path(root: Path) -> Path:
     return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 
 
+_POINTER_READ_RETRY_SECONDS = 1.0
+"""Budget for waiting out a concurrent writer's replace/clear of the pointer.
+
+A peer's handle on the pointer lives microseconds; a denying ACL does not
+clear at all. As in :mod:`core._lockfile_unlink`, the budget is the
+discriminator rather than the error code -- and here it has to be, because the
+read side carries no ``winerror`` to test.
+"""
+
+_POINTER_READ_POLL_SECONDS = 0.02
+
+
+def _read_pointer_bytes(target: Path) -> bytes | None:
+    """Read ``target``, tolerating a concurrent writer's replace or clear.
+
+    The pointer is rewritten by :func:`restore_pointer` (write-then-rename) and
+    removed by :func:`clear_pointer`, and this read sits on the ``Settings()``
+    bootstrap path -- so any process starting up while another switches profile
+    reads a file that is being replaced underneath it. Two failures follow, both
+    measured on Windows under concurrent access:
+
+    - The file vanishes between the caller's ``is_file()`` and the open, which
+      raised :exc:`FileNotFoundError` from a function documented to answer
+      ``None`` for an absent pointer.
+    - The open is refused while a writer holds the file, as
+      :exc:`PermissionError`. Unlike the removal path in
+      :mod:`core._lockfile_unlink`, this one arrives with ``winerror`` unset,
+      so contention cannot be told from a denying ACL by inspection; a bounded
+      wait separates them instead, and a genuine denial outlasts it and raises.
+
+    Retried on Windows only. POSIX has no sharing-violation class, so an
+    ``EACCES`` there is genuine and propagates on the first attempt.
+
+    Args:
+        target: The pointer file to read.
+
+    Returns:
+        The file's bytes, or ``None`` when it is absent.
+
+    Raises:
+        OSError: For any read failure that is not a concurrent writer, and for
+            a refusal that outlasts :data:`_POINTER_READ_RETRY_SECONDS`.
+    """
+    deadline = time.monotonic() + (_POINTER_READ_RETRY_SECONDS if sys.platform == "win32" else 0.0)
+    while True:
+        try:
+            return target.read_bytes()
+        except FileNotFoundError:
+            return None
+        except PermissionError:
+            if sys.platform != "win32" or time.monotonic() >= deadline:
+                raise
+            time.sleep(_POINTER_READ_POLL_SECONDS)
+
+
 def read_pointer(root: Path) -> BucketPointer | None:
     """Read and strict-validate the pointer file.
 
@@ -87,8 +144,10 @@ def read_pointer(root: Path) -> BucketPointer | None:
     target = pointer_path(root)
     if not target.is_file():
         return None
-    text = target.read_text(encoding="utf-8")
-    return BucketPointer.from_toml(text)
+    raw = _read_pointer_bytes(target)
+    if raw is None:
+        return None
+    return BucketPointer.from_toml(raw.decode("utf-8"))
 
 
 def capture_pointer(root: Path) -> bytes | None:
@@ -103,11 +162,7 @@ def capture_pointer(root: Path) -> bytes | None:
     Raises:
         OSError: If the pointer exists but cannot be read.
     """
-    target = pointer_path(root)
-    try:
-        return target.read_bytes()
-    except FileNotFoundError:
-        return None
+    return _read_pointer_bytes(pointer_path(root))
 
 
 def clear_pointer(root: Path) -> None:
