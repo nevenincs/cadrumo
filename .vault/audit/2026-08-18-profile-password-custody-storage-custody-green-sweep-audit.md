@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9081efe8017735d86414e9fb22dbf860db43fb3ed903780329d3f1fb066d67be'
+body_hash: 'sha256:c28109559739e7fc817f4c02f402d890cc13af69eb55f309653e206b1c524da5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4717,3 +4717,40 @@ the defect this campaign has been finding in other people's work.
 Nothing here was a product defect. The gate landed two entries ago was checked before
 committing, along with the import gate; the two absolute-import offenders it reports are
 another campaign's registry tests, unchanged.
+
+### Applying the previous entry's lesson to this campaign's own work
+
+The previous entry concluded that a structured assertion which passes proves the field's
+VALUE, never that the field can tell two situations apart. That conclusion was then turned
+on the change this campaign had made two entries earlier, and it did not survive.
+
+`test_the_verb_refuses_because_the_profile_fact_is_unanswered` was moved off localised
+prose onto `error.category == "REFUSED"` here. Its docstring states its one job: it is the
+positive control for the label assertions beside it, and it exists so that "a refusal
+caused by something else entirely" cannot let those siblings pass for the wrong reason.
+`category == "REFUSED"` cannot establish that — **a Click parameter error on these same
+verbs is published as REFUSED too.** The control was rewritten into precisely the defect it
+was written to prevent, and it passed, which is why nothing noticed.
+
+Measured against the live CLI for both affected verbs rather than argued from the sibling
+module:
+
+| | `category` | `failed_condition_id` |
+|---|---|---|
+| parameter error (`--bogus-flag`) | `REFUSED` | `None` |
+| the profile-completeness refusal | `REFUSED` | `cli.overview.profile.complete` |
+
+So the old assertion PASSES on a parameter error and the new one FAILS on it. The control
+now asserts the failed condition, which workflow state names and a bad command line never
+does.
+
+**Two things worth keeping from this.** The first is that the lesson had to be applied
+backwards, not only forwards: the entry that identified the trap was written while an
+instance of it sat committed three entries earlier in this same campaign's work. A rule
+discovered is worth a sweep of the work that preceded it, because the reason it was worth
+writing down is that it is easy to do.
+
+The second is that both the weakness and the fix were demonstrated on the verbs actually
+under test. The sibling module's measurement would have been a fair analogy and not a
+proof, and this campaign has now twice found analogies that did not hold when checked
+directly.
