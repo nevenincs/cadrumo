@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b3f54ed07b6d943bf5ade846bb6ff244d45fe29b5226a6db06990382301c629'
+body_hash: 'sha256:7c14e616489f60e7d3deaaca1b50d51054e3e8cfb937482e9cce143da4cfea0b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8891,3 +8891,20 @@ Modules: `test_record_design_source_selection` 2 failed → **22 passed**;
 `test_revision_authority_grade` 1 → **11 passed**;
 `test_revision_manifest_only_placement` 2 → **18 passed**. Authority CLEAN,
 generated-tree gates 30 passed.
+
+### Measured state, and the same capture fault a second time
+
+Registry suite: **64 failed, 5,030 passed** (from 70 / 5,024). Failures fell by
+exactly six and passes rose by exactly six, which is the six tests fixed here and
+nothing else moved.
+
+That arithmetic is the claim, NOT a per-test diff, because the earlier run's log
+had been piped through `tail -30` before reaching the file — 29 `FAILED` lines
+recorded against a 70-failure summary. Diffing the two produced a "newly failing"
+list of forty tests that were simply outside the earlier capture window, and
+every one of them predates this work.
+
+This is the second occurrence of the fault `aeat-local-execution` names, both in
+this campaign and both mine. The current log is a full capture: 64 `FAILED` lines
+against a 64-failure summary, which is the cheap check that the log is whole and
+is worth running before trusting any comparison built on one.
