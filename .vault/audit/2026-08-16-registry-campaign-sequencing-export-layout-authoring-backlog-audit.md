@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:dafeccbfb19db0b6dd4c0ad1ffbb91ed383f86e6417b346a03974a30f73a0da4'
+body_hash: 'sha256:38ac7c0543fe95bdb94026eafe8819f21ced6efc998630b14339b4ef34679ddc'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -8690,3 +8690,5 @@ Modules: `test_registry_schema_part1` 3 failed → **49 passed**; the referentia
 and fixture-sharing cluster **128 → 143 passed, 0 failed**. Authority CLEAN,
 ruff clean across the registry tests (four pre-existing lint errors fixed,
 two of them left by this campaign's own earlier span work).
+
+Registry suite: **70 failed, 5,024 passed** (from 79 / 5,015).
