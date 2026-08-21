@@ -244,7 +244,13 @@ def test_dangling_export_field_casilla_ref() -> None:
         records=(record,),
     )
     revision = minimal_revision(casillas=(casilla,), export_layouts=(layout,))
-    with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla_id"):
+    # Match the two things the diagnostic must carry to be actionable -- which
+    # field, and which id could not be resolved -- not the attribute's spelling.
+    # The check reports the resolved endpoint (`endpoint_casilla_id`, the accessor
+    # that yields `casilla_id` or a projection ref's casilla), so pinning the
+    # declared attribute name reds on a rewording while a diagnostic that lost the
+    # field id would still pass.
+    with pytest.raises(RegistryValidationError, match=r"el\.test\.field-01.*nonexistent-casilla"):
         build_minimal_snapshot(revision)
 
 

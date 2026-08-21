@@ -15,10 +15,18 @@ and each went green over live instances of it:
   intermediate (``updated = upsert(index, entry)``).
 
 Each fix looked complete and was not, because a detector that hunts a shape can
-only ever cover the shapes already imagined. So this gate does not hunt. It
-ENUMERATES every composing write in the application and domain layers and
-requires each to be either self-evidently guarded -- it passes
-``expected_revision_id`` -- or listed below. A site in neither fails.
+only ever cover the shapes already imagined. So this gate ENUMERATES every
+composing write in the application and domain layers and requires each to be
+either self-evidently guarded -- it passes ``expected_revision_id`` -- or
+listed below. A site in neither fails.
+
+That enumeration is itself shape-based, and saying otherwise was this file's
+own overstatement. Probing it found two evasions an ordinary refactor
+produces: binding the method to a local first, and reaching it through
+``getattr``. Both are recognised now, and each has a discriminating case, so
+the claim the docstring makes is the claim the tests check. The honest
+statement of the limit is that this covers the three spellings a composing
+write is written in here -- not every spelling that could exist.
 
 WHAT THE LIST IS, AND IS NOT. It is an inventory, not a clearance. Being listed
 records that a site writes a document without asserting a revision; it does not
@@ -52,6 +60,7 @@ and no protection at all.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -183,15 +192,67 @@ def _bare_composing_sites() -> set[tuple[str, str]]:
         for scope in ast.walk(tree):
             if not isinstance(scope, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
-            for node in ast.walk(scope):
-                if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
-                    continue
-                if node.func.attr not in _COMPOSING_WRITES:
-                    continue
-                if _asserts_a_revision(node):
-                    continue
+            if _has_bare_composing_call(scope):
                 found.add((relative, scope.name))
     return found
+
+
+def _composing_call_name(node: ast.Call, aliases: Mapping[str, str]) -> str | None:
+    """Return the composing write ``node`` invokes, however it was spelled.
+
+    Three spellings, because the first alone is what a refactor walks out of:
+
+    * ``repo.save_with_secure_object_writes(...)`` -- the attribute call;
+    * ``writer = repo.save_with_secure_object_writes`` then ``writer(...)`` --
+      the method bound to a local first, which is ordinary extraction;
+    * ``getattr(repo, "save_with_secure_object_writes")(...)`` -- the dynamic
+      spelling, which a dispatch loop reaches for.
+
+    The last two were MISSED by this gate until they were probed for. That is
+    the same weakness as the four detectors this file's docstring describes
+    replacing: a matcher that recognises one shape enumerates only the sites
+    written in it.
+    """
+    func = node.func
+    if isinstance(func, ast.Attribute) and func.attr in _COMPOSING_WRITES:
+        return func.attr
+    if isinstance(func, ast.Name) and func.id in aliases:
+        return aliases[func.id]
+    if (
+        isinstance(func, ast.Call)
+        and isinstance(func.func, ast.Name)
+        and func.func.id == "getattr"
+        and len(func.args) >= 2
+        and isinstance(func.args[1], ast.Constant)
+        and func.args[1].value in _COMPOSING_WRITES
+    ):
+        return str(func.args[1].value)
+    return None
+
+
+def _composing_aliases(scope: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, str]:
+    """Return local names bound to a composing write, e.g. ``w = repo.save_...``."""
+    aliases: dict[str, str] = {}
+    for node in ast.walk(scope):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Attribute):
+            continue
+        if node.value.attr not in _COMPOSING_WRITES:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                aliases[target.id] = node.value.attr
+    return aliases
+
+
+def _has_bare_composing_call(scope: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Whether ``scope`` composes a write without asserting a revision."""
+    aliases = _composing_aliases(scope)
+    return any(
+        isinstance(node, ast.Call)
+        and _composing_call_name(node, aliases) is not None
+        and not _asserts_a_revision(node)
+        for node in ast.walk(scope)
+    )
 
 
 def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
@@ -267,3 +328,62 @@ def test_every_declaration_states_something() -> None:
     empty = sorted(site for site, reason in _WRITES_WITHOUT_A_REVISION.items() if not reason.strip())
 
     assert not empty, f"declarations with no stated reason: {empty}"
+
+
+def _only_scope(*lines: str) -> ast.FunctionDef:
+    """Parse a snippet holding exactly one function and return it."""
+    tree = ast.parse("\n".join(lines) + "\n")
+    scopes = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    assert len(scopes) == 1, "fixture must hold exactly one function"
+    return scopes[0]
+
+
+def test_a_write_bound_to_a_local_first_is_still_seen() -> None:
+    """DISCRIMINATING: the evasion an ordinary extraction produces.
+
+    Binding the method to a local and calling it is a refactor nobody would
+    think of as changing anything. Before this case the detector saw no
+    attribute call and reported the function clean -- the fifth detector
+    failing the same way as the four this module's docstring describes
+    replacing.
+    """
+    scope = _only_scope(
+        "def persist(repository, entry):",
+        "    catalogue = repository.load()",
+        "    writer = repository.save_with_secure_object_writes",
+        "    writer(upsert(catalogue, entry), ())",
+    )
+
+    assert _has_bare_composing_call(scope)
+
+
+def test_a_write_reached_through_getattr_is_still_seen() -> None:
+    """DISCRIMINATING: the dynamic spelling a dispatch loop reaches for."""
+    scope = _only_scope(
+        "def persist(repository, entry):",
+        "    catalogue = repository.load()",
+        '    getattr(repository, "save_with_secure_object_writes")(upsert(catalogue, entry), ())',
+    )
+
+    assert _has_bare_composing_call(scope)
+
+
+def test_the_widened_detector_still_accepts_a_guarded_write() -> None:
+    """ANTI-TAUTOLOGY: widening must not make every call a violation.
+
+    Each spelling above is now recognised as a composing write; a revision
+    passed through any of them must still clear the site, or the gate would
+    flag the guarded code it exists to encourage.
+    """
+    attribute = _only_scope(
+        "def persist(repository, entry, revision):",
+        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)",
+    )
+    aliased = _only_scope(
+        "def persist(repository, entry, revision):",
+        "    writer = repository.save_with_secure_object_writes",
+        "    writer(entry, (), expected_revision_id=revision)",
+    )
+
+    assert not _has_bare_composing_call(attribute)
+    assert not _has_bare_composing_call(aliased)

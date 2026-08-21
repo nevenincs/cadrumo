@@ -211,8 +211,20 @@ _EXPECTED_DEADLINE_WINDOWS = (
     "modelo-130-2026-4t",
 )
 
+#: The application links Modelo 130's snapshot must carry, as a floor rather than
+#: an inventory -- the revision declares more than these, and adding one must not
+#: red the gate.
+#:
+#: ``modelo-130-verification`` was named here and is NOT declared, because it
+#: cannot be: ``verification`` is not a member of ``ApplicationLink.surface``'s
+#: closed vocabulary, and no revision anywhere in the registry declares such a
+#: surface. Modelo 130's verification concern is carried by the two links that do
+#: exist for it -- ``review`` (``cadrumo.application.filing.review``) and
+#: ``approval`` (``cadrumo.application.workflow.approval``) -- so the floor names
+#: those instead of an id nothing could satisfy.
 _REQUIRED_APPLICATION_LINKS = frozenset(
     {
+        "modelo-130-approval",
         "modelo-130-calculation",
         "modelo-130-deadline",
         "modelo-130-export",
@@ -220,7 +232,7 @@ _REQUIRED_APPLICATION_LINKS = frozenset(
         "modelo-130-filed-declarations-observation",
         "modelo-130-filing",
         "modelo-130-portal-cross-reference",
-        "modelo-130-verification",
+        "modelo-130-review",
     },
 )
 
