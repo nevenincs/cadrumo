@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:df56f1c3ea36e1adf1b1e7ec63976484fb8984722b1133c7bac747913764e24f'
+body_hash: 'sha256:651d01f834fcb780b812ac8ed1b7a9a96769947da3bbef3d1dbfae90e7578d7f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4644,3 +4644,40 @@ whose fixture, marker, or locale no longer delivers what its assertions name —
 product defect. Sixteen of roughly fifty domain modules are now swept. The recurring cause
 is that this directory holds the end-to-end operator surface and no lane runs it, so
 assumptions inside it are never re-validated by the work that invalidates them.
+
+### Correction: the package lanes DO cover that directory — and the real gap is reachability
+
+Three consecutive entries here concluded that `entrypoints/cli/tests` is red because "no
+lane runs it". **That was wrong, and it should be corrected rather than left standing.**
+
+`just test-unit` and `just test-integration` name NO paths. They run the whole tree and
+select by marker, so that directory is covered by the project's own lanes and every red
+found in those sweeps was visible to anyone running them. What is narrow is the
+three-path lane this campaign re-runs each iteration — a property of the working loop, not
+of the project. The sweeps were still worth doing, but the reason recorded for them was
+not the true one.
+
+**Checking that correction surfaced the real structural gap.** Because the lanes select by
+marker and name no path, a module carrying only architectural markers (`hex_application`
+and friends) is selected by nothing. It is not skipped and not reported; it simply never
+runs, and a suite that never runs it stays green forever. That is the failure mode that
+would let a whole module rot exactly the way individual assertions did in the last three
+entries.
+
+Measured: of 2,926 test modules under the package, **17 carry neither `unit` nor
+`integration`** — and all 17 carry `aeat_live`, which `just test-live` enrols. So the tree
+is currently reachable end to end, with zero orphans. Nothing proved it, and nothing kept
+it so.
+
+`dev/` already had this gate — `dev/tests/test_lane_reachability.py`, which the Justfile
+calls the sole declaration site for `dev/` lanes. The same argument applies to `src/`, and
+the check is simpler there because no lane names a path, so only marker selection can
+fail. The gate is hard-cut at zero orphans and lists the execution markers explicitly
+rather than deriving them: the Justfile's expressions are prose to a test, so if a lane's
+marker changes, this list is where the change is noticed.
+
+The `aeat_live` population is pinned in its own assertion, so removing that marker from the
+set fails loudly instead of silently narrowing what counts as reachable — the same
+anti-vacuity concern as an empty scan, applied to the gate's own vocabulary. Proven on a
+real module rather than only a sample: stripping `unit` from a live test file fails the
+gate naming it.
