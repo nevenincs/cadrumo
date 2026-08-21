@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:169cc5f2a0a3f2d84349ff540e2753acb07c7b7940d56bbad8a4291aff3480e4'
+body_hash: 'sha256:1f34a44fbdca8734ddbd8f37592fc6924b1f749f503dcc790d36d356b98a39f0'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -787,6 +787,58 @@ this revision looks stampable.
 contrary evidence (m220, m763) are structurally contested and should be split or have
 their amending orden cited before review, not stamped with a limit. The rest are ABSENT
 cases where a stated limit is the honest treatment.
+
+
+### m185-2003-2025-deadline-windows-cite-the-approving-apartado-not-the-plazo | medium | the file's own two comments contradict each other about which orden grounds them
+
+m185/2003-2025 carries 12 monthly deadline windows closing on the 10th of the following
+month. The dates are RIGHT. Their grounding is not.
+
+**Each window declares** ``legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]``.
+That entry is apartado **Primero**, whose bundled excerpt is titled *"Aprobación de los
+diseños físicos y lógicos, modelo 185"* -- it approves the record designs and says nothing
+about timing.
+
+**The provision that establishes the plazo is apartado Tercero**, present in the bundled
+whole-document file and not cited anywhere in this revision:
+
+> *"Tercero. Lugar y plazo de presentación de la información mensual. La información
+> mensual, modelo 185 ... se presentará ante el Departamento de Informática Tributaria de
+> la Agencia Estatal de Administración Tributaria **en el plazo de los diez días naturales
+> siguientes a la finalización del mes** a que se refiera la información."*
+
+That is exactly the rule the windows implement, so this is a citation defect rather than
+a date defect -- but the standing requirement is that a deadline window declare the
+specific binding provision that ESTABLISHES it, and an approval clause does not.
+
+**The windows file contradicts itself in two adjacent comments.** The first records the
+move correctly: *"these 12 windows all carry filing_year=2025, which orden-hac-1197-2025
+does not govern (it enters into force 2026-01-01...). The real governing instrument for
+2025 and earlier is orden-hac-96-2003."* The second, immediately below, still says:
+*"Modelo 185 monthly deadline windows, grounded in orden-hac-1197-2025 art 4."* The move
+updated the top note and left the original grounding comment naming the very orden the
+top note had just excluded.
+
+**m185/2003-2025 was NOT stamped.** Its "when due" evidence points at a provision that
+does not establish the deadline, which is a defect at exactly the half of the
+applicability rung this review would be attesting to. The sibling m185/2025-y-siguientes
+WAS stamped in the previous iteration: it cites ``orden-hac-1197-2025:art-4``, which is
+the genuine plazo article for the years it covers.
+
+The remediation is bounded and the evidence is already bundled: carve an apartado-Tercero
+excerpt following the documented convention of ``orden-hac-96-2003-primero.html``, enrol
+it, repoint the 12 windows, and correct the stale comment. Not landed here -- carving a
+corpus excerpt correctly requires matching that file's header convention and verifying
+the rendered text byte for byte, which is its own verification job.
+
+**A claim was investigated and DROPPED rather than reported:** that
+``orden-hac-96-2003.html`` mis-declares its encoding. One reading suggested it decoded
+legibly as latin-1 and produced replacement characters as UTF-8; a sweep of all 462
+bundled corpus HTML files then found **zero** that fail UTF-8 decoding, which
+contradicts it. The two observations were not reconciled, so no encoding finding is
+asserted here -- only the note that anyone carving an excerpt from that file should read
+the result back before trusting it.
+
 
 ## Recommendations
 
