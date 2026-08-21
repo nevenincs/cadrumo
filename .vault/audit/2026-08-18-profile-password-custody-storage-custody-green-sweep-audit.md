@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:172ee854d872e7b9857c02877d3aacda48941850c23bdc26bff574fdf7f5a471'
+body_hash: 'sha256:dcffafd8bcba0e064b0bbe2a6796bf7d94b4df47f4910068c80cc1b8d89784ff'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3982,3 +3982,47 @@ of the storage facade produces one execution and one class, both shipping lanes 
 packages. Two iterations have now been spent on it; it is a test-harness curiosity with no
 operator-visible consequence, and it should not be picked up again ahead of work that
 changes what the product does.
+
+### The guard that decides which directory a profile deletion may destroy
+
+Reached by the coverage-refusal selector, with both reachability caveats applied before
+acting — and a THIRD one discovered in the process.
+
+**`_acceleration_receipt.py` was dropped, not deferred.** It ranked second with 40
+platform-neutral uncovered refusals, but reading the functions shows the cluster
+(`_keyring`, `_store_acceleration_secret`, `_delete_acceleration_secret`) is entirely
+OS-keychain-dependent, and this environment's credential store fails with error 1312 by
+standing context. Those refusals are unreachable here for the same reason POSIX branches
+are: not untested, untestable. So the selector needs a third axis beside platform —
+**environment-gated by an excluded marker** (`os_keychain`). Both inflate a raw refusal
+count, and both are invisible until the functions are read.
+
+**`_capsule.py`'s deletion protocol was the real gap.** Five functions implement it —
+mark, rename to tombstone, verify tombstone, verify marker, remove tombstone — all live,
+all consumed by `_custody_service.py`'s delete flow, and **three of the five had no test
+naming them anywhere in the tree**. Checked before concluding: `test_capsule.py` is
+substantial but covers publication, discovery and retirement, never deletion.
+
+The consequence is unusually direct. `verify_profile_custody_deletion_tombstone` returns
+"the exact transaction-owned tombstone proven safe to remove", and its caller removes what
+it returns. Its refusals are the only thing between a profile deletion and destroying
+something it does not own: a live capsule, another transaction's tombstone, or data that
+arrived after the operator consented. Most guards in this campaign protect a value; this
+one authorises an `rm -rf` of a directory.
+
+Covered: the transaction binding (a foreign transaction owns no tombstone and must not be
+handed this one), the post-preflight inventory change (new data must not be destroyed by
+an old approval), an absent tombstone treated as ambiguous rather than as an idempotent
+success, and the marker's exclusivity (two transactions must not each believe they own the
+same capsule's destruction). Paired with the acceptance each must not break, because a
+verifier that refused everything would satisfy every refusal while stranding every real
+deletion.
+
+Proven by removing the inventory comparison and the marker-exclusivity check separately;
+each failed exactly one test. Restored and verified byte-identical to HEAD afterwards, per
+the rule from the swept-probe incident.
+
+**A note on the remaining lead.** The refusal counts for `_acceleration_receipt.py` should
+now be read as environment-blocked rather than open work. What is left on this axis after
+this entry is thin, and the campaign is close to the point where the coverage-refusal
+selector stops paying.
