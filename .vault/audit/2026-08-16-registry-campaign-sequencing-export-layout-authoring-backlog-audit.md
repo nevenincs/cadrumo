@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e831a88c77446a94e237b575510e6b4f7c5f0d25201cca22c79f03ea0f25965'
+body_hash: 'sha256:13e994a1109e69bf22ae04202bfce195df7f42190da4ee9dc6a4e2c1fdaac50d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9115,3 +9115,35 @@ red.
 
 Cluster: 7 failed → **31 passed**. Authority CLEAN, generated-tree gates 30
 passed.
+
+### Three that appeared while this tick ran
+
+The full-suite diff showed three failures NOT in the previous run, and none was
+caused by the work above.
+
+**Two reviewability failures came back on a stricter cap.** Modelo 840 carried a
+2,850-character `reviewed_by` and a 780-character `reason`. It was absent from
+this tick's earlier measurement because a peer stamped it midway through, and
+the earlier sweep also used the wrong threshold: there are TWO caps, and
+`test_registry_reviewability`'s is **520**, not the 600 used before. Re-measured
+at 520: 36 lines across 9 files, all prose keys (`notes` x34, plus 840's
+`reviewed_by` and `reason`). Wrapped through the same verify-before-write
+procedure, and 840's newly multi-line note was proven restampable on a temp tree.
+**Lines over 520 across the whole registry tree: 0.**
+
+**A hole closed, and a test named the type that fell through it.** A peer added
+`SourceReference.period_selector`, which made `Modelo` reachable from
+`RegistryCatalogues` by annotation alone —
+`test_selector_models_contribute_types_the_schema_annotations_cannot_see`
+asserted `Modelo` was NOT so reachable, so a hole CLOSING reddened a test whose
+subject was untouched.
+
+Measured before rewriting: 70 markers from the schema roots, 81 in full, and
+**eleven types still reachable only through the selector table** — the IVA
+family, `RetencionScheme`, `OssIossRegime`. The claim holds; only the specimen
+moved. It now asserts the CONTRIBUTION (`schema_only < full`, and the table-only
+set non-empty) with `IvaCategory` as a specimen that genuinely remains
+table-only, so a type migrating into annotation reach can no longer look like the
+table having stopped contributing. Proven by making the derivation ignore its
+roots: it reds with "the selector table contributed nothing the annotations
+miss".
