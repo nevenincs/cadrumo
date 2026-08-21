@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-20'
-modified: '2026-08-20'
+modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f734fadaef08865e06549ac8b0173826e3b51969ff53264437dfdfe4cf6e33e'
+body_hash: 'sha256:29863d8e1924bf272e9aec93939b040419896ef6a851defacf8a240dad2419f9'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -199,6 +199,55 @@ fail-closed state of an UNREVIEWED revision. Stamping would flip all ten to
 `inherited` without verifying anything. A gap count that a stamp erases is not evidence
 for stamping, and is not evidence against it either; the substantive field coverage
 above is what decides.
+
+
+### m222-authoring-is-specified-not-blocked | medium | The smallest "needs casilla authoring at scale" blocker is fully derivable from its bundled diseño, and here is what it costs
+
+Modelo 222 (pagos fraccionados, régimen de consolidación fiscal) declares 2
+declaration-header casillas against a diseño deriving 63 -- the smallest member of the
+authoring-at-scale group, and the one worth scoping first. It is NOT blocked on missing
+information. Measured against `01-222-ejercicio-2025-y-siguientes.xlsx`:
+
+- **63 box-tagged fields**, carrying the box number inline as `[NN]`, so the numbering
+  needs no inference.
+- **Data types are derivable from field length**: 57 fields of length 17 are money, 6 of
+  length 5 are percentages (`ratio`).
+- **Sections are derivable from the description prefix**: 3 boxes under
+  `A) Liquidación` (modalidad art. 40.2 LIS) and 59 under `B) Liquidación`
+  (art. 40.3 LIS), which further splits into `B.1) Caso general` and
+  `B.2) Casos específicos`.
+- **Legal grounding is the two LIS modalidad articles** the descriptions name
+  themselves, art. 40.2 and art. 40.3.
+
+**THE TRAP THIS SPEC EXISTS TO NAME. 63 tagged fields carry only 60 DISTINCT box
+numbers.** Boxes 16, 22 and 32 each appear twice, both times inside the same sheet
+(`DR22202`) at different offsets, carrying different data:
+
+| box | offset | what it holds |
+|---|---|---|
+| 16 | 13 | B.1 caso general -- Base del pago fraccionado |
+| 16 | 137 | B.1 caso general -- Resultado previo |
+| 22 | 193 | B.2 casos específicos -- Importe |
+| 22 | 429 | B.2 casos específicos -- Resultado previo |
+| 32 | 519 | B.2 casos específicos -- Resultado |
+| 32 | 553 | B.2 casos específicos -- Cantidad a ingresar |
+
+Authoring these three as a bare `16`, `22`, `32` would collapse six distinct declared
+figures into three, and the coverage report would still read 60 of 60 because it keys
+on the number. They must take the box-then-offset id shape (`16-13`, `16-137`), which
+is the same convention modelo 100 uses for its repeated boxes.
+
+**Cost, stated so the decision is informed:** 63 casilla declarations plus 63 labels in
+four locales -- 252 locale strings -- plus the semantic roles, which must not collide
+(the singleton-role typo gate refuses near-twins, and this form has natural twins like
+two "Resultado previo" boxes in different modalidades).
+
+**This is a FEATURE, not a review fix.** Authoring the boxes makes modelo 222 filing-
+capable, which is a product decision about whether Cadrumo supports the consolidated-
+group pago fraccionado. It is deliberately not started here: a half-authored casilla
+set is a silently narrower registry, and worse than the honest 2-casilla stub that
+exists now.
+
 
 ## Recommendations
 
