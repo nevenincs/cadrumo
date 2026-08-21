@@ -82,6 +82,24 @@ applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf"
 review_status = "reviewed"
 
+[legal."orden-hac-96-2003:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-96-2003-tercero.html#tercero"
+document_id = "BOE-A-2003-1911"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
+published_at = 2003-01-30
+effective_from = 2003-01-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-21
+reviewed_by = "agent-review (verbatim against the bundled disposicion Tercero excerpt)"
+notes = "Disposicion Tercero is the provision that ESTABLISHES the modelo 185 monthly plazo for filings governed by this orden: la informacion mensual se presentara en el plazo de los diez dias naturales siguientes a la finalizacion del mes a que se refiera la informacion. Disposicion Primero, cited as orden-hac-96-2003:art-1, approves the disenos fisicos y logicos and states no timing, so it cannot ground a deadline window."
+required_text = [
+    "en el plazo de los diez días naturales siguientes a la finalización del mes",
+]
+
 [legal."orden-hac-96-2003:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
