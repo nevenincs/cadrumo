@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 from datetime import date
 from decimal import Decimal
 
@@ -71,6 +73,19 @@ def _modelo_100_2025_snapshot():
     return _modelo_100_snapshot(2025)
 
 
+def _readable_transaction_id(label: str) -> str:
+    """Return the 64-hex ``TransactionId`` a readable fixture label stands for.
+
+    ``TransactionId`` is content-addressed -- exactly 64 hex characters -- and
+    these fixtures passed labels like ``"tx-ss"``, which the type now refuses.
+    Deriving the id from the label keeps the call sites readable while producing
+    a real one, and the derivation is clock-free so a fixture is the same id on
+    every run. No assertion here compares an id, so nothing depends on the shape
+    beyond its validity.
+    """
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
 def _expense_observation(
     transaction_id: str,
     *,
@@ -80,7 +95,7 @@ def _expense_observation(
     iva_amount: Decimal | None = None,
 ):
     fact = RentaDeductibleExpenseFact(
-        transaction_id=transaction_id,
+        transaction_id=_readable_transaction_id(transaction_id),
         catalogue_id="ledger",
         operation_date=date(2025, 4, 5),
         gross_amount=gross_amount,

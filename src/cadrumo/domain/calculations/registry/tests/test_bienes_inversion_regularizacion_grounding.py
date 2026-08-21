@@ -39,35 +39,66 @@ _GENERIC_DEDUCTION_FRAMEWORK = frozenset(
 )
 
 
-def _m303_casilla(filing_year: int, cid: str):
+def _m303_revision_scopes() -> list[tuple[str, int, str]]:
+    """Yield ``(revision_id, filing_year, period)`` for every committed M303 revision.
+
+    The years were pinned as ``[2020, 2024]`` with a comment reading "2020
+    resolves to the 2022 revision" -- true before the revision-span split gave
+    2022 an exact-year selector, and false afterwards, so the case raised
+    ``NoRevisionForPeriodError`` instead of checking any grounding.
+
+    Deriving the scopes covers all six revisions rather than two and cannot be
+    invalidated by the next split. The scope is still resolved through
+    ``select_revision`` from ``(modelo, filing_year, period)`` rather than
+    indexed by id, and the resolution is asserted to land on the revision it was
+    derived from. The period is read per revision because
+    ``2024-desde-09-y-3t`` does not carry 1T.
+    """
     modelo, _ = _committed_modelo("303")
-    rev = select_revision(modelo, filing_year=filing_year, period="1T")
+    scopes = []
+    for revision_id, revision in sorted(modelo.revisions.items()):
+        selector = revision.period_selector
+        year = selector.years[0] if selector.years else selector.year_from
+        scopes.append((revision_id, int(year), selector.periods[0]))
+    return scopes
+
+
+_M303_SCOPES = _m303_revision_scopes()
+
+
+def _m303_casilla(scope: tuple[str, int, str], cid: str):
+    revision_id, filing_year, period = scope
+    modelo, _ = _committed_modelo("303")
+    rev = select_revision(modelo, filing_year=filing_year, period=period)
+    assert str(rev.id) == revision_id, (
+        f"law-determined resolution for {filing_year} {period} landed on {rev.id!r}, "
+        f"not the revision the scope was derived from ({revision_id!r})"
+    )
     return {c.id: c for c in rev.casillas}.get(cid)
 
 
-# 2020 resolves to the 2022 revision; 2024 to its early-2024 revision.
-@pytest.mark.parametrize("year", [2020, 2024])
-def test_official_casilla_43_grounds_in_bienes_inversion_chapter(year: int) -> None:
+@pytest.mark.parametrize("scope", _M303_SCOPES, ids=[scope[0] for scope in _M303_SCOPES])
+def test_official_casilla_43_grounds_in_bienes_inversion_chapter(scope: tuple[str, int, str]) -> None:
     """The official form casilla 43 must cite the binding LIVA arts. 107-110."""
-    casilla = _m303_casilla(year, "43")
-    assert casilla is not None, f"M303 {year} must declare casilla 43"
+    casilla = _m303_casilla(scope, "43")
+    assert casilla is not None, f"M303 {scope[0]} must declare casilla 43"
     refs = set(casilla.legal_refs)
     missing = _BIENES_INVERSION_CHAPTER - refs
     assert not missing, (
-        f"M303 {year}: casilla 43 (regularización bienes de inversión) must cite "
+        f"M303 {scope[0]}: casilla 43 (regularización bienes de inversión) must cite "
         f"its binding provisions arts. 107-110; missing {sorted(missing)} in {sorted(refs)}"
     )
 
 
-@pytest.mark.parametrize("year", [2020, 2024])
-def test_official_casilla_43_does_not_stand_on_generic_framework_alone(year: int) -> None:
+@pytest.mark.parametrize("scope", _M303_SCOPES, ids=[scope[0] for scope in _M303_SCOPES])
+def test_official_casilla_43_does_not_stand_on_generic_framework_alone(scope: tuple[str, int, str]) -> None:
     """The generic deduction framework (arts. 92/94/95) must not be the only
     LIVA grounding on casilla 43 — the binding regularización provisions govern."""
-    casilla = _m303_casilla(year, "43")
-    assert casilla is not None, f"M303 {year} must declare casilla 43"
+    casilla = _m303_casilla(scope, "43")
+    assert casilla is not None, f"M303 {scope[0]} must declare casilla 43"
     refs = set(casilla.legal_refs)
     assert _BIENES_INVERSION_CHAPTER & refs, (
-        f"M303 {year}: casilla 43 cites only the generic deduction framework "
+        f"M303 {scope[0]}: casilla 43 cites only the generic deduction framework "
         f"{sorted(_GENERIC_DEDUCTION_FRAMEWORK & refs)} without the binding "
         f"arts. 107-110: {sorted(refs)}"
     )
