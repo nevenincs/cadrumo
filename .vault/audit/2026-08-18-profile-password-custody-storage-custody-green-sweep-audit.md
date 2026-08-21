@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:52195ae183c140a46e103cfcdae8a40f6d201dfe68f7ce976cdb691db1093b8e'
+body_hash: 'sha256:bf77c9da28dd091dd04cf79c1cbffbdb3aaa13701808a53b88d84ca386a88be1'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3706,3 +3706,67 @@ early — those are undecidable in general. It is worth having anyway because it
 shape a probe actually takes, it costs one AST walk, and it converts the recurring
 worktree hazard from a discipline every agent must remember into a failure the suite
 reports.
+
+### The uncovered-refusal selector double-counts the other platform's branches
+
+The selector introduced two entries ago — rank modules by how many of their UNCOVERED
+lines are `raise` statements — put `custody/_filesystem.py` at the top with 90. Acting on
+that number directly would have been wrong.
+
+Classifying the same 90 by platform reachability:
+
+- **27 are `_posix_*` / `renameat2` branches**, unreachable on this platform. They are not
+  a testing gap at all; they are the other operating system's implementation, and no test
+  runnable here can ever execute them.
+- 31 are Windows branches, live here.
+- 32 are platform-neutral.
+
+So the headline overstated the addressable gap by roughly a third, and would have kept
+overstating it for every dual-implementation module in the substrate. **A refusal count
+over a cross-platform module measures both platforms and can only ever be executed on
+one.** Split by reachability before ranking, or the largest modules will be the ones with
+the most unreachable code rather than the most untested code.
+
+This is the third time this campaign that a selector needed checking before its
+population was blamed — after the name-keyed sweeps and the raw refusal count on a module
+that already had a test file. The pattern is stable enough to state as a rule: **a
+selector's output is a hypothesis about where to look, never a measurement of what is
+wrong.**
+
+### The local-record contract an interrupted login recovers through
+
+The platform-neutral remainder was worth acting on. The login handover journal is one
+bounded local custody record, and `_login_session.py` funnels every failure against it
+into a fail-closed refusal — so what these primitives accept and refuse IS the recovery
+contract. Three properties were unexercised, and each is one a caller cannot verify for
+itself:
+
+- **Write-once refuses a second publisher.** Two processes must not both believe they
+  published the witness.
+- **A lost compare-and-swap preserves the other party's bytes.** Refusing is not
+  sufficient: the record on disk belongs to whoever won the race, and a refusal that had
+  already truncated it would leave the winner's witness unrecoverable. The function's
+  docstring promises this restoration; nothing asserted it.
+- **The idempotent CAS accepts only the current or the exact predecessor.** A crash retry
+  must converge — re-submitting the same receipt is a successful no-op, and the exact
+  predecessor completes the transition — while any other leaf is refused rather than
+  overwritten.
+
+Each was proven load-bearing separately, and the discrimination was precise: removing the
+write-once refusal failed only the second-publisher test; making compare-and-replace
+ignore its expectation failed only the PRESERVATION test and left the ordinary-advance
+test green; degrading the idempotent CAS into a blind write failed only the foreign-leaf
+refusal while both convergence tests stayed green, which shows those two do not
+over-constrain and the refusal test carries the safety property alone.
+
+Following the rule recorded after the swept-probe incident, each break was restored and
+then verified against HEAD rather than trusted, and the working tree was confirmed
+identical to the committed file before moving on.
+
+**Observed, not actioned:** `_filesystem.py` carries its own Windows contention retry
+(`_LOCAL_RECORD_REPLACE_ATTEMPTS = 8`, 10 ms apart) for the same replace-refused-by-a-reader
+problem centralised in `core/_windows_contention.py`. It retries on ANY `PermissionError`
+without consulting `winerror`, so it also waits out a genuine ACL denial for eighty
+milliseconds before reporting it. That is a mild inefficiency rather than a safety hole,
+but it is a third home for one concept and the natural consumer of the shared predicate.
+Not changed here because it is a live custody write path and deserves its own iteration.
