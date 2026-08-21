@@ -4,7 +4,7 @@ filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-02-01
-closes_on = 2026-02-28
+closes_on = 2026-03-02
 legal_refs = ["orden-hap-2118-2015:art-4"]
-source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order"]
+source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]
 

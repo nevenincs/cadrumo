@@ -1,7 +1,7 @@
 [[revisions."2013-y-siguientes".constructs]]
 id = "modelo-270-informative"
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-270-procedure", "enrolled-modelo-270-layout", "aeat-dr-270-2023"]
+source_refs = ["enrolled-modelo-270-procedure", "enrolled-modelo-270-layout", "aeat-dr-270-2023", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-270-filing", "modelo-270-deadline"]
 workbook_parity_refs = ["modelo-270-orden-static-layout"]

@@ -1,7 +1,7 @@
 [[revisions."2009-y-siguientes".constructs]]
 id = "modelo-181-informative"
 legal_refs = ["orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-181-procedure", "enrolled-modelo-181-layout", "aeat-dr-181-2022"]
+source_refs = ["enrolled-modelo-181-procedure", "enrolled-modelo-181-layout", "aeat-dr-181-2022", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-181-filing", "modelo-181-deadline"]
 workbook_parity_refs = ["modelo-181-orden-static-layout"]

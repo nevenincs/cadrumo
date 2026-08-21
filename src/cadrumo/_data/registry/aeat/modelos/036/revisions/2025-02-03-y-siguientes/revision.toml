@@ -60,7 +60,16 @@ acquisition and is not something this review does."""
 reviewed_at = 2026-08-21
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
-reason = "The censal declaration has no calendar plazo: its period_selector declares the EVENT kinds alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors each to its triggering event. Article 11.2 states this verbatim in the bundled corpus for the baja: la declaracion de baja debera presentarse en el plazo de un mes desde que se cumplan las condiciones previstas en el apartado 1 de este articulo. The bundled excerpts of articles 9 and 10 carry the substance of what alta and modificacion must declare but NOT their timing sentences, so the alta and modificacion periods are cited by article rather than reproduced and are not corpus-proven here. No recurring window exists for any of the three and none is fabricated."
+reason = """\
+The censal declaration has no calendar plazo: its period_selector declares the EVENT kinds \
+alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors each to \
+its triggering event. Article 11.2 states this verbatim in the bundled corpus for the \
+baja: la declaracion de baja debera presentarse en el plazo de un mes desde que se cumplan \
+las condiciones previstas en el apartado 1 de este articulo. The bundled excerpts of \
+articles 9 and 10 carry the substance of what alta and modificacion must declare but NOT \
+their timing sentences, so the alta and modificacion periods are cited by article rather \
+than reproduced and are not corpus-proven here. No recurring window exists for any of the \
+three and none is fabricated."""
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",

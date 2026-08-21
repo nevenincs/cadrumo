@@ -1,7 +1,7 @@
 [[revisions."2025-y-siguientes".constructs]]
 id = "modelo-193-annual-summary"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
 casilla_ids = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 formulas = ["modelo-193-base-total", "modelo-193-retenciones-total"]
 bindings = [
