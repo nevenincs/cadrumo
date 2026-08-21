@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:d0f323c36ffc69ef2f63801bc472e67f0e1338380009c8ed9f0c49fb03651991'
+body_hash: 'sha256:f5f12e609844ee45732dba3295b4c05e205d2b2fe67bd62f9ea79b7bbe30925e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1365,7 +1365,6 @@ deadline windows is not one defect but two. Where the law is event-anchored the 
 is reasonable and a disposition closes it. Where the law states a calendar rule the
 absence is a gap, and only data or a policy statement closes it.
 
-
 ### m763-spans-two-layout-amendments-not-one-and-cites-neither | high | the acquisition target is now named, as it was for m220
 
 The span gate reports m763/2011-y-siguientes as CONTRARY class: *"spans 1
@@ -1405,7 +1404,6 @@ Orden HAC/529/2026 (BOE-A-2026-11583).
 **Both contrary-class blockers are now named instruments rather than unknowns.** Neither
 is work a review iteration should improvise: each is a revision split plus a legal
 enrolment, with its own verification.
-
 
 ## Recommendations
 

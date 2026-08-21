@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c940f15cf7e67cbfe9c5295e7fae1b13bd9665743740b55b0ced0b8ba83cadc'
+body_hash: 'sha256:cd3bcf23351132176260c8d0fb911a185d4f7345b511f52bdf10e88b5300c13c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -10953,3 +10953,58 @@ Backlog **121 -> 92**.
 Modelo 322's 24 and modelo 193's 22 remain: 322's records resolve to sheets but
 no heading covers the casillas' spans, and modelo 193 has no semantic map at all,
 so it has no declared mapping to read.
+
+## Some casillas have no design position at all, and that is not a gap
+
+Modelo 322's ten remaining casillas produced no export-field hit under any
+mapping, and the reason is not a broken join: they carry `export_refs = 0` and a
+slug `number`. `iva.cuota-devengada-total`, `iva.repercutido.general`,
+`decl.ejercicio` and the rest are the APPLICATION's calculation surface, not
+AEAT boxes. No reading of any diseño can name them, because there is nothing at
+any offset to read.
+
+They are not ungrounded either. Each declares a `semantic_role`, and every one of
+the ten is already labelled on another modelo -- nine on 303, with the casilla ID
+identical -- so the label was copied rather than written. That is grounded in the
+project's own declared semantics, and it also prevents the same concept being
+worded two ways on two modelos, which authoring fresh prose would have risked.
+
+**The match requires `semantic_role` AND `id` together.** Role alone is a
+concept, and two modelos may legitimately word one concept differently where
+their forms differ; requiring the id as well means the two casillas are the same
+declared thing. A second, narrower fallback covers the two boxes that declare no
+role at all: same modelo, same casilla id, another revision. Restricted to one
+modelo deliberately, because box "69" means different things on different forms.
+
+That closed modelo 322 entirely, 24 labels.
+
+## The extracted text carries block rows the parsed IR drops
+
+Modelo 190's remaining amounts sat at 171-183, 184-196, 197-209 and 210-222, and
+the record-design IR reports only "Parte entera del importe de las" at each --
+the sub-row of a split pair, with no block row above it. The same document's
+extracted markdown carries both:
+
+```
+171-183 Numérico REDUCCIONES APLICABLES.
+171-181  Parte entera del importe de las ...
+182-183  Parte decimal del importe de las ...
+```
+
+The IR kept the sub-rows and dropped the block row; the text has both. Reading
+the markdown through the record-section reader recovers all four, and each
+matches its casilla id independently -- `reducciones-aplicables` ->
+REDUCCIONES APLICABLES, `gastos-deducibles` -> GASTOS DEDUCIBLES.
+
+This is worth separating from the earlier prose findings. Those said the
+INSTRUCTION prose beside the table names sub-fields the table cannot. This says
+the parsed intermediate is lossy against its own source for the TABLE itself, so
+"the IR does not carry it" is not evidence that the design does not.
+
+**A fifth naming convention**, at the clave B.01 prestacion block: the prose
+writes "Este campo se divide en cinco:" and then `390 01. Jubilación.`,
+`391 02. Viudedad.`, and so on -- position, ordinal, name. Five more casillas,
+each matching its id.
+
+Modelo 190 is down to 9, from 110 when this line of work started. Backlog
+**92 -> 53**.
