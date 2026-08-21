@@ -1,0 +1,48 @@
+[[revisions."2015-2024".bindings]]
+id = "modelo-184-member-row-nif"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "member_tax_id", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2015-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2015-2024".bindings]]
+id = "modelo-184-member-row-name"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "member_legal_name", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2015-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2015-2024".bindings]]
+id = "modelo-184-member-row-share"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "share_percentage", grouping = "per_atribucion_member", record = "miembro", data_type = "decimal" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2015-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2015-2024".bindings]]
+id = "modelo-184-member-row-base-assigned"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "base_imponible_assigned", grouping = "per_atribucion_member", record = "miembro", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2015-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+

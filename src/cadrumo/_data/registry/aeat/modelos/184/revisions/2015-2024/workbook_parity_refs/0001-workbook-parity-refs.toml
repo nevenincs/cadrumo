@@ -1,0 +1,16 @@
+[[revisions."2015-2024".workbook_parity_refs]]
+id = "modelo-184-dr-2025"
+workbook_source = "aeat-dr-184-2023-2024"
+fixture_id = "modelo-184-2025-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+# PROVISIONAL: label_pattern values in this profile were derived from registry
+# casilla LABEL fields (aeat-dr-184-2025 diseño de registro), NOT verified
+# against a real AEAT printed-declaración-form PDF specimen. The diseño de
+# registro is an EDI record-layout spec; it cannot ground named_label patterns.
+# Verification is pending a round-trip parse test against a real M184
+# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.

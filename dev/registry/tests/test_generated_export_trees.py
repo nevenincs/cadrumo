@@ -86,7 +86,12 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("202", "2025-y-siguientes", "aeat-dr-202-2025", "2025", 2025, "1P"),
     _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
     _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
-    _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
+    # Split at Orden HAC/1430/2025 art. cuarto, which introduces NUMERO TOTAL DE
+    # REGISTROS DE ENTIDAD at 221-229 of tipo 1 and is applicable for the first
+    # time to ejercicio 2025. One revision carries one layout, so the years
+    # before that boundary emit the 2023 design and the years after it the 2025.
+    _GeneratedTree("184", "2015-2024", "aeat-dr-184-2023-2024", "2023", 2024, "0A"),
+    _GeneratedTree("184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
     # Enrolled late, and its absence is why its map went stale unnoticed: 347 was
     # published without a row here, so nothing compared its committed tree against a
     # fresh render, and two anchors kept naming parent rows the parser had already

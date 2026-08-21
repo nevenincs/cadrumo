@@ -1,7 +1,0 @@
-[[revisions."2015-y-siguientes".application_links]]
-id = "modelo-184-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-184-2025"]

@@ -1,0 +1,37 @@
+[[revisions."2025-y-siguientes".extraction_profiles]]
+id = "modelo-184-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = 'Ejercicio'},
+]
+# decl.ejercicio label_pattern grounded against:
+# AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27 from
+#   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
+#     DR_100_199/DR_Modelo_184_2025.pdf
+#   saved at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
+#     01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
+# Registro de tipo 1, positions 5-8: "EJERCICIO"
+#   "Las cuatro cifras del ejercicio fiscal al que corresponde la declaración"
+# The printed field name is the bare word "EJERCICIO"; informativa justificantes render
+# this as "Ejercicio: <YYYY>" — the label_pattern 'Ejercicio' targets this printed token.
+#
+# decl.tipo-declaracion REMOVED: the field (positions 121-122 of registro de tipo 1)
+# is "DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA" — two separate single-character flag
+# positions (121=complementaria "C", 122=sustitutiva "S").  It is not a printed
+# label+value pair and cannot be extracted via named_label.  No AEAT-published source
+# uses "Tipo de declaración" as a labeled field for M184.  Identical to the M720
+# removal (same record-type-1 positions 121-122 structure).
+#
+# Synthetic round-trip fixture at src/cadrumo/tests/fixtures/justificantes/184/2024-0A.pdf
+# reproduces the AEAT ejercicio label so the named_label parser can locate and
+# extract the value.
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
