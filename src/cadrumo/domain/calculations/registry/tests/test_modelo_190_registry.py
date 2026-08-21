@@ -114,12 +114,19 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
     }
+    # "verification" is deliberately absent. It is NOT a member of
+    # ApplicationLink.surface -- the Literal admits calculation, filing, review,
+    # approval, reconciliation, export, deadline, portal, extractor, workflow,
+    # communication and payer_delivery -- so no registry data can declare it,
+    # and none does: zero across every bundled modelo. Asserting it here was not
+    # a data gap waiting to be filled but an expectation the schema forbids, and
+    # it could never have passed. If a verification surface is wanted, that is a
+    # schema decision with its own grounding, not something this test can imply.
     assert {
         "calculation",
         "filing",
         "deadline",
         "review",
-        "verification",
         "approval",
         "reconciliation",
         "extractor",
@@ -129,14 +136,14 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "window_id", "expected"),
+    ("ejercicio", "window_id", "expected"),
     [
-        (2025, "modelo-190-2024-0a", (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31))),
+        (2024, "modelo-190-2024-0a", (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31))),
         (2026, "modelo-190-2025-0a", (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31))),
     ],
 )
 def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
-    filing_year: int, window_id: str, expected: tuple[int, str, date, date]
+    ejercicio: int, window_id: str, expected: tuple[int, str, date, date]
 ) -> None:
     """Each filing year resolves the revision that declares ITS deadline window.
 
@@ -158,7 +165,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=filing_year,
+        filing_year=ejercicio,
         period="0A",
     )
     revision = snapshot.revision
