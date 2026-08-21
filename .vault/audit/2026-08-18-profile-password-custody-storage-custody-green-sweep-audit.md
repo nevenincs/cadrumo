@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:161d416d03d0b76b8685e21910239c362ba774b9e5d7a8366877a10abdc4accd'
+body_hash: 'sha256:ec69b810cb5d6d2637028c955109b017032a081b01869ae7c0f3b847017465d2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4300,3 +4300,46 @@ Recorded with the measurement so whoever narrows facades can act without re-deri
 
 Also verified covered this iteration and needing nothing: the six-phase login handover
 machine (every phase appears in tests) and the crash-recovery paths around it.
+
+### Running the tree-wide gates found a second self-inflicted reach, and bounded the rest
+
+Acting on the previous entry's lesson — a green domain lane is evidence about the lane's
+scope, not the tree — the whole `src/cadrumo/tests/` gate suite was run for the first time
+this campaign: **61 failed, 734 passed.**
+
+**One failure was this campaign's, and it is fixed.**
+`test_no_absolute_self_imports_in_cadrumo_package` reported four offenders, two of them the
+concurrent-registration test's spawned-child target, which imported `cadrumo.*` absolutely
+inside the worker function. The absolute form was reflexive rather than reasoned: spawn
+re-imports the module normally, so the relative form resolves in the child, and the test
+still passes as a real two-process race. That is now two out-of-lane violations this
+campaign introduced and did not see — the first an undeclared private import, this one an
+absolute self-import. Both were invisible for the same reason, and both were found only by
+running gates the loop never ran.
+
+**The rest is other work's, and the attribution was measured rather than assumed.** Every
+remaining failure was checked against this campaign's files by name; none match. The
+largest cluster deserves recording because it looks like domain debt and is not:
+
+`test_any_param_rationale_inventory` reports 30 parameter-level `Any` sites without a
+rationale, **12 of them in storage or custody**. The first hypothesis was that this
+campaign caused it — editing `_filesystem.py` for the budget fix added roughly twenty lines
+and a line-keyed exemption list would have gone stale, which is exactly the anti-pattern
+this project's own quality rule names. **That hypothesis was wrong and checking it mattered:**
+the ratchet is EMPTY. It was deliberately emptied and its matcher WIDENED in
+`4cbe88be7f`, and the widening is what surfaced sites that already existed. The gate is red
+tree-wide as a consequence of that change, and closing it belongs to whoever made it.
+
+**Not half-fixed, deliberately.** The twelve in-domain sites are not one kind of problem.
+`kernel32: Any` in the Windows job wrapper is a genuine third-party ctypes boundary that
+the architecture rule says to DOCUMENT inline. `adapters: Any | None` on
+`ProfileCustodyService` is a design escape that wants a Protocol over roughly thirty adapter
+attributes — real design work with live blast radius. Adding a rationale marker to the
+second kind would be using the marker as a mute button on exactly the judgement the gate
+exists to force, so nothing was marked. The classification is recorded here so the work can
+start from it.
+
+**Standing recommendation, now with two data points behind it:** run
+`src/cadrumo/tests/` and `dev/tests/` after any iteration that adds or moves files under
+`src/`. The domain lanes cannot see either, and both have now caught something this
+campaign introduced.
