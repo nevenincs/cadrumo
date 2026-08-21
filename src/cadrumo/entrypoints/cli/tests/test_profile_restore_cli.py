@@ -13,20 +13,25 @@ the capsule carries its own custody, so a fresh host can republish it.
 No mocks: real registration, real Argon2id envelope, real capsule on disk, the
 real Click command tree.
 
-The recovery-artifact door is exercised at the application layer, in
-``application/user_profile/tests/test_capsule_restore.py``. It is NOT covered
-here, and that is stated rather than left to be inferred from an absent test:
-minting an artifact needs a replayed recovery key that has no sanctioned
-test-support door yet, and reaching into another package's private test
-helpers to fake one would be worse than the honest gap. What that leaves
-untested at THIS layer is the notices branch below -- the assertion here that
-a password restore carries no advisory would pass identically if the advisory
-never fired at all, so it is written as a control on the password door, not as
-evidence about the recovery door.
+Both doors are covered here. The recovery-artifact door was previously left
+out, on the reasoning that minting an artifact needed a replayed recovery key
+with no sanctioned test-support door -- and that obstacle was real, just not
+insurmountable. The recovery key lives in a wipeable buffer that the creation
+flow zeroises once the handover callback returns, so an enrollment stored and
+read afterwards yields NUL bytes; the application-layer test copies only the
+phrase and rebuilds a key with a private helper. Copying the phrase INSIDE the
+handover, while the key is still live, mints the artifact through the
+operator's own public door and needs no helper at all.
+
+That matters because the password-door assertion below -- that a password
+restore carries no advisory -- would pass identically if the advisory never
+fired at all. It is a control, and it is now paired with the positive
+assertion that gives it meaning.
 """
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -137,3 +142,89 @@ def test_restore_refuses_a_directory_that_is_not_a_capsule(tmp_path: Path) -> No
 
         assert result.exit_code != 0
         assert "Traceback" not in result.output
+
+
+def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_path: Path) -> None:
+    """DISCRIMINATING: the advisory the recovery door exists to raise.
+
+    An operator reaching for the artifact has LOST the password. The records
+    come back; the credential does not. Without this advisory they learn that
+    at the next login prompt instead of here, where they can act on it.
+
+    Nothing held this before: the password-door test asserts the advisory is
+    ABSENT, which passes identically whether the advisory is correct or gone
+    altogether. Absence was proven and presence was not.
+    """
+    from uuid import UUID as _UUID
+
+    from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+    from ....application.user_profile import (
+        ProfileRecoveryEnrollment,
+        export_profile_recovery_artifact,
+        register_profile_with_credentials,
+    )
+
+    source_root = tmp_path / "source-root"
+    artifact = tmp_path / "exports" / "recovery.artifact.json"
+    artifact.parent.mkdir(parents=True, exist_ok=True)
+
+    with isolated_profile_storage_root(tmp_path=source_root):
+        # The phrase is copied INSIDE the handover, while the key is still
+        # live. The creation flow wipes that buffer once the callback returns,
+        # so an enrollment kept and read afterwards yields NUL bytes -- which
+        # is the correct behaviour for a secret and the reason this cannot be
+        # done by simply storing the object. Capturing the string here mints
+        # the artifact through the operator's own door, with no replay helper.
+        captured: list[ProfileRecoveryEnrollment] = []
+        phrases: list[str] = []
+
+        def _hand_over(enrollment: ProfileRecoveryEnrollment) -> None:
+            phrases.append(str(enrollment.recovery_key.mnemonic))
+            captured.append(enrollment)
+
+        outcome = register_profile_with_credentials(
+            label="artifact-subject",
+            passphrase=_test_passphrase(),
+            recovery_handover=_hand_over,
+        )
+        assert len(phrases[0].split()) == 24, "the phrase was read after its buffer was wiped"
+        material = load_committed_profile_password_material(_UUID(outcome.profile_id))
+        export_profile_recovery_artifact(
+            captured[0],
+            current_password=_test_passphrase(),
+            password_envelope=material.envelope,
+            sentinel=material.sentinel,
+            target=artifact,
+        )
+        capsule = material.capsule_path
+        recovery_secret = phrases[0]
+
+    restore_root = tmp_path / "restore-root"
+    with isolated_profile_storage_root(tmp_path=restore_root):
+        result = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "restore",
+                _RESTORED_LABEL,
+                "--file",
+                str(capsule),
+                "--artifact",
+                str(artifact),
+                "--secrets-stdin",
+            ],
+            input=json.dumps({"recovery_secret": recovery_secret}),
+        )
+
+        assert result.exit_code == 0, result.output
+        payload = assert_public_profile_payload_redacted(result.output, outcome.profile_id)
+
+        assert payload["authority"] == "recovery_artifact"
+        assert payload["password_unchanged"] is True
+
+        codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
+        assert _ADVISORY_CODE in codes, (
+            f"the recovery door must warn that the credential did not return; got {sorted(codes)}"
+        )
