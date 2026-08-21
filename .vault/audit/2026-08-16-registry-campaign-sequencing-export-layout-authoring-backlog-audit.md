@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:cd3bcf23351132176260c8d0fb911a185d4f7345b511f52bdf10e88b5300c13c'
+body_hash: 'sha256:4fab38a0c86a18465715a5eb397276404d8b505158454ff4eae79d1a319a64ed'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11008,3 +11008,77 @@ each matching its id.
 
 Modelo 190 is down to 9, from 110 when this line of work started. Backlog
 **92 -> 53**.
+
+## Tick: the locale catalogue parity gap closed to zero
+
+Queue position: all six queue items remain closed as verified false findings.
+This tick continued the catalogue axis the label backlog uncovered.
+
+### Orphan leaves removed, and why the first attempt produced nothing
+
+104 catalogue leaves were both orphaned (their casilla is not declared by the
+revision the key names) and blank. A first removal attempt drove
+`python -m dev.locales remove` as 416 subprocess spawns and timed out at ten
+minutes having removed nothing; the re-measure showed all 104 still present, so
+the timeout was not partial progress. `LocaleManager.remove_locale_values` is a
+batch API and did the same work in one process. These were removed rather than
+filled: authoring labels for boxes the registry does not declare would invent
+content for boxes that do not exist.
+
+### The honesty ratchet reads a leaf as a claim
+
+14 blank revision labels and construct titles were found on modelos 185, 303,
+322, 490 and 193. The first fill copied the Spanish into all four catalogues,
+reasoning from modelo 303's labelled revisions, which appear to ship one string
+in four locales and pass. That was wrong, and the ratchet caught it: those
+siblings carry NO ca or hu leaf at all and reach Spanish through runtime
+fallback. The ceiling is 0. A written leaf is a claim that the string was
+translated, so the fill was redone as four real strings per key.
+
+The same distinction explains a measure that looked contradictory: unresolved
+Spanish casilla labels read zero while parity still reported 566 absent leaves.
+Rendering and existence are different questions, and only the second is what
+parity asks.
+
+### What was authored
+
+* 478 casilla help leaves, from the house formula restating registry facts. The
+  opaque `x-...` token in these keys is the ENCODED casilla id
+  (`decl.ejercicio` encodes to `x-chim6r1ecll6asj3d5hmiro`), so identity was
+  taken from the casilla object and never parsed out of the key, which would
+  have written the encoded token into operator-facing prose.
+* 84 modelo 303/2022 casilla labels in four locales. No donor revision carried
+  four distinct values, so these were translated from a closed 47-segment
+  vocabulary and recomposed. The composer RAISES on a segment absent from the
+  table rather than passing the Spanish through; that is what surfaced the two
+  section-13 segments, whose `.- ` separator differs from the ` - ` the rest of
+  the labels use.
+* 14 revision designations and construct titles, plus modelo 193's four.
+
+### Measured after
+
+* authority CLEAN.
+* `codebase_missing` 566 -> 0.
+* locale suite 4 failed -> 3; both honesty gates green, including
+  `test_modelo_spanish_values_are_authority_source`, which this tick closed.
+* `codebase_extra` remains (197 by audit, 79 by the gate's own count): 103
+  docs, 36 modelo 182, 29 modelo 390, 15 mcp, 6 modelo 151, 5 modelo 193, 3
+  cli. This is the next item on this axis. The modelo 182 entries are expected
+  to be orphans from the deliberately reverted 182 layout; the docs, mcp and
+  cli entries belong to other surfaces and are not assumed to be removable.
+
+### Registry suite: 26 failures, none of them this work
+
+The suite reports 26, against the 19 carried as baseline. The difference is
+scope and tree movement, not a regression from this tick: every failure is a
+registry or design assertion that reads no locale catalogue, and the run that
+produced the count began before the bulk of these writes.
+
+Four are `test_revision_span_matches_published_designs`, reporting revision
+spans that cross a design re-layout: modelo 184 `2015-y-siguientes` needs 2
+revisions, modelo 200 `2024-y-siguientes` needs 2, modelo 322 `2008-2025` needs
+3, modelo 347 `2008-y-siguientes` needs 3. This is the same family as the
+modelo 220 blocker already recorded: a revision carries one export layout, so
+splitting a span needs the BOE orden that fixes each boundary. Recorded rather
+than fixed because each split is filing-grade and needs its establishing orden
+acquired, not inferred from the design diff.

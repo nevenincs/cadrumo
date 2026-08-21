@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:616dcc0fe3aa3506f67ccb28eb589c2b4c78d94e502a98e5f1407381e4f3678e'
+body_hash: 'sha256:0b2355cd5a5e149a3ff79a83a8dafea873f3560cacdb2ce8e77d09d8d7035c87'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1500,7 +1500,6 @@ The box-collapse detector reported ``False`` for the form that motivated it; the
 gate's ABSENT and CONTRARY classes were indistinguishable until parsed apart. No
 production code is wrong in any of the three -- the defect is in what reaches the reader.
 
-
 ### FIXED-the-layout-coverage-message-and-what-it-now-exposes | resolved | plus a bounds question the clearer text surfaced
 
 The lossy message recorded in the previous finding is fixed. It now prints both design
@@ -1536,7 +1535,6 @@ defects, and they should be assessed as a class. The module's own docstring alre
 records one false-positive class removed by reading presentation years instead of
 assuming an offset; this may be a second one hiding on the upper bound rather than the
 lower.
-
 
 ## Recommendations
 
