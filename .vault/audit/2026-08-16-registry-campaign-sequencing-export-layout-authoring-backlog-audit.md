@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:67b0724826804cc2e3335a89cf4bf1c160ccf129862fcf8daff6fe17cc930b65'
+body_hash: 'sha256:50d1b2b5ac00dd7dce4d1c4039baf6eed703f215061e1f0f796dcc049545945e'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -9508,3 +9508,60 @@ fifteen singletons. Two named backlogs stand behind them and both are acquisitio
 or sequencing bound rather than blocked on analysis: the 1,798 missing Spanish
 casilla labels, and the 88 weekend deadlines plus four design spans that need
 official AEAT artifacts the bundle does not carry.
+
+## Modelo 309's casilla labels authored in all four catalogues
+
+The label backlog was deferred last tick on sequencing grounds, which is not one
+of the three reasons this campaign accepts for recording instead of fixing. Taken
+this tick on a unit small enough to finish end to end.
+
+**Grounded from AEAT's own design, not invented.** Modelo 309 bundles
+`aeat-dr-309-2023`, and 56 of its 57 unlabelled casillas match a design field by
+their declared start offset, so the Spanish label IS the printed one:
+
+```
+decl.transmitente-nif        @109  Transmitente (3) - NIF
+decl.vehiculo-bastidor       @322  Caracteristicas y datos tecnicos (7) - Vehiculos - No identificacion (bastidor)
+```
+
+**The other three locales were composed, not translated line by line.** AEAT
+writes these as `Seccion (n) - Grupo - Campo`, so a glossary translates SEGMENTS
+and the label is recomposed. That is what makes "Base imponible" render
+identically in all sixteen places it appears; a label-by-label pass does not
+guarantee it. All 56 rendered with no unglossed segment.
+
+Two composition defects were caught by reading the output before applying it,
+not after: `Marca - Tipo - Modelo` split into three parts leaving `Modelo`
+unglossed, and the colon was being appended before the box marker, turning
+`Situacion tributaria (5):` into `Situacio tributaria: (5)`.
+
+Applied through `python -m dev.locales set-batch` — the sanctioned authority, not
+a hand edit of the shard trees. Unresolved Spanish labels **1,798 -> 1,742**.
+
+### The honesty ratchet caught one, correctly
+
+`ca.yml` gained one key identical to `es.yml`: `IBAN (10)`. That is a genuine
+coincidence rather than an untranslated string — IBAN is an ISO 13616 term
+spelled the same in both languages, and `(10)` is AEAT's own box marker — so it
+is recorded through `dev.locales allow-identical` with that reason, which is what
+the allowlist is for. The ratchet was right to stop it, and would have been right
+to stop a lazy copy.
+
+### One casilla left, and its gap is a finding
+
+`decl.periodo` declares number `11-12`. The design carries no field at offset 11:
+positions 8-11 are `Fin de identificador de modelo` and position 12 is
+`Reservado para la Administracion`. There is no printed label to read because
+those positions are not a printed data field, which is a question about that
+casilla's declared number rather than about its label. Left unlabelled and
+recorded rather than given invented text.
+
+### Two suites this campaign had not been measuring
+
+`dev/locales/tests` carries a pre-existing parity failure — every locale missing
+1,210 codebase keys and holding 147 extra — and the honesty gate's own view of
+the blank-Spanish backlog (1,302 leaves). Neither is caused by this work: the
+parity numbers are identical across all four catalogues, which an
+equal-across-locales addition cannot produce, and none of the 56 keys is named in
+the failure. Named here rather than left unmeasured, alongside the
+`dev/registry/tests` backlog recorded earlier.
