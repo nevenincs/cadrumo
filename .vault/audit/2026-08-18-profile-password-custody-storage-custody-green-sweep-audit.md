@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0bc6aa9ec94e7c16889ce6ed96c089460cc6ba3144de753339653a3c495be49'
+body_hash: 'sha256:3865b94e5525fb0a266d11eed2e0bf3fe3ef7271d365628c9044964524bc7861'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4895,3 +4895,35 @@ documented invariant for nothing.
 Also verified in passing: `profile_custody_local_lock` is the general file-lock PRIMITIVE,
 not "the per-profile lock" -- the root lock itself is built on it, as are the journal,
 receipt, evidence and session locks. Only one call site uses it for the per-profile path.
+
+### Correction: no test claims per-profile concurrency, and the weak race is now stronger
+
+**Correcting the previous entry.** It asserted that "several concurrency tests in this
+domain read as though per-profile isolation were being exercised". That claim was made
+without enumerating them, and enumerating them shows it is wrong.
+
+Every use of "independent" in the domain's concurrency tests refers to independent
+PROCESSES -- "an independent interpreter", "two independent interpreters", "two
+independently scheduled creates" -- which is accurate. `test_custody_isolation_matrix`
+concerns CRYPTOGRAPHIC isolation, that profile A's envelope cannot open profile B's
+capsule, and says so. `test_two_profiles_keep_independent_ledgers_across_unlocks` asserts
+disjoint ledger DATA, which is genuinely per-profile and is exactly what it checks. None
+promises per-profile concurrency. The conflation of "independent interpreters" with
+"independent profiles" was the reader's, not the tests'.
+
+What survives from that entry is the design fact — custody transactions serialise globally
+— and it is recorded at the site, which remains worth having because it was written down
+nowhere.
+
+**The weak detector recorded there is now measurably stronger.**
+`test_create_root_lock_serializes_duplicate_labels_across_real_processes` caught the root
+lock's removal in **1 run of 3**: each sibling reached the create whenever its own KDF
+setup happened to finish, so which one collided was scheduling luck rather than the lock.
+Releasing both from a barrier placed after the envelope material exists and before the
+transaction raises detection to **4 runs of 5**, measured the same way.
+
+It is deliberately left probabilistic. Its role is the REAL race — proving that two
+genuinely scheduled creates yield one winner — and forcing determinism would require
+holding the lock, which converts it into the exclusion test its two siblings already
+provide deterministically. A suite wants both shapes: one that proves the invariant under
+a held lock, and one that proves it under actual scheduling.
