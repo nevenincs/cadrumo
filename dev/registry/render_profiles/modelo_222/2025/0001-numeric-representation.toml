@@ -1,0 +1,40 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "222"
+design_epoch = "2025"
+source_ref = "aeat-dr-222-2025"
+source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR22201"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR22201"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m222-page-01-210"
+decision_statement = "The four digits of the ejercicio de devengo."
+justification = "Grounded in the bundled diseno aeat-dr-222-2025, which declares this field Num(4) at the anchored row. The design carries no source_cell so the statement is reproduced rather than cross-checked, matching modelo 202 on the same design family."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR22201"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR22201"
+

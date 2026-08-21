@@ -1,10 +1,32 @@
+# The close date is the NOMINAL date behind AEAT's published operational one, not
+# the operational date itself.
+#
+# Orden de 18 de noviembre de 1999 states TWO plazos for modelo 194 and this
+# window matches neither: apartado sexto gives "los veinte primeros dias
+# naturales del mes de enero" for papel impreso, and the soporte apartado gives
+# "el periodo comprendido entre el 1 de enero y el 20 de febrero de cada ano".
+# AEAT's Calendario del Contribuyente 2026 lists modelo 194 under "Hasta el 2 de
+# febrero", which is the Saturday shift of 31 January -- not 20 January and not
+# 20 February. Both 1999 ranges are therefore superseded in current practice by
+# an instrument this registry does not yet cite, and the calendar is the only
+# AEAT-emitted statement of the applicable plazo available here.
+#
+# Grounding in the calendar is what the standing rule permits when the orden does
+# not state the governing plazo. What the calendar publishes is the OPERATIONAL
+# date; the nominal behind it is 31 January, and that is what is stored, so
+# shift_deadline can report 2 February WITH its 'sabado' reason instead of
+# asserting that 2 February is an ordinary business-day deadline.
+#
+# apartado-cuarto is retained in legal_refs as the approving clause. It is not
+# cited as the plazo, because it states none.
+
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-194-2025-0a"
 filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-1999-11-18:apartado-cuarto"]
 source_refs = ["aeat-calendario-contribuyente-2026-hasta-2-febrero", "aeat-modelo-194-procedure", "boe-modelo-194-form-layout"]
 

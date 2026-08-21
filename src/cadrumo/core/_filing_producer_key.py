@@ -232,6 +232,35 @@ class FilingProducerKey(StrEnum):
     M202_NORMATIVA_TERRITORIO_FORAL = "m202.normativa_territorio_foral"
     M202_COMUNICACION_DATOS_ADICIONALES = "m202.comunicacion_datos_adicionales"
     M202_NUMERO_REFERENCIA_SOCIEDADES = "m202.numero_referencia_sociedades"
+
+    #: Modelo 222 is the CONSOLIDACION twin of modelo 202 -- same orden
+    #: (HFP/227/2017), same liquidacion blocks -- so the facts its diseno declares
+    #: are the group-level versions of 202's own and are named on that pattern.
+    #: The dominante entity's identity and the group number have no 202
+    #: counterpart because an individual filer has no dominante and no group.
+    M222_NUMERO_GRUPO = "m222.numero_grupo"
+    M222_REPRESENTANTE_O_DOMINANTE = "m222.representante_o_dominante"
+    M222_NORMATIVA_TERRITORIO_FORAL = "m222.normativa_territorio_foral"
+    M222_ENTIDAD_DOMINANTE_IDENTIFICACION = "m222.entidad_dominante_identificacion"
+    M222_ENTIDAD_DOMINANTE_PAIS_TERRITORIO_FORAL = "m222.entidad_dominante_pais_territorio_foral"
+    M222_ENTIDAD_DOMINANTE_RAZON_SOCIAL = "m222.entidad_dominante_razon_social"
+    M222_FECHA_INICIO_PERIODO_IMPOSITIVO = "m222.fecha_inicio_periodo_impositivo"
+    M222_CNAE_ACTIVIDAD_PRINCIPAL = "m222.cnae_actividad_principal"
+    M222_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE = "m222.regimen_entidades_navieras_tonelaje"
+    M222_REGIMEN_REDUCIDA_DIMENSION = "m222.regimen_reducida_dimension"
+    M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES = "m222.cifra_negocios_grupo_doce_meses"
+    M222_COOPERATIVA_FISCALMENTE_PROTEGIDA = "m222.cooperativa_fiscalmente_protegida"
+    M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO = "m222.regimen_entidades_capital_riesgo"
+    M222_CIRCUNSTANCIA_CONCURRENTE = "m222.circunstancia_concurrente"
+    M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO = "m222.cifra_negocios_periodo_anterior_tramo"
+    M222_MULTIPLES_TIPOS_IMPOSITIVOS = "m222.multiples_tipos_impositivos"
+    M222_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES = "m222.tipo_gravamen_impuesto_sociedades"
+    M222_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO = "m222.importe_neto_cifra_negocios_tramo"
+    M222_MODALIDAD_LIQUIDACION = "m222.modalidad_liquidacion"
+    M222_COMUNICACION_DATOS_ADICIONALES = "m222.comunicacion_datos_adicionales"
+    M222_NUMERO_REFERENCIA_SOCIEDADES = "m222.numero_referencia_sociedades"
+    M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO = "m222.comunicacion_variacion_composicion_grupo"
+    M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION = "m222.numero_referencia_sociedades_variacion"
     #: IRNR party identities. Modelo 210 separates the person who FILES from the
     #: person the income belongs to, and records in which of six capacities the
     #: filer acts, so neither `taxpayer.*` nor `presenter.*` can carry these:

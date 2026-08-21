@@ -8,9 +8,29 @@ authority_grade = "applicability"
 # plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales
 # tras los 6 meses posteriores a la conclusión del período impositivo). This is a
 # scheduling/applicability-grade revision carrying declaration-header casillas
-# only; the money-closure casillas of the group declaration are deferred until an
-# authoritative Modelo 220 diseño de registro is bundled, so no casilla number is
-# fabricated.
+# only; the money-closure casillas of the group declaration are deferred, and no
+# casilla number is fabricated.
+#
+# CORRECTED REASON. This previously read "deferred until an authoritative Modelo
+# 220 diseño de registro is bundled". FOUR are bundled and all four load through
+# the real record-design IR -- aeat-dr-220-2022 (124 sheets / 14,851 fields),
+# -2023 (127 / 15,648), -2024 (136 / 16,066) and -2025 (140 / 16,707) -- and the
+# 2024 and 2025 ones are named in this revision's own source_refs above. Design
+# availability is not what blocks the casillas.
+#
+# What blocks them is that this single open-ended revision SPANS A RE-LAYOUT.
+# test_revision_span_matches_published_designs measures the 2024/2025 boundary as
+# 4,524 of 7,466 shared boxes moved, 216 boxes added and 130 removed, and the
+# record set changing 137 -> 141; it reports "needs 2 revisions" and its stated
+# fix is to split at that boundary. Authoring one layout across the span would be
+# wrong for whichever year it did not follow.
+#
+# The split itself is blocked in turn, and the same gate says so: this modelo's
+# entire revision history cites only the founding orden-hac-657-2025, and no
+# amending or superseding orden authorising the 2025 layout exists anywhere in
+# the bundled legal catalogue. The gate's instruction is explicit -- acquire and
+# cite that BOE orden, do NOT satisfy it with design evidence alone. So the
+# blocker is an acquisition, not an authoring gap.
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-657-2025:art-3"]

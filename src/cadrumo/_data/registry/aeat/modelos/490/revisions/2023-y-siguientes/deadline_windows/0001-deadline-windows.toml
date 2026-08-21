@@ -40,9 +40,9 @@ filing_year = 2025
 period = "2025 4T"
 period_kind = "quarterly"
 opens_on = 2026-01-01
-closes_on = 2026-02-02
+closes_on = 2026-01-31
 legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-490-procedure", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]
+source_refs = ["enrolled-modelo-490-procedure"]
 
 [[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-490-2026-1t"

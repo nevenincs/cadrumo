@@ -9,6 +9,7 @@ import pytest
 
 from .....core import CasillaId
 from .....core.resources import bundled_path
+from .....domain.deadlines import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
     RegistryValidator,
@@ -125,10 +126,16 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
     # The 2024 window moved to the revision that owns the 2024 ejercicio; this
     # snapshot is the 2025-y-siguientes revision and carries its own only.
     expected_windows = {
-        # Closes 2 February, not 31 January: 31 January 2026 is a Saturday and
-        # AEAT's Calendario del Contribuyente 2026 lists modelo 193 under
-        # "Hasta el 2 de febrero". The rule-derived date closed it early.
-        "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 2, 2)),
+        # The window stores the NOMINAL statutory close from
+        # orden-eha-3377-2011 art. 5, the month-end the plazo names, never AEAT's
+        # published operational date. 31 January 2026 is a Saturday, so the
+        # operational date IS 2 February -- but that is derived on read by
+        # shift_deadline and asserted below beside the stored value. Storing the
+        # shifted date instead reports shifted=False / business_day, which states
+        # that no shift occurred and discards the statutory date; the two forms
+        # are indistinguishable on the operator-facing date alone, which is why
+        # both halves are asserted.
+        "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
     }
     assert set(windows) == set(expected_windows)
     for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
@@ -140,6 +147,15 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         assert window.closes_on == closes_on
         assert len(window.applicability_conditions) == 1
         assert window.applicability_conditions[0].field == "pays_capital_income_with_retencion"
+        # Grounded on art. 5, which establishes the plazo, rather than art. 1,
+        # which approves the modelo.
+        assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
+        shift = shift_deadline(window.closes_on, modelo="193", ccaa_code=None)
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (
+            date(2026, 2, 2),
+            True,
+            "sabado",
+        )
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3377-2011-art-5.html",
+  "source_sha256": "2cd98fc6201dd91d9fec0c2cdc1e0d765d657cf44ec3b9b4bb071f5963e39782",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presentación por medio de papel impreso del modelo 193 se realizará durante los veinte primeros días naturales del mes de enero siguiente al año natural al que se refiera la declaración.\nNo obstante lo anterior, cuando la declaración impresa se hubiese generado mediante la utilización, exclusivamente, de los correspondientes módulos de impresión desarrollados, a estos efectos, por la Agencia Estatal de Administración Tributaria o cuando la presentación se realice por vía telemática a través de Internet o en soporte directamente legible por ordenador, la presentación se realizará entre el 1 de enero y el 31 de enero del año siguiente al que corresponde dicha declaración.",
+      "title": "Artículo 5. Plazo de presentación del modelo 193.",
+      "section": "Artículo 5. Plazo de presentación del modelo 193.",
+      "anchor": null
+    }
+  ]
+}

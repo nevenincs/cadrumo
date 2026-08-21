@@ -1,0 +1,4 @@
+# Artículo 5. Plazo de presentación del modelo 193.
+
+La presentación por medio de papel impreso del modelo 193 se realizará durante los veinte primeros días naturales del mes de enero siguiente al año natural al que se refiera la declaración.
+No obstante lo anterior, cuando la declaración impresa se hubiese generado mediante la utilización, exclusivamente, de los correspondientes módulos de impresión desarrollados, a estos efectos, por la Agencia Estatal de Administración Tributaria o cuando la presentación se realice por vía telemática a través de Internet o en soporte directamente legible por ordenador, la presentación se realizará entre el 1 de enero y el 31 de enero del año siguiente al que corresponde dicha declaración.

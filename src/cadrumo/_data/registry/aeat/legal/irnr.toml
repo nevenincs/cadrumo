@@ -9,6 +9,24 @@
 #
 # TRLIRNR Art 10 is the representante-fiscal authority for M210.
 
+[legal."orden-eha-3290-2008:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008-art-11.html#a11"
+document_id = "BOE-A-2008-18111"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18111#a11"
+published_at = 2008-11-11
+effective_from = 2009-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-21
+reviewed_by = "agent-review (verbatim against the bundled articulo 11 excerpt)"
+notes = "Articulo 11 ESTABLISHES the modelo 296 plazo: sera el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual. Articulo 6, previously cited by the deadline window, is titled «Aprobacion del modelo 296» and states no timing."
+required_text = [
+    "será el comprendido entre el 1 de enero y el 31 de enero",
+]
+
 [legal."orden-eha-3290-2008:art-6"]
 evidence_tier = "legal_authority"
 authority = "boe"

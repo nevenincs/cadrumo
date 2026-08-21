@@ -16,6 +16,25 @@ authority_grade = "applicability"
 # here) whose attributed years fall entirely outside this revision's own
 # span (`year_from = 2025`) — it belongs to a different revision or acquisition
 # question, not to this one.
+# HAZARD CORRECTION (measured against both bundled disenos). The review below
+# records that the 2024 diseno "prints boxes 16, 22 and 32 TWICE each within a
+# single sheet, over different figures", and warns that authoring them as bare
+# numbers would collapse six figures into three. That is a false positive: it
+# counts bracket OCCURRENCES rather than box DECLARATIONS. In both the 2024 and
+# the 2025 diseno each of those boxes is declared exactly once, and its second
+# mention is a later field's formula citing it as an input --
+#   [16] declared "Base del pago fraccionado [16]", cited by
+#        "Resultado previo (clave ([16] x [17]) - [49]..."
+#   [22] declared "Importe del pago fraccionado [22]", cited by
+#        "Resultado previo (claves [22]+[25]+[54]+..."
+#   [32] declared "Resultado [32]", cited by
+#        "Cantidad a ingresar (mayor de claves [32]..."
+# Measured across both files: 63 own-box declarations in the 2025 diseno and 56
+# in the 2024 one, with ZERO duplicated declarations in either. The rule that
+# resolves it is that a field's own box is the LAST bracket in its description
+# and any earlier bracket is a formula input. Authoring the casillas as bare box
+# numbers is therefore correct; inventing distinct numbers to "separate" 16, 22
+# and 32 would be the actual defect.
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["1P", "2P", "3P"] }
 orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]

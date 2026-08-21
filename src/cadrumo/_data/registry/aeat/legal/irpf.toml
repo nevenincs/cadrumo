@@ -1901,6 +1901,24 @@ required_text = [
     "Aprobación del modelo 187 y de los diseños físicos y lógicos",
 ]
 
+[legal."orden-eha-3377-2011:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3377-2011-art-5.html#a5"
+document_id = "BOE-A-2011-19406"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19406#a5"
+published_at = 2011-12-13
+effective_from = 2012-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-21
+reviewed_by = "agent-review (verbatim against the bundled articulo 5 excerpt)"
+notes = "Articulo 5 ESTABLISHES the modelo 193 plazo. It states a twenty-natural-day base rule for the printed form and then the wider 1 to 31 January window whenever the declaration is filed by the AEAT print modules, telematically, or on soporte directamente legible por ordenador -- every form in current use. Articulo 1, previously cited by the deadline window, approves the modelo and states no timing."
+required_text = [
+    "entre el 1 de enero y el 31 de enero",
+]
+
 [legal."orden-eha-3377-2011:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

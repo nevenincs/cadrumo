@@ -776,6 +776,9 @@ if TYPE_CHECKING:
         PassphraseAssessment as PassphraseAssessment,
     )
     from ._registration import (
+        ProfileRegistrationConflictError as ProfileRegistrationConflictError,
+    )
+    from ._registration import (
         ProfileRegistrationError as ProfileRegistrationError,
     )
     from ._registration import (
@@ -973,6 +976,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileRecordSession": "._capsule_record",
     "ProfileRecoveryArtifactReceipt": "._recovery_custody",
     "ProfileRecoveryEnrollment": "._recovery_custody",
+    "ProfileRegistrationConflictError": "._registration",
     "ProfileRegistrationError": "._registration",
     "ProfileRegistrationOutcome": "._registration",
     "ProfileSectionView": "._overview",
@@ -1180,6 +1184,7 @@ __all__ = [
     "ProfileRecordSession",
     "ProfileRecoveryArtifactReceipt",
     "ProfileRecoveryEnrollment",
+    "ProfileRegistrationConflictError",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
     "ProfileRestoreAuthority",
