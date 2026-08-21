@@ -26,8 +26,9 @@ modelo:
               help: null
               label: PURPOSE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: null
-              label: null
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: Percentage of attributable income
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: null
               label: ENTITY TYPE
@@ -53,8 +54,9 @@ modelo:
               help: null
               label: MEDIUM TYPE
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: null
-              label: null
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: Total number of entity records
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: null
               label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
@@ -163,8 +165,9 @@ modelo:
               help: null
               label: null
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: null
-              label: null
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: Gross income / amount of accrued returns / accounting result
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
               help: null
               label: null
@@ -207,8 +210,9 @@ modelo:
               help: null
               label: CODE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: null
-              label: null
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: Reported-party code
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: null
               label: COUNTRY CODE
@@ -266,8 +270,9 @@ modelo:
               help: null
               label: null
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: null
-              label: null
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: NIF of the tax representative
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: LOCATION OF THE PROPERTY

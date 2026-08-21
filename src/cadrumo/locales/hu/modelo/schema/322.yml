@@ -165,36 +165,48 @@ modelo:
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [164]
             '165':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Adóalap
             '166':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Kulcs %
             '167':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Adóösszeg
             '168':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóalap
             '169':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Kulcs %
             '17':
               help: null
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [17]
             '170':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóösszeg
             '171':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóalap
             '172':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Kulcs %
             '173':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóösszeg
             '18':
               help: null
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
@@ -470,8 +482,10 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos
+                jogcímen, évre és időszakra korábban benyújtott önadózások eredménye'
             '70':
               help: null
               label: null
@@ -644,11 +658,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
+                Adóalap
             '75':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
+                felszámított adó
             '76':
               help: null
               label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
@@ -665,8 +683,10 @@ modelo:
               label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
                 szerint [80]
             '81':
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek
+                a LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
             '83':
               help: null
               label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
@@ -727,77 +747,93 @@ modelo:
               help: null
               label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 5.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Fő
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: null
-              label: null
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Fő
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
+                címzettje?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Az uralkodó szervezet NIF száma
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Mentesül a 390-es modelo éves IVA-összesítő bevallás
+                alól?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Uralkodó / függő
             x-chim6r1ee1in4qbfchng:
               help: null
               label: null
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Azonosítás. A különös arányosítás alkalmazása (LIVA 103.Dos.1º
+                cikk): választás vagy a választás visszavonása'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Szerepel a havi visszatérítési nyilvántartásban (RIVA
+                30. cikk)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Azonosítás. Alkalmazandó különös rendszer: LIVA 163 sexies.Cinco
+                cikk'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Kizárólag foral adóhatóság alá tartozó adóalany, a Vámhatóság
+                által megállapított, még befizetetlen import-IVA-val
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: null
-              label: null
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: null

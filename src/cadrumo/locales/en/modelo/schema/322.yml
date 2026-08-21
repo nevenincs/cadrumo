@@ -158,36 +158,48 @@ modelo:
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [164]
             '165':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Taxable base
             '166':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Rate %
             '167':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Tax amount
             '168':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Taxable base
             '169':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Rate %
             '17':
               help: null
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [17]
             '170':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Tax amount
             '171':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Taxable base
             '172':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Rate %
             '173':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Tax amount
             '18':
               help: null
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
@@ -462,8 +474,10 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'To deduct (only for a supplementary self-assessment): result
+                of earlier self-assessments filed for the same item, year and period'
             '70':
               help: null
               label: null
@@ -648,11 +662,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Taxable base
             '75':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Input tax
             '76':
               help: null
               label: Regularisation of amounts under art. 80.Cinco.5ª LIVA [76]
@@ -668,8 +686,10 @@ modelo:
               label: Transactions carried out in the year. Transactions under the
                 general regime [80]
             '81':
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Transactions under the cash-accounting special regime accrued
+                under the general rule of art. 75 LIVA
             '83':
               help: null
               label: Transactions carried out in the year. Exempt transactions without
@@ -731,77 +751,93 @@ modelo:
               label: Transactions carried out in the year. Supplies of capital goods
                 [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 1
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 1
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 2
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 2
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 3
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 3
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 4
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 4
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 5
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 5
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: Activity code - Principal
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: null
-              label: null
+              help: Completed only in the last period of the return.
+              label: IAE heading - Principal
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you a recipient of transactions under the
+                cash-accounting special regime?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. NIF of the dominant entity
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you exempt from the annual IVA summary return,
+                modelo 390?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Group number
             x-chim6r1ectp7as3f5lp6ur0:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
               help: null
               label: null
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'Identification. Application of the special pro rata (art. 103.Dos.1º
+                LIVA): election or revocation of the election'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you registered in the monthly refund register
+                (art. 30 RIVA)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'Identification. Applicable special regime: art. 163 sexies.Cinco
+                LIVA'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Taxable person taxed exclusively by a foral tax administration,
+                with import IVA assessed by Customs still to be paid
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: null
-              label: null
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Is there a volume of transactions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: null

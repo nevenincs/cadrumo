@@ -26,8 +26,9 @@ modelo:
               help: null
               label: TÁRGY
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: null
-              label: null
+              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+                bevallott adat.
+              label: A hozzárendelhető jövedelem százaléka
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: null
               label: SZERVEZET TÍPUSA
@@ -53,8 +54,9 @@ modelo:
               help: null
               label: ADATHORDOZÓ TÍPUSA
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: null
-              label: null
+              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+                bevallott adat.
+              label: A szervezeti rekordok teljes száma
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: null
               label: A TAGOK, ÖRÖKÖSÖK, KÖZÖS TULAJDONOSOK VAGY RÉSZTVEVŐK REKORDJAINAK
@@ -165,8 +167,10 @@ modelo:
               help: null
               label: null
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: null
-              label: null
+              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+                bevallott adat.
+              label: Bruttó bevétel / esedékessé vált hozamok összege / számviteli
+                eredmény
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
               help: null
               label: null
@@ -209,8 +213,9 @@ modelo:
               help: null
               label: KÓD
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: null
-              label: null
+              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+                bevallott adat.
+              label: Bejelentett fél kódja
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: null
               label: ORSZÁGKÓD
@@ -267,8 +272,9 @@ modelo:
               help: null
               label: null
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: null
-              label: null
+              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+                bevallott adat.
+              label: Az adóügyi képviselő NIF száma
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: AZ INGATLAN ELHELYEZKEDÉSE

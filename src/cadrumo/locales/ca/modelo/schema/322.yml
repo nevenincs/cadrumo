@@ -155,36 +155,48 @@ modelo:
               help: null
               label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [164]
             '165':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Resta d'operacions en règim general.
+                Base imposable
             '166':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Resta d'operacions en règim general.
+                Tipus %
             '167':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Resta d'operacions en règim general.
+                Quota
             '168':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Base imposable
             '169':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Tipus %
             '17':
               help: null
               label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
                 Quota [17]
             '170':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Quota
             '171':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Operacions intragrup. Base imposable
             '172':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Operacions intragrup. Tipus %
             '173':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Liquidació. IVA meritat. Operacions intragrup. Quota
             '18':
               help: null
               label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
@@ -454,8 +466,11 @@ modelo:
               help: null
               label: null
             '69':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'A deduir (exclusivament en cas d''autoliquidació complementària):
+                resultat de les autoliquidacions anteriors presentades pel mateix
+                concepte, exercici i període'
             '70':
               help: null
               label: null
@@ -638,11 +653,15 @@ modelo:
               help: null
               label: null
             '74':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Adquisicions de béns i serveis afectades pel règim especial del
+                criteri de caixa. Base imposable
             '75':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Adquisicions de béns i serveis afectades pel règim especial del
+                criteri de caixa. Quota suportada
             '76':
               help: null
               label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
@@ -658,8 +677,10 @@ modelo:
               label: Operacions realitzades en l'exercici. Operacions en règim general
                 [80]
             '81':
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Operacions acollides al règim especial del criteri de caixa meritades
+                segons la regla general de l'art. 75 LIVA
             '83':
               help: null
               label: Operacions realitzades en l'exercici. Operacions exemptes sense
@@ -722,77 +743,94 @@ modelo:
               label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
                 [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 5a
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 5a
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Principal
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: null
-              label: null
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Principal
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. És destinatari d'operacions a les quals s'apliqui
+                el règim especial del criteri de caixa?
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. NIF de l'entitat dominant
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Està exonerat de la declaració-resum anual de
+                l'IVA, model 390?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Núm. de grup
             x-chim6r1ectp7as3f5lp6ur0:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
               help: null
               label: null
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'Identificació. Aplicació de la prorrata especial (art. 103.Dos.1r
+                LIVA): opció per l''aplicació o revocació de l''opció'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Està inscrit en el Registre de devolució mensual
+                (art. 30 RIVA)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'Identificació. Tipus de règim especial aplicable: art. 163 sexies.Cinc
+                LIVA'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Subjecte passiu que tributa exclusivament a una Administració
+                tributària foral, amb IVA a la importació liquidat per la Duana pendent
+                d'ingrés
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: null
-              label: null
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Hi ha volum d'operacions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
               label: null

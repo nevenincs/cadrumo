@@ -26,8 +26,9 @@ modelo:
               help: null
               label: OBJECTE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: null
-              label: null
+              help: Dada declarada al model 184, declaracio informativa d'entitats
+                en regim d'atribucio de rendes.
+              label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: null
               label: TIPUS D'ENTITAT
@@ -53,8 +54,9 @@ modelo:
               help: null
               label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: null
-              label: null
+              help: Dada declarada al model 184, declaracio informativa d'entitats
+                en regim d'atribucio de rendes.
+              label: Nombre total de registres d'entitat
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: null
               label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
@@ -164,8 +166,10 @@ modelo:
               help: null
               label: null
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: null
-              label: null
+              help: Dada declarada al model 184, declaracio informativa d'entitats
+                en regim d'atribucio de rendes.
+              label: Ingressos íntegres / import de rendiments meritats / resultat
+                comptable
             x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
               help: null
               label: null
@@ -208,8 +212,9 @@ modelo:
               help: null
               label: CLAU
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: null
-              label: null
+              help: Dada declarada al model 184, declaracio informativa d'entitats
+                en regim d'atribucio de rendes.
+              label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: null
               label: CLAU PAÍS
@@ -266,8 +271,9 @@ modelo:
               help: null
               label: null
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: null
-              label: null
+              help: Dada declarada al model 184, declaracio informativa d'entitats
+                en regim d'atribucio de rendes.
+              label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: null
               label: SITUACIÓ DE L'IMMOBLE
