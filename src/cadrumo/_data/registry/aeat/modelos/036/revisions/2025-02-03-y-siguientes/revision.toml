@@ -22,7 +22,53 @@ source_refs = [
     "aeat-dr-036-2025",
     "aeat-modelo-036-procedure",
 ]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review of the declaracion censal. DISCLOSURE -- \
+family_dispositions.deadline_windows was authored in this same action by this same agent, \
+because the revision previously carried neither a window nor a reason and so failed the \
+\"when due\" half of the rung it declares; nothing else was altered. VERIFIED -- WHEN DUE: \
+this modelo has no calendar plazo by construction. Its period_selector declares the EVENT \
+kinds alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors \
+each to its triggering event. Article 11.2 is verbatim in the bundled corpus for the baja: \
+\"La declaracion de baja debera presentarse en el plazo de un mes desde que se cumplan las \
+condiciones previstas en el apartado 1 de este articulo\". VERIFIED -- TO WHOM: \
+orden-eha-1274-2007 is the founding approving orden (\"por la que se aprueban los modelos \
+036 y 037 de declaracion censal\"); orden-hac-1526-2024 art. 1 amends it so that \"la \
+orden pasa a aprobar el modelo 036 de Declaracion censal de alta, modificacion y baja\"; \
+and its disposicion final unica reads \"la orden entra en vigor el dia 3 de febrero de \
+2025. Se aplica por primera vez a los modelos...\", which is EXACTLY this revision's \
+valid_from of 2025-02-03. \"Se aplica por primera vez\" is a first-application clause, an \
+open-ended commencement, so the open-ended 2025-02-03-y-siguientes claim is correct rather \
+than outrunning its orden. NOT CLAIMED -- the bundled excerpts of RD 1065/2007 articles 9 \
+and 10 carry the substance of what an alta and a modificacion must declare but NOT their \
+timing sentences, so only the baja period is corpus-proven here; the alta and modificacion \
+periods are cited by article and were not reproduced, because reproducing them from memory \
+would fabricate dates this registry cannot evidence. NOT CLAIMED -- \
+independent_check_coverage is 0.0000 meaning NO CLAIM, not zero. NOT CLAIMED -- COVERAGE: \
+this revision declares 31 casillas against a bundled diseno deriving 288 fields. That \
+partial coverage is a filing-rung concern this applicability-grade review does not reach, \
+and the underlying extraction defect is being worked by another hand; nothing here asserts \
+the casilla set is complete. NOT CLAIMED -- no export layout is declared; 2 \
+construct-evidence inspection gaps remain open (filing gaps 0). NOT CLAIMED -- all 3 \
+locales are complete for the 31 labels, but the strings were not audited for accuracy.
+ \
+NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable \
+bundled design year(s) inside this claimed span, so AEAT published record designs do not \
+evidence the record layout for the years this revision covers; closing that needs AEAT \
+acquisition and is not something this review does."""
+reviewed_at = 2026-08-21
 
+[revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
+reason = "The censal declaration has no calendar plazo: its period_selector declares the EVENT kinds alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors each to its triggering event. Article 11.2 states this verbatim in the bundled corpus for the baja: la declaracion de baja debera presentarse en el plazo de un mes desde que se cumplan las condiciones previstas en el apartado 1 de este articulo. The bundled excerpts of articles 9 and 10 carry the substance of what alta and modificacion must declare but NOT their timing sentences, so the alta and modificacion periods are cited by article rather than reproduced and are not corpus-proven here. No recurring window exists for any of the three and none is fabricated."
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+]
+source_refs = [
+    "aeat-dr-036-2025",
+]
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
