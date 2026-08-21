@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:701a91a0a7c04da32567353e8f88cc6d1846a9115692af1e7e0d7e6c9d0dd63b'
+body_hash: 'sha256:0b00d77f0f348e802c21d5fbf79248ea3b44e277138196064b941347baa4a8db'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -346,6 +346,54 @@ stated rationale to weigh against the corpus convention, and rewriting 122 fresh
 landed casillas on one reading would be barging. m604 stays **pending_review** in both
 revisions: a revision whose numbering does not mirror the official layout cannot be
 honestly stamped, and stamping it would flip it onto the filing-authority proof path.
+
+
+### the-span-gate-is-not-what-separates-reviewed-from-pending | high | 60 of 80 stamped revisions carry the same failure the pending ones do, and no stamp says so
+
+``test_every_modelo_revision_span_is_corpus_proven`` and
+``test_no_revision_spans_a_design_relayout`` are the richest instruments in the registry
+suite. They report, per revision, whether AEAT's published record designs actually
+evidence the span the revision claims, and their messages are unusually directive --
+*"do not treat the gap as anything other than a failure"*, *"do not split this revision
+on today's evidence"*, *"do not attempt to satisfy this with design evidence alone"*.
+
+**Measured this iteration: the two gates name 74 revisions. 60 are already
+``agent_reviewed``. 14 are ``pending_review``.** Of the 15 pending revisions, 14 are
+flagged -- but so are three quarters of the reviewed corpus.
+
+The consequence is the finding. The span gate **cannot** be the bar that separates a
+stamped revision from a pending one, because the stamped population fails it at
+roughly the same rate. Treating it as a stamping blocker for any single revision would
+apply a standard 60 of its already-stamped peers do not meet. Yet nothing in the census
+records this: ``review_status=agent_reviewed`` and the 81/0/14 summary give no hint that
+most reviewed revisions have no corpus proof of their own span.
+
+**This session's own m194 stamp is an instance.** It enumerates real limits -- the
+tipo-2 per-perceptor detail is not modelled, no export layout is declared,
+full-diseño casilla-number coverage is inapplicable -- and every one is true. It simply
+never states that the bundled design evidences no year inside the revision's span. The
+stamp misrepresents nothing it asserts; it is narrower than the gate's bar without
+saying so, and a later reader cannot tell the difference from the census.
+
+**Precedent set rather than argued.** m182/2007-y-siguientes was stamped this iteration
+with the span hole named in ``reviewed_by``, along with the deferred-binding limit and
+the explicit note that ``independent_check_coverage`` 0.0000 is NO CLAIM rather than
+zero. It is applicability grade, ``fixed_width_export`` stays false, and the scope does
+not flip to filing. Census 80/0/15 -> 81/0/14, 95 rows, clean load.
+
+**What this changes about "clear the pending set".** The remaining 14 are not a backlog
+of unreviewed work sitting behind one shared obstacle. Fourteen of them share an
+obstacle that 60 *reviewed* revisions also have. The honest target is not to drive
+pending to zero but to make every stamp state which of the standing failures it does
+not close -- otherwise the count moves and the corpus learns nothing.
+
+**Corollary worth its own attention:** the gate's own module docstring records a
+previous instrument failure in this exact shape -- a privately re-declared four-digit
+box-number regex against Modelo 200's five-digit boxes, which switched the box-offset
+and box-set signals off while reporting nothing wrong. Its note is the general lesson:
+*"Agreement between two instruments sharing one blind spot is worth nothing, and unlike
+a wrong answer it offers nothing to notice."*
+
 
 ## Recommendations
 
