@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:fce3af694601123c3c017d7ff1a7e5ad486defb857eab45a7e40548c1e3c2b06'
+body_hash: 'sha256:28c570137e0a87bd5a750de6994a35ad9e90ed6ff8d17f51bb15da5c70f71c74'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1451,7 +1451,6 @@ specified: both ordenes bundled with the standard provenance note, ``art√≠culo √
 provision from HAP/2373/2014, then the revision split at 2015 and Q4 2018 with each
 segment citing the orden that governs it.
 
-
 ### the-layout-coverage-message-omits-the-half-that-explains-it | medium | four of sixteen entries read as false positives until the upper bound is recovered
 
 Triaging ``test_every_claimed_filing_year_is_covered_by_its_declared_layout_design``
@@ -1500,7 +1499,6 @@ measurement that is correct internally and lossy at the boundary where a human r
 The box-collapse detector reported ``False`` for the form that motivated it; the span
 gate's ABSENT and CONTRARY classes were indistinguishable until parsed apart. No
 production code is wrong in any of the three -- the defect is in what reaches the reader.
-
 
 ## Recommendations
 
