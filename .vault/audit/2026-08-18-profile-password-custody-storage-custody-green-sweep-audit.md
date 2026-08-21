@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:61f934b2fa2fb5ec7793dc6507327843228e031136b4ec1275636f679a49f464'
+body_hash: 'sha256:f60f7cf32574fe7b381cc217120053b1ffea04a221368609886100bd3899f296'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -3052,3 +3052,48 @@ always-passing.
 falls back from is still NEEDED on the platform that lacks it. `O_BINARY` and
 `O_NOFOLLOW` look identical as code and are opposites as decisions — one degrades to a
 no-op because nothing is required, the other degrades to a missing guarantee.
+
+### The detector this campaign built had the defect this campaign hunts
+
+Two sweeps came back clean before the finding arrived, and both are worth recording so
+they are not repeated.
+
+**Fallback shapes other than `getattr(os, FLAG, 0)`.** The domain holds exactly two:
+the keyring import, which fails CLOSED with a typed `KeyringUnavailableError` and
+additionally refuses a null keyring by priority; and a `hasattr` that is class
+validation, not a fallback. Neither substitutes a weaker path.
+
+**Handlers that swallow into `pass`/`None`/`continue`.** Thirty-nine of them, and the
+classification is the point: `FileNotFoundError → None` means absent, which is a real
+answer; `FileExistsError → pass` inside an exclusive-create retry is the retry; and
+`os.fstat` raising in `_is_open_file_descriptor` IS the answer that probe asks for.
+The acceleration-receipt handlers turn a corrupt receipt or an unavailable keychain into
+"no acceleration", which costs a re-authentication and is the safe direction. The one
+handler shaped like a fail-open — `_capsule_discovery` skipping a candidate it cannot
+anchor, so a retired member there goes undetected — sits in a function with no caller.
+
+**Then the real finding, in this campaign's own instrument.** The unused-export gate
+shipped earlier counted every string constant as a use, so a name listed in its OWN
+module's `__all__` counted as used. A module declaring what it offers was being read as
+somebody taking it — meaning a name was reported as used BECAUSE it was exported, which
+is exactly backwards for a gate asking whether exports are used.
+
+Eight names hid behind it, including `decrypt_profile_bundle_with_passphrase` — the read
+half of the bundle whose write half ships, which is the concrete symbol behind the
+portability gap this campaign recorded weeks of iterations ago. The gate that was
+supposed to surface such things was structurally unable to see this one.
+
+Each of the eight is now declared with its own reason rather than a shared one: four
+belong to the portability surface another owner is rebuilding;
+`bound_profile_record_session` is used by eight TEST modules and no production caller,
+which is what a test-support helper looks like rather than a dead symbol; two have no
+consumer anywhere and are genuine deletion candidates in other campaigns' surfaces.
+
+**The two halves now pin the detector from both sides.** Loosen it again and the eight
+records stop describing anything, so the staleness assertion reds — the declarations
+defend the detector's precision, not just the tree's state. Proven by restoring the blind
+spot.
+
+**Generalisable:** point the campaign's method at the campaign's own tools. A detector is
+production code for the question it answers, and it is subject to every failure mode it
+was built to find — including counting a declaration as a use.
