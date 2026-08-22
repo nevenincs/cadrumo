@@ -10,9 +10,60 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici fiscal a què es refereix la declaració
+            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: null
+              label: Número de referència de la declaració (reservat a l'Administració)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (alta / variació / baixa)
+            x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
+              help: null
+              label: Cognoms i nom o raó social del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Codi de municipi del representant (reservat a l'Administració)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Codi postal del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
+              help: null
+              label: Codi de província del representant (reservat a l'Administració)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
+              help: null
+              label: Codi de via del domicili del representant (reservat a l'Administració)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
+              help: null
+              label: Escala del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
+              help: null
+              label: Quilòmetre del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
+              help: null
+              label: Codi de municipi del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
+              help: null
+              label: Número del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
+              help: null
+              label: Pis del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
+              help: null
+              label: Codi de província del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
+              help: null
+              label: Porta del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
+              help: null
+              label: Sigla de la via pública del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
+              help: null
+              label: Nom de la via pública del domicili del representant
+            x-e9in0sj5edimst31dpq6abjed5j0:
+              help: null
+              label: NIF del representant
+            x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
+              help: null
+              label: Telèfon del representant
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
               help: null
               label: Cognoms i nom o raó social del subjecte passiu

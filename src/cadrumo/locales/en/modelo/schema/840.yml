@@ -10,9 +10,62 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year to which the return relates
+            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: null
+              label: Reference number of the return (reserved for the tax administration)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (registration / change / deregistration)
+            x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
+              help: null
+              label: Surnames and forename, or legal name, of the representative
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Municipality code of the representative (reserved for the tax
+                administration)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Postal code of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
+              help: null
+              label: Province code of the representative (reserved for the tax administration)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
+              help: null
+              label: Street code of the representative's address (reserved for the
+                tax administration)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
+              help: null
+              label: Stairwell of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
+              help: null
+              label: Kilometre marker of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
+              help: null
+              label: Municipality code of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
+              help: null
+              label: Street number of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
+              help: null
+              label: Floor of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
+              help: null
+              label: Province code of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
+              help: null
+              label: Door of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
+              help: null
+              label: Street-type abbreviation of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
+              help: null
+              label: Street name of the representative's address
+            x-e9in0sj5edimst31dpq6abjed5j0:
+              help: null
+              label: Tax identification number (NIF) of the representative
+            x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
+              help: null
+              label: Telephone number of the representative
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
               help: null
               label: Surnames and forename, or legal name, of the taxable person

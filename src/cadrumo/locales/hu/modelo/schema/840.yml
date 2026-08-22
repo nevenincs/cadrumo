@@ -10,9 +10,60 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás vonatkozási adóéve
+            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: null
+              label: A bevallás hivatkozási száma (az adóhatóság tölti ki)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
+            x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
+              help: null
+              label: A képviselő vezeték- és keresztneve vagy cégneve
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: A képviselő településkódja (az adóhatóság tölti ki)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: A képviselő címének irányítószáma
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
+              help: null
+              label: A képviselő tartománykódja (az adóhatóság tölti ki)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
+              help: null
+              label: A képviselő címének közterületkódja (az adóhatóság tölti ki)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
+              help: null
+              label: A képviselő címének lépcsőháza
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
+              help: null
+              label: A képviselő címének kilométerjelzése
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
+              help: null
+              label: A képviselő címének településkódja
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
+              help: null
+              label: A képviselő címének házszáma
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
+              help: null
+              label: A képviselő címének emelete
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
+              help: null
+              label: A képviselő címének tartománykódja
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
+              help: null
+              label: A képviselő címének ajtaja
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
+              help: null
+              label: A képviselő címében szereplő közterület jellegének rövidítése
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
+              help: null
+              label: A képviselő címének közterületneve
+            x-e9in0sj5edimst31dpq6abjed5j0:
+              help: null
+              label: A képviselő adóazonosító száma (NIF)
+            x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
+              help: null
+              label: A képviselő telefonszáma
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
               help: null
               label: Az adóalany vezeték- és keresztneve vagy cégneve

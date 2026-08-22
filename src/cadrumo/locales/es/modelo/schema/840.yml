@@ -11,9 +11,61 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio fiscal al que se refiere la declaración
+            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: null
+              label: Número de referencia de la declaración (reservado a la Administración)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (alta / variación / baja)
+            x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
+              help: null
+              label: Apellidos y nombre o razón social del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Código de municipio del representante (reservado a la Administración)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Código postal del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
+              help: null
+              label: Código de provincia del representante (reservado a la Administración)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
+              help: null
+              label: Código de vía del domicilio del representante (reservado a la
+                Administración)
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
+              help: null
+              label: Escalera del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
+              help: null
+              label: Kilómetro del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
+              help: null
+              label: Código de municipio del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
+              help: null
+              label: Número del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
+              help: null
+              label: Piso del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
+              help: null
+              label: Código de provincia del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
+              help: null
+              label: Puerta del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
+              help: null
+              label: Sigla de la vía pública del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
+              help: null
+              label: Nombre de la vía pública del domicilio del representante
+            x-e9in0sj5edimst31dpq6abjed5j0:
+              help: null
+              label: NIF del representante
+            x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
+              help: null
+              label: Teléfono del representante
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
               help: null
               label: Apellidos y nombre o razón social del sujeto pasivo

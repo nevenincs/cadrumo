@@ -1,0 +1,226 @@
+# Modelo 840 Apartado II [16] and Apartado III -- representante, boxes [17] to [32].
+# Transcribed position-by-position from the bundled aeat-dr-840 design (Pag. 1,
+# which tiles 1..1132 exactly once with no gap and no overlap).
+#
+# As in Apartado I, AEAT numbers by the PRINTED FORM rather than byte order: [31]
+# Provincia sits at @485 while [29] Municipio sits at @487, and [30] C. Mun. sits
+# at @522 after both. The offsets below are therefore not monotonic in number.
+#
+# Every field here is `text`, including the postal, municipio and provincia codes
+# and the telephone: each is a fixed-width code where a leading zero is
+# significant, and an integer round-trip would silently drop it.
+#
+# RESERVADO BOXES ARE DECLARED, not skipped. [16] Numero de referencia, [21] C.
+# Via, [30] C. Mun. and [32] C. Prov. are marked "Reservado" in the diseno -- the
+# administration fills them, not the taxpayer -- but AEAT still assigns each a box
+# number and the coverage report derives all four. Declaring them keeps the derived
+# set honest; `required = false` records that the filer supplies nothing. This is
+# the opposite treatment from the UNNUMBERED reserved run at @250+6 in Apartado I,
+# which carries no box number and is correctly not a casilla.
+#
+# The whole apartado is optional: a declaration filed without a representante
+# leaves every one of these blank, so none is `required`.
+
+# @275+13. Numero de referencia. [16].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.numero-referencia"
+number = "16"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "declaracion_numero_referencia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @288+9. NIF. [17].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.nif"
+number = "17"
+section = ["representante"]
+data_type = "nif"
+semantic_role = "representante_nif"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @297+125. Apellidos y nombre o razon social. [18].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.apellidos-razon-social"
+number = "18"
+section = ["representante"]
+data_type = "name"
+semantic_role = "representante_nombre_razon_social"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @422+2. SG (sigla de la via publica). [19].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-sigla-via"
+number = "19"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_sigla_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @424+25. Nombre de la via publica. [20].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-via-publica"
+number = "20"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_via_publica"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @449+6. C. Via (codigo de via). [21].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-via"
+number = "21"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @455+5. Num.. [22].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-numero"
+number = "22"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_numero"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @460+5. Km.. [23].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-kilometro"
+number = "23"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_kilometro"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @465+2. Esc.. [24].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-escalera"
+number = "24"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_escalera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @467+2. Piso. [25].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-piso"
+number = "25"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_piso"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @469+2. Pta.. [26].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-puerta"
+number = "26"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_puerta"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @471+9. Telefono. [27].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.telefono"
+number = "27"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_telefono"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @480+5. Cod. Postal. [28].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-postal"
+number = "28"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_postal"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @487+5. Municipio (codigo). [29].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-municipio"
+number = "29"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @522+6. C. Mun. (codigo de municipio). [30].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-municipio"
+number = "30"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @485+2. Provincia (codigo). [31].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-provincia"
+number = "31"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @528+2. C. Prov. (codigo de provincia). [32].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-provincia"
+number = "32"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]

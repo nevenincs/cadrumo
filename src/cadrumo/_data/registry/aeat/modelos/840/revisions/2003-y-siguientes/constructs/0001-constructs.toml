@@ -28,6 +28,23 @@ casilla_ids = [
     "sujeto.domicilio-provincia",
     "sujeto.domicilio-codigo-postal",
     "sujeto.telefono-contacto",
+    "decl.numero-referencia",
+    "representante.nif",
+    "representante.apellidos-razon-social",
+    "representante.domicilio-sigla-via",
+    "representante.domicilio-via-publica",
+    "representante.domicilio-codigo-via",
+    "representante.domicilio-numero",
+    "representante.domicilio-kilometro",
+    "representante.domicilio-escalera",
+    "representante.domicilio-piso",
+    "representante.domicilio-puerta",
+    "representante.telefono",
+    "representante.domicilio-codigo-postal",
+    "representante.domicilio-municipio",
+    "representante.domicilio-codigo-municipio",
+    "representante.domicilio-provincia",
+    "representante.domicilio-codigo-provincia",
 ]
 workbook_parity_refs = ["modelo-840-dr"]
 live_cross_references = [
