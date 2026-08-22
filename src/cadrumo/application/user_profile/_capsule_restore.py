@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.storage import custody
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ._aggregate import ProfileRestoreAuthority
@@ -42,7 +43,6 @@ from ._custody_ports import (
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
     parse_profile_custody_sentinel,
-    profile_custody_read_optional_member,
 )
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
@@ -119,10 +119,8 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     sentinel = parse_profile_custody_sentinel(
         _require_member(source, _SENTINEL_RELATIVE, "DEK sentinel", PROFILE_CAPSULE_SENTINEL_MAX_BYTES),
     )
-    database_bytes = _require_member(
-        source, _DATABASE_RELATIVE, "profile database", PROFILE_CAPSULE_DATABASE_MAX_BYTES
-    )
-    recovery_payload = profile_custody_read_optional_member(
+    database_bytes = _require_member(source, _DATABASE_RELATIVE, "profile database", PROFILE_CAPSULE_DATABASE_MAX_BYTES)
+    recovery_payload = custody.read_optional_profile_custody_local_record(
         source.joinpath(*_RECOVERY_RELATIVE), maximum_bytes=PROFILE_CAPSULE_RECOVERY_MAX_BYTES
     )
     recovery = None if recovery_payload is None else parse_profile_custody_recovery_envelope(recovery_payload)
@@ -282,7 +280,9 @@ def _require_member(source: Path, relative: tuple[str, ...], subject: str, maxim
     weaker read: ``is_file()`` then ``read_bytes()``, which follows a symlink,
     bounds nothing, and asks about a NAME before reading a FILE.
     """
-    payload = profile_custody_read_optional_member(source.joinpath(*relative), maximum_bytes=maximum_bytes)
+    payload = custody.read_optional_profile_custody_local_record(
+        source.joinpath(*relative), maximum_bytes=maximum_bytes
+    )
     if payload is None:
         raise ProfileCapsuleSourceError(f"capsule source is missing its {subject}")
     return payload

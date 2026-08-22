@@ -163,10 +163,12 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     target = _profile_lock_path(tmp_path)
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    with custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS):
-        with pytest.raises(Exception):  # noqa: B017 - the refusal type is the primitive's own
-            with custody.profile_custody_local_lock(target, timeout_seconds=0.5):
-                pass
+    with (
+        custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
+        pytest.raises(Exception),  # noqa: B017 - the refusal type is the primitive's own
+        custody.profile_custody_local_lock(target, timeout_seconds=0.5),
+    ):
+        pass
 
 
 def test_the_profile_lock_names_the_profile_it_scopes(tmp_path: Path) -> None:

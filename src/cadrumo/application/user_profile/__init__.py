@@ -343,6 +343,9 @@ if TYPE_CHECKING:
     from ._custody_carry import (
         serialize_carried_objects as serialize_carried_objects,
     )
+    from ._custody_hold_models import (
+        ProfileCustodyRetentionOverride as ProfileCustodyRetentionOverride,
+    )
     from ._custody_pointer import (
         ProfileCustodyPointerSnapshot as ProfileCustodyPointerSnapshot,
     )
@@ -458,9 +461,6 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
-        load_profile_custody_data_file as load_profile_custody_data_file,
-    )
-    from ._custody_ports import (
         load_profile_custody_password_material as load_profile_custody_password_material,
     )
     from ._custody_ports import (
@@ -551,9 +551,6 @@ if TYPE_CHECKING:
         refuse_profile_login_without_password_channel as refuse_profile_login_without_password_channel,
     )
     from ._custody_ports import (
-        replace_profile_custody_data_file as replace_profile_custody_data_file,
-    )
-    from ._custody_ports import (
         replace_profile_custody_envelope as replace_profile_custody_envelope,
     )
     from ._custody_ports import (
@@ -573,9 +570,6 @@ if TYPE_CHECKING:
     )
     from ._custody_transactions import (
         ProfileCustodyDeleteConfirmation as ProfileCustodyDeleteConfirmation,
-    )
-    from ._custody_hold_models import (
-        ProfileCustodyRetentionOverride as ProfileCustodyRetentionOverride,
     )
     from ._custody_transactions import (
         ProfileCustodyHoldAssessment as ProfileCustodyHoldAssessment,
@@ -869,7 +863,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "default_profile_bucket_event_history_repository": "._custody_ports",
     "default_profile_record_crypto_port": "._custody_ports",
     "export_profile_recovery_artifact": "._recovery_custody",
-    "load_profile_custody_data_file": "._custody_ports",
     "parse_profile_custody_envelope": "._custody_ports",
     "parse_profile_custody_recovery_envelope": "._custody_ports",
     "parse_profile_custody_sentinel": "._custody_ports",
@@ -891,7 +884,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_zeroise": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",
     "refuse_profile_login_without_password_channel": "._custody_ports",
-    "replace_profile_custody_data_file": "._custody_ports",
     "replace_profile_custody_envelope": "._custody_ports",
     "unlock_profile_custody_password": "._custody_ports",
     "verify_profile_custody_dek_against_sentinel": "._custody_ports",
@@ -1160,12 +1152,12 @@ __all__ = [
     "ProfileCustodyDeleteConfirmation",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyHoldAssessment",
-    "ProfileCustodyRetentionOverride",
     "ProfileCustodyHoldEvidence",
     "ProfileCustodyInventoryWitness",
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPointerSnapshot",
     "ProfileCustodyRecoveryEnvelopePort",
+    "ProfileCustodyRetentionOverride",
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyTransactionConflictError",

@@ -1066,23 +1066,6 @@ PROFILE_CAPSULE_RECOVERY_MAX_BYTES = custody.PROFILE_CUSTODY_RECOVERY_MAX_BYTES
 PROFILE_CAPSULE_DATABASE_MAX_BYTES = custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
 
 
-def profile_custody_read_optional_member(path: Path, *, maximum_bytes: int) -> bytes | None:
-    """Read an optional capsule member, or prove its absence, in one operation.
-
-    Absence is resolved INSIDE the anchored read rather than by a preceding
-    ``is_file()``. Inspecting a pathname and then reopening it is two
-    operations on a name, not one on a file, and the primitive's own contract
-    says exactly that.
-
-    Anchored, bounded and no-follow matter MOST for the source an operator
-    hands to ``config profile restore``, which is the less trusted of the two
-    capsule kinds: a published capsule lives inside this product's own storage
-    root, while a restore source is a directory from anywhere. This is the read
-    that path uses.
-    """
-    return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
-
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
     """Return where a committed capsule keeps its optional recovery wrapper."""
     return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME
@@ -1359,34 +1342,6 @@ def _temporary_profile_custody_session(*, profile_id: UUID, dek: bytes, root: Pa
         bridge.close()
 
 
-def load_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    *,
-    root: Path | None = None,
-) -> bytes:
-    """Read one committed capsule data member through the custody provider."""
-    return custody.load_committed_profile_custody_data_file(profile_id, relative_name, root=root)
-
-
-def replace_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    payload: bytes,
-    *,
-    expected_sha256: str,
-    root: Path | None = None,
-) -> None:
-    """CAS-replace one committed capsule data member through custody."""
-    custody.replace_committed_profile_custody_data_file(
-        profile_id,
-        relative_name,
-        payload,
-        expected_sha256=expected_sha256,
-        root=root,
-    )
-
-
 def default_profile_bucket_event_history_repository(
     *,
     objects: ProfileCustodySecureObjectRepositoryPort | None = None,
@@ -1437,7 +1392,6 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "load_profile_custody_data_file",
     "load_profile_custody_password_material",
     "parse_profile_custody_envelope",
     "parse_profile_custody_recovery_envelope",
@@ -1468,7 +1422,6 @@ __all__ = [
     "profile_zeroise",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
-    "replace_profile_custody_data_file",
     "replace_profile_custody_envelope",
     "unlock_profile_custody_password",
     "verify_profile_custody_dek_against_sentinel",
