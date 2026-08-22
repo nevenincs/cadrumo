@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:260a2757f97acc3d453958ad6af33a3f03afe45cf31ab9495ef81d915c7e6116'
+body_hash: 'sha256:b17b93ed9de4927bd066b1eaf58f54a935560b4a47524804af6b0beec931f711'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -83,6 +83,47 @@ perform network I/O. `SourceConnectivityGrounding` continues to parse locator
 shape only. The prior medium HTTPS trust-boundary finding therefore remains open
 for any future dereferencer but is not widened by S03.
 
+### relational-binding-correction | low | Corrective commit binds candidate, source, resolver, revision, and evidence identities
+
+Corrective commit `995d8d391f` introduces one shared
+`SourceConnectivityConnectionIdentity` and requires the resolver, encrypted
+revision, operator, executable-evidence, and census-row candidate identities to
+agree. Focused mutation probes independently changed candidate id, source kind,
+source object id, resolver id, and calculation revision id. Every mismatch was
+refused. Repository implementation files, HTTPS locators, and non-test modules
+were also refused as executable evidence. This closes the cross-component
+identity portion of `disconnected-attestations`.
+
+### enrollment-evidence-remains-asserted | high | Deferred sources and nonexistent executable evidence can still claim a production connection
+
+The correction does not establish that the shared source kind is actually
+enrolled or that its executable evidence exists. A focused probe built a
+`connected` row for candidate `inventory-stock` using the currently deferred
+`BindingSourceKind.RELATED_PARTY_OPERATION`, resolver `resolver-a`, command id
+`anything`, and locator
+`src/cadrumo/fake/tests/test_does_not_exist.py:999`. The complete row validated.
+`SourceConnectivityExecutableEvidence` checks only the locator string shape; it
+does not establish repository existence, a test identity, or a test-to-command
+and test-to-resolver relationship. Likewise, `command_id` is merely a stable
+token, not an identity drawn from or checked against the supported CLI command
+surface. Consequently one internally consistent but invented identity bundle
+still upgrades a deferred source to `connected` without live resolver enrollment
+or executable operator and persistence proof. The original
+`disconnected-attestations` HIGH finding is narrowed but remains open.
+
+### strict-true-correction | low | Corrective strict booleans reject integer and textual substitutes
+
+The `_StrictBoolean` fields plus explicit truth validators accept only actual
+boolean values and require them to be true. A focused probe confirmed integer
+`1` is refused; the implementation's recorded probes also cover textual
+substitutes. This closes `literal-true-coercion`.
+
+### docstring-correction | low | Census-row documentation now describes the landed relational proof
+
+The corrected `SourceConnectivityCensusRow` docstring describes evidence and
+accountability for all dispositions and the additional relational proof required
+for a connected row. This closes `stale-connected-proof-docstring`.
+
 ## Recommendations
 
 - For `disconnected-attestations`, bind all proof components to one stable
@@ -101,6 +142,17 @@ for any future dereferencer but is not widened by S03.
 - Preserve the correct connected/proof bidirectional invariant, canonical
   `BindingSourceKind` ownership, S03 scope boundary, and non-dereferencing HTTPS
   behavior while correcting the findings.
-- Do not begin S04 while `disconnected-attestations` remains open. Focused
-  regression coverage needed to close S03 findings may accompany corrective S03
-  work without broadening into S05's full planned matrix.
+- For `enrollment-evidence-remains-asserted`, ensure the production census
+  builder or its mandatory ratchet gate derives resolver ownership from the live
+  enrolled source-disposition authority and verifies each executable evidence
+  identity against a real, allowlisted test or generated proof manifest. A
+  caller-authored path-shaped string must not manufacture enrollment.
+- Bind `entrypoint_id` and `command_id` to the supported operator command
+  catalogue, and bind each evidence id to the exact resolver, persistence, or
+  operator proof it establishes rather than accepting one generic test-shaped
+  locator for every proof family.
+- Retain the corrected shared-identity validators, strict booleans, executable
+  locator exclusions, and updated documentation.
+- S04 remains blocked until the remaining HIGH finding is closed or the same
+  commit establishes a mandatory, non-bypassable live-authority validator that
+  makes invented/deferred proof records impossible at census admission.
