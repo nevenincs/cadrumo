@@ -37,6 +37,7 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._records
    cadrumo.adapters.persistence.storage.custody._recovery
    cadrumo.adapters.persistence.storage.custody._recovery_artifact
+   cadrumo.adapters.persistence.storage.custody._recovery_secret_codec
    cadrumo.adapters.persistence.storage.custody._sentinel
    cadrumo.adapters.persistence.storage.custody._sentinel_contract
    cadrumo.adapters.persistence.storage.custody._zeroise

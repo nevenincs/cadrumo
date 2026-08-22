@@ -7,12 +7,179 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
+              label: A csoport tevekenysegei. A(z) 1. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
+              label: A csoport tevekenysegei. A(z) 2. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0co:
+              label: A csoport tevekenysegei. A(z) 3. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d0:
+              label: A csoport tevekenysegei. A(z) 4. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d8:
+              label: A csoport tevekenysegei. A(z) 5. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0dg:
+              label: A csoport tevekenysegei. A(z) 6. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0do:
+              label: A csoport tevekenysegei. A(z) 7. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e0:
+              label: A csoport tevekenysegei. A(z) 8. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e8:
+              label: A csoport tevekenysegei. A(z) 9. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c0:
+              label: A csoport tevekenysegei. A(z) 10. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c8:
+              label: A csoport tevekenysegei. A(z) 11. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2cg:
+              label: A csoport tevekenysegei. A(z) 12. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2co:
+              label: A csoport tevekenysegei. A(z) 13. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2d0:
+              label: A csoport tevekenysegei. A(z) 14. tevekenyseg CNAE-kodja
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g64:
+              label: A csoport tevekenysegei. A(z) 1. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g68:
+              label: A csoport tevekenysegei. A(z) 2. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6c:
+              label: A csoport tevekenysegei. A(z) 3. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6g:
+              label: A csoport tevekenysegei. A(z) 4. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6k:
+              label: A csoport tevekenysegei. A(z) 5. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6o:
+              label: A csoport tevekenysegei. A(z) 6. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6s:
+              label: A csoport tevekenysegei. A(z) 7. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g70:
+              label: A csoport tevekenysegei. A(z) 8. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g74:
+              label: A csoport tevekenysegei. A(z) 9. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h60:
+              label: A csoport tevekenysegei. A(z) 10. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h64:
+              label: A csoport tevekenysegei. A(z) 11. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h68:
+              label: A csoport tevekenysegei. A(z) 12. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6c:
+              label: A csoport tevekenysegei. A(z) 13. tevekenyseg CNAE (2009) leirasa
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6g:
+              label: A csoport tevekenysegei. A(z) 14. tevekenyseg CNAE (2009) leirasa
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn68rrdd5n62rjkckmmsrpde9in6qb4cln78p9ddsmmcrric5m0:
+              label: Csoporttipus es egyeb jellemzok. Olyan csoport, amelynek anyavallalata
+                kulfoldi illetosegu vagy helyi szabalyok ala tartozik
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6arbge9in6obj5limqpbictimst35ec:
+              label: Csoporttipus es egyeb jellemzok. Novekedesi vallalkozasok csoportja
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqorfdto6asj1ehkncobj:
+              label: Csoporttipus es egyeb jellemzok. Szovetkezeti csoport
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqobjcljnasj1chnn4obj:
+              label: Csoporttipus es egyeb jellemzok. Biztositoi csoport
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqoricli6it3f:
+              label: Csoporttipus es egyeb jellemzok. Hitelintezeti csoport
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpjfe9gmo:
+              label: Csoporttipus es egyeb jellemzok. Kulon jogallasu csoport, helyi
+                szabalyok szerinti adozas
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpr5dpin4obc:
+              label: Csoporttipus es egyeb jellemzok. Altalanos csoport
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6irj3cln78qbmdtpiqsj5chqm6qb4c4mm8qbdcln76qbfdo:
+              label: Csoporttipus es egyeb jellemzok. Kisvallalati kedvezmenyek alkalmazasa
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6srridlgn8qbmc4mm6rrdeln2qorfdommcrric5m2qrj1epgn4sj1:
+              label: Csoporttipus es egyeb jellemzok. Kozos szabalyok ala tartozo
+                csoport, amelynek egyik tagja Navarra helyi szabalyai ala tartozik
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6us33d5nmsbb6d5n6aspdednm6qb1dhin6:
+              label: Csoporttipus es egyeb jellemzok. A teljes adotartozas 0,7 szazalekanak
+                felajanlasa szocialis celokra
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7d5mmarhdehnmspbcc5l6a:
+              label: Csoporttipus es egyeb jellemzok. Hajozasi tarsasagokat tomorito
+                csoport a tonnatartalom szerinti adozasi rendszerben
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7dhgn6bb1e9q2qdpk5kpiqr39ec:
+              label: Csoporttipus es egyeb jellemzok. Az LIS 74.3. cikkenek szabalyait
+                alkalmazo csoport
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5kp30bb15kr30bbdd5m6orreclpg:
+              label: Nettó arbevetel. Legalabb 20 millio, de 60 millio euro alatt
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5li6asr4ckmjcc1ddlkmor3fdpin6:
+              label: Nettó arbevetel. Legalabb 60 millio euro
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5lkmspj5e9kmushd68o2qrb9dhm6urj5ec:
+              label: Nettó arbevetel. 20 millio euro alatt
+            x-cdnmqs3cclmmarjkc5p6io9eclpiqorfdlo6opbdcln78obid5gg:
+              label: Kiegeszito onadozas. Az onadozas kiegeszito jellegu
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Kiegeszito onadozas. A korabbi onadozas bizonylatszama
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqs3iclpn8ob3d5nmsbbgc5q74qbddtn6iobc:
+              label: Kiegeszito onadozas. Az eszkozatalakitasi vagyoni hozzajarulas
+                onadozasanak bizonylatszama
+            x-cdnmst31cdq6ubj5dlgmir0:
+              label: Kapcsolattarto szemely. E-mail cim
+            x-cdnmst31cdq6ubjedtmm4sj5:
+              label: Kapcsolattarto szemely. Nev
+            x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
+              label: Kapcsolattarto szemely. Vezetekes telefon
+            x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
+              label: Kapcsolattarto szemely. Mobiltelefon
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adócsoport bevallásának vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              label: Anyavallalat. Vezeteknev vagy cegnev
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
+              label: Anyavallalat. Nev
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
+              label: Anyavallalat. Azonosito szam
+            x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
+              label: Anyavallalat. Orszag vagy kulon jogallasu terulet
+            x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              label: Kepviselo vagy anyavallalat. Vezeteknev vagy cegnev
+            x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:
+              label: Kepviselo vagy anyavallalat. Az adocsoportba tartozo anyavallalat
+            x-d5i6arjkd5j6ior1cdkmurheclpiqsj5e1p6asr5dpq62rjkck:
+              label: Kepviselo vagy anyavallalat. Kepviselo, de nem anyavallalat
+            x-d5i6arjkd5j6ior1cdkmurhedpkmc:
+              label: Kepviselo vagy anyavallalat. Adoazonosito szam (NIF)
+            x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
+              label: Kepviselo vagy anyavallalat. Nev
+            x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
+              label: Kepviselo vagy anyavallalat. Az adocsoport szama
+            x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:
+              label: Kepviselo vagy anyavallalat. Idoszak
+            x-d5i6arjkd5j6ior1cdkmurheehimopb6dtn6u:
+              label: Kepviselo vagy anyavallalat. Telefonszam
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dcpkmsobc:
+              label: Adozasi idoszak. Zaro datum
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dd5n6ior9ds:
+              label: Adozasi idoszak. Kezdo datum
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubjkd5o6ubb5d9in4or9cdkmu:
+              label: Adozasi idoszak. Az uzleti ev tipusa
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmcpb3d1giqs3fchin4:
+              label: Torvenyes kepviselok. 1. torvenyes kepviselo. A meghatalmazas
+                datuma
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsqb6:
+              label: Torvenyes kepviselok. 1. torvenyes kepviselo. Adoazonosito szam
+                (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrdc9p6a:
+              label: Torvenyes kepviselok. 1. torvenyes kepviselo. Nev es vezeteknev
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrkc5p6io8:
+              label: Torvenyes kepviselok. 1. torvenyes kepviselo. Kozjegyzoi iroda
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmcpb3d1giqs3fchin4:
+              label: Torvenyes kepviselok. 2. torvenyes kepviselo. A meghatalmazas
+                datuma
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsqb6:
+              label: Torvenyes kepviselok. 2. torvenyes kepviselo. Adoazonosito szam
+                (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrdc9p6a:
+              label: Torvenyes kepviselok. 2. torvenyes kepviselo. Nev es vezeteknev
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrkc5p6io8:
+              label: Torvenyes kepviselok. 2. torvenyes kepviselo. Kozjegyzoi iroda
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmcpb3d1giqs3fchin4:
+              label: Torvenyes kepviselok. 3. torvenyes kepviselo. A meghatalmazas
+                datuma
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsqb6:
+              label: Torvenyes kepviselok. 3. torvenyes kepviselo. Adoazonosito szam
+                (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrdc9p6a:
+              label: Torvenyes kepviselok. 3. torvenyes kepviselo. Nev es vezeteknev
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
+              label: Torvenyes kepviselok. 3. torvenyes kepviselo. Kozjegyzoi iroda
           construct:
             modelo-220-declaration-construct:
               field:

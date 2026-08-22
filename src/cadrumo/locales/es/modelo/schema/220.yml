@@ -8,12 +8,194 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 1
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 2
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0co:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 3
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d0:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 4
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d8:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 5
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0dg:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 6
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0do:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 7
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e0:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 8
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e8:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 9
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c0:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 10
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c8:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 11
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2cg:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 12
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2co:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 13
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2d0:
+              label: Actividades del grupo. Epigrafe CNAE de la actividad 14
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g64:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                1
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g68:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                2
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6c:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                3
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6g:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                4
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6k:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                5
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6o:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                6
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6s:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                7
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g70:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                8
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g74:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                9
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h60:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                10
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h64:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                11
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h68:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                12
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6c:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                13
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6g:
+              label: Actividades del grupo. Descripcion CNAE (2009) de la actividad
+                14
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn68rrdd5n62rjkckmmsrpde9in6qb4cln78p9ddsmmcrric5m0:
+              label: Tipo de grupo y otros caracteres. Grupo con entidad dominante
+                no residente o sometida a normativa foral
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6arbge9in6obj5limqpbictimst35ec:
+              label: Tipo de grupo y otros caracteres. Grupo de empresas emergentes
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqorfdto6asj1ehkncobj:
+              label: Tipo de grupo y otros caracteres. Grupo de cooperativas
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqobjcljnasj1chnn4obj:
+              label: Tipo de grupo y otros caracteres. Grupo de entidades aseguradoras
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqoricli6it3f:
+              label: Tipo de grupo y otros caracteres. Grupo de entidades de credito
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpjfe9gmo:
+              label: Tipo de grupo y otros caracteres. Grupo foral, tributacion conforme
+                a normativa foral
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpr5dpin4obc:
+              label: Tipo de grupo y otros caracteres. Grupo general
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6irj3cln78qbmdtpiqsj5chqm6qb4c4mm8qbdcln76qbfdo:
+              label: Tipo de grupo y otros caracteres. Aplicacion de incentivos de
+                reducida dimension
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6srridlgn8qbmc4mm6rrdeln2qorfdommcrric5m2qrj1epgn4sj1:
+              label: Tipo de grupo y otros caracteres. Grupo sometido a normativa
+                comun con alguna entidad sometida a la normativa foral de Navarra
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6us33d5nmsbb6d5n6aspdednm6qb1dhin6:
+              label: Tipo de grupo y otros caracteres. Opcion del 0,7 por ciento de
+                la cuota integra para fines sociales
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7d5mmarhdehnmspbcc5l6a:
+              label: Tipo de grupo y otros caracteres. Grupo con entidades navieras
+                en el regimen especial de tributacion en funcion del tonelaje
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7dhgn6bb1e9q2qdpk5kpiqr39ec:
+              label: Tipo de grupo y otros caracteres. Grupo que aplica las reglas
+                del art. 74.3 LIS
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5kp30bb15kr30bbdd5m6orreclpg:
+              label: Importe neto de la cifra de negocios. De al menos 20 millones
+                y inferior a 60 millones de euros
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5li6asr4ckmjcc1ddlkmor3fdpin6:
+              label: Importe neto de la cifra de negocios. De al menos 60 millones
+                de euros
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5lkmspj5e9kmushd68o2qrb9dhm6urj5ec:
+              label: Importe neto de la cifra de negocios. Inferior a 20 millones
+                de euros
+            x-cdnmqs3cclmmarjkc5p6io9eclpiqorfdlo6opbdcln78obid5gg:
+              label: Autoliquidacion complementaria. La autoliquidacion es complementaria
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Autoliquidacion complementaria. Numero de justificante de la
+                autoliquidacion anterior
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqs3iclpn8ob3d5nmsbbgc5q74qbddtn6iobc:
+              label: Autoliquidacion complementaria. Numero de justificante de la
+                autoliquidacion de la prestacion patrimonial por conversion de activos
+            x-cdnmst31cdq6ubj5dlgmir0:
+              label: Persona de contacto para incidencias. Direccion de correo electronico
+            x-cdnmst31cdq6ubjedtmm4sj5:
+              label: Persona de contacto para incidencias. Nombre
+            x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
+              label: Persona de contacto para incidencias. Telefono fijo
+            x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
+              label: Persona de contacto para incidencias. Telefono movil
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaración del grupo fiscal
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              label: Entidad dominante. Apellidos o razon social
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
+              label: Entidad dominante. Nombre
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
+              label: Entidad dominante. Numero de identificacion
+            x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
+              label: Entidad dominante. Pais o territorio foral
+            x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              label: Entidad representante o dominante. Apellidos o razon social
+            x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:
+              label: Entidad representante o dominante. Es entidad dominante incluida
+                en el grupo fiscal
+            x-d5i6arjkd5j6ior1cdkmurheclpiqsj5e1p6asr5dpq62rjkck:
+              label: Entidad representante o dominante. Es entidad representante y
+                no dominante
+            x-d5i6arjkd5j6ior1cdkmurhedpkmc:
+              label: Entidad representante o dominante. N.I.F.
+            x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
+              label: Entidad representante o dominante. Nombre
+            x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
+              label: Entidad representante o dominante. Numero del grupo fiscal
+            x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:
+              label: Entidad representante o dominante. Periodo
+            x-d5i6arjkd5j6ior1cdkmurheehimopb6dtn6u:
+              label: Entidad representante o dominante. Telefono
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dcpkmsobc:
+              label: Periodo impositivo. Fecha final
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dd5n6ior9ds:
+              label: Periodo impositivo. Fecha de inicio
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubjkd5o6ubb5d9in4or9cdkmu:
+              label: Periodo impositivo. Tipo de ejercicio
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmcpb3d1giqs3fchin4:
+              label: Representantes legales. Representante legal 1. Fecha del poder
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsqb6:
+              label: Representantes legales. Representante legal 1. N.I.F.
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrdc9p6a:
+              label: Representantes legales. Representante legal 1. Nombre y apellidos
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrkc5p6io8:
+              label: Representantes legales. Representante legal 1. Notaria
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmcpb3d1giqs3fchin4:
+              label: Representantes legales. Representante legal 2. Fecha del poder
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsqb6:
+              label: Representantes legales. Representante legal 2. N.I.F.
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrdc9p6a:
+              label: Representantes legales. Representante legal 2. Nombre y apellidos
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrkc5p6io8:
+              label: Representantes legales. Representante legal 2. Notaria
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmcpb3d1giqs3fchin4:
+              label: Representantes legales. Representante legal 3. Fecha del poder
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsqb6:
+              label: Representantes legales. Representante legal 3. N.I.F.
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrdc9p6a:
+              label: Representantes legales. Representante legal 3. Nombre y apellidos
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
+              label: Representantes legales. Representante legal 3. Notaria
           construct:
             modelo-220-declaration-construct:
               field:

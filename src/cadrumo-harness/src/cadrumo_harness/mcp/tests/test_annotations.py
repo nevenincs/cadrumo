@@ -11,6 +11,8 @@ import importlib.util
 
 import pytest
 
+from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+
 from .._annotations import (
     McpAnnotations,
     annotation_coverage_gaps,
@@ -35,15 +37,13 @@ def test_every_descriptor_has_full_annotation_coverage() -> None:
 
 
 def test_open_world_hint_covers_exactly_the_sede_family_over_the_real_surface() -> None:
-    # The openWorldHint is derived from the single
-    # classification authority and is set for exactly the AEAT-sede-interacting
-    # verbs (the ``app.live.*`` subtree and any ``pull*`` leaf) and no local verb.
+    # openWorldHint follows the attached policy's network capability, never a
+    # key/path naming heuristic.
     descriptors = build_tool_descriptors()
     for descriptor in descriptors:
-        key = descriptor.command_key
-        expected = key.startswith("app.live.") or key.rsplit(".", 1)[-1].startswith("pull")
-        assert descriptor.annotations.open_world_hint is expected, key
-    # The set is non-empty: the live family exists on the real surface.
+        raw = command_execution_policy_for_cli_path(descriptor.verb_schema.cli_path)
+        expected = "network" in raw.classification.expanded_capabilities
+        assert descriptor.annotations.open_world_hint is expected, descriptor.command_key
     assert any(descriptor.annotations.open_world_hint for descriptor in descriptors)
 
 

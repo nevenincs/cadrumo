@@ -59,6 +59,8 @@ _StableToken = Annotated[
     str,
     Field(min_length=1, max_length=160, pattern=r"^[a-z0-9][a-z0-9._:-]*$"),
 ]
+_PersistedSourceReference = Annotated[str, Field(min_length=1, max_length=256)]
+"""Opaque source reference with exact ``CalculationSourceRef.source_ref`` constraints."""
 _StrictBoolean = Annotated[bool, Field(strict=True)]
 
 
@@ -195,7 +197,7 @@ class SourceConnectivityConnectionIdentity(SourceConnectivityCandidateIdentity):
     """Shared identity of one source-to-revision production connection."""
 
     source_kind: BindingSourceKind
-    source_object_id: _StableToken
+    source_ref: _PersistedSourceReference
     resolver_id: _StableToken
     calculation_revision_id: CalculationRevisionId
 
@@ -282,7 +284,7 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     connection: SourceConnectivityConnectionIdentity
-    persisted_source_identity: _StableToken
+    persisted_source_identity: _PersistedSourceReference
     persisted_source_fingerprint: _StableToken
     strict_round_trip: _StrictBoolean
     encrypted_at_rest: _StrictBoolean
@@ -294,8 +296,8 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
         """Require true strict-storage claims tied to this exact connection."""
         if not (self.strict_round_trip and self.encrypted_at_rest and self.anti_tautology_mutation):
             raise ValueError("encrypted revision proof requires every strict proof assertion")
-        if self.persisted_source_identity != self.connection.source_object_id:
-            raise ValueError("persisted source identity must match the asserted source object")
+        if self.persisted_source_identity != self.connection.source_ref:
+            raise ValueError("persisted source identity must match the asserted source reference")
         _require_matching_evidence(
             self.connection,
             self.evidence,

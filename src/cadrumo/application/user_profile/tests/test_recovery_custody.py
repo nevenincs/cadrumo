@@ -26,9 +26,9 @@ import pytest
 from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
-    ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryArtifactWarning,
+    ProfileCustodyRecoverySecretError,
     create_profile_custody_sentinel,
 )
 from ....core.config import override_settings
@@ -246,7 +246,7 @@ def test_a_wrong_recovery_secret_is_refused(enrolled: _EnrolledProfile, tmp_path
     enrolled.export(target)
     wrong = " ".join(["abandon"] * 23 + ["art"])
 
-    with pytest.raises((ProfileCustodyPasswordError, ProfileCustodyRecordError)):
+    with pytest.raises((ProfileCustodyRecoverySecretError, ProfileCustodyRecordError)):
         restore_profile_from_recovery_artifact(
             label="Refused",
             artifact_source=target,
@@ -581,7 +581,7 @@ def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
 
     with generate_recovery_key() as impostor:
         assert impostor.mnemonic != enrolled.enrollment.recovery_key.mnemonic
-        with pytest.raises(ProfileCustodyPasswordError):
+        with pytest.raises(ProfileCustodyRecoverySecretError):
             restore_profile_from_recovery_artifact(
                 label="Refused",
                 artifact_source=artifact,

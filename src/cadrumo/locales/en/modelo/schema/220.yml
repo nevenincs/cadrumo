@@ -7,12 +7,183 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
+              label: Group activities. CNAE code of activity 1
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
+              label: Group activities. CNAE code of activity 2
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0co:
+              label: Group activities. CNAE code of activity 3
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d0:
+              label: Group activities. CNAE code of activity 4
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0d8:
+              label: Group activities. CNAE code of activity 5
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0dg:
+              label: Group activities. CNAE code of activity 6
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0do:
+              label: Group activities. CNAE code of activity 7
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e0:
+              label: Group activities. CNAE code of activity 8
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj0e8:
+              label: Group activities. CNAE code of activity 9
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c0:
+              label: Group activities. CNAE code of activity 10
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2c8:
+              label: Group activities. CNAE code of activity 11
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2cg:
+              label: Group activities. CNAE code of activity 12
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2co:
+              label: Group activities. CNAE code of activity 13
+            x-c5hn8qbmd5i62p35ecn66rj1ckmj2d0:
+              label: Group activities. CNAE code of activity 14
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g64:
+              label: Group activities. CNAE (2009) description of activity 1
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g68:
+              label: Group activities. CNAE (2009) description of activity 2
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6c:
+              label: Group activities. CNAE (2009) description of activity 3
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6g:
+              label: Group activities. CNAE (2009) description of activity 4
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6k:
+              label: Group activities. CNAE (2009) description of activity 5
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6o:
+              label: Group activities. CNAE (2009) description of activity 6
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g6s:
+              label: Group activities. CNAE (2009) description of activity 7
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g70:
+              label: Group activities. CNAE (2009) description of activity 8
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g74:
+              label: Group activities. CNAE (2009) description of activity 9
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h60:
+              label: Group activities. CNAE (2009) description of activity 10
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h64:
+              label: Group activities. CNAE (2009) description of activity 11
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h68:
+              label: Group activities. CNAE (2009) description of activity 12
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6c:
+              label: Group activities. CNAE (2009) description of activity 13
+            x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9h6g:
+              label: Group activities. CNAE (2009) description of activity 14
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn68rrdd5n62rjkckmmsrpde9in6qb4cln78p9ddsmmcrric5m0:
+              label: Group type and other characteristics. Group whose parent is non-resident
+                or subject to chartered rules
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6arbge9in6obj5limqpbictimst35ec:
+              label: Group type and other characteristics. Group of start-up companies
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqorfdto6asj1ehkncobj:
+              label: Group type and other characteristics. Group of cooperatives
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqobjcljnasj1chnn4obj:
+              label: Group type and other characteristics. Group of insurance entities
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpbeehkm8ob4clpiqoricli6it3f:
+              label: Group type and other characteristics. Group of credit institutions
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpjfe9gmo:
+              label: Group type and other characteristics. Chartered-territory group,
+                taxed under chartered rules
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6esjle1niqpr5dpin4obc:
+              label: Group type and other characteristics. General group
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6irj3cln78qbmdtpiqsj5chqm6qb4c4mm8qbdcln76qbfdo:
+              label: Group type and other characteristics. Application of small-entity
+                incentives
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6srridlgn8qbmc4mm6rrdeln2qorfdommcrric5m2qrj1epgn4sj1:
+              label: Group type and other characteristics. Group under common rules
+                with an entity subject to the chartered rules of Navarre
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn6us33d5nmsbb6d5n6aspdednm6qb1dhin6:
+              label: Group type and other characteristics. Election of 0.7 per cent
+                of the gross tax liability for social purposes
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7d5mmarhdehnmspbcc5l6a:
+              label: Group type and other characteristics. Group with shipping entities
+                under the tonnage tax regime
+            x-cdgn4ob3ehin4pbj5ljn4tbgdsn74pb7dhgn6bb1e9q2qdpk5kpiqr39ec:
+              label: Group type and other characteristics. Group applying the rules
+                of art. 74.3 LIS
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5kp30bb15kr30bbdd5m6orreclpg:
+              label: Net turnover. At least 20 million and below 60 million euros
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5li6asr4ckmjcc1ddlkmor3fdpin6:
+              label: Net turnover. At least 60 million euros
+            x-cdkmcsj15ln6aprfcdkmuspeehp62rbf5lkmspj5e9kmushd68o2qrb9dhm6urj5ec:
+              label: Net turnover. Below 20 million euros
+            x-cdnmqs3cclmmarjkc5p6io9eclpiqorfdlo6opbdcln78obid5gg:
+              label: Supplementary self-assessment. The self-assessment is supplementary
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Supplementary self-assessment. Reference number of the previous
+                self-assessment
+            x-cdnmqs3cclmmarjkc5p6io9ed9qn6t39cpkm6obeehiiqs3iclpn8ob3d5nmsbbgc5q74qbddtn6iobc:
+              label: Supplementary self-assessment. Reference number of the self-assessment
+                of the patrimonial contribution for asset conversion
+            x-cdnmst31cdq6ubj5dlgmir0:
+              label: Contact person for incidents. E-mail address
+            x-cdnmst31cdq6ubjedtmm4sj5:
+              label: Contact person for incidents. Name
+            x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
+              label: Contact person for incidents. Landline telephone
+            x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
+              label: Contact person for incidents. Mobile telephone
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the tax group return relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              label: Parent entity. Surnames or legal name
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
+              label: Parent entity. Name
+            x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
+              label: Parent entity. Identification number
+            x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
+              label: Parent entity. Country or chartered territory
+            x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              label: Representative or parent entity. Surnames or legal name
+            x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:
+              label: Representative or parent entity. Is the parent entity included
+                in the tax group
+            x-d5i6arjkd5j6ior1cdkmurheclpiqsj5e1p6asr5dpq62rjkck:
+              label: Representative or parent entity. Is the representative entity
+                and not the parent
+            x-d5i6arjkd5j6ior1cdkmurhedpkmc:
+              label: Representative or parent entity. Tax identification number (NIF)
+            x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
+              label: Representative or parent entity. Name
+            x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
+              label: Representative or parent entity. Tax group number
+            x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:
+              label: Representative or parent entity. Period
+            x-d5i6arjkd5j6ior1cdkmurheehimopb6dtn6u:
+              label: Representative or parent entity. Telephone
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dcpkmsobc:
+              label: Tax period. End date
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dd5n6ior9ds:
+              label: Tax period. Start date
+            x-e1in4qbfchniqqbde1nn6qbkd5r6ubjkd5o6ubb5d9in4or9cdkmu:
+              label: Tax period. Type of financial year
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmcpb3d1giqs3fchin4:
+              label: Legal representatives. Legal representative 1. Date of the power
+                of attorney
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsqb6:
+              label: Legal representatives. Legal representative 1. Tax identification
+                number (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrdc9p6a:
+              label: Legal representatives. Legal representative 1. Name and surnames
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrkc5p6io8:
+              label: Legal representatives. Legal representative 1. Notary
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmcpb3d1giqs3fchin4:
+              label: Legal representatives. Legal representative 2. Date of the power
+                of attorney
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsqb6:
+              label: Legal representatives. Legal representative 2. Tax identification
+                number (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrdc9p6a:
+              label: Legal representatives. Legal representative 2. Name and surnames
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrkc5p6io8:
+              label: Legal representatives. Legal representative 2. Notary
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmcpb3d1giqs3fchin4:
+              label: Legal representatives. Legal representative 3. Date of the power
+                of attorney
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsqb6:
+              label: Legal representatives. Legal representative 3. Tax identification
+                number (NIF)
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrdc9p6a:
+              label: Legal representatives. Legal representative 3. Name and surnames
+            x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
+              label: Legal representatives. Legal representative 3. Notary
           construct:
             modelo-220-declaration-construct:
               field:

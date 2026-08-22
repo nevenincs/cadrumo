@@ -251,7 +251,7 @@ class MetaDescribeResult(BaseModel):
     ``search`` returns a ranked page
     of decision hints, ``describe`` returns ONE command's whole shape by key - its
     per-verb ``input_schema``, its mutability annotations, its confirmation tier,
-    its declared risk posture, its owning curated toolset, and exactly which
+    its callback-attached execution posture, its owning curated toolset, and exactly which
     personas may call it - so a model can inspect a verb fully before spending an
     ``execute`` round-trip on it.
     """
@@ -300,7 +300,11 @@ def describe_command(
             persona.value
             for persona in AgentPersona
             if is_tool_in_persona_scope(persona=persona, command_key=command_key)
-            and not is_handoff_denied(persona=persona, command_key=command_key)
+            and not is_handoff_denied(
+                persona=persona,
+                command_key=command_key,
+                execution_policy=descriptor.execution_policy,
+            )
         )
     )
     return MetaDescribeResult(
@@ -358,7 +362,11 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     """
     if persona is not None and not is_tool_in_persona_scope(persona=persona, command_key=descriptor.command_key):
         return f"refused: {descriptor.command_key!r} is outside the active persona {persona.value!r}'s tool scope"
-    if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
+    if persona is not None and is_handoff_denied(
+        persona=persona,
+        command_key=descriptor.command_key,
+        execution_policy=descriptor.execution_policy,
+    ):
         return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
     if confirmation_for_policy(descriptor.execution_policy) is ConfirmationPolicy.BLOCK:
         return "refused: AEAT live-write is permanently forbidden"

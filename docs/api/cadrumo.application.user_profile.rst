@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.user_profile._aggregate
+   cadrumo.application.user_profile._authentication
    cadrumo.application.user_profile._bundle
    cadrumo.application.user_profile._bundle_encryption
    cadrumo.application.user_profile._bundle_export
@@ -50,6 +51,7 @@ Submodules
    cadrumo.application.user_profile._profile_record_repository
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
+   cadrumo.application.user_profile._prospective_password
    cadrumo.application.user_profile._recovery_custody
    cadrumo.application.user_profile._registration
    cadrumo.application.user_profile._repository

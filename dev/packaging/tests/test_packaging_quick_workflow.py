@@ -90,7 +90,7 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
 
 
 def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
-    """Quick is the per-push signal; superseded runs are cancelled, not queued."""
+    """Main pushes finish their signal while superseded PR revisions cancel."""
     document = _quick_document()
     triggers = document[True] if True in document else document["on"]
     assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
@@ -98,7 +98,9 @@ def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
     assert push["branches"] == ["main"]
     assert ".vault/**" in push["paths-ignore"]
     assert "**.md" in push["paths-ignore"]
-    assert document["concurrency"]["cancel-in-progress"] is True
+    concurrency = document["concurrency"]
+    assert concurrency["group"] == "${{ github.workflow }}-${{ github.ref }}"
+    assert concurrency["cancel-in-progress"] == "${{ github.event_name == 'pull_request' }}"
     # Future pull-request flow: same T1 probe, but never fork code on the fleet —
     # every job must carry the same-repo guard (see test_change_class_tiers).
     assert triggers["pull_request"]["branches"] == ["main"]

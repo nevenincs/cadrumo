@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .....core.external_constants import UTF_8_ENCODING
-from ._errors import ProfileCustodyRecordError
+from ._errors import ProfileCustodyRecoverySecretError
 
 
 def encode_recovery_secret(secret: str) -> bytes:
@@ -11,7 +11,7 @@ def encode_recovery_secret(secret: str) -> bytes:
     try:
         return secret.encode(UTF_8_ENCODING, errors="strict")
     except UnicodeEncodeError:
-        raise ProfileCustodyRecordError("profile recovery secret is not strict UTF-8") from None
+        raise ProfileCustodyRecoverySecretError("profile recovery secret is not strict UTF-8") from None
 
 
 def decode_recovery_secret(value: bytes) -> str:
@@ -19,7 +19,7 @@ def decode_recovery_secret(value: bytes) -> str:
     try:
         return value.decode(UTF_8_ENCODING, errors="strict")
     except UnicodeDecodeError:
-        raise ProfileCustodyRecordError("profile recovery secret transport is not strict UTF-8") from None
+        raise ProfileCustodyRecoverySecretError("profile recovery secret transport is not strict UTF-8") from None
 
 
 __all__ = ["decode_recovery_secret", "encode_recovery_secret"]

@@ -32,6 +32,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.i18n import tr
 
+from ._command_policy import CommandPolicyProjection
+from ._command_policy import command_policy as descriptor_command_policy
 from ._hitl import ConfirmationPolicy, is_handoff_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -84,6 +86,7 @@ def resolve_confirm_route(
     *,
     policy: ConfirmationPolicy,
     command_key: str,
+    execution_policy: CommandPolicyProjection | None = None,
     client_supports_elicitation: bool,
 ) -> ConfirmRoute:
     """The degradation matrix: how this call's tier is enforced for this client.
@@ -97,12 +100,15 @@ def resolve_confirm_route(
         return ConfirmRoute.AUTO
     if client_supports_elicitation:
         return ConfirmRoute.ELICIT
-    if is_handoff_command(command_key):
+    attached_policy = execution_policy or descriptor_command_policy(command_key)
+    if is_handoff_command(attached_policy):
         return ConfirmRoute.REFUSE_NO_CHANNEL
     return ConfirmRoute.CLIENT_HINT
 
 
-def confirmation_request(*, command_key: str) -> ConfirmationRequest:
+def confirmation_request(
+    *, command_key: str, execution_policy: CommandPolicyProjection | None = None
+) -> ConfirmationRequest:
     """Build the elicitation request for one confirm-tier command.
 
     The ``message`` and field ``description`` are rendered by the client TO THE
@@ -113,7 +119,8 @@ def confirmation_request(*, command_key: str) -> ConfirmationRequest:
     Returns:
         A :class:`ConfirmationRequest`.
     """
-    if is_handoff_command(command_key):
+    attached_policy = execution_policy or descriptor_command_policy(command_key)
+    if is_handoff_command(attached_policy):
         consequence = tr(
             "mcp.elicitation.confirm.consequence_handoff",
             default=(

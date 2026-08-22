@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ... import core
+from ...domain.modelos import CalculationSourceRef
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -25,7 +26,7 @@ class _ProofAuthority:
     def __init__(
         self,
         *,
-        enrolled: frozenset[core.BindingSourceKind] = frozenset({core.BindingSourceKind.MANUAL_INPUT}),
+        enrolled: frozenset[core.BindingSourceKind] = frozenset({core.BindingSourceKind.COLLECTIBLE_INVOICE}),
         workflows: frozenset[tuple[str, str]] = frozenset({(_ENTRYPOINT_ID, _COMMAND_ID)}),
         evidence_digests: dict[str, str] | None = None,
     ) -> None:
@@ -61,7 +62,7 @@ class _ProofAuthority:
         proof: core.SourceConnectivityEncryptedRevisionProof,
     ) -> bool:
         return (
-            proof.persisted_source_identity == proof.connection.source_object_id
+            proof.persisted_source_identity == proof.connection.source_ref
             and proof.persisted_source_fingerprint == _FINGERPRINT
         )
 
@@ -80,16 +81,16 @@ def _grounding(
 
 def _connection(
     *,
-    candidate_id: str = "inventory.stock",
-    source_kind: core.BindingSourceKind = core.BindingSourceKind.MANUAL_INPUT,
-    source_object_id: str = "inventory-2026",
-    resolver_id: str = "inventory-resolver",
+    candidate_id: str = "invoice.collectible",
+    source_kind: core.BindingSourceKind = core.BindingSourceKind.COLLECTIBLE_INVOICE,
+    source_ref: str = "collectible_invoice:inv-0001",
+    resolver_id: str = "invoice-source-resolver",
     revision_id: str = _REVISION_ID,
 ) -> core.SourceConnectivityConnectionIdentity:
     return core.SourceConnectivityConnectionIdentity(
         candidate_id=candidate_id,
         source_kind=source_kind,
-        source_object_id=source_object_id,
+        source_ref=source_ref,
         resolver_id=resolver_id,
         calculation_revision_id=revision_id,
     )
@@ -142,7 +143,7 @@ def _connected_proof(
         ),
         encrypted_revision=core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity=connection.source_object_id,
+            persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=True,
@@ -343,8 +344,44 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
 
 
 @pytest.mark.parametrize(
+    "source_ref",
+    [
+        "percepcion:12345678Z:A:-",
+        "invoice:INV-2026/0001",
+        "foreign_asset:Opaque Asset Ref #1",
+        " invoice:Case-And-Space/0002 ",
+        "R" * 256,
+    ],
+)
+def test_connectivity_source_reference_acceptance_matches_persisted_model_exactly(source_ref: str) -> None:
+    persisted = CalculationSourceRef(
+        source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref=source_ref,
+        fingerprint=_FINGERPRINT,
+    )
+    connection = _connection(source_ref=source_ref)
+    proof = _connected_proof(connection).encrypted_revision
+    assert connection.source_ref == persisted.source_ref == source_ref
+    assert proof.persisted_source_identity == source_ref
+
+
+@pytest.mark.parametrize("source_ref", ["", "R" * 257])
+def test_connectivity_source_reference_rejection_matches_persisted_model(source_ref: str) -> None:
+    with pytest.raises(ValidationError):
+        CalculationSourceRef(
+            source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_ref=source_ref,
+            fingerprint=_FINGERPRINT,
+        )
+    with pytest.raises(ValidationError):
+        _connection(source_ref=source_ref)
+
+
+@pytest.mark.parametrize(
     "mutated_field",
-    ["candidate_id", "source_kind", "source_object_id", "resolver_id", "calculation_revision_id"],
+    ["candidate_id", "source_kind", "source_ref", "resolver_id", "calculation_revision_id"],
 )
 def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated_field: str) -> None:
     connection = _connection()
@@ -352,7 +389,7 @@ def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated
     mutations: dict[str, object] = {
         "candidate_id": "different.candidate",
         "source_kind": core.BindingSourceKind.PROFILE,
-        "source_object_id": "different-source",
+        "source_ref": "foreign_asset:asset-0002",
         "resolver_id": "different-resolver",
         "calculation_revision_id": "d" * 64,
     }
@@ -372,7 +409,7 @@ def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated
 
 def test_role_specific_proof_refuses_unrelated_or_wrong_role_evidence() -> None:
     connection = _connection()
-    unrelated = _connection(source_object_id="deferred-source")
+    unrelated = _connection(source_ref="foreign_asset:asset-0002")
     evidence = _executable_evidence(
         unrelated,
         evidence_id="wrong-evidence",
@@ -390,7 +427,7 @@ def test_role_specific_proof_refuses_unrelated_or_wrong_role_evidence() -> None:
     with pytest.raises(ValidationError, match="must carry role"):
         core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity=connection.source_object_id,
+            persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=True,
@@ -411,7 +448,7 @@ def test_proof_truth_claims_reject_coercible_substitutes(truthy: object) -> None
         core.SourceConnectivityEncryptedRevisionProof.model_validate(
             {
                 "connection": connection,
-                "persisted_source_identity": connection.source_object_id,
+                "persisted_source_identity": connection.source_ref,
                 "persisted_source_fingerprint": _FINGERPRINT,
                 "strict_round_trip": truthy,
                 "encrypted_at_rest": truthy,
@@ -431,7 +468,7 @@ def test_false_strict_proof_assertion_is_refused() -> None:
     with pytest.raises(ValidationError, match="every strict proof assertion"):
         core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity=connection.source_object_id,
+            persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=False,
@@ -440,12 +477,22 @@ def test_false_strict_proof_assertion_is_refused() -> None:
         )
 
 
-def test_encrypted_revision_proof_refuses_source_identity_drift() -> None:
+@pytest.mark.parametrize(
+    "persisted_source_identity",
+    [
+        "inv-0001",
+        "collectible_invoice:inv-00001",
+        "foreign_asset:inv-0001",
+    ],
+)
+def test_encrypted_revision_proof_refuses_raw_or_normalised_source_reference_drift(
+    persisted_source_identity: str,
+) -> None:
     connection = _connection()
     proof = _connected_proof(connection).encrypted_revision
     with pytest.raises(ValidationError, match="persisted source identity"):
         core.SourceConnectivityEncryptedRevisionProof.model_validate(
-            proof.model_dump() | {"persisted_source_identity": "different-source"},
+            proof.model_dump() | {"persisted_source_identity": persisted_source_identity},
         )
 
 

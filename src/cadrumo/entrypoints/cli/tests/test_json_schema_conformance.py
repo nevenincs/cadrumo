@@ -242,8 +242,8 @@ def test_every_emitted_command_identifier_is_registered() -> None:
 
     The leaf gate below derives the command path from the Typer tree and checks
     it is registered. That leaves one route open, and a live defect took it:
-    ``ledger.invoice.add`` was registered and declared in the risk table, while
-    the handler emitted ``ledger.invoice.create``. Both halves of the leaf gate
+    ``ledger.invoice.add`` was registered while the handler emitted
+    ``ledger.invoice.create``. Both halves of the leaf gate
     agreed, so it stayed green, and ``aeat --format json app ledger invoice
     add`` refused at runtime with "no registered output schema" -- a
     JSON-emitting verb that could not emit.

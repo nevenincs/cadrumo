@@ -350,7 +350,7 @@ def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
     """
     if not command_key or command_key.strip() != command_key:
         raise ValueError("command key must be a non-empty normalized string")
-    return _naive_cli_path(command_key)
+    return tuple(token.replace("_", "-") for token in _naive_cli_path(command_key))
 
 
 def _resolve_command(

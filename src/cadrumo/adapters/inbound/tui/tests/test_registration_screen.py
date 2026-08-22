@@ -16,6 +16,7 @@ profile is real.
 
 from __future__ import annotations
 
+import unicodedata
 from uuid import UUID
 
 import pytest
@@ -97,7 +98,17 @@ async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_path) -> None:
+@pytest.mark.parametrize(
+    "candidate",
+    (
+        pytest.param("a" * 15, id="15-scalars"),
+        pytest.param("a" * 256, id="256-scalars"),
+        pytest.param("😀" * 256, id="1024-bytes"),
+        pytest.param("é" * 15, id="composed"),
+        pytest.param("e\u0301" * 15, id="decomposed"),
+    ),
+)
+async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_path, candidate: str) -> None:
     """The screen creates a real, unlocked profile from a name and a password.
 
     The bucket is then challenged with the typed password and with a wrong
@@ -108,7 +119,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await _fill(pilot, username="Screen Subject", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
+            await _fill(pilot, username="Screen Subject", password=candidate, confirm=candidate)
             await pilot.click("#btn-create")
             # Registration runs on a worker thread, so a bare pause only
             # yields the event loop and may return before the profile
@@ -129,11 +140,22 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
             root=storage_root,
         )
         unlocked = unlock_profile_custody(
-            password=_TYPED_PASSWORD,
+            password=candidate,
             envelope=material.envelope,
             sentinel=material.sentinel,
         )
         assert len(bytes(unlocked.dek)) == 32
+        counterpart = unicodedata.normalize(
+            "NFD" if unicodedata.is_normalized("NFC", candidate) else "NFC",
+            candidate,
+        )
+        if counterpart != candidate:
+            with pytest.raises(ProfileCustodyPasswordError):
+                unlock_profile_custody(
+                    password=counterpart,
+                    envelope=material.envelope,
+                    sentinel=material.sentinel,
+                )
         with pytest.raises(ProfileCustodyPasswordError):
             unlock_profile_custody(
                 password="a-different-secret",  # noqa: S106 - synthetic wrong password under test

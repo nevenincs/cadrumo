@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from ._command_schema import command_schema_refs as command_schema_refs
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
+    from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
 from typer._types import TyperChoice as _TyperChoice
 
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
@@ -66,6 +67,7 @@ from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
+from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
@@ -1258,7 +1260,7 @@ def full_command_tree() -> click.Command:
     return root
 
 
-def command_execution_policy_for_cli_path(cli_path: tuple[str, ...]) -> object:
+def command_execution_policy_for_cli_path(cli_path: tuple[str, ...]) -> _CommandExecutionPolicy:
     """Return callback-attached policy for one live path, loading only that path.
 
     The concrete policy type remains owned by the CLI metadata module.  This

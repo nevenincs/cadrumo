@@ -42,8 +42,8 @@ def test_no_exposed_tool_is_a_forbidden_live_write() -> None:
 
 
 def test_a_hypothetical_live_write_would_be_blocked() -> None:
-    # Defensive: if a live-write verb ever entered the command set - declared
-    # live_write in the risk table - the gate blocks it outright. This proves the
+    # Defensive: if an attached callback policy ever declares live_write, the
+    # gate blocks it outright. This proves the
     # BLOCK rail is real, not vacuous.
     planted = CommandPolicyProjection(
         command_key="planted.live.submit",

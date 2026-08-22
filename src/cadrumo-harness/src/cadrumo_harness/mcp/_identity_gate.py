@@ -26,7 +26,7 @@ from typing import Protocol
 
 from cadrumo.core.i18n import tr
 
-from ._command_policy import command_policy
+from ._command_policy import CommandPolicyProjection, command_policy
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 
 #: Verbs that change or clear WHICH taxpayer profile is active. Executing one
@@ -117,7 +117,12 @@ class _IdentityGateState(Protocol):
     def rearm(self) -> None: ...
 
 
-def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str | None:
+def identity_gate_refusal(
+    command_key: str,
+    *,
+    execution_policy: CommandPolicyProjection | None = None,
+    state: _IdentityGateState,
+) -> str | None:
     """Return a localized refusal for an unconfirmed first mutating call, else ``None``.
 
     Evaluated for every verb call on both the direct and ``execute`` paths, in
@@ -139,12 +144,8 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
     downstream calculation. "Changes nothing" and "may proceed unidentified" are
     different questions, and this gate asks the second.
 
-    Today the exclusion is a no-op - no exposed command is both ``read_only``
-    and ``open_world``, pinned by
-    ``test_identity_gate_open_world_invariant.py``. It is here so that the
-    invariant holds by CONSTRUCTION rather than by accident of ``read_only``
-    deriving from family mutability: were reads ever declared per command, all
-    32 AEAT-reaching verbs would otherwise drop out of this gate silently.
+    The exclusion is attached-policy driven: network-capable callbacks stay
+    gated even when their local effect is read-only.
 
     The refusal text carries no interpolation, so it is byte-identical on both
     call paths.
@@ -156,10 +157,8 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
         state.record_identity_read()
         return None
     try:
-        classification = command_policy(command_key)
-    except (LookupError, ValueError):
-        if state.identity_confirmed:
-            return None
+        classification = execution_policy or command_policy(command_key)
+    except LookupError:
         return tr("mcp.identity_gate.first_mutation_refused", default=_FIRST_MUTATION_REFUSED_DEFAULT)
     if classification.read_only and not classification.open_world:
         return None

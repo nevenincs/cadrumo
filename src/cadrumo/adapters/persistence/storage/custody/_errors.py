@@ -33,7 +33,11 @@ class ProfileCustodyRecordError(ProfileCustodyError, ValueError):
 
 
 class ProfileCustodyPasswordError(ProfileCustodyError, ValueError):
-    """Raised when a password cannot be represented by the custody contract."""
+    """Raised when profile-password representation or proof is refused."""
+
+
+class ProfileCustodyRecoverySecretError(ProfileCustodyError, ValueError):
+    """Raised when recovery-secret representation or proof is refused."""
 
 
 class ProfileCustodyRefusedError(ProfileCustodyError):
@@ -76,6 +80,7 @@ __all__ = [
     "ProfileCustodyPasswordError",
     "ProfileCustodyRecordError",
     "ProfileCustodyRecoveryGuidance",
+    "ProfileCustodyRecoverySecretError",
     "ProfileCustodyRefusal",
     "ProfileCustodyRefusedError",
     "WipeTypeError",

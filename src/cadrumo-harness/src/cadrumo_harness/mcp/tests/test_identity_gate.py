@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 
-# A concrete mutating verb (declared not-read-only in the risk table) and its
+# A concrete mutating verb (attached policy is not read-only) and its
 # MCP tool name, plus a concrete read-only identity verb. A handoff verb is used
 # for the server-level cases so a CLEARED gate refuses at the confirmation route
 # (no elicitation channel in a unit build) instead of spawning a real CLI
@@ -151,24 +151,19 @@ def test_the_canonical_switch_carries_the_identity_change_not_a_sandbox_verb() -
 def test_a_reappearing_sandbox_use_verb_would_fail_closed_rather_than_pass() -> None:
     """Unavailability is not the only guarantee worth holding, so the fallback is pinned.
 
-    A key absent from the risk table classifies all-false, which means NOT
-    read-only. The gate therefore treats a sandbox-use verb as an ordinary
-    mutating call and refuses it on an unconfirmed session, rather than
-    waving it through as it once did by name. This is the property that
-    survives someone re-registering the verb without re-reading this module.
+    A key absent from the live descriptor set owns no execution policy. The
+    gate therefore refuses it rather than inventing an all-false default.
     """
     for retired in _RETIRED_SANDBOX_USE_KEYS:
         with pytest.raises(LookupError):
             command_policy(retired)
         assert identity_gate_refusal(retired, state=SessionIdentityState()) is not None
 
-    # ...and it is a refusal on the UNCONFIRMED session specifically, not a
-    # blanket block: a confirmed session lets the same call through, so the
-    # assertion above is measuring the gate and not a dead key path.
+    # Session confirmation cannot turn an unknown command into an assessed one.
     confirmed = SessionIdentityState()
     confirmed.record_identity_read()
     for retired in _RETIRED_SANDBOX_USE_KEYS:
-        assert identity_gate_refusal(retired, state=confirmed) is None
+        assert identity_gate_refusal(retired, state=confirmed) is not None
 
 
 def test_elicitation_echo_names_the_label_never_empty() -> None:
