@@ -1,0 +1,12 @@
+# AEAT publishes no casilla number for this box: the exempt INSS
+# maternidad/paternidad benefit (LIRPF art. 7.h) is subtracted from computable
+# work income but appears in no dictionary, XSD or manual under any number.
+# It therefore carries a descriptive id, as every other non-AEAT box here does,
+# rather than borrowing a four-digit id from AEAT's numbering space.
+[[revisions."2024".casillas]]
+id = "prestacion-inss-maternidad-paternidad-exenta"
+number = "prestacion-inss-maternidad-paternidad-exenta"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
+legal_refs = ["ley-35-2006:art-7-h"]
+source_refs = ["aeat-renta-2024-manual-parte1"]

@@ -1,0 +1,175 @@
+# Modelo 840 Apartado I -- datos identificativos del sujeto pasivo, transcribed
+# position-by-position from the bundled aeat-dr-840 record design (Pag. 1, which
+# tiles 1..1132 exactly once with no gap and no overlap).
+#
+# `number` carries AEAT's OWN bracket number as printed in the diseno ([1] .. [13]),
+# not a minted byte span. AEAT numbers these by the printed form rather than by byte
+# order -- [11] Provincia sits at @213 while [10] Municipio sits at @215 -- so the
+# offsets below are deliberately not monotonic in number, and each number appears
+# exactly once in this apartado.
+#
+# Codigo postal, numero, kilometro and the provincia/municipio codes are `text`,
+# not integer: every one is a fixed-width code where a leading zero is significant,
+# and an integer round-trip would silently drop it.
+#
+# NOT MODELLED HERE, and deliberately: the unnumbered "Municipio" description run at
+# @220+30 and the "Reservado ... Cod. Mun." run at @250+6 are a table-expansion text
+# and an administration-reserved slot, neither of which is a taxpayer-supplied box.
+# Apartados II-V (declaracion, representante, datos de la actividad, local afecto)
+# remain unauthored; this fragment covers Apartado I only.
+
+# @36+9. Apart. I: Datos ident. del sujeto pasivo. NIF. [1]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.nif"
+number = "1"
+section = ["declarante"]
+data_type = "nif"
+semantic_role = "sujeto_pasivo_nif"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @45+125. Apart. I: Datos ident. del sujeto pasivo. Apellidos y nombre o Razon social. [2]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.apellidos-razon-social"
+number = "2"
+section = ["declarante"]
+data_type = "name"
+semantic_role = "sujeto_pasivo_nombre_razon_social"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @170+2. Apart. I: Datos ident. del sujeto pasivo. SG (sigla de la via publica). [3]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-sigla-via"
+number = "3"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_sigla_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @172+25. Apart. I: Datos ident. del sujeto pasivo. Via publica. [4]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-via-publica"
+number = "4"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_via_publica"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @197+5. Apart. I: Datos ident. del sujeto pasivo. Num.. [5]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-numero"
+number = "5"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_numero"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @202+5. Apart. I: Datos ident. del sujeto pasivo. Km.. [6]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-kilometro"
+number = "6"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_kilometro"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @207+2. Apart. I: Datos ident. del sujeto pasivo. Esc.. [7]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-escalera"
+number = "7"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_escalera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @209+2. Apart. I: Datos ident. del sujeto pasivo. Piso. [8]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-piso"
+number = "8"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_piso"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @211+2. Apart. I: Datos ident. del sujeto pasivo. Pta.. [9]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-puerta"
+number = "9"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_puerta"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @215+5. Apart. I: Datos ident. del sujeto pasivo. Municipio (codigo). [10]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-municipio"
+number = "10"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @213+2. Apart. I: Datos ident. del sujeto pasivo. Provincia (codigo). [11]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-provincia"
+number = "11"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @256+5. Apart. I: Datos ident. del sujeto pasivo. Cod. Postal. [12]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.domicilio-codigo-postal"
+number = "12"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_domicilio_codigo_postal"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @261+9. Apart. I: Datos ident. del sujeto pasivo. Telefono de contacto (prefijo incluido). [13]
+[[revisions."2003-y-siguientes".casillas]]
+id = "sujeto.telefono-contacto"
+number = "13"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "sujeto_pasivo_telefono_contacto"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
