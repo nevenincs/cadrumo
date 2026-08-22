@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f222da9a2a69b71ea89ebc3a9f44dcb9722c54ea4e26ab199c2061e11213d3c2'
+body_hash: 'sha256:aca237494b362bceac619bb9f9b3b60391a756ce3bf8f5e95b6b6201efa1f44e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6442,3 +6442,40 @@ It appeared in failures before this change as well. Recorded rather than chased:
 polluting test is a bisect, and the execution-policy surface is not this campaign's.
 
 Lanes 314 integration / 1612 unit sequential.
+
+### Correcting the previous entry: the execution-policy failure was not order dependence
+
+The previous entry recorded `test_execution_policy` as carrying an order-dependent defect,
+reasoning that it reads the process-global Typer command tree and that something earlier in a
+run leaves that tree modified. **That mechanism was inferred from a single non-reproducing
+failure, and measurement refutes it.**
+
+Bisected properly this time, all sequential (`-n0`), all with the lane's own marker
+expression:
+
+- storage package, then the failing module: **1,196 passed**
+- user_profile package, then the failing module: **330 passed**
+- the `_config` package alone: **95 passed**
+- the FULL three-package lane, the exact command that failed: **1,613 passed**
+
+`pytest-randomly` is not installed, so collection order is deterministic and the original run
+should have reproduced. It did not. The remaining explanations are environmental: this
+worktree's backing share is documented as unreliable under concurrent I/O, and peers commit
+into this tree continuously, so a file can change underneath a running session -- which for a
+test asserting on rendered CLI help is enough to flip a result.
+
+**Two things to carry.** First, the campaign's own rule -- re-run before blaming the code --
+was applied to the individual test but not to the CLAIM: the isolation pass proved the test
+was innocent, and I then published a mechanism for a failure I had not shown was
+reproducible. Diagnosing why something failed is a separate act from establishing that it
+fails at all, and the second has to come first.
+
+Second, the correction is worth more than the original note: the domain lane is a RELIABLE
+instrument. Every "lanes green" statement in this campaign rests on it, and a genuine
+order-dependence would have undermined all of them. It does not exist.
+
+Also corrected: the previous entry called the execution-policy surface "not this campaign's".
+`entrypoints/cli/_config` is one of the three domain lane paths. It is this campaign's, which
+is precisely why the claim was worth re-testing rather than leaving recorded.
+
+No production change this iteration.
