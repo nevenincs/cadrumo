@@ -41,7 +41,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 def test_committed_modelo_347_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_347()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2008-2024"}
+    assert set(modelo.revisions) == {"2008-2024", "2025-y-siguientes"}
 
 
 @pytest.mark.parametrize("filing_year", [2008, 2018, 2024, 2026])
@@ -54,10 +54,18 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         filing_year=filing_year,
         period="0A",
     )
-    assert snapshot.revision.id == "2008-2024"
+    # The split at the 2024/2025 boundary means the year decides the half, and
+    # that is the fact worth pinning: the two carry different byte layouts, so a
+    # year resolving to the wrong one would build cleanly and file at the wrong
+    # offsets.
+    assert snapshot.revision.id == ("2025-y-siguientes" if filing_year >= 2025 else "2008-2024")
+    # Orden HAC/1431/2025 takes effect in December 2025, so it applies to the
+    # later half only. Asserting both on every year would credit the earlier
+    # revision with an orden that post-dates every filing it governs.
     assert snapshot.revision.orden_aplicabilidad == (
-        "orden-eha-3012-2008:art-1",
-        "orden-hac-1431-2025:art-1",
+        ("orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1")
+        if filing_year >= 2025
+        else ("orden-eha-3012-2008:art-1",)
     )
 
 
@@ -75,13 +83,19 @@ def test_committed_modelo_347_is_informative_only() -> None:
 
 def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:
     modelo, catalogues = _load_modelo_347()
-    expected_sources = {"aeat-dr-347-2025", "aeat-dr-347-2011"}
+
     assert catalogues.sources["aeat-modelo-347-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-347-2008-form"].evidence_tier == "layout_authority"
     assert catalogues.sources["boe-modelo-347-2011-amendment"].evidence_tier == "layout_authority"
-    for revision in modelo.revisions.values():
+    for revision_id, revision in modelo.revisions.items():
         sources_seen = {ref.workbook_source for ref in revision.workbook_parity_refs}
-        assert expected_sources <= sources_seen, sources_seen
+        # Each revision is checked against the design IT emits, so the parity
+        # refs must be exactly the record designs that revision cites. Pinning a
+        # fixed pair here was right while one revision carried both designs and
+        # became wrong the moment the split gave each half its own -- the
+        # relationship survives the next split, the literal set does not.
+        declared = {ref for ref in revision.source_refs if ref.startswith("aeat-dr-347-")}
+        assert sources_seen == declared, (revision_id, sources_seen, declared)
         for ref in revision.workbook_parity_refs:
             assert ref.formula_coverage == "record_design_layout"
             assert ref.runner_required is False
