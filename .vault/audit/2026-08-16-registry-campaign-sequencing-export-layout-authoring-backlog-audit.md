@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:23a030df73fd2828b12b5b367b4b56187b5537615e65b2de5e87016cc875f639'
+body_hash: 'sha256:69f4eb370914cedbfef00cfab8210c3a0ce4e4f23393fb217789df9aa7a5e5d1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15997,3 +15997,121 @@ will not leave it by parser work alone: of its three remaining holes, the Pág.
 without a better extraction. Pág. 31's row -- an ordinal/offset identity shared
 across twenty-two lines, where the rejoin's duplicate guard is in play -- is the
 last one on that design that repair can reach.
+
+## Tick: a gate that ran nothing, restored -- and a Pág. 31 hypothesis of mine disproved
+
+Re-measured at tick start: authority CLEAN.
+
+### The collection error was the higher-value target
+
+Last tick recorded `test_binding_coverage_breadth.py` failing to COLLECT and did
+not fix it. That was the wrong order of priorities to leave behind: a module
+that cannot import runs ZERO assertions, so three real checks over binding
+source coverage were silently absent while the suite reported only "1 error"
+beside thirteen failures.
+
+The cause was a peer making the name public: `_ENROLLED_SOURCE_KINDS` became
+`ENROLLED_SOURCE_KINDS`, same value, underscore dropped, and the test's import
+was left on the old spelling. Repointed; the module collects and its **three
+tests pass**.
+
+Two things were checked before touching it rather than assumed. The symbol still
+carries the same value (`CALCULATION_ROUTE_ENROLLED_SOURCES`), so the rename is
+cosmetic and no behaviour is being papered over. And it is NOT on the
+`application.modelo` facade, nor in its own module's `__all__`, and this test is
+its ONLY consumer -- so the cross-package reach into a private module is a
+pre-existing boundary issue the rename merely surfaced. It was not "fixed" by
+promoting the name to a facade, because the architecture rule forbids exactly
+that reflex: a single caller's need is not evidence of a shared primitive.
+
+### A hypothesis of mine, disproved
+
+Two ticks ago Pág. 31's missing row was attributed to the rejoin's
+duplicate-identity guard, on the reasoning that twenty-two lines carry ``827``
+and many records share the (54, 827) identity. Measured properly this tick:
+**nine** rows parse as ordinal 54 at position 827 -- Liquidación I, compensación
+de bases, DT octava, aseguradoras twice, IIC three times, and the fin-de-registro
+constant -- and **none of them is the Contabilidad Banco de España row** Pág. 31
+needs.
+
+So the row is not suppressed by a guard; it is absent from the parsed stream
+altogether, which is the same shape as the position-10 pair rather than the
+shape of the two rows repaired in the last two ticks. That changes what the next
+attempt should look for, and the earlier guess is withdrawn rather than left
+standing.
+
+### Verified
+
+* the restored module's three tests pass; ruff clean on it.
+* registry + generated-tree + application/registry: **13 failed, 5,960 passed,
+  ZERO errors** -- the collection error gone, and the passed count up by exactly
+  the three tests it was hiding.
+* the nine `ord54@827` rows enumerated individually rather than counted.
+
+### Still open
+
+The eight inventories and five peer surfaces, unchanged. Modelo 200's 2010
+edition keeps three holes: the position-10 pair, closed as unrecoverable, and
+Pág. 31's row, which now needs a raw-text search for a mangled ordinal 54 rather
+than an investigation of the duplicate guard.
+
+## Tick: Pág. 31's join is blocked by none of its documented preconditions
+
+Re-measured at tick start: authority CLEAN.
+
+### The row, found in the raw text
+
+Last tick's handoff was a raw-text search for a mangled ordinal 54. It is not
+mangled. The Banco de España block emits a clean repeating triple:
+
+    [3289] '53 810'
+    [3290] '17 N Contabilidad Banco de Espana - Estado cambios ... Incrementos de otros'
+    [3291] 'Reservas [374] '
+    [3292] '54 827'
+    [3293] '17 N Contabilidad Banco de Espana - Estado cambios ... Incrementos de otros'
+    [3294] 'Otros instrumentos capital [375] '
+
+Ordinal 53 joins from that shape. Ordinal 54, one triple later, does not.
+
+### Every documented precondition holds, and it still does not join
+
+`_rejoin_reversed_column_rows` requires four things of a forward pair. All four
+were measured at the ord54 site rather than reasoned about:
+
+* the head matches `_REVERSED_ROW_HEAD_RE` -- **true**
+* the following line matches `_REVERSED_ROW_TAIL_RE` -- **true**
+* neither line already parses as a row -- **true for both**
+* the `(ordinal, offset)` identity is not already claimed in that record --
+  **not claimed**
+
+So the guard this campaign twice suspected is not the cause, and last tick's
+withdrawal of that hypothesis stands. What remains is the loop itself: the pair
+one triple earlier IS joined, and a joined pair advances the index past two
+lines, so where 3292 lands in that walk is the only unexamined variable.
+
+That is a specific, testable next step -- and it is a claim about loop mechanics,
+which is exactly the kind of thing this campaign has been wrong about when it
+guessed. It was not guessed at here.
+
+### No change was made this tick
+
+Stated plainly rather than dressed up: this tick produced diagnosis and no code.
+The alternative on the budget left was to alter the index arithmetic of a
+function that correctly joins 592 pairs across six editions, on a hypothesis
+that had not been tested. A corpus control would very likely have shown "1
+improved, 0 regressed" for that too, and this campaign has already shipped one
+change that passed its control and was wrong for a reason the control could not
+see.
+
+### Verified
+
+* the four preconditions, each measured at the failing site.
+* the neighbouring ordinal 53 joining from the identical shape, which is what
+  makes the loop the remaining suspect rather than the pattern definitions.
+* authority CLEAN; the working tree carries no edit from this tick.
+
+### Still open
+
+The eight inventories and five peer surfaces. Modelo 200's 2010 edition keeps
+three holes: the position-10 pair, closed as unrecoverable, and Pág. 31's ord54,
+whose next step is now the rejoin loop's index advancement and nothing else.

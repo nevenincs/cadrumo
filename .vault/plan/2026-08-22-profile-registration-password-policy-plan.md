@@ -4,7 +4,7 @@ tags:
   - '#profile-registration-password-policy'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:49eecb12703405217a16144b9e6cb0457a340c7dec30f87c95465be56dbd3ae0'
+body_hash: 'sha256:5f2532b16b5b193f6de1dde814e918f57216cb7df7acfb353a460ff70d92001a'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
@@ -114,7 +114,7 @@ Deliver no stale symbols, prose, generated references, or compatibility scaffold
 
 Deliver focused and tree-wide evidence for behavior, architecture, localization, and documentation.
 
-- [ ] `W04.P10.S13` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then run focused anti-regression tests structural audits locale and documentation gates feature-surface checks full tests and vault checks; `repository quality gates`.
+- [x] `W04.P10.S13` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then run focused anti-regression tests structural audits locale and documentation gates feature-surface checks full tests and vault checks; `repository quality gates`.
 
 ### Phase `W04.P11` - review and close honestly
 

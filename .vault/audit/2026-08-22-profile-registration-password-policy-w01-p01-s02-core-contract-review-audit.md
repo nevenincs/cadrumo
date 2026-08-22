@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c0e457da2c5edffc4f0aad150517e85934c85270d00e8deebd26a96465c2df0f'
+body_hash: 'sha256:180745ef22db98973ffa5cd2d037ddf11319568be91b4cbbcaf215fcca5fcb44'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -1044,3 +1044,55 @@ mapping passes all 27 cases, Ruff lint and format checks pass, commit diff
 hygiene passes, the retired test and mapper names are absent, and Vaultspec
 frontmatter validation is clean. No LOW-to-CRITICAL S12 finding remains. S12 is
 review-clean and S13 may proceed.
+
+## S13 repository-gate evidence review
+
+Commit `4adde55c8b` is an evidence-only change and does not alter runtime,
+tests, locales, or documentation. Semantic code and governing-ADR discovery,
+exact retired-symbol searches, the accepted ADR, live plan, current HEAD, and
+the S13 execution record were reviewed. The feature lanes collectively cover
+the original incident: canonical scalar/UTF-8 assessment, pre-mutation
+registration and rotation, live TUI and scripted CLI localization, strict
+secret transport, recovery independence, and non-oracular proof outcomes.
+
+An independently reconstructed integration command over registration,
+rotation, TUI registration, four-locale parity, scripted creation, inbound
+matrix, and recovery custody reproduces the recorded `104 passed` exactly
+(with five non-integration cases deselected). A separate core-credential and
+authentication-mapping sample passes 39 tests. The previously reviewed serial
+recovery and mapping lanes remain 22 and 27 passed. Exact search confirms the
+four retired production symbols remain absent; the two custody names occur
+only in negative assertions, and recovery code does not invoke prospective
+profile-password assessment.
+
+The recorded full-tree classifications are credible and non-overlapping with
+the feature. Current import-linter again keeps nine contracts and breaks one;
+all reported application/user-profile adapter edges in feature-touched modules
+already exist before `63617870cb`. Current locale output remains dominated by
+Modelo 036, 220, and 390 schema leaves, not credential keys. The S13 record
+truthfully calls `just docs-check 4` interrupted, gives no fabricated terminal
+count, and explicitly says the full corpus stopped at collection rather than
+claiming either full lane green. Subsequent concurrent registry and calculation
+commits explain why present global drift counts exceed the recorded snapshot;
+none changes the evidence-only S13 commit's feature classification.
+
+### s13-command-evidence-absent | medium | Aggregate gate results omit their reproducible command scopes
+
+`.vault/exec/2026-08-22-profile-registration-password-policy/2026-08-22-profile-registration-password-policy-W04-P10-S13.md:35-81`
+records result counts and prose scope, but no executed command lines. It does
+not identify the paths or marker expression behind `67 passed / 82
+deselected`, the seven-file scope that produces `104 passed`, the exact custody
+selection, the feature-scoped Ruff paths, the negative-search expressions, the
+Vault subcommands, or the bounded API/documentation commands. A reasonable
+seven-file reconstruction reproduces the integration count exactly but yields
+`5 passed / 104 deselected` in the default lane, demonstrating that the other
+aggregate scope cannot be recovered from the record by symmetry.
+
+This is not a runtime or security red, and the independently sampled critical
+gates are green. It is nevertheless a material evidence defect in the Step
+whose sole deliverable is repository quality-gate evidence: future reviewers
+cannot distinguish the intended selection from a coincidentally equal count or
+rerun the asserted scoped gates. Append the literal commands (including paths,
+markers, serial/xdist choice, and bounded/interrupted command status) beside
+each result. S13 is not independently reproducible until that correction, so
+S14 should not start yet.

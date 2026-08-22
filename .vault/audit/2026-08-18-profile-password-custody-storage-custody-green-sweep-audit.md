@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:984ccb65e1ac817222e843e6fda9fbc19b85e676c57fc7fe0f91fa6dcff1f7b5'
+body_hash: 'sha256:e6c4cfc541b40526b1a7a2416f1f01b7c0f5fa1b7d32f9a2f95dab73c73bc855'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6669,3 +6669,51 @@ the same treatment. Ask for each whether it was asserting something DOWNSTREAM o
 refusal. If it was, the assertion is still the contract and the setup is what is stale;
 adopting the new refusal as the expectation quietly deletes coverage while turning the lane
 green.
+
+### The full CLI integration tree is red, and mostly not for the reason it looks like
+
+The previous entry ended with a pointer: the tightened profile-active guard might have
+stranded cases outside the two domain lanes. Measured, that pointer is largely WRONG and is
+retracted here. The full CLI integration tree reports 431 failed and 42 errors, but counting
+signatures across the log gives `KDF_SUPERVISION_UNAVAILABLE` 111 hits against
+`REFUSED_CLI_BOUNDARY` 8. The dominant failure has nothing to do with the write policy, and a
+report written from the hypothesis rather than the counts would have filed a hundred phantom
+findings against a peer's correct commit.
+
+The KDF signature does not survive its own check either. `test_config.py` carries seven real
+registrations, each spawning a supervised Argon2id worker, and at eight xdist workers in
+isolation it passes 13/13 with zero KDF hits -- the same eight-worker parallelism the full run
+uses. So the mechanism is not "the supervisor cannot take eight workers". What differs in the
+full run is machine-wide load: this is a shared box with other agents running their own
+suites, and the supervisor spawns a subprocess per call and fails CLOSED with a clear code
+when it cannot. Failing closed on genuine resource exhaustion is correct behaviour, not a
+defect. The honest conclusion is that the full CLI integration suite is not a trustworthy
+instrument on this machine under concurrent load, and a red result from it needs its
+signatures counted before any of it is believed.
+
+Note also that this tree is in NO per-push lane -- the per-push integration gate names four
+specific files, and the broad suite runs only in the dispatch-only full workflow. That is how
+a tree this red stays invisible.
+
+### A repair can import a cost the case never had
+
+Fixing the three stranded cases in the previous entry, the censo module was given an active
+profile through `register_cli_profile`, the CLI registration door. That door derives custody
+material through the supervised KDF worker. Four cases that had previously touched no storage
+at all -- they were refused before the artefact was opened -- now each spawned a subprocess,
+and under the full tree all four ERRORED on `KDF_SUPERVISION_UNAVAILABLE`. The repair was
+correct in substance and wrong in weight: those cases assert a PARSER contract and have no
+interest in key derivation, so paying for a real Argon2id run made them fail for reasons
+unrelated to their subject.
+
+Replaced with `isolated_cli_runtime_profile`, which provisions the bucket directly: same
+active-profile guarantee, no subprocess, and the module runs in 4.2 s against 18.8 s. The
+external-break proof was re-run against the new fixture and still bites -- the substituted
+parser is reached and both cases red. The sibling `test_config.py` change stands as written,
+because that module already registers through the same door at seven call sites and one more
+is consistent with it.
+
+Durable lesson: when a guard strands a test, the cheapest setup that satisfies the guard is
+not automatically the right one. Ask what the case is ABOUT, and pay only for that. A fixture
+that drags in a heavyweight real subsystem the assertions never mention will eventually fail
+for a reason the test name cannot explain.
