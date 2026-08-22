@@ -26,58 +26,56 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the censal alta/modificacion/baja declaration. \
 DISCLOSURE -- self-review: the same agent authored the casillas being reviewed. VERIFIED \
--- PAGINA 2A IS AUTHORED, 104 casillas covering all 86 box numbers it prints, plus 18 \
-slugs for fields carrying no printed number. Revision total 199 casillas. Every offset, \
-length and number was cross-checked back against the design row it came from: 86 design \
-numbers, 86 authored, ZERO missing, ZERO invented, ZERO length mismatches. Pag. 2A tiles \
-1..2000 exactly once with no gap and no overlap, checked for partial overlap and not \
-merely for gaps. THIS STAMP CORRECTS THE DENOMINATOR FOR THE FOURTH TIME, and the pattern \
-of that correction matters more than the figure. Earlier stamps on this revision reported \
-the box count as 288, then 348, then 659. It now measures 667. Each figure was produced by \
-widening the bracket pattern: 288 read only [NNN]; 348 added malformed and multi-number \
-brackets but MISSED LETTERED BOXES, the largest class; 659 added lettered; 667 adds the \
-parenthesised form, AEAT printing (a28) for one field. THE HONEST CLAIM IS NOT \"this \
-modelo prints 667 boxes\". It is that a pattern admitting five bracket forms finds 667 \
-distinct numbers, and nothing establishes a sixth form does not exist. Every one of the \
-four figures was a floor reported as a total. That is the same instrument error four times \
-over, committed inside the very measurement built to expose the instrument error, and any \
-coverage denominator derived by pattern-match over prose inherits the caveat. VERIFIED -- \
-COVERAGE 169 of 667 real boxes, 25 percent: 83 plain-digit boxes and 86 lettered. 498 \
-remain. Against the digits-only derived set the figure is unchanged at 65 of 288, and THAT \
-IS THE POINT: every number on Pag. 2A is lettered, so authoring the entire record moved \
-the derived coverage report by exactly zero. A derived zero is evidence the deriver \
-recognised nothing, not evidence of absence. THIS STAMP ALSO RETRACTS, AS THE PREVIOUS ONE \
-DID, the claim that \"Pag. 0, 2A and 2C carry no box numbers at all, being repeating or \
-structural records\". True of Pag. 0 alone. Pag. 2A is the persona fisica identity and \
-domicilio record: [A4] N.I.F./N.I.E., [A5] Apellido 1, [A25] Codigo de Provincia, [A91] \
-establecimiento permanente. Pag. 2C carries 57 real boxes and remains unauthored. VERIFIED \
--- THREE BRACKET FORMS ARE MALFORMED IN AEAT'S OWN SPREADSHEET and are transcribed as \
-printed rather than normalised away: [A1) closes with a parenthesis, [ A38] carries a \
-leading space, (a28) is lowercase and parenthesised. Each holds exactly ONE number \
-belonging to exactly ONE field, so each casilla carries AEAT's real number. VERIFIED -- \
-THE CONTRASTING CASE, which is why the above is not a licence to invent: on Pag. 3 a \
-single byte carries a bracket LISTING several numbers ([300,301,302], [311,312], [330 \
-332]) because the printed form has three tick boxes the fichero collapses into one \
-selecting code byte. No single number describes such a field, so each takes a slug. The \
-tell is field width against number count. VERIFIED -- A10 and A3B are each printed on a \
-dia, mes and ano triple; each becomes ONE date casilla, because six integers would \
-misrepresent two printed boxes. The same convention already governs this modelo's other \
-dates and Pag. 9's sucesor blocks. NOT CLAIMED -- 498 OF THE 667 REAL BOXES REMAIN \
-UNMODELLED. By record: Pag. 5, Pag. 2B, Pag. 4, Pag. 2C, Pag. 6, Pag. 7, Pag. 10, Pag. 8 \
-and the remainder of Pag. 3. Pag. 0 has none and is genuinely the envelope. Pag. 1, 3, 9 \
-and now 2A are the authored ones. NOT CLAIMED -- A57, A58, A65 to A67, A86 to A89, A93, \
-A95 and A97 are absent from the Pag. 2A design and were NOT invented; they may live on the \
-printed form without a fichero position, or on another page. NOT CLAIMED -- THE CAUSA \
-FRAGMENT'S LABELS remain underivable from any bundled source; its cited instructions file \
-is a 5.4 KB navigation shell with no casilla table. Numbers and section mapping ARE \
-grounded on the diseno. NOT CLAIMED -- LABELS ARE UNACCENTED ASCII across all four \
-catalogues, matching the 95 pre-existing modelo 036 labels rather than improving 104 of \
-them into a mixed-accenting state; this is a known presentation limitation, not a claim \
-that the Spanish is typographically correct. All 199 label keys carry non-null values in \
-es/en/ca/hu, verified by counting VALUES rather than keys; the strings were not audited \
-for translation accuracy. NOT CLAIMED -- NO CONSTRUCT MEMBERSHIP CHANGE and NO EXPORT \
-LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
-worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- \
+-- PAGINA 2C IS AUTHORED, 73 casillas covering all 57 box numbers it prints, plus 16 slugs \
+for fields carrying no printed number. Revision total 272 casillas. Pag. 2C is the \
+establecimiento permanente record of a non-resident legal person or entity. Every offset, \
+length and number was cross-checked back against the design row it came from: 57 design \
+numbers, 57 authored, ZERO missing, ZERO invented, ZERO length mismatches. Pag. 2C tiles \
+1..1400 exactly once with no gap and no overlap, checked for partial overlap and not \
+merely for gaps. THIS COMPLETES A RETRACTION MADE IN TWO EARLIER STAMPS. Those stamps \
+claimed \"Pag. 0, 2A and 2C carry no box numbers at all, being repeating or structural \
+records\". That was true of Pag. 0 alone. Pag. 2A was corrected first, 86 boxes; Pag. 2C \
+is corrected here, 57 boxes. Both read as zero for the same reason: every number on either \
+record is LETTERED, [A4] and [C1] rather than [104], and the derived-casilla regex matches \
+digits only. Authoring both records therefore moved the derived coverage report by EXACTLY \
+ZERO, which is the honest signal rather than a defect -- a derived zero is evidence the \
+deriver recognised nothing, not evidence of absence. VERIFIED -- COVERAGE 226 of 667 real \
+boxes, 34 percent, up from 169. Against the digits-only derived set the figure is \
+unchanged at 65 of 288. The 667 denominator carries the caveat recorded in the previous \
+stamp and it still stands: it is what a pattern admitting five bracket forms finds, and \
+nothing establishes a sixth form does not exist. Four denominators have now been reported \
+for this modelo -- 288, 348, 659, 667 -- and every one was a floor presented as a total. \
+VERIFIED -- C70 and C71 are each printed on a dia, mes and ano triple; each becomes ONE \
+date casilla, matching A10 and A3B on Pag. 2A and the sucesor blocks on Pag. 9. Six \
+integers would misrepresent two printed boxes. VERIFIED -- C68 AND C69 NAME THE WRONG \
+ENTITY IN AEAT'S OWN TEXT: both descriptions open \"Persona Fisica.\" while sitting inside \
+the establecimiento permanente record and numbered in its C series. Read as a copy-paste \
+artefact in the published spreadsheet, recorded in the fragment, and NOT propagated into \
+the labels, which describe the record the fields actually belong to. This is a judgement \
+about AEAT's text, not a transcription, and is flagged as such. VERIFIED -- THE SIXTEEN \
+SLUG NUMBERS ARE PREFIXED \"ep-\" because Pag. 2A's persona fisica record carries fields \
+of the same name and (segmento, number) uniqueness is enforced revision-wide. The \
+collision was surfaced by the loader refusing the first attempt, not anticipated. STATUS \
+CHANGE WORTH RECORDING -- the filing-capability worklist now reports this revision as \
+AUTHORABLE on era, citing aeat-dr-036-2025 with 272 casillas declared, where it previously \
+lacked the casilla set entirely. What it now needs is a SEMANTIC MAP AND EXPORT LAYOUT, \
+not more casillas. NOT CLAIMED -- 441 OF THE 667 REAL BOXES REMAIN UNMODELLED, and the \
+remainder is now exactly known per record: Pag. 5 107, Pag. 2B 98, Pag. 4 88, Pag. 6 52, \
+Pag. 7 42, Pag. 10 24, Pag. 8 16, and 14 still open on Pag. 3. Pag. 0 has none and is \
+genuinely the envelope. Pag. 1, 2A, 2C, 9 and most of 3 are the authored records. NOT \
+CLAIMED -- C31 to C38, C56 to C58 and C65 to C67 are absent from the Pag. 2C design and \
+were NOT invented; likewise A57, A58, A65 to A67, A86 to A89, A93, A95 and A97 on Pag. 2A. \
+NOT CLAIMED -- THE CAUSA FRAGMENT'S LABELS on Pag. 3 remain underivable from any bundled \
+source; its cited instructions file is a 5.4 KB navigation shell with no casilla table. \
+Numbers and section mapping ARE grounded on the diseno. NOT CLAIMED -- NO EXPORT LAYOUT \
+AND NO CONSTRUCT MEMBERSHIP CHANGE: the application still cannot file this modelo and \
+model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
+inspection bar and must be re-made if a layout ever lands and lifts the derived scope to \
+filing. NOT CLAIMED -- LABELS ARE UNACCENTED ASCII across all four catalogues, matching \
+the pre-existing modelo 036 labels rather than leaving the revision in a mixed-accenting \
+state; a known presentation limitation, not a claim of typographic correctness. All 272 \
+label keys carry non-null values in es/en/ca/hu, verified by counting VALUES rather than \
+keys; the strings were not audited for translation accuracy. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-22
 

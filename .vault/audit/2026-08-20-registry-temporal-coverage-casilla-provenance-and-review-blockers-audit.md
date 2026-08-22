@@ -2858,3 +2858,67 @@ ending.** Both were restored byte-exact from git and verified by size and hash; 
 damage persists. The lesson generalises past PDFs: a whitespace or line-ending
 normalisation must be scoped by FORMAT, never by directory, and content-addressed
 evidence is the last place to run a blanket rewrite.
+
+## 2026-08-22 — Pagina 2C authored, and two modelos have crossed into AUTHORABLE
+
+### What landed
+
+Modelo 036 Pag. 2C: **73 casillas covering all 57 box numbers it prints**, plus 16
+slugs. The revision is now **272 casillas, 226 of 667 real boxes (34%)**, up from
+169. Zero missing, zero invented, zero length mismatches; the record tiles 1..1400
+exactly once. 292 locale strings applied; all 272 label keys verified non-null by
+counting values across es/en/ca/hu. Suite: **zero regressions** against the previous
+run's FAILED list, and the two reviewability failures from the prior iteration are
+now green.
+
+This completes the retraction begun with Pag. 2A. The claim "Pag. 0, 2A and 2C carry
+no box numbers at all" was true of Pag. 0 alone: 2A prints 86, 2C prints 57, all of
+them lettered and therefore invisible to a digits-only regex.
+
+### The loop's prerequisite is now MET for two modelos — the next unit is different
+
+The v7 brief's premise is that the filing worklist is a casilla backlog, and that a
+revision with 2 casillas against a 381-field design cannot carry a real layout. That
+was correct, and it is now discharged for two entries. The worklist gate reports:
+
+| revision | worklist status |
+|---|---|
+| 840 / 2003-y-siguientes | **AUTHORABLE on era** — cites `aeat-dr-840`, **121 casillas** — needs its semantic map and layout |
+| 036 / 2025-02-03-y-siguientes | **AUTHORABLE on era** — cites `aeat-dr-036-2025`, **272 casillas** — needs its semantic map and layout |
+| 220 / 2024 | AUTHORABLE on era — 2 casillas — casilla set still the blocker |
+| 390 / 2021 | AUTHORABLE on era — 10 casillas |
+
+**So "author the casilla set" is no longer the right next unit for 840 or 036.** What
+they need is the semantic map and the export layout. The gate names its own
+precondition for that work: *the design's extraction must be checked for PARTIAL
+OVERLAP first* (`test_cited_design_field_bounds_are_self_consistent`) — a gap-only
+tiling check is insufficient, because partial overlap leaves no holes.
+
+Modelo 840 is the smaller and better-shaped first target: 121 casillas over 108 boxes
+across 3 records, against modelo 036's 272 casillas over 13 records of which 8 remain
+wholly unauthored.
+
+Note this does NOT reopen the v6 instruction. v6 failed because it asked for layouts
+on revisions holding 2 casillas. The precondition it lacked is exactly what these two
+iterations built.
+
+### Remaining modelo 036 work, exactly quantified
+
+441 of 667 boxes unmodelled: Pag. 5 (107), Pag. 2B (98), Pag. 4 (88), Pag. 6 (52),
+Pag. 7 (42), Pag. 10 (24), Pag. 8 (16), and 14 still open on Pag. 3. Pag. 0 is the
+envelope and has none.
+
+### Two transcription judgements recorded rather than buried
+
+**C68 and C69 name the wrong entity in AEAT's own text.** Both descriptions open
+"Persona Fisica." while sitting inside the establecimiento permanente record and
+numbered in its C series. Read as a copy-paste artefact in the published spreadsheet;
+the labels describe the record the fields actually belong to. This is a *judgement*
+about AEAT's text rather than a transcription of it, so it is flagged in the fragment
+and in the stamp instead of being silently normalised.
+
+**Slug numbers collide across records.** Pag. 2C's unnumbered fields carry the same
+names as Pag. 2A's (`codigo-via-ine`, `aeat-alta`), and `(segmento, number)`
+uniqueness is enforced revision-wide. The collision was surfaced by the loader
+refusing the first attempt, not anticipated — worth remembering when authoring any
+second record of a modelo whose records repeat a block structure.
