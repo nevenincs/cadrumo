@@ -21,7 +21,7 @@ from pathlib import Path
 
 from .....core import StorageCategory, storage_location
 from ._errors import BucketValidationError
-from ._layout import BucketPaths, bucket_paths
+from ._layout import BucketPaths, bucket_paths, validate_path_component
 
 _KEYSTORE_VALIDATION_SURFACE = "bucket_keystore"
 
@@ -44,10 +44,7 @@ def keystore_path(root: Path, bucket_id: str) -> Path:
     Raises:
         BucketValidationError: When ``bucket_id`` is empty or carries a path separator.
     """
-    if not bucket_id:
-        raise BucketValidationError("bucket_id must be non-empty")
-    if "/" in bucket_id or "\\" in bucket_id:
-        raise BucketValidationError("bucket_id must not contain a path separator")
+    validate_path_component(bucket_id, subject="bucket_id")
     return keystore_root(root) / bucket_id
 
 
@@ -133,10 +130,22 @@ def keystore_sidecar_path(*, storage_root: Path, bucket_id: str, filename: str) 
     Returns:
         The keystore-separated sidecar path.
 
+    Both inputs are checked, which they were not before: separation is a
+    statement about ``bucket_id``, and ``filename`` was joined unexamined. This
+    is the join point for the persisted session record, the wrapped bucket DEK
+    and the login-throttle cache, so an unchecked filename places key material
+    wherever it says -- measured, ``"../../secrets.json"`` reached the storage
+    root and ``"C:/evil.json"`` reached the drive root. Every caller passes a
+    module constant today; the check is here so that stays a property of the
+    join rather than of the callers.
+
     Raises:
-        BucketValidationError: When the keystore path violates separation.
+        BucketValidationError: When the keystore path violates separation, or
+            when ``bucket_id`` or ``filename`` is not a single containable path
+            component.
     """
     validate_keystore_separation(storage_root, bucket_id)
+    validate_path_component(filename, subject="filename")
     return keystore_path(storage_root, bucket_id) / filename
 
 

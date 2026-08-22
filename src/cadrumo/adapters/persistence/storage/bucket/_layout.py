@@ -22,7 +22,7 @@ from __future__ import annotations
 import gc
 import secrets
 import shutil
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Literal
 
 from pydantic import BaseModel
@@ -63,43 +63,67 @@ class BucketPaths(BaseModel):
     """
 
 
+def validate_path_component(value: str, *, subject: str) -> None:
+    """Refuse ``value`` unless it is one path component that stays where it is joined.
+
+    Every storage path built from a caller-supplied string needs this same
+    answer, and the rule was previously written out at each join instead. Three
+    copies drifted apart: ``bucket_paths`` and :func:`keystore_path` each
+    enumerated the empty and separator cases, and the keystore sidecar join
+    validated its ``bucket_id`` while never looking at its ``filename`` at all.
+
+    Four ways a value fails to be a component, each measured against a real
+    join rather than reasoned about:
+
+    - **Empty**, which joins to the parent itself.
+    - **Carrying a separator**, the only case all three copies caught.
+    - **A dot segment.** ``".."`` carries no separator, so a separator check
+      passes it, and the join then resolves ABOVE the directory being addressed.
+    - **Drive-qualified.** ``"D:x"`` resolves onto another drive entirely, and
+      ``"C:x"`` -- when the root is already on ``C:`` -- silently becomes the
+      component ``"x"``, so the directory name no longer equals the identifier
+      that named it and two distinct ids can land on one directory.
+
+    Raises:
+        BucketValidationError: When ``value`` is not a single containable
+            component; ``subject`` names the offending parameter.
+    """
+    if not value:
+        raise BucketValidationError(f"{subject} must be non-empty")
+    if "/" in value or "\\" in value:
+        raise BucketValidationError(f"{subject} must not contain a path separator")
+    if set(value) == {"."}:
+        raise BucketValidationError(f"{subject} must not be a dot segment")
+    windows_reading = PureWindowsPath(value)
+    if windows_reading.drive or windows_reading.root:
+        raise BucketValidationError(f"{subject} must not be drive-qualified")
+
+
 def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     """Resolve the typed paths for ``<root>/buckets/<bucket_id>/`` without IO.
 
-    A dot segment is refused for the same reason a separator is. ``".."``
-    carries no separator, so the check below it passes, and the join then
-    resolves to the storage root -- one level ABOVE the ``buckets/`` directory
-    this function exists to address. ``"."`` addresses ``buckets/`` itself.
-    Neither is a bucket, and both would hand a caller paths over a tree the
-    layout never meant to expose.
-
-    Nothing reaches this with a dot segment today: a restored archive's
-    ``bucket_id`` must equal the custody envelope's ``profile_id``, which is a
-    UUID, and the system-scoped ids in the tree are ``system``, ``unsecured``
-    and ``diagnostic-probe``. But that containment lives upstream, in an
-    identity cross-check written for a different purpose, while
-    :data:`BucketId` itself is a 1-128 character string
-    that admits ``".."`` happily. Refusing it HERE puts the guarantee at the
-    boundary that owns the join, so a future caller resolving an id from an
-    untrusted source inherits the refusal rather than the traversal.
+    The id is checked by :func:`validate_path_component` before it is joined,
+    so it must be one containable component. Nothing reaches this with a
+    hostile id today -- a restored archive's ``bucket_id`` must equal the
+    custody envelope's ``profile_id``, which is a UUID, and the system-scoped
+    ids are ``system``, ``unsecured`` and ``diagnostic-probe``. But that
+    containment lives upstream in an identity cross-check written for another
+    purpose, while :data:`BucketId` itself is a 1-128 character string that
+    admits ``".."`` happily. Refusing it HERE puts the guarantee at the
+    boundary that owns the join.
 
     Args:
         root: Cadrumo storage root (the parent of ``buckets/``).
-        bucket_id: The bucket identifier; must be non-empty.
+        bucket_id: The bucket identifier; must be one path component.
 
     Returns:
         A :class:`BucketPaths` record carrying every resolved subpath.
 
     Raises:
-        BucketValidationError: When ``bucket_id`` is empty, is a dot segment, or
-            contains a path separator.
+        BucketValidationError: When ``bucket_id`` is not a single containable
+            path component; see :func:`validate_path_component`.
     """
-    if not bucket_id:
-        raise BucketValidationError("bucket_id must be non-empty")
-    if "/" in bucket_id or "\\" in bucket_id:
-        raise BucketValidationError("bucket_id must not contain a path separator")
-    if set(bucket_id) == {"."}:
-        raise BucketValidationError("bucket_id must not be a dot segment")
+    validate_path_component(bucket_id, subject="bucket_id")
 
     bucket_dir = root / storage_location(StorageCategory.BUCKETS).relative_path() / bucket_id
     return BucketPaths(
@@ -177,4 +201,5 @@ __all__ = [
     "BucketPaths",
     "bucket_paths",
     "trash_rename_and_remove",
+    "validate_path_component",
 ]
