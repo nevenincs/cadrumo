@@ -5452,3 +5452,48 @@ unattributed rather than as cleared.
 
 Lanes 314 integration / 1586 unit, both unchanged -- the new gate lives in
 `src/cadrumo/tests`, outside the domain lane paths.
+
+### The per-push stub gate was watching a tree it had just written itself
+
+The wheel-gate fix raised the obvious follow-up: that relocation missed one referencing
+surface, so which others did it miss? Chasing the docs surface found something better than
+another stale path.
+
+**First, a self-inflicted one.** `python -m dev.docs.apidocs scaffold --check` reported
+drift: `cadrumo.core._windows_contention` had no stub. That module was added EARLIER IN
+THIS CAMPAIGN -- the Windows contention predicate -- and `scaffold` was never run, so it
+was silently absent from the published documentation. The docs rule states both autodoc
+failure modes and names this as the quieter one: an orphan stub crashes the next nitpicky
+build loudly, while a missing stub produces no error anywhere.
+
+**Then the reason nothing caught it.** `test-dev-ci` -- the lane `ci.yml` runs per push --
+already named `dev/docs/apidocs/tests`, enrolled with a long and careful argument: a module
+add, rename or delete is the only thing that drifts the stubs, `docs-check` is path-scoped
+to `docs/` so no `src/**` push fires it, and therefore no per-push lane produced a verdict.
+Every step of that reasoning is right. **The directory it names cannot answer the
+question.** `dev/docs/apidocs/tests` scaffolds the real module tree into a `tmp_path` and
+checks THAT for drift, so it proves the manager's round-trip and is clean by construction;
+it never looks at the committed `docs/api/` tree. The gate whose subject is the committed
+tree is `dev/docs/tests/test_api_stubs.py`, which ran only in `test-dev-tooling` (ci-full)
+and the path-scoped `docs-check`.
+
+Measured rather than argued, with one stub removed from the committed tree:
+
+    dev/docs/apidocs/tests                            -> 10 passed   (blind)
+    ... plus dev/docs/tests/test_api_stubs.py         ->  1 failed
+
+So the fix is one path on one recipe line, and the marker was checked rather than assumed --
+`unit`, `hex_core`, `docs` -- exactly as the neighbouring comment insists, since a
+`docs`-only marker would be deselected by that lane's expression and still exit zero.
+
+**The shape is worth naming, because it is the most expensive kind of gap.** This was not
+an unguarded surface anyone had overlooked; someone identified the exact risk, wrote out the
+failure modes, chose the lane deliberately, and documented why. The enrollment then pointed
+at a test directory whose name matches the subject while its SUBJECT does not -- tmp_path
+round-trip versus committed tree. Everything downstream reads as covered, and the more
+carefully the reasoning is written, the less likely anyone re-derives it. **A gate is only
+as good as the thing it looks at, and a directory name is not evidence of what its tests
+assert.** My own missing stub sat on main through several pushes as the live proof.
+
+Lanes 314 integration / 1586 unit, both unchanged. `scaffold --check` now clean, and the
+nitpicky docs build passes with the new stub (17 tests).
