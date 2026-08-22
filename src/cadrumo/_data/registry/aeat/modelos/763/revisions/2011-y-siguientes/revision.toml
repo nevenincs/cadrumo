@@ -47,6 +47,29 @@ authority_grade = "applicability"
 #
 # The span gate sees only the 2012/2015 boundary; the 2018 one is invisible to it
 # but real, evidenced by the design registrations and now by its orden.
+#
+# THE ACTUAL REMAINING BLOCKER, now precisely characterised: this revision claims
+# valid_from 2011-01-01, but AEAT's index title for its own earliest bundled
+# design reads "ejercicios 2T-3T 2012, 2013 y 2014", placing the first covered
+# period at 2T 2012 -- five quarters later than the claim. Nothing bundled
+# resolves the difference. The founding orden is de 5 de julio de 2011, entered
+# into force the day after publication, and carries NO disposicion transitoria and
+# NO first-application clause (re-checked against BOE 2026-08-22); Ley 13/2011,
+# which created the tax, is not in the corpus or the legal catalogue at all.
+#
+# That question blocks the partition rather than merely accompanying it. Every one
+# of this registry's 99 revisions carries at least one deadline window -- there is
+# no precedent for a revision that cannot say when it is due -- so each new era
+# needs its own trimestral windows, and the earliest era's windows cannot be
+# authored without knowing which trimestre was first. Deriving them from the art 4
+# cadence alone would fabricate up to five deadlines for periods the modelo may
+# never have covered, which is the same trap orden HAC/510/2021's disposicion
+# transitoria set for modelo 604 and which was caught there only by reading the
+# orden before generating.
+#
+# Resolving it needs Ley 13/2011 (or AEAT's own first-period statement) acquired
+# and bundled. That is the next step, and it is an acquisition, not an authoring
+# decision to be made from a filename.
 valid_from = 2011-01-01
 period_selector = { year_from = 2011, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
@@ -60,6 +83,7 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-763-procedure",
     "enrolled-modelo-763-layout",
+    "aeat-dr-763-2012",
     "aeat-dr-763-2015",
     "boe-modelo-763-2015-amendment",
     "boe-modelo-763-2018-amendment",

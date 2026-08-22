@@ -144,6 +144,36 @@ applies_from = 2018-10-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
 review_status = "reviewed"
 
+# Registered 2026-08-22. This design was bundled corpus that no catalogue entry,
+# hash-pin or resolver could see -- one of 49 such files the registration gate
+# reports across the tree. Its era is read off AEAT's own index title for the
+# artefact ("ejercicios 2T-3T 2012, 2013 y 2014"), which is the sanctioned
+# evidence for a design boundary here; modelo 490's revision prose sets that
+# precedent explicitly and warns the boundary must never be chosen to make a
+# window check pass.
+#
+# NOTE THE DISAGREEMENT, do not silently resolve it: that index title places the
+# first covered period at 2T 2012, while modelo 763's revision claims valid_from
+# 2011-01-01. Five quarters are claimed that AEAT's own artefact does not cover.
+# The founding orden EHA/1881/2011 is de 5 de julio de 2011, entered into force
+# the day after publication, carries NO disposicion transitoria and NO
+# first-application clause (re-checked against BOE 2026-08-22), so nothing
+# bundled says which trimestre was first. applies_from below records what the
+# artefact evidences, NOT a ruling on when the modelo first applied.
+[sources."aeat-dr-763-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/02-763-orden-eha-1881-2011-ejercicios-2t-3t-2012-2013-y-2014.pdf"
+sha256 = "b9da58969e0a5cbea00c2f0780c3cbdc8fba3c5b9fc26d17042f8f277278d2fd"
+bytes = 45482
+retrieved_at = 2026-08-22
+applies_from = 2012-04-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-763-2015"]
 evidence_tier = "layout_authority"
 authority = "aeat"
