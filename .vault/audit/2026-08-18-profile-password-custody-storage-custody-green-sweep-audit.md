@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-21'
+modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:3865b94e5525fb0a266d11eed2e0bf3fe3ef7271d365628c9044964524bc7861'
+body_hash: 'sha256:116fdcc328424f760fe7c9dea817d71e3cfc57a685ed16018cf2244e6e459414'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4927,3 +4927,33 @@ genuinely scheduled creates yield one winner — and forcing determinism would r
 holding the lock, which converts it into the exclusion test its two siblings already
 provide deterministically. A suite wants both shapes: one that proves the invariant under
 a held lock, and one that proves it under actual scheduling.
+
+### The serial slice, and a hole in this campaign's own reachability gate
+
+**The serial slice was verified rather than assumed.** Every iteration of this campaign
+excludes `serial` from both lanes, and the standing note that the slice is healthy predates
+weeks of peer commits. Run for the domain: **16 tests, all passing.** The note still holds.
+
+**Running it exposed a weakness in the gate added a few entries ago.** That gate asserts
+each module carries an execution marker. The lanes, however, also EXCLUDE markers, and a
+combination excluded by every one of them is run by nothing while still looking marked:
+`integration and serial and perf` is dropped by the parallel lane for being serial and by
+the serial lane for being perf. The `dev/` reachability gate evaluates its lane
+EXPRESSIONS precisely for this reason, and the `src/` one only checked presence — a
+weaker check than the sibling it was modelled on.
+
+The hole is currently empty, measured rather than assumed: no module carries
+`serial and perf`, and `external_tool`, `perf` and `resident_service` are not used anywhere
+under `src/` at all — those exclusions are defensive against markers that live in other
+trees. The 16 `serial` tests are the only occupants of any exclusion.
+
+The gate now evaluates the five declared lane expressions instead. Proven on a real module
+by marking it `integration+serial+perf`: the new check fails, and **the presence check
+stays green** — which is the whole point, since the old assertion could not see the case.
+
+**One instrument correction worth recording.** The first marker census reported 29,704
+tests for `-m serial`, the size of the entire suite. The number was real and the reading
+was wrong: pytest prints `16/29704 tests collected`, and the pattern matched the total
+rather than the selection. Every "no tests collected" in the same census was accurate,
+which is what made the one wrong figure easy to accept — a census is only as good as its
+least-checked line.
