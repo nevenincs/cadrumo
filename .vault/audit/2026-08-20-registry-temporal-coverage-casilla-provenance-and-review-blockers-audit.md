@@ -2786,3 +2786,75 @@ m036 coverage reads "65 of 288". Against the true set it is **65 of 659 — unde
 Nothing authored is wrong; the casillas and their numbers are all read from the design.
 What was wrong is every denominator I have reported for this modelo, and the direction of
 the error consistently flattered progress.
+
+## 2026-08-22 (later still) — Pagina 2A authored, and the denominator moved a fourth time
+
+### What landed
+
+Modelo 036 Pag. 2A is authored: **104 casillas covering all 86 box numbers it
+prints**, plus 18 slugs for fields carrying no printed number. Every offset, length
+and number was cross-checked back against the design row it came from — 86 design
+numbers, 86 authored, zero missing, zero invented, zero length mismatches. The record
+tiles 1..2000 exactly once. All 199 modelo 036 labels resolve to non-null values
+across es/en/ca/hu, verified by counting **values**, not keys.
+
+This is the record a previous stamp declared to have no boxes at all.
+
+### The denominator has now been reported four times, and every figure was a floor
+
+| reported | by what pattern | wrong because |
+|---|---|---|
+| 288 | `\[\d+\]` | misses lettered, list and malformed brackets |
+| 348 | + malformed, + multi-number | **misses lettered boxes**, the largest class |
+| 659 | + lettered | misses the parenthesised form `(a28)` |
+| **667** | + parenthesised | current best; still only a floor |
+
+**This is the same instrument error four times, committed inside the very tool built
+to detect the instrument error.** Each pass widened the pattern, found more, and each
+time the new figure was reported as though it were the true set. It was not. It was
+the largest number that pattern could see.
+
+The honest form of the claim is not "modelo 036 prints 667 boxes". It is: **a pattern
+admitting five bracket forms finds 667 distinct box numbers, and nothing establishes
+that a sixth form does not exist.** Any coverage denominator derived by pattern-match
+over prose carries that caveat and should state it.
+
+Current coverage, on that basis: **169 of 667 (25%)** — 83 plain-digit boxes and 86
+lettered. 498 remain.
+
+### A latent corpus hazard, found by accident, and a mistake made chasing it
+
+Mid-iteration the registry suite went from 8 failures to **742 failed / 203 errors**.
+Root cause was not any registry edit: `source 'boe-modelo-194-form-layout' byte count
+mismatch`. The corpus file `corpus/normatives/html/orden-1999-11-18.html` was 104069
+bytes on disk against a declared and committed 103935 — a delta of exactly 134 bytes,
+being 134 CRLF pairs.
+
+**`git status` reported the file as unmodified throughout.** `.gitattributes` sets
+`* text=auto eol=lf`, so git normalises CRLF away on commit: the corrupted working
+file and the clean blob are indistinguishable to git, while the validator — which
+reads the bytes on disk and hashes them — sees a broken content-addressed artefact.
+The corruption is invisible to the tool everyone checks and fatal to the tool nobody
+checks until the suite reds.
+
+The mechanism is a Python text-mode write on Windows translating `\n` to `\r\n`.
+Any script that authors a corpus file with `open(...,'w')` or `write_text` **without
+`newline=""`** silently corrupts it.
+
+`.gitattributes` already protects `corpus/aeat_official/**` with `-text`, and its own
+comment states the reason exactly: "a rewritten byte is not a cosmetic difference — it
+invalidates the artefact and whatever conclusion was drawn from it." **The sibling
+tree `corpus/normatives/` carries the same content-addressed evidence and has no such
+protection.** Extending `-text` to it would not stop a bad script writing CRLF, but it
+would make the damage VISIBLE in `git status` instead of silently normalised. Not
+applied here: it changes checkout semantics for 1406 committed files and deserves its
+own reviewed change rather than a drive-by inside a loop iteration.
+
+**The mistake, recorded because it was mine and it was destructive.** Chasing this, a
+blanket "replace CRLF with LF across `corpus/normatives/`" was run. It rewrote two
+PDFs — `boe-a-2023-17429-modelo-721-layout.pdf` and its 2024 amendment — shrinking
+them by 4 and 8 bytes, because **`\r\n` inside a PDF is binary content, not a line
+ending.** Both were restored byte-exact from git and verified by size and hash; no
+damage persists. The lesson generalises past PDFs: a whitespace or line-ending
+normalisation must be scoped by FORMAT, never by directory, and content-addressed
+evidence is the last place to run a blanket rewrite.
