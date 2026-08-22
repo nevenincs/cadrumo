@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee140dcf16e4ca1d464636eb85060866e4e51d33ce295f1215fc3c8fc5a0d248'
+body_hash: 'sha256:3743c44aeaf6f8d78fbdf9a83e5a43150226336e0859c0ecc5e7a5820b2f5a7a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14659,3 +14659,152 @@ known to have held still. Snapshotting `_data` either side of a run costs
 seconds and turns an unattributable red into a fact. Three ticks have now spent
 effort on names that were already fixed or never broken; the cheap guard is to
 re-run alone AND re-read HEAD, in that order, before opening any of them.
+
+## Tick: the filing worklist is three backlogs, and ten of thirteen are authorable now
+
+Re-measured at tick start: authority CLEAN, queue confirmed finished, last
+tick's quiescence guard committed. With the queue done the remaining reds are
+the eight declared inventories, so this tick went at the one closest to the
+endpoint: the filing-capability worklist, thirteen revisions that declare no
+export layout.
+
+### Sizing it first, which changed what was worth doing
+
+Reading each of the thirteen against the corpus rather than picking one and
+starting: most are stubs with two to seven casillas, so the blocker is the
+casilla schema, not the layout -- which is what an earlier audit already
+corrected itself to. Authoring the smallest genuinely open one (modelo 188, 40
+design fields) means roughly 1,100 lines of semantic map and render profile with
+filing-grade `legal_refs` per field, on the evidence of modelo 185's 2026
+mapping, which is the same informativa shape at 35 fields. That is not
+completable AND groundable in one tick, and a half-authored map ships exactly
+the ungrounded data the rules forbid. So it was not started.
+
+### What the worklist was hiding
+
+Every line read "no export layout", which presents one backlog of one kind of
+work. Deriving each line's actual blocker from the tree splits it three ways:
+
+* **10 AUTHORABLE** -- the revision already cites a registered record design.
+* **2 BLOCKED on corpus** (modelos 136 and 721) -- no design is bundled at all,
+  so nothing can be authored until the corpus carries one.
+* **1 BLOCKED on era** (modelo 185's `2003-2025`) -- one design IS registered
+  for this modelo, and it correctly grounds the sibling `2025-y-siguientes`
+  revision instead, because it governs 2026 onward. The design for THIS window
+  is not bundled.
+
+The gate's own docstring forbids narrowing, allowlisting and hardcoding. None of
+those happened: the list length, the count and the assertion are unchanged, each
+line is derived on every run, and a modelo that gains a layout still leaves the
+list on its own.
+
+### A conclusion this tick reached and then disproved
+
+Modelo 038's design states no orden, no BOE reference and no ejercicio anywhere
+in its extracted text -- only AEAT's "actualizado 28/06/2024" update date. On
+that basis it was written down mid-tick as ruling-blocked, because this campaign
+has twice had to undo reading an update date as a governed period.
+
+The derived classifier disproved it: `enrolled-modelo-038-layout` is a
+registered `record_design` source pointing at that exact PDF, so the revision
+already cites its design and is authorable. The earlier "unregistered" reading
+came from a different gate with a different criterion. Deriving the answer from
+the tree beat recalling it, which is the point of the classifier.
+
+### Verified
+
+* the worklist still fails with thirteen lines and the same count; each now
+  states what it waits on. Ruff clean.
+* registry + generated-tree + application/registry: **9 failed, 5953 passed** --
+  the eight declared inventories plus the casilla-label gate.
+
+### The label failure is a peer's open work, and the run before it was noise
+
+A first standing run reported **76 failed and 34 errors** across schema hygiene,
+scenarios, prorrata and transitional rates. None of it was real. `git status`
+showed a peer holding UNCOMMITTED modelo 840 edits -- one modified constructs
+file and one untracked casilla file -- so the tree was read mid-edit; HEAD had
+not moved at all. Re-running returned 9. The remaining label failure is that
+same in-flight casilla awaiting its locale strings, which is theirs to finish.
+
+Last tick established that a red name is not evidence until the tree is known to
+have held still. This tick that guidance paid for itself twice in one sitting:
+once at 76 failures, once at 34 errors, both from a working tree nobody had
+committed.
+
+## Tick: what an authorable worklist line actually costs, measured on modelo 188
+
+Re-measured at tick start: authority CLEAN, queue confirmed finished, last
+tick's worklist classifier committed. Ten of the thirteen filing-capability
+lines are AUTHORABLE, so this tick went to author one.
+
+### Two candidate shortcuts, both closed by measurement
+
+The smallest authored export layout in the tree is FOUR lines -- modelo 193's
+`fichero-boe` carries an id, `legal_refs` and `source_refs` and no records at
+all. If a bare layout satisfied the capability gate, every worklist line could
+be closed by a stub. It cannot be taken: that file is a second layout beside
+three record-bearing ones, and reaching the gate that way would declare a
+capability the modelo does not have.
+
+The question it raised was worth asking anyway, and was answered by measurement
+rather than assumption: **six revisions ARE capable on layouts that declare no
+record** -- modelo 100's 2020 through 2025. That is legitimate and not a defect:
+their format is `xml_dictionary` with a `dictionary_source_ref`, so AEAT's
+dictionary supplies the record structure instead of an authored table. No
+`fixed_width` layout in the tree is recordless. The second shortcut -- authoring
+an `xml_dictionary` layout for a worklist modelo -- closes too: none of the ten
+authorable modelos has a bundled dictionary or XSD. They are all fixed-width.
+
+### The real cost, on the smallest line
+
+Modelo 188 was measured end to end because it is the smallest authorable line at
+40 design fields. Its diseño reads clean, both records tile 1..250 exactly, and
+the declarante record maps onto the five `resumen` casillas already declared.
+One apparent ambiguity resolved itself: the design prints "NÚMERO TOTAL DE
+PERCEPTORES" and "BASE RETENCIONES" TWICE, and the registry already explains why
+-- casilla 01 counts perceptores whose base is positive and casilla 04 those
+whose base is negative, "at offsets 136 and 175".
+
+What stops the layout is the second record. The 23 perceptor fields are
+repeating detail rows, which this registry models through detail-record
+BINDINGS, and modelo 188 declares none. Authoring only the declarante record
+would satisfy the capability gate while the modelo still could not file a
+complete declaration -- the silent-capability failure the worklist exists to
+prevent -- so it was not done. Modelo 182, the only worklist line that already
+has bindings, has five covering a much larger record: the same shape.
+
+That is the honest cost of an "AUTHORABLE" line, and it is why these are
+inventories rather than chores.
+
+### What was landed instead
+
+The registry's claim that its two perceptor counts sit at offsets 136 and 175
+lived only in a prose reason field. Nothing compared the casilla set to the
+diseño it cites, so the two could disagree and a future layout would be authored
+onto the disagreement.
+
+That claim is now checked: the diseño must carry one hoja-resumen field per
+declared `resumen` casilla, the integer/money split must match the widths AEAT
+prints (9 characters for a count, 15 for an amount), and the two counts must sit
+at 136 and 175. The design's offsets are not compared to themselves -- that
+would be tautological -- but the REGISTRY's declared set against the DESIGN's.
+
+Each of the three assertions was proved to bite under a mutation aimed at it
+specifically. The first control dropped a trailing field and two assertions
+fired while the offsets one did not, correctly: dropping the last amount leaves
+both counts where they were. Moving a count off 175 fired it.
+
+### Verified
+
+* the new module: 3 passed, each assertion independently proved to bite.
+* registry + generated-tree + application/registry: **8 failed, 5957 passed** --
+  exactly the eight declared inventories, with the tree measured quiescent
+  (0 added, 0 removed, 0 changed) across the whole run.
+* ruff clean.
+
+### Still open
+
+The eight inventories. Modelo 188's layout needs its perceptor detail-record
+bindings authored before the declarante record can be landed with it; that pair
+is one unit and should be taken as one.
