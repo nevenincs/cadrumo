@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d571e038050534b5764f6bce481ac99d7a5ad185979d75ea3132a7f2ef5289f7'
+body_hash: 'sha256:fe330a51c2efb707a9006cdb2504969ef6400e90409df36c8fade3f4b29e45d5'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-research]]"
   - "[[2026-08-22-secure-storage-performance-hardening-reference]]"

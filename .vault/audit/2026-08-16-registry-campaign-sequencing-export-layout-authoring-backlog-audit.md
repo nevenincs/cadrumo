@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:69330ff332637ba2f5de13baef6aeb691d786819abf208280c70de457c7df472'
+body_hash: 'sha256:d4cc923651324c64de5a48934bfbf585745859dddcfde69eccaa583ebbfc0cb1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14990,3 +14990,75 @@ The eight inventories. Three capability lines have now closed on this method
 modelos whose detail records are larger. The 28-line layout-design-applies
 inventory is the natural next target, since three of its lines are now this
 campaign's own and the fix is bundling designs or splitting revisions.
+
+## Tick: the 187/188/194 layouts withdrawn -- the peer's audit was right and the revisions said so themselves
+
+Re-measured at tick start: authority CLEAN, and a peer audit
+(`modelo 187 took the year-mismatch trade, and a third gate broke with it`)
+challenging last tick's decision directly.
+
+### The challenge, and why it holds
+
+Last tick authored export layouts for modelos 187, 188 and 194 from designs
+beginning in 2022, 2023 and 2024 against revisions claiming 2019 onward, and
+justified keeping them on the grounds that 25 pre-existing lines on
+`test_layout_design_applies_to_claimed_years` show the same shape.
+
+That justification was wrong, and the peer named why: those 25 lines are a
+DEFECT inventory, not precedent. Their note says modelo 181 "already carries
+this defect". Using a backlog of known defects to license three more inverts
+what the inventory is for.
+
+The concrete harm was specific and I had already stated it: for 2019-2021 these
+modelos previously REFUSED and would now EMIT, at byte offsets no bundled design
+evidences. Whether those offsets are actually wrong is unknown -- modelo 194's
+2023 and 2024 editions are coordinate-identical, so editions can be stable --
+but unknown is precisely the case for refusing rather than emitting.
+
+### The revisions had already said this, in their own review stamps
+
+The decisive evidence was not the audit but the registry. All three revisions
+carry a reviewer stamp reading "the record design's per-perceptor detail is NOT
+modelled and no export layout is declared NOT CLAIMED", and, on the span:
+
+> 0 comparable bundled design year(s) inside this revision's claimed span, so
+> AEAT's published record designs do not evidence the record layout for the
+> years this revision covers; closing that gap needs AEAT acquisition and is NOT
+> something this review does.
+
+So a reviewer had already determined that these layouts could not be grounded
+from the bundled corpus, and last tick's work contradicted a stamped review on
+all three modelos. Modelo 187 is `authority_grade = "applicability"`, not even
+filing-grade.
+
+### Withdrawn, and the alternatives that were considered first
+
+Narrowing each revision to its design's years was checked and rejected: the
+windows are `valid_from = 2019-01-01` grounded in the approving ordenes, so
+narrowing them would misstate the law to satisfy a gate. Splitting at the design
+boundary invents an era boundary the corpus does not evidence. `ExportLayoutDefinition`
+carries no year bound, so the layout cannot be scoped to its own design era.
+
+All three layouts, their 127 bindings, their export application links and the
+construct extensions were withdrawn. The anti-vacuity witness was restored to
+M182/M187 now that M187 refuses again.
+
+### Verified
+
+* worklist returns to **13 revisions across 12 modelos**; the layout-design
+  inventory returns to **25 lines**. Both sides of the trade are unwound.
+* the detail-row probe and printed-box-set gate pass; authority loads CLEAN.
+* registry + generated-tree + application/registry: the eight declared
+  inventories, plus modelo 036's ten unlabelled `decl.firma-*` casillas, which
+  are a peer's in-flight work. Two further reds passed in isolation, the tree
+  having gained a file mid-run.
+
+### What this leaves for the endpoint
+
+These three modelos cannot gain a filing layout from the bundled corpus at all.
+The blocker is AEAT acquisition of the 2019-2021 record designs, which is an
+operator action, not an authoring one. The capability worklist's "AUTHORABLE"
+classifier is too generous for exactly this reason: it asks whether a revision
+cites a registered design, not whether that design covers the years the revision
+claims. Those are different questions and this tick cost three modelos to learn
+it.
