@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from contextlib import ExitStack, suppress
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
@@ -49,10 +49,33 @@ def write_data_files(data_root: Path, data_files: Mapping[str, bytes]) -> None:
 
 
 def validated_data_path(value: str) -> PurePosixPath:
+    """Return ``value`` as a relative capsule path, or refuse it.
+
+    "Portable" is the whole contract: the value is parsed as POSIX because that
+    is the capsule's on-wire spelling, but it is JOINED onto a staging root on
+    whatever platform is running -- and a drive-qualified value means something
+    different to the two. ``"C:/x"`` is an ordinary two-component relative path
+    to :class:`~pathlib.PurePosixPath`, so it is neither absolute nor dotted and
+    clears the checks below; joined on Windows it discards the staging root
+    entirely and resolves to ``C:x``. ``"C:x"`` is worse, resolving against the
+    process's current directory on that drive.
+
+    So the POSIX reading alone cannot decide this, and the Windows reading is
+    the one that matters at the join. Both are consulted.
+
+    The empty-parts check is not redundant with the component check below it.
+    ``PurePosixPath`` normalises a lone ``.`` away, so ``"."`` and ``"./"``
+    parse to NO components at all -- the ``{"", ".", ".."}`` membership test
+    never sees the value it names, and the path resolves to the staging root
+    itself, which is a directory rather than a file to write.
+    """
     if not value or "\\" in value:
         raise ProfileCustodyRecordError("profile capsule data path must be a nonempty portable relative path")
     path = PurePosixPath(value)
-    if path.is_absolute() or any(component in {"", ".", ".."} for component in path.parts):
+    if not path.parts or path.is_absolute() or any(component in {"", ".", ".."} for component in path.parts):
+        raise ProfileCustodyRecordError("profile capsule data path escapes its staging root")
+    windows_reading = PureWindowsPath(value)
+    if windows_reading.drive or windows_reading.root:
         raise ProfileCustodyRecordError("profile capsule data path escapes its staging root")
     return path
 

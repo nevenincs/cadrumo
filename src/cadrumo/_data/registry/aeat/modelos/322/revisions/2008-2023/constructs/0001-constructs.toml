@@ -55,9 +55,6 @@ application_links = [
 ]
 filing_schedules = ["modelo-322-mensual"]
 deadline_windows = [
-    "modelo-322-2025-01",
-    "modelo-322-2025-06",
-    "modelo-322-2025-12",
 ]
 
 # Calculation-completeness manifest for revision 2008-2025: the

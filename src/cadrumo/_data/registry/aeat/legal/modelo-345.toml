@@ -322,3 +322,31 @@ published_at = 2025-12-16
 applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
 review_status = "reviewed"
+
+[sources."aeat-dr-345-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/02-345-ejercicio-2023-y-siguientes.pdf"
+sha256 = "94800d433248ad6bd9baf1213fe2ae512732d21520b923cc0ce2c044edd247de"
+bytes = 332516
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr345.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-345-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/04-345-diseno-de-registro-actualizado-en-2024.pdf"
+sha256 = "90b12b42a644c55793a93831cc279bc6cdaad832802d3e7b1f309a0743a46c1f"
+bytes = 245193
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/DR_Modelo_345_2024.pdf"
+review_status = "reviewed"

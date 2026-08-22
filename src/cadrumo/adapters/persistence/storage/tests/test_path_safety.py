@@ -9,13 +9,9 @@ import pytest
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .. import PathContainmentError
-from .._path_safety import safe_repository_id, safe_subpath
+from .._path_safety import safe_repository_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def _raise_unsafe_subpath(root: Path) -> None:
-    safe_subpath(root, "../escape", context="test")
 
 
 def _raise_unsafe_repository_id(_root: Path) -> None:
@@ -24,27 +20,8 @@ def _raise_unsafe_repository_id(_root: Path) -> None:
 
 def test_path_containment_errors_inherit_value_error(tmp_path: Path) -> None:
     """Legacy ``except ValueError`` callers must still catch typed errors."""
-    for operation in (_raise_unsafe_subpath, _raise_unsafe_repository_id):
-        with pytest.raises(ValueError):
-            operation(tmp_path)
-
-
-class TestSafeSubpath:
-    """``safe_subpath`` resolves nested relative paths and rejects escapes."""
-
-    def test_legitimate_nested_path(self, tmp_path: Path) -> None:
-        resolved = safe_subpath(tmp_path, "alpha/beta/gamma.json", context="test")
-        assert resolved == (tmp_path / "alpha" / "beta" / "gamma.json").resolve()
-
-    def test_unsafe_relative_paths_rejected(self, tmp_path: Path) -> None:
-        for unsafe_path in (
-            "../escape.json",
-            "/etc/passwd",
-            "alpha\\beta.json",
-            "alpha/../beta.json",
-        ):
-            with pytest.raises(PathContainmentError):
-                safe_subpath(tmp_path, unsafe_path, context="test")
+    with pytest.raises(ValueError):
+        _raise_unsafe_repository_id(tmp_path)
 
 
 class TestSafeRepositoryId:
@@ -102,7 +79,7 @@ class TestErrorCodeBinding:
 
     def test_path_containment_error_uses_localized_operator_message(self) -> None:
         with pytest.raises(PathContainmentError) as excinfo:
-            safe_subpath(Path("records"), "../escape", context="path")
+            safe_repository_id("../escape", context="path")
 
         with override_settings(cadrumo_output_language="en"):
             message = resolve_error_message(excinfo.value)
@@ -111,5 +88,5 @@ class TestErrorCodeBinding:
         assert message == "A computed path escapes the configured root directory."
         assert excinfo.value.context == {
             "path_context": "path",
-            "violation": "relative_subpath",
+            "violation": "repository_id_separator",
         }

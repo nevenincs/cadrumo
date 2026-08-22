@@ -109,6 +109,48 @@ def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
             provision_bucket_directory(tmp_path, bucket_id)
 
 
+def test_bucket_paths_rejects_a_dot_segment(tmp_path: Path) -> None:
+    """DISCRIMINATING: a dot segment carries no separator, so the sibling check passes it.
+
+    ``".."`` is the one that matters. It is not a bucket, and joining it
+    resolves ABOVE ``buckets/`` onto the storage root, which is a tree this
+    function is not meant to hand anyone paths over.
+    """
+    for bucket_id in ("..", ".", "..."):
+        with pytest.raises(BucketValidationError, match="dot segment"):
+            bucket_paths(tmp_path, bucket_id)
+        with pytest.raises(BucketValidationError, match="dot segment"):
+            provision_bucket_directory(tmp_path, bucket_id)
+
+
+def test_the_dot_segment_refusal_is_what_keeps_the_join_inside_buckets(tmp_path: Path) -> None:
+    """ANTI-VACUITY: pins the escape the refusal prevents, so it cannot be dropped quietly.
+
+    Asserting only that ``".."`` raises says nothing about WHY it must. This
+    states the consequence directly: every accepted id resolves underneath
+    ``buckets/``, and ``".."`` is excluded from that set precisely because it
+    would not.
+    """
+    buckets_dir = (bucket_paths(tmp_path, "alpha").bucket_dir).parent
+
+    assert bucket_paths(tmp_path, "alpha").bucket_dir.resolve().parent == buckets_dir.resolve()
+    # What the refused id would have produced, had it been accepted.
+    assert (buckets_dir / "..").resolve() == tmp_path.resolve()
+    assert buckets_dir.resolve() != tmp_path.resolve()
+
+
+def test_a_system_scoped_bucket_id_still_resolves(tmp_path: Path) -> None:
+    """ANTI-TAUTOLOGY: the refusal must not have widened onto legitimate ids.
+
+    Not every bucket id is a UUID -- ``system``, ``unsecured`` and
+    ``diagnostic-probe`` are real ids in the tree. A guard that refused those
+    too would pass the assertions above while breaking the surfaces that use
+    them, so the accepting direction is pinned as well.
+    """
+    for bucket_id in ("system", "unsecured", "diagnostic-probe", "a.b", "..alpha"):
+        assert bucket_paths(tmp_path, bucket_id).bucket_dir.name == bucket_id
+
+
 def test_bucket_paths_is_pure_no_filesystem_side_effects(tmp_path: Path) -> None:
     paths = bucket_paths(tmp_path, "alpha")
 

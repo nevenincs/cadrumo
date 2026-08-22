@@ -70,7 +70,7 @@ bindings = [
     "modelo-347-declarante-numero-personas-entidades",
     "modelo-347-declarante-importe-total-anual-operaciones",
 ]
-workbook_parity_refs = ["modelo-347-dr-2025", "modelo-347-dr-2011"]
+workbook_parity_refs = ["modelo-347-dr-2025"]
 live_cross_references = [
     "modelo-347-static-documentation",
     "modelo-347-filed-declarations-read",
@@ -91,13 +91,6 @@ export_layouts = ["generated-modelo-347-2025-y-siguientes-fichero"]
 filing_schedules = ["modelo-347-anual"]
 extraction_profiles = ["modelo-347-declaracion-pdf"]
 deadline_windows = [
-    "modelo-347-2018-0a",
-    "modelo-347-2019-0a",
-    "modelo-347-2020-0a",
-    "modelo-347-2021-0a",
-    "modelo-347-2022-0a",
-    "modelo-347-2023-0a",
-    "modelo-347-2024-0a",
     "modelo-347-2025-0a",
     "modelo-347-2026-0a",
 ]

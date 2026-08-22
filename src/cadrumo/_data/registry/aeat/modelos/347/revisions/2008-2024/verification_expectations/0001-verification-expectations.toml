@@ -22,7 +22,6 @@ discrepancy_causes = ["extraction_unreliable"]
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]

@@ -5,662 +5,635 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-2025:
+        2008-2023:
           casilla:
             '01':
-              help: null
+              help: Box 01 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [01]
             '02':
-              help: null
+              help: Box 02 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [02]
             '03':
-              help: null
+              help: Box 03 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [03]
             '04':
-              help: null
+              help: Box 04 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [04]
             '05':
-              help: null
+              help: Box 05 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [05]
             '06':
-              help: null
+              help: Box 06 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [06]
             '07':
-              help: null
+              help: Box 07 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [07]
             08:
-              help: null
+              help: Box 08 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [08]
             09:
-              help: null
+              help: Box 09 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [09]
             '10':
-              help: null
+              help: Box 10 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
                 on intra-group transactions [10]
             '107':
-              help: null
+              help: Box 107 of modelo 322, tax year 2008.
               label: Tax information by territory (only for taxable persons taxed
                 by several Administrations) - Common territory [107]
             '11':
-              help: null
+              help: Box 11 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
                 on intra-group transactions [11]
             '12':
-              help: null
+              help: Box 12 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime [12]
             '120':
-              help: null
+              help: Box 120 of modelo 322, tax year 2008.
               label: Transactions outside scope by place-of-supply rules (except those
                 in box 123) [120]
             '122':
-              help: null
+              help: Box 122 of modelo 322, tax year 2008.
               label: Taxable transactions with reverse charge [122]
             '123':
-              help: null
+              help: Box 123 of modelo 322, tax year 2008.
               label: Transactions outside scope by place-of-supply rules under the
                 one-stop-shop special regimes [123]
             '124':
-              help: null
+              help: Box 124 of modelo 322, tax year 2008.
               label: Taxable transactions under the one-stop-shop special regimes
                 [124]
             '125':
-              help: null
+              help: Box 125 of modelo 322, tax year 2008.
               label: Taxable transactions with reverse charge [125]
             '126':
-              help: null
+              help: Box 126 of modelo 322, tax year 2008.
               label: Transactions outside scope by place-of-supply rules under the
                 one-stop-shop special regimes [126]
             '127':
-              help: null
+              help: Box 127 of modelo 322, tax year 2008.
               label: Taxable transactions under the one-stop-shop special regimes
                 [127]
             '128':
-              help: null
+              help: Box 128 of modelo 322, tax year 2008.
               label: Intra-group transactions valued under arts. 78 y 79 LIVA [128]
             '13':
-              help: null
+              help: Box 13 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [13]
             '14':
-              help: null
+              help: Box 14 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [14]
             '15':
-              help: null
+              help: Box 15 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime [15]
             '150':
-              help: null
+              help: Box 150 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime [150]
             '151':
-              help: null
+              help: Box 151 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [151]
             '152':
-              help: null
+              help: Box 152 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [152]
             '153':
-              help: null
+              help: Box 153 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime [153]
             '154':
-              help: null
+              help: Box 154 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [154]
             '155':
-              help: null
+              help: Box 155 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [155]
             '156':
-              help: null
+              help: Box 156 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
                 [156]
             '157':
-              help: null
+              help: Box 157 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [157]
             '158':
-              help: null
+              help: Box 158 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [158]
             '159':
-              help: null
+              help: Box 159 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [159]
             '16':
-              help: null
+              help: Box 16 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [16]
             '160':
-              help: null
+              help: Box 160 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [160]
             '161':
-              help: null
+              help: Box 161 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [161]
             '162':
-              help: null
+              help: Box 162 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [162]
             '163':
-              help: null
+              help: Box 163 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [163]
             '164':
-              help: null
+              help: Box 164 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [164]
-            '165':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Other transactions under the general
-                regime. Taxable base
-            '166':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Other transactions under the general
-                regime. Rate %
-            '167':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Other transactions under the general
-                regime. Tax amount
-            '168':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Equivalence surcharge. Taxable base
-            '169':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Equivalence surcharge. Rate %
             '17':
-              help: null
+              help: Box 17 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [17]
-            '170':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Equivalence surcharge. Tax amount
             '171':
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
               label: Settlement. Output IVA. Intra-group transactions. Taxable base
-            '172':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Intra-group transactions. Rate %
-            '173':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Settlement. Output IVA. Intra-group transactions. Tax amount
             '18':
-              help: null
+              help: Box 18 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime [18]
             '19':
-              help: null
+              help: Box 19 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [19]
             '20':
-              help: null
+              help: Box 20 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [20]
             '21':
-              help: null
+              help: Box 21 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-Community acquisitions of goods
                 and services. Taxable base [21]
             '22':
-              help: null
+              help: Box 22 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Intra-Community acquisitions of goods
                 and services. Tax amount [22]
             '23':
-              help: null
-              label: null
+              help: Box 23 of modelo 322, tax year 2008.
+              label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+                charge (except intra-Community acquisitions) [23]
             '24':
-              help: null
-              label: null
+              help: Box 24 of modelo 322, tax year 2008.
+              label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+                charge (except intra-Community acquisitions). Cuota [24]
             '25':
-              help: null
+              help: Box 25 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
                 under the general regime. Taxable base [25]
             '26':
-              help: null
+              help: Box 26 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
                 under the general regime. Tax amount [26]
             '27':
-              help: null
+              help: Box 27 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
                 [27]
             '28':
-              help: null
+              help: Box 28 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [28]
             '29':
-              help: null
+              help: Box 29 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [29]
             '30':
-              help: null
+              help: Box 30 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
                 [30]
             '31':
-              help: null
+              help: Box 31 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [31]
             '32':
-              help: null
+              help: Box 32 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [32]
             '33':
-              help: null
+              help: Box 33 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
                 [33]
             '34':
-              help: null
+              help: Box 34 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [34]
             '35':
-              help: null
+              help: Box 35 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [35]
             '36':
-              help: null
+              help: Box 36 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of equivalence-surcharge
                 bases and amounts. Taxable base [36]
             '37':
-              help: null
+              help: Box 37 of modelo 322, tax year 2008.
               label: Settlement. VAT ACCRUED. Adjustment of equivalence-surcharge
                 bases and amounts. Tax amount [37]
             '38':
-              help: null
-              label: null
+              help: Box 38 of modelo 322, tax year 2008.
+              label: Total accrued cuota ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
             '39':
-              help: null
+              help: Box 39 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on current intra-group
                 transactions. Taxable base [39]
             '40':
-              help: null
+              help: Box 40 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on current intra-group
                 transactions. Tax amount [40]
             '41':
-              help: null
+              help: Box 41 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on intra-group transactions
                 in capital goods. Taxable base [41]
             '42':
-              help: null
+              help: Box 42 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on intra-group transactions
                 in capital goods. Tax amount [42]
             '43':
-              help: null
+              help: Box 43 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Adjustment of deductions on intra-group
                 transactions. Taxable base [43]
             '44':
-              help: null
+              help: Box 44 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Adjustment of deductions on intra-group
                 transactions. Tax amount [44]
             '45':
-              help: null
+              help: Box 45 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on other current domestic
                 transactions. Taxable base [45]
             '46':
-              help: null
+              help: Box 46 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on other current domestic
                 transactions. Tax amount [46]
             '47':
-              help: null
+              help: Box 47 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on other domestic transactions
                 in capital goods. Taxable base [47]
             '48':
-              help: null
+              help: Box 48 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on other domestic transactions
                 in capital goods. Tax amount [48]
             '49':
-              help: null
+              help: Box 49 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on imports of current
                 goods. Taxable base [49]
             '50':
-              help: null
+              help: Box 50 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on imports of current
                 goods. Tax amount [50]
             '500':
-              help: null
+              help: Box 500 of modelo 322, tax year 2008.
               label: Prorrata - 1 - CNAE code [500]
             '501':
-              help: null
+              help: Box 501 of modelo 322, tax year 2008.
               label: Prorrata - 1 - Transaction amount [501]
             '502':
-              help: null
+              help: Box 502 of modelo 322, tax year 2008.
               label: Prorrata - 1 - Amount of transactions with the right to deduct
                 [502]
             '503':
-              help: null
+              help: Box 503 of modelo 322, tax year 2008.
               label: Prorrata - 1 - Prorrata type [503]
             '504':
-              help: null
+              help: Box 504 of modelo 322, tax year 2008.
               label: Prorrata - 1 - Prorrata % [504]
             '505':
-              help: null
+              help: Box 505 of modelo 322, tax year 2008.
               label: Prorrata - 2 - CNAE code [505]
             '506':
-              help: null
+              help: Box 506 of modelo 322, tax year 2008.
               label: Prorrata - 2 - Transaction amount [506]
             '507':
-              help: null
+              help: Box 507 of modelo 322, tax year 2008.
               label: Prorrata - 2 - Amount of transactions with the right to deduct
                 [507]
             '508':
-              help: null
+              help: Box 508 of modelo 322, tax year 2008.
               label: Prorrata - 2 - Prorrata type [508]
             '509':
-              help: null
+              help: Box 509 of modelo 322, tax year 2008.
               label: Prorrata - 2 - Prorrata % [509]
             '51':
-              help: null
+              help: Box 51 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on imports of capital
                 goods. Taxable base [51]
             '510':
-              help: null
+              help: Box 510 of modelo 322, tax year 2008.
               label: Prorrata - 3 - CNAE code [510]
             '511':
-              help: null
+              help: Box 511 of modelo 322, tax year 2008.
               label: Prorrata - 3 - Transaction amount [511]
             '512':
-              help: null
+              help: Box 512 of modelo 322, tax year 2008.
               label: Prorrata - 3 - Amount of transactions with the right to deduct
                 [512]
             '513':
-              help: null
+              help: Box 513 of modelo 322, tax year 2008.
               label: Prorrata - 3 - Prorrata type [513]
             '514':
-              help: null
+              help: Box 514 of modelo 322, tax year 2008.
               label: Prorrata - 3 - Prorrata % [514]
             '515':
-              help: null
+              help: Box 515 of modelo 322, tax year 2008.
               label: Prorrata - 4 - CNAE code [515]
             '516':
-              help: null
+              help: Box 516 of modelo 322, tax year 2008.
               label: Prorrata - 4 - Transaction amount [516]
             '517':
-              help: null
+              help: Box 517 of modelo 322, tax year 2008.
               label: Prorrata - 4 - Amount of transactions with the right to deduct
                 [517]
             '518':
-              help: null
+              help: Box 518 of modelo 322, tax year 2008.
               label: Prorrata - 4 - Prorrata type [518]
             '519':
-              help: null
+              help: Box 519 of modelo 322, tax year 2008.
               label: Prorrata - 4 - Prorrata % [519]
             '52':
-              help: null
+              help: Box 52 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. For input tax on imports of capital
                 goods. Tax amount [52]
             '520':
-              help: null
+              help: Box 520 of modelo 322, tax year 2008.
               label: Prorrata - 5 - CNAE code [520]
             '521':
-              help: null
+              help: Box 521 of modelo 322, tax year 2008.
               label: Prorrata - 5 - Transaction amount [521]
             '522':
-              help: null
+              help: Box 522 of modelo 322, tax year 2008.
               label: Prorrata - 5 - Amount of transactions with the right to deduct
                 [522]
             '523':
-              help: null
+              help: Box 523 of modelo 322, tax year 2008.
               label: Prorrata - 5 - Prorrata type [523]
             '524':
-              help: null
+              help: Box 524 of modelo 322, tax year 2008.
               label: Prorrata - 5 - Prorrata % [524]
             '53':
-              help: null
+              help: Box 53 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. On intra-Community acquisitions of
                 current goods and services. Taxable base [53]
             '54':
-              help: null
+              help: Box 54 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. On intra-Community acquisitions of
                 current goods and services. Tax amount [54]
             '55':
-              help: null
+              help: Box 55 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. On intra-Community acquisitions of
                 capital goods. Taxable base [55]
             '56':
-              help: null
+              help: Box 56 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. On intra-Community acquisitions of
                 capital goods. Tax amount [56]
             '57':
-              help: null
+              help: Box 57 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Adjustment of deductions on remaining
                 transactions (non intra-group). Taxable base [57]
             '58':
-              help: null
+              help: Box 58 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Adjustment of deductions on remaining
                 transactions (non intra-group). Tax amount [58]
             '59':
-              help: null
+              help: Box 59 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Compensation under the special A.G.
                 y P regime. Tax amount [59]
             '60':
-              help: null
+              help: Box 60 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Capital-goods regularisation. Tax
                 amount [60]
             '61':
-              help: null
+              help: Box 61 of modelo 322, tax year 2008.
               label: Settlement. Deductible VAT. Regularisation for the definitive
                 prorrata percentage. Tax amount [61]
             '62':
-              help: null
-              label: null
+              help: Box 62 of modelo 322, tax year 2008.
+              label: Total deductible ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
             '63':
-              help: null
-              label: null
+              help: Box 63 of modelo 322, tax year 2008.
+              label: Liquidación (continued). Difference ([38] - [62]) . [63]
             '64':
-              help: null
+              help: Box 64 of modelo 322, tax year 2008.
               label: Settlement (continued). Attributable to the State Administration
                 (%) [64]
             '65':
-              help: null
+              help: Box 65 of modelo 322, tax year 2008.
               label: Settlement (continued). Attributable to the State Administration
                 [65]
             '66':
-              help: null
+              help: Box 66 of modelo 322, tax year 2008.
               label: Settlement (continued). Amounts to offset from periods before
                 joining the group [66]
             '67':
-              help: null
+              help: Box 67 of modelo 322, tax year 2008.
               label: Settlement (continued). Only for taxable persons taxed jointly
                 by the State Administration and the Foral Treasuries. Result of the
                 annual regularisation [67]
             '68':
-              help: null
-              label: null
+              help: Box 68 of modelo 322, tax year 2008.
+              label: Liquidación (continued). Result ([65] - [66] + [67]) [68]
             '69':
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
               label: 'To deduct (only for a supplementary self-assessment): result
                 of earlier self-assessments filed for the same item, year and period'
             '70':
-              help: null
-              label: null
+              help: Box 70 of modelo 322, tax year 2008.
+              label: Result of the self-assessment ([68] - [69]) [70]
             '700':
-              help: null
+              help: Box 700 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on domestic transactions. Current goods
                 and services. Taxable base [700]
             '701':
-              help: null
+              help: Box 701 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on domestic transactions. Current goods
                 and services. Deductible tax amount [701]
             '702':
-              help: null
+              help: Box 702 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on domestic transactions. Capital goods.
                 Taxable base [702]
             '703':
-              help: null
+              help: Box 703 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on domestic transactions. Capital goods.
                 Deductible tax amount [703]
             '704':
-              help: null
+              help: Box 704 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on imports. Current goods. Taxable base
                 [704]
             '705':
-              help: null
+              help: Box 705 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on imports. Current goods. Deductible
                 tax amount [705]
             '706':
-              help: null
+              help: Box 706 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on imports. Capital goods. Taxable base
                 [706]
             '707':
-              help: null
+              help: Box 707 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on imports. Capital goods. Deductible
                 tax amount [707]
             '708':
-              help: null
+              help: Box 708 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Taxable base [708]
             '709':
-              help: null
+              help: Box 709 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Deductible tax amount [709]
             '71':
-              help: null
+              help: Box 71 of modelo 322, tax year 2008.
               label: Additional information. Intra-Community supplies of goods and
                 services [71]
             '710':
-              help: null
+              help: Box 710 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on intra-Community acquisitions. Capital
                 goods. Taxable base [710]
             '711':
-              help: null
+              help: Box 711 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Deductible tax amount [711]
             '712':
-              help: null
+              help: Box 712 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Compensation under the special agriculture, livestock
                 and fisheries regime. Taxable base [712]
             '713':
-              help: null
+              help: Box 713 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Compensation under the special agriculture, livestock
                 and fisheries regime. Deductible tax amount [713]
             '714':
-              help: null
+              help: Box 714 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Adjustment of deductions. Taxable base [714]
             '715':
-              help: null
+              help: Box 715 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Adjustment of deductions. Deductible tax amount [715]
             '716':
-              help: null
+              help: Box 716 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 1. Capital-goods regularisation. Deductible tax amount
                 [716]
             '717':
-              help: null
-              label: null
+              help: Box 717 of modelo 322, tax year 2008.
+              label: 'Activities under differentiated deduction regimes. Deductible
+                IVA: Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711
+                + 713 + 715 + 716). Deductible cuota [717]'
             '718':
-              help: null
+              help: Box 718 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on domestic transactions. Current goods
                 and services. Taxable base [718]
             '719':
-              help: null
+              help: Box 719 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on domestic transactions. Current goods
                 and services. Deductible tax amount [719]
             '72':
-              help: null
+              help: Box 72 of modelo 322, tax year 2008.
               label: Additional information. Exports and assimilated transactions
                 [72]
             '720':
-              help: null
+              help: Box 720 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on domestic transactions. Capital goods.
                 Taxable base [720]
             '721':
-              help: null
+              help: Box 721 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on domestic transactions. Capital goods.
                 Deductible tax amount [721]
             '722':
-              help: null
+              help: Box 722 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on imports. Current goods. Taxable base
                 [722]
             '723':
-              help: null
+              help: Box 723 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on imports. Current goods. Deductible
                 tax amount [723]
             '724':
-              help: null
+              help: Box 724 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on imports. Capital goods. Taxable base
                 [724]
             '725':
-              help: null
+              help: Box 725 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on imports. Capital goods. Deductible
                 tax amount [725]
             '726':
-              help: null
+              help: Box 726 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Taxable base [726]
             '727':
-              help: null
+              help: Box 727 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Deductible tax amount [727]
             '728':
-              help: null
+              help: Box 728 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on intra-Community acquisitions. Capital
                 goods. Taxable base [728]
             '729':
-              help: null
+              help: Box 729 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Deductible tax amount [729]
             '730':
-              help: null
+              help: Box 730 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Compensation under the special agriculture, livestock
                 and fisheries regime. Taxable base [730]
             '731':
-              help: null
+              help: Box 731 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Compensation under the special agriculture, livestock
                 and fisheries regime. Deductible tax amount [731]
             '732':
-              help: null
+              help: Box 732 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Adjustment of deductions. Taxable base [732]
             '733':
-              help: null
+              help: Box 733 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Adjustment of deductions. Deductible tax amount [733]
             '734':
-              help: null
+              help: Box 734 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Capital-goods regularisation. Deductible tax amount
                 [734]
             '735':
-              help: null
-              label: null
+              help: Box 735 of modelo 322, tax year 2008.
+              label: 'Activities under differentiated deduction regimes. Deductible
+                IVA: Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729
+                + 731 + 733 + 734). Deductible cuota [735]'
             '74':
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
@@ -672,17 +645,17 @@ modelo:
               label: Acquisitions of goods and services covered by the cash-accounting
                 special regime. Input tax
             '76':
-              help: null
+              help: Box 76 of modelo 322, tax year 2008.
               label: Regularisation of amounts under art. 80.Cinco.5ª LIVA [76]
             '77':
-              help: null
+              help: Box 77 of modelo 322, tax year 2008.
               label: Import VAT assessed by Customs pending payment [77]
             '79':
-              help: null
+              help: Box 79 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Supplies of immovable property
                 and non-habitual financial transactions [79]
             '80':
-              help: null
+              help: Box 80 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions under the
                 general regime [80]
             '81':
@@ -691,63 +664,65 @@ modelo:
               label: Transactions under the cash-accounting special regime accrued
                 under the general rule of art. 75 LIVA
             '83':
-              help: null
+              help: Box 83 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Exempt transactions without
                 the right to deduct [83]
             '84':
-              help: null
+              help: Box 84 of modelo 322, tax year 2008.
               label: Transactions outside scope by place-of-supply rules (except those
                 in box 126) [84]
             '86':
-              help: null
+              help: Box 86 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions under the
                 simplified regime [86]
             '88':
-              help: null
-              label: null
+              help: Box 88 of modelo 322, tax year 2008.
+              label: Transactions carried out in the year. Total turnover (art. 121
+                Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86
+                + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
-              help: null
+              help: Box 89 of modelo 322, tax year 2008.
               label: Tax information by territory (only for taxable persons taxed
                 by several Administrations) - Álava [89]
             '90':
-              help: null
+              help: Box 90 of modelo 322, tax year 2008.
               label: Tax information by territory (only for taxable persons taxed
                 by several Administrations) - Gipuzkoa [90]
             '91':
-              help: null
+              help: Box 91 of modelo 322, tax year 2008.
               label: Tax information by territory (only for taxable persons taxed
                 by several Administrations) - Biscay [91]
             '92':
-              help: null
+              help: Box 92 of modelo 322, tax year 2008.
               label: Tax information by territory (only for taxable persons taxed
                 by several Administrations) - Navarre [92]
             '93':
-              help: null
+              help: Box 93 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Intra-Community supplies
                 of goods and services [93]
             '94':
-              help: null
+              help: Box 94 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Exports and other exempt
                 transactions with the right to deduct [94]
             '95':
-              help: null
+              help: Box 95 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions under the
                 special agriculture, livestock and fisheries regime [95]
             '96':
-              help: null
+              help: Box 96 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions by taxable
                 persons under the special equivalence surcharge regime [96]
             '97':
-              help: null
+              help: Box 97 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions under the
                 special regime for second-hand goods, works of art, antiques and collectors'
                 items [97]
             '98':
-              help: null
+              help: Box 98 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Transactions under the
                 special Travel Agencies regime [98]
             '99':
-              help: null
+              help: Box 99 of modelo 322, tax year 2008.
               label: Transactions carried out in the year. Supplies of capital goods
                 [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
@@ -792,7 +767,7 @@ modelo:
               label: Identification. Are you a recipient of transactions under the
                 cash-accounting special regime?
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Box ejercicio of modelo 322, tax year 2008.
               label: Filing year to which the return relates
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: Field declared on modelo 322, the group-of-entities individual
@@ -812,7 +787,7 @@ modelo:
                 monthly self-assessment.
               label: Identification. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: Box periodo of modelo 322, tax year 2008.
               label: Period (annual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: Field declared on modelo 322, the group-of-entities individual
@@ -839,28 +814,903 @@ modelo:
                 monthly self-assessment.
               label: Identification. Is there a volume of transactions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: Box iva.autorepercutido.intracomunitaria of modelo 322, tax year
+                2008.
               label: Reverse-charge VAT amount on intra-Community acquisitions
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
+              help: Box iva.cuota-deducible-total of modelo 322, tax year 2008.
               label: Total deductible VAT amount
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
+              help: Box iva.cuota-devengada-total of modelo 322, tax year 2008.
               label: Total accrued VAT amount
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: Total output VAT calculated at the standard 21% rate.
               label: Output VAT amount at the standard rate (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
+              help: Box iva.repercutido.reducido of modelo 322, tax year 2008.
               label: Output VAT amount at the reduced rate (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
+              help: Box iva.repercutido.super-reducido of modelo 322, tax year 2008.
               label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
+              help: Box iva.resultado-regimen-general of modelo 322, tax year 2008.
               label: General regime result
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
+              help: Box iva.soportado.interiores of modelo 322, tax year 2008.
+              label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: Modelo 322 IVA group of entities, individual return
+          field:
+            label: Modelo 322, tax years 2008 to 2025
+        2024-2025:
+          casilla:
+            '01':
+              help: Box 01 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
+                [01]
+            '02':
+              help: Box 02 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [02]
+            '03':
+              help: Box 03 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
+                [03]
+            '04':
+              help: Box 04 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
+                [04]
+            '05':
+              help: Box 05 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [05]
+            '06':
+              help: Box 06 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
+                [06]
+            '07':
+              help: Box 07 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
+                [07]
+            08:
+              help: Box 08 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [08]
+            09:
+              help: Box 09 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
+                [09]
+            '10':
+              help: Box 10 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
+                on intra-group transactions [10]
+            '107':
+              help: Box 107 of modelo 322, tax year 2024.
+              label: Tax information by territory (only for taxable persons taxed
+                by several Administrations) - Common territory [107]
+            '11':
+              help: Box 11 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
+                on intra-group transactions [11]
+            '12':
+              help: Box 12 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime [12]
+            '120':
+              help: Box 120 of modelo 322, tax year 2024.
+              label: Transactions outside scope by place-of-supply rules (except those
+                in box 123) [120]
+            '122':
+              help: Box 122 of modelo 322, tax year 2024.
+              label: Taxable transactions with reverse charge [122]
+            '123':
+              help: Box 123 of modelo 322, tax year 2024.
+              label: Transactions outside scope by place-of-supply rules under the
+                one-stop-shop special regimes [123]
+            '124':
+              help: Box 124 of modelo 322, tax year 2024.
+              label: Taxable transactions under the one-stop-shop special regimes
+                [124]
+            '125':
+              help: Box 125 of modelo 322, tax year 2024.
+              label: Taxable transactions with reverse charge [125]
+            '126':
+              help: Box 126 of modelo 322, tax year 2024.
+              label: Transactions outside scope by place-of-supply rules under the
+                one-stop-shop special regimes [126]
+            '127':
+              help: Box 127 of modelo 322, tax year 2024.
+              label: Taxable transactions under the one-stop-shop special regimes
+                [127]
+            '128':
+              help: Box 128 of modelo 322, tax year 2024.
+              label: Intra-group transactions valued under arts. 78 y 79 LIVA [128]
+            '13':
+              help: Box 13 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Rate % [13]
+            '14':
+              help: Box 14 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Tax amount [14]
+            '15':
+              help: Box 15 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime [15]
+            '150':
+              help: Box 150 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime [150]
+            '151':
+              help: Box 151 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Rate % [151]
+            '152':
+              help: Box 152 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Tax amount [152]
+            '153':
+              help: Box 153 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime [153]
+            '154':
+              help: Box 154 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Rate % [154]
+            '155':
+              help: Box 155 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Tax amount [155]
+            '156':
+              help: Box 156 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
+                [156]
+            '157':
+              help: Box 157 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [157]
+            '158':
+              help: Box 158 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [158]
+            '159':
+              help: Box 159 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
+                [159]
+            '16':
+              help: Box 16 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Rate % [16]
+            '160':
+              help: Box 160 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [160]
+            '161':
+              help: Box 161 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
+                [161]
+            '162':
+              help: Box 162 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
+                [162]
+            '163':
+              help: Box 163 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [163]
+            '164':
+              help: Box 164 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
+                [164]
+            '165':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Taxable base
+            '166':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Rate %
+            '167':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Other transactions under the general
+                regime. Tax amount
+            '168':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Taxable base
+            '169':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Rate %
+            '17':
+              help: Box 17 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Tax amount [17]
+            '170':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Equivalence surcharge. Tax amount
+            '171':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Taxable base
+            '172':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Rate %
+            '173':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Settlement. Output IVA. Intra-group transactions. Tax amount
+            '18':
+              help: Box 18 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime [18]
+            '19':
+              help: Box 19 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Rate % [19]
+            '20':
+              help: Box 20 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Remaining transactions under the general
+                regime. Tax amount [20]
+            '21':
+              help: Box 21 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-Community acquisitions of goods
+                and services. Taxable base [21]
+            '22':
+              help: Box 22 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Intra-Community acquisitions of goods
+                and services. Tax amount [22]
+            '23':
+              help: Box 23 of modelo 322, tax year 2024.
+              label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+                charge (except intra-Community acquisitions) [23]
+            '24':
+              help: Box 24 of modelo 322, tax year 2024.
+              label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+                charge (except intra-Community acquisitions). Cuota [24]
+            '25':
+              help: Box 25 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
+                under the general regime. Taxable base [25]
+            '26':
+              help: Box 26 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of bases and tax amounts
+                under the general regime. Tax amount [26]
+            '27':
+              help: Box 27 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
+                [27]
+            '28':
+              help: Box 28 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [28]
+            '29':
+              help: Box 29 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [29]
+            '30':
+              help: Box 30 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
+                [30]
+            '31':
+              help: Box 31 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [31]
+            '32':
+              help: Box 32 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [32]
+            '33':
+              help: Box 33 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
+                [33]
+            '34':
+              help: Box 34 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [34]
+            '35':
+              help: Box 35 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [35]
+            '36':
+              help: Box 36 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of equivalence-surcharge
+                bases and amounts. Taxable base [36]
+            '37':
+              help: Box 37 of modelo 322, tax year 2024.
+              label: Settlement. VAT ACCRUED. Adjustment of equivalence-surcharge
+                bases and amounts. Tax amount [37]
+            '38':
+              help: Box 38 of modelo 322, tax year 2024.
+              label: Total accrued cuota ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
+            '39':
+              help: Box 39 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on current intra-group
+                transactions. Taxable base [39]
+            '40':
+              help: Box 40 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on current intra-group
+                transactions. Tax amount [40]
+            '41':
+              help: Box 41 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on intra-group transactions
+                in capital goods. Taxable base [41]
+            '42':
+              help: Box 42 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on intra-group transactions
+                in capital goods. Tax amount [42]
+            '43':
+              help: Box 43 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Adjustment of deductions on intra-group
+                transactions. Taxable base [43]
+            '44':
+              help: Box 44 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Adjustment of deductions on intra-group
+                transactions. Tax amount [44]
+            '45':
+              help: Box 45 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on other current domestic
+                transactions. Taxable base [45]
+            '46':
+              help: Box 46 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on other current domestic
+                transactions. Tax amount [46]
+            '47':
+              help: Box 47 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on other domestic transactions
+                in capital goods. Taxable base [47]
+            '48':
+              help: Box 48 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on other domestic transactions
+                in capital goods. Tax amount [48]
+            '49':
+              help: Box 49 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on imports of current
+                goods. Taxable base [49]
+            '50':
+              help: Box 50 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on imports of current
+                goods. Tax amount [50]
+            '500':
+              help: Box 500 of modelo 322, tax year 2024.
+              label: Prorrata - 1 - CNAE code [500]
+            '501':
+              help: Box 501 of modelo 322, tax year 2024.
+              label: Prorrata - 1 - Transaction amount [501]
+            '502':
+              help: Box 502 of modelo 322, tax year 2024.
+              label: Prorrata - 1 - Amount of transactions with the right to deduct
+                [502]
+            '503':
+              help: Box 503 of modelo 322, tax year 2024.
+              label: Prorrata - 1 - Prorrata type [503]
+            '504':
+              help: Box 504 of modelo 322, tax year 2024.
+              label: Prorrata - 1 - Prorrata % [504]
+            '505':
+              help: Box 505 of modelo 322, tax year 2024.
+              label: Prorrata - 2 - CNAE code [505]
+            '506':
+              help: Box 506 of modelo 322, tax year 2024.
+              label: Prorrata - 2 - Transaction amount [506]
+            '507':
+              help: Box 507 of modelo 322, tax year 2024.
+              label: Prorrata - 2 - Amount of transactions with the right to deduct
+                [507]
+            '508':
+              help: Box 508 of modelo 322, tax year 2024.
+              label: Prorrata - 2 - Prorrata type [508]
+            '509':
+              help: Box 509 of modelo 322, tax year 2024.
+              label: Prorrata - 2 - Prorrata % [509]
+            '51':
+              help: Box 51 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on imports of capital
+                goods. Taxable base [51]
+            '510':
+              help: Box 510 of modelo 322, tax year 2024.
+              label: Prorrata - 3 - CNAE code [510]
+            '511':
+              help: Box 511 of modelo 322, tax year 2024.
+              label: Prorrata - 3 - Transaction amount [511]
+            '512':
+              help: Box 512 of modelo 322, tax year 2024.
+              label: Prorrata - 3 - Amount of transactions with the right to deduct
+                [512]
+            '513':
+              help: Box 513 of modelo 322, tax year 2024.
+              label: Prorrata - 3 - Prorrata type [513]
+            '514':
+              help: Box 514 of modelo 322, tax year 2024.
+              label: Prorrata - 3 - Prorrata % [514]
+            '515':
+              help: Box 515 of modelo 322, tax year 2024.
+              label: Prorrata - 4 - CNAE code [515]
+            '516':
+              help: Box 516 of modelo 322, tax year 2024.
+              label: Prorrata - 4 - Transaction amount [516]
+            '517':
+              help: Box 517 of modelo 322, tax year 2024.
+              label: Prorrata - 4 - Amount of transactions with the right to deduct
+                [517]
+            '518':
+              help: Box 518 of modelo 322, tax year 2024.
+              label: Prorrata - 4 - Prorrata type [518]
+            '519':
+              help: Box 519 of modelo 322, tax year 2024.
+              label: Prorrata - 4 - Prorrata % [519]
+            '52':
+              help: Box 52 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. For input tax on imports of capital
+                goods. Tax amount [52]
+            '520':
+              help: Box 520 of modelo 322, tax year 2024.
+              label: Prorrata - 5 - CNAE code [520]
+            '521':
+              help: Box 521 of modelo 322, tax year 2024.
+              label: Prorrata - 5 - Transaction amount [521]
+            '522':
+              help: Box 522 of modelo 322, tax year 2024.
+              label: Prorrata - 5 - Amount of transactions with the right to deduct
+                [522]
+            '523':
+              help: Box 523 of modelo 322, tax year 2024.
+              label: Prorrata - 5 - Prorrata type [523]
+            '524':
+              help: Box 524 of modelo 322, tax year 2024.
+              label: Prorrata - 5 - Prorrata % [524]
+            '53':
+              help: Box 53 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. On intra-Community acquisitions of
+                current goods and services. Taxable base [53]
+            '54':
+              help: Box 54 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. On intra-Community acquisitions of
+                current goods and services. Tax amount [54]
+            '55':
+              help: Box 55 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. On intra-Community acquisitions of
+                capital goods. Taxable base [55]
+            '56':
+              help: Box 56 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. On intra-Community acquisitions of
+                capital goods. Tax amount [56]
+            '57':
+              help: Box 57 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Adjustment of deductions on remaining
+                transactions (non intra-group). Taxable base [57]
+            '58':
+              help: Box 58 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Adjustment of deductions on remaining
+                transactions (non intra-group). Tax amount [58]
+            '59':
+              help: Box 59 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Compensation under the special A.G.
+                y P regime. Tax amount [59]
+            '60':
+              help: Box 60 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Capital-goods regularisation. Tax
+                amount [60]
+            '61':
+              help: Box 61 of modelo 322, tax year 2024.
+              label: Settlement. Deductible VAT. Regularisation for the definitive
+                prorrata percentage. Tax amount [61]
+            '62':
+              help: Box 62 of modelo 322, tax year 2024.
+              label: Total deductible ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
+            '63':
+              help: Box 63 of modelo 322, tax year 2024.
+              label: Liquidación (continued). Difference ([38] - [62]) . [63]
+            '64':
+              help: Box 64 of modelo 322, tax year 2024.
+              label: Settlement (continued). Attributable to the State Administration
+                (%) [64]
+            '65':
+              help: Box 65 of modelo 322, tax year 2024.
+              label: Settlement (continued). Attributable to the State Administration
+                [65]
+            '66':
+              help: Box 66 of modelo 322, tax year 2024.
+              label: Settlement (continued). Amounts to offset from periods before
+                joining the group [66]
+            '67':
+              help: Box 67 of modelo 322, tax year 2024.
+              label: Settlement (continued). Only for taxable persons taxed jointly
+                by the State Administration and the Foral Treasuries. Result of the
+                annual regularisation [67]
+            '68':
+              help: Box 68 of modelo 322, tax year 2024.
+              label: Liquidación (continued). Result ([65] - [66] + [67]) [68]
+            '69':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'To deduct (only for a supplementary self-assessment): result
+                of earlier self-assessments filed for the same item, year and period'
+            '70':
+              help: Box 70 of modelo 322, tax year 2024.
+              label: Result of the self-assessment ([68] - [69]) [70]
+            '700':
+              help: Box 700 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on domestic transactions. Current goods
+                and services. Taxable base [700]
+            '701':
+              help: Box 701 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on domestic transactions. Current goods
+                and services. Deductible tax amount [701]
+            '702':
+              help: Box 702 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on domestic transactions. Capital goods.
+                Taxable base [702]
+            '703':
+              help: Box 703 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on domestic transactions. Capital goods.
+                Deductible tax amount [703]
+            '704':
+              help: Box 704 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on imports. Current goods. Taxable base
+                [704]
+            '705':
+              help: Box 705 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on imports. Current goods. Deductible
+                tax amount [705]
+            '706':
+              help: Box 706 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on imports. Capital goods. Taxable base
+                [706]
+            '707':
+              help: Box 707 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on imports. Capital goods. Deductible
+                tax amount [707]
+            '708':
+              help: Box 708 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Taxable base [708]
+            '709':
+              help: Box 709 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Deductible tax amount [709]
+            '71':
+              help: Box 71 of modelo 322, tax year 2024.
+              label: Additional information. Intra-Community supplies of goods and
+                services [71]
+            '710':
+              help: Box 710 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on intra-Community acquisitions. Capital
+                goods. Taxable base [710]
+            '711':
+              help: Box 711 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Deductible tax amount [711]
+            '712':
+              help: Box 712 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Compensation under the special agriculture, livestock
+                and fisheries regime. Taxable base [712]
+            '713':
+              help: Box 713 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Compensation under the special agriculture, livestock
+                and fisheries regime. Deductible tax amount [713]
+            '714':
+              help: Box 714 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Adjustment of deductions. Taxable base [714]
+            '715':
+              help: Box 715 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Adjustment of deductions. Deductible tax amount [715]
+            '716':
+              help: Box 716 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 1. Capital-goods regularisation. Deductible tax amount
+                [716]
+            '717':
+              help: Box 717 of modelo 322, tax year 2024.
+              label: 'Activities under differentiated deduction regimes. Deductible
+                IVA: Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711
+                + 713 + 715 + 716). Deductible cuota [717]'
+            '718':
+              help: Box 718 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on domestic transactions. Current goods
+                and services. Taxable base [718]
+            '719':
+              help: Box 719 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on domestic transactions. Current goods
+                and services. Deductible tax amount [719]
+            '72':
+              help: Box 72 of modelo 322, tax year 2024.
+              label: Additional information. Exports and assimilated transactions
+                [72]
+            '720':
+              help: Box 720 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on domestic transactions. Capital goods.
+                Taxable base [720]
+            '721':
+              help: Box 721 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on domestic transactions. Capital goods.
+                Deductible tax amount [721]
+            '722':
+              help: Box 722 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on imports. Current goods. Taxable base
+                [722]
+            '723':
+              help: Box 723 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on imports. Current goods. Deductible
+                tax amount [723]
+            '724':
+              help: Box 724 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on imports. Capital goods. Taxable base
+                [724]
+            '725':
+              help: Box 725 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on imports. Capital goods. Deductible
+                tax amount [725]
+            '726':
+              help: Box 726 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Taxable base [726]
+            '727':
+              help: Box 727 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Deductible tax amount [727]
+            '728':
+              help: Box 728 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on intra-Community acquisitions. Capital
+                goods. Taxable base [728]
+            '729':
+              help: Box 729 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
+                goods and services. Deductible tax amount [729]
+            '730':
+              help: Box 730 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Compensation under the special agriculture, livestock
+                and fisheries regime. Taxable base [730]
+            '731':
+              help: Box 731 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Compensation under the special agriculture, livestock
+                and fisheries regime. Deductible tax amount [731]
+            '732':
+              help: Box 732 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Adjustment of deductions. Taxable base [732]
+            '733':
+              help: Box 733 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Adjustment of deductions. Deductible tax amount [733]
+            '734':
+              help: Box 734 of modelo 322, tax year 2024.
+              label: Activities with differentiated deduction regimes. Deductible
+                VAT. Group 2. Capital-goods regularisation. Deductible tax amount
+                [734]
+            '735':
+              help: Box 735 of modelo 322, tax year 2024.
+              label: 'Activities under differentiated deduction regimes. Deductible
+                IVA: Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729
+                + 731 + 733 + 734). Deductible cuota [735]'
+            '74':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Taxable base
+            '75':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Acquisitions of goods and services covered by the cash-accounting
+                special regime. Input tax
+            '76':
+              help: Box 76 of modelo 322, tax year 2024.
+              label: Regularisation of amounts under art. 80.Cinco.5ª LIVA [76]
+            '77':
+              help: Box 77 of modelo 322, tax year 2024.
+              label: Import VAT assessed by Customs pending payment [77]
+            '79':
+              help: Box 79 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Supplies of immovable property
+                and non-habitual financial transactions [79]
+            '80':
+              help: Box 80 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions under the
+                general regime [80]
+            '81':
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Transactions under the cash-accounting special regime accrued
+                under the general rule of art. 75 LIVA
+            '83':
+              help: Box 83 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Exempt transactions without
+                the right to deduct [83]
+            '84':
+              help: Box 84 of modelo 322, tax year 2024.
+              label: Transactions outside scope by place-of-supply rules (except those
+                in box 126) [84]
+            '86':
+              help: Box 86 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions under the
+                simplified regime [86]
+            '88':
+              help: Box 88 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Total turnover (art. 121
+                Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86
+                + 95 + 96 + 97 + 98 - 79 - 99) [88]
+            '89':
+              help: Box 89 of modelo 322, tax year 2024.
+              label: Tax information by territory (only for taxable persons taxed
+                by several Administrations) - Álava [89]
+            '90':
+              help: Box 90 of modelo 322, tax year 2024.
+              label: Tax information by territory (only for taxable persons taxed
+                by several Administrations) - Gipuzkoa [90]
+            '91':
+              help: Box 91 of modelo 322, tax year 2024.
+              label: Tax information by territory (only for taxable persons taxed
+                by several Administrations) - Biscay [91]
+            '92':
+              help: Box 92 of modelo 322, tax year 2024.
+              label: Tax information by territory (only for taxable persons taxed
+                by several Administrations) - Navarre [92]
+            '93':
+              help: Box 93 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Intra-Community supplies
+                of goods and services [93]
+            '94':
+              help: Box 94 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Exports and other exempt
+                transactions with the right to deduct [94]
+            '95':
+              help: Box 95 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions under the
+                special agriculture, livestock and fisheries regime [95]
+            '96':
+              help: Box 96 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions by taxable
+                persons under the special equivalence surcharge regime [96]
+            '97':
+              help: Box 97 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions under the
+                special regime for second-hand goods, works of art, antiques and collectors'
+                items [97]
+            '98':
+              help: Box 98 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Transactions under the
+                special Travel Agencies regime [98]
+            '99':
+              help: Box 99 of modelo 322, tax year 2024.
+              label: Transactions carried out in the year. Supplies of capital goods
+                [99]
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 1
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 1
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 2
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 2
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 3
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 3
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 4
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 4
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: Completed only in the last period of the return.
+              label: Activity code - Other 5
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Other 5
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: Completed only in the last period of the return.
+              label: Activity code - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: Completed only in the last period of the return.
+              label: IAE heading - Principal
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you a recipient of transactions under the
+                cash-accounting special regime?
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 322, tax year 2024.
+              label: Filing year to which the return relates
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. NIF of the dominant entity
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you exempt from the annual IVA summary return,
+                modelo 390?
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Group number
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Dominant / dependent
+            x-chim6r1ee1in4qbfchng:
+              help: Box periodo of modelo 322, tax year 2024.
+              label: Period (annual, 0A)
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'Identification. Application of the special pro rata (art. 103.Dos.1º
+                LIVA): election or revocation of the election'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Are you registered in the monthly refund register
+                (art. 30 RIVA)?
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: 'Identification. Applicable special regime: art. 163 sexies.Cinco
+                LIVA'
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Taxable person taxed exclusively by a foral tax administration,
+                with import IVA assessed by Customs still to be paid
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
+              label: Identification. Is there a volume of transactions (art. 121 LIVA)?
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Box iva.autorepercutido.intracomunitaria of modelo 322, tax year
+                2024.
+              label: Reverse-charge VAT amount on intra-Community acquisitions
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Box iva.cuota-deducible-total of modelo 322, tax year 2024.
+              label: Total deductible VAT amount
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Box iva.cuota-devengada-total of modelo 322, tax year 2024.
+              label: Total accrued VAT amount
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Box iva.repercutido.reducido of modelo 322, tax year 2024.
+              label: Output VAT amount at the reduced rate (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Box iva.repercutido.super-reducido of modelo 322, tax year 2024.
+              label: Output VAT amount at the super-reduced rate (4%)
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Box iva.resultado-regimen-general of modelo 322, tax year 2024.
+              label: General regime result
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Box iva.soportado.interiores of modelo 322, tax year 2024.
               label: Deductible input VAT on domestic current transactions
           construct:
             modelo-322-iva-grupo-individual:

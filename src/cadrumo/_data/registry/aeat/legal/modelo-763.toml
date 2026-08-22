@@ -80,3 +80,17 @@ retrieved_at = 2026-07-21
 applies_from = 2018-10-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
 review_status = "reviewed"
+
+[sources."aeat-dr-763-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/03-763-ejercicios-2015-a-2018-hasta-3t.xlsx"
+sha256 = "124c40d7cdadced45e21a2b6b01bb9d76d30e78551ae7316508c14ceaec4f62e"
+bytes = 101269
+retrieved_at = 2026-08-15
+applies_from = 2015-01-01
+applies_to = 2018-09-30
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2015v11.xlsx"
+review_status = "reviewed"

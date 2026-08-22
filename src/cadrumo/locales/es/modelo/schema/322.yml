@@ -6,472 +6,437 @@ modelo:
           Modelo individual. Autoliquidación mensual.
         title: IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual
       revision:
-        2008-2025:
+        2008-2023:
           casilla:
             '01':
-              help: null
+              help: Casilla 01 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
                 [01]
             '02':
-              help: null
+              help: Casilla 02 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [02]
             '03':
-              help: null
+              help: Casilla 03 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [03]
             '04':
-              help: null
+              help: Casilla 04 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
                 [04]
             '05':
-              help: null
+              help: Casilla 05 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [05]
             '06':
-              help: null
+              help: Casilla 06 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [06]
             '07':
-              help: null
+              help: Casilla 07 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
                 [07]
             08:
-              help: null
+              help: Casilla 08 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [08]
             09:
-              help: null
+              help: Casilla 09 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [09]
             '10':
-              help: null
+              help: Casilla 10 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
                 intragrupo [10]
             '107':
-              help: null
+              help: Casilla 107 del modelo 322, ejercicio 2008.
               label: Información de la tributación por territorio (sólo para sujetos
                 pasivos que tributan a varias Administraciones) -Territorio común
                 [107]
             '11':
-              help: null
+              help: Casilla 11 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
                 intragrupo [11]
             '12':
-              help: null
+              help: Casilla 12 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
                 [12]
             '120':
-              help: null
+              help: Casilla 120 del modelo 322, ejercicio 2008.
               label: Operaciones no sujetas por reglas de localización (excepto las
                 incluidas en la casilla 123). [120]
             '122':
-              help: null
+              help: Casilla 122 del modelo 322, ejercicio 2008.
               label: Operaciones sujetas con inversión del sujeto pasivo [122]
             '123':
-              help: null
+              help: Casilla 123 del modelo 322, ejercicio 2008.
               label: Operaciones no sujetas por reglas de localización acogidas a
                 los regímenes especiales de ventanilla única [123]
             '124':
-              help: null
+              help: Casilla 124 del modelo 322, ejercicio 2008.
               label: Operaciones sujetas y acogidas a los regímenes especiales de
                 ventanilla única [124]
             '125':
-              help: null
+              help: Casilla 125 del modelo 322, ejercicio 2008.
               label: Operaciones sujetas con inversión del sujeto pasivo [125]
             '126':
-              help: null
+              help: Casilla 126 del modelo 322, ejercicio 2008.
               label: Operaciones no sujetas por reglas de localización acogidas a
                 los regímenes especiales de ventanilla única [126]
             '127':
-              help: null
+              help: Casilla 127 del modelo 322, ejercicio 2008.
               label: Operaciones sujetas y acogidas a los regímenes especiales de
                 ventanilla única [127]
             '128':
-              help: null
+              help: Casilla 128 del modelo 322, ejercicio 2008.
               label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
                 arts. 78 y 79 LIVA [128]
             '13':
-              help: null
+              help: Casilla 13 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Tipo % [13]
             '14':
-              help: null
+              help: Casilla 14 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Cuota [14]
             '15':
-              help: null
+              help: Casilla 15 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
                 [15]
             '150':
-              help: null
+              help: Casilla 150 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
                 [150]
             '151':
-              help: null
+              help: Casilla 151 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Tipo % [151]
             '152':
-              help: null
+              help: Casilla 152 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Cuota [152]
             '153':
-              help: null
+              help: Casilla 153 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
                 [153]
             '154':
-              help: null
+              help: Casilla 154 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Tipo % [154]
             '155':
-              help: null
+              help: Casilla 155 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Cuota [155]
             '156':
-              help: null
+              help: Casilla 156 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
                 [156]
             '157':
-              help: null
+              help: Casilla 157 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [157]
             '158':
-              help: null
+              help: Casilla 158 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [158]
             '159':
-              help: null
+              help: Casilla 159 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
                 [159]
             '16':
-              help: null
+              help: Casilla 16 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Tipo % [16]
             '160':
-              help: null
+              help: Casilla 160 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [160]
             '161':
-              help: null
+              help: Casilla 161 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [161]
             '162':
-              help: null
+              help: Casilla 162 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
                 [162]
             '163':
-              help: null
+              help: Casilla 163 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [163]
             '164':
-              help: null
+              help: Casilla 164 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [164]
-            '165':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
-                Base imponible
-            '166':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
-                Tipo %
-            '167':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
-                Cuota
-            '168':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Recargo de equivalencia. Base imponible
-            '169':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Recargo de equivalencia. Tipo %
             '17':
-              help: null
+              help: Casilla 17 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Cuota [17]
-            '170':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Recargo de equivalencia. Cuota
             '171':
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
                 del grupo de entidades.
               label: Liquidación. IVA devengado. Operaciones intragrupo. Base imponible
-            '172':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Operaciones intragrupo. Tipo %
-            '173':
-              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
-                del grupo de entidades.
-              label: Liquidación. IVA devengado. Operaciones intragrupo. Cuota
             '18':
-              help: null
+              help: Casilla 18 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
                 [18]
             '19':
-              help: null
+              help: Casilla 19 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Tipo % [19]
             '20':
-              help: null
+              help: Casilla 20 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Cuota [20]
             '21':
-              help: null
+              help: Casilla 21 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
                 bienes y servicios. Base imponible [21]
             '22':
-              help: null
+              help: Casilla 22 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
                 bienes y servicios. Cuota [22]
             '23':
-              help: null
+              help: Casilla 23 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
                 sujeto pasivo (excepto adq. intracom.) [23]
             '24':
-              help: null
+              help: Casilla 24 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
                 sujeto pasivo (excepto adq. intracom.). Cuota [24]
             '25':
-              help: null
+              help: Casilla 25 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
                 general. Base imponible [25]
             '26':
-              help: null
+              help: Casilla 26 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
                 general. Cuota [26]
             '27':
-              help: null
+              help: Casilla 27 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
                 [27]
             '28':
-              help: null
+              help: Casilla 28 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [28]
             '29':
-              help: null
+              help: Casilla 29 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [29]
             '30':
-              help: null
+              help: Casilla 30 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
                 [30]
             '31':
-              help: null
+              help: Casilla 31 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [31]
             '32':
-              help: null
+              help: Casilla 32 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [32]
             '33':
-              help: null
+              help: Casilla 33 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
                 [33]
             '34':
-              help: null
+              help: Casilla 34 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [34]
             '35':
-              help: null
+              help: Casilla 35 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [35]
             '36':
-              help: null
+              help: Casilla 36 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
                 de equivalencia. Base imponible [36]
             '37':
-              help: null
+              help: Casilla 37 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
                 de equivalencia. Cuota [37]
             '38':
-              help: null
+              help: Casilla 38 del modelo 322, ejercicio 2008.
               label: Total cuota devengada ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
                 [38]
             '39':
-              help: null
+              help: Casilla 39 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
                 intragrupo corrientes. Base imponible [39]
             '40':
-              help: null
+              help: Casilla 40 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
                 intragrupo corrientes. Cuota [40]
             '41':
-              help: null
+              help: Casilla 41 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
                 intragrupo con bienes de inversión. Base imponible [41]
             '42':
-              help: null
+              help: Casilla 42 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
                 intragrupo con bienes de inversión. Cuota [42]
             '43':
-              help: null
+              help: Casilla 43 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
                 operaciones intragrupo. Base imponible [43]
             '44':
-              help: null
+              help: Casilla 44 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
                 operaciones intragrupo. Cuota [44]
             '45':
-              help: null
+              help: Casilla 45 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
                 interiores corrientes. Base imponible [45]
             '46':
-              help: null
+              help: Casilla 46 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
                 interiores corrientes. Cuota [46]
             '47':
-              help: null
+              help: Casilla 47 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
                 interiores con bienes de inversión. Base imponible [47]
             '48':
-              help: null
+              help: Casilla 48 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
                 interiores con bienes de inversión. Cuota [48]
             '49':
-              help: null
+              help: Casilla 49 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
                 de bienes corrientes. Base imponible [49]
             '50':
-              help: null
+              help: Casilla 50 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
                 de bienes corrientes. Cuota [50]
             '500':
-              help: null
+              help: Casilla 500 del modelo 322, ejercicio 2008.
               label: Prorratas - 1 - Código CNAE [500]
             '501':
-              help: null
+              help: Casilla 501 del modelo 322, ejercicio 2008.
               label: Prorratas - 1 - Importe de operaciones [501]
             '502':
-              help: null
+              help: Casilla 502 del modelo 322, ejercicio 2008.
               label: Prorratas - 1 - Importe de operaciones con derecho a deducción
                 [502]
             '503':
-              help: null
+              help: Casilla 503 del modelo 322, ejercicio 2008.
               label: Prorratas - 1 - Tipo de prorrata [503]
             '504':
-              help: null
+              help: Casilla 504 del modelo 322, ejercicio 2008.
               label: Prorratas - 1 - % de prorrata [504]
             '505':
-              help: null
+              help: Casilla 505 del modelo 322, ejercicio 2008.
               label: Prorratas - 2 - Código CNAE [505]
             '506':
-              help: null
+              help: Casilla 506 del modelo 322, ejercicio 2008.
               label: Prorratas - 2 - Importe de operaciones [506]
             '507':
-              help: null
+              help: Casilla 507 del modelo 322, ejercicio 2008.
               label: Prorratas - 2 - Importe de operaciones con derecho a deducción
                 [507]
             '508':
-              help: null
+              help: Casilla 508 del modelo 322, ejercicio 2008.
               label: Prorratas - 2 - Tipo de prorrata [508]
             '509':
-              help: null
+              help: Casilla 509 del modelo 322, ejercicio 2008.
               label: Prorratas - 2 - % de prorrata [509]
             '51':
-              help: null
+              help: Casilla 51 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
                 de bienes de inversión. Base imponible [51]
             '510':
-              help: null
+              help: Casilla 510 del modelo 322, ejercicio 2008.
               label: Prorratas - 3 - Código CNAE [510]
             '511':
-              help: null
+              help: Casilla 511 del modelo 322, ejercicio 2008.
               label: Prorratas - 3 - Importe de operaciones [511]
             '512':
-              help: null
+              help: Casilla 512 del modelo 322, ejercicio 2008.
               label: Prorratas - 3 - Importe de operaciones con derecho a deducción[512]
             '513':
-              help: null
+              help: Casilla 513 del modelo 322, ejercicio 2008.
               label: Prorratas - 3 - Tipo de prorrata [513]
             '514':
-              help: null
+              help: Casilla 514 del modelo 322, ejercicio 2008.
               label: Prorratas - 3 - % de prorrata [514]
             '515':
-              help: null
+              help: Casilla 515 del modelo 322, ejercicio 2008.
               label: Prorratas - 4 - Código CNAE[515]
             '516':
-              help: null
+              help: Casilla 516 del modelo 322, ejercicio 2008.
               label: Prorratas - 4 - Importe de operaciones[516]
             '517':
-              help: null
+              help: Casilla 517 del modelo 322, ejercicio 2008.
               label: Prorratas - 4 - Importe de operaciones con derecho a deducción
                 [517]
             '518':
-              help: null
+              help: Casilla 518 del modelo 322, ejercicio 2008.
               label: Prorratas - 4 - Tipo de prorrata[518]
             '519':
-              help: null
+              help: Casilla 519 del modelo 322, ejercicio 2008.
               label: Prorratas - 4 - % de prorrata [519]
             '52':
-              help: null
+              help: Casilla 52 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
                 de bienes de inversión. Cuota [52]
             '520':
-              help: null
+              help: Casilla 520 del modelo 322, ejercicio 2008.
               label: Prorratas - 5 - Código CNAE [520]
             '521':
-              help: null
+              help: Casilla 521 del modelo 322, ejercicio 2008.
               label: Prorratas - 5 - Importe de operaciones[521]
             '522':
-              help: null
+              help: Casilla 522 del modelo 322, ejercicio 2008.
               label: Prorratas - 5 - Importe de operaciones con derecho a deducción[522]
             '523':
-              help: null
+              help: Casilla 523 del modelo 322, ejercicio 2008.
               label: Prorratas - 5 - Tipo de prorrata [523]
             '524':
-              help: null
+              help: Casilla 524 del modelo 322, ejercicio 2008.
               label: Prorratas - 5 - % de prorrata [524]
             '53':
-              help: null
+              help: Casilla 53 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
                 de bienes y servicios corrientes. Base imponible [53]
             '54':
-              help: null
+              help: Casilla 54 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
                 de bienes y servicios corrientes. Cuota[54]
             '55':
-              help: null
+              help: Casilla 55 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
                 de bienes de inversión. Base imponible [55]
             '56':
-              help: null
+              help: Casilla 56 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
                 de bienes de inversión. Cuota [56]
             '57':
-              help: null
+              help: Casilla 57 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
                 de operaciones (no intragrupo). Base imponible [57]
             '58':
-              help: null
+              help: Casilla 58 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
                 de operaciones (no intragrupo). Cuota [58]
             '59':
-              help: null
+              help: Casilla 59 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE.Compensación régimen especial A.G.
                 y P. Cuota [59]
             '60':
-              help: null
+              help: Casilla 60 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Regularización bienes de inversión.
                 Cuota [60]
             '61':
-              help: null
+              help: Casilla 61 del modelo 322, ejercicio 2008.
               label: Liquidación. IVA DEDUCIBLE. Regularización por aplicación del
                 porcentaje definitivo de prorrata. Cuota [61]
             '62':
-              help: null
+              help: Casilla 62 del modelo 322, ejercicio 2008.
               label: Total a deducir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
                 [62]
             '63':
-              help: null
+              help: Casilla 63 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Diferencia ([38] - [62]) . [63]
             '64':
-              help: null
+              help: Casilla 64 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Atribuible a la Administración del
                 Estado (%) . [64]
             '65':
-              help: null
+              help: Casilla 65 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Atribuible a la Administración del
                 Estado. [65]
             '66':
-              help: null
+              help: Casilla 66 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Cuotas a compensar de períodos anteriores
                 a la incorporación al grupo. [66]
             '67':
-              help: null
+              help: Casilla 67 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Exclusivamente para sujetos pasivos
                 que tributan conjuntamente a la Administración del Estado y a las
                 Haciendas Forales. Resultado de la regularización anual. [67]
             '68':
-              help: null
+              help: Casilla 68 del modelo 322, ejercicio 2008.
               label: Liquidación (continuación). Resultado ([65] - [66] + [67]) [68]
             '69':
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
@@ -480,187 +445,187 @@ modelo:
                 resultado de las autoliquidaciones anteriores presentadas por el mismo
                 concepto, ejercicio y periodo'
             '70':
-              help: null
+              help: Casilla 70 del modelo 322, ejercicio 2008.
               label: Resultado de la autoliquidación ([68] - [69]) [70]
             '700':
-              help: null
+              help: Casilla 700 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en operaciones interiores. Bienes y servicios
                 corrientes. Base imponible [700]'
             '701':
-              help: null
+              help: Casilla 701 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en operaciones interiores Bienes y servicios
                 corrientes.Cuota deducible [701]'
             '702':
-              help: null
+              help: Casilla 702 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.
                 Base imponible [702]'
             '703':
-              help: null
+              help: Casilla 703 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
                 deducible [703]'
             '704':
-              help: null
+              help: Casilla 704 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en importaciones. Bienes corrientes. Base imponible
                 [704]'
             '705':
-              help: null
+              help: Casilla 705 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
                 [705]'
             '706':
-              help: null
+              help: Casilla 706 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en importaciones Bienes de inversión. Base
                 imponible [706]'
             '707':
-              help: null
+              help: Casilla 707 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en importaciones. Bienes de inversión.Cuota
                 deducible [707]'
             '708':
-              help: null
+              help: Casilla 708 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes. Base imponible [708]'
             '709':
-              help: null
+              help: Casilla 709 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes.Cuota deducible [709]'
             '71':
-              help: null
+              help: Casilla 71 del modelo 322, ejercicio 2008.
               label: Información adicional. Entregas intracomunitarias de bienes y
                 servicios [71]
             '710':
-              help: null
+              help: Casilla 710 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
                 de inversión. Base imponible [710]'
             '711':
-              help: null
+              help: Casilla 711 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes.Cuota deducible [711]'
             '712':
-              help: null
+              help: Casilla 712 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
                 y pesca. Base imponible [712]'
             '713':
-              help: null
+              help: Casilla 713 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
                 y pesca. Cuota deducible [713]'
             '714':
-              help: null
+              help: Casilla 714 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Rectificación de deducciones. Base imponible [714]'
             '715':
-              help: null
+              help: Casilla 715 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Rectificación de deducciones. Cuota deducible [715]'
             '716':
-              help: null
+              help: Casilla 716 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Regularización de bienes de inversión. Cuota deducible [716]'
             '717':
-              help: null
+              help: Casilla 717 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 1. Suma de deducciones (701 + 703 + 705 + 707 + 709 + 711 +
                 713 + 715 + 716). Cuota deducible [717]'
             '718':
-              help: null
+              help: Casilla 718 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en operaciones interiores. Bienes y servicios
                 corrientes. Base imponible [718]'
             '719':
-              help: null
+              help: Casilla 719 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2.. IVA deducible en operaciones interiores Bienes y servicios
                 corrientes.Cuota deducible [719]'
             '72':
-              help: null
+              help: Casilla 72 del modelo 322, ejercicio 2008.
               label: Información adicional. Exportaciones y operaciones asimiladas.
                 [72]
             '720':
-              help: null
+              help: Casilla 720 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.
                 Base imponible [720]'
             '721':
-              help: null
+              help: Casilla 721 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
                 deducible [721]'
             '722':
-              help: null
+              help: Casilla 722 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en importaciones. Bienes corrientes. Base imponible
                 [722]'
             '723':
-              help: null
+              help: Casilla 723 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
                 [723]'
             '724':
-              help: null
+              help: Casilla 724 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en importaciones Bienes de inversión. Base
                 imponible [724]'
             '725':
-              help: null
+              help: Casilla 725 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en importaciones. Bienes de inversión.Cuota
                 deducible [725]'
             '726':
-              help: null
+              help: Casilla 726 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes. Base imponible [726]'
             '727':
-              help: null
+              help: Casilla 727 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes.Cuota deducible [727]'
             '728':
-              help: null
+              help: Casilla 728 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
                 de inversión. Base imponible [728]'
             '729':
-              help: null
+              help: Casilla 729 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes.Cuota deducible [729]'
             '730':
-              help: null
+              help: Casilla 730 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
                 y pesca. Base imponible [730]'
             '731':
-              help: null
+              help: Casilla 731 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
                 y pesca. Cuota deducible [731]'
             '732':
-              help: null
+              help: Casilla 732 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Rectificación de deducciones. Base imponible [732]'
             '733':
-              help: null
+              help: Casilla 733 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Rectificación de deducciones. Cuota deducible [733]'
             '734':
-              help: null
+              help: Casilla 734 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Regularización de bienes de inversión. Cuota deducible [734]'
             '735':
-              help: null
+              help: Casilla 735 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. Suma de deducciones (719 + 721 + 723 + 725 + 727 + 729 +
                 731 + 733 + 734). Cuota deducible [735]'
@@ -675,18 +640,18 @@ modelo:
               label: Adquisiciones de bienes y servicios afectadas por el régimen
                 especial del criterio de caja. Cuota soportada
             '76':
-              help: null
+              help: Casilla 76 del modelo 322, ejercicio 2008.
               label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
             '77':
-              help: null
+              help: Casilla 77 del modelo 322, ejercicio 2008.
               label: IVA a la importación liquidado por la Aduana pendiente de ingreso
                 [77]
             '79':
-              help: null
+              help: Casilla 79 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Entregas de bienes inmuebles
                 y operaciones financieras no habituales [79]
             '80':
-              help: null
+              help: Casilla 80 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones en régimen
                 general [80]
             '81':
@@ -695,66 +660,66 @@ modelo:
               label: Operaciones acogidas al régimen especial del criterio de caja
                 devengadas conforme a la regla general del art. 75 LIVA
             '83':
-              help: null
+              help: Casilla 83 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones exentas sin
                 derecho a deducción [83]
             '84':
-              help: null
+              help: Casilla 84 del modelo 322, ejercicio 2008.
               label: Operaciones no sujetas por reglas de localización (excepto las
                 incluidas en la casilla 126) [84]
             '86':
-              help: null
+              help: Casilla 86 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones en régimen
                 simplificado [86]
             '88':
-              help: null
+              help: Casilla 88 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Total volumen de operaciones
                 (Art. 121 Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127
                 + 128 + 86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
-              help: null
+              help: Casilla 89 del modelo 322, ejercicio 2008.
               label: Información de la tributación por territorio (sólo para sujetos
                 pasivos que tributan a varias Administraciones) - Álava [89]
             '90':
-              help: null
+              help: Casilla 90 del modelo 322, ejercicio 2008.
               label: Información de la tributación por territorio (sólo para sujetos
                 pasivos que tributan a varias Administraciones)-Guipúcoa [90]
             '91':
-              help: null
+              help: Casilla 91 del modelo 322, ejercicio 2008.
               label: Información de la tributación por territorio (sólo para sujetos
                 pasivos que tributan a varias Administraciones) -Vizcaya [91]
             '92':
-              help: null
+              help: Casilla 92 del modelo 322, ejercicio 2008.
               label: Información de la tributación por territorio (sólo para sujetos
                 pasivos que tributan a varias Administraciones) -Navarra [92]
             '93':
-              help: null
+              help: Casilla 93 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Entregas intracomunitarias
                 de bienes y servicios [93]
             '94':
-              help: null
+              help: Casilla 94 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio.. Exportaciones y otras
                 operaciones exentas con derecho a deducción [94]
             '95':
-              help: null
+              help: Casilla 95 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones en régimen
                 especial de la agricultura, ganadería y pesca [95]
             '96':
-              help: null
+              help: Casilla 96 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio.. Operaciones realizadas
                 por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
                 [96]
             '97':
-              help: null
+              help: Casilla 97 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones en Régimen
                 especial de bienes usados, objetos de arte, antigüedades y objetos
                 de colección [97]
             '98':
-              help: null
+              help: Casilla 98 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Operaciones en régimen
                 especial de Agencias de Viajes [98]
             '99':
-              help: null
+              help: Casilla 99 del modelo 322, ejercicio 2008.
               label: Operaciones realizadas en el ejercicio. Entregas de bienes de
                 inversión [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
@@ -799,7 +764,7 @@ modelo:
               label: Identificación. ¿Es destinatario de operaciones a las que se
                 aplique el régimen especial del criterio de caja?
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Casilla ejercicio del modelo 322, ejercicio 2008.
               label: Ejercicio al que se refiere la declaración
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
@@ -819,7 +784,7 @@ modelo:
                 del grupo de entidades.
               label: Identificación. Dominante / dependiente
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: Casilla periodo del modelo 322, ejercicio 2008.
               label: Periodo (anual, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: Dato declarado en el modelo 322, autoliquidacion mensual individual
@@ -847,31 +812,910 @@ modelo:
                 del grupo de entidades.
               label: Identificación. ¿Existe volumen de operaciones (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: Casilla iva.autorepercutido.intracomunitaria del modelo 322, ejercicio
+                2008.
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
                 (LIVA art 84.Uno.2)
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
+              help: Casilla iva.cuota-deducible-total del modelo 322, ejercicio 2008.
               label: Total cuota IVA deducible (soportado en operaciones interiores
                 + autorepercutido deducible)
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
+              help: Casilla iva.cuota-devengada-total del modelo 322, ejercicio 2008.
               label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
                 en adquisiciones intracomunitarias)
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: Cuota total de IVA repercutido calculada al tipo general del 21%.
               label: Cuota IVA repercutido al tipo general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
+              help: Casilla iva.repercutido.reducido del modelo 322, ejercicio 2008.
               label: Cuota IVA repercutido al tipo reducido (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
+              help: Casilla iva.repercutido.super-reducido del modelo 322, ejercicio
+                2008.
               label: Cuota IVA repercutido al tipo super-reducido (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
+              help: Casilla iva.resultado-regimen-general del modelo 322, ejercicio
+                2008.
               label: Resultado del regimen general (cuota devengada - cuota deducible)
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
+              help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2008.
+              label: Cuota IVA soportado en operaciones interiores corrientes
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: Modelo 322 IVA grupo de entidades, modelo individual
+          field:
+            label: Modelo 322, ejercicios 2008 a 2025
+        2024-2025:
+          casilla:
+            '01':
+              help: Casilla 01 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [01]
+            '02':
+              help: Casilla 02 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [02]
+            '03':
+              help: Casilla 03 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [03]
+            '04':
+              help: Casilla 04 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [04]
+            '05':
+              help: Casilla 05 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [05]
+            '06':
+              help: Casilla 06 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [06]
+            '07':
+              help: Casilla 07 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [07]
+            08:
+              help: Casilla 08 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [08]
+            09:
+              help: Casilla 09 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [09]
+            '10':
+              help: Casilla 10 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [10]
+            '107':
+              help: Casilla 107 del modelo 322, ejercicio 2024.
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Territorio común
+                [107]
+            '11':
+              help: Casilla 11 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas de operaciones
+                intragrupo [11]
+            '12':
+              help: Casilla 12 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [12]
+            '120':
+              help: Casilla 120 del modelo 322, ejercicio 2024.
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 123). [120]
+            '122':
+              help: Casilla 122 del modelo 322, ejercicio 2024.
+              label: Operaciones sujetas con inversión del sujeto pasivo [122]
+            '123':
+              help: Casilla 123 del modelo 322, ejercicio 2024.
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [123]
+            '124':
+              help: Casilla 124 del modelo 322, ejercicio 2024.
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [124]
+            '125':
+              help: Casilla 125 del modelo 322, ejercicio 2024.
+              label: Operaciones sujetas con inversión del sujeto pasivo [125]
+            '126':
+              help: Casilla 126 del modelo 322, ejercicio 2024.
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única [126]
+            '127':
+              help: Casilla 127 del modelo 322, ejercicio 2024.
+              label: Operaciones sujetas y acogidas a los regímenes especiales de
+                ventanilla única [127]
+            '128':
+              help: Casilla 128 del modelo 322, ejercicio 2024.
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA [128]
+            '13':
+              help: Casilla 13 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [13]
+            '14':
+              help: Casilla 14 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [14]
+            '15':
+              help: Casilla 15 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [15]
+            '150':
+              help: Casilla 150 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [150]
+            '151':
+              help: Casilla 151 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [151]
+            '152':
+              help: Casilla 152 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [152]
+            '153':
+              help: Casilla 153 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [153]
+            '154':
+              help: Casilla 154 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [154]
+            '155':
+              help: Casilla 155 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [155]
+            '156':
+              help: Casilla 156 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [156]
+            '157':
+              help: Casilla 157 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [157]
+            '158':
+              help: Casilla 158 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [158]
+            '159':
+              help: Casilla 159 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [159]
+            '16':
+              help: Casilla 16 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [16]
+            '160':
+              help: Casilla 160 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [160]
+            '161':
+              help: Casilla 161 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [161]
+            '162':
+              help: Casilla 162 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Base imponible
+                [162]
+            '163':
+              help: Casilla 163 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Tipo % [163]
+            '164':
+              help: Casilla 164 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Operaciones intragrupo. Cuota [164]
+            '165':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
+                Base imponible
+            '166':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
+                Tipo %
+            '167':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Resto de operaciones en régimen general.
+                Cuota
+            '168':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Recargo de equivalencia. Base imponible
+            '169':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Recargo de equivalencia. Tipo %
+            '17':
+              help: Casilla 17 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [17]
+            '170':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Recargo de equivalencia. Cuota
+            '171':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Operaciones intragrupo. Base imponible
+            '172':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Operaciones intragrupo. Tipo %
+            '173':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Liquidación. IVA devengado. Operaciones intragrupo. Cuota
+            '18':
+              help: Casilla 18 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general
+                [18]
+            '19':
+              help: Casilla 19 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Tipo % [19]
+            '20':
+              help: Casilla 20 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
+                Cuota [20]
+            '21':
+              help: Casilla 21 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Base imponible [21]
+            '22':
+              help: Casilla 22 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Adquisiciones intracomunitarias de
+                bienes y servicios. Cuota [22]
+            '23':
+              help: Casilla 23 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.) [23]
+            '24':
+              help: Casilla 24 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Otras operaciones con inversión del
+                sujeto pasivo (excepto adq. intracom.). Cuota [24]
+            '25':
+              help: Casilla 25 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Base imponible [25]
+            '26':
+              help: Casilla 26 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas en régimen
+                general. Cuota [26]
+            '27':
+              help: Casilla 27 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [27]
+            '28':
+              help: Casilla 28 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [28]
+            '29':
+              help: Casilla 29 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [29]
+            '30':
+              help: Casilla 30 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [30]
+            '31':
+              help: Casilla 31 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [31]
+            '32':
+              help: Casilla 32 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [32]
+            '33':
+              help: Casilla 33 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Base imponible
+                [33]
+            '34':
+              help: Casilla 34 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Tipo % [34]
+            '35':
+              help: Casilla 35 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Recargo de Equivalencia. Cuota [35]
+            '36':
+              help: Casilla 36 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Base imponible [36]
+            '37':
+              help: Casilla 37 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEVENGADO. Modificación bases y cuotas del recargo
+                de equivalencia. Cuota [37]
+            '38':
+              help: Casilla 38 del modelo 322, ejercicio 2024.
+              label: Total cuota devengada ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
+            '39':
+              help: Casilla 39 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Base imponible [39]
+            '40':
+              help: Casilla 40 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo corrientes. Cuota [40]
+            '41':
+              help: Casilla 41 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Base imponible [41]
+            '42':
+              help: Casilla 42 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en operaciones
+                intragrupo con bienes de inversión. Cuota [42]
+            '43':
+              help: Casilla 43 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Base imponible [43]
+            '44':
+              help: Casilla 44 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones por
+                operaciones intragrupo. Cuota [44]
+            '45':
+              help: Casilla 45 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Base imponible [45]
+            '46':
+              help: Casilla 46 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores corrientes. Cuota [46]
+            '47':
+              help: Casilla 47 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Base imponible [47]
+            '48':
+              help: Casilla 48 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones
+                interiores con bienes de inversión. Cuota [48]
+            '49':
+              help: Casilla 49 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Base imponible [49]
+            '50':
+              help: Casilla 50 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes corrientes. Cuota [50]
+            '500':
+              help: Casilla 500 del modelo 322, ejercicio 2024.
+              label: Prorratas - 1 - Código CNAE [500]
+            '501':
+              help: Casilla 501 del modelo 322, ejercicio 2024.
+              label: Prorratas - 1 - Importe de operaciones [501]
+            '502':
+              help: Casilla 502 del modelo 322, ejercicio 2024.
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
+                [502]
+            '503':
+              help: Casilla 503 del modelo 322, ejercicio 2024.
+              label: Prorratas - 1 - Tipo de prorrata [503]
+            '504':
+              help: Casilla 504 del modelo 322, ejercicio 2024.
+              label: Prorratas - 1 - % de prorrata [504]
+            '505':
+              help: Casilla 505 del modelo 322, ejercicio 2024.
+              label: Prorratas - 2 - Código CNAE [505]
+            '506':
+              help: Casilla 506 del modelo 322, ejercicio 2024.
+              label: Prorratas - 2 - Importe de operaciones [506]
+            '507':
+              help: Casilla 507 del modelo 322, ejercicio 2024.
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
+                [507]
+            '508':
+              help: Casilla 508 del modelo 322, ejercicio 2024.
+              label: Prorratas - 2 - Tipo de prorrata [508]
+            '509':
+              help: Casilla 509 del modelo 322, ejercicio 2024.
+              label: Prorratas - 2 - % de prorrata [509]
+            '51':
+              help: Casilla 51 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Base imponible [51]
+            '510':
+              help: Casilla 510 del modelo 322, ejercicio 2024.
+              label: Prorratas - 3 - Código CNAE [510]
+            '511':
+              help: Casilla 511 del modelo 322, ejercicio 2024.
+              label: Prorratas - 3 - Importe de operaciones [511]
+            '512':
+              help: Casilla 512 del modelo 322, ejercicio 2024.
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción[512]
+            '513':
+              help: Casilla 513 del modelo 322, ejercicio 2024.
+              label: Prorratas - 3 - Tipo de prorrata [513]
+            '514':
+              help: Casilla 514 del modelo 322, ejercicio 2024.
+              label: Prorratas - 3 - % de prorrata [514]
+            '515':
+              help: Casilla 515 del modelo 322, ejercicio 2024.
+              label: Prorratas - 4 - Código CNAE[515]
+            '516':
+              help: Casilla 516 del modelo 322, ejercicio 2024.
+              label: Prorratas - 4 - Importe de operaciones[516]
+            '517':
+              help: Casilla 517 del modelo 322, ejercicio 2024.
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
+                [517]
+            '518':
+              help: Casilla 518 del modelo 322, ejercicio 2024.
+              label: Prorratas - 4 - Tipo de prorrata[518]
+            '519':
+              help: Casilla 519 del modelo 322, ejercicio 2024.
+              label: Prorratas - 4 - % de prorrata [519]
+            '52':
+              help: Casilla 52 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones
+                de bienes de inversión. Cuota [52]
+            '520':
+              help: Casilla 520 del modelo 322, ejercicio 2024.
+              label: Prorratas - 5 - Código CNAE [520]
+            '521':
+              help: Casilla 521 del modelo 322, ejercicio 2024.
+              label: Prorratas - 5 - Importe de operaciones[521]
+            '522':
+              help: Casilla 522 del modelo 322, ejercicio 2024.
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción[522]
+            '523':
+              help: Casilla 523 del modelo 322, ejercicio 2024.
+              label: Prorratas - 5 - Tipo de prorrata [523]
+            '524':
+              help: Casilla 524 del modelo 322, ejercicio 2024.
+              label: Prorratas - 5 - % de prorrata [524]
+            '53':
+              help: Casilla 53 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Base imponible [53]
+            '54':
+              help: Casilla 54 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes y servicios corrientes. Cuota[54]
+            '55':
+              help: Casilla 55 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Base imponible [55]
+            '56':
+              help: Casilla 56 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. En adquisiciones intracomunitarias
+                de bienes de inversión. Cuota [56]
+            '57':
+              help: Casilla 57 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Base imponible [57]
+            '58':
+              help: Casilla 58 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Rectificación de deducciones en resto
+                de operaciones (no intragrupo). Cuota [58]
+            '59':
+              help: Casilla 59 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE.Compensación régimen especial A.G.
+                y P. Cuota [59]
+            '60':
+              help: Casilla 60 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Regularización bienes de inversión.
+                Cuota [60]
+            '61':
+              help: Casilla 61 del modelo 322, ejercicio 2024.
+              label: Liquidación. IVA DEDUCIBLE. Regularización por aplicación del
+                porcentaje definitivo de prorrata. Cuota [61]
+            '62':
+              help: Casilla 62 del modelo 322, ejercicio 2024.
+              label: Total a deducir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
+            '63':
+              help: Casilla 63 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Diferencia ([38] - [62]) . [63]
+            '64':
+              help: Casilla 64 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado (%) . [64]
+            '65':
+              help: Casilla 65 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Atribuible a la Administración del
+                Estado. [65]
+            '66':
+              help: Casilla 66 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Cuotas a compensar de períodos anteriores
+                a la incorporación al grupo. [66]
+            '67':
+              help: Casilla 67 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Exclusivamente para sujetos pasivos
+                que tributan conjuntamente a la Administración del Estado y a las
+                Haciendas Forales. Resultado de la regularización anual. [67]
+            '68':
+              help: Casilla 68 del modelo 322, ejercicio 2024.
+              label: Liquidación (continuación). Resultado ([65] - [66] + [67]) [68]
+            '69':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: 'A deducir (exclusivamente en caso de autoliquidación complementaria):
+                resultado de las autoliquidaciones anteriores presentadas por el mismo
+                concepto, ejercicio y periodo'
+            '70':
+              help: Casilla 70 del modelo 322, ejercicio 2024.
+              label: Resultado de la autoliquidación ([68] - [69]) [70]
+            '700':
+              help: Casilla 700 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [700]'
+            '701':
+              help: Casilla 701 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [701]'
+            '702':
+              help: Casilla 702 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [702]'
+            '703':
+              help: Casilla 703 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [703]'
+            '704':
+              help: Casilla 704 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [704]'
+            '705':
+              help: Casilla 705 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [705]'
+            '706':
+              help: Casilla 706 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [706]'
+            '707':
+              help: Casilla 707 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [707]'
+            '708':
+              help: Casilla 708 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [708]'
+            '709':
+              help: Casilla 709 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [709]'
+            '71':
+              help: Casilla 71 del modelo 322, ejercicio 2024.
+              label: Información adicional. Entregas intracomunitarias de bienes y
+                servicios [71]
+            '710':
+              help: Casilla 710 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [710]'
+            '711':
+              help: Casilla 711 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [711]'
+            '712':
+              help: Casilla 712 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [712]'
+            '713':
+              help: Casilla 713 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [713]'
+            '714':
+              help: Casilla 714 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Base imponible [714]'
+            '715':
+              help: Casilla 715 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Rectificación de deducciones. Cuota deducible [715]'
+            '716':
+              help: Casilla 716 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Regularización de bienes de inversión. Cuota deducible [716]'
+            '717':
+              help: Casilla 717 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 1. Suma de deducciones (701 + 703 + 705 + 707 + 709 + 711 +
+                713 + 715 + 716). Cuota deducible [717]'
+            '718':
+              help: Casilla 718 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes y servicios
+                corrientes. Base imponible [718]'
+            '719':
+              help: Casilla 719 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2.. IVA deducible en operaciones interiores Bienes y servicios
+                corrientes.Cuota deducible [719]'
+            '72':
+              help: Casilla 72 del modelo 322, ejercicio 2024.
+              label: Información adicional. Exportaciones y operaciones asimiladas.
+                [72]
+            '720':
+              help: Casilla 720 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.
+                Base imponible [720]'
+            '721':
+              help: Casilla 721 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en operaciones interiores. Bienes de inversión.Cuota
+                deducible [721]'
+            '722':
+              help: Casilla 722 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes. Base imponible
+                [722]'
+            '723':
+              help: Casilla 723 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes corrientes.Cuota deducible
+                [723]'
+            '724':
+              help: Casilla 724 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones Bienes de inversión. Base
+                imponible [724]'
+            '725':
+              help: Casilla 725 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en importaciones. Bienes de inversión.Cuota
+                deducible [725]'
+            '726':
+              help: Casilla 726 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes. Base imponible [726]'
+            '727':
+              help: Casilla 727 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [727]'
+            '728':
+              help: Casilla 728 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                de inversión. Base imponible [728]'
+            '729':
+              help: Casilla 729 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
+                y servicios corrientes.Cuota deducible [729]'
+            '730':
+              help: Casilla 730 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Base imponible [730]'
+            '731':
+              help: Casilla 731 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Compensaciones en régimen especial de la agricultura, ganadería
+                y pesca. Cuota deducible [731]'
+            '732':
+              help: Casilla 732 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Base imponible [732]'
+            '733':
+              help: Casilla 733 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Rectificación de deducciones. Cuota deducible [733]'
+            '734':
+              help: Casilla 734 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Regularización de bienes de inversión. Cuota deducible [734]'
+            '735':
+              help: Casilla 735 del modelo 322, ejercicio 2024.
+              label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
+                Grupo 2. Suma de deducciones (719 + 721 + 723 + 725 + 727 + 729 +
+                731 + 733 + 734). Cuota deducible [735]'
+            '74':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Adquisiciones de bienes y servicios afectadas por el régimen
+                especial del criterio de caja. Base imponible
+            '75':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Adquisiciones de bienes y servicios afectadas por el régimen
+                especial del criterio de caja. Cuota soportada
+            '76':
+              help: Casilla 76 del modelo 322, ejercicio 2024.
+              label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
+            '77':
+              help: Casilla 77 del modelo 322, ejercicio 2024.
+              label: IVA a la importación liquidado por la Aduana pendiente de ingreso
+                [77]
+            '79':
+              help: Casilla 79 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes inmuebles
+                y operaciones financieras no habituales [79]
+            '80':
+              help: Casilla 80 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                general [80]
+            '81':
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Operaciones acogidas al régimen especial del criterio de caja
+                devengadas conforme a la regla general del art. 75 LIVA
+            '83':
+              help: Casilla 83 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones exentas sin
+                derecho a deducción [83]
+            '84':
+              help: Casilla 84 del modelo 322, ejercicio 2024.
+              label: Operaciones no sujetas por reglas de localización (excepto las
+                incluidas en la casilla 126) [84]
+            '86':
+              help: Casilla 86 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                simplificado [86]
+            '88':
+              help: Casilla 88 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Total volumen de operaciones
+                (Art. 121 Ley IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127
+                + 128 + 86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
+            '89':
+              help: Casilla 89 del modelo 322, ejercicio 2024.
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) - Álava [89]
+            '90':
+              help: Casilla 90 del modelo 322, ejercicio 2024.
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones)-Guipúcoa [90]
+            '91':
+              help: Casilla 91 del modelo 322, ejercicio 2024.
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Vizcaya [91]
+            '92':
+              help: Casilla 92 del modelo 322, ejercicio 2024.
+              label: Información de la tributación por territorio (sólo para sujetos
+                pasivos que tributan a varias Administraciones) -Navarra [92]
+            '93':
+              help: Casilla 93 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Entregas intracomunitarias
+                de bienes y servicios [93]
+            '94':
+              help: Casilla 94 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio.. Exportaciones y otras
+                operaciones exentas con derecho a deducción [94]
+            '95':
+              help: Casilla 95 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de la agricultura, ganadería y pesca [95]
+            '96':
+              help: Casilla 96 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio.. Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
+                [96]
+            '97':
+              help: Casilla 97 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección [97]
+            '98':
+              help: Casilla 98 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Operaciones en régimen
+                especial de Agencias de Viajes [98]
+            '99':
+              help: Casilla 99 del modelo 322, ejercicio 2024.
+              label: Operaciones realizadas en el ejercicio. Entregas de bienes de
+                inversión [99]
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Otras 1ª
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Otras 1ª
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Otras 2ª
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Otras 2ª
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Otras 3ª
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Otras 3ª
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Otras 4ª
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Otras 4ª
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Otras 5ª
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Otras 5ª
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Código de actividad - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: Se cumplimenta exclusivamente en el ultimo periodo de la declaracion.
+              label: Epígrafe IAE - Principal
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. ¿Es destinatario de operaciones a las que se
+                aplique el régimen especial del criterio de caja?
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casilla ejercicio del modelo 322, ejercicio 2024.
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. NIF de la entidad dominante
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. ¿Está exonerado de la declaración-resumen anual
+                del IVA, modelo 390?
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. Nº de grupo
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. Dominante / dependiente
+            x-chim6r1ee1in4qbfchng:
+              help: Casilla periodo del modelo 322, ejercicio 2024.
+              label: Periodo (anual, 0A)
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: 'Identificación. Aplicación de la prorrata especial (art. 103.Dos.1º
+                LIVA): opción por la aplicación o revocación de la opción'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. ¿Está inscrito en el Registro de devolución mensual
+                (art. 30 RIVA)?
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: 'Identificación. Tipo de régimen especial aplicable: art. 163
+                sexies.Cinco LIVA'
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Sujeto pasivo que tributa exclusivamente a una Administración
+                tributaria foral, con IVA a la importación liquidado por la Aduana
+                pendiente de ingreso
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: Dato declarado en el modelo 322, autoliquidacion mensual individual
+                del grupo de entidades.
+              label: Identificación. ¿Existe volumen de operaciones (art. 121 LIVA)?
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Casilla iva.autorepercutido.intracomunitaria del modelo 322, ejercicio
+                2024.
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Casilla iva.cuota-deducible-total del modelo 322, ejercicio 2024.
+              label: Total cuota IVA deducible (soportado en operaciones interiores
+                + autorepercutido deducible)
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Casilla iva.cuota-devengada-total del modelo 322, ejercicio 2024.
+              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
+                en adquisiciones intracomunitarias)
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Cuota total de IVA repercutido calculada al tipo general del 21%.
+              label: Cuota IVA repercutido al tipo general (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Casilla iva.repercutido.reducido del modelo 322, ejercicio 2024.
+              label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Casilla iva.repercutido.super-reducido del modelo 322, ejercicio
+                2024.
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Casilla iva.resultado-regimen-general del modelo 322, ejercicio
+                2024.
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2024.
               label: Cuota IVA soportado en operaciones interiores corrientes
           construct:
             modelo-322-iva-grupo-individual:

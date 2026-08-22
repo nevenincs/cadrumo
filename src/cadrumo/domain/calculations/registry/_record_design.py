@@ -1804,7 +1804,21 @@ def _optional_header_text(values: tuple[object, ...], index: int | None) -> str 
 
 
 def _required_text(value: object | None, sheet: str, row: int, field: str) -> str:
-    cleaned = coerce_cell_text(value)
+    """Render a required cell verbatim, as an integer where the sheet stored a float.
+
+    ``integral_floats_as_int=True`` for the same reason :func:`_ordinal_text`
+    carries it: a spreadsheet hands back a whole-number cell as a ``float``, so
+    a ``Tipo`` of ``6`` arrives as ``6.0`` and renders as ``"6.0"``. AEAT never
+    prints a type code that way, and the artifact is reader-dependent rather
+    than a property of the design -- the same modelo 100 2016 design read from
+    its ``.xls`` yielded ``"6.0"`` where its ``.xlsx`` conversion yielded
+    ``"6"``, which is how this surfaced.
+
+    This function serves only the ``Tipo`` column, so the coercion cannot reach
+    a description or any other cell whose text might legitimately end in
+    ``.0``.
+    """
+    cleaned = coerce_cell_text(value, integral_floats_as_int=True)
     if not cleaned:
         raise RegistryValidationError(f"{sheet!r} row {row} missing {field}")
     return cleaned
@@ -1823,8 +1837,14 @@ def _required_type_code(
     present-but-unreadable value, which stays a hard refusal exactly as
     before. This is the sole read path that can turn a "missing type" refusal
     into a read.
+
+    Carries ``integral_floats_as_int=True`` for the same reason
+    :func:`_required_text` does: this is the other read path for the same
+    ``Tipo`` column, and leaving one of the two uncoerced would make the
+    rendered type code depend on whether a correction sidecar happened to
+    exist for the row.
     """
-    cleaned = coerce_cell_text(value)
+    cleaned = coerce_cell_text(value, integral_floats_as_int=True)
     if cleaned:
         return cleaned, None
     correction = corrections.get((sheet, row))

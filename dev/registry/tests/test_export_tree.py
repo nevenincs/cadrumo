@@ -507,11 +507,16 @@ def _real_authorities(tree: _GeneratedTree):
 #: Modelo 184 is used instead because it is ENROLLED in the generated-tree drift
 #: gate, so its real diseño and real semantic map are already proven to render a
 #: complete, valid tree. It also carries NO supporting modelo and exactly ONE
-#: revision, so the isolated candidate needs neither a staged neighbour nor
-#: sibling pruning -- modelo 202, the first choice, folds in modelo 200 and the
-#: candidate root must contain exactly the target modelo.
+#: revision, so the isolated candidate needs no staged neighbour -- modelo 202,
+#: the first choice, folds in modelo 200 and the candidate root must contain
+#: exactly the target modelo.
+#:
+#: It no longer carries exactly one revision: the split at Orden HAC/1430/2025's
+#: boundary gave it `2015-2024` and `2025-y-siguientes`, so the isolation does
+#: prune a sibling now. The tree named here is the later half, which is the one
+#: the 2025 design and its `2025` epoch belong to.
 _ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree(
-    "184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
+    "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
 )
 
 

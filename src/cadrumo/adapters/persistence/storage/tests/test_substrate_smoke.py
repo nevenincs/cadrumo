@@ -28,7 +28,7 @@ from .. import (
     default_rules_for_class,
     load_envelope,
     redact,
-    safe_subpath,
+    safe_repository_id,
     save_envelope,
 )
 
@@ -115,11 +115,11 @@ def test_redaction_strips_audit_class_defaults() -> None:
 
 
 def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
-    """The substrate's typed path helpers refuse traversal attempts."""
+    """The substrate's typed id helper refuses a token shaped like a traversal."""
     from .. import PathContainmentError
 
-    with pytest.raises(PathContainmentError, match=r"owning root|within|stay"):
-        safe_subpath(tmp_path, "../escape", context="smoke")
+    with pytest.raises(PathContainmentError, match=r"separator"):
+        safe_repository_id("../escape", context="smoke")
 
 
 def test_file_lock_serializes_writers(tmp_path: Path) -> None:

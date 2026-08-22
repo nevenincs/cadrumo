@@ -68,13 +68,3 @@ closes_on = 2025-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
-[[revisions."2008-2024".deadline_windows]]
-id = "modelo-347-2026-0a"
-filing_year = 2026
-period = "2026 0A"
-period_kind = "annual"
-opens_on = 2027-02-01
-closes_on = 2027-02-28
-legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
-

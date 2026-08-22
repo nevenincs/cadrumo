@@ -49,7 +49,7 @@ _M347_BINDING_SOURCE_REFS = {
 
 def _modelo_347_revision():
     modelo, _catalogues = _committed_modelo("347")
-    return modelo.revisions["2008-y-siguientes"]
+    return modelo.revisions["2008-2024"]
 
 
 def _counterpart_summary_observation(

@@ -41,7 +41,7 @@ the casillas graded here (``iva.cuota-devengada-total`` /
 ``iva_amount``); it is set to zero rather than fabricated from an assumed
 rate.
 
-Registry mapping (M322 2008-2025 revision):
+Registry mapping (M322 2024-2025 revision):
 
     iva.cuota-devengada-total = repercutido.general (iva_amount) +
       repercutido.reducido (0) + repercutido.super-reducido (0) +

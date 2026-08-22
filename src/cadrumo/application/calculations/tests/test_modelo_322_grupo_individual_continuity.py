@@ -18,7 +18,7 @@ from real IVA ledger observations. Both years are recorded through the
 :class:`EnrollmentRecorder` and cross-checked against the authorization
 manifest via :func:`assert_enrollment_matches_manifest`.
 
-The ``2008-2025`` revision is genuinely year-stable: it resolves
+The ``2008-2023`` revision is genuinely year-stable: it resolves
 for both 2025 and 2026 with identical structure and rates (the REGE
 individual form and the general/reduced/super-reduced rate set are
 unchanged across the two ejercicios), so the second year is a real
@@ -176,7 +176,7 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: 322 individual monthly REGE across two renta years.
 
     Drives the REAL 322 backend for December of both renta years (the
-    ``2008-2025`` revision resolves identically for each), records each
+    ``2008-2023`` revision resolves identically for each), records each
     through the :class:`EnrollmentRecorder` (calculation mode, evidence =
     produced-value count from a real engine run), and cross-checks the recorded
     distinct-year set against the authorization manifest claim. A single-year or

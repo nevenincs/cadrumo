@@ -8,7 +8,7 @@ stop, not a retry" section of
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347
-``2008-y-siguientes`` was such a revision, so ``modelo readiness`` reported ``ready:
+``2008-2024`` was such a revision, so ``modelo readiness`` reported ``ready:
 true`` for a freshly-created, casilla-empty draft (the binding axis had nothing to fail
 on) while ``modelo work verify`` legitimately refused to grant ``VERIFICADO_COMPLETO``.
 M347 now carries real counterpart-summary bindings, so ``modelo readiness`` reports the
@@ -53,7 +53,7 @@ _PROFILE_ID = "operator"
 _MODELO = "347"
 _FILING_YEAR = 2024
 _PERIOD = "0A"
-_REVISION = "2008-y-siguientes"
+_REVISION = "2008-2024"
 
 _READINESS_STEP = "modelo.readiness"
 _BLOCKING_STEP = "modelo.work.verify"
@@ -165,7 +165,7 @@ def test_registry_grounding_closed_the_readiness_verify_contradiction(
     """Closure regression / reinstatement tripwire: readiness no longer says ready.
 
     Commit ``8220834c35`` (``feat(modelo-347): bind invoice-source summary totals``) gave
-    Modelo 347 ``2008-y-siguientes`` real registry calculation bindings. Before it, the
+    Modelo 347 ``2008-2024`` real registry calculation bindings. Before it, the
     casilla-empty M347 draft was the only deterministic, clock-free CLI reproduction of
     the category-4 readiness-says-ready / verify-blocks contradiction, because the binding
     axis had nothing to fail on. Now readiness's binding axis fires, so ``modelo
