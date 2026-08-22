@@ -68,27 +68,3 @@ closes_on = 2025-02-28
 legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
 
-[[revisions."2015-2024".deadline_windows]]
-id = "modelo-184-2025-0a"
-filing_year = 2025
-period = "2025 0A"
-period_kind = "annual"
-opens_on = 2026-02-01
-closes_on = 2026-02-28
-legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
-
-[[revisions."2015-2024".deadline_windows]]
-id = "modelo-184-2026-0a"
-filing_year = 2026
-period = "2026 0A"
-period_kind = "annual"
-opens_on = 2027-02-01
-closes_on = 2027-02-28
-legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
-
-# -----------------------------------------------------------------------------
-# Atribucion member row-producer bindings (Orden HAP/2250/2015 Anexo
-# tipo 2 records — entity member detail).
-# -----------------------------------------------------------------------------
