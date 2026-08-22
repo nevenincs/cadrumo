@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -16,6 +16,22 @@ modelo:
           construct:
             modelo-220-declaration-construct:
               field:
-                title: null
+                title: Modelo 220 annual return of the tax group under the fiscal
+                  consolidation regime
           field:
-            label: null
+            label: Orden HAC/657/2025 (modelo 220), tax year 2024
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the tax group return relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: Modelo 220 annual return of the tax group under the fiscal
+                  consolidation regime
+          field:
+            label: Orden HAC/529/2026 (modelo 220), tax years 2025 onwards

@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -16,6 +16,22 @@ modelo:
           construct:
             modelo-220-declaration-construct:
               field:
-                title: null
+                title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
+                  rendszerben
           field:
-            label: null
+            label: Orden HAC/657/2025 (220-as modelo), 2024-es adóév
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adócsoport bevallásának vonatkozási éve
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
+                  rendszerben
+          field:
+            label: Orden HAC/529/2026 (220-as modelo), 2025-től kezdődő adóévek

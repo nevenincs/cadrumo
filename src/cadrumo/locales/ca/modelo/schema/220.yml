@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -16,6 +16,22 @@ modelo:
           construct:
             modelo-220-declaration-construct:
               field:
-                title: null
+                title: Modelo 220 declaració anual del grup fiscal en règim de consolidació
+                  fiscal
           field:
-            label: null
+            label: Orden HAC/657/2025 (modelo 220), exercici 2024
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració del grup fiscal
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: Modelo 220 declaració anual del grup fiscal en règim de consolidació
+                  fiscal
+          field:
+            label: Orden HAC/529/2026 (modelo 220), exercicis 2025 i següents
