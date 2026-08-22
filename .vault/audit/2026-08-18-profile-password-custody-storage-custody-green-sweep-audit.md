@@ -5912,3 +5912,37 @@ changed is that it is now a question about 21 consumed functions rather than 34 
 with the 12 Protocol methods excluded on evidence.
 
 Lanes 314 integration / 1587 unit, unchanged. Ruff ran before the lanes again: clean.
+
+### Using a gate's own escape hatch, and refusing to use it for the real question
+
+The previous entry split the 34 flagged wrappers into 12 Protocol methods and 22 module-level
+functions. This entry acts on the half that is decidable and refuses to act on the half that
+is not.
+
+**The 12 are documented as exemptions, through the mechanism built for exactly this.** The
+family's stated harm is "a second import path to a symbol that already has a canonical home".
+For an instance method on a port adapter that harm cannot arise: the consumer holds the PORT
+object and calls through the interface, so there is no import site to move -- and the family's
+own remedy, "point the consumers at the owning facade and delete the wrapper", would delete
+the Protocol implementation rather than an alias. Both classes were verified to be live port
+providers, instantiated and returned as the default, and both are documented as adapting the
+persistence facade to an application-owned Protocol. Pure delegation is what such an adapter
+looks like when the facade already matches the port.
+
+The mechanism is well designed and was used as designed: each exemption carries a required
+reason, a sibling test refuses a blank one -- *"an exemption without a stated reason is a mute
+button, not a judgement"* -- and the check is EQUALITY, so an entry that stops being a wrapper
+fails too and a dead slot can never hide a live one. The reason guard was proven to bite by
+blanking one reason from outside the repo.
+
+**The 21 module-level forwards are deliberately left undocumented.** They are the actual
+design question -- whether that port layer should exist -- and answering it by writing
+exemptions would be precisely the mute button the reason test exists to prevent. An escape
+hatch used on the case it was built for is judgement; the same hatch used to silence an open
+question is evasion, and the difference is not visible in the diff.
+
+The gate stays red, which is correct, and now names 21 actionable items instead of 33 mixed
+ones. That is the same shape as the census work two entries ago: the value delivered is not a
+green gate but a verdict someone can act on.
+
+Lanes 314 integration / 1587 unit, unchanged.
