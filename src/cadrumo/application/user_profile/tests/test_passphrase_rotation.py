@@ -18,7 +18,11 @@ from ....adapters.persistence.storage.custody import (
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
-from ....core import PROFILE_PASSWORD_MAX_SCALARS, ProfilePasswordRefusalReason
+from ....core import (
+    PROFILE_PASSWORD_MAX_SCALARS,
+    PROFILE_PASSWORD_MIN_SCALARS,
+    ProfilePasswordRefusalReason,
+)
 from ....domain.buckets import BucketEventType
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
@@ -255,6 +259,61 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
         assert candidate not in repr(payload)
         assert refused.value.context == payload.context
         assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "a" * PROFILE_PASSWORD_MIN_SCALARS,
+        "a" * PROFILE_PASSWORD_MAX_SCALARS,
+        "\U0001f600" * 256,
+    ),
+)
+def test_rotation_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, replacement: str) -> None:
+    """Rotation accepts the two scalar boundaries and 1,024 strict UTF-8 bytes."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register()
+        profile_id = UUID(outcome.profile_id)
+
+        rotate_profile_passphrase(
+            profile_id=profile_id,
+            current_passphrase=_CURRENT,
+            new_passphrase=replacement,
+            new_passphrase_confirmation=replacement,
+        )
+
+        material = load_committed_profile_password_material(profile_id)
+        assert unlock_profile_custody_password(material, password=replacement).dek is not None
+
+
+@pytest.mark.parametrize(
+    ("replacement", "equivalent"),
+    (
+        ("\u00e9" * PROFILE_PASSWORD_MIN_SCALARS, "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS),
+        ("e\u0301" * PROFILE_PASSWORD_MIN_SCALARS, "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS),
+    ),
+)
+def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
+    tmp_path: Path,
+    replacement: str,
+    equivalent: str,
+) -> None:
+    """Rotation never normalises a replacement credential."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register()
+        profile_id = UUID(outcome.profile_id)
+        rotate_profile_passphrase(
+            profile_id=profile_id,
+            current_passphrase=_CURRENT,
+            new_passphrase=replacement,
+            new_passphrase_confirmation=replacement,
+        )
+
+        material = load_committed_profile_password_material(profile_id)
+        assert unlock_profile_custody_password(material, password=replacement).dek is not None
+        with pytest.raises(Exception) as refused:
+            unlock_profile_custody_password(material, password=equivalent)
+        assert profile_is_password_authentication_failure(refused.value)
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes | None]:
