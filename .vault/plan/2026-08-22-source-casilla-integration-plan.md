@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:dce84e6200f36b967381cbf3689b41543c821fa0d18e0ef88fe4b9eaf58fbfa5'
+body_hash: 'sha256:37d1d2f5a763d69ccaffb61ce5cfb28e53786eba4e9a10f0cc5e0b7be83a5f38'
 ---
 
 # `source-casilla-integration` plan
@@ -33,7 +33,7 @@ Create the authoritative, machine-checkable inventory of registry destinations a
 
 Define the typed candidate identity, evidence, ownership, disposition, expiry, and proof model.
 
-- [ ] `W01.P01.S01` - define the closed connectivity disposition taxonomy and candidate identity model; `src/cadrumo/core/source_connectivity.py`.
+- [x] `W01.P01.S01` - define the closed connectivity disposition taxonomy and candidate identity model; `src/cadrumo/core/source_connectivity.py`.
 - [ ] `W01.P01.S02` - define grounding, ownership, review-condition, expiry, and bounded-follow-up fields; `src/cadrumo/core/source_connectivity.py`.
 - [ ] `W01.P01.S03` - define the connected-slice proof contract for resolver ownership, revision persistence, and operator reachability; `src/cadrumo/core/source_connectivity.py`.
 - [ ] `W01.P01.S04` - expose the canonical connectivity models through the core public surface; `src/cadrumo/core/__init__.py`.
