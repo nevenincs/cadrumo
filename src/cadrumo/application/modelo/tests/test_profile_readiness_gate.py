@@ -104,10 +104,15 @@ def _store_profile_without_activity(bucket_id: str) -> None:
     )
 
 
-def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
+def _store_ready_profile(
+    bucket_id: str,
+    *,
+    activity_start_date: date,
+    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
+) -> None:
     seed_test_profile_record(
         UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=setup_state,
             profile_id=bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -844,9 +849,11 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
     "missing: nothing".
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2025, 1, 1))
-        record = load_test_profile_record(_OPERATOR_PROFILE_ID)
-        replace_test_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
+        _store_ready_profile(
+            _OPERATOR_PROFILE_ID,
+            activity_start_date=date(2025, 1, 1),
+            setup_state=ProfileSetupState.INCOMPLETE,
+        )
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(

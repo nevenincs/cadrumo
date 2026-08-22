@@ -32,6 +32,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 class _ModeloCase(NamedTuple):
+    """One modelo's approval and plazo expectations.
+
+    ``revision_id`` names the era these expectations were authored against. It is
+    NOT used to look a revision up: this test pinned an id, and modelo 220's id
+    stopped existing the moment its span was split at the 2024/2025 re-layout --
+    the windows neither moved nor changed, but the lookup raised ``KeyError`` and
+    the modelo went unchecked. That is the same failure the sibling
+    ``test_modelo_490_604_763_registry`` module already recorded for modelos 490
+    and 604. Every window of every revision is checked instead, so a split cannot
+    silently drop coverage, and the assertions name the revision they fired on.
+    """
+
     modelo_id: str
     revision_id: str
     approval_ref: str
@@ -85,11 +97,15 @@ def test_modelo_220_222_approval_and_plazo_resolve_as_legal_authority(case: _Mod
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_deadline_provision_is_cited_by_every_window(case: _ModeloCase) -> None:
     modelo, _ = _committed_modelo(case.modelo_id)
-    revision = modelo.revisions[case.revision_id]
-    assert revision.deadline_windows, f"{case.modelo_id} must declare deadline windows"
-    for window in revision.deadline_windows:
-        assert window.period_kind == case.period_kind
-        assert case.plazo_ref in window.legal_refs
+    declared = [
+        (revision_id, window)
+        for revision_id, revision in modelo.revisions.items()
+        for window in revision.deadline_windows
+    ]
+    assert declared, f"{case.modelo_id} must declare deadline windows"
+    for revision_id, window in declared:
+        assert window.period_kind == case.period_kind, f"{case.modelo_id}/{revision_id} {window.id}"
+        assert case.plazo_ref in window.legal_refs, f"{case.modelo_id}/{revision_id} {window.id}"
 
 
 def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() -> None:
