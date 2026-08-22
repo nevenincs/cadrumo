@@ -1,26 +1,58 @@
-# Causa-de-presentación casillas, PÁGINA 1 of the Modelo 036.
+# Causa-de-presentacion casillas, PAGINA 1 of the Modelo 036.
 #
-# Numbers and labels are transcribed verbatim from the AEAT-published
-# "Instrucciones Modelo 036", Anexo 3, PÁGINA 1, table columns
-# TIPO / CASILLA / CAUSA DE PRESENTACIÓN, bundled in the corpus at
-#   _data/corpus/aeat_official/instructions/modelo_036/files/
-#     instrucciones-cumplimentacion-pagina-1.html
+# PROVENANCE, re-grounded 2026-08-22. This header previously read that the numbers
+# and labels were "transcribed verbatim from the AEAT-published Instrucciones
+# Modelo 036, Anexo 3, PAGINA 1, table columns TIPO / CASILLA / CAUSA DE
+# PRESENTACION", citing
+#   corpus/aeat_official/instructions/modelo_036/files/instrucciones-cumplimentacion-pagina-1.html
+# That citation could not be checked. The bundled file is a 5.4 KB navigation
+# shell carrying no casilla table, and across ALL SIX bundled modelo 036
+# instruction files the numbers 101, 103, 141, 151 and 152 appear in none of them.
+# The page it was captured from does exist -- the file's own title is "Guia
+# practica para cumplimentacion del modelo censal 036 / Anexos / Anexo 3" -- so
+# the CAPTURE dropped the table, rather than the source lacking one.
 #
-# Each is a tick box on the printed form and is therefore boolean and
+# What each source actually supports is now stated separately, because they do not
+# support the same things:
+#
+# NUMBERS AND SECTIONS come from aeat-dr-036-2025, the bundled diseno de registro,
+# and are verifiable there. Pag. 1 tiles 1..500 exactly once with no gap and no
+# overlap, every number below was read from its own field description, and the
+# TIPO axis this file maps onto `section` is carried by the diseno itself: each
+# description opens "Alta.", "Modificacion." or "Baja.". The alta / modificacion /
+# baja mapping is therefore grounded, not inferred.
+#
+# LABELS DO NOT COME FROM THE DISENO and are deliberately not re-derived from it.
+# They are richer than it and in several places better. The diseno carries AEAT's
+# own typo at [130] ("Solicitud de ata/baja"), renders [142] and [143] unaccented
+# and lowercase, and abbreviates throughout ("pag." for "paginas", "act. empr."
+# for "actividades empresariales"). The labels read as AEAT instruction prose, and
+# they diverge from the diseno in ways a rendering of it could not produce: [124]
+# and [142] carry "y baja" where the diseno says only "Modificacion", [129] says
+# "alta/baja" where the diseno says "inscripcion/baja", and [145] carries a
+# "(pagina 10)" reference the diseno does not print.
+#
+# ONE LABEL WAS CORRECTED on this evidence. [137] read "Modificacion datos
+# relativos a otros Impuestos", dropping the "y registros" the diseno states
+# ("otros impuestos y registros"). That is a narrowing of what the box covers, so
+# the label now carries the register half in all four catalogues.
+#
+# THE OTHER DIVERGENCES ARE RECORDED, NOT CHANGED. Each is plausible as instruction
+# text and none is contradicted by the diseno; adjudicating them needs the real
+# Anexo 3 table, which is the acquisition this file is waiting on. Whoever bundles
+# it should re-check [124], [129], [142] and [145] against it.
+#
+# Each casilla is a tick box on the printed form and is therefore boolean and
 # optional: a declaration ticks only the causas that motivate it, and the
-# instructions are explicit that "se deberán rellenar exclusivamente las
-# casillas que sufran alguna modificación". They are `manual` rather than
-# `bound` because their value comes from the filed declaration itself
-# (operator-entered, or lifted by the declaracion-pdf extraction profile),
-# not from a profile fact.
+# instructions are explicit that "se deberan rellenar exclusivamente las casillas
+# que sufran alguna modificacion". They are `manual` rather than `bound` because
+# their value comes from the filed declaration itself -- operator-entered, or
+# lifted by the declaracion-pdf extraction profile -- not from a profile fact.
 #
-# The TIPO column rides on each casilla's section path, mapping every causa
-# onto the alta / modificación / baja lifecycle. That is what would let a
-# filed 036 be classified from its ticked boxes rather than from prose.
-# Nothing consumes that mapping today: the reader that did was deleted once
-# a live authenticated walk proved the declarations register carries no 036
-# rows at all. These casillas are kept as the transcribed AEAT form itself,
-# grounded and ready for whichever surface reads a filed 036 next.
+# Nothing consumes the TIPO mapping today: the reader that did was deleted once a
+# live authenticated walk proved the declarations register carries no 036 rows at
+# all. These casillas are kept as the transcribed AEAT form itself, grounded and
+# ready for whichever surface reads a filed 036 next.
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-110"
