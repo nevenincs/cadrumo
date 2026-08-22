@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f28439e5cf34dfec67671130c32ec3ced69263a910421e37c6ce06da96fae99'
+body_hash: 'sha256:450ece04516fbbca92f80cba01e9d360c72e3b5a1e95f485c5257c5fd991d2e1'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1727,6 +1727,51 @@ twenty-five entries are consequences of the mismatch rather than data defects. I
 unilaterally narrow a shipped gate -- that is a decision about what the check is for, and
 the gate's author reasoned carefully enough on the adjacent axis that the change belongs
 with them.
+
+
+### STANDING CONCLUSIONS -- which findings on this page still hold | index | read this before acting on anything above
+
+This document accumulated findings across a long campaign and several of them supersede
+earlier ones on the same page. A reader arriving now needs to know which conclusions
+stand. **Later entries win; this index says so explicitly.**
+
+**Superseded chains, in order:**
+
+| superseded finding | replaced by | why |
+|---|---|---|
+| m190/m193 "cite a superseded twenty-day plazo" | "mis-cited, not superseded" | both plazos live in the SAME article; the earlier regex stopped at the first sentence |
+| "three filing-scope stamps sit on revisions a gate calls uncoverable" | "``filing_eligible`` has no runtime consumer" | the flag is reporting-only, and the flip moves gaps into the STRICTER bucket |
+| "eleven are citation defects" | "only three" then "the class is empty" then "the gate measures the wrong axis" | byte comparison killed eight; the registry's own validation killed the rest |
+| "m604 is the contrary class" | m604's numbering was corrected and 2024-y-siguientes reviewed | the contrary basis was the numbering, and it is gone |
+
+**What stands, and is actionable:**
+
+- The pre-shifted-deadline sweep is CLOSED, 10 of 10, verified by re-scan. Three root
+  causes, and the approving-clause habit (five windows citing the article that approves
+  the modelo rather than the one stating its plazo) is the durable lesson.
+- Design source windows are **ejercicio-scoped by deliberate authoring decision**, so the
+  layout-coverage gate's presentation-year comparison is off by one lag by construction.
+  About ten of its twenty-five entries are that mismatch; the multi-year-gap entries are
+  genuine.
+- The remaining three pending revisions are blocked on data or decisions, not review:
+  m220 needs Orden HAC/529/2026 enrolled and a split; m763 needs BOE-A-2014-13180 and
+  BOE-A-2018-17602 and a three-way split; m604/2021-2023 needs a product decision on
+  whether a closed span carries historical windows.
+- Bundling new corpus text from a web fetch needs operator authorization. Naming the
+  instrument is the correct stopping point for an agent, not a shortfall.
+
+**What this campaign delivered, stated plainly.** Census moved 78/0/17 to 95/0/3 over the
+run, but that figure includes substantial peer work landing in parallel -- revision
+splits, casilla authoring, locale sweeps. This campaign's own reviews are thirteen:
+m182, m721, m136, m840, m036, m185 x2, m222, m165, m181, m270, m604/2024, and the m576
+re-stamp. Each states its limits in ``reviewed_by``, including the ones no gate would
+have forced it to state.
+
+**The honest caveat on the count.** Nine iterations of this campaign ended without moving
+it, and several ended by refusing a stamp that looked available. That is the intended
+shape: the pending count is not the deliverable, and a revision moved across it without
+evidence would be worse than one left behind.
+
 
 ## Recommendations
 
