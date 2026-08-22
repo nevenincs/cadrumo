@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:35a9f2a5366e9c65d97cfff2450d711a2ccb71ac3f310e9d95be5f4531c4c087'
+body_hash: 'sha256:f658f3dcaa6efe5cc49f95de38eefb5416a5e7476f26a7261f8818ddadc4ea04'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6239,3 +6239,35 @@ defensible either way and belongs to whoever owns the CLI refusal vocabulary.
 
 No defect found. Recorded so this axis is not re-probed: the domain's refusals are
 well-formed, discriminable, and actionable for the operator they were written for.
+
+### The non-interactive creation path, and a third suspicion that dissolved
+
+Driving the flow end to end, `config profile create --secrets-stdin` refuses with "unknown
+option". Against the secrets-channel contract -- "`--secrets-stdin` and `--secrets-fd` are
+the channels a caller with NO terminal must use, and for this CLI that caller is the ORDINARY
+one" -- that reads like an agent being unable to perform the very first operation. It is not.
+
+`create` is a lazy WIZARD leaf serving two audiences through one verb, and the scripted arm
+is explicit about it: a script or agent passing field flags or `--quiet`/`--accept-defaults`
+gets "a JSON envelope with no screen", routed to
+`register_profile_from_scripted_invocation`. That path resolves the credential from
+`CADRUMO_SECRET_PASSPHRASE`, described in its own module as the sanctioned secrets
+environment surface "so creation and login read one" -- confirmed: `_login_session` and
+`preflight` read the same setting. And the module states the security reason `--secrets-*`
+is absent here: **"The passphrase is never accepted as an argv value, on this verb or any."**
+An argv secret is visible in a process listing.
+
+`restore` carrying `--secrets-stdin` while `create` does not is therefore a distinction, not
+a drift: the ambient environment passphrase is the LOCAL profile's, while restore needs the
+ARCHIVE's, which may differ -- an export can be sealed under `--recovery-wrap-passphrase`.
+Two secrets, two channels.
+
+**Three suspicions across two iterations, all dissolved on measurement**: the text/JSON
+guidance asymmetry, the `operator_decision` default, and now the missing secrets channel.
+Each looked like a defect from one angle and was answered by a design decision written down
+at the site. Set against the one real find in the same sweep -- `--to` versus `--output` --
+the ratio is worth stating plainly: driving the CLI is a productive instrument, and most of
+what it surfaces in this domain turns out to be deliberate.
+
+The custody CLI surface is recorded as verified across refusals, scripted creation and
+secrets channels. No defect found.
