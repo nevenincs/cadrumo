@@ -8,11 +8,8 @@ declare risk-adjacent facts independently:
   is the one catastrophic-and-permanent mis-declaration, so it is cross-checked
   against the leaf as a TEST (not runtime code). Vacuously true today (no such
   verb is exposed), which is exactly the invariant it locks.
-- The write-policy parity: every profile-bound WRITE verb in the runtime write
-  guard (``PROFILE_BOUND_WRITE_VERB_PATHS``) maps to a command whose family is
-  mutating, and no read-only-family command owns a write path - catching drift on
-  BOTH the write guard and the manifest mutability (the write guard is itself
-  fail-open on renames per ``cadrumo-pull-and-file-standard``).
+- The write-policy parity: callback-attached policy owns both mutability and
+  storage-route scope, so no read-only descriptor may declare a write route.
 """
 
 from __future__ import annotations

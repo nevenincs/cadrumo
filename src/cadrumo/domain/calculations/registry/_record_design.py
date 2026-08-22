@@ -751,6 +751,65 @@ def _reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
 _FUSED_ROW_RE = re.compile(r"^\s*(\d+)\s+(\d+)([A-Za-z][A-Za-z.]*)\s+(\S.*)$")
 
 
+#: A row whose OFFSET and LENGTH were emitted twice and whose naturaleza was
+#: glued to the description's opening column marker:
+#: ``137 1777 15 1777 15 AnC B Participaciones ...`` for AEAT's
+#: ``137 1777 15 An C B Participaciones ...``.
+_DOUBLED_COORDINATE_ROW_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
+    r"(?P=offset)\s+(?P=length)\s+(?P<naturaleza>An|Num|Tit|N|A)(?P<rest>\S.*)$",
+)
+
+
+def _collapse_doubled_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Collapse a row whose position and length were printed twice.
+
+    Modelo 200's 2010 edition emits some rows with the coordinate pair repeated
+    and the naturaleza run into the description's stray column marker, which
+    matches no column shape and is refused -- leaving a hole the width of the
+    row it lost.
+
+    Two independent confirmations are required, and the first is what makes this
+    safe: the repeat must be EXACT, matched by backreference rather than by
+    re-reading two numbers that merely look similar, so the source itself states
+    the coordinate twice. The row must then also continue the previous one --
+    ordinal by one, offset resuming where it ended -- so a doubled pair that
+    lands in the wrong place is still refused.
+
+    The naturaleza is separated on its own evidence: it is a closed set, so a
+    token beginning with one of its members and continuing into text can only be
+    that member followed by description. No position is inferred anywhere; every
+    number written out here was read from the line.
+    """
+    collapsed: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            collapsed.append(line)
+            continue
+        doubled = _DOUBLED_COORDINATE_ROW_RE.match(line)
+        if (
+            doubled is not None
+            and previous is not None
+            and previous.ordinal is not None
+            and previous.ordinal.isdigit()
+            and _continues(previous, doubled.group("ordinal"), int(doubled.group("offset")))
+        ):
+            rebuilt = (
+                f"{doubled.group('ordinal')} {doubled.group('offset')} {doubled.group('length')} "
+                f"{doubled.group('naturaleza')} {doubled.group('rest').strip()}"
+            )
+            candidate = _parse_pdf_row(rebuilt, index + 1)
+            if candidate is not None:
+                previous = candidate
+                collapsed.append(rebuilt)
+                continue
+        collapsed.append(line)
+    return tuple(collapsed)
+
+
 def _split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Separate a row whose first two columns were emitted without a space.
 
@@ -925,7 +984,9 @@ def _extract_record_design_pdf_stream(
     lines = _reattach_stranded_casilla_tags(
         _split_row_from_wrapped_content(
             _split_fused_ordinal_offset_rows(
-                _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+                _collapse_doubled_coordinate_rows(
+                    _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+                ),
             ),
         ),
     )

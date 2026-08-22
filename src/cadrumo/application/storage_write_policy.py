@@ -6,10 +6,9 @@ combines the matched :class:`StorageWritePolicyCode` with the
 :class:`~cadrumo.core.config.StorageRouteKind` derived from
 :class:`~cadrumo.core.config.Settings`.
 
-This module is the application-side policy query, not the session opener.
-It classifies the dispatched verb path, honours bootstrap-exempt CLI
-surfaces, delegates stub-only Modelo work-create refusals to the leaf
-handler, and refuses profile-bound mutations when storage is routed to the
+This module is the application-side route query, not the session opener.
+The CLI callback's attached execution policy supplies the write-route scope;
+this query refuses profile-bound mutations when storage is routed to the
 root fallback database or to an explicit ``CADRUMO_DATABASE_URL``. A stale
 settings object with a valid active-profile pointer is reclassified through
 :func:`~cadrumo.core.config.settings_for_active_profile_bucket` so the root
@@ -17,12 +16,9 @@ callback sees the same active-bucket route the storage runtime would use.
 
 See Also:
     :mod:`cadrumo.entrypoints.cli`
-        Root command callback that reconstructs verb paths, consults this
+        Root command callback that resolves callback policy, consults this
         policy, and opens active bucket sessions only after the policy allows
         dispatch.
-    :func:`cadrumo.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
-        Supplies the sessionless bootstrap flag passed into
-        :func:`inspect_storage_write_policy`.
     :func:`cadrumo.core.config.classify_storage_route`
         Produces the :class:`~cadrumo.core.config.StorageRouteClassification`
         inspected for guarded mutation paths.
@@ -33,7 +29,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
@@ -43,7 +38,6 @@ from ..core import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
     read_pointer,
 )
@@ -68,8 +62,8 @@ from .operator_actions import (
 class StorageWritePolicyCode(StrEnum):
     """Machine-readable outcomes from the root write-policy query.
 
-    The values distinguish allowed active-bucket writes, read-only or
-    bootstrap-exempt paths, leaf-owned refusals, and the two route-level
+    The values distinguish allowed active-bucket writes, state-free or
+    bootstrap-root paths, and the two route-level
     denials the CLI root must stop before opening profile storage. Each value
     is carried in the ``code`` field of :class:`StorageWritePolicyDecision`,
     returned from :func:`inspect_storage_write_policy`.
@@ -77,9 +71,7 @@ class StorageWritePolicyCode(StrEnum):
 
     ALLOWED_ACTIVE_BUCKET = "allowed_active_bucket"
     BOOTSTRAP_EXEMPT = "bootstrap_exempt"
-    LEAF_REFUSAL_DELEGATED = "leaf_refusal_delegated"
     NON_PROFILE_BOUND_VERB = "non_profile_bound_verb"
-    NO_VERB_PATH = "no_verb_path"
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
     REFUSED_EXPLICIT_DATABASE_URL = "refused_explicit_database_url"
 
@@ -109,10 +101,10 @@ class StorageWritePolicyDecision(BaseModel):
     Attributes:
         allowed: Whether root dispatch may continue.
         code: The :class:`StorageWritePolicyCode` that determined the result.
-        profile_bound_write: Whether the verb path matched the guarded
-            profile-bound mutation catalogue.
-        bootstrap_exempt: Whether the CLI root classified the invocation as
-            bootstrap-exempt before policy inspection.
+        profile_bound_write: Whether callback policy declares a profile-bound
+            storage write route.
+        bootstrap_exempt: Whether callback policy declares a bootstrap-root
+            write route that is permitted before an active bucket exists.
         route_kind: Effective :class:`~cadrumo.core.config.StorageRouteKind` for
             guarded writes, or ``None`` when no route was inspected.
         message_key: Locale key for a refusal message rendered at the CLI
@@ -151,179 +143,14 @@ class StorageWritePolicyDecision(BaseModel):
         return tr(self.message_key, locale=locale)
 
 
-PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
-    "app ledger add",
-    "app ledger update",
-    "app ledger classify",
-    "app ledger allocate",
-    "app ledger attach",
-    "app ledger archive",
-    "app ledger stash",
-    "app ledger exclude",
-    "app ledger remove",
-    "app ledger reset",
-    "app ledger split",
-    "app ledger merge",
-    "app ledger link",
-    "app ledger track",
-    "app ledger export",
-    "app ledger import",
-    "app ledger rule add",
-    "app ledger rule apply",
-    "app ledger ratios set",
-    "app ledger ratios unset",
-    # The payable/collectible invoice verbs collapsed into one ``invoice``
-    # family discriminated by ``--kind``; the guard catalogue kept the
-    # pre-collapse spellings, so every invoice mutation fell out of the
-    # profile-bound write guard and was answered NON_PROFILE_BOUND_VERB.
-    # Only the mutating leaves are listed: a bare ``app ledger invoice``
-    # prefix would also capture ``list``/``view``.
-    "app ledger invoice add",
-    "app ledger invoice update",
-    "app ledger invoice remove",
-    "app ledger inventory create",
-    "app ledger inventory movement add",
-    "app ledger inventory valuation preview",
-    "app ledger evidence add",
-    "app ledger evidence update",
-    "app ledger evidence remove",
-    "app ledger evidence confirm",
-    "app ledger restore",
-    "app ledger invoice import",
-    # Fetches a document and stores its bytes as encrypted evidence through
-    # ``add_attachment``; ``pull-folder`` is the same primitive applied
-    # once per Drive child. A link is never stored on its own, so both verbs
-    # always write bucket-scoped attachment bytes when they succeed.
-    "app ledger doclink",
-    "app ledger pull-folder",
-    # Composes the same ``create_catalogue_invoice`` primitive its guarded
-    # ``catalogue create`` sibling uses, so it was the one unguarded door into
-    # the invoice catalogue.
-    "app ledger invoice wizard",
-    # Operator-declared IVA registers, each an encrypted bucket-scoped
-    # document: the capital-goods register (``add``), and the prorrata
-    # register (``upsert_entry`` / ``upsert_sector_definition``).
-    "app ledger bienes-inversion declare",
-    "app ledger prorrata elect-general",
-    "app ledger prorrata elect-especial",
-    "app ledger prorrata revoke-especial",
-    "app ledger prorrata declare-sector",
-    # Rewrites the whole derived participation index via ``replace_all``. The
-    # index is a rebuildable cache, but the rebuild itself is a bucket write.
-    "app ledger participation rebuild",
-    "app live justificante pull",
-    "app live iva-wallet pull",
-    "app live iva-wallet pull-history",
-    # Prefix matching only continues past an entry on a SPACE, so the
-    # ``app live iva-wallet pull`` entry above never covered the hyphenated
-    # ``pull-evidence`` leaf. It persists an acquisition manifest into the
-    # encrypted live-IVA namespace and needs its own entry.
-    "app live iva-wallet pull-evidence",
-    # Persists nothing of the register it reads, which is why the verb is
-    # ``discover`` rather than ``pull`` -- but it resolves its session through
-    # the central live-session writer, which opens an active-profile storage
-    # span and an auth mutation span, so the bucket is written either way. A
-    # read-shaped name is not a read-shaped write path.
-    "app live filed discover",
-    "app live filed pull",
-    "app live filed pull-all",
-    "app live filed pull-sources",
-    "app live notifications pull",
-    # Persists fetched notification-document bytes and their manifest into
-    # bucket-scoped encrypted custody; it never changes AEAT state.
-    "app live notifications document pull",
-    "app live expedientes pull",
-    "app live verify nif-iva",
-    "app live verify tgvi",
-    "app modelo work create",
-    "app modelo work rename",
-    "app modelo work discard",
-    "app modelo work calculate",
-    "app modelo work verify",
-    "app modelo work file",
-    "app modelo work amend",
-    "app modelo work resume",
-    # Guided walks over the SAME primitives their guarded siblings call --
-    # ``work calculate`` and ``work amend`` respectively -- so leaving them out
-    # left a prompted path to a write whose direct path was guarded.
-    "app modelo work wizard",
-    "app modelo work amend-wizard",
-    "app modelo m145 create",
-    # Lifecycle transitions on a persisted M145 communication record; each
-    # saves the transitioned record together with its history event.
-    "app modelo m145 mark-delivered-to-payer",
-    "app modelo m145 mark-locally-completed",
-    # Records an M036 census declaration filed at sede into the encrypted
-    # declaration namespace, with the matching CENSO_DECLARATION_* audit event.
-    "app modelo m036 alta",
-    "app modelo m036 modificacion",
-    "app modelo m036 baja",
-    "app modelo iva-wallet seed",
-    # The two write companions of ``seed``: ``correct`` overwrites the stored
-    # opening carry-forward balance, ``override`` persists a taxpayer_override
-    # decision. Both emit an audit event; the read-only ``balance`` sibling is
-    # deliberately absent.
-    "app modelo iva-wallet correct",
-    "app modelo iva-wallet override",
-    # Mints and persists this bucket's signing / encryption keypair on first
-    # use, so each is a bucket write even when its package output goes to a
-    # file; ``decrypt`` additionally records the consumed-nonce replay ledger.
-    # The ``build`` / ``encrypt-*`` siblings write only to --output and the
-    # ``verify*`` siblings stay bootstrap-exempt for profile-less reviewers.
-    "app modelo review-package sign",
-    "app modelo review-package counter-sign",
-    "app modelo review-package decrypt",
-    "app modelo review-package import-feedback",
-    "app modelo filing-record import",
-    # Persists non-official local casilla observations for later prefill.
-    "app modelo filing-record observe-local",
-    # Reads as a query but is not one: the M190 / retenciones paths own a
-    # durable set-replace of percepción and retención observations before the
-    # aggregation runs, which is why the CLI entrypoint -- not the pure
-    # aggregator -- is the write site.
-    "app modelo aggregate",
-    "app modelo reconcile",
-    "app modelo export",
-    # Clears crash-interrupted bundle exports: removes staged cleartext, drops
-    # the journal entry, and emits the owed PROFILE_EXPORTED bucket event.
-    "app maintenance reconcile",
-    "app quickfile",
-    "config auth configure",
-    "config auth login",
-    "config auth logout",
-    "config auth reset",
-    "config auth diagnostics report",
-    "config auth apoderado configure",
-    "config auth apoderado clear",
-    "config google register",
-    "config google login",
-    "config google logout",
-    "config google folder set",
-    "config google sync push",
-    "config google sync calc pull",
-    "config google sync calc compute",
-)
-"""Profile-bound mutation verb prefixes guarded by the root write policy.
-
-:func:`is_profile_bound_write_verb_path` matches this catalog by prefix after
-the CLI root reconstructs the Typer verb path. The catalog is separate from
-:data:`~cadrumo.entrypoints.cli._bootstrap_exempt.BOOTSTRAP_EXEMPT_VERB_PATHS`:
-bootstrap-exempt verbs skip the active-session gate, while these prefixes
-identify commands that must be routed through an active profile bucket before
-they can mutate profile-bound storage.
-"""
-
-
 def inspect_storage_write_policy(
-    verb_path: str | None,
+    write_route: str,
     *,
-    bootstrap_exempt: bool,
     settings: Settings | None = None,
-    argv_tokens: Sequence[str] | None = None,
 ) -> StorageWritePolicyDecision:
-    """Return whether ``verb_path`` may perform profile-bound writes.
+    """Return whether a callback's declared route may perform storage writes.
 
-    Bootstrap-exempt and non-profile-bound paths are allowed without route
+    Bootstrap-root and non-profile-bound policies are allowed without route
     inspection. Guarded mutation paths are allowed only when the effective
     storage route is an active bucket; root fallback and explicit database
     routes return refusing :class:`StorageWritePolicyDecision` values before
@@ -331,42 +158,25 @@ def inspect_storage_write_policy(
     :class:`~cadrumo.core.config.StorageRouteClassification` so root dispatch does
     not duplicate storage-routing logic.
 
-    See Also:
-        :data:`PROFILE_BOUND_WRITE_VERB_PATHS`
-            Guarded mutation catalog consulted by this policy query.
-        :func:`~cadrumo.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
-            Source of the ``bootstrap_exempt`` input from the CLI root.
-        :func:`is_profile_bound_write_verb_path`
-            Prefix matcher used before route classification.
+    Unknown values fail closed. The caller obtains the value from validated,
+    callback-attached command policy rather than reconstructing a command path.
     """
-    if bootstrap_exempt:
+    if write_route == "bootstrap-root":
         return StorageWritePolicyDecision(
             allowed=True,
             code=StorageWritePolicyCode.BOOTSTRAP_EXEMPT,
             profile_bound_write=False,
             bootstrap_exempt=True,
         )
-    if verb_path is None:
-        return StorageWritePolicyDecision(
-            allowed=True,
-            code=StorageWritePolicyCode.NO_VERB_PATH,
-            profile_bound_write=False,
-            bootstrap_exempt=False,
-        )
-    if not is_profile_bound_write_verb_path(verb_path):
+    if write_route == "none":
         return StorageWritePolicyDecision(
             allowed=True,
             code=StorageWritePolicyCode.NON_PROFILE_BOUND_VERB,
             profile_bound_write=False,
             bootstrap_exempt=False,
         )
-    if _delegates_to_leaf_refusal(verb_path, argv_tokens, settings):
-        return StorageWritePolicyDecision(
-            allowed=True,
-            code=StorageWritePolicyCode.LEAF_REFUSAL_DELEGATED,
-            profile_bound_write=True,
-            bootstrap_exempt=False,
-        )
+    if write_route != "profile-bound":
+        raise ValueError(f"unknown command write-route scope: {write_route}")
 
     route = _classify_effective_write_route(settings)
     if route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE:
@@ -461,19 +271,6 @@ def _settings_environment_name(field_name: str) -> str:
     return environment_name
 
 
-def is_profile_bound_write_verb_path(verb_path: str) -> bool:
-    """Return whether ``verb_path`` names a profile-bound mutation surface.
-
-    Matching is prefix-based against :data:`PROFILE_BOUND_WRITE_VERB_PATHS`
-    so positional arguments appended by Click/Typer reconstruction do not
-    hide a guarded operator command.
-    """
-    normalised = verb_path.strip()
-    return any(
-        normalised == guarded or normalised.startswith(f"{guarded} ") for guarded in PROFILE_BOUND_WRITE_VERB_PATHS
-    )
-
-
 def _classify_effective_write_route(settings: Settings | None) -> StorageRouteClassification:
     """Return the effective storage route for a guarded write decision.
 
@@ -496,53 +293,10 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
     return route
 
 
-def _delegates_to_leaf_refusal(
-    verb_path: str,
-    argv_tokens: Sequence[str] | None,
-    settings: Settings | None,
-) -> bool:
-    """Return whether a work-create refusal belongs to the modelo leaf handler.
-
-    Stub-only modelos are intentionally allowed past the root route guard so the
-    leaf command can emit its specific unsupported-work-create refusal. Modelo
-    210 stays root-guarded when the live engine is enabled because that path can
-    become a real profile-bound write. The check uses :class:`Modelo` for the
-    canonical M210 identifier.
-    """
-    normalised = verb_path.strip()
-    if normalised != "app modelo work create" and not normalised.startswith("app modelo work create "):
-        return False
-    modelo = _option_value(argv_tokens or (), "--modelo")
-    if modelo is None:
-        return False
-    from .modelo import STUB_ONLY_MODELOS
-
-    modelo_code = modelo.strip()
-    if modelo_code not in STUB_ONLY_MODELOS:
-        return False
-    resolved = settings or load_settings()
-    return modelo_code != Modelo.M210 or not resolved.cadrumo_m210_engine_live
-
-
-def _option_value(argv_tokens: Sequence[str], option: str) -> str | None:
-    """Return an option value from reconstructed Click/Typer argv tokens."""
-    prefix = f"{option}="
-    for index, token in enumerate(argv_tokens):
-        if token.startswith(prefix):
-            value = token[len(prefix) :].strip()
-            return value or None
-        if token == option and index + 1 < len(argv_tokens):
-            value = argv_tokens[index + 1].strip()
-            return value or None
-    return None
-
-
 __all__ = [
-    "PROFILE_BOUND_WRITE_VERB_PATHS",
     "StorageWritePolicyCode",
     "StorageWritePolicyCondition",
     "StorageWritePolicyDecision",
     "StorageWritePolicyEvidence",
     "inspect_storage_write_policy",
-    "is_profile_bound_write_verb_path",
 ]
