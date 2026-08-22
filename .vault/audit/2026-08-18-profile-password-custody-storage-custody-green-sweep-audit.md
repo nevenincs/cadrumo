@@ -5999,3 +5999,55 @@ adapter functions they call, so a name-based rewrite risks silently altering the
 own internal uses.
 
 Flagged forwarding wrappers 21 -> 5. Lanes 314 integration / 1589 unit.
+
+### The forwarding port layer is gone: task complete
+
+All twenty-one module-level forwarding wrappers in `_custody_ports.py` are removed across
+six slices. `test_family2_delegate_wrapper_shims` now names NOTHING from that module. The
+twelve Protocol-adapter methods remain, exempted on evidence rather than convenience. Lanes
+held at 314 integration / 1589 unit throughout.
+
+**The last slice was the hardest, and every problem in it was caught by a machine rather
+than by reading.** Three shapes defeated pattern-based rewriting:
+
+- A function-LOCAL import, indented inside a function body, invisible to a column-anchored
+  pattern.
+- A single-line multi-name import (`from .. import A, B`), which a name-level substitution
+  corrupted into `from .. import master_key.current_active_bucket_session`. `ast.parse`
+  refused it before a single byte was written.
+- `profile_close_bucket_session` passed as a VALUE to `ExitStack.callback` rather than
+  called, so a rewrite keyed on `name(` left it standing.
+
+The fix was to stop pattern-matching imports and rewrite the statements by AST line span,
+which handles all three. **The general lesson: a name has more shapes than a call.** Import
+membership, indented local import, bare reference, and same-name aliasing each need a
+different treatment, and only the parser knows which one it is looking at.
+
+**Identical names turned the biggest item into the cheapest.** `profile_session_path` had 57
+call sites -- and forwarded to an adapter function of exactly the same name, so changing the
+import SOURCE left every call site untouched. Measuring the shape before estimating the work
+inverted the order entirely: the 57-site symbol took one line, while a 24-site one needed
+every reference rewritten.
+
+**Evidence the layer was not doing its job.** Three user_profile TEST modules already
+imported these names straight from the adapter facade, and two wrappers had no callers at
+all while still being registered in the package facade in two places. The "one
+application-owned door" the module's docstring described was not the door the package
+itself used.
+
+**Attribution stayed disciplined to the end.** Sixteen failures in `application/tests` and
+`workflow/tests` were grouped before AND after the final slice -- same modules, same counts
+-- so the slice added none. They remain the peer constraint-tightening on
+`LedgerPreflightIssue.transaction_id` / `ProjectionActiveProfile.profile_id` plus the
+uncommitted `config_reset` retention rework.
+
+**Running formatters and fixers over DIRECTORIES was the recurring self-inflicted cost.**
+Twice it modified files belonging to peers -- fifteen by `ruff format`, seven by
+`ruff check --fix` -- and both sets were restored. Both tools are now run on the explicit
+list of files a slice changed.
+
+**What the gate says next, and it is a different scope:** twelve forwarding wrappers survive
+elsewhere -- `adapters/persistence/profile/_filing_runtime`, `_modelo_runtime`,
+`application/evidence`, `flows`, `modelo`, `domain/iva`, `domain/transactions` and one more
+in `user_profile/_custody_transactions`. They belong to other surfaces and are not part of
+this bounded task.
