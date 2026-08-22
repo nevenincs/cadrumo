@@ -11,18 +11,7 @@
 # impositivo ends on another date file within the same statutory 25-día window
 # measured from their own cierre.
 
-[[revisions."2024-y-siguientes".deadline_windows]]
-id = "modelo-220-2024-0a"
-filing_year = 2024
-period = "2024 0A"
-period_kind = "annual"
-opens_on = 2025-07-01
-closes_on = 2025-07-25
-payment_cutoff_on = 2025-07-22
-legal_refs = ["ley-27-2014:art-124"]
-source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]
-
-[[revisions."2024-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-220-2025-0a"
 filing_year = 2025
 period = "2025 0A"
@@ -31,4 +20,4 @@ opens_on = 2026-07-01
 closes_on = 2026-07-25
 payment_cutoff_on = 2026-07-22
 legal_refs = ["ley-27-2014:art-124"]
-source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]
+source_refs = ["boe-modelo-220-2026-form", "aeat-modelo-200-manual-2025"]

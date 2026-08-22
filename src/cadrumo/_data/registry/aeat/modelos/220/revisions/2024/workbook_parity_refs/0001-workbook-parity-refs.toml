@@ -6,7 +6,7 @@
 # carries no calc formulas, so runner_required is false: the anchor pins the
 # official layout provenance without asserting a numeric parity run.
 
-[[revisions."2024-y-siguientes".workbook_parity_refs]]
+[[revisions."2024".workbook_parity_refs]]
 id = "modelo-220-record-design"
 workbook_source = "aeat-dr-220-2024"
 fixture_id = "modelo-220-record-design-layout"

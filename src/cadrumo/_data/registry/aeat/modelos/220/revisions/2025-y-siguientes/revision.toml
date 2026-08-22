@@ -1,0 +1,76 @@
+[revisions."2025-y-siguientes"]
+authority_grade = "applicability"
+# Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
+# régimen de consolidación fiscal. The IS declaration models for períodos
+# impositivos iniciados en 2024 are approved by Orden HAC/657/2025
+# (BOE-A-2025-12818); the bundled excerpt's art 3 names "Modelos 200 y 220"
+# verbatim, evidencing that Modelo 220 is one of the approved models. The filing
+# plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales
+# tras los 6 meses posteriores a la conclusión del período impositivo). This is a
+# scheduling/applicability-grade revision carrying declaration-header casillas
+# only; the money-closure casillas of the group declaration are deferred, and no
+# casilla number is fabricated.
+#
+# CORRECTED REASON. This previously read "deferred until an authoritative Modelo
+# 220 diseño de registro is bundled". FOUR are bundled and all four load through
+# the real record-design IR -- aeat-dr-220-2022 (124 sheets / 14,851 fields),
+# -2023 (127 / 15,648), -2024 (136 / 16,066) and -2025 (140 / 16,707) -- and the
+# 2024 and 2025 ones are named in this revision's own source_refs above. Design
+# availability is not what blocks the casillas.
+#
+# What blocks them is that this single open-ended revision SPANS A RE-LAYOUT.
+# test_revision_span_matches_published_designs measures the 2024/2025 boundary as
+# 4,524 of 7,466 shared boxes moved, 216 boxes added and 130 removed, and the
+# record set changing 137 -> 141; it reports "needs 2 revisions" and its stated
+# fix is to split at that boundary. Authoring one layout across the span would be
+# wrong for whichever year it did not follow.
+#
+# AMENDING ORDEN ACQUIRED AND CITED (2026-08-22). The gate's instruction was
+# explicit -- acquire and cite the BOE orden that authorises the later layout,
+# and do NOT satisfy it with design evidence alone. Orden HAC/529/2026
+# (BOE-A-2026-11583) is that orden: it approves the IS declaration models for
+# períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de
+# 2025, the successor to orden-hac-657-2025's 2024 models. Its art 6.3 is the
+# Modelo 220-specific plazo, grounding the group declaration in LIS art 75.2 --
+# the plazo of the representante's individual declaration -- rather than the
+# general art 124.1 plazo, and it names «el Modelo 220 de declaración aprobado
+# en el artículo 1 de la presente orden», which is itself operative evidence
+# that art 1 approves this modelo. That is firmer grounding than the 2024-era
+# citation, whose only bundled provision naming 220 is art 3's domiciliación
+# heading. Its disposición final segunda fixes the 2025 temporal boundary.
+#
+# NOT SPLIT YET. The split gate (test_no_revision_spans_a_design_relayout) does
+# not flag this revision: it carries no export layout, so there are no byte
+# offsets for a re-layout to write wrongly, and the harm the split prevents does
+# not yet exist here. The split becomes required the moment an export layout is
+# authored, and the 4,524-of-7,466 moved boxes at the 2024/2025 boundary say
+# which side any such layout would have to pick.
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-529-2026:art-6-3"]
+legal_refs = [
+    "orden-hac-529-2026:art-6-3",
+    "orden-hac-529-2026:df-segunda",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "boe-modelo-220-2026-form",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2025",
+]
+
+
+[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2025-y-siguientes' of modelo 220 DOES have a strictly-earlier sibling ('2024'), so a within-modelo continuity transition is structurally possible here. None is declared because the two eras are not a renumbering of one another: at the 2024/2025 boundary AEAT's record designs move 4,524 of 7,466 shared boxes, add 216 and remove 130, and the record set changes 137 -> 141. Asserting continuity across that would claim an identity the designs contradict, and this revision declares only declaration-header casillas in any case. The family is empty on a reviewed judgement, not by omission.
+"""
+legal_refs = [
+    "orden-hac-529-2026:art-6-3",
+    "orden-hac-529-2026:df-segunda",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "boe-modelo-220-2026-form",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2025",
+]
