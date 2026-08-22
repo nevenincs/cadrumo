@@ -5651,3 +5651,57 @@ secrets tests. The ratchet is now green — zero monkeypatch machinery in determ
 production tests.
 
 Lanes 314 integration / 1587 unit (+1, the probe's anti-tautology case).
+
+### A facade gate that could not read half the facades it judged
+
+`dev/tests/test_facade_export_gate.py` was red with nineteen breaks under a serious
+headline: *"facade(s) name a symbol that does not exist at HEAD -- a clean checkout will
+fail to import these packages even though every working tree resolves them."* That claim, if
+true, is a shipping defect. It is false.
+
+**Established before touching anything**, because the gate deliberately compares HEAD
+against the working tree and this is a shared worktree full of peers' uncommitted files:
+the symbols ARE defined at HEAD (`git grep` against the rev), the facades and their target
+modules are unmodified (so working tree == HEAD for them), and a real interpreter resolves
+all nineteen. The gate was wrong, not the tree.
+
+**The cause is one the scanner's own docstring anticipated and half-solved.** A lazy facade
+resolves inside `__getattr__`, so nothing binds statically and the scanner must model the
+dispatch. It modelled the inline form -- `name == "X"` -- by harvesting string constants
+from the function body. The tree ships a second shape:
+
+    _REGISTRY_CONTRACT_EXPORTS = frozenset({"UserProfileSelectorIndex", ...})
+    def __getattr__(name):
+        if name in _REGISTRY_CONTRACT_EXPORTS: ...
+
+The names live at module level; the body holds none. So the scanner read those facades as
+resolving NOTHING and reported every export they serve. The tell was visible in the output
+and easy to miss: `cadrumo.domain.user_profile` reported six symbols but NOT
+`UserProfilePortableExport`, which sits in the same `__getattr__` under an inline
+comparison. One facade, two shapes, one of them invisible.
+
+**Why this was worth an iteration rather than a note.** A gate's value is that red means
+something. Nineteen standing false positives are how a gate stops being read -- and while it
+is red it also buries the next REAL break in its own output, which is the failure mode it
+exists to prevent.
+
+**The fix is narrowed deliberately, and that narrowing is the anti-tautology test.** Only
+containers `__getattr__` actually references are harvested. Trusting every module-level
+string set would let an unrelated constant list vouch for names the dispatch never serves --
+turning a repaired gate into a blind one, which is strictly worse than the false positives
+it replaced. Both directions are pinned in `dev/quality/tests/`, placed there rather than
+beside the gate so the private helper is an intra-package import rather than a new
+cross-package private reach; that directory is also in the per-push lane. The gate's own
+anti-tautology pass against the pinned broken revision still detects all five known breaks,
+so the scan is repaired rather than silenced.
+
+**Two dev/quality failures measured and attributed, not inherited silently.**
+`test_doc_privacy` reports operator-identifying tokens in vault documents from other
+campaigns (dated 2026-08-01 to 08-15) plus a legal-catalogue TOML whose `reviewed_by` the
+grounding rule positively requires -- which is what the gate's allowlist is for, and not
+this campaign's call. This campaign's audit file was checked directly and is clean and
+unreported. `test_fixture_census` refuses a dynamically-named fixture; the changed files
+here define no fixtures at all, and a line-87 scan of both trees finds no match, so it
+originates in the census's own manifest set.
+
+Lanes 314 integration / 1587 unit, unchanged.
