@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:849d8d06510fc9437dc366e23e8e159d4c8c2fa03ff89d83cede59e39cb6406b'
+body_hash: 'sha256:c2989d5f5c5f2ffabae3f3165f791fc8bd7a4dc68768341a2dc6cd81d12dae26'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6106,3 +6106,35 @@ that were not aliases.
 
 `application/user_profile` and `adapters/persistence/storage` now carry neither a forwarding
 wrapper nor a re-export alias. Lanes 314 integration / 1589 unit.
+
+### Two remaining no-shim axes, both measured clean
+
+With the forwarding wrappers and re-export aliases gone, two shapes from the mandate were
+still unswept in this domain. Both were checked and neither is present.
+
+**Duplicated fixture facades.** Four profile/storage fixture factories exist, and three of
+them call themselves "Canonical", which reads like three canonical homes for one concern.
+They are not. They wrap three genuinely different primitives, and each primitive's docstring
+states its own boundary against the others: `isolated_sessionless_storage_root` starts NO
+session and exists for cold-start and no-session assertions;
+`isolated_profile_storage_root` provisions no bucket, so the creation path itself is the
+system under test; `isolated_runtime_profile` provisions the full bucket, manifest, wrapped
+DEK, active route and session. The fourth factory is a seed-once-per-module variant for
+suites whose setup is expensive. Three points on a spectrum of how much world exists, plus
+one lifecycle variant -- the opposite of duplication, and documented as such before anyone
+asked.
+
+**Dev tooling re-implementing a src primitive.** Several `dev/` modules call
+`hashlib.sha256(...).hexdigest()` directly while `core.hashing.sha256_hex` exists. That is
+stdlib usage, not a re-implementation of project logic -- `sha256_hex` is itself a thin
+wrapper over the same call. Flagging it would be the cry-wolf failure this campaign has
+repeatedly guarded against, and the modules are corpus and docs tooling outside this domain.
+The shape worth finding here would be dev re-deriving project LOGIC, such as its own
+registry loader or path-containment rule; none was found.
+
+**Position.** `application/user_profile`, `adapters/persistence/storage` and
+`entrypoints/cli/_config` carry no forwarding wrappers, no re-export aliases, no forward-only
+bridge modules and no duplicated fixture facades. The remaining named items are decisions
+rather than defects: the profile-bundle import half, the import-hygiene ratchet at 108 vs 69
+across six peer packages, the five unreachable `dev/packaging` cases, and the twelve
+forwarding wrappers in other owners' surfaces.
