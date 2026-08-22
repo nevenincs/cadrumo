@@ -50,6 +50,7 @@ from cadrumo.application.registry import (
     RegistryConformanceProfile,
     audit_bundled_registry_conformance,
     compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
 )
 from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -362,11 +363,12 @@ def test_annual_matrix_revision_is_read_from_the_validated_authority() -> None:
     assert coordinate.law_selected_revision == inspection.revision_id
     assert coordinate.law_selected_revision == "2025"
     assert coordinate.authority_scope == "inspection_only"
-    assert coordinate.schema_comparison == compare_annual_casilla_population(
-        inspection,
+    assert coordinate.schema_comparison == compare_annual_casilla_population_for_revision(
+        modelo=inspection.modelo_id,
+        revision=revision,
         filing_year=2025,
         period="0A",
-        revision=revision,
+        sources=inspection.sources,
         source_root=authority.source_root,
     )
 
