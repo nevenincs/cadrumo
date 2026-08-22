@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:754e5c769af8dc2d6434341a323dde698e0912b2df8f9ebb936830b84820a6de'
+body_hash: 'sha256:97605b1461b431c003807cfb8d8000ecfe85da4037f1334921b37dbe75e3ff0d'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1844,6 +1844,51 @@ known fallout with named fixes rather than as the split having gone wrong.
 
 Nothing here was changed by this campaign; the two named renames belong to whoever owns
 the splits.
+
+
+### the-continuity-ratchet-fired-on-exactly-the-ids-the-split-duplicated | medium | which branch applies, decided by measurement
+
+``test_ungrounded_continuity_backlog_matches_its_committed_baseline`` reds after the
+m184 and m347 splits, and it offers two branches without saying which:
+
+> *"Either a chain lost its ``continuidad_id`` stamp (a regression -- restore the stamp),
+> or a NEW revision landed carrying repeated casilla ids (legitimate -- those ids are
+> un-reviewed, so raise the baseline)"*
+
+Measured, the answer is unambiguous. Counting casilla ids present in BOTH halves of each
+split:
+
+| modelo | ids shared across the split halves | ratchet delta |
+|---|---|---|
+| m184 (2015-2024 / 2025-y-siguientes) | **86** | **+86** |
+| m347 (2008-2024 / 2025-y-siguientes) | **39** | **+39** |
+
+Exact, one-to-one. The ratchet fired on precisely the ids the split duplicated and on
+nothing else, so the second branch applies: this is a legitimate consequence of new
+revisions landing, not a lost stamp.
+
+**Why splitting produces this by construction.** A split copies a revision's casilla set
+into both halves. Every id then appears twice across the modelo with no
+``continuidad_id`` linking the two occurrences, which is exactly the shape the ratchet
+counts. Any split of a revision with N casillas will raise this backlog by N.
+
+**Not raised, and the reason is a real choice.** The gate prints a ready-to-paste
+replacement baseline, and taking it would record 125 further ids as un-reviewed backlog.
+The stronger alternative is stamping ``continuidad_id`` on those chains, which ASSERTS
+and reviews the continuity across the split rather than deferring it. Both are legitimate;
+only the split's author knows whether they intend to establish continuity or accept the
+backlog, and raising the baseline forecloses the better option silently.
+
+What this contributes is the disambiguation the gate could not make: the counts match the
+duplication exactly, so nobody needs to hunt for a lost stamp that is not missing.
+
+This is the third distinct piece of split fallout recorded -- after the layout-coverage
+gate not clearing, and the fragment names that had to be renamed. Together they describe
+what a revision split drags behind it: stale fragment names (fixable mechanically, and
+done), committed baselines that shift by exactly the duplicated-casilla count, bindings
+and export records that move relative to their revision, and a layout gate that the split
+does not satisfy at all.
+
 
 ## Recommendations
 
