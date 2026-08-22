@@ -5545,3 +5545,57 @@ the ratchet exists to prevent.
 Recorded with the evidence so the decision can be made on measurement rather than
 re-derived. **No production change this iteration**, and the lanes were not re-run because
 nothing ran.
+
+### Three custody cases nothing could run, found by a gate nothing runs
+
+The previous entry measured that `dev/tests` produces a verdict only on a manual
+`workflow_dispatch`. Running it deliberately is therefore the cheap move, and it returned
+71 failures over 610 passes -- a directory that has not been read in some time.
+
+**First, attribution.** `test_lane_reachability.py` was among the failures, and a lane was
+edited here last iteration, so the failure was read before anything else. Its unreachable
+list named `dev/packaging` serial cases and `os_keychain` cases; the addition made here was
+a single file appended to a PARALLEL lane line, which cannot remove coverage from either.
+Not this campaign's breakage, and confirmed by reading the list rather than by reasoning
+about the edit.
+
+**Then the finding, which is squarely in this domain.** Three `os_keychain` cases were
+selected by no lane at all:
+
+    entrypoints/cli/tests/test_config_custody_profile_lifecycle.py
+        test_registered_profile_custody_survives_logout_and_reopens_on_login
+    entrypoints/cli/tests/test_named_profile_resolution_cross_process.py
+        test_a_named_profile_resolves_in_a_process_that_did_not_write_it
+        test_the_named_and_active_paths_agree_about_the_same_record
+
+`test-os-keychain` is the only lane that can select them, and it named ONE module from that
+directory -- `test_profile_session_root_resume.py` -- while these live in two siblings. So
+the cross-process resumption contract the lane exists for was, in two of its three files,
+never selectable. The gate's own words for this are exact: *a test nobody runs reads as
+coverage and is not.*
+
+The fix names the DIRECTORY instead of a third and fourth file, because `-m os_keychain` is
+what scopes it: a future custody case added beside them is selected when it lands rather
+than joining the same silence. Measured both directions -- the lane selected 39 and now
+selects 42, and the unreachable list drops from 8 to 5.
+
+**A qualification that matters.** These cases still cannot PASS on this host: the OS
+credential store refuses a network logon with error 1312, which the standing context already
+records and which the lane's own comment calls a true report of the host rather than a
+defect. Making them SELECTABLE is the whole of the fix. It would have been easy to overstate
+this as restored coverage; what is restored is the ability of an interactive desktop session
+to exercise them at all.
+
+**The remaining five are left deliberately.** They are `dev/packaging` integration+serial
+cases that `test-dev-ci`'s serial line does not name. Enrolling never-run heavy install
+tests into a per-push lane has the same blast-radius problem as the import-hygiene gate --
+a different surface, other owners, and a decision that should be made by them.
+
+**The compounding shape, now three deep.** A stale stub survived because the per-push lane
+watched a `tmp_path` round-trip; the hygiene ratchet drifted because its gate runs only on
+manual dispatch; and these three custody cases were unreachable because the gate that says
+so ALSO runs only on manual dispatch. Each layer of the safety net is itself watched by a
+layer nobody looks at. The generalisation worth carrying: **when a gate reports a gap, ask
+what runs the gate -- an unread verdict and an absent one are the same thing.**
+
+Lanes 314 integration / 1586 unit, both unchanged.
