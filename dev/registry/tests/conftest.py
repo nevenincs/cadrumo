@@ -2,7 +2,22 @@
 
 import pytest
 
+from cadrumo.core.resources import resources
 from cadrumo.domain.calculations.registry import bundled_revision_inspection
+
+
+@pytest.fixture(scope="session")
+def registry_authority():
+    """The session registry authority, as the src-tree conftest provides it.
+
+    `test_the_static_closure_matches_what_a_real_load_imports` confronts the
+    import graph's closure with what a REAL load leaves in `sys.modules`, so it
+    needs an authority that has actually loaded. The fixture it asks for is
+    defined in the registry package's own conftest, which pytest never applies
+    to this directory -- collection here errored on the missing name instead of
+    running the check. Same object, same session scope.
+    """
+    return resources().modelos.authority
 
 
 @pytest.fixture
