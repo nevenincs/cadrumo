@@ -1444,8 +1444,7 @@ source_cell = "A101"
 
 [[entries]]
 export_field_id = "m322-2023.page-01.f097"
-kind = "casilla"
-casilla_id = "171"
+kind = "filler"
 legal_refs = ["orden-eha-3434-2007:art-1"]
 source_refs = ["aeat-dr-322-2023"]
 

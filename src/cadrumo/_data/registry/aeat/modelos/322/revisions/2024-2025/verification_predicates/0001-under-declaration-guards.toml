@@ -1,0 +1,32 @@
+# Modelo 322 silent-under-declaration guards.
+#
+# 322 is the member entity's own monthly IVA liquidation inside a grupo de
+# entidades, and its result is what Modelo 353 aggregates. A silent zero here
+# therefore under-declares twice: once on this return, and again in the group
+# aggregate that sums it.
+#
+# The first guard watches the total against its own strongest contributor. A
+# positive repercutido at the general tipo with a zero cuota devengada total has
+# no legitimate reading at all -- the total is the sum of the repercutido tiers
+# plus the autorepercutido cuota, so a zero total means the sum did not run.
+# ADVISORY rather than blocking because it is a derivation regression, surfaced
+# to the operator rather than used to refuse a filing that may otherwise be
+# correct.
+#
+# The second guard watches the chain's end. Here a zero consequent IS legitimate
+# and common: a member whose deducible equals its devengada nets to nothing, and
+# refusing that would block correct returns. It stays advisory for that reason,
+# and holds trivially when the antecedent is at or below zero, so a member in a
+# net-credit month raises nothing.
+
+[[revisions."2024-2025".verification_predicates]]
+predicate_id = "modelo-322-2024-2025-repercutido-general-implica-cuota-devengada-total"
+expression = 'implies_nonzero(["iva.repercutido.general", "iva.cuota-devengada-total"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1"]
+
+[[revisions."2024-2025".verification_predicates]]
+predicate_id = "modelo-322-2024-2025-cuota-devengada-implica-resultado"
+expression = 'implies_nonzero(["iva.cuota-devengada-total", "iva.resultado-regimen-general"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1"]
