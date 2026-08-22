@@ -75,6 +75,7 @@ def test_command_capability_taxonomy_is_closed_and_serialisable() -> None:
         "calculation",
         "filing",
         "crypto",
+        "subprocess",
     }
 
     assert set(get_args(CommandCapability)) == expected_capabilities

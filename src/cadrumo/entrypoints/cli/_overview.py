@@ -30,9 +30,6 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ._app_execution_policies import CALCULATION_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application import overview as _overview_application
 from ...application.overview import (
     OverviewCalendar,
@@ -47,6 +44,8 @@ from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
+from ._app_execution_policies import CALCULATION_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _canonical_period,

@@ -7,9 +7,6 @@ from typing import Annotated
 
 import typer
 
-from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application.registry import (
     RegistryRevisionDiffReport,
     RegistryTreeReport,
@@ -21,6 +18,8 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
+from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, resolve_optional_root
 from ._registry_corpus import citations_app, manuals_app
 from ._registry_diff_payloads import RegistryDiffRevisionsResult

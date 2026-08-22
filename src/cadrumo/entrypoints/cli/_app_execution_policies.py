@@ -67,6 +67,12 @@ LIVE_PROFILE_WRITE = _policy(
     "external-io",
     write_route="profile-bound",
 )
+BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE = _policy(
+    frozenset({"browser", "subprocess", "encrypted-facts"}),
+    frozenset({"browser", "network", "local-state"}),
+    "external-io",
+    write_route="profile-bound",
+)
 QUICKFILE_HANDOFF = _policy(
     frozenset({"calculation", "filing", "encrypted-facts"}),
     frozenset({"local-state"}),

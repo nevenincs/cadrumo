@@ -12,12 +12,11 @@ from typing import Annotated, TypedDict
 
 import typer
 
-from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory
+from ._app_execution_policies import METADATA, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE_ALL, _emit_envelope
 
 
@@ -154,7 +153,7 @@ def portals_show(
 
 
 for _callback in (portals_list, portals_show):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+    command_execution_policy(METADATA)(_callback)
 
 
 # ─────────────────────────────────────────────────────────────────────────

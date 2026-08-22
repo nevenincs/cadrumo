@@ -42,12 +42,15 @@ CommandCapability = Literal[
     "calculation",
     "filing",
     "crypto",
+    "subprocess",
 ]
 """Authority families a command may enter while it executes.
 
 ``state-free`` is an affirmative declaration that a node needs none of the
 other authorities. ``local-storage`` covers application-local files such as
-telemetry that are neither profile custody nor encrypted taxpayer facts. The remaining values are composable. Capability
+telemetry that are neither profile custody nor encrypted taxpayer facts.
+``subprocess`` declares child-process inspection or control independently of
+network and browser authority. The remaining values are composable. Capability
 implications keep registrations concise while preserving the full import
 boundary used by gates.
 """

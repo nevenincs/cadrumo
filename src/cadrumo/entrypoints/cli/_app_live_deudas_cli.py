@@ -23,11 +23,10 @@ from typing import Annotated
 
 import typer
 
-from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...core.i18n import tr
+from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
 from ._app_live_auth_preflight import resolve_active_bucket
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -211,4 +210,4 @@ def deudas_latest(ctx: typer.Context) -> None:
 
 
 for _callback in (deudas_list, deudas_view, deudas_latest):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+    command_execution_policy(ENCRYPTED_READ)(_callback)

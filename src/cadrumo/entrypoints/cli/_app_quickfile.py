@@ -22,15 +22,14 @@ from typing import Annotated
 
 import typer
 
-from ._app_execution_policies import QUICKFILE_HANDOFF
-from ._command_policy import command_execution_policy
-
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ._app_execution_policies import QUICKFILE_HANDOFF
 from ._app_quickfile_payloads import QuickfileResultPayload
+from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
     _filing_taxpayer_or_refuse,

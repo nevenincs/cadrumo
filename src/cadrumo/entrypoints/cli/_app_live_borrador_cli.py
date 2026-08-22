@@ -15,21 +15,20 @@ from typing import Annotated, Literal, TypedDict
 
 import typer
 
-from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application.live import (
     Borrador100SnapshotService,
     SnapshotLifecycleState,
     SnapshotStateFilter,
 )
 from ...core.i18n import tr
+from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
 from ._app_live_payloads import (
     Borrador100LatestResult,
     Borrador100ListResult,
     Borrador100SnapshotSummaryPayload,
     Borrador100ViewResult,
 )
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 
 
@@ -217,7 +216,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
         _emit_envelope(ctx, command="app.live.borrador.100.latest", result=result, lines=lines)
 
     for callback in (borrador_100_list, borrador_100_show, borrador_100_latest):
-        command_execution_policy(LIVE_PROFILE_WRITE)(callback)
+        command_execution_policy(ENCRYPTED_READ)(callback)
 
 
 def _borrador_row(snapshot) -> _BorradorRow:

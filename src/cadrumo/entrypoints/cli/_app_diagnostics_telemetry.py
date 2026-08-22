@@ -37,11 +37,10 @@ from __future__ import annotations
 
 import typer
 
-from ._app_execution_policies import LOCAL_STORAGE_READ, LOCAL_STORAGE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...core.i18n import tr
 from ...core.telemetry import TelemetryTier
+from ._app_execution_policies import LOCAL_STORAGE_READ, LOCAL_STORAGE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, case_insensitive_choice
 from ._diagnostics_payloads import (
     TelemetryFlushResult,

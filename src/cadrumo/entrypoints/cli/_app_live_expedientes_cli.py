@@ -16,12 +16,11 @@ from typing import Annotated, Protocol, TypedDict
 
 import typer
 
-from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application.live import capture_expedientes_bulk
 from ...core.i18n import tr
+from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
 from ._app_live_auth_preflight import _metric_line, resolve_active_bucket, run_auth_preflight
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, resolve_pull_year_range
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -339,5 +338,6 @@ def expedientes_latest(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
 
 
-for _callback in (expedientes_pull, expedientes_list, expedientes_show, expedientes_latest):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+command_execution_policy(LIVE_PROFILE_WRITE)(expedientes_pull)
+for _callback in (expedientes_list, expedientes_show, expedientes_latest):
+    command_execution_policy(ENCRYPTED_READ)(_callback)

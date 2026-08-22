@@ -14,14 +14,13 @@ from typing import Annotated, TypedDict
 
 import typer
 
-from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
+from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
 from ._app_live_auth_preflight import resolve_active_bucket
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -345,7 +344,9 @@ def verify_tgvi(
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
 
-for _callback in (verify_list, verify_show, verify_latest, verify_nif_iva, verify_tgvi):
+for _callback in (verify_list, verify_show, verify_latest):
+    command_execution_policy(ENCRYPTED_READ)(_callback)
+for _callback in (verify_nif_iva, verify_tgvi):
     command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
 
 

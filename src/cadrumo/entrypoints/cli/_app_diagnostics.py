@@ -46,11 +46,10 @@ from datetime import date as _date
 
 import typer
 
-from ._app_execution_policies import LOCAL_STORAGE_READ
-from ._command_policy import command_execution_policy
-
 from ...core.i18n import tr
 from ._app_diagnostics_telemetry import telemetry_app
+from ._app_execution_policies import LOCAL_STORAGE_READ
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, optional_decimal_text
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,

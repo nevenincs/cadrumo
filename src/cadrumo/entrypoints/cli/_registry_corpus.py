@@ -6,9 +6,6 @@ from typing import Annotated
 
 import typer
 
-from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
-
 from ...application.registry import (
     RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
@@ -36,6 +33,8 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...domain.manuals import ManualPart
+from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._registry_corpus_payloads import (
     CitationListResult,
