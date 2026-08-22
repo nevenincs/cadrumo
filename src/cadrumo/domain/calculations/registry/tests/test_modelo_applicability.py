@@ -28,6 +28,8 @@ from .. import (
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
+from .._applicability import MODELO_APPLICABILITY_RULES
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,38 +52,40 @@ _NON_IMPATRIADO_SPECIAL_REGIMES = (None, IrpfSpecialRegime.GENERAL)
 
 
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
-    """The seed rules are exposed by the registry package."""
+    """Every applicability rule authored in the registry is one the engine reads.
+
+    This pinned a literal list of modelo ids, which had to be edited by hand on
+    every enrolment and could not tell a missing entry from an intended one. It
+    was hiding a real defect: nine modelos -- 136, 145, 151, 210, 216, 232, 296,
+    360 and 714 -- carried applicability rules authored and loader-validated in
+    their registry trees while absent from
+    ``REGISTRY_RESOLVED_APPLICABILITY_MODELOS``, so ``has_applicability_rule``
+    answered ``False`` for them and every profile got ``INCOMPLETE``. Authored
+    regulatory data that nothing reads is the dormant-capacity failure, and a
+    hand-maintained id list agreed with itself while it happened.
+
+    The property instead: what the package exposes is exactly what the registry
+    authors, plus the modelos still resolved from the literal table. A rule
+    authored without enrolment now fails here, and so does an enrolment with no
+    rule behind it.
+    """
 
     assert derive_modelo_applicability.__module__ == ("cadrumo.domain.calculations.registry._applicability")
-    rules = iter_modelo_applicability_rules()
-    assert {rule.modelo for rule in rules} == {
-        "100",
-        "111",
-        "115",
-        "117",
-        "123",
-        "126",
-        "128",
-        "130",
-        "131",
-        "180",
-        "184",
-        "187",
-        "188",
-        "190",
-        "193",
-        "194",
-        "200",
-        "202",
-        "303",
-        "322",
-        "347",
-        "349",
-        "353",
-        "369",
-        "390",
-        "720",
-        "721",
+
+    modelos, _catalogues = _committed_registry_tree()
+    authored = {
+        modelo.id
+        for modelo in modelos
+        if any(revision.applicability for revision in modelo.revisions.values())
+    }
+    assert authored, "no modelo authors an applicability rule, so this assertion would be vacuous"
+
+    still_literal = {str(modelo) for modelo in MODELO_APPLICABILITY_RULES}
+    exposed = {rule.modelo for rule in iter_modelo_applicability_rules()}
+
+    assert exposed == authored | still_literal, {
+        "authored_but_not_exposed": sorted(authored - exposed),
+        "exposed_but_not_authored_or_literal": sorted(exposed - (authored | still_literal)),
     }
 
 
