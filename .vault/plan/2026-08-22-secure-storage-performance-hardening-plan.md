@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:431b2d8a68ad162164c935dbd7afc298b2b441e986da23ddfae33089080aa00c'
+body_hash: 'sha256:2971fe3af1c9815cc7a88f1a57816dffa568b57bfe589954b2e69c3205382e3c'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -44,7 +44,7 @@ Make the real installed command tree authoritative for universal enrollment.
 - [x] `W01.P01.S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior; `src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [x] `W01.P01.S03` - Introduce lightweight node-attached command execution policy and expose it through the live command census; `src/cadrumo/entrypoints/cli/_command_policy.py and _command_suggestions.py`.
 - [x] `W01.P01.S48` - Attach execution policy to every config subtree callback and group; `src/cadrumo/entrypoints/cli/_config/`.
-- [ ] `W01.P01.S49` - Attach execution policy to ledger subtree callbacks and remove ledger risk path declarations; `src/cadrumo/entrypoints/cli/ ledger modules`.
+- [x] `W01.P01.S49` - Attach execution policy to every ledger subtree callback and group while retaining legacy risk rows until mandatory S52 consumer migration and deletion; `src/cadrumo/entrypoints/cli/ ledger modules`.
 - [ ] `W01.P01.S50` - Attach execution policy to modelo subtree callbacks and remove modelo risk path declarations; `src/cadrumo/entrypoints/cli/ modelo modules`.
 - [ ] `W01.P01.S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks; `src/cadrumo/entrypoints/cli/ remaining app modules`.
 - [ ] `W01.P01.S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table; `src/cadrumo/application/operator_surface and src/cadrumo/adapters/inbound/mcp`.

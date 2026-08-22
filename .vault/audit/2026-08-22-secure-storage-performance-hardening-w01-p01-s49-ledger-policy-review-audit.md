@@ -5,29 +5,10 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ffd0d184a463302195f810aff4cd27558cd475ab7c82cdfa9f676ba75cc3aea3'
+body_hash: 'sha256:d1e17a5384f265d263b4860bcf6cb3ae0ecccd57e4c25936e16bddbc6687e3e3'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `W01.P01.S49 ledger execution-policy review`
 
@@ -95,3 +76,28 @@ and demonstrate the assertion bites when one representative callback is
 externally downgraded. Re-run the focused policy suite, Ruff, destructive and
 handoff parity, real-process help behavior, and the feature-scoped Vaultspec
 gate before approval.
+
+## Resolution and re-review
+
+The current committed S49 implementation resolves both findings. `ledger add`,
+`ledger import`, invoice `add`, invoice `import`, and evidence `confirm` now
+carry `LEDGER_NETWORK_WRITE`; `ledger doclink` now carries
+`LEDGER_GOOGLE_WRITE`. The live-census test asserts the exact network effect,
+encrypted-facts authority, and profile-bound route for each network specimen,
+and separately requires Google plus its implied network authority for doclink.
+An externally constructed callback deliberately carrying `LEDGER_WRITE` is
+passed through the same semantic assertion under `pytest.raises`, proving the
+downgrade detector bites rather than merely checking that metadata exists.
+
+The implementation lane's focused post-fix run completed with 15 tests passing,
+plus clean Ruff and Ty checks. This independent re-review confirmed the current
+source declarations and test construction and reran Ruff successfully. Its
+fresh pytest and live-census attempts were prevented before collection by an
+unrelated current-HEAD import failure:
+`profile_is_password_authentication_failure` is missing from
+`application.user_profile._custody_ports`; the run correctly reported zero
+tests rather than being treated as green. That external regression does not
+reopen either S49 finding, but must be cleared before a tree-wide release gate.
+
+S49 is approved on re-review: no critical or high execution-policy finding
+remains. The legacy risk table remains intentionally unchanged until S52.
