@@ -148,14 +148,46 @@ def _lazy_resolvable_names(tree: ast.Module) -> set[str]:
     through every name because the module *has* a ``__getattr__`` -- makes the
     scan blind to precisely the facades that use the pattern, which in this
     tree includes ``cadrumo.core``.
+
+    A second shipped shape keeps the names in a module-level container and
+    tests membership against it (``if name in _REGISTRY_CONTRACT_EXPORTS``).
+    Harvesting only the function body reads those facades as resolving NOTHING
+    and reports every one of their exports as unbound -- measured, nineteen
+    such reports across ``cadrumo.domain.user_profile`` and
+    ``cadrumo.entrypoints.cli``, each of which a real interpreter resolves.
+    So the containers ``__getattr__`` actually references are harvested too,
+    which is narrower than trusting any module-level string set: a container
+    the function never consults still contributes nothing.
     """
-    return {
+    getattr_defs = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"]
+    inline = {
         sub.value
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"
+        for node in getattr_defs
         for sub in ast.walk(node)
         if isinstance(sub, ast.Constant) and isinstance(sub.value, str)
     }
+    referenced = {
+        sub.id for node in getattr_defs for sub in ast.walk(node) if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load)
+    }
+    return inline | _module_level_strings(tree, referenced)
+
+
+def _module_level_strings(tree: ast.Module, wanted: set[str]) -> set[str]:
+    """Return string constants held by module-level bindings named in ``wanted``."""
+    harvested: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            targets = {t.id for t in node.targets if isinstance(t, ast.Name)}
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            targets = {node.target.id}
+        else:
+            continue
+        if not (targets & wanted) or node.value is None:
+            continue
+        harvested |= {
+            sub.value for sub in ast.walk(node.value) if isinstance(sub, ast.Constant) and isinstance(sub.value, str)
+        }
+    return harvested
 
 
 def _exported_names(tree: ast.Module) -> list[str] | None:
