@@ -2111,3 +2111,60 @@ authority off a filename is not the standard, however plausible the date.
 Side effect worth keeping: the registration gate's unregistered-design population went
 **49 → 48**. The remaining 48 span modelos 036, 100, 111, 115, 123 and others — a real
 inventory backlog, not m763-specific.
+
+## 2026-08-22 — filing-capability triage: two predictors that beat "smallest first"
+
+Opening the export-layout campaign on the smallest revision was the wrong instinct, and
+measuring caught it before a byte offset was written. Two independent filters decide whether
+a layout can be authored honestly, and neither is size.
+
+### Filter 1 — does the design's field table TILE?
+
+`extract_record_design` reports a field list; a fixed-width layout is only authorable if that
+list tiles the record once, with no gap and no overlap. Measured across all worklist designs:
+
+| modelo | fields | overlaps |
+|---|---|---|
+| **038** | 58 | **31 — CORRUPT** |
+| 182 / 187 / 188 / 194 | 38–46 | 0 |
+| 840 | 381 | 0 |
+| 763 | 201 | 0 |
+| 036 | 1047 | 0 |
+| 220 (2024 / 2025) | 16079 / 16720 | 0 |
+
+Modelo 038's PDF extracts with reversed text (`AIRATNEMELPMOC .CED` for "DEC.
+COMPLEMENTARIA", `ODOIREP` for "PERIODO"), merged column descriptions, and 31 overlapping
+fields. **Every offset in it would be a guess.** It is the only corrupt one — this is not a
+PDF-versus-xlsx problem, and four other PDFs tile perfectly.
+
+**The read-quality gate cannot see this.** `test_no_bundled_design_is_unreadable_or_only_partly_read`
+reports 9 designs as PARTIAL ("sheets skipped"); modelo 038 is not among them, because its
+sheets *are* read — they just come out garbled. The gate detects absence, not corruption. A
+tiling check is the missing instrument.
+
+### Filter 2 — do the design's years cover the revision's CLAIMED years?
+
+`test_every_claimed_filing_year_is_covered_by_its_declared_layout_design` fires only on
+revisions that ALREADY declare a layout. So a revision with no layout looks clean, and
+authoring one moves it onto that gate's failing list. Measured claimed-vs-covered:
+
+- **Fully covered, authorable now:** 840 (24/24y), 036 (2/2y), 220/2024 (1/1y), and 038
+  (25/25y, but blocked by Filter 1).
+- **Would trip the claimed-year gate:** 182 (**17 of 20 years uncovered**), 188 (4y), 194
+  (4y), 187 (3y), 763 (1y — 2011, the same first-application question already open),
+  220/2025-y-siguientes (2026).
+- **No registered design at all:** 185, 136, 721.
+
+This is the "gates overlap, so satisfying one can violate another" hazard, and the tell named
+in the rules is oscillation. Authoring modelo 182's layout from a 2024-only design would take
+the filing worklist 13 → 12 and push the claimed-year gate 15 → 16. That is a trade, not
+progress. The third shape is an era split so each layout matches its own design — but the
+early era then remains unfileable, so **the worklist cannot be driven to zero by authoring
+layouts alone.** Most of these revisions are open-ended spans whose designs cover only recent
+years; the residue needs older designs acquired from AEAT.
+
+### Corrected order
+
+**840 first** — fully design-covered, tiles clean, 381 fields, 2 casillas — then 036, then
+220/2024. Not 038 (corrupt), and not the small informative returns (year gaps).
+
