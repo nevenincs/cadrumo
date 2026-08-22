@@ -37,7 +37,14 @@ from ...domain.transactions import (
     is_classified,
 )
 from ...llm import LLMSplitApplyResult
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
+from ._ledger_execution_policies import (
+    LEDGER_DESTRUCTIVE,
+    LEDGER_GOOGLE_WRITE,
+    LEDGER_NETWORK_COMPUTE_WRITE,
+    LEDGER_WRITE,
+)
 from ._ledger_support import (
     _emit_update_result,
     _ledger_transaction_validation_no_recovery,
@@ -76,6 +83,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
 
 
+@command_execution_policy(LEDGER_WRITE)
 def ledger_detach(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.detach.id_help")),
@@ -113,6 +121,7 @@ def ledger_detach(
     )
 
 
+@command_execution_policy(LEDGER_WRITE)
 def ledger_attach(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.attach.id_help")),
@@ -222,6 +231,7 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
     return guessed or "application/octet-stream"
 
 
+@command_execution_policy(LEDGER_GOOGLE_WRITE)
 def ledger_doclink(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
@@ -336,6 +346,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     return folder_id
 
 
+@command_execution_policy(LEDGER_GOOGLE_WRITE)
 def ledger_pull_folder(
     ctx: typer.Context,
     folder: str = typer.Option(
@@ -479,6 +490,7 @@ def ledger_pull_folder(
     )
 
 
+@command_execution_policy(LEDGER_WRITE)
 def ledger_archive(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.archive.id_help")),
@@ -512,6 +524,7 @@ def ledger_archive(
     )
 
 
+@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_stash(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.stash.id_help")),
@@ -545,6 +558,7 @@ def ledger_stash(
     )
 
 
+@command_execution_policy(LEDGER_WRITE)
 def ledger_exclude(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
@@ -593,6 +607,7 @@ def ledger_exclude(
     )
 
 
+@command_execution_policy(LEDGER_WRITE)
 def ledger_restore(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.restore.id_help")),
@@ -626,6 +641,7 @@ def ledger_restore(
     )
 
 
+@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_remove(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.remove.id_help")),
@@ -664,6 +680,7 @@ def ledger_remove(
     )
 
 
+@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_reset(
     ctx: typer.Context,
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.reset.reason_help")),
@@ -699,6 +716,7 @@ def ledger_reset(
     )
 
 
+@command_execution_policy(LEDGER_NETWORK_COMPUTE_WRITE)
 def ledger_split(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.split.id_help")),
@@ -1047,6 +1065,7 @@ def _ledger_split_llm(
     )
 
 
+@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_merge(
     ctx: typer.Context,
     child_id: list[str] = typer.Option([], "--child-id", help=tr("cli.ledger.merge.child_id_help")),

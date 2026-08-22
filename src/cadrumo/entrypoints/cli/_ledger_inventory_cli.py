@@ -15,6 +15,7 @@ from ...application.inventory import InventoryMovementCommand, InventoryService
 from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import MovementKind
+from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
     _parse_iso_date,
@@ -24,6 +25,7 @@ from ._common import (
 from ._common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
+from ._ledger_execution_policies import LEDGER_COMPUTE_READ, LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 from ._ledger_payloads import (
     InventoryCreateResult,
     InventoryListResult,
@@ -59,12 +61,16 @@ inventory_valuation_app = typer.Typer(
     help=tr("cli.app.ledger.inventory.valuation_group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(inventory_app)
+declare_metadata_group(inventory_movement_app)
+declare_metadata_group(inventory_valuation_app)
 
 
 @inventory_app.command(
     "list",
     help=tr("cli.app.ledger.inventory.list_help"),
 )
+@command_execution_policy(LEDGER_READ)
 def inventory_list(ctx: typer.Context) -> None:
     """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
     bucket_id = _inventory_bucket_id()
@@ -92,6 +98,7 @@ def inventory_list(ctx: typer.Context) -> None:
     "create",
     help=tr("cli.app.ledger.inventory.create_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def inventory_create(
     ctx: typer.Context,
     actividad_id: str = typer.Argument(
@@ -141,6 +148,7 @@ def inventory_create(
     "add",
     help=tr("cli.app.ledger.inventory.movement_add_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def inventory_movement_add(
     ctx: typer.Context,
     actividad_id: str = typer.Option(
@@ -223,6 +231,7 @@ def inventory_movement_add(
     "preview",
     help=tr("cli.app.ledger.inventory.valuation_preview_help"),
 )
+@command_execution_policy(LEDGER_COMPUTE_READ)
 def inventory_valuation_preview(
     ctx: typer.Context,
     actividad_id: str = typer.Option(

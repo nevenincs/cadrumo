@@ -22,7 +22,9 @@ from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import TransactionValidationError
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
+from ._ledger_execution_policies import LEDGER_NETWORK_WRITE
 from ._ledger_support import _ledger_transaction_validation_no_recovery
 
 if TYPE_CHECKING:
@@ -179,6 +181,7 @@ def register_import_commands(app: typer.Typer) -> None:
     """Register ledger import commands."""
 
     @app.command("import", help=tr("cli.ledger.import.help"))
+    @command_execution_policy(LEDGER_NETWORK_WRITE)
     def ledger_import(
         ctx: typer.Context,
         file: Path = typer.Option(..., "--file", help=tr("cli.ledger.import.file_help")),

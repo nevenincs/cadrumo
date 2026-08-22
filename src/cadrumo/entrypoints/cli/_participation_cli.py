@@ -21,7 +21,9 @@ from typer.core import TyperGroup
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import get_transaction_participation
 from ...core.i18n import tr
+from ._command_policy import command_execution_policy
 from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
+from ._ledger_execution_policies import LEDGER_COMPUTE_WRITE, LEDGER_READ
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
@@ -49,6 +51,7 @@ def register_participation_commands(
     )
 
     @participation.callback(invoke_without_command=True)
+    @command_execution_policy(LEDGER_READ)
     def participation_lookup(
         ctx: typer.Context,
         transaction_id: str | None = typer.Argument(
@@ -172,6 +175,7 @@ def _participation_lines(
 
 def _register_rebuild_command(participation: typer.Typer) -> None:
     @participation.command("rebuild")
+    @command_execution_policy(LEDGER_COMPUTE_WRITE)
     def participation_rebuild(ctx: typer.Context) -> None:
         """Run :func:`rebuild_participation_index` for the active bucket."""
         from ...application.modelo import rebuild_participation_index

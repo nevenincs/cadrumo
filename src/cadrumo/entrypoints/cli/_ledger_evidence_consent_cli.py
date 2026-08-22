@@ -34,11 +34,13 @@ from ...application.ledger import (
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _state, _tx_repo
 from ._ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceConsentRederiveResult,
 )
+from ._ledger_execution_policies import LEDGER_NETWORK_WRITE, LEDGER_READ, declare_metadata_group
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
 _NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
@@ -49,6 +51,7 @@ _REDERIVE_REFUSED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_refused
 _GROUP_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.group_help"
 
 consent_app = typer.Typer(no_args_is_help=True)
+declare_metadata_group(consent_app)
 
 
 def _unrecallable_notice() -> Notice:
@@ -98,6 +101,7 @@ def register_evidence_consent_commands(evidence_app: typer.Typer) -> None:
 
 def _register_consent_list_command() -> None:
     @consent_app.command("list", help=tr(_LIST_HELP_LOCALE_KEY))
+    @command_execution_policy(LEDGER_READ)
     def consent_list(ctx: typer.Context) -> None:
         """List off-host dispatches and the artefacts derived from them."""
         bucket_id = _tx_repo(_state()).bucket_id
@@ -191,6 +195,7 @@ def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
 
 def _register_consent_rederive_command() -> None:
     @consent_app.command("rederive", help=tr(_REDERIVE_HELP_LOCALE_KEY))
+    @command_execution_policy(LEDGER_NETWORK_WRITE)
     def consent_rederive(
         ctx: typer.Context,
         evidence_reference: str = typer.Argument(

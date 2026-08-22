@@ -24,6 +24,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, SupplyNature
 from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -40,6 +41,13 @@ from ._ledger_evidence_batch_cli import register_evidence_batch_command
 from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
 from ._ledger_evidence_consent_cli import register_evidence_consent_commands
 from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
+from ._ledger_execution_policies import (
+    LEDGER_DESTRUCTIVE,
+    LEDGER_NETWORK_WRITE,
+    LEDGER_READ,
+    LEDGER_WRITE,
+    declare_metadata_group,
+)
 from ._ledger_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
@@ -56,6 +64,7 @@ evidence_app = typer.Typer(
     help=tr("cli.app.ledger.evidence.group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(evidence_app)
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -84,6 +93,7 @@ def _register_evidence_add_command() -> None:
         "add",
         help=tr("cli.app.ledger.evidence.add_help"),
     )
+    @command_execution_policy(LEDGER_WRITE)
     def evidence_add(
         ctx: typer.Context,
         source_path: str = typer.Argument(
@@ -156,6 +166,7 @@ def _register_evidence_view_command() -> None:
         "view",
         help=tr("cli.app.ledger.evidence.view_help"),
     )
+    @command_execution_policy(LEDGER_READ)
     def evidence_view(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
@@ -179,6 +190,7 @@ def _register_evidence_list_command() -> None:
         "list",
         help=tr("cli.app.ledger.evidence.list_help"),
     )
+    @command_execution_policy(LEDGER_READ)
     def evidence_list(ctx: typer.Context) -> None:
         """List every purchase invoice evidence record in the active bucket."""
         transaction_repository = _tx_repo(_state())
@@ -209,6 +221,7 @@ def _register_evidence_update_command() -> None:
         "update",
         help=tr("cli.app.ledger.evidence.update_help"),
     )
+    @command_execution_policy(LEDGER_WRITE)
     def evidence_update(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
@@ -256,6 +269,7 @@ def _register_evidence_remove_command() -> None:
         "remove",
         help=tr("cli.app.ledger.evidence.remove_help"),
     )
+    @command_execution_policy(LEDGER_DESTRUCTIVE)
     def evidence_remove(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
@@ -376,6 +390,7 @@ def _register_evidence_extract_command() -> None:
         "extract",
         help=tr("cli.app.ledger.evidence.extract_help"),
     )
+    @command_execution_policy(LEDGER_NETWORK_WRITE)
     def evidence_extract(
         ctx: typer.Context,
         evidence_id: str | None = typer.Option(
@@ -504,6 +519,7 @@ def _register_evidence_confirm_command() -> None:
         "confirm",
         help=tr("cli.app.ledger.evidence.confirm_help"),
     )
+    @command_execution_policy(LEDGER_NETWORK_WRITE)
     def evidence_confirm(
         ctx: typer.Context,
         kind: InvoiceKind = typer.Option(

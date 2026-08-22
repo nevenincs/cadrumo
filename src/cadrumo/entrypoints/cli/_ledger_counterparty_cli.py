@@ -50,6 +50,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
 from ...domain.iva import EUMemberState, IvaTerritorialScope
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
@@ -58,6 +59,7 @@ from ._ledger_counterparty_payloads import (
     CounterpartyShowResult,
     CounterpartyWithdrawResult,
 )
+from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 
 if TYPE_CHECKING:
     from ...application.ledger import ConfirmedCounterpartyFacts
@@ -67,6 +69,7 @@ counterparty_app = typer.Typer(
     help=tr("cli.app.ledger.counterparty.group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(counterparty_app)
 
 
 def register_counterparty_commands(app: typer.Typer) -> None:
@@ -110,6 +113,7 @@ def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPaylo
     "confirm",
     help=tr("cli.app.ledger.counterparty.confirm_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def counterparty_confirm(
     ctx: typer.Context,
     # The subject is a POSITIONAL argument, not an option: the verb addresses one
@@ -225,6 +229,7 @@ def counterparty_confirm(
     "withdraw",
     help=tr("cli.app.ledger.counterparty.withdraw_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def counterparty_withdraw(
     ctx: typer.Context,
     tax_identifier: str = typer.Argument(
@@ -279,6 +284,7 @@ def counterparty_withdraw(
     "show",
     help=tr("cli.app.ledger.counterparty.show_help"),
 )
+@command_execution_policy(LEDGER_READ)
 def counterparty_show(
     ctx: typer.Context,
     tax_identifier: str = typer.Argument(

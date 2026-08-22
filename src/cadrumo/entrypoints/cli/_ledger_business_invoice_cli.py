@@ -38,6 +38,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, IvaCategory
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -57,6 +58,13 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceUpdatePayload,
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
+)
+from ._ledger_execution_policies import (
+    LEDGER_DESTRUCTIVE,
+    LEDGER_NETWORK_WRITE,
+    LEDGER_READ,
+    LEDGER_WRITE,
+    declare_metadata_group,
 )
 from ._ledger_support import _ledger_cli_no_recovery
 
@@ -94,6 +102,7 @@ invoice_app = typer.Typer(
     help=tr("cli.app.ledger.invoice.group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(invoice_app)
 
 
 # The invoice fields every operator surface renders, declared once. Both
@@ -377,6 +386,7 @@ _CatalogueRetentionAmountOpt = Annotated[
     "add",
     help=tr("cli.app.ledger.invoice.add_help"),
 )
+@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_add(
     ctx: typer.Context,
     kind: _CatalogueKindOpt,
@@ -467,6 +477,7 @@ def invoice_add(
     "wizard",
     help=tr("cli.app.ledger.invoice.wizard_help"),
 )
+@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_wizard(
     ctx: typer.Context,
     kind: _CatalogueKindOpt,
@@ -569,6 +580,7 @@ def invoice_wizard(
     "import",
     help=tr("cli.app.ledger.invoice.import_help"),
 )
+@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_import(
     ctx: typer.Context,
     file: Path = typer.Option(
@@ -757,6 +769,7 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
     "list",
     help=tr("cli.app.ledger.invoice.list_help"),
 )
+@command_execution_policy(LEDGER_READ)
 def invoice_list(
     ctx: typer.Context,
     kind: InvoiceKind | None = typer.Option(
@@ -796,6 +809,7 @@ def invoice_list(
     "view",
     help=tr("cli.app.ledger.invoice.view_help"),
 )
+@command_execution_policy(LEDGER_READ)
 def invoice_view(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
@@ -825,6 +839,7 @@ def invoice_view(
     "remove",
     help=tr("cli.app.ledger.invoice.remove_help"),
 )
+@command_execution_policy(LEDGER_DESTRUCTIVE)
 def invoice_remove(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
@@ -862,6 +877,7 @@ def invoice_remove(
     "update",
     help=tr("cli.app.ledger.invoice.update_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def invoice_update(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
