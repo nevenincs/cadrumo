@@ -153,6 +153,195 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigència normativa des del 3 de febrer de 2025
+            x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Establiment permanent. Avisos. Alta d'avisos de l'AEAT
+            x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Establiment permanent. Avisos. Baixa d'avisos de l'AEAT
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Establiment permanent. Avisos. Alta a l'aplicacio mobil de l'AEAT
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa a l'aplicacio mobil de l'AEAT
+            x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              label: Establiment permanent. Avisos. Alta d'avisos de la DGT
+            x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa d'avisos de la DGT
+            x-clo2sobmd5pmuspdclmm2qbc:
+              label: Establiment permanent. Avisos. Correu electronic
+            x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Establiment permanent. Avisos. Alta o modificacio del correu
+                electronic d'avisos
+            x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Establiment permanent. Avisos. Baixa del correu electronic d'avisos
+            x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Establiment permanent. Avisos. Alta o modificacio del telefon
+                mobil
+            x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Establiment permanent. Avisos. Baixa del telefon mobil
+            x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Establiment permanent. Avisos. Prefix de pais del telefon mobil
+            x-clo2sobmd5pmuspdehim2bb1dhq62:
+              label: Establiment permanent. Avisos. Alta d'avisos del TEA
+            x-clo2sobmd5pmuspdehim2bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa d'avisos del TEA
+            x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Establiment permanent. Avisos. Telefon mobil
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Establiment permanent. Domicili fiscal a Espanya. Bloc
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Establiment permanent. Domicili fiscal a Espanya. Qualificador
+                del numero
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de municipi
+                INE
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi postal
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de provincia
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de via
+                INE
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Establiment permanent. Domicili fiscal a Espanya. Complement
+                de domicili
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Establiment permanent. Domicili fiscal a Espanya. Escala
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Establiment permanent. Domicili fiscal a Espanya. Indicador de
+                referencia cadastral del domicili fiscal
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Establiment permanent. Domicili fiscal a Espanya. Localitat o
+                poblacio
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Establiment permanent. Domicili fiscal a Espanya. Nom del municipi
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Establiment permanent. Domicili fiscal a Espanya. Nom de la via
+                publica
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Establiment permanent. Domicili fiscal a Espanya. Numero de casa
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Establiment permanent. Domicili fiscal a Espanya. Planta
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Establiment permanent. Domicili fiscal a Espanya. Portal
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Establiment permanent. Domicili fiscal a Espanya. Porta
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Establiment permanent. Domicili fiscal a Espanya. Referencia
+                cadastral
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Establiment permanent. Domicili fiscal a Espanya. Tipus de numero
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Establiment permanent. Domicili fiscal a Espanya. Tipus de via
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Establiment permanent. Domicili a efectes de notificacions. En
+                qualitat de, per a l'apartat de correus
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                postal de l'apartat de correus
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de provincia de l'apartat de correus
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Establiment permanent. Domicili a efectes de notificacions. Numero
+                d'apartat de correus
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Establiment permanent. Domicili a efectes de notificacions. Destinatari
+                de l'apartat de correus, si es diferent del declarant
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Establiment permanent. Domicili a efectes de notificacions. Poblacio
+                o ciutat de l'apartat de correus
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Establiment permanent. Domicili a efectes de notificacions. Indicador
+                de baixa del domicili de notificacions
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Establiment permanent. Domicili a efectes de notificacions. Bloc
+                (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Establiment permanent. Domicili a efectes de notificacions. En
+                qualitat de (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Establiment permanent. Domicili a efectes de notificacions. Qualificador
+                del numero (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de municipi INE (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                postal (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de provincia (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de via INE (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Establiment permanent. Domicili a efectes de notificacions. Complement
+                de domicili (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Establiment permanent. Domicili a efectes de notificacions. Destinatari,
+                si es diferent del declarant (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Establiment permanent. Domicili a efectes de notificacions. Escala
+                (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Establiment permanent. Domicili a efectes de notificacions. Localitat
+                o poblacio (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Establiment permanent. Domicili a efectes de notificacions. Nom
+                del municipi (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Establiment permanent. Domicili a efectes de notificacions. Nom
+                de la via publica (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Establiment permanent. Domicili a efectes de notificacions. Numero
+                de casa (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Establiment permanent. Domicili a efectes de notificacions. Planta
+                (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Establiment permanent. Domicili a efectes de notificacions. Portal
+                (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Establiment permanent. Domicili a efectes de notificacions. Porta
+                (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Establiment permanent. Domicili a efectes de notificacions. Tipus
+                de numero (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Establiment permanent. Domicili a efectes de notificacions. Tipus
+                de via (domicili 1)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              label: Establiment permanent. Identificacio. Anagrama
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Establiment permanent. Identificacio. Domini o adreca d'internet
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Establiment permanent. Identificacio. Domini o adreca d'internet
+                (segon)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              label: Establiment permanent. Identificacio. Es una sucursal de l'entitat
+                no resident
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              label: Establiment permanent. Identificacio. Data de constitucio
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              label: Establiment permanent. Identificacio. Data d'inscripcio al registre
+                mercantil
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              label: Establiment permanent. Identificacio. Estat de residencia de
+                la persona o entitat no resident de la qual depen
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              label: Establiment permanent. Identificacio. N.I.F. de la persona o
+                entitat no resident de la qual depen, si en disposa
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              label: Establiment permanent. Identificacio. Rao o denominacio social
+                de la persona o entitat no resident de la qual depen
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Establiment permanent. Identificacio. N.I.F.
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Establiment permanent. Identificacio. Codi d'identificacio fiscal
+                de l'Estat de residencia o NVAT
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              label: Establiment permanent. Identificacio. Rao o denominacio social
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              label: Establiment permanent. Identificacio. Tipus d'establiment permanent
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Avisos. Alta d'avisos de l'AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

@@ -149,6 +149,195 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Regulation in force from 3 February 2025
+            x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Permanent establishment. Alerts. Registration for AEAT alerts
+            x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Permanent establishment. Alerts. Deregistration from AEAT alerts
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Permanent establishment. Alerts. Registration in the AEAT mobile
+                application
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from the AEAT
+                mobile application
+            x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              label: Permanent establishment. Alerts. Registration for DGT alerts
+            x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from DGT alerts
+            x-clo2sobmd5pmuspdclmm2qbc:
+              label: Permanent establishment. Alerts. E-mail
+            x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Permanent establishment. Alerts. Registration or change of the
+                alert e-mail
+            x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Permanent establishment. Alerts. Deregistration of the alert
+                e-mail
+            x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Permanent establishment. Alerts. Registration or change of the
+                mobile telephone
+            x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Permanent establishment. Alerts. Deregistration of the mobile
+                telephone
+            x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Permanent establishment. Alerts. Country dialling prefix of the
+                mobile telephone
+            x-clo2sobmd5pmuspdehim2bb1dhq62:
+              label: Permanent establishment. Alerts. Registration for TEA alerts
+            x-clo2sobmd5pmuspdehim2bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from TEA alerts
+            x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Permanent establishment. Alerts. Mobile telephone
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Permanent establishment. Tax address in Spain. Block
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Permanent establishment. Tax address in Spain. Number qualifier
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Permanent establishment. Tax address in Spain. INE municipality
+                code
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Permanent establishment. Tax address in Spain. Postal code
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Permanent establishment. Tax address in Spain. Province code
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Permanent establishment. Tax address in Spain. INE street code
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Permanent establishment. Tax address in Spain. Address complement
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Permanent establishment. Tax address in Spain. Stairway
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Permanent establishment. Tax address in Spain. Cadastral reference
+                indicator of the tax address
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Permanent establishment. Tax address in Spain. Locality or town
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Permanent establishment. Tax address in Spain. Municipality name
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Permanent establishment. Tax address in Spain. Street name
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Permanent establishment. Tax address in Spain. House number
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Permanent establishment. Tax address in Spain. Floor
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Permanent establishment. Tax address in Spain. Entrance
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Permanent establishment. Tax address in Spain. Door
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Permanent establishment. Tax address in Spain. Cadastral reference
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Permanent establishment. Tax address in Spain. Number type
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Permanent establishment. Tax address in Spain. Street type
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Permanent establishment. Address for notifications. Acting as,
+                for the post office box
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Permanent establishment. Address for notifications. Postal code
+                of the post office box
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Permanent establishment. Address for notifications. Province
+                code of the post office box
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Permanent establishment. Address for notifications. Post office
+                box number
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Permanent establishment. Address for notifications. Addressee
+                of the post office box, if different from the filer
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Permanent establishment. Address for notifications. Town or city
+                of the post office box
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Permanent establishment. Address for notifications. Deregistration
+                indicator of the notification address
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Permanent establishment. Address for notifications. Block (address
+                1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Permanent establishment. Address for notifications. Acting as
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Permanent establishment. Address for notifications. Number qualifier
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Permanent establishment. Address for notifications. INE municipality
+                code (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Permanent establishment. Address for notifications. Postal code
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Permanent establishment. Address for notifications. Province
+                code (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Permanent establishment. Address for notifications. INE street
+                code (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Permanent establishment. Address for notifications. Address complement
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Permanent establishment. Address for notifications. Addressee,
+                if different from the filer (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Permanent establishment. Address for notifications. Stairway
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Permanent establishment. Address for notifications. Locality
+                or town (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Permanent establishment. Address for notifications. Municipality
+                name (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Permanent establishment. Address for notifications. Street name
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Permanent establishment. Address for notifications. House number
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Permanent establishment. Address for notifications. Floor (address
+                1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Permanent establishment. Address for notifications. Entrance
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Permanent establishment. Address for notifications. Door (address
+                1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Permanent establishment. Address for notifications. Number type
+                (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Permanent establishment. Address for notifications. Street type
+                (address 1)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              label: Permanent establishment. Identification. Logotype name
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Permanent establishment. Identification. Internet domain or address
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Permanent establishment. Identification. Internet domain or address
+                (second)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              label: Permanent establishment. Identification. Whether it is a branch
+                of the non-resident entity
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              label: Permanent establishment. Identification. Date of incorporation
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              label: Permanent establishment. Identification. Date of entry in the
+                commercial register
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              label: Permanent establishment. Identification. State of residence of
+                the non-resident person or entity it depends on
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              label: Permanent establishment. Identification. Tax identification number
+                of the non-resident person or entity it depends on, if any
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              label: Permanent establishment. Identification. Legal name of the non-resident
+                person or entity it depends on
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Permanent establishment. Identification. Tax identification number
+                (NIF)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Permanent establishment. Identification. Tax identification code
+                of the State of residence or NVAT
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              label: Permanent establishment. Identification. Legal name
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              label: Permanent establishment. Identification. Type of permanent establishment
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Alerts. Registration for AEAT alerts
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

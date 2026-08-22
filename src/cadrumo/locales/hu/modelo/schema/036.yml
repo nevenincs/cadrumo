@@ -148,6 +148,170 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Jogszabályi hatály 2025. február 3-tól
+            x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Allando telephely. Ertesitesek. AEAT-ertesitesek bejegyzese
+            x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Allando telephely. Ertesitesek. AEAT-ertesitesek torlese
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Allando telephely. Ertesitesek. Regisztracio az AEAT mobilalkalmazasaban
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Allando telephely. Ertesitesek. Kiiratkozas az AEAT mobilalkalmazasabol
+            x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              label: Allando telephely. Ertesitesek. DGT-ertesitesek bejegyzese
+            x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              label: Allando telephely. Ertesitesek. DGT-ertesitesek torlese
+            x-clo2sobmd5pmuspdclmm2qbc:
+              label: Allando telephely. Ertesitesek. E-mail
+            x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Allando telephely. Ertesitesek. Az ertesitesi e-mail bejegyzese
+                vagy modositasa
+            x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Allando telephely. Ertesitesek. Az ertesitesi e-mail torlese
+            x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Allando telephely. Ertesitesek. A mobiltelefon bejegyzese vagy
+                modositasa
+            x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Allando telephely. Ertesitesek. A mobiltelefon torlese
+            x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Allando telephely. Ertesitesek. A mobiltelefon orszaghivo szama
+            x-clo2sobmd5pmuspdehim2bb1dhq62:
+              label: Allando telephely. Ertesitesek. TEA-ertesitesek bejegyzese
+            x-clo2sobmd5pmuspdehim2bb2c5l62:
+              label: Allando telephely. Ertesitesek. TEA-ertesitesek torlese
+            x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Allando telephely. Ertesitesek. Mobiltelefon
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Tomb
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam kiegeszitoje
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. INE telepuleskod
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Iranyitoszam
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Tartomanykod
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. INE kozterulet-kod
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Cim kiegeszitese
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Lepcsohaz
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Az adougyi
+                lakcim ingatlan-nyilvantartasi jelzoje
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Helyseg vagy
+                telepules
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Telepules neve
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Kozterulet
+                neve
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Emelet
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Lepcsohaz bejarata
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Ajto
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Ingatlan-nyilvantartasi
+                hivatkozas
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam tipusa
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Allando telephely. Spanyolorszagi adougyi lakcim. Kozterulet
+                jellege
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Allando telephely. Ertesitesi cim. Minosege a postafiok tekinteteben
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Allando telephely. Ertesitesi cim. A postafiok iranyitoszama
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Allando telephely. Ertesitesi cim. A postafiok tartomanykodja
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Allando telephely. Ertesitesi cim. Postafiok szama
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Allando telephely. Ertesitesi cim. A postafiok cimzettje, ha
+                elter a bevallotol
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Allando telephely. Ertesitesi cim. A postafiok telepulese vagy
+                varosa
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Allando telephely. Ertesitesi cim. Az ertesitesi cim torlesenek
+                jelzoje
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Allando telephely. Ertesitesi cim. Tomb (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Allando telephely. Ertesitesi cim. Minosege (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Allando telephely. Ertesitesi cim. Hazszam kiegeszitoje (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Allando telephely. Ertesitesi cim. INE telepuleskod (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Allando telephely. Ertesitesi cim. Iranyitoszam (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Allando telephely. Ertesitesi cim. Tartomanykod (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Allando telephely. Ertesitesi cim. INE kozterulet-kod (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Allando telephely. Ertesitesi cim. Cim kiegeszitese (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Allando telephely. Ertesitesi cim. Cimzett, ha elter a bevallotol
+                (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Allando telephely. Ertesitesi cim. Lepcsohaz (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Allando telephely. Ertesitesi cim. Helyseg vagy telepules (1.
+                cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Allando telephely. Ertesitesi cim. Telepules neve (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Allando telephely. Ertesitesi cim. Kozterulet neve (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Allando telephely. Ertesitesi cim. Hazszam (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Allando telephely. Ertesitesi cim. Emelet (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Allando telephely. Ertesitesi cim. Lepcsohaz bejarata (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Allando telephely. Ertesitesi cim. Ajto (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Allando telephely. Ertesitesi cim. Hazszam tipusa (1. cim)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Allando telephely. Ertesitesi cim. Kozterulet jellege (1. cim)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              label: Allando telephely. Azonositas. Emblema
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Allando telephely. Azonositas. Internetes domain vagy cim
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Allando telephely. Azonositas. Internetes domain vagy cim (masodik)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              label: Allando telephely. Azonositas. A kulfoldi illetosegu szervezet
+                fioktelepe-e
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              label: Allando telephely. Azonositas. Az alapitas datuma
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              label: Allando telephely. Azonositas. A cegjegyzekbe torteno bejegyzes
+                datuma
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
+                vagy szervezetnek az illetosege szerinti allam, amelytol fugg
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
+                vagy szervezetnek az adoazonosito szama, amelytol fugg, ha van
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
+                vagy szervezetnek a neve, amelytol fugg
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Allando telephely. Azonositas. Adoazonosito szam (NIF)
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Allando telephely. Azonositas. Az illetoseg szerinti allam adoazonosito
+                kodja vagy NVAT
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              label: Allando telephely. Azonositas. Cegnev
+            x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              label: Allando telephely. Azonositas. Az allando telephely tipusa
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Ertesitesek. AEAT-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
