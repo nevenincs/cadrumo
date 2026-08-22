@@ -458,12 +458,6 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
-        parse_profile_custody_envelope as parse_profile_custody_envelope,
-    )
-    from ._custody_ports import (
-        parse_profile_custody_recovery_envelope as parse_profile_custody_recovery_envelope,
-    )
-    from ._custody_ports import (
         profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
     )
     from ._custody_ports import (
@@ -824,8 +818,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "default_profile_bucket_event_history_repository": "._custody_ports",
     "default_profile_record_crypto_port": "._custody_ports",
     "export_profile_recovery_artifact": "._recovery_custody",
-    "parse_profile_custody_envelope": "._custody_ports",
-    "parse_profile_custody_recovery_envelope": "._custody_ports",
     "profile_advance_session_idle_deadline": "._custody_ports",
     "profile_custody_record_session_material": "._custody_ports",
     "profile_custody_secure_object_namespace": "._custody_ports",

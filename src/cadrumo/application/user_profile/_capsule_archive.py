@@ -52,6 +52,10 @@ from ...adapters.persistence.storage.bucket import (
     read_sealed_archive,
     write_sealed_archive,
 )
+from ...adapters.persistence.storage.custody import (
+    parse_profile_custody_envelope,
+    parse_profile_custody_recovery_envelope,
+)
 from ...core import PRODUCT_IDENTITY
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
@@ -59,10 +63,6 @@ from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
 from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
-from ._custody_ports import (
-    parse_profile_custody_envelope,
-    parse_profile_custody_recovery_envelope,
-)
 
 if TYPE_CHECKING:
     from pathlib import Path

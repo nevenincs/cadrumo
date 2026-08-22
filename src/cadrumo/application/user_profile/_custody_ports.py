@@ -981,23 +981,6 @@ def verify_profile_custody_dek_against_sentinel(
     )
 
 
-def parse_profile_custody_envelope(payload: bytes) -> ProfileCustodyEnvelopePort:
-    """Parse one canonical password envelope from bytes the caller holds.
-
-    The committed-capsule reader cannot serve a restore, whose capsule is by
-    definition unpublished, so its material arrives as bytes and is parsed
-    here through the same strict record the publisher wrote. Parsing rather
-    than trusting is the point: a torn member is refused before anything is
-    republished, not discovered as a decryption failure afterwards.
-    """
-    return custody.parse_profile_custody_envelope(payload)
-
-
-def parse_profile_custody_recovery_envelope(payload: bytes) -> ProfileCustodyRecoveryEnvelopePort:
-    """Parse one canonical optional recovery wrapper from bytes the caller holds."""
-    return custody.parse_profile_custody_recovery_envelope(payload)
-
-
 #: Per-member ceilings for a capsule directory, re-exported so the restore path
 #: bounds each member with the SAME value the published capsule reader uses
 #: rather than forming a second opinion about the same record.
@@ -1229,8 +1212,6 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "parse_profile_custody_envelope",
-    "parse_profile_custody_recovery_envelope",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_close_bucket_session",

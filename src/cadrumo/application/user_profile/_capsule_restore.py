@@ -32,6 +32,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.storage import custody
+from ...adapters.persistence.storage.custody import (
+    parse_profile_custody_envelope,
+    parse_profile_custody_recovery_envelope,
+)
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ._aggregate import ProfileRestoreAuthority
@@ -40,8 +44,6 @@ from ._custody_ports import (
     PROFILE_CAPSULE_ENVELOPE_MAX_BYTES,
     PROFILE_CAPSULE_RECOVERY_MAX_BYTES,
     PROFILE_CAPSULE_SENTINEL_MAX_BYTES,
-    parse_profile_custody_envelope,
-    parse_profile_custody_recovery_envelope,
 )
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
