@@ -27,6 +27,60 @@ modelo:
               help: A negatív alappal rendelkező kedvezményezetti rekordokban szereplő
                 levonási alapok összege.
               label: A levonások és előlegfizetések negatív alapja
+            x-e1in4opec9gn6p9de9in8pbecdkmurj5ec:
+              help: null
+              label: Forrásadó- és előlegalap
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Kulcs
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Esedékesség éve
+            x-e1in4opecpim6q315lhmurjjehkn8tb3d5nmsbb1dpq6ior9e1gm6qbfdo:
+              help: null
+              label: Létrehozás vagy előrehozás dátuma
+            x-e1in4oped5i6arjkd5j6ior1cdkmurhde9imst315lr6it31dhkm6qb1:
+              help: null
+              label: A biztosított életjáradék azonosítása
+            x-e1in4oped5n6crridlgm6qbfdomm2p39cdkmurj1dg:
+              help: null
+              label: Kiegészítő információ
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Mód
+            x-e1in4opedpkmc:
+              help: null
+              label: A kedvezményezett adóazonosító száma
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: A törvényes képviselő adóazonosító száma
+            x-e1in4opedpnmqojick:
+              help: null
+              label: A kedvezményezett vezeték- és utóneve vagy cégneve
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Forrásadó százaléka
+            x-e1in4opee1p6irb15lgn0rriehgm8o8:
+              help: null
+              label: Befizetett díj
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Tartománykód
+            x-e1in4opee9im8tb3cdkmurj5ecmm8t1dcdqm2sjkc4:
+              help: null
+              label: Csökkentések (a 35/2006. törvény negyedik átmeneti rendelkezése)
+            x-e1in4opee9imsp39dlkmarjkdtpiqor1e1kn8obc5lmmuoj9dhkm2sj9ds:
+              help: null
+              label: Tőkejövedelmek vagy hozamok
+            x-e1in4opee9imsp39dlkmarjkdtpiqsr5ctqn4rrj5lgm6sj5cli6ushdd1kn0rrkclhm2sj9ds:
+              help: null
+              label: Jelzálogjogosult kedvezményezettű biztosításból származó jövedelem
+            x-e1in4opee9imst315lr6it31dhkm6qb15lgn6pb7elp62p31:
+              help: null
+              label: Biztosított életjáradék
+            x-e1in4opee9in8pbecdkmurj5ecmmirj7e9in6rrj5lhnapbeehgg:
+              help: null
+              label: Forrásadó és adóelőleg
           construct:
             modelo-188-calculation-construct:
               field:
