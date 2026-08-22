@@ -2576,3 +2576,38 @@ relación-de-locales block restated with no number on any repetition. Same for m
 where 24 of 110 fields are casillas. Those repetitions are the `binding_record` /
 `repeat = "binding_rows"` shape modelo 720 uses. **The next question for modelo 840 is a
 binding set, then a layout — not more casillas.**
+
+## 2026-08-22 — modelo 187 took the year-mismatch trade, observed not reverted
+
+A peer authored an export layout for modelo 187/2019-y-siguientes during this session.
+It is recorded here because it is the exact trade this campaign measured and warned
+against two iterations earlier, and because a third gate broke as a side effect that is
+easy to misattribute.
+
+**What happened.** `aeat-dr-187-2022` applies from 2022 onward; the revision claims
+2019 onward. Authoring a layout from it moved:
+
+- `test_filing_capability_worklist` 13 -> 12 (m187 can now emit)
+- `test_layout_design_applies_to_claimed_years` gained m187, which now reports
+  "claims ejercicio(s) 2019-2021 (3 year(s))" uncovered
+- `test_detail_row_field_declaration_coverage::test_the_probe_answers_for_a_modelo_whose_snapshot_refuses`
+  now FAILS with "DID NOT RAISE RegistryValidationError"
+
+**The third one is the trap for whoever triages next.** That test is an ANTI-VACUITY
+guard: it pins modelos 182 and 187 as genuinely refusing so the probe cannot pass by
+having stopped being exercised. Giving m187 a layout made its snapshot succeed, so the
+guard broke. It reads like an unrelated regression and is not — it is a direct
+consequence, and m182 still refuses correctly.
+
+**Not reverted, deliberately.** The peer is actively working this modelo and the rules
+say coordinate rather than barge. Three outcomes are defensible and the choice is
+theirs: acquire the 2019-2021 design and keep the layout; split the revision at 2022 so
+the layout matches its own design era (the earlier era then stays unfileable, so the
+worklist entry returns); or withdraw the layout. Whichever is chosen, the anti-vacuity
+guard needs a refusing modelo that is still refusing.
+
+**The general shape, restated.** Satisfying the filing worklist by authoring a layout
+from a design that does not cover the revision's claimed years is a TRADE, not progress:
+one gate goes green, another goes red, and the byte offsets are wrong for the uncovered
+years. Modelo 181 already carries this defect. The tell named in the rules is
+oscillation between two gates, and it applies here.
