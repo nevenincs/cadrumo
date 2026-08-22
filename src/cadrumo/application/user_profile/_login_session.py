@@ -89,10 +89,8 @@ from ._custody_ports import (
     ProfileSessionResumeOutcomePort,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
-    load_profile_custody_password_material,
     profile_advance_session_idle_deadline,
     profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
     profile_close_bucket_session,
     profile_current_bucket_session,
     profile_is_keyring_unavailable,
@@ -761,7 +759,7 @@ def bind_resumed_profile_session(
     # The session takes and owns its own copy.
     try:
         idle_minutes, _ = _bucket_session_windows()
-        session = profile_bucket_session_open_resumed(
+        session = master_key.BucketSession.open_resumed(
             bucket_id=bucket_id,
             dek=bytes(dek),
             idle_minutes=idle_minutes,
@@ -793,7 +791,7 @@ def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path
     has opened therefore makes every fact consumer prove both the session and
     the exact capsule it reads.
     """
-    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    material = custody.load_committed_profile_password_material(UUID(bucket_id), root=storage_root)
     activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
 
 
@@ -805,7 +803,7 @@ def _resume_acceleration_receipt(
 ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
     """Resume only against the envelope that is current for this capsule."""
     profile_id = UUID(bucket_id)
-    material = load_profile_custody_password_material(profile_id, root=storage_root)
+    material = custody.load_committed_profile_password_material(profile_id, root=storage_root)
     envelope = material.envelope
     return custody.resume_profile_session(
         storage_root=storage_root,
@@ -1122,7 +1120,7 @@ def _authenticate_candidate_or_record_failure(
     passphrase_callback: Callable[[], str] | None,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
-    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    material = custody.load_committed_profile_password_material(UUID(bucket_id), root=storage_root)
     password = _resolve_login_password(passphrase_callback)
     try:
         unlocked = unlock_profile_custody_password(material, password=password)
@@ -1135,7 +1133,7 @@ def _authenticate_candidate_or_record_failure(
     try:
         idle_minutes, absolute_minutes = _bucket_session_windows()
         absolute_deadline = now + timedelta(minutes=absolute_minutes)
-        session = profile_bucket_session_open_resumed(
+        session = master_key.BucketSession.open_resumed(
             bucket_id=bucket_id,
             dek=bytes(dek_buffer),
             idle_minutes=idle_minutes,

@@ -11,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -27,7 +28,6 @@ from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...user_profile import (
     profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
     profile_close_bucket_session,
 )
 from .._models import WorkflowState
@@ -239,7 +239,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     previous_profile = sys.getprofile()
     sys.setprofile(observe_filesystem_calls)
     instant = datetime.now(UTC)
-    ready_custody_session = profile_bucket_session_open_resumed(
+    ready_custody_session = master_key.BucketSession.open_resumed(
         bucket_id=_PROFILE_ID,
         dek=_DEK,
         idle_minutes=15,

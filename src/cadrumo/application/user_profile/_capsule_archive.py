@@ -60,7 +60,6 @@ from ...core.identity import BucketId
 from ...core.time import now as _now
 from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 from ._custody_ports import (
-    load_profile_custody_password_material,
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
 )
@@ -155,7 +154,7 @@ def export_profile_capsule_archive(
         ProfileCapsuleArchiveError: When the capsule is not published, or a
             member does not fit the archive's invariant layout.
     """
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     source = read_profile_capsule_source(material.capsule_path)
     if source.password_envelope.profile_id != profile_id:
         raise ProfileCapsuleArchiveError("published capsule names a different profile than the export target")

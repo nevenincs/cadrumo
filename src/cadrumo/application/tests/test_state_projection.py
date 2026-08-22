@@ -29,6 +29,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.persistence.storage import master_key
 from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
@@ -51,7 +52,6 @@ from ..state_projection import (
 from ..user_profile import (
     close_active_profile_record_session,
     profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
     profile_close_bucket_session,
     register_profile_with_credentials,
 )
@@ -126,7 +126,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
     instant = datetime.now(UTC)
-    session = profile_bucket_session_open_resumed(
+    session = master_key.BucketSession.open_resumed(
         bucket_id=outcome.profile_id,
         dek=unlocked.dek,
         idle_minutes=15,

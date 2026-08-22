@@ -981,15 +981,6 @@ def verify_profile_custody_dek_against_sentinel(
     )
 
 
-def load_profile_custody_password_material(
-    profile_id: UUID,
-    *,
-    root: Path | None = None,
-) -> ProfileCustodyPasswordMaterialPort:
-    """Load the normal-password envelope through the custody provider."""
-    return custody.load_committed_profile_password_material(profile_id, root=root)
-
-
 def parse_profile_custody_envelope(payload: bytes) -> ProfileCustodyEnvelopePort:
     """Parse one canonical password envelope from bytes the caller holds.
 
@@ -1060,30 +1051,8 @@ def profile_custody_record_session_material(
     session = master_key.current_active_bucket_session()
     if session is None or not master_key.session_serves_bucket(session, str(profile_id)):
         return None
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
-
-
-def profile_bucket_session_open_resumed(
-    *,
-    bucket_id: str,
-    dek: bytes,
-    idle_minutes: int,
-    opened_at: datetime,
-    idle_deadline: datetime,
-    absolute_deadline: datetime,
-    storage_root: Path,
-) -> ProfileBucketSessionPort:
-    """Re-open a persisted DEK-only bucket session through custody."""
-    return master_key.BucketSession.open_resumed(
-        bucket_id=bucket_id,
-        dek=dek,
-        idle_minutes=idle_minutes,
-        opened_at=opened_at,
-        idle_deadline=idle_deadline,
-        absolute_deadline=absolute_deadline,
-        storage_root=storage_root,
-    )
 
 
 def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
@@ -1260,12 +1229,10 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "load_profile_custody_password_material",
     "parse_profile_custody_envelope",
     "parse_profile_custody_recovery_envelope",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
-    "profile_bucket_session_open_resumed",
     "profile_close_bucket_session",
     "profile_current_bucket_session",
     "profile_custody_owner_root",

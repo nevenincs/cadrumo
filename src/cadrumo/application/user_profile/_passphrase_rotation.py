@@ -42,7 +42,6 @@ from ...domain.buckets import BucketEventType
 from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from ._custody_ports import (
     create_profile_custody_registration_material,
-    load_profile_custody_password_material,
     profile_custody_recovery_envelope_path,
     profile_is_password_authentication_failure,
     unlock_profile_custody_password,
@@ -123,7 +122,7 @@ def rotate_profile_passphrase(
 
     storage_root = effective_storage_root(root)
     with profile_custody_transaction_lock(storage_root, profile_id):
-        material = load_profile_custody_password_material(profile_id, root=storage_root)
+        material = custody.load_committed_profile_password_material(profile_id, root=storage_root)
         current = material.envelope
         try:
             unlock = unlock_profile_custody_password(material, password=current_passphrase)

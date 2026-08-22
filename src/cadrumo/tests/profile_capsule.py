@@ -16,6 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
+from ..adapters.persistence.storage import custody
 from ..adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -24,7 +25,6 @@ from ..adapters.persistence.storage.custody import (
     list_current_profile_custody_capsule_ids,
 )
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
-from ..application.user_profile import load_profile_custody_password_material
 from ..application.user_profile._capsule_record import ProfileRecordSession
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile._profile_record_repository import (
@@ -149,7 +149,7 @@ def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=_active_bucket_dek(profile_id),
