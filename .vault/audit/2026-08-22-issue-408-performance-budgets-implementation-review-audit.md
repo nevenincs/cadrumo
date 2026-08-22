@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:83e86e9f5d52f804bef3921a993bc0431b6a0860456e812364fed56887528e02'
+body_hash: 'sha256:7c88b34a557af401648ce6c5daec795c1f14c4cdb001ffaf3ae6eb1487698e59'
 related: []
 ---
 
@@ -120,3 +120,34 @@ The benchmark constants, fixture volume, and iterations remain unmodified, but t
 `corrective-query-budget-regression` finding keeps the implementation blocked. Issue 408 is
 not safe to integrate or close until the exact security semantics and strict performance
 budgets are simultaneously green.
+
+## Final resolution verification
+
+Final corrective commit `953793b9eb60221976ba1fdaf7cee495ca0eb869` resolves
+`corrective-query-budget-regression` without reopening either settled finding. The
+targeted transaction path now performs one parameterized raw-SQL snapshot constrained by
+the exact namespace and selected HMAC object-key digests. It materializes the complete
+selected row set, checks every selected outer schema version, and invokes the owning
+repository's legacy refusal before constructing any decrypted record or yielding any
+payload. Current rows continue through the shared secure-row codec, preserving the
+classification, registered-schema, ciphertext and payload integrity, revision-lineage,
+and established exception checks; decoded transactions then pass the existing addressed
+transaction-id assertion. Missing ids remain omitted.
+
+The ordinary read still refuses legacy inner envelopes, while the explicit IVA-authority
+migration remains the only cutover path and retains its cross-authority validation and
+compare-and-swap replacement semantics. The corrective diff does not alter that migration
+implementation or the previously verified memoized-save invalidation. SQL instrumentation
+now proves one addressed `object_key IN (...)` secure-object batch plus the membership-index
+point read, with no unaddressed secure-object namespace scan.
+
+Focused migration/CAS, targeted-read, transaction persistence, secure-row decode,
+integrity/lineage, date-index query-shape, and memoized-cache tests passed: 87 tests. Ruff
+and `git diff --check` passed. The authoritative sequential 30,000-row integration subset
+also passed all three selected tests in 148.46 seconds: the quarterly partitioned and M130
+optimized paths both remain below their unchanged strict `< 3.0` CPU-second ceilings, and
+the degraded full-scan anti-control remains above the ceiling. No benchmark fixture,
+iteration, sample axis, or budget changed in this final corrective diff.
+
+No new findings were identified. All HIGH and MEDIUM findings in this audit are resolved;
+issue 408 is safe to integrate and close.
