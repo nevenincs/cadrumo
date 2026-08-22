@@ -5599,3 +5599,55 @@ layer nobody looks at. The generalisation worth carrying: **when a gate reports 
 what runs the gate -- an unread verdict and an absent one are the same thing.**
 
 Lanes 314 integration / 1586 unit, both unchanged.
+
+### The no-shim mandate turned on this campaign's own tests
+
+Scope was widened by operator direction: the ban on stubs, shims, re-export bridges and
+duplicate APIs binds `src/`, `src/**/tests/` and `dev/` equally, and test and dev modules
+are first-class subjects rather than support scaffolding. Applied here first.
+
+**The bridge shape is essentially absent, measured not assumed.** A forward-only detector
+(top-level imports, no definitions beyond `__all__`) over 3,284 package test modules and 697
+dev modules found FOUR, all `conftest.py` — which is how pytest shares fixtures, not a
+bridge. Nothing to do there.
+
+**The substitution shape was present, and both offenders were this campaign's own.**
+`dev/tests/test_monkeypatch_inventory.py` names exactly two files tree-wide, and `git log`
+attributes both to commits from this work. The ratchet is absolute — no allowlist, because
+the resolution is meant to be removal — and it lives in `dev/tests`, the per-push blind spot
+recorded two entries above. So the violations were introduced and never reported, which is
+the blindness and the mandate meeting in one place.
+
+**Lock order: a delegating observer is still a patch.** The old module wrapped
+`profile_custody_local_lock` to record each path, and its docstring defended this at length
+— the wrapper delegated to the real implementation, acquired real file locks, faked nothing.
+That defence is true and beside the point: the rule forbids the machinery, not just the
+faking, and accepting "it only observes" is how the exception widens.
+
+Real contention answers the same question without touching the code under test. A sibling
+PROCESS holds the ROOT lock; a thread here enters the transaction and must block; this
+process then acquires the PROFILE lock itself. **That acquisition succeeding is the proof**
+— had the transaction taken the profile lock first, it would already be held. The probe is a
+real acquisition of the real leaf, and on Windows the primitive opens with no sharing, so a
+second acquire refuses even in-process. That property is what makes the probe discriminating
+rather than decorative, so it is pinned by its own anti-tautology test instead of assumed.
+One real detail had to be handled: the transaction creates the capsules directory only AFTER
+taking the root lock, so while blocked the probe had no parent to anchor against and failed
+for the wrong reason.
+
+**Secrets channel: enter one call lower rather than substitute the stream.**
+`read_secrets_stdin` reaches `sys.stdin.buffer` directly, so it can only be driven by
+replacing that stream. It delegates to `_validate_secrets_payload`, which takes raw BYTES
+and decides every refusal the module asserts — malformed JSON, wrong shape, and the value
+that must never be echoed. The stdin reader's own contribution is the size bound, which no
+test here exercises, and the refusal keys passed are the stdin channel's, so the messages
+under test are unchanged. Rejected alternatives: a manual `sys.stdin` save/restore is the
+same practice with the detector's matcher evaded, which this project explicitly forbids; and
+adding a stream parameter would be production surface existing only for a test.
+
+Both proven to bite from outside the repo: inverting the production lock order leaves the
+probe unable to acquire, and stripping the accepted-key context fails two of the three
+secrets tests. The ratchet is now green — zero monkeypatch machinery in deterministic
+production tests.
+
+Lanes 314 integration / 1587 unit (+1, the probe's anti-tautology case).
