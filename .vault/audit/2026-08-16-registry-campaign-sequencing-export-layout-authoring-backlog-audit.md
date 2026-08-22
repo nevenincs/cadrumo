@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:46f7585e394df19635e93f7d6bcdc846efa67700de3f84770b712e2b282c6eb9'
+body_hash: 'sha256:4bad71f6927fb9aae29ac272c8e4546d56f4af993172058a8551310175807e53'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14510,3 +14510,80 @@ Two failures in the full parallel run -- modelo 840's construct membership and
 nine anexo_b role tests -- pass in isolation. That is the loader-cache race the
 local-execution rule names, not a regression; worth re-reading before anyone
 triages them.
+
+## Tick: the last four drifting tests, and every one had a different cause
+
+Re-measured at tick start: authority CLEAN, queue confirmed finished, boundary
+census holding, last tick's locale work committed. The four
+`application/registry` tests named as "the same pinned-tally shape" were taken
+up here. That label turned out to be wrong: they shared a symptom and nothing
+else, and each needed its own grounding before it could be touched.
+
+### Modelo 303 "no longer declares external grounding" -- the data was right
+
+The row the test picked, `2024-desde-09-y-3t`, declares no externally-grounded
+casillas, and should not. Its sibling half `2024-hasta-08-y-2t` grounds five
+casillas against the AEAT Manual practico IVA 2024 Cap. 9 **first-trimester**
+supuesto practico. 1T falls in the early half. Declaring the same ids on the
+September-onward half would ground figures that worked example never covers --
+the fabrication `no-silent-under-declaration` exists to prevent.
+
+The selector was the defect: it took the revision reconciling the MOST casillas,
+and the late half legitimately reconciles more since it added boxes 166 and 167.
+It now selects among rows that actually declare grounding, which is what the
+mutation below needs.
+
+### The governance stamp -- a test about the composer, broken by review progress
+
+The baseline asserted modelo 100's first revision was `pending_review`. A peer
+stamped it `agent_reviewed`, and the test measuring whether the COMPOSER reads
+the field started measuring whether anyone had reviewed anything yet. Both ends
+of the mutation proof are now constructed: the pending end is forced by
+`model_copy` before composing, so review progress cannot break it again.
+
+### Diffing 2015 against 2020 -- years modelo 303 no longer covers
+
+The test asserted both years resolve to revision `2022`, which held only while
+that revision began open-ended. Spans have since been narrowed to the years the
+bundled designs prove, so 2015, 2020 and 2021 now correctly resolve to no
+revision at all. Retargeted onto `2026-y-siguientes`, where 2026 and 2027 are
+genuinely one revision -- the test's actual intent.
+
+### The 7,5 % rung that never existed in 2023
+
+The test expected the 2022 -> 2023 diff to add BOTH `dr303-154` and `dr303-166`
+transitional rate parameters. Only 154 is added, and the registry says why in
+its own parameter file: the bundled 2023 diseno declares the reducido rung's
+constant directly as `Constante "00500"` (5 %), and "the 7,5 % step, the 2 %
+super-reducido rung, and every dated window beyond 2024 belong to the two
+2024-covering revisions and to no other". Confirmed against the tree: `166`
+exists ONLY in `2024-desde-09-y-3t`.
+
+The assertion is now inverted rather than deleted -- `166` must be ABSENT from
+this diff -- so the grounded split is pinned instead of merely un-asserted.
+
+### Modelo 840 construct membership -- order, not membership
+
+Found while confirming the suite. The assertion compared construct members to
+revision casillas as ORDERED tuples; the sets are equal at 32 and 32, and only
+the sequence differs after the sujeto set was authored. Nothing was lost. It now
+asserts set equality plus length, which is what the test's own name claims and
+what cannot break on an incidental reordering.
+
+### Verified
+
+* `application/registry`: **75 passed**, from four failures.
+* registry + generated-tree + application/registry: **9 failed, 5952 passed** --
+  the eight declared inventories, plus one verdict-cache test that passes in
+  isolation.
+* ruff clean across every touched file.
+
+### Worth carrying: the parallel run keeps manufacturing failures
+
+Three separate tests this tick and last -- modelo 840's construct membership,
+nine anexo_b role tests, the casilla-label coverage gate and the validation
+verdict cache -- appeared red in the full parallel run and green in isolation.
+The verdict cache is shared state, which makes it the clearest case. This is the
+loader-cache race the local-execution rule names, and it is now frequent enough
+that a red name from a parallel run should be re-run alone BEFORE anyone spends
+a tick on it. Two of the five reds this tick were real; three were not.
