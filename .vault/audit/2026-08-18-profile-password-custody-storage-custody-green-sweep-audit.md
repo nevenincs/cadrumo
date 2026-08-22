@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe60fc45d2434938486d2d8e13c1edd35820c5c8255ca8cdf7221a1bb1a1712f'
+body_hash: 'sha256:4536f4e8ecfcf9c460324164ade5f7fc501ff948e320af7d10e1e451c9c6eb23'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6517,3 +6517,39 @@ has consistently refused to do, and being the author of the gate is not an exemp
 land the moment the manifest is regenerable.
 
 No production change this iteration.
+
+### Unblocking the census: the factory now has one closure
+
+The closure refusal was deferred twice as "a design decision someone should make". The
+previous entry changed what it was worth by showing it also blocked manifest REGENERATION,
+so the artefact was rotting behind it. That justified doing the work.
+
+**The split.** `active_profile_isolated_backend_fixture` selected between two nested fixtures
+on its `scope` argument, so the decorator a binding inherits was chosen at the call site --
+unresolvable for a static census, and correctly refused. It is now two factories with one
+nested fixture each, and the seeding body is hoisted to a shared module-level helper so the
+two scopes cannot diverge. Sharing that body was the point: splitting without it would have
+duplicated the world setup, which is exactly what the single factory was protecting.
+
+**The wrapper had to go with it, and its stated purpose survived.** `_live_fx_backend` existed
+so the bucket id and settings could not drift between the two scopes -- but those were already
+module CONSTANTS. What the wrapper added was a function returning a different fixture per
+call: the same unresolvable shape, one level up. The shared arguments are now one named
+mapping and each binding calls its own factory, so the anti-drift guarantee is kept and the
+shape is gone.
+
+**Measured result.** `fixture_ownership --write` no longer refuses at the closure. It now
+reaches the check it exists for and reports two genuine substitutable duplicates --
+`bundled_root_pointing_at`, in two `domain/calculations/registry/tests` modules. That belongs
+to the registry campaign to adjudicate, and the manifest stays unregenerable until it is. But
+the blocker has moved from "this shape cannot be analysed" to "the tool found something",
+which is the difference between a broken instrument and a working one with a finding.
+
+**A process note, third occurrence.** The module using the module-scoped variant reported 13
+errors under xdist and passed sequentially; re-run unchanged, it then passed under xdist too.
+That is the documented share flakiness, and the rule -- re-run before blaming the code -- has
+now paid three times in this campaign. The first of those runs also included a fixtures module
+in the pytest arguments, which is not a test module and should not have been there; that was
+my error, not the tree's.
+
+Lanes 340 integration / 1637 unit.
