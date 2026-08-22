@@ -951,3 +951,19 @@ passes all 27 cases, registry tests pass all 23 cases, and registry enforcement 
 all seven cases. Ruff lint, Ruff format, and commit diff hygiene pass on the ten owned
 Python files. No other LOW-to-CRITICAL finding was found. This HIGH blocks review-clean
 S12 and W04.P10.S13.
+
+#### S12 HIGH remediation resolution
+
+Commit `f60746befe` closes `s12-recovery-raw-presentation`. Recovery-artifact restore
+now maps only `ProfileCustodyRecoverySecretError` through the explicit
+`RECOVERY_RESTORE` proof operation to the existing context-free
+`ProfileAuthenticationRefusedError`. The credential-neutral mapper replaced the retired
+password-named mapper with no alias or compatibility export. Password proof operations
+still map only password custody refusal; integrity, corruption, supervision, resource,
+storage, and transaction failures remain unmapped.
+
+The real wrong-mnemonic restore renders under Spanish and requires the exact localized
+non-oracular message while excluding the adapter English, translation key, `INTERNAL`,
+traceback, and submitted mnemonic. A malformed-surrogate restore produces the same public
+type and publishes no capsule. Focused mapping tests pass 27 cases, recovery integration
+passes 22 cases, and Ruff lint and format checks are clean. The HIGH is closed.
