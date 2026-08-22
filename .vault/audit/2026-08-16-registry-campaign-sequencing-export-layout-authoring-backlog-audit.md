@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e7f8690298bdb6a708889b4b5d63c94e4a057e91fcb6bbd88802ab5c7947c33'
+body_hash: 'sha256:01dd70aa4d1487289b2a57a174452e3f9d7427aaafa34125c8e3687a1b0918b1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13309,3 +13309,91 @@ The eighteen standing failures are unchanged: the filing-capability worklist,
 the four span-gate rows, the unregistered-design list, the
 layout-design-applies divergences, and the formula-parity and continuidad
 ratchet entries.
+
+## Tick: a persisted model that could not read its own dump
+
+Re-measured at tick start: authority loads CLEAN, modelo 840 blocked on three
+families.
+
+### Why the tick did not author modelo 840's casillas
+
+Its 381 design fields carry 108 numbered boxes, and authoring those casillas is
+the obvious next step -- but every one of the tree's 23,047 casillas carries
+`localization_keys`, so 108 new casillas mean 108 label keys in all FOUR locale
+catalogues. Spanish comes from the design's own field descriptions and English
+is a translation; Catalan and Hungarian for filing-grade IAE terminology are
+not something this session can ground, and the locales rule forbids the
+placeholder that would paper over it. Recorded with that reason and the tick
+spent where evidence was available.
+
+### The defect: seven layouts could not be re-validated from their own dump
+
+`test_dictionary_path_override` reconstructs a layout with
+`ExportLayoutDefinition(**layout.model_dump() | {...})` to prove a fixed-width
+layout may not declare a dictionary override. It failed with 145 validation
+errors instead of the expected refusal -- and those errors were the finding, not
+noise.
+
+Measured across the tree: 79 of 86 committed export layouts survived a
+dump-then-validate cycle, and 7 did not -- Modelo 200's `2024-y-siguientes` and
+all six Modelo 303 revisions, every one a layout carrying `projection_ref`
+fields. An `ExportLayoutDefinition` is a persisted registry model that surfaces
+copy to adjust a field, so a model whose own dump its validator rejects cannot
+be round-tripped at all, and nothing said so until something tried.
+
+The cause is one exact-type guard in `compile_filing_projection_ref`:
+`type(payload[field]) is not str`. A `StrEnum` member fails it although a member
+IS a str and its value IS the wire primitive, and a python-mode `model_dump()`
+emits members. The compiler's own docstring had already reasoned this way about
+JSON nulls -- "refusing that would refuse a value the target model accepts, and
+would make a reference unable to survive its own serialisation" -- and the enum
+case was simply never reached.
+
+### The narrowing, and what it deliberately did not loosen
+
+Enum members are narrowed to their value before the guards run, so the guards
+stay strict against genuine non-primitives. The integer guard in particular
+still refuses `bool`: `True` is an `int` subclass, and a slot silently reading
+as 1 would address the wrong projection row. No test asserted that a StrEnum was
+refused, which was checked before changing the check rather than after.
+
+### Proven on real data, in-process
+
+Of the 1,782 projection references committed across the tree, **1,771 refused
+their own dump** under the previous compiler and **none** does now. The proof
+reconstructs the previous behaviour inside the test process rather than mutating
+a tracked file -- last tick a peer committed a bite mutation during the seconds
+it was on disk, and an in-process control cannot be captured that way.
+
+Two regressions guard it from both ends. The core pair asserts a reference
+equals itself across its own dump AND that the primitive guards still refuse a
+bool slot, a non-string field and surrounding whitespace. The registry trio
+asserts every committed layout reconstructs with STRICT EQUALITY -- not merely
+"does not raise", which a validator that stopped refusing while dropping a field
+would also satisfy -- plus two anti-vacuity checks: that the population still
+contains layouts with projections, and that a dumped reference still emits enum
+members, so the roundtrip cannot start passing for a reason unrelated to the
+narrowing.
+
+### Verified
+
+* registry package: 17 failed, 5201 passed, from 18 failed / 5197 passed. The
+  failure that disappeared is `test_dictionary_path_override`, which this fix
+  repaired; the four added passes are the new tests.
+* core package: 30 passed in the projection-reference module, and 7 failures
+  elsewhere that read modelo 036, `user_profile/_custody_*`, modelo 369's
+  extraction profiles and the locale catalogues -- none touching the one core
+  file this tick changed.
+* authority loads CLEAN.
+
+### Still open
+
+Modelo 840 needs `bindings` and `export_layouts`, `projection_endpoints` decided
+once a layout exists, and 108 casillas whose Catalan and Hungarian labels need an
+operator or a translator rather than this session.
+
+The seventeen standing registry failures are unchanged. One working-tree change
+is deliberate and uncommitted: modelo 322's `2008-2023` revision, where HEAD
+still carries last tick's bite mutation ("This revision calculates none" on a
+revision declaring three formulas) and the working copy restores the correct
+"applies none".
