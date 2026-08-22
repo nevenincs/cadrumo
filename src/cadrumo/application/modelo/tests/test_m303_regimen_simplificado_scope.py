@@ -61,17 +61,15 @@ _SCHEMA_REQUIRED_FACTS = (
 )
 
 
-def _store_profile(*, composition: M303RegimeComposition | None) -> None:
-    facts = _SCHEMA_REQUIRED_FACTS
-    if composition is not None:
-        facts = (
-            *_SCHEMA_REQUIRED_FACTS,
-            UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        )
+def _store_profile(*, composition: M303RegimeComposition) -> None:
+    facts = (
+        *_SCHEMA_REQUIRED_FACTS,
+        UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    )
     seed_test_profile_record(
         UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,

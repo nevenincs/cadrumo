@@ -9,7 +9,7 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from .....core import CasillaId
+from .....core import CasillaId, RegistryAuthorityGrade
 from ....contribuyente import (
     PROFILE_KEYS,
     RentaAscendantProfile,
@@ -81,12 +81,18 @@ def _revalidate_snapshot_with_map(
 def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySnapshot, Mapping[str, object]]:
     if field_name == "filing_schedules":
         modelos_by_id, catalogues = _loaded_registry()
+        # Modelo 036 is borrowed only because it populates `filing_schedules`;
+        # the subject here is identifier-map key/payload drift on the snapshot
+        # model. Built at the rung 036 actually declares -- its censal alta is
+        # filed on AEAT's sede and it authors no export layout, so the FILING
+        # rung refuses it on a capability this test never reads.
         snapshot = build_snapshot(
             modelos_by_id["036"],
             catalogues,
             source_root=_source_root(),
             filing_year=2025,
             period="alta",
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         )
         return snapshot, snapshot.filing_schedules
 

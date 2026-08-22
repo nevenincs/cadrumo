@@ -23,7 +23,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
 from .._formula_runtime import calculate_registry_snapshot
 from .._validate import RegistryValidator
@@ -141,7 +141,18 @@ def test_modelo_117_126_128_136_formulas_are_owned_by_constructs(case: _ModeloAr
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_117_126_128_136_official_form_arithmetic(case: _ModeloArithmeticCase) -> None:
-    snapshot = _committed_snapshot(case.modelo_id, case.filing_year, case.period)
+    # The CALCULATION rung, because that is the question: this runs the
+    # revision's formulas against AEAT's own worked figures. The FILING rung
+    # additionally demands an export layout, which modelo 136 cannot have --
+    # its export family is declared not applicable because AEAT publishes no
+    # positional record design for it -- so asking for filing capability made
+    # an arithmetic test refuse on a capability it never uses.
+    snapshot = _committed_snapshot(
+        case.modelo_id,
+        case.filing_year,
+        case.period,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     result = calculate_registry_snapshot(
         snapshot,
         inputs=case.inputs,
