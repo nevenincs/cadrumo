@@ -1493,6 +1493,25 @@ applies_to = 2025-07-25
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "reviewed"
 
+[legal."orden-hac-529-2026:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#a3"
+document_id = "BOE-A-2026-11583"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-13
+effective_from = 2026-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 art 3.2, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"
+notes = """Orden HAC/529/2026 art 3.2 fixes the domiciliación bancaria window for the IS declaration models of períodos impositivos iniciados en 2025: del 1 al 22 de julio de 2026, ambos inclusive. It grounds the modelo 220 deadline window's payment_cutoff_on. That date had been carried across the span split from the 2024 orden's equivalent clause without being checked -- it happened to be right, but nothing in the tree said so."""
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse",
+    "desde el día 1 de julio hasta el 22 de julio de 2026",
+]
+
 [legal."orden-hac-529-2026:art-6-3"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1537,8 +1556,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-529-2026.html"
-sha256 = "cd4e16eb55bcb6776ad85ab45cb97a2afcee5652f756e43fd15f54357a4e570f"
-bytes = 2668
+sha256 = "c8b3eea25b45fc705bc3b3a1df6818c75490df58239ef1c816c43574d71649c5"
+bytes = 3227
 retrieved_at = 2026-08-22
 published_at = 2026-05-13
 applies_from = 2026-07-01

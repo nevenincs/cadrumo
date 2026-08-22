@@ -3,11 +3,17 @@
   "source_kind": "normatives_html",
   "status": "ok",
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026.html",
-  "source_sha256": "cd4e16eb55bcb6776ad85ab45cb97a2afcee5652f756e43fd15f54357a4e570f",
+  "source_sha256": "c8b3eea25b45fc705bc3b3a1df6818c75490df58239ef1c816c43574d71649c5",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
+    {
+      "text": "2. La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2026, ambos inclusive.",
+      "title": "Articulo 3. Pago de las deudas tributarias mediante domiciliacion bancaria.",
+      "section": "Articulo 3. Pago de las deudas tributarias mediante domiciliacion bancaria.",
+      "anchor": "#a3"
+    },
     {
       "text": "3. De acuerdo con lo dispuesto en el artículo 75.2 de la Ley 27/2014, de 27 de noviembre, el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden, se presentará dentro del plazo correspondiente a la declaración en régimen de tributación individual de la entidad representante del grupo fiscal o entidad cabeza de grupo.",
       "title": "Articulo 6. Plazo de presentacion.",
@@ -15,7 +21,7 @@
       "anchor": "#a6"
     },
     {
-      "text": "La presente orden entrará en vigor el día 1 de julio de 2026, y será aplicable a los modelos de declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y a entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025.\nProvenance: verbatim excerpt of Orden HAC/529/2026 (BOE-A-2026-11583), fetched 2026-08-22 from two BOE surfaces -- buscar/doc.php and diario_boe/txt.php -- which reproduce the title, articulo 6.3 and the disposicion final segunda identically. SCOPE OF THIS EXCERPT: it covers ONLY those provisions. Articulo 1, the approval clause, is deliberately NOT bundled: it is a long enumerated list and no fetch returned it without elision, so bundling it would have meant abridging a provision and calling the result verbatim -- the exact defect corrected in the sibling orden-hac-510-2021 excerpt on the same day. Articulo 6.3 is nonetheless direct authority that this orden approves Modelo 220, since it speaks of \"el Modelo 220 de declaracion aprobado en el articulo 1 de la presente orden\". Pending operator re-verification, and articulo 1 remains to be bundled from a surface that will serve it whole.",
+      "text": "La presente orden entrará en vigor el día 1 de julio de 2026, y será aplicable a los modelos de declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y a entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025.\nProvenance: verbatim excerpt of Orden HAC/529/2026 (BOE-A-2026-11583), fetched 2026-08-22 from two BOE surfaces -- buscar/doc.php and diario_boe/txt.php -- which reproduce the title, articulo 6.3 and the disposicion final segunda identically. SCOPE OF THIS EXCERPT: it covers ONLY those provisions plus articulo 3.2, the domiciliacion bancaria window, added 2026-08-22 after the same two surfaces agreed on it verbatim; it grounds the modelo 220 deadline window's payment_cutoff_on, which until then was an unverified date carried over from the 2024 orden's pattern. Articulo 1, the approval clause, is deliberately NOT bundled: it is a long enumerated list and no fetch returned it without elision, so bundling it would have meant abridging a provision and calling the result verbatim -- the exact defect corrected in the sibling orden-hac-510-2021 excerpt on the same day. Articulo 6.3 is nonetheless direct authority that this orden approves Modelo 220, since it speaks of \"el Modelo 220 de declaracion aprobado en el articulo 1 de la presente orden\". Pending operator re-verification, and articulo 1 remains to be bundled from a surface that will serve it whole.",
       "title": "Disposicion final segunda. Entrada en vigor.",
       "section": "Disposicion final segunda. Entrada en vigor.",
       "anchor": "#dfsegunda"
