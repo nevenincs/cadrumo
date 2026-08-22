@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ab9f2721306d6133d4347021b01dd7eafa1cdab41aba30934bacac96e0632c6'
+body_hash: 'sha256:c70d40c5aa411551564e5dd99d9e3e23cbfbb15cf1f7416c7fb1493d4d722798'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12910,3 +12910,114 @@ bindings, so its perceptor detail rows need a binding family designed and
 grounded first. Not started this tick rather than half-built, because a partial
 layout would satisfy the worklist gate while under-declaring, which is the exact
 failure that gate exists to catch.
+
+## Tick: the queue is closed, and picking the next authoring target found a design that contradicts itself
+
+Re-measured at tick start: authority loads CLEAN. All six queue items are
+verified finished; the remaining work toward a green matrix is the twelve
+revisions that declare no export layout.
+
+### Choosing the target by measurement rather than by size
+
+Authoring a layout makes a revision declare a layout AUTHORITY, and the
+layout-design gate then requires every ejercicio the revision claims to be
+covered by that design's applicable years, corrected for arrears filing through
+the revision's own deadline windows. So the smallest modelo is not automatically
+the right one to author: a revision whose only bundled design begins after the
+years it claims cannot receive a layout honestly at all.
+
+Measured across the nine blocked revisions that have bundled evidence, only four
+are admissible -- modelos 036, 038, 220 and 840. The other five claim ejercicios
+their design does not reach: modelo 182 by sixteen years, 763 by six, 188 and 194
+by three each, 187 by two. Their blocker is acquiring an era-matching design, not
+authoring effort, which corrects the ordering recorded last tick: modelo 188 was
+named the next target on field count alone, and it is not eligible.
+
+### The smallest admissible target is blocked by its own extraction
+
+Modelo 038 is the smallest of the four at 58 design fields, and it declares
+twelve deadline windows already. Reading its design ended the attempt: the
+extraction is self-contradicting.
+
+Its columns come back MIRRORED -- `PERIODO` reads `ODOIREP`, `SUBCLAVE` reads
+`EVALCBUS`, `DEC. COMPLEMENTARIA` reads `AIRATNEMELPMOC .CED` -- and the same
+pass misplaces field bounds, so `NÚMERO DE JUSTIFICANTE` at `@112..124` straddles
+a `BLANCOS.` field at `@108..120`. Nine mirrored descriptions and 130 overlapped
+positions across 58 fields. Authoring 250 bytes of layout from that reading would
+be inventing offsets, so the attempt stopped rather than proceeding.
+
+Recorded rather than fixed, with the reason stated: the defect is in the
+record-design parser, and a peer has been landing exactly that work -- a
+`reversed-column coverage` commit on 2026-08-21 and further record-design commits
+through today. That file is being edited right now.
+
+### Overlap alone is not the defect, and the first rule would have been wrong
+
+The first form of this measurement flagged 154 sheets corpus-wide as having
+overlapping fields. Checking before believing it: an amount decomposed into
+`ENTERO` and `DECIMAL` parts legitimately covers the same bytes as its
+components, and a section heading spans the fields printed beneath it. Both are
+CONTAINMENT, and modelo 280's `@177` and modelo 349's `@153` are exactly that --
+each has zero partial overlaps once containment is excluded.
+
+What cannot be a decomposition is a PARTIAL overlap: two fields sharing bytes
+where neither contains the other. Modelo 038 has fifteen. The refined rule
+separates the two populations exactly, and the unrefined one would have condemned
+154 sheets of correct data.
+
+### The gate landed
+
+A design an export layout is authored against may not contradict its own field
+bounds. Measured over the 77 designs an export layout cites, across 404 sheets:
+zero partial overlaps, so the property holds today for everything anything is
+authored against -- a gate rather than a worklist.
+
+It is anchored on the REAL corpus defect rather than a constructed one: a sibling
+test requires the detector to still find modelo 038's violations, and says to
+re-anchor rather than weaken the gate if the parser fix lands and it comes back
+clean. A third test states the constraint where a reader meets it -- that design
+must not be cited for a layout, because the offsets it encodes cannot be trusted.
+
+Bite proof on real data: the live cited set yields zero failures; adding modelo
+038's design to it yields fifteen, each naming the two fields and the bytes they
+fight over.
+
+### The standing red inventories, checked rather than assumed
+
+`test_every_claimed_filing_year_is_covered_by_its_declared_layout_design` fails
+with 25 divergences and says so by design -- "LANDED RED DELIBERATELY where it
+fails ... the failures are the finding rather than a regression". It is not a
+regression from this tick and must not be quieted by narrowing a revision's
+claim, which its own docstring warns is how a registry is made to assert
+something false.
+
+Worth recording about the earlier splits: only the EARLY half of each appears in
+that list -- modelo 184's `2015-2024`, 322's `2008-2023`, 347's `2008-2024`.
+Every later half now cites a design that covers it, so the splits moved those
+years out of divergence rather than into it. Modelo 151 appears nowhere at all,
+because its era-matching 2015-2022 design was acquired and bundled. That is the
+pattern which closes these entries: acquisition, never narrowing.
+
+### Verified
+
+* the new bounds gate: 3 passed.
+* bounds, export-layout coverage, layout-design-applies and coverage-key
+  together: 36 passed plus the one deliberately-red inventory, unchanged at 25
+  divergences.
+* authority loads CLEAN.
+* the partial-overlap rule measured before being written: 0 across 77 cited
+  designs and 404 sheets, 15 on the known violator, 0 on the two designs whose
+  overlap is legitimate containment.
+
+### Still open
+
+Twelve revisions need an export layout. Four are admissible today -- modelo 038
+(58 design fields, blocked on the parser), 840 (381), 036 (1047) and 220
+(32,799). Modelo 840 is the next authoring target on evidence: its design
+extracts cleanly with zero mirrored descriptions and zero overlaps, and its
+applicability window matches the revision's claim exactly. It declares two
+casillas against 381 design fields and no deadline windows, so authoring it is a
+casilla-schema and deadline-window job before it is a layout job.
+
+The other five blocked revisions need an era-matching design acquired before any
+layout can be authored against them.
