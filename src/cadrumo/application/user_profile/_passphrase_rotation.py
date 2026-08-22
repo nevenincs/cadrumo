@@ -71,7 +71,12 @@ class ProfilePassphraseRotationError(CadrumoError):
     ) -> None:
         """Retain a typed prospective refusal without retaining the password."""
         super().__init__(message, context=context, translated_message=translated_message)
-        self.password_refusal = password_refusal
+        self._password_refusal = password_refusal
+
+    @property
+    def password_refusal(self) -> ProspectiveProfilePasswordRefusal | None:
+        """Retain the typed refusal for trusted in-process consumers only."""
+        return self._password_refusal
 
 
 class ProfilePassphraseRotationOutcome(BaseModel):

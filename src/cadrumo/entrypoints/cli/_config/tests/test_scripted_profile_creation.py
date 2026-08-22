@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
+from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -194,6 +195,43 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
 
     combined = refused.stdout + refused.stderr
     assert refused.exit_code != 0
+    assert combined
+    document = json.loads(refused.stderr)
+    assert set(document) == {"active_profile", "command", "error", "notices", "schema_version", "status"}
+    assert document["command"] == "config.profile.create"
+    assert document["status"] == "error"
+    assert document["notices"] == []
+    error = document["error"]
+    assert set(error) == {
+        "action",
+        "category",
+        "code",
+        "context",
+        "message",
+        "retryable",
+        "runbook_id",
+        "trace_id",
+    }
+    assert error["category"] == "REFUSED"
+    assert error["code"] == "REFUSED_PROFILE_REGISTRATION"
+    assert error["action"] is None
+    assert error["retryable"] is False
+    assert error["runbook_id"] is None
+    assert error["context"] == {
+        "minimum_scalars": "15",
+        "reason": "too_few_scalars",
+        "scalar_count": "14",
+        "utf8_byte_count": "14",
+    }
+    assert error["message"] == tr(
+        "application.user_profile.errors.profile_password_too_few_scalars",
+        minimum_scalars=15,
+        reason="too_few_scalars",
+        scalar_count=14,
+        utf8_byte_count=14,
+    )
+    assert "password_refusal" not in error["context"]
+    assert "ProspectiveProfilePasswordRefusal" not in combined
     assert "profile_password_too_few_scalars" not in combined
     assert "profile password must contain 15 to 256 Unicode scalars" not in combined
     assert "Traceback" not in combined

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e479124c45db45911c994b1c44d5a3c0ff394af4dc62d5763c9414fa2946065'
+body_hash: 'sha256:683b7418cd41e0d8e43d30fe58746be08bf6207bf44c3d7b3de0b7ab577fb0b6'
 step_id: 'S10'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -61,8 +61,12 @@ related:
 
 All four supported locales now contain distinct prospective-password guidance with complete safe placeholders and one non-oracular authentication refusal. Scripted creation renders the typed application outcome without raw custody English, INTERNAL guidance, traceback, message-key leakage, or candidate echo, and creates no profile on refusal.
 
-Ruff passes. The scripted creation lane passes eight cases and the combined scripted/manager refusal lane passes ten cases.
+Ruff passes. The scripted creation lane passes eight cases and the combined scripted/manager refusal lane passes eleven cases.
 
 ## Notes
 
 Locale YAML was changed only through `python -m dev.locales`. `scaffold --check` and `audit` remain globally red because unrelated generated Modelo 036/390 catalogue leaves are missing in the shared tree; the feature-owned stale leaves reported by the audit were removed. No unrelated generated keys were scaffolded or overwritten.
+
+## Review remediation
+
+The typed prospective refusal remains available through the application error's read-only `password_refusal` property, while its backing field is private and therefore excluded from automatic public envelope context. The real scripted boundary test now parses a nonempty JSON document and pins the complete outer and error key sets, command, status, category, code, action, retryability, runbook, exact finite safe context, and localized message. It excludes the internal attribute name and type marker as well as the message key, raw custody diagnostic, traceback, INTERNAL guidance, and candidate, and proves no profile exists. The corrected combined focused count is eleven.
