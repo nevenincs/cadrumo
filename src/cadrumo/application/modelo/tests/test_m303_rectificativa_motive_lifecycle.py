@@ -234,6 +234,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
             "input_values_by_casilla_id": {},
             "binding_overrides": {},
             "casilla_values": {},
+            "source_provenance": (),
             "filing_instance_evidence": evidence,
             "created_at": _NOW,
             "updated_at": _NOW,

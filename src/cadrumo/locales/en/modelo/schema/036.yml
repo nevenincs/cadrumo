@@ -1497,6 +1497,131 @@ modelo:
               help: null
               label: Code of the title of representation (second representative, block
                 3.2)
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              label: Register of extractors from tax warehouses. Applies for registration
+                or removal for products under the excise duties on alcohol and derived
+                beverages
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              label: Register of extractors from tax warehouses. Date of the application
+                for alcohol and derived beverages
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              label: Register of extractors from tax warehouses. Applies for registration
+                or removal for products under the excise duties on hydrocarbons
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              label: Register of extractors from tax warehouses. Date of the application
+                for hydrocarbons
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              label: Excise duties. Required to file a self-assessment for the electricity
+                tax
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              label: Excise duties. Date. Required to file a self-assessment for the
+                electricity tax
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              label: Excise duties. Obligation to register the establishments in the
+                territorial register of the managing office
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              label: Excise duties. Date. Obligation to register the establishments
+                in the territorial register of the managing office
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              label: Excise duties. Obligation to file a return for the excise duty
+                on insurance premiums
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              label: Excise duties. Date. Obligation to file a return for the excise
+                duty on insurance premiums
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              label: Excise duties. Required to file the annual summary return for
+                the excise duty on coal
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              label: Excise duties. Date. Required to file the annual summary return
+                for the excise duty on coal
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: VAT. Intra-Community acquisitions. Election for the general VAT
+                regime, taxable or not taxable
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: VAT. Intra-Community acquisitions. Has exceeded the 10,000 euro
+                threshold
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              label: Environmental taxes. Obligation to file a return
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              label: Environmental taxes. Date of the obligation to file a return
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on income from professional activities
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              label: Withholdings and payments on account. Date of the obligation
+                on income from professional activities
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on income from letting or subletting
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              label: Withholdings and payments on account. Date of the obligation
+                on income from letting or subletting
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on investment income obtained as consideration
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              label: Withholdings and payments on account. Date of the obligation
+                on investment income obtained as consideration
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on investment income arising from transactions
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              label: Withholdings and payments on account. Date of the obligation
+                on investment income arising from transactions
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on other investment income
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              label: Withholdings and payments on account. Date of the obligation
+                on other investment income
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on investment income derived from transfers
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              label: Withholdings and payments on account. Date of the obligation
+                on investment income derived from transfers
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on income from personal employment
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              label: Withholdings and payments on account. Date of the obligation
+                on income from personal employment
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              label: Withholdings and payments on account. Obligation to withhold
+                or make a payment on account on transfers or redemptions of shares
+                or holdings
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              label: Withholdings and payments on account. Date of the obligation
+                on transfers or redemptions of shares or holdings
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              label: Tax on certain digital services. Required to file a self-assessment
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              label: Tax on certain digital services. Date of the obligation to file
+                a self-assessment
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.4.a). Taxation at destination
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.4.a). Date
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.4.a). Revocation
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.4.a). Has exceeded the 10,000 euro threshold
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.8). Taxation at destination
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.8). Date
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.8). Revocation
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.8). Has exceeded the 10,000 euro threshold
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: Share of liquidation, assets or estate of the successor or beneficiary

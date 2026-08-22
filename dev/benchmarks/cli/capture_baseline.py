@@ -36,6 +36,8 @@ HELP_ARGS = ("--help",)
 _SNAPSHOT_WORKER_ENV = "CADRUMO_BASELINE_SNAPSHOT_WORKER"
 _SNAPSHOT_DIGEST_ENV = "CADRUMO_BASELINE_SOURCE_DIGEST"
 _SNAPSHOT_ROOT_ENV = "CADRUMO_BASELINE_SOURCE_ROOT"
+_ORIGIN_GIT_ENV = "CADRUMO_BASELINE_ORIGIN_GIT"
+_ORIGIN_DIRTY_ENV = "CADRUMO_BASELINE_ORIGIN_DIRTY_FINGERPRINT"
 
 
 def _command_tokens(node: LiveCommandNode) -> tuple[str, ...]:
@@ -203,7 +205,8 @@ def _git_revision() -> str:
 def _environment_payload() -> dict[str, str]:
     return {
         "captured_at_utc": datetime.now(UTC).isoformat(),
-        "git_revision": _git_revision(),
+        "originating_git_revision": os.environ.get(_ORIGIN_GIT_ENV, _git_revision()),
+        "originating_dirty_fingerprint": os.environ.get(_ORIGIN_DIRTY_ENV, "unfrozen"),
         "python": platform.python_version(),
         "implementation": platform.python_implementation(),
         "operating_system": platform.system(),
@@ -237,6 +240,43 @@ def _copy_source_snapshot(source: Path, snapshot: Path) -> str:
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
     )
     return _tree_digest(snapshot)
+
+
+def _worktree_fingerprint(repository_root: Path) -> str:
+    """Hash tracked, staged, and untracked worktree state without publishing it."""
+    digest = hashlib.sha256()
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise RuntimeError("git executable is required to fingerprint the worktree")
+    commands = (
+        (git_executable, "status", "--porcelain=v1", "-z"),
+        (git_executable, "diff", "--binary", "HEAD"),
+        (git_executable, "diff", "--binary", "--cached", "HEAD"),
+    )
+    for command in commands:
+        completed = subprocess.run(  # noqa: S603 - fixed local Git reads.
+            command,
+            cwd=repository_root,
+            check=True,
+            capture_output=True,
+        )
+        digest.update(completed.stdout)
+        digest.update(b"\0")
+    untracked = subprocess.run(  # noqa: S603 - resolved local Git executable and fixed arguments.
+        (git_executable, "ls-files", "--others", "--exclude-standard", "-z"),
+        cwd=repository_root,
+        check=True,
+        capture_output=True,
+    ).stdout.split(b"\0")
+    for encoded in sorted(item for item in untracked if item):
+        relative = encoded.decode("utf-8", errors="surrogateescape")
+        path = repository_root / relative
+        digest.update(encoded)
+        digest.update(b"\0")
+        if path.is_file():
+            digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def _assert_snapshot_runtime() -> None:
@@ -289,6 +329,9 @@ def capture(
         "samples": samples,
         "timeout_seconds": timeout,
         "workers": workers,
+        "source_snapshot_digest": os.environ[_SNAPSHOT_DIGEST_ENV],
+        "originating_git_revision": os.environ[_ORIGIN_GIT_ENV],
+        "originating_dirty_fingerprint": os.environ[_ORIGIN_DIRTY_ENV],
     }
 
     commands: dict[str, dict[str, Any]] = {}
@@ -410,6 +453,9 @@ def capture(
 
 def check_baseline(payload: Mapping[str, Any]) -> None:
     """Reject stale, incomplete, unranked, or unsafely labelled evidence."""
+    from cadrumo.entrypoints.cli import app
+    from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
+
     if payload.get("schema") != SCHEMA:
         raise RuntimeError("unsupported or missing CLI baseline schema")
     actual = {" ".join(node.path): node for node in walk_live_command_tree(app)}
@@ -456,6 +502,10 @@ def _run_snapshot_worker(args: argparse.Namespace) -> int:
         if not snapshot_package.exists():
             raise RuntimeError("baseline checkpoint exists without its source snapshot")
         snapshot_digest = _tree_digest(snapshot_package)
+        checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        checkpoint_config = checkpoint.get("run_config", {})
+        origin_git = str(checkpoint_config["originating_git_revision"])
+        origin_dirty = str(checkpoint_config["originating_dirty_fingerprint"])
     else:
         if snapshot_parent.exists():
             resolved = snapshot_parent.resolve()
@@ -463,12 +513,17 @@ def _run_snapshot_worker(args: argparse.Namespace) -> int:
                 raise RuntimeError("refusing to replace source snapshot outside benchmark directory")
             shutil.rmtree(resolved)
         snapshot_digest = _copy_source_snapshot(source, snapshot_package)
+        origin_git = _git_revision()
+        origin_dirty = _worktree_fingerprint(repository_root)
 
     env = dict(os.environ)
     env[_SNAPSHOT_WORKER_ENV] = "1"
     env[_SNAPSHOT_DIGEST_ENV] = snapshot_digest
     env[_SNAPSHOT_ROOT_ENV] = str(snapshot_parent / "src")
+    env[_ORIGIN_GIT_ENV] = origin_git
+    env[_ORIGIN_DIRTY_ENV] = origin_dirty
     env["PYTHONPATH"] = os.pathsep.join((str(snapshot_parent / "src"), str(repository_root)))
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run(  # noqa: S603 - fixed interpreter/module; original CLI options only.
         [sys.executable, "-P", "-m", "dev.benchmarks.cli.capture_baseline", *sys.argv[1:]],
         cwd=repository_root,
@@ -487,8 +542,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Capture a new baseline or check the committed evidence."""
     args = _parse_args(argv)
     if args.check:
-        from cadrumo.entrypoints.cli import app  # noqa: F401 - force live import before checking.
-
         check_baseline(json.loads(args.output.read_text(encoding="utf-8")))
         return 0
     if os.environ.get(_SNAPSHOT_WORKER_ENV) != "1":

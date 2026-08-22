@@ -159,11 +159,13 @@ from ._diff import (
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 from ._source_connectivity_authority import (
+    CalculationRouteManualSourceOwnership,
+    CalculationRouteResolverSourceOwnership,
+    CalculationRouteSourceOwnershipCatalogue,
     LiveSourceConnectivityProofAuthority,
-    LiveSourceResolverCatalogue,
-    LiveSourceResolverEnrollment,
     RepositoryEvidenceDigestVerifier,
     RepositoryRootEvidenceDigestVerifier,
+    build_calculation_route_source_ownership_catalogue,
 )
 
 _import_module("cadrumo.domain.renta")
@@ -553,14 +555,15 @@ def _load_filed_observation(path: Path):
 __all__ = [
     "AnnualCasillaPopulationComparison",
     "BindingDiff",
+    "CalculationRouteManualSourceOwnership",
+    "CalculationRouteResolverSourceOwnership",
+    "CalculationRouteSourceOwnershipCatalogue",
     "CasillaDiff",
     "CoverageAuthorityScope",
     "FiledStateVerificationReport",
     "FormulaDiff",
     "LatestRevisionSupportProbe",
     "LiveSourceConnectivityProofAuthority",
-    "LiveSourceResolverCatalogue",
-    "LiveSourceResolverEnrollment",
     "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
@@ -598,6 +601,7 @@ __all__ = [
     "RevisionGovernanceStamp",
     "RevisionModelLawCoverage",
     "audit_bundled_registry_conformance",
+    "build_calculation_route_source_ownership_catalogue",
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",

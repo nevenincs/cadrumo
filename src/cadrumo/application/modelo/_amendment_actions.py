@@ -516,6 +516,7 @@ def _build_amendment_draft_revision(
             "source_transaction_ids": baseline_revision.source_transaction_ids,
             "borrador_snapshot_id": baseline_revision.borrador_snapshot_id,
             "bindings_sourced_from_borrador": baseline_revision.bindings_sourced_from_borrador,
+            "source_provenance": baseline_revision.source_provenance,
             "casilla_values": corrected_values,
             "observations": amendment_observations,
             "created_at": now,

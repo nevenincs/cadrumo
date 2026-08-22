@@ -2,56 +2,126 @@
 
 from __future__ import annotations
 
+import os
+import stat
+import sys
+from contextlib import suppress
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import (
     BindingSourceKind,
+    ModeloCalculationRouteId,
     SourceConnectivityConnectionIdentity,
     SourceConnectivityEncryptedRevisionProof,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
 )
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
 from ..aggregation import BindingSourceDisposition
+from ..modelo import (
+    CALCULATION_ROUTE_ID,
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    MANUAL_INPUT_RESOLVER_ID,
+)
 from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
 
-class LiveSourceResolverEnrollment(BaseModel):
-    """Canonical live disposition and resolver owner for one binding source kind."""
+class CalculationRouteResolverSourceOwnership(BaseModel):
+    """One real resolver's canonical source ownership on the production route."""
 
     model_config = _STRICT_FROZEN
 
+    route_id: ModeloCalculationRouteId
+    stage: Literal["pre_mesh", "mesh", "conditional", "post_mesh"]
     source_kind: BindingSourceKind
     resolver_id: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9][a-z0-9._:-]*$")
-    disposition: BindingSourceDisposition
 
 
-class LiveSourceResolverCatalogue(BaseModel):
-    """Deterministic exact source-kind-to-resolver ownership catalogue."""
+class CalculationRouteManualSourceOwnership(BaseModel):
+    """The sole typed manual-input pseudo-owner on the production route."""
 
     model_config = _STRICT_FROZEN
 
-    enrollments: tuple[LiveSourceResolverEnrollment, ...] = Field(min_length=1)
+    route_id: ModeloCalculationRouteId
+    stage: Literal["manual"]
+    source_kind: Literal[BindingSourceKind.MANUAL_INPUT]
+    owner_id: Literal["manual_input"]
+
+
+type CalculationRouteSourceOwnership = CalculationRouteResolverSourceOwnership | CalculationRouteManualSourceOwnership
+
+
+def _canonical_route_source_ownership() -> tuple[
+    tuple[CalculationRouteResolverSourceOwnership, ...],
+    CalculationRouteManualSourceOwnership,
+]:
+    resolver_rows: list[CalculationRouteResolverSourceOwnership] = []
+    manual_rows: list[CalculationRouteManualSourceOwnership] = []
+    for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP:
+        for source_kind in owner.owned_sources:
+            if CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind] is not BindingSourceDisposition.ENROLLED:
+                raise RuntimeError(f"calculation route owns non-enrolled source {source_kind.value!r}")
+            if owner.resolver_type is None:
+                manual_rows.append(
+                    CalculationRouteManualSourceOwnership(
+                        route_id=CALCULATION_ROUTE_ID,
+                        stage="manual",
+                        source_kind=source_kind,
+                        owner_id=MANUAL_INPUT_RESOLVER_ID,
+                    ),
+                )
+            else:
+                resolver_rows.append(
+                    CalculationRouteResolverSourceOwnership(
+                        route_id=CALCULATION_ROUTE_ID,
+                        stage=owner.stage,
+                        source_kind=source_kind,
+                        resolver_id=owner.resolver_id,
+                    ),
+                )
+    if len(manual_rows) != 1:
+        raise RuntimeError("calculation route requires exactly one manual-input pseudo-owner")
+    return tuple(sorted(resolver_rows, key=lambda row: row.source_kind.value)), manual_rows[0]
+
+
+class CalculationRouteSourceOwnershipCatalogue(BaseModel):
+    """Exact projection of canonical production route ownership and dispositions."""
+
+    model_config = _STRICT_FROZEN
+
+    resolver_sources: tuple[CalculationRouteResolverSourceOwnership, ...] = Field(min_length=1)
+    manual_input: CalculationRouteManualSourceOwnership
 
     @model_validator(mode="after")
-    def _require_unique_deterministic_sources(self) -> LiveSourceResolverCatalogue:
-        source_kinds = tuple(row.source_kind for row in self.enrollments)
-        if len(set(source_kinds)) != len(source_kinds):
-            raise ValueError("live source resolver catalogue requires unique source kinds")
-        if source_kinds != tuple(sorted(source_kinds, key=lambda item: item.value)):
-            raise ValueError("live source resolver catalogue requires deterministic source-kind order")
+    def _require_exact_canonical_projection(self) -> CalculationRouteSourceOwnershipCatalogue:
+        expected_resolvers, expected_manual = _canonical_route_source_ownership()
+        if self.resolver_sources != expected_resolvers or self.manual_input != expected_manual:
+            raise ValueError("source ownership catalogue must exactly project the canonical calculation route")
         return self
 
-    def enrollment_for(self, source_kind: BindingSourceKind) -> LiveSourceResolverEnrollment | None:
-        """Return the unique live policy row for ``source_kind``, if declared."""
-        return next((row for row in self.enrollments if row.source_kind is source_kind), None)
+    def ownership_for(self, source_kind: BindingSourceKind) -> CalculationRouteSourceOwnership | None:
+        """Return the exact canonical route owner for one enrolled source."""
+        if source_kind is BindingSourceKind.MANUAL_INPUT:
+            return self.manual_input
+        return next((row for row in self.resolver_sources if row.source_kind is source_kind), None)
+
+
+def build_calculation_route_source_ownership_catalogue() -> CalculationRouteSourceOwnershipCatalogue:
+    """Project complete source ownership from the validated production route."""
+    resolver_sources, manual_input = _canonical_route_source_ownership()
+    return CalculationRouteSourceOwnershipCatalogue(
+        resolver_sources=resolver_sources,
+        manual_input=manual_input,
+    )
 
 
 @runtime_checkable
@@ -69,33 +139,107 @@ class RepositoryRootEvidenceDigestVerifier:
     repository_root: Path
 
     def digest(self, repository_reference: str) -> str | None:
-        """Digest a contained regular file, refusing traversal and symlink escape."""
+        """Hash one verified open descriptor, refusing path replacement and escape."""
         relative_text = _repository_path_without_line(repository_reference)
         if relative_text is None:
             return None
         try:
             root = self.repository_root.resolve(strict=True)
-            candidate = (root / Path(*PurePosixPath(relative_text).parts)).resolve(strict=True)
         except (OSError, RuntimeError):
             return None
-        if not candidate.is_relative_to(root) or not candidate.is_file():
+        if not root.is_dir():
             return None
+        candidate = root / Path(*PurePosixPath(relative_text).parts)
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
-            return sha256(candidate.read_bytes()).hexdigest()
+            descriptor = os.open(candidate, flags)
         except OSError:
             return None
+        try:
+            opened_path = _final_path_from_open_descriptor(descriptor)
+            if opened_path is None or not _same_filesystem_path(opened_path, candidate):
+                return None
+            if not opened_path.is_relative_to(root):
+                return None
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                return None
+            digest = sha256()
+            with os.fdopen(descriptor, "rb", closefd=False) as opened_file:
+                while chunk := opened_file.read(1024 * 1024):
+                    digest.update(chunk)
+            return digest.hexdigest()
+        except (OSError, RuntimeError, ValueError):
+            return None
+        finally:
+            with suppress(OSError):
+                os.close(descriptor)
+
+
+def _same_filesystem_path(left: Path, right: Path) -> bool:
+    """Compare final-handle and requested paths under platform case semantics."""
+    return os.path.normcase(os.path.normpath(str(left))) == os.path.normcase(os.path.normpath(str(right)))
+
+
+def _final_path_from_open_descriptor(descriptor: int) -> Path | None:
+    """Return the OS-reported final path for one already-open descriptor."""
+    if os.name == "nt":
+        return _windows_final_path_from_open_descriptor(descriptor)
+    if sys.platform.startswith("linux"):
+        try:
+            return Path(os.readlink(f"/proc/self/fd/{descriptor}"))
+        except OSError:
+            return None
+    return None
+
+
+def _windows_final_path_from_open_descriptor(descriptor: int) -> Path | None:
+    """Ask Windows for the stable final path bound to an open file handle."""
+    try:
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        get_final_path = ctypes.WinDLL("kernel32", use_last_error=True).GetFinalPathNameByHandleW
+        get_final_path.argtypes = (wintypes.HANDLE, wintypes.LPWSTR, wintypes.DWORD, wintypes.DWORD)
+        get_final_path.restype = wintypes.DWORD
+        handle = wintypes.HANDLE(msvcrt.get_osfhandle(descriptor))
+        required = get_final_path(handle, None, 0, 0)
+        if required == 0:
+            return None
+        buffer = ctypes.create_unicode_buffer(required + 1)
+        written = get_final_path(handle, buffer, len(buffer), 0)
+        if written == 0 or written >= len(buffer):
+            return None
+        path = buffer.value
+        if path.startswith("\\\\?\\UNC\\"):
+            path = "\\\\" + path[8:]
+        elif path.startswith("\\\\?\\"):
+            path = path[4:]
+        return Path(path)
+    except (ImportError, OSError, ValueError):
+        return None
 
 
 def _repository_path_without_line(reference: str) -> str | None:
     """Return a safe relative POSIX path from a repository evidence locator."""
-    path, separator, line = reference.rpartition(":")
-    candidate = path if separator and line.isdigit() else reference
+    colon_count = reference.count(":")
+    if colon_count == 0:
+        candidate = reference
+    elif colon_count == 1:
+        path, line = reference.rsplit(":", 1)
+        if not line.isdigit():
+            return None
+        candidate = path
+    else:
+        return None
+    raw_parts = candidate.split("/")
     pure_path = PurePosixPath(candidate)
     if (
         not candidate
         or "\\" in candidate
+        or candidate.startswith("/")
         or pure_path.is_absolute()
-        or any(part in {"", ".", ".."} for part in pure_path.parts)
+        or any(part in {"", ".", ".."} for part in raw_parts)
     ):
         return None
     return candidate
@@ -105,32 +249,43 @@ def _repository_path_without_line(reference: str) -> str | None:
 class LiveSourceConnectivityProofAuthority:
     """Concrete live authority over enrollment, workflows, evidence, and revisions."""
 
-    source_resolvers: LiveSourceResolverCatalogue
+    source_ownership: CalculationRouteSourceOwnershipCatalogue
     workflows: SupportedModeloCalculationWorkflowCatalogue
     calculation_revisions: CalculationRevisionCatalogueRepositoryProtocol
     evidence_verifier: RepositoryEvidenceDigestVerifier
 
     def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         """Require exact resolver ownership under an enrolled live disposition."""
-        enrollment = self.source_resolvers.enrollment_for(connection.source_kind)
-        return (
-            enrollment is not None
-            and enrollment.disposition is BindingSourceDisposition.ENROLLED
-            and enrollment.resolver_id == connection.resolver_id
-        )
+        ownership = self.source_ownership.ownership_for(connection.source_kind)
+        if isinstance(ownership, CalculationRouteManualSourceOwnership):
+            return ownership.owner_id == connection.resolver_id
+        return ownership is not None and ownership.resolver_id == connection.resolver_id
 
-    def operator_workflow_is_supported(
+    def operator_workflow_reaches_source(
         self,
         connection: SourceConnectivityConnectionIdentity,
-        *,
-        entrypoint_id: str,
-        command_id: str,
+        proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         """Require the exact reviewed live workflow beside exact source enrollment."""
-        return self.source_is_enrolled(connection) and self.workflows.supports(
-            entrypoint_id=entrypoint_id,
-            command_id=command_id,
+        if proof.connection != connection:
+            return False
+        ownership = self.source_ownership.ownership_for(connection.source_kind)
+        workflows = tuple(
+            workflow
+            for workflow in self.workflows.workflows
+            if workflow.entrypoint_id == proof.entrypoint_id
+            and workflow.command_id == proof.command_id
+            and workflow.route_id is proof.route_id
+            and workflow.canonical_cli_path == proof.canonical_cli_path
         )
+        if ownership is None or len(workflows) != 1 or ownership.route_id is not workflows[0].route_id:
+            return False
+        owner_id = (
+            ownership.owner_id
+            if isinstance(ownership, CalculationRouteManualSourceOwnership)
+            else ownership.resolver_id
+        )
+        return owner_id == connection.resolver_id
 
     def encrypted_revision_matches(self, proof: SourceConnectivityEncryptedRevisionProof) -> bool:
         """Match one exact provenance row in the encrypted calculation revision."""
@@ -167,9 +322,11 @@ class LiveSourceConnectivityProofAuthority:
 
 
 __all__ = [
+    "CalculationRouteManualSourceOwnership",
+    "CalculationRouteResolverSourceOwnership",
+    "CalculationRouteSourceOwnershipCatalogue",
     "LiveSourceConnectivityProofAuthority",
-    "LiveSourceResolverCatalogue",
-    "LiveSourceResolverEnrollment",
     "RepositoryEvidenceDigestVerifier",
     "RepositoryRootEvidenceDigestVerifier",
+    "build_calculation_route_source_ownership_catalogue",
 ]

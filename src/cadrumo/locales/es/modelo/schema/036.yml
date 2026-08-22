@@ -1550,6 +1550,132 @@ modelo:
               help: null
               label: Clave del titulo de representacion (segundo representante, bloque
                 3.2)
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              label: Registro de extractores de depositos fiscales. Solicita alta
+                o baja para productos de los Impuestos sobre el alcohol y bebidas
+                derivadas
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              label: Registro de extractores de depositos fiscales. Fecha de la solicitud
+                para alcohol y bebidas derivadas
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              label: Registro de extractores de depositos fiscales. Solicita alta
+                o baja para productos de los Impuestos sobre Hidrocarburos
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              label: Registro de extractores de depositos fiscales. Fecha de la solicitud
+                para hidrocarburos
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              label: Impuestos especiales. Obligado a presentar autoliquidacion por
+                el Impuesto sobre la Electricidad
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              label: Impuestos especiales. Fecha. Obligado a presentar autoliquidacion
+                por el Impuesto sobre la Electricidad
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              label: Impuestos especiales. Obligacion de inscribir los establecimientos
+                en el registro territorial de la oficina gestora
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              label: Impuestos especiales. Fecha. Obligacion de inscribir los establecimientos
+                en el registro territorial de la oficina gestora
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              label: Impuestos especiales. Obligacion de presentar declaracion por
+                el Impuesto Especial sobre Primas de Seguros
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              label: Impuestos especiales. Fecha. Obligacion de presentar declaracion
+                por el Impuesto Especial sobre Primas de Seguros
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              label: Impuestos especiales. Obligado a presentar la declaracion resumen
+                anual del Impuesto Especial sobre el Carbon
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              label: Impuestos especiales. Fecha. Obligado a presentar la declaracion
+                resumen anual del Impuesto Especial sobre el Carbon
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: IVA. Adquisiciones intracomunitarias. Opcion por el regimen general
+                del IVA, sujecion o no sujecion
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: IVA. Adquisiciones intracomunitarias. Ha superado el umbral de
+                10.000 euros
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              label: Impuestos medioambientales. Obligacion de presentar declaracion
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              label: Impuestos medioambientales. Fecha de la obligacion de presentar
+                declaracion
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rendimientos de actividades profesionales
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rendimientos de actividades profesionales
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rendimientos del arrendamiento o subarrendamiento
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rendimientos del arrendamiento o subarrendamiento
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rentas de capital mobiliario obtenidas por la contraprestacion
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rentas de capital mobiliario obtenidas por la contraprestacion
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rentas de capital mobiliario procedentes de operaciones
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rentas de capital mobiliario procedentes de operaciones
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre otras rentas de capital mobiliario
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                otras rentas de capital mobiliario
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rentas de capital mobiliario derivadas de la transmision
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rentas de capital mobiliario derivadas de la transmision
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre rendimientos del trabajo personal
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                rendimientos del trabajo personal
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+                a cuenta sobre transmisiones o reembolsos de acciones o participaciones
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre
+                transmisiones o reembolsos de acciones o participaciones
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              label: Impuesto sobre determinados servicios digitales. Obligado a presentar
+                autoliquidacion
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              label: Impuesto sobre determinados servicios digitales. Fecha de la
+                obligacion de presentar autoliquidacion
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.4.a). Tributacion en destino
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.4.a). Fecha
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.4.a). Revocacion
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.4.a). Ha superado el umbral de 10.000 euros
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.8). Tributacion en destino
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.8). Fecha
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.8). Revocacion
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+                (art. 70.Uno.8). Ha superado el umbral de 10.000 euros
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor

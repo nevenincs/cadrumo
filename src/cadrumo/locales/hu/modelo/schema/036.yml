@@ -1481,6 +1481,132 @@ modelo:
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
               help: null
               label: A kepviseleti jogcim kodja (masodik kepviselo, 3.2 blokk)
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              label: Adoraktari kitarolok nyilvantartasa. Kerelem az alkohol es szarmazekos
+                italok jovedeki adoja ala tartozo termekekre
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              label: Adoraktari kitarolok nyilvantartasa. Az alkoholra es szarmazekos
+                italokra vonatkozo kerelem datuma
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              label: Adoraktari kitarolok nyilvantartasa. Kerelem a szenhidrogenek
+                jovedeki adoja ala tartozo termekekre
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              label: Adoraktari kitarolok nyilvantartasa. A szenhidrogenekre vonatkozo
+                kerelem datuma
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              label: Jovedeki adok. Koteles onadozast benyujtani a villamosenergia-ado
+                tekinteteben
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              label: Jovedeki adok. Datum. Koteles onadozast benyujtani a villamosenergia-ado
+                tekinteteben
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              label: Jovedeki adok. Kotelezettseg a telephelyek bejegyzesere a kezelo
+                hivatal teruleti nyilvantartasaba
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              label: Jovedeki adok. Datum. Kotelezettseg a telephelyek bejegyzesere
+                a kezelo hivatal teruleti nyilvantartasaba
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              label: Jovedeki adok. Kotelezettseg a biztositasi dijak kulonadojanak
+                bevallasara
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              label: Jovedeki adok. Datum. Kotelezettseg a biztositasi dijak kulonadojanak
+                bevallasara
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              label: Jovedeki adok. Koteles benyujtani a szenado eves osszefoglalo
+                bevallasat
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              label: Jovedeki adok. Datum. Koteles benyujtani a szenado eves osszefoglalo
+                bevallasat
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: AFA. Kozossegen beluli beszerzesek. Az altalanos AFA-rendszer
+                valasztasa, adokoteles vagy nem adokoteles
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: AFA. Kozossegen beluli beszerzesek. Meghaladta a 10 000 euros
+                kuszoberteket
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              label: Kornyezetvedelmi adok. Bevallasbenyujtasi kotelezettseg
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              label: Kornyezetvedelmi adok. A bevallasbenyujtasi kotelezettseg datuma
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: szakmai tevekenysegbol szarmazo
+                jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                szakmai tevekenysegbol szarmazo jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: berbeadasbol vagy albérletbol szarmazo
+                jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                berbeadasbol vagy albérletbol szarmazo jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: ellenszolgaltatasbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                ellenszolgaltatasbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: ugyletekbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                ugyletekbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: egyeb tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                egyeb tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: atruhazasbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                atruhazasbol szarmazo tokejovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: munkaviszonybol szarmazo jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                munkaviszonybol szarmazo jovedelem'
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
+                torteno befizetesi kotelezettseg: reszvenyek vagy reszesedesek atruhazasa
+                vagy visszavaltasa'
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
+                reszvenyek vagy reszesedesek atruhazasa vagy visszavaltasa'
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              label: Egyes digitalis szolgaltatasok adoja. Onadozas benyujtasara koteles
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              label: Egyes digitalis szolgaltatasok adoja. Az onadozasi kotelezettseg
+                datuma
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.4.a cikk). Rendeltetesi hely szerinti adozas
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.4.a cikk). Datum
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.4.a cikk). Visszavonas
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.4.a cikk). Meghaladta a 10 000 euros kuszoberteket
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.8 cikk). Rendeltetesi hely szerinti adozas
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.8 cikk). Datum
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.8 cikk). Visszavonas
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
+                (70.Uno.8 cikk). Meghaladta a 10 000 euros kuszoberteket
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki

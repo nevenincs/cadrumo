@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal, Protocol
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, ModeloCalculationRouteId
 from ..aggregation import (
     AtribucionMemberSourceResolver,
     BindingSourceDisposition,
@@ -36,6 +36,7 @@ from ..invoices import InvoiceCatalogueSourceResolver
 from ._borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "manual"]
+CALCULATION_ROUTE_ID = ModeloCalculationRouteId.MODELO_WORK_CALCULATION
 MANUAL_INPUT_RESOLVER_ID = "manual_input"
 
 
@@ -184,6 +185,7 @@ def require_calculation_route_resolver(stage: CalculationRouteStage, resolver: o
 
 __all__ = [
     "CALCULATION_ROUTE_ENROLLED_SOURCES",
+    "CALCULATION_ROUTE_ID",
     "CALCULATION_ROUTE_PRE_MESH_SOURCES",
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",

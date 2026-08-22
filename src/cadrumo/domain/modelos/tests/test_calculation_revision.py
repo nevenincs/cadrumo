@@ -640,17 +640,22 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
         "input_values_by_casilla_id": {},
         "binding_overrides": {},
         "casilla_values": {},
-        "filing_instance_evidence": None,
     }
-    canonical = derive_calculation_revision_id(**common, source_provenance=(first, second))
-    assert canonical == derive_calculation_revision_id(**common, source_provenance=(second, first))
+    canonical = derive_calculation_revision_id(
+        **common, source_provenance=(first, second), filing_instance_evidence=None
+    )
+    assert canonical == derive_calculation_revision_id(
+        **common, source_provenance=(second, first), filing_instance_evidence=None
+    )
     assert canonical != derive_calculation_revision_id(
         **common,
         source_provenance=(first.model_copy(update={"resolver_id": "rival-resolver"}), second),
+        filing_instance_evidence=None,
     )
     assert canonical != derive_calculation_revision_id(
         **common,
         source_provenance=(first.model_copy(update={"fingerprint": "sha256:" + "c" * 64}), second),
+        filing_instance_evidence=None,
     )
 
 
@@ -880,6 +885,7 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
                 "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
                 "inputs_snapshot": {_INPUT_CASILLA_001: "10.00"},
                 "casilla_values": output_values,
+                "source_provenance": (),
                 "created_at": created,
                 "updated_at": created,
             },

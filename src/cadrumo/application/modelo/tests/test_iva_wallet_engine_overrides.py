@@ -182,6 +182,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                 "input_values_by_casilla_id": {},
                 "binding_overrides": {},
                 "casilla_values": casilla_values,
+                "source_provenance": (),
                 "observations": registry_grounded_observations(
                     modelo="303",
                     filing_year=_TARGET_YEAR,

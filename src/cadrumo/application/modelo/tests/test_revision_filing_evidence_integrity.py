@@ -104,4 +104,39 @@ def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> N
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
+            source_provenance=(),
+        )
+
+
+def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
+    """Every identity caller records either the canonical trace or explicit emptiness."""
+    source_root = Path(__file__).parents[3]
+    omissions: list[str] = []
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+        if path.name == "_calculation_revision.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
+            if name != "derive_calculation_revision_id":
+                continue
+            if not any(keyword.arg == "source_provenance" for keyword in node.keywords):
+                omissions.append(f"{path.relative_to(source_root)}:{node.lineno}")
+
+    assert omissions == []
+
+
+def test_revision_id_source_provenance_has_no_default_and_cannot_be_omitted() -> None:
+    parameter = inspect.signature(derive_calculation_revision_id).parameters["source_provenance"]
+    assert parameter.default is inspect.Parameter.empty
+
+    with pytest.raises(TypeError, match="source_provenance"):
+        inspect.signature(derive_calculation_revision_id).bind(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values={},
+            filing_instance_evidence=None,
         )

@@ -24,6 +24,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_validator
 
+from ._calculation_route import ModeloCalculationRouteId
 from ._models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
 from .identity import CalculationRevisionId, ContentDigest
@@ -242,14 +243,12 @@ class SourceConnectivityProofAuthority(Protocol):
     def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         """Return whether the canonical source mesh currently enrolls this source."""
 
-    def operator_workflow_is_supported(
+    def operator_workflow_reaches_source(
         self,
         connection: SourceConnectivityConnectionIdentity,
-        *,
-        entrypoint_id: str,
-        command_id: str,
+        proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
-        """Return whether the live operator catalogue owns this workflow identity."""
+        """Return whether this workflow reaches the exact asserted connection."""
 
     def encrypted_revision_matches(
         self,
@@ -317,6 +316,8 @@ class SourceConnectivityOperatorReachabilityProof(BaseModel):
     connection: SourceConnectivityConnectionIdentity
     entrypoint_id: _StableToken
     command_id: _StableToken
+    route_id: ModeloCalculationRouteId
+    canonical_cli_path: tuple[_StableToken, ...] = Field(min_length=1)
     resolver_observed: _StrictBoolean
     evidence: tuple[SourceConnectivityExecutableEvidence, ...] = Field(min_length=1)
 
@@ -469,11 +470,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
         if not authority.source_is_enrolled(connection):
             raise ValueError("connected proof source is not enrolled by the live source mesh")
         operator = proof.operator_reachability
-        if not authority.operator_workflow_is_supported(
-            connection,
-            entrypoint_id=operator.entrypoint_id,
-            command_id=operator.command_id,
-        ):
+        if not authority.operator_workflow_reaches_source(connection, operator):
             raise ValueError("connected proof operator workflow is not supported")
         if not authority.encrypted_revision_matches(proof.encrypted_revision):
             raise ValueError("connected proof encrypted revision does not match persisted source provenance")

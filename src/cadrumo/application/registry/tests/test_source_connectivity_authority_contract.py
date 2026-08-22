@@ -2,54 +2,103 @@
 
 from __future__ import annotations
 
+import os
 from hashlib import sha256
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind, SourceConnectivityConnectionIdentity
+from ....core import (
+    BindingSourceKind,
+    SourceConnectivityConnectionIdentity,
+    SourceConnectivityExecutableEvidence,
+    SourceConnectivityExecutableEvidenceRole,
+    SourceConnectivityGrounding,
+    SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
+)
 from ....domain.modelos import CalculationSourceRef
 from ...aggregation import BindingSourceDisposition
+from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ...operator_surface import (
+    LiveLeafInventoryRow,
+    ModeloCalculationRouteId,
+    OperatorSurfaceReconciliation,
+    ReconciledOperatorLeaf,
+    SupportedModeloCalculationWorkflow,
+    SupportedModeloCalculationWorkflowCatalogue,
+    build_supported_modelo_calculation_workflow_catalogue,
+)
 from .. import (
+    CalculationRouteResolverSourceOwnership,
+    CalculationRouteSourceOwnershipCatalogue,
     LiveSourceConnectivityProofAuthority,
-    LiveSourceResolverCatalogue,
-    LiveSourceResolverEnrollment,
     RepositoryEvidenceDigestVerifier,
     RepositoryRootEvidenceDigestVerifier,
+    build_calculation_route_source_ownership_catalogue,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _enrollment(
-    source_kind: BindingSourceKind,
-    resolver_id: str,
-    *,
-    disposition: BindingSourceDisposition = BindingSourceDisposition.ENROLLED,
-) -> LiveSourceResolverEnrollment:
-    return LiveSourceResolverEnrollment(
-        source_kind=source_kind,
-        resolver_id=resolver_id,
-        disposition=disposition,
+def test_source_ownership_catalogue_is_an_exact_projection_not_free_enrollment() -> None:
+    catalogue = build_calculation_route_source_ownership_catalogue()
+    collectible = catalogue.ownership_for(BindingSourceKind.COLLECTIBLE_INVOICE)
+    assert isinstance(collectible, CalculationRouteResolverSourceOwnership)
+    assert catalogue.manual_input.source_kind is BindingSourceKind.MANUAL_INPUT
+
+    with pytest.raises(ValidationError, match="exactly project"):
+        CalculationRouteSourceOwnershipCatalogue(
+            resolver_sources=catalogue.resolver_sources[:-1],
+            manual_input=catalogue.manual_input,
+        )
+    with pytest.raises(ValidationError, match="exactly project"):
+        CalculationRouteSourceOwnershipCatalogue(
+            resolver_sources=(
+                catalogue.resolver_sources[0].model_copy(update={"resolver_id": "invented-resolver"}),
+                *catalogue.resolver_sources[1:],
+            ),
+            manual_input=catalogue.manual_input,
+        )
+    with pytest.raises(ValidationError, match="exactly project"):
+        CalculationRouteSourceOwnershipCatalogue(
+            resolver_sources=catalogue.resolver_sources,
+            manual_input=catalogue.manual_input.model_copy(update={"owner_id": "invented-manual-owner"}),
+        )
+
+
+def test_workflow_catalogue_refuses_directly_authored_command_path_cross_pair() -> None:
+    with pytest.raises(ValidationError, match="command and canonical path must agree"):
+        SupportedModeloCalculationWorkflow(
+            command_id="modelo.work.calculate",
+            route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+            canonical_cli_path=_WORKFLOW_PATHS["quickfile"],
+        )
+
+
+@pytest.mark.parametrize(
+    "disposition",
+    (BindingSourceDisposition.DEFERRED, BindingSourceDisposition.RESERVED),
+)
+def test_source_ownership_catalogue_refuses_non_enrolled_sources(
+    disposition: BindingSourceDisposition,
+) -> None:
+    catalogue = build_calculation_route_source_ownership_catalogue()
+    source_kind = next(
+        source for source, declared in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items() if declared is disposition
     )
+    invented = catalogue.resolver_sources[0].model_copy(update={"source_kind": source_kind})
+    with pytest.raises(ValidationError, match="exactly project"):
+        CalculationRouteSourceOwnershipCatalogue(
+            resolver_sources=(*catalogue.resolver_sources, invented),
+            manual_input=catalogue.manual_input,
+        )
 
 
-def test_live_source_resolver_catalogue_is_exact_unique_and_deterministic() -> None:
-    collectible = _enrollment(BindingSourceKind.COLLECTIBLE_INVOICE, "invoice-source-resolver")
-    foreign = _enrollment(BindingSourceKind.FOREIGN_ASSET, "foreign-asset-source-resolver")
-    catalogue = LiveSourceResolverCatalogue(enrollments=(collectible, foreign))
-
-    assert catalogue.enrollment_for(BindingSourceKind.COLLECTIBLE_INVOICE) == collectible
-    assert catalogue.enrollment_for(BindingSourceKind.PROFILE) is None
-    with pytest.raises(ValidationError, match="unique source kinds"):
-        LiveSourceResolverCatalogue(enrollments=(collectible, collectible))
-    with pytest.raises(ValidationError, match="deterministic source-kind order"):
-        LiveSourceResolverCatalogue(enrollments=(foreign, collectible))
-
-
-def test_repository_digest_verifier_is_deterministic_and_root_contained(tmp_path) -> None:
+def test_repository_digest_verifier_hashes_real_file_and_detects_changed_bytes(tmp_path: Path) -> None:
     repository_root = tmp_path / "repository"
     evidence_path = repository_root / "src" / "cadrumo" / "tests" / "test_evidence.py"
     evidence_path.parent.mkdir(parents=True)
@@ -62,20 +111,98 @@ def test_repository_digest_verifier_is_deterministic_and_root_contained(tmp_path
     expected = sha256(evidence_bytes).hexdigest()
     assert verifier.digest("src/cadrumo/tests/test_evidence.py") == expected
     assert verifier.digest("src/cadrumo/tests/test_evidence.py:1") == expected
+    evidence_path.write_bytes(b"def test_evidence():\n    assert False\n")
+    assert verifier.digest("src/cadrumo/tests/test_evidence.py") != expected
     assert verifier.digest("../outside.py") is None
     assert verifier.digest(str(outside_path)) is None
     assert verifier.digest("src/cadrumo/tests/missing.py") is None
+
+
+@pytest.mark.parametrize(
+    "malformed_reference",
+    (
+        "C:/Windows/win.ini",
+        "C:relative.py",
+        "src/file.py:ads",
+        "src/file.py:1:2",
+        "src//file.py",
+        "src/./file.py",
+        "src/../file.py",
+        "src\\file.py",
+        "/src/file.py",
+    ),
+)
+def test_repository_digest_verifier_rejects_malformed_repository_references(
+    tmp_path: Path,
+    malformed_reference: str,
+) -> None:
+    repository_root = tmp_path / "repository"
+    repository_root.mkdir()
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+
+    assert verifier.digest(malformed_reference) is None
+
+
+def test_repository_digest_verifier_rejects_descriptor_path_replacement(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository_root = tmp_path / "repository"
+    target = repository_root / "src" / "cadrumo" / "tests" / "test_target.py"
+    replacement = repository_root / "src" / "cadrumo" / "tests" / "test_replacement.py"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"target")
+    replacement.write_bytes(b"replacement")
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    real_open = os.open
+
+    def redirect_open(path: os.PathLike[str] | str, flags: int) -> int:
+        if Path(path) == target:
+            return real_open(replacement, flags)
+        return real_open(path, flags)
+
+    monkeypatch.setattr(os, "open", redirect_open)
+    assert verifier.digest("src/cadrumo/tests/test_target.py") is None
+
+
+def test_repository_digest_verifier_rejects_directory_as_nonregular_descriptor(tmp_path: Path) -> None:
+    repository_root = tmp_path / "repository"
+    evidence_dir = repository_root / "src" / "cadrumo" / "tests" / "test_directory"
+    evidence_dir.mkdir(parents=True)
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    assert verifier.digest("src/cadrumo/tests/test_directory") is None
+
+
+def test_repository_digest_verifier_rejects_symlink_escape(tmp_path: Path) -> None:
+    repository_root = tmp_path / "repository"
+    evidence_dir = repository_root / "src" / "cadrumo" / "tests"
+    evidence_dir.mkdir(parents=True)
+    outside = tmp_path / "outside.py"
+    outside.write_bytes(b"outside")
+    symlink = evidence_dir / "test_symlink.py"
+    symlink.symlink_to(outside)
+
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    assert verifier.digest("src/cadrumo/tests/test_symlink.py") is None
+
+    outside_directory = tmp_path / "outside"
+    outside_directory.mkdir()
+    (outside_directory / "test_evidence.py").write_bytes(b"outside intermediate")
+    intermediate_symlink = repository_root / "src" / "linked"
+    intermediate_symlink.symlink_to(outside_directory, target_is_directory=True)
+    assert verifier.digest("src/linked/test_evidence.py") is None
 
 
 def test_registry_facade_exposes_authority_and_injected_verifier_port() -> None:
     from .. import __all__
 
     assert {
+        "CalculationRouteResolverSourceOwnership",
+        "CalculationRouteSourceOwnershipCatalogue",
         "LiveSourceConnectivityProofAuthority",
-        "LiveSourceResolverCatalogue",
-        "LiveSourceResolverEnrollment",
         "RepositoryEvidenceDigestVerifier",
         "RepositoryRootEvidenceDigestVerifier",
+        "build_calculation_route_source_ownership_catalogue",
     } <= set(__all__)
     assert isinstance(RepositoryRootEvidenceDigestVerifier, type)
     assert isinstance(LiveSourceConnectivityProofAuthority, type)
@@ -93,6 +220,142 @@ class _RevisionRepository:
         return SimpleNamespace(revisions={self._revision.calculation_revision_id: self._revision})
 
 
+_WORKFLOW_PATHS = {
+    "modelo.work.calculate": ("app", "modelo", "work", "calculate"),
+    "modelo.work.wizard": ("app", "modelo", "work", "wizard"),
+    "quickfile": ("app", "quickfile"),
+}
+
+
+def _workflow_catalogue(*command_ids: str) -> SupportedModeloCalculationWorkflowCatalogue:
+    leaves = tuple(
+        ReconciledOperatorLeaf(
+            live_leaf=LiveLeafInventoryRow(
+                subject_leaf_key=command_id,
+                canonical_cli_path=_WORKFLOW_PATHS[command_id],
+                provenance="resolved Click command tree",
+            ),
+            result_schema=None,
+            input_schema=None,
+            mounted_family=None,
+            profile_policy=None,
+            surface_exposure=None,
+            exclusions=(),
+        )
+        for command_id in command_ids
+    )
+    return build_supported_modelo_calculation_workflow_catalogue(
+        OperatorSurfaceReconciliation(leaves=leaves),
+    )
+
+
+def _operator_proof(
+    connection: SourceConnectivityConnectionIdentity,
+    command_id: str,
+) -> SourceConnectivityOperatorReachabilityProof:
+    grounding = SourceConnectivityGrounding(
+        locator_kind=SourceConnectivityGroundingLocatorKind.REPOSITORY,
+        reference="src/cadrumo/application/registry/tests/test_source_connectivity_authority_contract.py:1",
+        summary="Executable workflow-to-source authority proof.",
+    )
+    evidence = SourceConnectivityExecutableEvidence(
+        evidence_id="operator-reachability",
+        role=SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
+        connection=connection,
+        locator=grounding,
+        content_digest="b" * 64,
+    )
+    return SourceConnectivityOperatorReachabilityProof(
+        connection=connection,
+        entrypoint_id="cli",
+        command_id=command_id,
+        route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+        canonical_cli_path=_WORKFLOW_PATHS[command_id],
+        resolver_observed=True,
+        evidence=(evidence,),
+    )
+
+
+@pytest.mark.parametrize("command_id", tuple(_WORKFLOW_PATHS))
+def test_live_workflow_authority_joins_each_reviewed_workflow_to_route_ownership(
+    tmp_path: Path,
+    command_id: str,
+) -> None:
+    source_ownership = build_calculation_route_source_ownership_catalogue()
+    owner = source_ownership.ownership_for(BindingSourceKind.COLLECTIBLE_INVOICE)
+    assert isinstance(owner, CalculationRouteResolverSourceOwnership)
+    connection = SourceConnectivityConnectionIdentity(
+        candidate_id="invoice.collectible",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref="collectible_invoice:inv-0001",
+        resolver_id=owner.resolver_id,
+        calculation_revision_id="a" * 64,
+    )
+    authority = LiveSourceConnectivityProofAuthority(
+        source_ownership=source_ownership,
+        workflows=_workflow_catalogue(*_WORKFLOW_PATHS),
+        calculation_revisions=cast(
+            Any,
+            _RevisionRepository(
+                SimpleNamespace(calculation_revision_id=connection.calculation_revision_id),
+            ),
+        ),
+        evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
+    )
+    proof = _operator_proof(connection, command_id)
+    assert authority.operator_workflow_reaches_source(connection, proof)
+    assert not authority.operator_workflow_reaches_source(
+        connection.model_copy(update={"source_ref": "collectible_invoice:inv-0002"}),
+        proof,
+    )
+
+
+def test_live_workflow_authority_refuses_cross_paired_route_workflow_and_owner_axes(tmp_path: Path) -> None:
+    source_ownership = build_calculation_route_source_ownership_catalogue()
+    owner = source_ownership.ownership_for(BindingSourceKind.COLLECTIBLE_INVOICE)
+    assert isinstance(owner, CalculationRouteResolverSourceOwnership)
+    connection = SourceConnectivityConnectionIdentity(
+        candidate_id="invoice.collectible",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref="collectible_invoice:inv-0001",
+        resolver_id=owner.resolver_id,
+        calculation_revision_id="a" * 64,
+    )
+    authority = LiveSourceConnectivityProofAuthority(
+        source_ownership=source_ownership,
+        workflows=_workflow_catalogue("modelo.work.calculate"),
+        calculation_revisions=cast(
+            Any,
+            _RevisionRepository(SimpleNamespace(calculation_revision_id=connection.calculation_revision_id)),
+        ),
+        evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
+    )
+    proof = _operator_proof(connection, "modelo.work.calculate")
+
+    assert not authority.operator_workflow_reaches_source(
+        connection,
+        proof.model_copy(update={"route_id": "phantom_calculation_route"}),
+    )
+    assert not authority.operator_workflow_reaches_source(
+        connection,
+        proof.model_copy(update={"canonical_cli_path": _WORKFLOW_PATHS["quickfile"]}),
+    )
+    assert not authority.operator_workflow_reaches_source(
+        connection,
+        proof.model_copy(update={"command_id": "modelo.work.wizard"}),
+    )
+    assert not authority.operator_workflow_reaches_source(
+        connection.model_copy(update={"resolver_id": "renamed-resolver"}),
+        proof.model_copy(update={"connection": connection.model_copy(update={"resolver_id": "renamed-resolver"})}),
+    )
+    assert not authority.operator_workflow_reaches_source(
+        connection.model_copy(update={"source_kind": BindingSourceKind.FOREIGN_ASSET}),
+        proof.model_copy(
+            update={"connection": connection.model_copy(update={"source_kind": BindingSourceKind.FOREIGN_ASSET})},
+        ),
+    )
+
+
 def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -> None:
     revision_id = "a" * 64
     persisted = CalculationSourceRef(
@@ -104,7 +367,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     )
     revision = SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(persisted,))
     authority = LiveSourceConnectivityProofAuthority(
-        source_resolvers=cast(Any, object()),
+        source_ownership=build_calculation_route_source_ownership_catalogue(),
         workflows=cast(Any, object()),
         calculation_revisions=cast(Any, _RevisionRepository(revision)),
         evidence_verifier=cast(Any, object()),
@@ -135,7 +398,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         source_provenance=(persisted, rival),
     )
     ambiguous_authority = LiveSourceConnectivityProofAuthority(
-        source_resolvers=cast(Any, object()),
+        source_ownership=build_calculation_route_source_ownership_catalogue(),
         workflows=cast(Any, object()),
         calculation_revisions=cast(Any, _RevisionRepository(ambiguous_revision)),
         evidence_verifier=cast(Any, object()),
@@ -153,7 +416,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         source_provenance=(incoherent,),
     )
     incoherent_authority = LiveSourceConnectivityProofAuthority(
-        source_resolvers=cast(Any, object()),
+        source_ownership=build_calculation_route_source_ownership_catalogue(),
         workflows=cast(Any, object()),
         calculation_revisions=cast(Any, _RevisionRepository(incoherent_revision)),
         evidence_verifier=cast(Any, object()),

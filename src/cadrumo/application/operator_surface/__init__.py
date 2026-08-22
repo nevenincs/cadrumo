@@ -48,6 +48,7 @@ from ._action_resolution import (
     resolve_notice_action,
 )
 from ._calculation_workflows import (
+    ModeloCalculationRouteId,
     SupportedModeloCalculationWorkflow,
     SupportedModeloCalculationWorkflowCatalogue,
     build_supported_modelo_calculation_workflow_catalogue,
@@ -148,6 +149,7 @@ __all__ = [
     "LiveLeafInventoryRow",
     "ManifestActionProfile",
     "ManifestActionResolution",
+    "ModeloCalculationRouteId",
     "ModeloLifecycleStep",
     "MountedCommandDomain",
     "MountedCommandFamily",
