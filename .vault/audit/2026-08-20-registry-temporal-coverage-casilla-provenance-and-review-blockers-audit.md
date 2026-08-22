@@ -2993,3 +2993,78 @@ its conventions are settled, not that the backlog moved materially.
 — **is a parallel-run flake, not a regression**: all 11 tests in that module pass
 single-process (`-n0`). The m390 fragment-naming failure was fixed by a peer in the
 same window.
+
+## 2026-08-22 — Pagina 2B authored: the three identity records are complete, and AEAT collides with itself
+
+### What landed
+
+Modelo 036 Pag. 2B: **119 casillas covering 96 of the 98 box numbers it prints**, plus
+23 slugs. Revision now **391 casillas, 322 of 667 real boxes (48%)**, up from 226.
+
+This completes the modelo's **three identity records**: Pag. 2A persona física, Pag. 2B
+persona jurídica o entidad, Pag. 2C establecimiento permanente of a non-resident entity.
+
+Pag. 2B is also the only one of the three the derived set can partly see: its
+personalidad jurídica block carries plain-digit boxes (65, 68, 69, 70, 71, 73, 75, 77,
+78, 79) alongside the lettered B series. 2A and 2C are wholly lettered and moved the
+derived report by zero.
+
+### AEAT prints [B72], [B74] and [B76] TWICE EACH in one record
+
+Confirmed against the raw cell text, not inferred from a parse. The two homes:
+
+| home | evidence |
+|---|---|
+| domicilio social block | **B71…B85 is a complete, coherent run** — B71 tipo de vía, B72 nombre de la vía, B73 tipo núm., B74 núm casa, B75 calif., B76 bloque … B85 código de provincia |
+| personalidad jurídica, `@1734` `@1737` `@1740` | neighbours are **plain digits** — 70, 71, 73, 75, 77 — so the three B-prefixed entries interrupt an otherwise unbroken plain sequence |
+
+The domicilio social fields keep the numbers; the personalidad jurídica fields take
+slugs, per the modelo 604 precedent that a field naming *another* box's number keeps a
+slug. Revision-wide `(segmento, number)` uniqueness made duplication unavailable anyway.
+
+**What was deliberately not done.** The plain run strongly suggests AEAT meant [72],
+[74], [76]. That reading is an **inference, not a transcription**, so those numbers were
+not adopted — the registry does not assert a box number AEAT did not print. The
+distinction is the whole discipline: a plausible reconstruction of what a source *meant*
+is not evidence of what it *says*.
+
+### An error I made, and the step that caught it
+
+`@11+1` prints `[B1,B2]` — one selecting code byte behind two printed tick boxes
+(residente/constituida en España, or no residente/constituida en el extranjero). My
+extraction's fallback pattern matched the trailing `B2]` and I adopted **B2** as the
+casilla number.
+
+That is exactly the mistake this modelo's own Pag. 3 fragment warns about, and a rule I
+had written down before breaking it: **where one byte carries a bracket LISTING several
+numbers, no single number describes the field, so it takes a slug.** The tell is field
+width against number count.
+
+It now takes a slug, and B1 and B2 are both unmodelled *as numbers* — correct rather
+than a gap, since neither names the field alone. The fragment says so explicitly so a
+later reader does not "fix" it back.
+
+**The step that caught it is worth keeping: re-measure coverage per record AFTER
+authoring, rather than trusting the authoring pass.** The authoring pass and the
+verification pass used the same extraction, so they agreed with each other and were both
+wrong; the per-record coverage scan used a wider pattern and disagreed. Two passes that
+share a parser cannot check each other.
+
+### Remaining modelo 036 work
+
+345 of 667 boxes: Pag. 5 (107), Pag. 4 (88), Pag. 6 (52), Pag. 7 (42), Pag. 10 (24),
+Pag. 8 (16), 14 still open on Pag. 3, plus B1/B2 correctly unmodelled. Pag. 0 is the
+envelope.
+
+### Incidental
+
+Casilla ids cap at **64 characters**, and this record's section names overflow it
+(`domicilio_residencia_extranjero` is 31 on its own). Its ids use a short token per
+section while the section path keeps its full name; 2A and 2C did not need this, so the
+three identity records are internally consistent but not identical in id shape.
+
+Suite: **13 failures, zero new.** The `test_loader_cache_isolation` entry from the
+previous run is gone, confirming it was a parallel flake. A collection ERROR in
+`test_binding_coverage_breadth` was a peer's in-flight rename
+(`_ENROLLED_SOURCE_KINDS` → `ENROLLED_SOURCE_KINDS`), already fixed uncommitted in their
+working tree and passing; left for them.
