@@ -268,8 +268,20 @@ def test_exists_save_and_bucket_id_delegate_to_concrete_repository(
     _repository(runtime_profile).save(_catalogue(first_transaction))
     assert memoized.exists() is True
 
+    march_window = (date(2024, 3, 1), date(2024, 3, 31))
+    assert _transaction_ids(memoized.load()) == {first_transaction.transaction_id}
+    assert _transaction_ids(memoized.load_for_date_range(*march_window)) == set()
+    assert _transaction_ids(memoized.partition_by_date_range(*march_window).in_window) == set()
+    assert _transaction_ids(memoized.load_by_ids((first_transaction.transaction_id,))) == {
+        first_transaction.transaction_id,
+    }
+
     memoized.save(_catalogue(replacement_transaction))
 
-    assert _transaction_ids(_repository(runtime_profile).load()) == {
-        replacement_transaction.transaction_id,
-    }
+    expected = {replacement_transaction.transaction_id}
+    assert _transaction_ids(memoized.load()) == expected
+    assert _transaction_ids(memoized.load_for_date_range(*march_window)) == expected
+    assert _transaction_ids(memoized.partition_by_date_range(*march_window).in_window) == expected
+    assert _transaction_ids(memoized.load_by_ids((replacement_transaction.transaction_id,))) == expected
+    assert _transaction_ids(memoized.load_by_ids((first_transaction.transaction_id,))) == set()
+    assert _transaction_ids(_repository(runtime_profile).load()) == expected

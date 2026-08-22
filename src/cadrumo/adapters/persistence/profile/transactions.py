@@ -890,15 +890,19 @@ class TransactionCatalogueRepository:
             secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
             for transaction_id in selected_ids
         }
+        object_keys = tuple(transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids)
+        self._require_current_rows(object_keys)
         transactions_by_id: dict[str, Transaction] = {}
-        records = self._objects.load_many(
+        migrated = self._objects.migrate_many_atomically(
             TX_BUCKET_NAMESPACE,
-            (transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids),
+            object_keys,
             expected_class=_TX_CATALOGUE_SENSITIVITY,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            current_version=_TX_CATALOGUE_VERSION,
+            validate_upgraded_payloads=self._refuse_targeted_implicit_migration,
+            write_provenance="transaction-catalogue:schema-migration",
         )
-        for record in records:
-            transaction_id = transaction_id_by_digest.get(bytes(record.object_key))
+        for object_key, record in migrated.items():
+            transaction_id = transaction_id_by_digest.get(secure_object_key_digest(object_key))
             if transaction_id is None:
                 continue
             try:
@@ -919,6 +923,11 @@ class TransactionCatalogueRepository:
             for transaction_id in selected_ids
             if transaction_id in transactions_by_id
         ]
+
+    @staticmethod
+    def _refuse_targeted_implicit_migration(_payloads: Mapping[str, bytes]) -> None:
+        """Keep exact-ID reads behind the explicit whole-authority cutover."""
+        raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
 
     def _assert_transaction_row_identity(
         self,
@@ -1177,14 +1186,11 @@ class TransactionCatalogueRepository:
 
     def _require_current_rows(self, object_keys: Iterable[str]) -> None:
         """Refuse an ordinary read until the explicit S54 cutover has persisted v2."""
-        from ..storage.crypto import secure_object_key_digest
-
         keys = tuple(object_keys)
-        digests = {secure_object_key_digest(key) for key in keys}
         old = [
-            row.object_key
-            for row in self._objects.iter_all_records_raw(namespace=TX_BUCKET_NAMESPACE)
-            if row.object_key in digests and row.schema_version != _TX_CATALOGUE_VERSION
+            object_key
+            for object_key, schema_version in self._objects.peek_many_schema_versions(TX_BUCKET_NAMESPACE, keys).items()
+            if schema_version != _TX_CATALOGUE_VERSION
         ]
         if old:
             raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")

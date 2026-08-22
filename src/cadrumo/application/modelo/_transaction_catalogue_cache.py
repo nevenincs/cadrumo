@@ -81,6 +81,10 @@ class MemoizedTransactionCatalogueRepository:
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Delegate a :class:`TransactionCatalogue` write to the authority repository."""
         self._repository.save(catalogue)
+        self._catalogue = None
+        self._date_range_catalogues.clear()
+        self._id_catalogues.clear()
+        self._partition_catalogues.clear()
 
 
 __all__ = ["MemoizedTransactionCatalogueRepository"]
