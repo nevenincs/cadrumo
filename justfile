@@ -597,10 +597,23 @@ test-dev-tooling:
 # Its tests are `unit`-marked, so the marker expression below selects them --
 # checked rather than assumed, since a `docs`-only marker would have been
 # deselected here and still exited zero.
+#
+# `dev/docs/tests/test_api_stubs.py` is named too, and the pair is not
+# redundant. `dev/docs/apidocs/tests` scaffolds the real module tree into a
+# `tmp_path` and checks THAT for drift, so it proves the manager's round-trip
+# and is clean by construction -- it cannot see the committed `docs/api/` tree
+# at all. The gate whose subject is the COMMITTED tree is `test_api_stubs.py`,
+# and it ran only in `test-dev-tooling` (ci-full) and `docs-check` (path-scoped
+# to docs/, so no `src/**` push fires it). So the verdict this block argues for
+# was still not produced on a push: a module added under `src/cadrumo/` reached
+# main with no stub and silently dropped out of the published docs, which is
+# exactly the failure mode described above. Its marker was checked the same
+# way -- `unit`, `hex_core`, `docs` -- and it needs no browser or server, so it
+# costs the lane a directory walk.
 [doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
 [group('testing')]
 test-dev-ci:
-    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
+    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests dev/docs/tests/test_api_stubs.py
     @uv run --no-sync pytest -q -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
 # Run the four conformance gates that are correctly `integration`-marked
