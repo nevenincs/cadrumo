@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:450ece04516fbbca92f80cba01e9d360c72e3b5a1e95f485c5257c5fd991d2e1'
+body_hash: 'sha256:c5f26e2dc18619959264ce4cc47936cbb8f10325ad747eab16b4ac90bc40dc41'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1728,7 +1728,6 @@ unilaterally narrow a shipped gate -- that is a decision about what the check is
 the gate's author reasoned carefully enough on the adjacent axis that the change belongs
 with them.
 
-
 ### STANDING CONCLUSIONS -- which findings on this page still hold | index | read this before acting on anything above
 
 This document accumulated findings across a long campaign and several of them supersede
@@ -1771,7 +1770,6 @@ have forced it to state.
 it, and several ended by refusing a stamp that looked available. That is the intended
 shape: the pending count is not the deliverable, and a revision moved across it without
 evidence would be worse than one left behind.
-
 
 ## Recommendations
 

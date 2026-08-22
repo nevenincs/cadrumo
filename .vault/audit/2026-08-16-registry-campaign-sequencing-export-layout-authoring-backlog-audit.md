@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:82338a8d48a762c61c686906952c41d8cd46207ecc4e2ba7a331fe24cec79224'
+body_hash: 'sha256:c46d48731b41dc58a1dd2c9d6cda7c09b4191b37b6dc84be2a6cd879b0443f55'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11513,3 +11513,113 @@ Modelo 184's `2015-2024` also now appears in
 revisions claim filing years no bundled design covers. That gate was already
 red with that family; the split did not create the class, and modelo 322's
 `2008-2023` joins it for the same reason -- no design is bundled before 2022.
+
+## Tick: modelo 347 split at the 2024/2025 boundary
+
+Re-measured at tick start: authority CLEAN, span gate reporting modelo 200
+(1 re-layout), 322 (1) and 347 (2). Both confirmation runs left in flight last
+tick had again been cut short by the session ending; the locale suite was
+re-run to completion and reports 531 passed, which closes that open item.
+
+### The key was the opposite of the previous split's
+
+Modelo 322 taught that a printed ordinal can be a contiguous 1..N POSITION, and
+pairing on it maps the Nth field of one design onto the Nth of another. Modelo
+347's ordinals are the opposite and the same control separates them: they are
+NOT contiguous (15 of 21 fields in a record carry one), and the fields they
+pair keep their meaning -- 52 of 54 agree on a normalised description and 51
+share a length.
+
+That normalisation mattered. A first reading compared descriptions exactly and
+concluded only 2 of 54 matched, which would have condemned a sound key: the
+differences were trailing periods and PDF line-wraps ('TIPO DE REGISTRO.'
+against 'TIPO DE REGISTRO'), not different fields.
+
+The 2008 and 2010 designs were measured too and are NOT derivable: their box
+numbers agree with 2010's on 11 of 43 fields. So one epoch was built and two
+were not, and the revision keeps reporting for the boundary between them.
+
+### Four fields authored, and the rule that first got them wrong
+
+Eight 2011 fields carry no ordinal. Four pair by offset. The other four are
+parte entera/decimal halves of amounts the 2025 design places elsewhere.
+
+The first rule bound each half to the nearest preceding NUMBERED field, and
+produced `decl.total-inmuebles` -- a COUNT -- as the parent of an IMPORTE half.
+The parser does not emit a parent header row for a field it has already
+decomposed, so "nearest preceding" lands on whatever came before. Reading the
+design settled it: 170-184 is `IMPORTE TOTAL DE LAS OPERACIONES DE
+ARRENDAMIENTO DE LOCALES DE NEGOCIO`, declared as the sum of the inmueble
+records' `IMPORTE DE LA OPERACION`, and 100-114 is that inmueble amount itself.
+Both casillas already existed in the registry, so the four halves are bound to
+`decl.importe-total-arrendamiento-locales` and `inmueble.importe-operacion`.
+
+### What the generator refused, and why each refusal was right
+
+Four validation refusals, none of them noise:
+
+* the render profile must cover EXACTLY the eligible blank numeric fields, so
+  the four authored halves needed rules of their own -- the integer half
+  carrying all its digits as integer digits, the fractional half as decimals,
+  the shape the 2025 profile already uses for its own split amount;
+* `allowed_values` is required on every rule and the shipped profile writes an
+  empty list rather than omitting it;
+* a casilla that already declares `export_refs` cannot be silently overwritten
+  by generation. Two casillas still named a 2025 field the 2011 layout
+  addresses with TWO fields, so the authored reference was cleared and the
+  generator wrote the pair it actually renders;
+* the ejercicio-2025 deadline window, its construct reference and its 2026
+  contribuyente calendar citation all belong to the later revision. A window is
+  owned by the revision whose years it closes.
+
+### A drop rule that asked the wrong side
+
+The split first dropped `decl.importe-total-arrendamiento-locales` and
+`inmueble.importe-operacion` from the earlier revision -- the very two casillas
+just authored into its epoch. The rule computed droppable casillas from the
+2025 map alone, where those two look unpaired because the 2025 design places
+them differently. Corrected to ask the TARGET epoch: a casilla is droppable
+only if the epoch the revision will actually emit does not bind it. Five
+casillas drop, all genuine 2025 additions (criterio de caja, bienes
+vinculados, inversión del sujeto pasivo, convocatoria BDNS).
+
+### Two sweeps that were too broad
+
+A blanket rename of `2008-y-siguientes` across every file mentioning modelo 347
+also rewrote historical prose in the span detector -- which records what it
+diagnosed about the revision as it was NAMED at the time -- and corrupted this
+module's own ledger note into "`("347", "2008-2024")` became `("347",
+"2008-2024")`". Both restored.
+
+The locale carry was retargeted from modelo 322 by sed and silently kept
+reading modelo 322's catalogue, because the path is built in an f-string the
+pattern did not match. Nothing was lost: the guard added after the previous
+tick's deletion refused to write when it found no keys to carry. That is the
+second time that guard has caught a bad retarget, and the argument for keeping
+it is now empirical rather than theoretical.
+
+### Verified
+
+* authority CLEAN; generated-tree gates 38 -> 40.
+* the span gate reports modelo 347 as ONE re-layout needing two revisions, down
+  from two and three. All three remaining modelos now stand at exactly one
+  boundary each -- five boundaries across the tree have become three.
+* `codebase_missing` back to 0 after carrying 150 keys, removing 90 orphans and
+  authoring the 20 help keys plus four designations; extras at the 118 docs/mcp
+  baseline.
+* the split-progress ledger entry was retargeted, not removed, and its module
+  passes.
+
+### Still open
+
+The 2008/2010 boundaries on 347 and the 2022/2023 boundary on 322 need per-epoch
+authoring against designs that pair with nothing. Modelo 200 is untouched and is
+the largest of the three.
+
+The application-calculations suite reports 75 failures on a run that began
+before this split. They are not from these splits: modelo 714's seven, named in
+the previous tick's count, pass when run directly, so part of that surface is
+transient. The rest cluster on cross-period clean-state provenance, modelo 721
+(no bundled design at all), modelo 036, modelo 840 and IVA compensation
+prefill, plus a modelo 390 revision gap at year 2026 that queue item 6 will
+meet.
