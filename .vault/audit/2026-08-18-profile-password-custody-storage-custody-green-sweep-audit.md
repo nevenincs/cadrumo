@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f658f3dcaa6efe5cc49f95de38eefb5416a5e7476f26a7261f8818ddadc4ea04'
+body_hash: 'sha256:22ed991eedd39891e283359b63d60e5d65032a61082f93485981dbfb0f714d0a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6271,3 +6271,35 @@ what it surfaces in this domain turns out to be deliberate.
 
 The custody CLI surface is recorded as verified across refusals, scripted creation and
 secrets channels. No defect found.
+
+### Closing position
+
+The last unprobed marker slice is empty: `perf` is excluded from every per-push lane and runs
+only in the dispatch-only full lane, which made it a candidate for hidden failures -- but this
+domain declares NO perf-marked tests at all (1,950 collected, 0 selected). Nothing was hiding
+there. With the serial slice already recorded healthy, the marker axes are exhausted.
+
+**What this campaign leaves behind.** `application/user_profile`,
+`adapters/persistence/storage` and `entrypoints/cli/_config` carry no forwarding wrappers, no
+re-export aliases, no forward-only bridge modules, no duplicated fixture facades and no
+monkeypatch machinery. Twenty-two forwarding wrappers and five re-export aliases were removed
+across seven slices, roughly 264 call sites repointed, with the domain lanes flat at
+314 integration / 1,589 unit from the first slice to the last. Real defects fixed earlier in
+the sweep include a fail-open redaction exemption, two pointer-contention races, a
+retryability flattening that told an agent to rename a profile that did not exist, a
+dot-segment path traversal, a drive-qualified capsule path, a keystore join that accepted an
+unchecked filename, and an operator-facing refusal that printed a message key.
+
+**Where the remaining value is, and it is not here.** Four items are named, measured and
+waiting on a decision rather than on effort: the profile-bundle IMPORT half (the product
+writes passphrase-encrypted bundles nothing can read back -- the one genuine product-level
+defect still open); the import-hygiene ratchet at 108 sites against 69 documented across six
+peer packages; five `dev/packaging` cases reachable by no lane; and `runbook_id`, null 634
+times out of 634 in the shared error contract. Each was left alone deliberately: acting would
+mean either overriding an owner's judgement or making a broad mechanical change to a surface
+this campaign does not own.
+
+**The honest read on continuing.** The last four iterations produced one real defect
+(`--to` versus `--output`) against three suspicions that dissolved on measurement. That is a
+sound instrument meeting a sound surface, not a stalled search -- but it is a poor use of
+further iterations. The campaign is complete on its stated goal.
