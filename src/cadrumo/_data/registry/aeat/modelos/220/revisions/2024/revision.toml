@@ -58,7 +58,38 @@ source_refs = [
     "aeat-modelo-200-manual-2024",
     "boe-modelo-200-2025-form",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2024 era. DISCLOSURE \
+-- self-review: the same agent split this revision out of the former open-ended \
+'2024-y-siguientes' in the immediately preceding commits, and swept the split's fallout \
+(locale keys, a record-design exception key, a pinned revision id in a sibling test). No \
+casilla, window date or offset was altered by the split; the 2024 window and both casillas \
+are the ones this revision already carried. VERIFIED -- SPAN: valid_to is now 2024-12-31 \
+and the revision cites only aeat-dr-220-2024. Before the split one revision spanned AEAT's \
+2024/2025 re-layout, which moves 4,524 of 7,466 shared boxes, adds 216, removes 130 and \
+changes the record set 137 -> 141; the span gate no longer reports a spanned re-layout for \
+this modelo. VERIFIED -- WHEN DUE: LIS art 124.1, 25 dias naturales tras los 6 meses \
+posteriores a la conclusion del periodo impositivo, so a calendar-year group closing 31 \
+Dec 2024 files 1-25 July 2025. The window stores those NOMINAL dates. Its \
+payment_cutoff_on 2025-07-22 is grounded in the bundled orden-hac-657-2025 art 3.2, 'desde \
+el dia 1 de julio hasta el 22 de julio de 2025, ambos inclusive'. NOT CLAIMED -- THE \
+APPROVING CLAUSE: this era's only bundled provision naming Modelo 220 is art 3, whose \
+subject is domiciliacion bancaria. That is DISTRIBUTION evidence, not the approving \
+clause; the dedicated 'Se aprueba el modelo 220' text of orden-hac-657-2025 art 1 is NOT \
+bundled. The sibling 2025 era has strictly better grounding on this point. NOT CLAIMED -- \
+RECORD DESIGN: 0 of 7,596 casillas the bundled 2024 diseno derives are modelled. This \
+revision is applicability grade and declares only the declaration header (ejercicio, tipo \
+de declaracion); no casilla number is fabricated. That is a scheduling and applicability \
+claim ONLY, not a claim about the form's content. NOT CLAIMED -- FILING: no export layout, \
+so this application cannot file the modelo; it sits on the filing-capability worklist \
+alongside modelos 038, 182, 187, 222 and 840, which the worklist gate states explicitly is \
+a backlog and not a defect to suppress. model_law_authority_scope stays inspection_only. \
+NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the \
+audited locales are complete but their strings were not audited for accuracy; the four \
+catalogues were re-authored under the new revision id in this same sweep because locale \
+keys derive from that id."""
+reviewed_at = 2026-08-22
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
 reason = """

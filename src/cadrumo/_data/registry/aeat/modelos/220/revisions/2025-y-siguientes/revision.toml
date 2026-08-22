@@ -58,7 +58,39 @@ source_refs = [
     "aeat-dr-220-2025",
     "aeat-modelo-200-manual-2025",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025-y-siguientes \
+era. DISCLOSURE -- self-review: the same agent acquired and bundled Orden HAC/529/2026, \
+split this revision out of the former open-ended '2024-y-siguientes', and swept the \
+split's fallout, all in the immediately preceding commits. VERIFIED -- APPLICABILITY, and \
+it is firmer than the 2024 era's: orden-hac-529-2026 art 6.3 speaks of 'el Modelo 220 de \
+declaracion aprobado en el articulo 1 de la presente orden', an operative clause naming \
+this modelo, where the 2024 era has only art 3's domiciliacion-bancaria heading -- \
+distribution evidence rather than an approving clause. Both provisions were fetched from \
+two BOE surfaces that reproduce them identically. VERIFIED -- WHEN DUE: art 6.3 grounds \
+the group declaration in LIS art 75.2, 'dentro del plazo correspondiente a la declaracion \
+en regimen de tributacion individual de la entidad representante del grupo fiscal', which \
+routes to the representante's own art 124.1 plazo: a calendar-year group closing 31 Dec \
+2025 files 1-25 July 2026. NOMINAL dates stored. The payment_cutoff_on 2026-07-22 is now \
+grounded in art 3.2, 'desde el dia 1 de julio hasta el 22 de julio de 2026, ambos \
+inclusive' -- that date had been carried across the split from the 2024 orden's clause by \
+pattern and was verified only in this sweep; it was right, but nothing in the tree said \
+so. VERIFIED -- SPAN BOUNDARY: the disposicion final segunda makes the orden applicable to \
+periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025, which is \
+the boundary the split was cut at. NOT CLAIMED -- ARTICULO 1 IS NOT BUNDLED. No fetch \
+returned its enumerated list without elision, and bundling an abridged provision as \
+verbatim is the exact defect corrected in orden-hac-510-2021 the same day. Art 6.3 attests \
+art 1's approval of this modelo; the approving text itself remains to be acquired whole. \
+NOT CLAIMED -- RECORD DESIGN: 0 of 7,682 casillas the bundled 2025 diseno derives are \
+modelled. Applicability grade, declaration header only, no casilla number fabricated. A \
+scheduling and applicability claim ONLY. NOT CLAIMED -- SPAN EVIDENCE IS THIN: the gate \
+reports only 1 comparable bundled design year inside this open-ended span; that is \
+ABSENT-class evidence, not the contrary-evidence class. NOT CLAIMED -- FILING: no export \
+layout; on the filing-capability worklist, which its gate states is a backlog and not a \
+defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
+is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
+reviewed_at = 2026-08-22
 
 [revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
