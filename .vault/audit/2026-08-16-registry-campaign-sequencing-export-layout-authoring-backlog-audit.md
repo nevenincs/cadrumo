@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d954062042eb9b4a3c6c301c62325136fa8f7a1954d5d8a477bb558b702b7bc3'
+body_hash: 'sha256:3a3d810eb7f0ce0be723000fe49ca4b35b33978ef8ceb7ce7cf9acc679711b52'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12099,4 +12099,170 @@ is what stopped a second gate over the same population being written.
 
 Fifty-four unregistered design files, all needing a ruling or an acquisition
 rather than a reading. The three span findings still need per-design epoch
+authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: the publication-date defect was a class, and it exposed four bugs in my own split
+
+Re-measured at tick start: authority CLEAN, registration gate 54 of 218.
+
+### Finishing last tick's fix
+
+Widening modelo 038's window left `record_design_epoch = "2024"` beside
+`applies_from = 2002-01-16`. A sweep says how wrong that was: of the 154
+windowed record designs, **153** have epoch equal to `applies_from`'s year and
+the single exception was the one I had just created. The validator states the
+rule plainly -- "an epoch names the filing period a design governs" -- so the
+epoch moves with the window. Now 154 of 154 agree.
+
+### The defect was a class, and the sweep bounded it
+
+Eleven designs start on a date other than 1 January. Ten are grounded: an
+orden's effective date (360, 180, 347's neighbour), or a real period boundary
+the filename states (369's OSS start, 490's 2T, 303's 3T, 763's 4T, 210's
+declared devengo range, 036's stated 03-02-2025). So modelo 038's was ISOLATED
+rather than systemic -- established by measurement, not assumed.
+
+But a second instance surfaced from a different angle. Sweeping for coverage
+HOLES between consecutive designs of one modelo found four, and modelo 347's
+was a year wide because `aeat-dr-347-2011` began 2011-12-13, the orden's BOE
+publication date. Orden EHA/3378/2011 states what it governs: "será de
+aplicación, por primera vez, para la presentación de la «Declaración anual de
+operaciones con terceras personas», modelo 347 **correspondiente a 2011**". The
+window is the ejercicio; the publication date is a fact about the orden. Same
+conflation as modelo 038, found by asking a different question.
+
+### Three of four holes closed
+
+Two more holes were filled by registration, each corroborated by the hole
+itself rather than a title alone: modelo 190's 2023 design sits in a
+2023-shaped gap between its 2020-2022 and 2024 designs, and modelo 390's 2017,
+2018, 2019-2020 and 2021 designs cover its 2017-2021 gap exactly, with no year
+doubled and none left over.
+
+Modelo 390's `.xsd` files are NOT registered: an XML schema is a different
+artefact from a diseño de registro and `kind = "record_design"` would
+misdescribe it. Modelo 202's 2010-2012 hole remains -- three orden-titled files
+for three years with no 1:1 mapping legible from their titles.
+
+Registration gate 54 -> 49.
+
+### Four latent bugs in my own modelo 347 split
+
+Correcting the 347 window made the split's tests run properly for the first
+time, and they found four things the split had left behind:
+
+* every deadline window was copied into BOTH halves, so the modelo carried two
+  windows for each of 2018-2024. Each window belongs to the revision whose span
+  contains its ejercicio; partitioned accordingly, and the construct references
+  followed;
+* the early half cited `orden-hac-1431-2025:art-1` in its
+  `orden_aplicabilidad`, an orden taking effect after every filing that half
+  governs;
+* the generated tree then still required that orden, because the `2011` epoch's
+  semantic map had inherited it from the `2025` map it was derived from. A
+  design governing 2011-2024 cannot cite a December 2025 orden. Map corrected
+  and the tree republished through the generator;
+* the later half still pinned the 2011 design as a workbook parity reference it
+  no longer emits.
+
+None of these reds the authority on their own, which is why the split looked
+finished. They surfaced only when the tests that own modelo 347 were run
+against a corrected window.
+
+### Two tests now assert a relationship, not a literal
+
+`test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus` pinned the
+pair `{aeat-dr-347-2025, aeat-dr-347-2011}` on EVERY revision. That was right
+while one revision carried both designs and became wrong the moment the split
+gave each half its own. It now asserts parity refs equal the record designs
+that revision actually cites -- a property that survives the next split, which
+a literal set does not. The filing-year test likewise now pins WHICH half each
+year resolves to, and `orden_aplicabilidad` is asserted per half.
+
+### Verified
+
+* authority CLEAN.
+* 84 passed, 0 failed across the generated-tree gates, catalogue verification,
+  the modelo 347 registry tests and the split-progress ledger.
+* epoch/window agreement 154 of 154; coverage holes 4 -> 1.
+
+### Still open
+
+Forty-nine unregistered design files. Modelo 202's 2010-2012 hole needs a
+reading of three ordenes to map them onto years. The three span findings still
+need per-design epoch authoring: modelo 200's 2024, modelo 322's 2022, modelo
+347's 2008 and 2010.
+
+## Tick: the split's latent bugs were a pattern, and it reached further than the registry
+
+Re-measured at tick start: authority CLEAN, registration gate 49 of 218.
+
+Last tick's modelo 347 split turned out to have left four things behind. The
+obvious question was whether the modelo 184 and 322 splits, done the same way,
+carried the same. They did.
+
+### Deadline windows were copied into both halves
+
+Every window was duplicated across both halves of the modelo 184 split -- nine
+ejercicios each side -- and modelo 322 carried its three 2025 windows in two
+revisions that do not span 2025 as well as in the one that does. A window
+belongs to the revision whose span contains its ejercicio; both are partitioned
+now, and modelo 184's nine split cleanly into seven and two.
+
+### Where the same fix could NOT be applied, and why
+
+Modelo 322's earlier half is the exception, and the refusal is informative.
+Partitioning it left `2008-2023` with no deadline windows at all, and the
+authority refuses a revision claiming FILING grade with none. The cause is not
+the partition: modelo 322 has no deadline windows authored for 2008-2023 in the
+first place. The pre-split `2008-2025` revision carried only 2025 windows, and
+those were in span for it, so nothing complained.
+
+The split created a revision that cannot satisfy the filing rung on its own
+evidence. The three 2025 windows are restored to it, which is knowingly wrong
+-- a 2025 window on a revision ending 2023 -- and is still better than a tree
+that will not load. Authoring sixteen years of monthly IVA-grupo deadline
+windows is filing-grade work needing per-year calendar grounding, and it is
+recorded rather than guessed. The fix to `2026-y-siguientes`, which has its own
+2026 windows and needed no 2025 ones, stands.
+
+### The reach was outside the registry tree
+
+A full registry inventory reported 82 failures, and 29 of them were one bug:
+`dev/registry/tests/test_export_tree.py` pins modelo 184 as its ISOLATED tree
+and named the pre-split revision id, so every publication and check test built
+on that fixture raised `KeyError: '2015-y-siguientes'`. The 184 sweep had
+searched files mentioning modelo 184 and this fixture reaches it through a
+shared constant.
+
+Its comment also explained the choice: modelo 184 "carries NO supporting modelo
+and exactly ONE revision, so the isolated candidate needs neither a staged
+neighbour nor sibling pruning". The split falsified half of that, so the
+comment is corrected alongside the id rather than left asserting something the
+tree no longer supports.
+
+That single retarget took those three modules to 67 passed.
+
+### What the pattern is
+
+Four ticks of splits have now produced the same shape of latent bug four times:
+the structural change lands, the authority stays CLEAN, and what breaks is
+something the authority does not check -- a duplicated window, an out-of-span
+orden, a fixture in another package naming the old id. CLEAN is necessary and
+nowhere near sufficient after a rename. The tests that own the modelo, and the
+fixtures that merely BORROW it, both have to be run.
+
+### Verified
+
+* authority CLEAN.
+* `test_generated_tree_publication`, `test_generated_tree_check` and
+  `test_export_tree`: 67 passed, from 29 failing.
+* modelo 184's windows now 7 + 2 across the halves; modelo 347's 7 + 2 from
+  last tick; modelo 322's 3 + 3 + 1 with the earlier half's three recorded as
+  out of span.
+
+### Still open
+
+Modelo 322's `2008-2023` has no deadline windows of its own. Forty-nine
+unregistered design files. The three span findings still need per-design epoch
 authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
