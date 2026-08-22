@@ -47,6 +47,11 @@ from ._action_resolution import (
     resolve_catalogue_action,
     resolve_notice_action,
 )
+from ._calculation_workflows import (
+    SupportedModeloCalculationWorkflow,
+    SupportedModeloCalculationWorkflowCatalogue,
+    build_supported_modelo_calculation_workflow_catalogue,
+)
 from ._contract import (
     ACCEPTED_ROOTS,
     MOUNTED_COMMAND_FAMILIES,
@@ -167,11 +172,14 @@ __all__ = [
     "RootSurfaceName",
     "ServiceOwner",
     "SourceKindAlias",
+    "SupportedModeloCalculationWorkflow",
+    "SupportedModeloCalculationWorkflowCatalogue",
     "SurfaceExposureInventoryRow",
     "build_help_document",
     "build_operator_surface_contract",
     "build_operator_surface_manifest",
     "build_root_landing_report",
+    "build_supported_modelo_calculation_workflow_catalogue",
     "event_suffix_for",
     "get_builtin_catalogue",
     "get_operator_surface_contract",
