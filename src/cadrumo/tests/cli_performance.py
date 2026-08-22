@@ -175,6 +175,7 @@ class CliPerformanceCalibration:
 
     command_profiles: tuple[CliPerformanceProfile, ...]
     control_profiles: tuple[CliPerformanceProfile, ...]
+    measured_pair_orders: tuple[Literal["command-first", "control-first"], ...]
     command_resolution: LatencyDistribution
     command_invocation: LatencyDistribution
     control_resolution: LatencyDistribution
@@ -264,6 +265,7 @@ def calibrate_cli_path(
     calibration_policy = policy or PerformanceCalibrationPolicy()
     command_profiles: list[CliPerformanceProfile] = []
     control_profiles: list[CliPerformanceProfile] = []
+    measured_pair_orders: list[Literal["command-first", "control-first"]] = []
     for index in range(calibration_policy.warmup_runs + calibration_policy.sample_count):
         def measure_command() -> CliPerformanceProfile:
             return profile_cli_path(
@@ -284,18 +286,23 @@ def calibrate_cli_path(
                 timeout=timeout,
             )
 
+        pair_order: Literal["command-first", "control-first"]
         if index % 2 == 0:
+            pair_order = "command-first"
             command, control = measure_command(), measure_control()
         else:
+            pair_order = "control-first"
             control, command = measure_control(), measure_command()
         _require_successful_profile(command, label="command")
         _require_successful_profile(control, label="control")
         if index >= calibration_policy.warmup_runs:
             command_profiles.append(command)
             control_profiles.append(control)
+            measured_pair_orders.append(pair_order)
     return CliPerformanceCalibration(
         command_profiles=tuple(command_profiles),
         control_profiles=tuple(control_profiles),
+        measured_pair_orders=tuple(measured_pair_orders),
         command_resolution=_phase_distribution(command_profiles, "resolution"),
         command_invocation=_phase_distribution(command_profiles, "invocation"),
         control_resolution=_phase_distribution(control_profiles, "resolution"),
