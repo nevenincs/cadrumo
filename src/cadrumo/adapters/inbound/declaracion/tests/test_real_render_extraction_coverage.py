@@ -94,6 +94,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import resources
 from .....tests import FIXTURES_DIR
 from .._parser import _extract_profile_values, _select_extraction_profile, extract_pages_text
@@ -217,7 +218,7 @@ _M390_REPLACEMENT_ABSENT = frozenset(
         "iva.anual.repercutido.super-reducido",
         "iva.anual.repercutido.reducido",
         "iva.anual.repercutido.general",
-        "iva.anual.autorepercutido.intracomunitaria",
+        "iva.anual.aic.bienes.tipo-21.cuota",
         "iva.anual.cuota-devengada-total",
         "iva.anual.compensacion-generada-ejercicio-no-97",
     },
@@ -285,6 +286,7 @@ def _declaracion_profile(specimen: _AnnexSpecimen | _ReplacementSpecimen):
         specimen.modelo,
         filing_year=specimen.filing_year,
         period=specimen.period,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
     revision = snapshot.revision
     return _select_extraction_profile(snapshot, extraction_profile_id=None), revision
@@ -511,10 +513,10 @@ def test_count_valued_targets_stay_whole_and_non_negative(
 def test_blank_box_does_not_fabricate_its_own_box_number() -> None:
     """A blank money box is reported absent, not read as its printed box number.
 
-    ``named_label`` captures the last token on the line, and on an AEAT form a
-    blank money box leaves its own printed box number as that token. Modelo 390
-    box 662 is printed and blank, so without the guard the profile would report
-    662 euros of cuotas pendientes de compensacion the filing never declared.
+    A named-label amount match captures the last token on the line, and on an
+    AEAT form a blank money box leaves its own printed box number as that token.
+    The profile therefore anchors box 662 geometrically and looks to its right;
+    without that guard it would report 662 euros the filing never declared.
 
     This is the only specimen in the tree that exercises the guard end to end,
     and it is now a reproduction rather than the render that first surfaced it.
@@ -530,10 +532,11 @@ def test_blank_box_does_not_fabricate_its_own_box_number() -> None:
     full_text = "\n".join(pages)
 
     target = next(t for t in profile.target_casillas if str(t.casilla_id) == target_id)
-    assert target.label_pattern is not None
-    assert re.search(target.label_pattern, full_text, re.IGNORECASE), (
-        f"{specimen.label}: the label for {target_id!r} is not present in this render, so "
-        f"its absence below would prove nothing about the blank-box guard"
+    assert target.bbox_anchor is not None
+    assert target.bbox_anchor.box_number_pattern == "^662$"
+    assert re.search(r"\b662\b", full_text), (
+        f"{specimen.label}: box number for {target_id!r} is not present in this render, so "
+        "its absence below would prove nothing about the blank-box guard"
     )
 
     amounts = _extracted_amounts(specimen)
