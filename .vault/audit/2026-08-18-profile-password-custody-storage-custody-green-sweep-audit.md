@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea3f051cfca7c04d16b1dd76348a42f69e899b50a80f31f866111e112e144338'
+body_hash: 'sha256:8ac5ebc9440f016d27f176c23c4ddcb6d6d52eccec10fba3c8870e4c4ce4789f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -5869,3 +5869,46 @@ because a peer sweep published the work before the linter ran here; running it f
 cheap fix and it paid immediately.
 
 Lanes 314 integration / 1587 unit, unchanged.
+
+### Measuring the custody-ports contradiction instead of arguing it
+
+The previous entry left thirty-four flagged forwarding wrappers as a standoff: a shipped
+gate says delete them, the module's docstring says the indirection IS the design. That was
+stated from the two claims without reading the wrappers. Reading them splits the population
+and dissolves most of the standoff.
+
+**Twelve are methods implementing declared Protocols.** For those the gate's own remedy --
+"point the consumers at the owning package's facade and delete the wrapper" -- cannot be
+followed: a method that satisfies an interface is the binding, and deleting it removes the
+implementation rather than an alias. That is a distinct class the flag does not distinguish,
+and it is the strongest part of the module's defence.
+
+**The module is mixed, which the flag correctly reflects.** `profile_zeroise` is a pure
+forward to `custody.zeroise` whose only addition is a prefix. `profile_is_authentication_
+failure` -- a TypeGuard that recognises adapter refusals "without leaking adapter types" --
+is NOT flagged. So the gate discriminates between aliasing and deciding, and the module
+genuinely holds both.
+
+**Twenty-two are module-level functions, and exactly one has no consumers.** Counted per
+symbol across the tree: the rest carry 2 to 57 callers, so deleting them is the contested
+design question and stays open. `profile_custody_read_member` had ONE reference in the whole
+repository -- its own definition -- and no facade export.
+
+**Its docstring made a security claim, which was checked before deleting rather than after.**
+It said the anchored, bounded, no-follow read "matters MORE for the source an operator hands
+to `config profile restore`, which is the less trusted of the two". If nothing called it, the
+question is whether restore reads members some weaker way. It does not: restore uses the
+OPTIONAL sibling, equally anchored and bounded, whose call site explicitly rejects the
+"``is_file()`` then ``read_bytes()``, which follows a symlink" shape. The property holds; the
+wrapper was residue whose prose described what its sibling does.
+
+The sibling documented the TOCTOU reasoning but not the untrusted-source one, so that
+paragraph moved there. **Deleting code should not delete the reason it existed** -- the
+rationale outlives the residue, and this is the second time this campaign has found a
+security argument living only in prose attached to something removable.
+
+Flagged wrappers 34 -> 33. The remaining question is unchanged and still needs a ruling; what
+changed is that it is now a question about 21 consumed functions rather than 34 mixed items,
+with the 12 Protocol methods excluded on evidence.
+
+Lanes 314 integration / 1587 unit, unchanged. Ruff ran before the lanes again: clean.
