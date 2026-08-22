@@ -30,12 +30,28 @@ def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
     return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
 
 
-def test_setup_uv_consumers_follow_the_repository_python_pin() -> None:
-    """Ordinary jobs defer to .python-version; genuine compatibility matrices may vary."""
-    pin = _python_pin()
+def _is_compatibility_matrix_override(*, selection: object, matrix: object, pin: str) -> bool:
+    """Return whether an override is a real matrix containing the pin and an alternative."""
+    match = _MATRIX_EXPRESSION.fullmatch(str(selection))
+    if match is None or not isinstance(matrix, dict):
+        return False
+    values = matrix.get(match.group(1))
+    return (
+        isinstance(values, list)
+        and pin in {str(value) for value in values}
+        and any(str(value) != pin for value in values)
+    )
+
+
+def _assert_setup_uv_consumers_follow_pin(
+    documents: list[tuple[Path, dict[str, Any]]],
+    *,
+    pin: str,
+) -> None:
+    consumer_found = False
     violations: list[str] = []
 
-    for path, document in _workflow_documents():
+    for path, document in documents:
         for job_name, job in (document.get("jobs") or {}).items():
             if not isinstance(job, dict):
                 continue
@@ -43,6 +59,7 @@ def test_setup_uv_consumers_follow_the_repository_python_pin() -> None:
             for step_index, step in enumerate(steps):
                 if not isinstance(step, dict) or not str(step.get("uses", "")).startswith("astral-sh/setup-uv@"):
                     continue
+                consumer_found = True
                 selection = (step.get("with") or {}).get("python-version")
                 if selection is None:
                     # With no UV_PYTHON override, uv resolves the checked-in
@@ -56,20 +73,56 @@ def test_setup_uv_consumers_follow_the_repository_python_pin() -> None:
                         violations.append(f"{path.name}:{job_name}: setup-uv precedes checkout")
                     continue
 
-                match = _MATRIX_EXPRESSION.fullmatch(str(selection))
                 matrix = (job.get("strategy") or {}).get("matrix") or {}
-                values = matrix.get(match.group(1)) if match else None
-                if (
-                    not isinstance(values, list)
-                    or pin not in {str(value) for value in values}
-                    or not any(str(value) != pin for value in values)
-                ):
+                if not _is_compatibility_matrix_override(selection=selection, matrix=matrix, pin=pin):
                     violations.append(f"{path.name}:{job_name}: {selection!r}")
 
+    assert consumer_found, "no setup-uv consumer was found; the CI Python pin contract has no live surface"
     assert violations == [], (
         "setup-uv Python overrides bypass .python-version unless they are a "
         f"compatibility matrix containing the exact pin and an alternative: {violations}"
     )
+
+
+def test_setup_uv_consumers_follow_the_repository_python_pin() -> None:
+    """Ordinary jobs defer to .python-version; genuine compatibility matrices may vary."""
+    _assert_setup_uv_consumers_follow_pin(_workflow_documents(), pin=_python_pin())
+
+
+def test_empty_setup_uv_surface_is_rejected() -> None:
+    """Deleting every consumer cannot make the repository-wide gate pass vacuously."""
+    with pytest.raises(AssertionError, match="no setup-uv consumer was found"):
+        _assert_setup_uv_consumers_follow_pin([], pin=_python_pin())
+
+
+@pytest.mark.parametrize(
+    ("selection", "matrix", "expected"),
+    [
+        ("${{ matrix.python-version }}", {"python-version": ["{pin}", "3.13t"]}, True),
+        ("${{ matrix.python-version }}", {"python-version": ["3.13t", "3.12"]}, False),
+        ("${{ matrix.python-version }}", {"python-version": ["{pin}"]}, False),
+        ("3.13", {}, False),
+        ("${{ inputs.python-version }}", {"python-version": ["{pin}", "3.13t"]}, False),
+        ("${{ matrix.python-version }}", {"other-version": ["{pin}", "3.13t"]}, False),
+    ],
+    ids=(
+        "canonical-pin-and-alternative",
+        "missing-canonical-pin",
+        "canonical-pin-without-alternative",
+        "loose-literal",
+        "non-matrix-expression",
+        "mismatched-matrix-key",
+    ),
+)
+def test_compatibility_matrix_override_classifier(
+    selection: str,
+    matrix: dict[str, list[str]],
+    expected: bool,
+) -> None:
+    """Only the deliberate compatibility-matrix exception is accepted."""
+    pin = _python_pin()
+    resolved_matrix = {key: [pin if value == "{pin}" else value for value in values] for key, values in matrix.items()}
+    assert _is_compatibility_matrix_override(selection=selection, matrix=resolved_matrix, pin=pin) is expected
 
 
 def test_release_cohort_enforces_the_repository_python_pin() -> None:
