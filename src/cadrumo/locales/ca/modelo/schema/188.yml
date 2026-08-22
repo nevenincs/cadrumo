@@ -27,61 +27,6 @@ modelo:
               help: Suma de les bases de retenció reflectides en els registres de
                 perceptor amb base negativa.
               label: Base de retencions i ingressos a compte negativa
-            x-e1in4opec9gn6p9de9in8pbecdkmurj5ec:
-              help: null
-              label: Base de retencions i ingressos a compte
-            x-e1in4opecdm62tj5:
-              help: null
-              label: Clau
-            x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
-              label: Exercici de meritació
-            x-e1in4opecpim6q315lhmurjjehkn8tb3d5nmsbb1dpq6ior9e1gm6qbfdo:
-              help: null
-              label: Data de constitució o anticipació
-            x-e1in4oped5i6arjkd5j6ior1cdkmurhde9imst315lr6it31dhkm6qb1:
-              help: null
-              label: Identificació de la renda vitalícia assegurada
-            x-e1in4oped5n6crridlgm6qbfdomm2p39cdkmurj1dg:
-              help: null
-              label: Informació addicional
-            x-e1in4opedlnm8obcd5i62p0:
-              help: null
-              label: Modalitat
-            x-e1in4opedpkmc:
-              help: null
-              label: NIF de la persona perceptora
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
-              label: NIF del representant legal
-            x-e1in4opedpnmqojick:
-              help: null
-              label: Cognoms i nom, raó social o denominació de la persona perceptora
-            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
-              label: Percentatge de retenció
-            x-e1in4opee1p6irb15lgn0rriehgm8o8:
-              help: null
-              label: Import de la prima aportada
-            x-e1in4opee1p6utj9dphmio8:
-              help: null
-              label: Codi de província
-            x-e1in4opee9im8tb3cdkmurj5ecmm8t1dcdqm2sjkc4:
-              help: null
-              label: Reduccions (disposició transitòria quarta de la Llei 35/2006)
-            x-e1in4opee9imsp39dlkmarjkdtpiqor1e1kn8obc5lmmuoj9dhkm2sj9ds:
-              help: null
-              label: Rendes o rendiments del capital mobiliari
-            x-e1in4opee9imsp39dlkmarjkdtpiqsr5ctqn4rrj5lgm6sj5cli6ushdd1kn0rrkclhm2sj9ds:
-              help: null
-              label: Rendiments derivats d'assegurances el beneficiari de les quals
-                és el creditor hipotecari
-            x-e1in4opee9imst315lr6it31dhkm6qb15lgn6pb7elp62p31:
-              help: null
-              label: Renda vitalícia assegurada
-            x-e1in4opee9in8pbecdkmurj5ecmmirj7e9in6rrj5lhnapbeehgg:
-              help: null
-              label: Retencions i ingressos a compte
           construct:
             modelo-188-calculation-construct:
               field:

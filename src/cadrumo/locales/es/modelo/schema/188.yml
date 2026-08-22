@@ -29,61 +29,6 @@ modelo:
               help: Suma de las bases de retención e ingreso a cuenta reflejadas en
                 los registros de perceptor con base negativa.
               label: Base de retenciones e ingresos a cuenta negativa
-            x-e1in4opec9gn6p9de9in8pbecdkmurj5ec:
-              help: null
-              label: Base de retenciones e ingresos a cuenta
-            x-e1in4opecdm62tj5:
-              help: null
-              label: Clave
-            x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
-              label: Ejercicio de devengo
-            x-e1in4opecpim6q315lhmurjjehkn8tb3d5nmsbb1dpq6ior9e1gm6qbfdo:
-              help: null
-              label: Fecha de constitución o anticipación
-            x-e1in4oped5i6arjkd5j6ior1cdkmurhde9imst315lr6it31dhkm6qb1:
-              help: null
-              label: Identificación de la renta vitalicia asegurada
-            x-e1in4oped5n6crridlgm6qbfdomm2p39cdkmurj1dg:
-              help: null
-              label: Información adicional
-            x-e1in4opedlnm8obcd5i62p0:
-              help: null
-              label: Modalidad
-            x-e1in4opedpkmc:
-              help: null
-              label: NIF del perceptor
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
-              label: NIF del representante legal
-            x-e1in4opedpnmqojick:
-              help: null
-              label: Apellidos y nombre, razón social o denominación del perceptor
-            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
-              label: Porcentaje de retención
-            x-e1in4opee1p6irb15lgn0rriehgm8o8:
-              help: null
-              label: Prima aportada
-            x-e1in4opee1p6utj9dphmio8:
-              help: null
-              label: Código de provincia
-            x-e1in4opee9im8tb3cdkmurj5ecmm8t1dcdqm2sjkc4:
-              help: null
-              label: Reducciones (disposición transitoria cuarta de la Ley 35/2006)
-            x-e1in4opee9imsp39dlkmarjkdtpiqor1e1kn8obc5lmmuoj9dhkm2sj9ds:
-              help: null
-              label: Rentas o rendimientos del capital mobiliario
-            x-e1in4opee9imsp39dlkmarjkdtpiqsr5ctqn4rrj5lgm6sj5cli6ushdd1kn0rrkclhm2sj9ds:
-              help: null
-              label: Rendimientos derivados de seguros cuyo beneficiario es el acreedor
-                hipotecario
-            x-e1in4opee9imst315lr6it31dhkm6qb15lgn6pb7elp62p31:
-              help: null
-              label: Renta vitalicia asegurada
-            x-e1in4opee9in8pbecdkmurj5ecmmirj7e9in6rrj5lhnapbeehgg:
-              help: null
-              label: Retenciones e ingresos a cuenta
           construct:
             modelo-188-calculation-construct:
               field:

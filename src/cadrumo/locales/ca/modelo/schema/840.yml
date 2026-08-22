@@ -34,46 +34,47 @@ modelo:
                 blanc)
             x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
               help: null
-              label: null
+              label: Codi de municipi de l'activitat (reservat a l'Administracio)
             x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
               help: null
-              label: null
+              label: Codi de provincia de l'activitat (reservat a l'Administracio)
             x-c5hn8bj4clpm6sj9e1hmirre:
               help: null
               label: Descripcio de l'activitat (reservat a l'Administracio)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: codi postal'
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: codi de via (reservat a l''Administracio)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: escala'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: quilometre'
             x-c5hn8bj4dtmmior9dhkmubbeelmmasjf:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: numero'
             x-c5hn8bj4dtmmior9dhkmubbgd5pmu:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: pis'
             x-c5hn8bj4dtmmior9dhkmubbgehng:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: Pto., segons l''abreviatura del disseny
+                de registre'
             x-c5hn8bj4dtmmior9dhkmubbgelin4t31:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: porta'
             x-c5hn8bj4dtmmior9dhkmubbjd5jmoo9depkm2:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: sigla de la via publica'
             x-c5hn8bj4dtmmior9dhkmubbkclm6apjfdpng:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: telefon'
             x-c5hn8bj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
               help: null
-              label: null
+              label: 'Domicili de l''activitat: nom de la via publica'
             x-c5hn8bj5f1imsor9dtn0:
               help: null
               label: null
@@ -91,16 +92,16 @@ modelo:
               label: Hi ha local afecte indirectament a l'activitat
             x-c5hn8bjdeln6ior9e1kmu:
               help: null
-              label: null
+              label: Codi de municipi on s'exerceix l'activitat
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd64:
               help: null
-              label: null
+              label: 'Notes que son aplicables: agrupacio, primera'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd68:
               help: null
-              label: null
+              label: 'Notes que son aplicables: agrupacio, segona'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd6c:
               help: null
-              label: null
+              label: 'Notes que son aplicables: agrupacio, tercera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
               help: null
               label: null
@@ -112,19 +113,19 @@ modelo:
               label: null
             x-c5hn8bjedtq62bb7e9qn0rpd64:
               help: null
-              label: null
+              label: 'Notes que son aplicables: grup, primera'
             x-c5hn8bjedtq62bb7e9qn0rpd68:
               help: null
-              label: null
+              label: 'Notes que son aplicables: grup, segona'
             x-c5hn8bjedtq62bb7e9qn0rpd6c:
               help: null
-              label: null
+              label: 'Notes que son aplicables: grup, tercera'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
               help: null
               label: null
             x-c5hn8bjge9nncqbecdkm2:
               help: null
-              label: null
+              label: Codi de provincia on s'exerceix l'activitat
             x-c5hn8bjge9nncqbecdkm2bb3elnn8o9de1p6utj9dphmiobc:
               help: null
               label: Provincia a la qual correspon la quota provincial

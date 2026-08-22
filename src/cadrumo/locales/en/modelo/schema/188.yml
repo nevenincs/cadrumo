@@ -25,60 +25,6 @@ modelo:
               help: Sum of the withholding bases reported in recipient records with
                 a negative base.
               label: Negative base for withholdings and payments on account
-            x-e1in4opec9gn6p9de9in8pbecdkmurj5ec:
-              help: null
-              label: Withholding and payment-on-account base
-            x-e1in4opecdm62tj5:
-              help: null
-              label: Key
-            x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
-              label: Accrual year
-            x-e1in4opecpim6q315lhmurjjehkn8tb3d5nmsbb1dpq6ior9e1gm6qbfdo:
-              help: null
-              label: Date of establishment or advance
-            x-e1in4oped5i6arjkd5j6ior1cdkmurhde9imst315lr6it31dhkm6qb1:
-              help: null
-              label: Identification of the insured life annuity
-            x-e1in4oped5n6crridlgm6qbfdomm2p39cdkmurj1dg:
-              help: null
-              label: Additional information
-            x-e1in4opedlnm8obcd5i62p0:
-              help: null
-              label: Modality
-            x-e1in4opedpkmc:
-              help: null
-              label: Payee tax identification number
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
-              label: Legal representative tax identification number
-            x-e1in4opedpnmqojick:
-              help: null
-              label: Surname and given name, or company name, of the payee
-            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
-              label: Withholding percentage
-            x-e1in4opee1p6irb15lgn0rriehgm8o8:
-              help: null
-              label: Premium paid
-            x-e1in4opee1p6utj9dphmio8:
-              help: null
-              label: Province code
-            x-e1in4opee9im8tb3cdkmurj5ecmm8t1dcdqm2sjkc4:
-              help: null
-              label: Reductions (transitional provision four of Law 35/2006)
-            x-e1in4opee9imsp39dlkmarjkdtpiqor1e1kn8obc5lmmuoj9dhkm2sj9ds:
-              help: null
-              label: Investment income or returns
-            x-e1in4opee9imsp39dlkmarjkdtpiqsr5ctqn4rrj5lgm6sj5cli6ushdd1kn0rrkclhm2sj9ds:
-              help: null
-              label: Income from insurance whose beneficiary is the mortgage creditor
-            x-e1in4opee9imst315lr6it31dhkm6qb15lgn6pb7elp62p31:
-              help: null
-              label: Insured life annuity
-            x-e1in4opee9in8pbecdkmurj5ecmmirj7e9in6rrj5lhnapbeehgg:
-              help: null
-              label: Withholdings and payments on account
           construct:
             modelo-188-calculation-construct:
               field:
