@@ -61,6 +61,7 @@ _IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id("69")
 _M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = validated_casilla_id("15")
 _M130_PAYMENT_BASE_CASILLA: CasillaId = validated_casilla_id("14")
+_M303_PERIOD_CASILLA: CasillaId = validated_casilla_id("decl.periodo")
 _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 
@@ -79,6 +80,13 @@ def _populated_observation() -> RegistryModeloObservation:
                 operand_values=(),
                 legal_refs=("ley-37-1992:art-21",),
                 source_refs=("aeat-iva-2025",),
+            ),
+            CasillaObservation(
+                casilla_id=_M303_PERIOD_CASILLA,
+                value_kind="text",
+                value="1T",
+                legal_refs=("rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"),
+                source_refs=("boe-modelo-303-2008-form", "aeat-modelo-303-procedure"),
             ),
             CasillaObservation(
                 casilla_id=_IVA_RESULTADO_CASILLA,
@@ -123,8 +131,12 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "202530300000001Z",
         }
-        assert len(loaded.observation.observations) == 2
-        loaded_computed = loaded.observation.observations[1]
+        assert len(loaded.observation.observations) == 3
+        loaded_computed = next(
+            observation
+            for observation in loaded.observation.observations
+            if observation.casilla_id == _IVA_RESULTADO_CASILLA
+        )
         assert loaded_computed.formula_id == "iva.formula.resultado"
         assert loaded_computed.operand_refs == (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
         assert loaded_computed.operand_casilla_refs == (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
@@ -133,6 +145,60 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             Decimal("7654.33"),
         )
         assert loaded_computed.legal_refs == ("ley-37-1992:art-94",)
+        loaded_period = next(
+            observation
+            for observation in loaded.observation.observations
+            if observation.casilla_id == _M303_PERIOD_CASILLA
+        )
+        assert loaded_period.value == "1T"
+        assert _M303_PERIOD_CASILLA not in loaded.observation.casilla_values
+
+
+def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: Path) -> None:
+    """Anti-tautology: changing the persisted text scalar changes the loaded envelope."""
+    from sqlalchemy import select
+
+    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from .._observations_repository import observation_key
+
+    period = Period.from_year_and_code(2025, "1T")
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        original = _populated_observation()
+        repo = CalculationObservationRepository()
+        repo.save(
+            repo.prepare_observation_envelope(
+                original,
+                source_kind="aeat_sede_justificante",
+                captured_at=_CAPTURED_AT,
+            )
+        )
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == repo.namespace,
+            SecureObjectRow.object_key == observation_key("303", period),
+        )
+
+        def replace_text_scalar(envelope):
+            rows = envelope["payload"]["observation"]["observations"]
+            period_row = next(row for row in rows if row["casilla_id"] == _M303_PERIOD_CASILLA)
+            assert period_row["value_kind"] == "text" and period_row["value"] == "1T"
+            period_row["value"] = "0"
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=replace_text_scalar,
+        )
+
+        loaded = repo.load_observation("303", period)
+        assert loaded is not None
+        assert loaded.observation != original
+        loaded_period = next(
+            observation
+            for observation in loaded.observation.observations
+            if observation.casilla_id == _M303_PERIOD_CASILLA
+        )
+        assert loaded_period.value == "0"
+        assert loaded_period.value_kind == "text"
 
 
 def test_calculation_observation_repository_rejects_printed_number_reference(
