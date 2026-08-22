@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b6f84be38ca61e03cd852952b9f801619afeef36bc35b1223a393bd93a89015'
+body_hash: 'sha256:4f587a553680d921dd0ecb08ab798abfd1b7b2a2e6b6c8ac78a772c86d6721ba'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16742,3 +16742,168 @@ Splitting modelo 200's `2024-y-siguientes` into per-design revisions, with the
 
 The 2015-2022 impatriado escala, unchanged: two retrieval routes tested, both
 truncate short of art. 93. Operator-side.
+
+## Tick: the relayout splits scoped, and a gate that must NOT be closed
+
+Re-measured at tick start: authority CLEAN at `8fbcd3b2a3`, standing gates green.
+
+### Three revisions span a relayout, and only one is tick-sized
+
+| modelo | revision | casillas | tree files | designs cited |
+|---|---|---|---|---|
+| 200 | 2024-y-siguientes | 3462 | 1191 | 2024 + 2025 |
+| 322 | 2008-2023 | 212 | 26 | 2023 only |
+| 347 | 2008-2024 | 39 | 23 | 2011 only |
+
+Modelo 200 is not a tick's work and a half-built revision breaks authority load,
+so it was scoped rather than started. Modelo 347 is the smallest: its relayout
+sits at the 2009/2010 boundary (9 fields added, 28 removed), and all three
+candidate designs read cleanly -- `aeat-dr-347-2008` (20/20/29 fields),
+`aeat-dr-347-2010` (18/18/14), `aeat-dr-347-2011` (18/26/14), each 500
+positions, none skipped. So the split has a sound basis.
+
+It is still multi-tick. `python -m dev.registry.newmodelo checklist` enumerates
+12 items for a new revision, and item 10 is per-casilla locale keys in all FOUR
+catalogues -- the ratchet that has blocked this campaign before. Some of that is
+reusable from the sibling revision where a box survives the relayout, but not
+blind.
+
+### A remedy I proposed and the gate refused
+
+The instinct was to NARROW modelo 347's revision to start at 2010 rather than
+author a 2008-2009 revision, on the grounds that ejercicio 2008 is outside any
+live filing window. The corpus-proven gate states its own policy and it excludes
+that: a gap "is fixed by bundling the design, splitting the revision, or merging
+an unwarranted split, **never accepted as a standing state**". Recorded because
+the reasoning was appealing and wrong, and the next reader will reach for it too.
+
+### The unmeasured-design report is a LEDGER, not a backlog
+
+25 bundled designs are reported as attributable to no ejercicio, and the report
+reads like work to close. It is not. The relayout module's own reasoning says
+Modelo 036 is scoped by an in-force DATE and Modelo 210 by a DEVENGO SPAN, so
+they have real coverage on an axis that is not an ejercicio, and "enumerating
+those into years would invent years... Being visible as unattributed is the
+correct outcome for them".
+
+Closing it is a one-line change and it is precisely the error the gate exists to
+prevent: a design attributed to years it never claimed gets compared against
+those years, which puts a filing year under another year's layout. The module
+records the measurement that refutes the tempting inference --
+`03-180-orden-hap-1732-2014` states `Ejercicio 2021`, seven years from its
+orden.
+
+Confirmed empirically before concluding it: modelo 210's two designs ARE already
+registered with `record_design_epoch` and `applies_to`, and are still listed. So
+the report is not measuring catalogue attribution at all.
+
+### What was landed
+
+`test_non_ejercicio_designs_stay_unattributed.py` guards the hazard: these four
+designs must attribute to NO ejercicio, while the ones registered as sources must
+still declare their coverage on their own axis. Both halves matter -- the first
+alone would pass on a design nobody documented, the second alone would not stop
+a back-fill.
+
+Two assumptions were wrong while authoring it, both caught by the test rather
+than by review:
+
+* the documentation half initially asserted all four are registered. They are
+  not.
+* the correction then assumed BOTH modelo 036 designs are unregistered. Only the
+  **provisional** one is. The definitive 2025 design is registered and carries
+  its epoch; the provisional is a superseded draft that governs no window, so
+  being bundled-but-unregistered is right for it. Pinned as an equality so a
+  second unregistered design cannot inherit this explanation.
+
+### Verified
+
+* the new module: 8 passed. Authority loads CLEAN; ruff clean.
+* it bites: forcing `_design_coverage_years` to return a year reds all four
+  back-fill guards.
+
+### Still open
+
+The three relayout splits, in ascending size: modelo 347 (39 casillas),
+modelo 322 (212), modelo 200 (3462, and its 2025 side is already correct so only
+the 2024 side needs re-rendering). Each is a `dev.registry.newmodelo` scaffold
+plus the 12-item checklist, and each is multi-tick.
+
+## Tick: modelo 347's split boundary is pairable after all, and the record said otherwise
+
+Re-measured at tick start: authority CLEAN at `630f009de5`.
+
+### Starting the smallest split, and stopping before breaking anything
+
+The intent was to author modelo 347's `2008-2009` revision and finish the split
+end to end. It was not started, and the reason is worth stating rather than
+implying: `dev.registry.newmodelo checklist` is 12 items, item 10 is per-casilla
+locale keys in all four catalogues, and a half-authored revision does not load.
+There is no partial landing of a revision that leaves the tree green.
+
+What the tick did instead was remove the thing blocking it.
+
+### The recorded blocker was about the KEY, not the layouts
+
+`test_revision_span_split_progress.py` records, for modelo 347: "The 2008 and
+2010 designs are NOT derivable: their box numbers agree with 2010's on 11 of 43,
+so a derivation would carry semantics onto the wrong boxes."
+
+The measurement is right. The conclusion is narrower than it reads, and reading
+the designs shows why: **these two designs print no bracketed box numbers at
+all.** A number-keyed pairing cannot succeed on documents that carry no numbers,
+so its 11-of-43 agreement is a fact about the key, not about whether the layouts
+correspond.
+
+Read on bytes, they correspond exactly. The 2009/2010 re-layout is four merges
+and one addition, every position accounted for:
+
+* `PERSONA TELEFONO` (59+9) + `CON QUIEN RELACIONARSE` (68+40) -> one field
+  (59+49);
+* `DEC. COMPLEMENTARIA` (121+1) + `DEC. SUSTITUTIVA` (122+1) -> (121+2);
+* `CODIGO PROVINCIA` (77+2) + `CODIGO PAIS` (79+2) -> `CODIGO PROVINCIA/PAIS`
+  (77+4);
+* two `IMPORTE ...` + `DECIMAL` pairs (100+13 / 113+2 and 115+13 / 128+2) ->
+  15-byte amounts;
+* and 2010 carves a 4-byte `EJERCICIO` (130+4) out of the trailing BLANCOS,
+  which shrinks 371 -> 367.
+
+### What was landed, and why this property rather than a field map
+
+`test_modelo_347_designs_are_boundary_compatible.py` asserts NOT a
+field-to-field mapping -- that would be a similarity judgement, and the
+grounding rule forbids similarity as a route to box identity -- but the weaker
+structural fact that carries the same weight: **no field of either design
+partially overlaps a field of the other.** Every overlap is total containment in
+one direction.
+
+That is the same containment-versus-partial-overlap distinction the record-design
+contiguity rules already turn on. Where one design's field sits wholly inside
+another's, the narrower is a subdivision of the wider and its meaning is bounded
+by it; where fields straddle, nothing can be said without reading AEAT's prose.
+These never straddle, across all three sheets.
+
+The module also pins the cause of the original verdict -- that neither design
+prints a box number -- so the next reader meets the explanation with the
+evidence rather than the conclusion alone.
+
+The split-progress record's note has been amended in place to point at it. A
+tracked justification that stops the next agent is worth correcting where they
+will read it, not only in an audit.
+
+### Verified
+
+* the new module: 8 passed, including the containment property on all three
+  sheets; 11 passed with the split-progress module alongside it, which still
+  passes after the amendment.
+* it bites: shifting one 2010 field by a single position makes two 2008 fields
+  straddle it and reds the containment check, naming both.
+* authority loads CLEAN; ruff clean on both files.
+
+### Still open
+
+The three splits, unchanged in size but no longer blocked on pairing for 347:
+modelo 347 (39 casillas, pairing now proved), modelo 322 (212 casillas, whose
+own recorded blocker -- "no key pairs the two designs totally" -- deserves the
+same byte-level re-examination this tick gave 347), and modelo 200 (3462, only
+its 2024 side needing re-rendering).
