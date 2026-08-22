@@ -1,0 +1,320 @@
+[[revisions.2008-2024.export_layouts]]
+id = 'generated-modelo-347-2008-2024-fichero'
+
+[[revisions.2008-2024.export_layouts.records]]
+id = 'm347-inmueble'
+record_type = 'inmueble'
+order = 2
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '347'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f003'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f005'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'inmueble.arrendatario-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f006'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'inmueble.representante-legal-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f007'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'inmueble.arrendatario-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f008'
+offset = 76
+length = 1
+kind = 'literal'
+literal = 'I'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f009'
+offset = 77
+length = 23
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f010'
+offset = 100
+length = 13
+kind = 'casilla'
+casilla_id = 'inmueble.importe-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f011'
+offset = 113
+length = 2
+kind = 'casilla'
+casilla_id = 'inmueble.importe-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f012'
+offset = 115
+length = 1
+kind = 'casilla'
+casilla_id = 'inmueble.situacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f013'
+offset = 116
+length = 25
+kind = 'casilla'
+casilla_id = 'inmueble.referencia-catastral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f014'
+offset = 141
+length = 193
+kind = 'casilla'
+casilla_id = 'inmueble.direccion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[[revisions.2008-2024.export_layouts.records.fields]]
+id = 'm347-2011.inmueble.f015'
+offset = 334
+length = 167
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2011']
+
+[revisions.2008-2024.export_layouts.records.row_field_casilla_ids]

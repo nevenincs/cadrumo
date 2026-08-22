@@ -101,7 +101,12 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # published without a row here, so nothing compared its committed tree against a
     # fresh render, and two anchors kept naming parent rows the parser had already
     # descended past.
-    _GeneratedTree("347", "2008-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
+    # Split at the 2024/2025 boundary. The 2011 epoch was derivable because
+    # 347's printed ordinal IS a box identity (unlike modelo 322, where it is
+    # a contiguous position); the 2008 and 2010 designs pair with nothing, so
+    # 2008-2010 still emits the 2011 layout and keeps reporting.
+    _GeneratedTree("347", "2008-2024", "aeat-dr-347-2011", "2011", 2011, "0A"),
+    _GeneratedTree("347", "2025-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
     # Enrolled with the layout, not after it, which is the whole lesson of the 347
     # entry above: a published tree that nothing compares against a fresh render
     # is free to drift, and 347's map did exactly that unnoticed.
