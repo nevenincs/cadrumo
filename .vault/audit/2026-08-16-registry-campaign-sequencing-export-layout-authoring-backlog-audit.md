@@ -14412,3 +14412,101 @@ antipattern, which is why they drift at all.
 conformance ratchet whose baseline has drifted (`composed_modelos current=58
 required=73`). It has never been inside this campaign's measured set, recorded
 now so it stops being invisible.
+
+## Tick: two fabricated casilla numbers, found behind a drifting tally
+
+Re-measured at tick start: authority CLEAN, queue confirmed finished, boundary
+census green and holding. The six `application/registry` failures deferred last
+tick as "registry-data drift, whoever authors it" were taken up here, because
+"not my modelo" is not a deferral reason and the deferral turned out to be wrong.
+
+### The tally was hiding a real defect
+
+The failing assertion was a per-year count of modelo 100 registry casillas,
+drifting 2093 -> 2103 and 2238 -> 2248. Treating that as a stale baseline would
+have been the tidy answer and the wrong one. Measuring registry against AEAT's
+dictionary per year:
+
+* 2020-2023: **identical**, divergence 0.
+* 2024: registry-only **31**; 2025: registry-only **33**. Dictionary-only: zero
+  in every year -- nothing AEAT declares is missing from the registry.
+
+Splitting those registry-only ids by grounding rather than counting them:
+
+* **29 + PH18** are real AEAT dictionary rows that carry no casilla NUMBER --
+  the `*NN` datos-identificativos series (63 such rows) and the `###` unnumbered
+  rows. Grounded, structurally unnumbered.
+* **`AJ`** is grounded in the *toma de datos* dictionary, a different AEAT
+  artefact from the declaración one the comparator reads.
+* **`0058` (2024) and `0059` (2025)** are in **no bundled AEAT source at all**.
+
+### Verified before recorded, and two instruments were wrong first
+
+Both casillas declare the LIRPF art. 7.h exempt INSS maternity/paternity
+benefit. Each was checked against **every source it cites**: the 2024 pair
+cites two dictionaries, neither contains `0058`; the 2025 pair cites the
+dictionary and the Renta manual, neither contains `0059`. Also absent from the
+XSD and from every Renta manual, any year.
+
+Two false readings were caught on the way. A key-based lookup called them
+absent when for numeric ids the dictionary carries the number in its THIRD
+field, not the key. Then a loose regex "found" `casilla 0059` eight times in the
+manual -- every hit a prefix of `[0597]`, a different box. Manufactured
+grounding is exactly the failure this campaign forbids, and it took a literal
+match to disprove it.
+
+Meanwhile AEAT's real `0058` in 2025 is `TPRART`, the DA-60 artistic-activities
+reduction, which the registry declares correctly and separately.
+
+### Not removed -- renamed
+
+Removal was the first instinct and the reference check disproved it: both are
+load-bearing, members of construct `0008-renta-work-income`, **negated inside
+`total-ingresos-integros-computables`**, with a dedicated grounded oracle test.
+The concept is real; only the number is not AEAT's.
+
+`internal_only` was unavailable -- its validator requires `input_kind =
+computed` and these are `manual` inputs -- so they now carry a descriptive id,
+`prestacion-inss-maternidad-paternidad-exenta`, which is the established shape
+for a box AEAT does not number. All four locale catalogues already held that
+exact key as a `null`-valued scaffold placeholder, which corroborates the shape;
+they now carry real labels in es/en/ca/hu.
+
+### The tally became the property it stood for
+
+The registry-side count table is deleted. It measured declarations this project
+AUTHORS, so it drifted on every legitimate addition and detected nothing in
+between. In its place, two assertions that do not drift: every casilla AEAT
+declares is declared by the registry (`extra_casilla_ids == ()`), and every
+registry casilla carrying an AEAT NUMBER appears in that year's dictionary.
+Boxes AEAT does not number are excluded by SHAPE, not by being counted.
+
+**That gate bites, and on this exact defect**: before the rename `0058` and
+`0059` were the two numeric ids it lists. The dictionary-side census is KEPT as
+a number, because it is a fact about the AEAT artefact rather than about our
+authoring -- drift there means the corpus moved and should fail.
+
+The art. 7.h oracle test now resolves the casilla by SEMANTIC ROLE instead of by
+id, so the invariant it pins survives a renumbering rather than breaking on one.
+
+### Verified
+
+* modelo 100 across 2020-2025: dictionary-only 0, AEAT-numbered-but-absent 0.
+* authority loads CLEAN after the rename; the art. 7.h oracle passes; locale
+  parity, honesty and `scaffold --check` all clean (531 passed).
+* registry + generated-tree + application/registry: 13 failed, 5948 passed. Eight
+  are the declared inventories; four are the drift tests below; the modelo 840
+  one passes in isolation.
+
+### Still open, and whose
+
+Four `application/registry` tests remain red and were not reached: the
+governance stamp expecting `pending_review` where a revision is now
+`agent_reviewed`, the independent-check coverage test, and two registry-diff
+tests pinning a parameter id that moved 154 -> 166. All four are the same
+pinned-tally shape as the one fixed here and deserve the same treatment.
+
+Two failures in the full parallel run -- modelo 840's construct membership and
+nine anexo_b role tests -- pass in isolation. That is the loader-cache race the
+local-execution rule names, not a regression; worth re-reading before anyone
+triages them.
