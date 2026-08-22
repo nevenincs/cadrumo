@@ -36,8 +36,15 @@ from ._inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: The attribute that marks an expression as an erase decision.
-_DECISION_MARKER = "blocks_erase"
+#: The attributes that mark an expression as an erase decision.
+#:
+#: ``blocks_erase`` is the reset's own retention backstop. ``filing_hold`` is
+#: the SAME legal question asked at the custody transaction, which reaches it
+#: through the hold assessment rather than the floor assessment -- both compute
+#: from one ``assess_retention_floor``. Keying on the floor term alone left the
+#: custody gates outside this gate's site population entirely, which is how a
+#: third condition reached them without arriving here.
+_DECISION_MARKERS = frozenset({"blocks_erase", "filing_hold"})
 
 #: Every term an erase decision is currently entitled to read.
 #:
@@ -45,7 +52,24 @@ _DECISION_MARKER = "blocks_erase"
 #: operator override that some surfaces admit and the delete verb does not.
 #: A term outside this pair means the retention contract grew a condition, and
 #: the gate's whole purpose is to make that arrive at every site at once.
-_DECLARED_VOCABULARY = frozenset({"blocks_erase", "override_approved"})
+_DECLARED_VOCABULARY = frozenset(
+    {
+        "blocks_erase",
+        "override_approved",
+        # The custody expression of the same decision. ``legal_hold`` is the
+        # one term no operator authorisation clears; ``retention_override`` is
+        # that authorisation, weighed only against the filing half.
+        "filing_hold",
+        "legal_hold",
+        "retention_override",
+        # NOT a retention condition: the custody re-validation compares the
+        # recorded and current assessments and reads the identity to prove it
+        # is comparing one profile against itself. Declared so the gate keeps
+        # its teeth for terms that ARE conditions, rather than reddening on an
+        # identity guard.
+        "profile_id",
+    }
+)
 
 #: Source carrying a third condition at a single site.
 _WIDENED_SAMPLE = (
@@ -81,7 +105,7 @@ def _decision_expressions(tree: ast.AST) -> list[ast.expr]:
             continue
         if any(
             isinstance(inner, ast.Attribute)
-            and inner.attr == _DECISION_MARKER
+            and inner.attr in _DECISION_MARKERS
             and not (isinstance(inner.value, ast.Name) and inner.value.id == "self")
             for inner in ast.walk(node)
         ):

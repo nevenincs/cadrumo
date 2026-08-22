@@ -45,13 +45,15 @@ def _create_profile(
     calls, so every suite that seeds a profile gets the fact rather than only
     the ones that remembered to restore it.
 
-    The empty LEGAL case snapshot is still recorded here, and deliberately not
-    at that door, because no production door records it either: the deletion
-    preflight demands both hold owners' facts and only the filing owner has a
-    creation-time writer. Recording it at the seeding door would make every
-    seeded profile carry a fact a real one does not, hiding that gap behind
-    green suites. It is scaffolding for a production gap this suite does not
-    own, which is why it stays visible here.
+    The empty LEGAL case snapshot is still recorded here rather than at that
+    door. Registration DOES now record one -- ``try_record_legal_hold_snapshot``
+    runs on the production registration path -- so the older claim that no
+    production door writes it is no longer true. What remains true, and is why
+    this stays visible, is that the recorded value is always the empty tuple:
+    nothing in the product ever records an OPEN case, so a legal hold cannot
+    become true outside a test. Seeding it here keeps that gap where a reader
+    of this suite meets it, instead of behind a door that makes every seeded
+    profile look like a real one.
     """
     from ...tests.user_profile import register_minimal_profile
     from ..evidence import LegalHoldCaseAuthority
