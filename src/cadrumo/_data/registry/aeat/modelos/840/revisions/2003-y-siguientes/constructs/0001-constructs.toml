@@ -12,7 +12,23 @@ source_refs = [
     "aeat-modelo-840-procedure",
     "boe-modelo-840-2003-form",
 ]
-casilla_ids = ["decl.tipo-declaracion", "decl.ejercicio"]
+casilla_ids = [
+    "decl.tipo-declaracion",
+    "decl.ejercicio",
+    "sujeto.nif",
+    "sujeto.apellidos-razon-social",
+    "sujeto.domicilio-sigla-via",
+    "sujeto.domicilio-via-publica",
+    "sujeto.domicilio-numero",
+    "sujeto.domicilio-kilometro",
+    "sujeto.domicilio-escalera",
+    "sujeto.domicilio-piso",
+    "sujeto.domicilio-puerta",
+    "sujeto.domicilio-municipio",
+    "sujeto.domicilio-provincia",
+    "sujeto.domicilio-codigo-postal",
+    "sujeto.telefono-contacto",
+]
 workbook_parity_refs = ["modelo-840-dr"]
 live_cross_references = [
     "modelo-840-static-documentation",

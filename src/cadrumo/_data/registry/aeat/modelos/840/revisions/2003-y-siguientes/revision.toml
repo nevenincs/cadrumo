@@ -25,40 +25,41 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: applicability-grade review of the IAE alta/variacion/baja declaration. DISCLOSURE \
--- this review follows a change made in the SAME action: the revision carried no \
-deadline_windows and no reasoned absence, which failed the "when due" half of the rung it \
-declares, so family_dispositions.deadline_windows was authored here before reviewing. The \
-reviewer and that author are the same agent; nothing else in the revision was altered. \
-VERIFIED -- WHEN DUE: orden-hac-2572-2003 apartado sexto reads verbatim in the bundled \
-corpus "La presentacion de la declaracion del Impuesto sobre Actividades Economicas, \
-modelo 840, debera realizarse, segun se trate de declaraciones de alta, variacion o baja, \
-en los plazos regulados en los articulos 5, 6 y 7 del Real Decreto 243/1995". Every plazo \
-is anchored to an EVENT -- the start, variacion or cese of the actividad -- not to the \
-calendar, so no recurring window exists to declare and none was fabricated; this matches \
-the shape modelo 145 already uses for its own event-relative plazo. VERIFIED -- TO WHOM: \
-apartado primero is the dedicated approving clause, "Se aprueba el modelo 840, «Impuesto \
-sobre Actividades Economicas», que figura en el anexo I de la presente Orden", carrying NO \
-year bound, so the open-ended 2003-y-siguientes claim does not outrun its orden. NOT \
-CLAIMED -- Real Decreto 243/1995 is NOT bundled in this corpus. The concrete \
-event-relative periods of its articles 5, 6 and 7 are cited by delegation through the \
-bundled apartado and are NOT corpus-proven here; a reviewer wanting the actual periods \
-must acquire the RD. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. \
-NOT CLAIMED -- no export layout is declared and the 108 fields the bundled diseno derives \
-are not modelled; this revision carries 2 casillas and reaches scheduling and \
-applicability only, which is what the applicability rung asserts. ADVISORY, not a defect: \
-the classification audit raises informative_axis_divergence for calculation_class = \
-informative against tax_domain = iae, and its own detail states the taxonomy label is a \
-free choice carrying no invariant -- an informative declaration inside the IAE domain is a \
-legitimate combination. CORRECTED SINCE -- the family_dispositions.formulas \
-reason on this revision described it as "an informational declaration reporting \
-third-party data to AEAT", which contradicts this file's own header ("administered \
-municipally and is not a return this application emits") and misstates the modelo: the IAE \
-declaration reports the taxpayer's OWN actividad. The conclusion that no formula family \
-applies was correct and is unchanged; the reason now cites TRLRHL art. 90, which puts the \
-liquidation with the administration. The same sentence sat verbatim on nine other revisions and was checked against each modelo's official name: it stays on 189, 280, 345 and 347, where the declarant reports OTHER people's data, and was corrected on 145, 232 and 720, which like this one report the declarant's own facts. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
-strings were not audited for accuracy."""
-reviewed_at = 2026-08-21
+agent: applicability-grade review of the IAE alta/variacion/baja declaration, re-stamped \
+after authoring Apartado I. DISCLOSURE -- self-review: the same agent authored the 13 \
+Apartado I casillas, re-grounded the two pre-existing ones and swept the construct \
+membership in the immediately preceding commits. VERIFIED -- COVERAGE MOVED 0 -> 15 of \
+108. The two pre-existing casillas carried SLUG numbers, and a slug matches no design box, \
+which is the whole reason the coverage report read zero; AEAT prints them as [14] at \
+@270+4 (Ejercicio) and [15] at @274+1 (Declaracion de:), and they now carry those numbers. \
+This is the same defect and the same fix already applied to modelo 604. VERIFIED -- TILING \
+before any offset was trusted: Pag. 1 of aeat-dr-840 tiles 1..1132 exactly once, no gap \
+and no overlap, 106 fields. Apartado I is transcribed position-by-position as boxes [1] to \
+[13]. VERIFIED -- TWO AUTHORING HAZARDS, both recorded in the fragment: AEAT numbers by \
+the PRINTED FORM not by byte order, so [11] Provincia sits at @213 while [10] Municipio \
+sits at @215 and the offsets are deliberately non-monotonic in number -- sorting by number \
+would have mis-assigned them; and codigo postal, numero, kilometro and the \
+provincia/municipio codes are text rather than integer, because each is a fixed-width code \
+where a leading zero is significant and an integer round-trip drops it silently. NOT \
+CLAIMED -- 93 OF 108 DERIVED CASILLAS REMAIN UNCOVERED. Apartados II (declaracion), III \
+(representante), IV (datos de la actividad) and V (local afecto indirectamente) are \
+unauthored. Apartado IV additionally needs a distinguishing convention before it can be \
+touched: five of its box numbers repeat across sibling positions -- [53], [54] and [55] \
+each label a triplet (Agrupacion/Grupo/Epigrafe 1o, 2o, 3o), [62] is a date split into \
+dia/mes/ano components, and [63] labels both Causa de la baja and Causa de la variacion -- \
+and (segmento, number) is uniqueness-enforced, so they cannot each carry the printed \
+number. NOT CLAIMED -- DELIBERATELY UNMODELLED: the unnumbered Municipio description run \
+at @220+30 and the administration-reserved Cod. Mun. at @250+6 are a table expansion and a \
+reserved slot, not taxpayer-supplied boxes. NOT CLAIMED -- NO EXPORT LAYOUT, so this \
+application still cannot file the modelo and it stays on the filing-capability worklist; \
+model_law_authority_scope remains inspection_only. A layout needs the remaining apartados \
+first. NOT CLAIMED -- the earlier review's reasoning that this modelo 'is not a return \
+this application emits' is NOT relied on here: the worklist gate's own docstring says an \
+individually-defensible withdrawal record is the historical defect, not a justification. \
+NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the \
+audited locales are complete for all 15 labels across es/en/ca/hu, but the strings were \
+not audited for accuracy."""
+reviewed_at = 2026-08-22
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN actividad economica, declaring alta, variacion or baja in the matricula del IAE. The cuota is not self-assessed here: TRLRHL art. 90 puts the gestion tributaria of the impuesto with the matricula and the liquidation with the administration, so this form computes no liability and the formula family is inapplicable by this modelo's nature rather than merely absent."
