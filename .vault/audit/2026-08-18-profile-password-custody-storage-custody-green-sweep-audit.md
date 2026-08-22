@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed567c6454325de5209eddccd418ae36cd15ebeb030f441c8b938f03f9f9408c'
+body_hash: 'sha256:c8a4a3899f800032727cae5e45e930f907c7fd2e80c4daa925657081abc0459b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6171,3 +6171,38 @@ has already been bounded once for drifting into work like that.
 
 Recorded with the counts so the decision can be made on measurement. **No production change
 this iteration.**
+
+### Driving the CLI instead of reading it
+
+Several iterations of reading code had found nothing, so the instrument changed: run the
+real command tree against an isolated storage root and see what an operator sees. That
+found something reading had not.
+
+**`config profile archive export` took `--to` for its destination.** The other two export
+verbs in this CLI -- `ledger export` and the modelo export -- both take `--output`. One
+concept, two operator-facing names, and this verb was the odd one of three.
+
+**`--to` is worse than inconsistent here.** This CLI already uses `--to` as the END of a date
+range, paired with `--from`, in the overview verbs. The same flag meant a date bound in one
+place and a file path in another. The rename removes an overload, not just a variance.
+
+**The input side was checked and deliberately left alone.** `--file` is the mandated name for
+the one local file a verb READS, so `archive inspect --file` is correct and stays. `--output`
+is where a verb WRITES. An early reading of this as a contract violation was wrong, and
+measuring the rule's actual wording -- it governs INPUT options -- is what corrected it
+before anything was changed. The locale key was already
+`cli.config.profile.archive.export_out_help`, so the help text needed no edit at all; the
+option had been conceptually "out" since it was written.
+
+**The conformance gate earned its place.** It caught a documented sequence contract still
+carrying `--to`, which is exactly the surface the CLI-contract rule warns a rename must sweep
+by hand. Here the gate swept it instead.
+
+**Two measurement notes.** A filtered listing of the command tree omitted `config profile
+edit` and briefly looked like a dangling doc reference -- the verb exists; the filter did not
+include the word. And `docs/cli/config/profile.rst` appeared stale mid-iteration and then was
+not: it is generated, and a peer's commit regenerated it WHILE this rename sat uncommitted in
+the shared tree, so it picked the new name up. Regenerating rather than hand-editing was
+still the right move; the page simply needed no write by the time it was checked.
+
+Lanes 314 integration / 1589 unit.
