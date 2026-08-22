@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0f8bea43f599c2d0bb2f56fb96579100dbd4c169f6c44d67e12b0fcd7b3174d'
+body_hash: 'sha256:30ad53100285152d020ba1488a1052ca25775d60c50ec3ca33e331f8130766db'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15797,3 +15797,74 @@ The eight inventories. Modelo 200's three editions remain the parser lane, now
 with four dead ends recorded and the search narrowed to the reader's internal
 segmentation. Modelo 390's 2021 stub still accounts for two red gates, and both
 clear when its casillas are stamped.
+
+## Tick: modelo 200's position-10 holes are unrecoverable, and that is now proven rather than suspected
+
+Re-measured at tick start: authority CLEAN. This tick finished the
+multi-tick chase into modelo 200's 2010 edition and reached a definite answer.
+
+### Two more hypotheses eliminated, then the reader instrumented
+
+* **An earlier dispatch handler claiming the row.** `feed()` tries page-name,
+  record-heading, table-header, title-continuation and page-heading BEFORE
+  field-row, so a parseable row can be swallowed. Tested on all 48 `ord5@10`
+  lines: **zero** are claimed by any of them.
+* **Rows lost inside the assembly transforms.** Counted stage by stage: 48
+  before, 48 after `_undouble_struck_rows`, 48 after
+  `_rejoin_reversed_column_rows`.
+
+Neither held, so the reader itself was instrumented. `contiguity_failure` is
+what turns a holed sheet into a `skipped` entry INSTEAD of a sheet, which is why
+the failing records were invisible in `extraction.sheets`. Suppressing it in a
+probe made them visible, and they say plainly what is wrong: Pág. 21 and Pág. 22
+run ordinals 1, 2, 3, 4, then **6** -- ordinal 5 is absent from the record, and
+every description on those pages carries a stray ``C`` column prefix.
+
+### What the source actually contains
+
+    '36 3 An C Pagina. Constante "021"'
+    '49 1 An C Fin de identificador de modelo. Constante ">"'
+    'An C Indicador de pagina complementaria.'
+
+The first two fuse ORDINAL and OFFSET into one token -- ``36`` is ordinal 3 at
+position 6, ``49`` is ordinal 4 at position 9 -- in a shape distinct from the
+one repaired earlier (``59 1A``), because here length and type stay separate.
+
+The third line is the answer. Ordinal 5's row reaches the reader with **no
+numbers at all**: ordinal, offset and length are all gone, and only the type
+token ``An`` and the description survive.
+
+### Why this is not fixable, stated as a limit rather than left open
+
+Neighbours determine all three values -- the previous row ends at 9, so ordinal
+5 begins at position 10, and the next row starts at 11, so its length is 1. That
+is inference of THREE values from context with **nothing in the line to check
+them against**.
+
+That is materially weaker than the repair this campaign accepted two ticks ago.
+There, the fused token ``59`` had to be reproduced exactly by concatenating the
+two expected numbers, so the source confirmed the reading. Here the line offers
+no numeric token at all, so the reading would rest entirely on its neighbours --
+which is inventing a position, the one thing this reader's own contract refuses.
+
+So modelo 200's two position-10 holes are a corpus-extraction limit, not a
+parser gap. Recovering them needs a better extraction of that PDF, not a better
+inference over this one.
+
+The three OTHER skipped sheets on this design are a separate matter and remain
+open: they lose mid-record runs of 15, 17 and 17 bytes, the width of a monetary
+row, which is the dropped-row shape earlier repairs addressed.
+
+### Verified
+
+* every claim above reproduced against the real design: the 48-row counts, the
+  zero handler claims, the ordinal 4-to-6 jump, and the three source lines.
+* authority CLEAN; no production change was made this tick, so no control or
+  suite run is claimed.
+
+### Still open
+
+The eight inventories. Modelo 200's position-10 holes are now CLOSED as
+unrecoverable and should not be chased again; its three mid-record runs are the
+remaining parser work on that design, and they are the shape earlier fixes
+already handled elsewhere.

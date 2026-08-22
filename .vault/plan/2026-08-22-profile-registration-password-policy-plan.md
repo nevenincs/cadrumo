@@ -3,13 +3,13 @@ tags:
   - '#plan'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
+modified: '2026-08-22'
+body_hash: 'sha256:49eecb12703405217a16144b9e6cb0457a340c7dec30f87c95465be56dbd3ae0'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
-modified: '2026-08-22'
-body_hash: 'sha256:24c6713ed09d642eed30ccdd3fb63ee5ffbaf61ca26c4ec83bdf507d5d493b17'
 ---
 
 <!-- RETIRED: S01 -->
@@ -108,7 +108,7 @@ Remove residual bloat, update generated surfaces, run repository gates, formally
 
 Deliver no stale symbols, prose, generated references, or compatibility scaffolding.
 
-- [ ] `W04.P09.S12` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then delete repository-wide policy bloat and stale prose, reconcile docstrings, and regenerate only feature-owned API and operator documentation; `repository profile credential documentation surface`.
+- [x] `W04.P09.S12` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then delete repository-wide policy bloat and stale prose, reconcile docstrings, and regenerate only feature-owned API and operator documentation; `repository profile credential documentation surface`.
 
 ### Phase `W04.P10` - run security and repository quality gates
 

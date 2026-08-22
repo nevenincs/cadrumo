@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed532cf6f4b5f5807d977fc697a6d500811865dfeddc379d7846b2218cc130a1'
+body_hash: 'sha256:a813892ebc86afceae668da205820bfa1bd3b768de7a3581bda9942be0b136e9'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -852,3 +852,102 @@ submitted value (or a distinctive safe substring) plus no profile, and assert th
 `config.profile.create` schema contains exactly one `--secrets-stdin` boolean parameter.
 The original MEDIUM is therefore only partially remediated and remains open. No HIGH or
 CRITICAL finding remains, but these two MEDIUM findings block W04.P09.S12.
+
+#### S11 final remediation closure
+
+Current-HEAD re-review of the feature-owned portions of mixed commit `b556e1ceba`
+and execution-record commit `38da9b3642`, after repeated semantic code and
+governing-ADR discovery plus exact-symbol confirmation, closes both residual MEDIUM
+findings. The scripted create diversion now calls the canonical
+`activate_subcommand_output_language` at
+`src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py:122` after Click has parsed
+the declared option and before scripted registration resolves input, reads a secret,
+assesses the candidate, or constructs a refusal. This matches the timing used by sibling
+subcommands and fixes the real defect exposed by the new test: without the activation,
+non-Spanish requests could inherit ambient Spanish.
+
+The four real en/es/ca/hu invocations at
+`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:74-112`
+now pin the complete error object: stable REFUSED category and registration code, exact
+four-fact safe context, null action/runbook/trace identifier, non-retryability, and the
+exact selected-locale message. Each case excludes the other three rendered messages,
+the candidate, message key, internal typed marker, raw custody diagnostic, traceback,
+and INTERNAL guidance, and proves no published capsule. The already exact outer-envelope
+regression and authoritative zero-profile listing cover the same real 14-scalar path;
+locale activation changes only presentation context before that unchanged pre-mutation
+application refusal. `s11-language-surface-bite` is closed.
+
+All creation-channel invalid shapes now prove refusal and zero listed profiles: malformed
+JSON, missing confirmation, extra field, greater-than-8-KiB payload, and unequal
+confirmation. The parameterized test checks the actual 9,000-character submitted value
+is absent from combined stdout/stderr, while the mismatch test checks both distinct
+submitted secrets are absent. The lazy contract test at
+`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:287-295`
+independently proves rendered help contains one `--secrets-stdin` occurrence and the
+materialized `config.profile.create` verb schema contains exactly one matching parameter
+with that flag. `s11-creation-channel-contract-bite-follow-up` and the original MEDIUM
+are closed.
+
+Independent serial verification passes all 44 real TUI/scripted integration cases in
+32.98 seconds and all five locale-parity cases in 3.04 seconds. Ruff lint and Ruff format
+checks pass over all five relevant production/test files, and both reviewed commits pass
+diff hygiene. `dev.locales scaffold --check` remains globally red with exactly 198
+missing leaves in each locale, all under unrelated generated Modelo 036/390 schema keys;
+filtering finds no missing key outside those two domains and no feature credential drift.
+No unresolved LOW, MEDIUM, HIGH, or CRITICAL S11 finding remains. W04.P09.S12 may
+proceed.
+
+### s12-recovery-raw-presentation | high | Dedicated recovery refusal still publishes raw custody English
+
+The mandatory S12 review grounded commits `ca2f63ce22` and `6994cc04e9` against
+the accepted ADR, research, incident reference, live plan, current source, exact-symbol
+searches, and repository-wide negative space. The internal architecture is directionally
+correct: `ProfileCustodyRecoverySecretError` is a sibling rather than subclass of
+`ProfileCustodyPasswordError`, is exported through both custody facades, and has its own
+registered code. Recovery UTF-8 representation and supervised proof now raise the
+dedicated type; the no-op catch/rethrow in the recovery envelope door is deleted. Exact
+search finds no recovery call into canonical profile-password assessment, no retired
+eight-character profile constant/export/validator/alias/shim, no stale minimum-only
+locale leaf, and no recovery catch of `ProfileCustodyPasswordError`. Password proof
+mapping remains deliberately limited to `ProfileCustodyPasswordError`, preserving the
+non-oracular application authentication outcome without reclassifying recovery-secret
+representation as a profile password.
+
+However, the new type is still constructed with raw persistence-owned English at
+`src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py:412` and
+`src/cadrumo/adapters/persistence/storage/custody/_recovery_secret_codec.py:14,22`.
+`restore_profile_from_recovery_artifact` at
+`src/cadrumo/application/user_profile/_recovery_custody.py:263-269` lets this exception
+cross the application boundary unchanged. Registration in the error catalogue does not
+localize it: `resolve_error_message` at `src/cadrumo/core/errors/_registry.py:492-509`
+prefers a nonempty first string argument before the registered message key. A direct
+runtime proof returns code `REFUSED_STORAGE_PROFILE_CUSTODY_RECOVERY_SECRET` and the
+correct generic message key, but resolves the public message to the raw sentence
+`profile recovery secret did not authenticate the custody envelope`.
+
+This recreates the incident's architectural failure on the recovery door: an expected
+credential refusal is typed and classified, yet storage prose still reaches the
+operator and bypasses active-language rendering. The modified application tests only
+expect the adapter exception type, so they positively lock the leak-through boundary
+rather than exercising a localized public outcome. Map recovery-secret representation
+and proof to an appropriate secret-free application refusal before it reaches inbound
+presentation, or otherwise ensure the adapter retains diagnostic detail without a raw
+positional message that the public resolver selects. Add a real restore/recovery CLI
+regression proving wrong and malformed recovery secrets render one localized refusal
+without raw custody text, traceback, INTERNAL guidance, or mutation. Do not route this
+through the profile-password prospective policy or expose password measurements.
+
+The generated API additions are feature-owned and mechanically shaped: the recovery
+codec and the two new application modules are the only retained new stubs, and their
+parent toctrees are updated. API scaffold/audit currently report exactly three unrelated
+missing source-connectivity/operator-surface stubs, two orphaned retired risk-table
+stubs, and three stale parent stubs. The documented `ContentDigest` facade drift is
+likewise unrelated concurrent identity/source-connectivity work. No shipped guide or
+README contains the retired eight-character policy; the historical changelog entry is
+commit history, not an active operator contract.
+
+Independent recovery codec tests pass all 10 cases, application recovery integration
+passes all 27 cases, registry tests pass all 23 cases, and registry enforcement passes
+all seven cases. Ruff lint, Ruff format, and commit diff hygiene pass on the ten owned
+Python files. No other LOW-to-CRITICAL finding was found. This HIGH blocks review-clean
+S12 and W04.P10.S13.

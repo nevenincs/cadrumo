@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # project supported modelo calculation workflows from the reconciled live operator surface
 
 ## Scope

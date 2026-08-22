@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe330a51c2efb707a9006cdb2504969ef6400e90409df36c8fade3f4b29e45d5'
+body_hash: 'sha256:4c9c4ba9872623291b6fa90ea913eec346f7652ae4117b64cfd5172c542f258c'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-research]]"
   - "[[2026-08-22-secure-storage-performance-hardening-reference]]"
@@ -84,6 +84,14 @@ registration retains lightweight metadata and loader references. Resolving
 `config profile list` imports its own payload contract and the public inventory
 symbol, not calculation registries, filing engines, certificate adapters,
 unrelated config payloads, or broad workflow aggregators.
+
+Each executable callback owns one immutable execution policy, including its
+storage write route. That callback-attached declaration is the sole live
+authority for profile-bound and bootstrap-root routing; the former hand-kept
+verb-path catalogue, prefix matcher, mutation heuristics, exports, and fallback
+defaults are deleted. This supersedes earlier ADR and reference clauses that
+prescribed catalogue enrollment. Missing or invalid callback policy refuses
+dispatch rather than being interpreted as state-free or non-profile-bound.
 
 Application facades use explicit PEP 562 lazy maps. Heavy Pydantic contracts
 move to cohesive sibling modules and construct only when requested. A command

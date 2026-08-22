@@ -55,4 +55,3 @@ Proceed with `W01.P01.S134`. Its concrete authority should obtain this
 catalogue through the reconciliation-backed builder, preserving the reviewed
 rule that the public semantic allowlist never becomes an independent command
 existence authority.
-
