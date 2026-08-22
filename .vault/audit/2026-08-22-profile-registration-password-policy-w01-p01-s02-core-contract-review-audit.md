@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e5960f6d94480b0d79038d6595dc4a73ac007c600f5f95a6c557ba690c343ea'
+body_hash: 'sha256:591c3db028074a4f0b93e1d52ef46a671fc210dedd03021859f9dfc9999bf303'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -103,3 +103,74 @@ and the focused real-behavior registration, rotation, and headless-TUI run passe
 22 tests. Exact repository search finds no live consumer of the removed constant,
 enum member, public helper, application assessment model, or application minimum alias.
 The remaining byte-precedence and exact Unicode matrix belongs to S04 as recommended.
+
+### step-atomicity-remediation | low | Follow-up review confirms the blocking import-graph finding is closed
+
+The follow-up review re-grounded current code and the accepted ADR semantically, then
+confirmed the exact symbol graph and inspected remediation commits `2ca941531e` and
+`61a63f2f8c`. Current `src/cadrumo/core/__init__.py:155-162`,
+`src/cadrumo/core/__init__.py:551-553`, `src/cadrumo/core/__init__.py:711-712`,
+`src/cadrumo/core/__init__.py:756`, and `src/cadrumo/core/__init__.py:1011-1013`
+publish and lazily resolve the canonical bounds, assessment, refusal taxonomy, and
+assessor. Registration consumes that assessor at
+`src/cadrumo/application/user_profile/_registration.py:182`, rotation at
+`src/cadrumo/application/user_profile/_passphrase_rotation.py:116`, TUI validation at
+`src/cadrumo/adapters/inbound/tui/_registration_screen.py:369` and
+`src/cadrumo/adapters/inbound/tui/_registration_screen.py:415`, and CLI composition at
+`src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:468-471`.
+
+Exact repository search under `src/cadrumo` finds no
+`NIST_PASSPHRASE_MIN_LENGTH`, `PassphraseStrength.TOO_SHORT`, public
+`character_class_count`, old `minimum_length=` strength call, application
+`PassphraseAssessment`, `PASSPHRASE_MINIMUM_LENGTH`, or `assess_passphrase` consumer.
+The remaining `_character_class_count` is private implementation detail, not an alias or
+compatibility export. A public-facade import probe succeeded; integration collection
+found all 22 targeted registration, rotation, and headless-TUI tests; and the same 22
+tests passed. No new HIGH or CRITICAL finding was identified. The former HIGH is fully
+resolved, and W01.P01 may proceed to S04.
+
+### s04-surrogate-coverage | medium | The contract test proves only the first high-surrogate code point
+
+The mandatory S04 follow-up reviewed commit `ac5f1d5648` against the accepted ADR,
+research, incident reference, plan, current core implementation, execution record, and
+overlapping shared-worktree state after fresh semantic and exact-symbol discovery. The
+literal boundary matrix in `src/cadrumo/core/tests/test_credentials.py:19-49` is
+independent of production constants and will turn red for regressions at 14/15/256/257
+scalars, 1,024/1,025 bytes, or the required byte-before-scalar precedence. The tests at
+`src/cadrumo/core/tests/test_credentials.py:69-77` distinguish composed from decomposed
+input by their submitted scalar and byte measurements; lines 80-97 pin the finite
+dataclass field surface, typed numeric facts, frozen/slotted representation, and absence
+of the candidate; and lines 100-105 prove that a strong invalid candidate remains
+invalid while a fair valid candidate remains valid. These expectations are capable of
+failing when their corresponding production guarantees regress. The commit adds only
+the owned core test and its S04 execution record, Ruff and formatting pass, diff hygiene
+passes, and the focused serial unit run passes all 11 cases, matching the execution
+record.
+
+The surrogate test at `src/cadrumo/core/tests/test_credentials.py:59-66`, however, uses
+only `U+D800`. That proves refusal at the first high-surrogate value and proves that a
+surrogate result carries no UTF-8 measurement, but it does not exercise any low
+surrogate (`U+DC00` through `U+DFFF`) or the upper endpoint. A regression narrowing the
+production check to the high-surrogate half would therefore keep all S04 tests green
+while violating the ADR's refusal of every surrogate code point. Add an independently
+parameterized low-surrogate case, preferably `U+DFFF` to pin the closed upper endpoint,
+and assert the same `CONTAINS_SURROGATE`, scalar-count, and absent-byte facts. This is a
+MEDIUM test-completeness defect, not a current production defect. No HIGH or CRITICAL
+finding blocks S05, though S04 should be amended so its claimed surrogate guarantee is
+complete rather than carried as later debt.
+
+### s04-surrogate-coverage-closure | low | Both closed surrogate-range endpoints now bite
+
+Commit `9924fffae6` closes `s04-surrogate-coverage` without production changes. After
+fresh semantic ADR and code grounding plus exact-symbol confirmation, the amended test at
+`src/cadrumo/core/tests/test_credentials.py:59-66` independently supplies `U+D800` and
+`U+DFFF`. Both cases assert `CONTAINS_SURROGATE`, the unchanged submitted scalar count,
+and no UTF-8 byte measurement. A regression that accepts either the high-surrogate start
+or low-surrogate upper endpoint now turns the focused suite red, covering the entire
+closed production range represented by `0xD800 <= ord(character) <= 0xDFFF`.
+
+The remediation diff is limited to the owned test and S04 execution evidence. Ruff,
+formatting, and commit diff hygiene pass; the focused serial core unit module passes all
+12 cases; and the execution record reports the same amended count. The MEDIUM is closed.
+No unresolved HIGH, CRITICAL, or MEDIUM finding remains from the S02-S04 core-contract
+reviews.

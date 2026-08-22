@@ -4,7 +4,7 @@ tags:
   - '#profile-registration-password-policy'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:0023fe23e95bb67a1d7c930ed7ebab9be5b1fc9bda13b66f7408c99aaf1a42f7'
+body_hash: 'sha256:8efda28a3c6c33d8670da81335bbcb3d4c1283489fde7aa06a0bd1f6c560bbcd'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
@@ -47,8 +47,8 @@ Create the dependency-safe core authority, remove stale profile policy, separate
 Deliver one pure typed exact-sequence assessment and retire the obsolete eight-character profile policy.
 
 - [x] `W01.P01.S02` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then implement the canonical profile-password assessment, typed reasons, safe derived facts, exact-sequence behavior, and advisory strength while deleting obsolete generic profile-policy branches; `src/cadrumo/core/_credentials.py`.
-- [ ] `W01.P01.S03` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then expose only canonical profile-password and retained non-profile credential capabilities while removing stale exports and lazy mappings without aliases; `src/cadrumo/core/__init__.py`.
-- [ ] `W01.P01.S04` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then prove scalar and byte boundaries, surrogate refusal, safe reasons, advisory independence, and composed/decomposed exact preservation; `src/cadrumo/core/tests/test_credentials.py`.
+- [x] `W01.P01.S03` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then expose only canonical profile-password and retained non-profile credential capabilities while removing stale exports and lazy mappings without aliases; `src/cadrumo/core/__init__.py`.
+- [x] `W01.P01.S04` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then prove scalar and byte boundaries, surrogate refusal, safe reasons, advisory independence, and composed/decomposed exact preservation; `src/cadrumo/core/tests/test_credentials.py`.
 
 ### Phase `W01.P02` - consume the canonical contract in custody
 

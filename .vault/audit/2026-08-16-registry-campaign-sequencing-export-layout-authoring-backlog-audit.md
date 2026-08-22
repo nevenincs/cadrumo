@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc522e1fa9163ca111e50dcbbe5356e50d66c6060266a7b4b450d5430d39a4ba'
+body_hash: 'sha256:4b7e196f6052a409bfc38a90322a11f49aa117ff8540bc7b5089d159578b12c6'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15133,3 +15133,64 @@ recorded so the next attempt does not have to redo it.
   the eight declared inventories and nothing else, tree quiescent.
 * the worklist still fails with all 13 lines and the same count; only the verdict
   on each line changed. Ruff clean.
+
+## Tick: modelo 038 authored and withdrawn -- a gate already named its design unusable
+
+Re-measured at tick start: authority CLEAN, the tightened classifier holding,
+modelo 038 reading AUTHORABLE with its design's declared era (`applies_from`
+2002-01-16) covering every claimed ejercicio.
+
+### The checks that passed, and the one that was never asked
+
+Modelo 038 was taken because last tick's reasoning had already distinguished it
+from 187/188/194. That reasoning was re-verified rather than trusted: its review
+stamp's "NOT CLAIMED" is about CASILLA numbering ("a diseno IS bundled but
+derives 0 numbered casillas"), not about the design failing to evidence the
+layout; its export application link already existed with no layout behind it;
+and both records extract at 250 bytes with **zero holes**.
+
+58 bindings and a two-record layout were authored, and the trade that sank
+modelo 187 did NOT recur: the layout-design-applies inventory stayed at 25 lines
+with modelo 038 absent, and the worklist dropped 13 to 12.
+
+Then the full run surfaced
+`test_cited_design_field_bounds_are_self_consistent`, whose second test is named
+`test_the_known_self_contradicting_design_is_not_authored_against`. The design
+is `enrolled-modelo-038-layout`. Its extraction places fields across each
+other's bytes -- `@68..107 'BLANCOS.'` against `@72..111 'PERSONA CON QUIEN
+RELACIONARSE'`, and seven more pairs across both records -- so the offsets it
+encodes cannot be trusted.
+
+**Zero holes was never evidence of a clean read.** A PARTIAL overlap consumes
+the same bytes twice and leaves no hole behind, so the coverage check that
+passed could not have detected this. The gate already existed, already named
+this exact design, and the pre-authoring checklist simply did not consult it.
+
+Withdrawn: the bindings, the layout and the construct link. The three gates it
+broke pass again and authority loads CLEAN.
+
+### What was kept
+
+The classifier's AUTHORABLE verdict now reads **"AUTHORABLE on era"** and names
+the precondition it does not establish, pointing at the sibling gate. The check
+is deliberately not repeated inside the worklist: it must extract every cited
+design, which would turn a directory listing into minutes of parsing.
+
+So the worklist now answers two of the three questions authoring needs -- does a
+registered design exist, and does its era cover the claim -- and says plainly
+that the third, whether the design can be read reliably, lives elsewhere.
+
+### Verified
+
+* registry + generated-tree + application/registry: **9 failed, 5956 passed** --
+  the eight declared inventories plus a snake_case failure in modelo 036's
+  in-flight casilla set, which grew from 41 to 71 during this session and is a
+  peer's work. Tree quiescent (0/0/0).
+
+### Still open
+
+The eight inventories. Of the four lines reading AUTHORABLE on era, modelo 038
+is now known to be blocked behind a design-extraction defect; 036 and 840 are
+under active peer authoring; 220/2024 is the untested one. Whether modelo 038
+becomes authorable at all depends on repairing that extraction, which is
+record-design parser work rather than registry authoring.
