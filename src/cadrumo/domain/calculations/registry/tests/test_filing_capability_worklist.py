@@ -38,6 +38,8 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core.resources import bundled_path
@@ -128,10 +130,67 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             f"BLOCKED on era: {len(registered)} registered design(s) for this modelo, none cited by this "
             "revision -- the design governing THIS window is not among them"
         )
+
+    uncovered = _uncovered_claimed_years(revision, cited, sources)
+    if uncovered:
+        span = f"{uncovered[0]}-{uncovered[-1]}" if len(uncovered) > 1 else str(uncovered[0])
+        return (
+            f"BLOCKED on design coverage: cites {cited[0]}, but ejercicio(s) {span} "
+            f"({len(uncovered)} year(s)) fall outside every cited design's era -- a layout authored "
+            "from it would write those years at offsets no bundled design evidences"
+        )
     return (
         f"AUTHORABLE: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
         "-- needs its semantic map and layout"
     )
+
+
+#: Open-ended designs are treated as covering to this horizon, matching
+#: :mod:`test_layout_design_applies_to_claimed_years`, which asks the same
+#: question about revisions that already declare a layout.
+_OPEN_ENDED_HORIZON = 2026
+
+
+def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: object) -> list[int]:
+    """Return the ejercicios this revision claims that no cited design covers.
+
+    The distinction this draws is the one that cost three modelos. A revision
+    can cite a registered record design and still be unauthorable, because
+    citing a design is not the same as that design covering the years the
+    revision claims. Modelos 187, 188 and 194 each cite a design beginning in
+    2022, 2023 or 2024 while claiming ejercicios from 2019: authoring a layout
+    from those designs satisfied THIS gate and immediately put the same
+    revisions on `test_layout_design_applies_to_claimed_years`, having replaced
+    a refusal with an emitted record at unevidenced offsets.
+
+    Their own review stamps had already recorded it -- "0 comparable bundled
+    design year(s) inside this revision's claimed span" -- so the information
+    was in the tree before the mistake and this classifier simply did not ask.
+    """
+    selector = revision.period_selector
+    if selector.years:
+        claimed = sorted(selector.years)
+    elif selector.year_from is None:
+        return []
+    else:
+        upper = selector.year_to if selector.year_to is not None else _OPEN_ENDED_HORIZON
+        claimed = list(range(selector.year_from, upper + 1))
+
+    windows: list[tuple[int | None, int | None]] = []
+    for ref in cited:
+        source = sources.get(ref)
+        start = getattr(source, "applies_from", None)
+        end = getattr(source, "applies_to", None)
+        windows.append(
+            (start.year if isinstance(start, date) else None, end.year if isinstance(end, date) else None),
+        )
+    return [
+        year
+        for year in claimed
+        if not any(
+            (start is None or year >= start) and (end is None or year <= end) for start, end in windows
+        )
+    ]
 
 
 def test_every_registry_revision_can_produce_a_filing_artifact() -> None:

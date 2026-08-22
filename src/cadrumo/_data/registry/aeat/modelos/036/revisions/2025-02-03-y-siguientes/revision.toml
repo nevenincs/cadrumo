@@ -24,40 +24,46 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: applicability-grade review of the declaracion censal. DISCLOSURE -- \
-family_dispositions.deadline_windows was authored in this same action by this same agent, \
-because the revision previously carried neither a window nor a reason and so failed the \
-\"when due\" half of the rung it declares; nothing else was altered. VERIFIED -- WHEN DUE: \
-this modelo has no calendar plazo by construction. Its period_selector declares the EVENT \
-kinds alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors \
-each to its triggering event. Article 11.2 is verbatim in the bundled corpus for the baja: \
-\"La declaracion de baja debera presentarse en el plazo de un mes desde que se cumplan las \
-condiciones previstas en el apartado 1 de este articulo\". VERIFIED -- TO WHOM: \
-orden-eha-1274-2007 is the founding approving orden (\"por la que se aprueban los modelos \
-036 y 037 de declaracion censal\"); orden-hac-1526-2024 art. 1 amends it so that \"la \
-orden pasa a aprobar el modelo 036 de Declaracion censal de alta, modificacion y baja\"; \
-and its disposicion final unica reads \"la orden entra en vigor el dia 3 de febrero de \
-2025. Se aplica por primera vez a los modelos...\", which is EXACTLY this revision's \
-valid_from of 2025-02-03. \"Se aplica por primera vez\" is a first-application clause, an \
-open-ended commencement, so the open-ended 2025-02-03-y-siguientes claim is correct rather \
-than outrunning its orden. NOT CLAIMED -- the bundled excerpts of RD 1065/2007 articles 9 \
-and 10 carry the substance of what an alta and a modificacion must declare but NOT their \
-timing sentences, so only the baja period is corpus-proven here; the alta and modificacion \
-periods are cited by article and were not reproduced, because reproducing them from memory \
-would fabricate dates this registry cannot evidence. NOT CLAIMED -- \
-independent_check_coverage is 0.0000 meaning NO CLAIM, not zero. NOT CLAIMED -- COVERAGE: \
-this revision declares 31 casillas against a bundled diseno deriving 288 fields. That \
-partial coverage is a filing-rung concern this applicability-grade review does not reach, \
-and the underlying extraction defect is being worked by another hand; nothing here asserts \
-the casilla set is complete. NOT CLAIMED -- no export layout is declared; 2 \
-construct-evidence inspection gaps remain open (filing gaps 0). NOT CLAIMED -- all 3 \
-locales are complete for the 31 labels, but the strings were not audited for accuracy.
- \
-NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable \
-bundled design year(s) inside this claimed span, so AEAT published record designs do not \
-evidence the record layout for the years this revision covers; closing that needs AEAT \
-acquisition and is not something this review does."""
-reviewed_at = 2026-08-21
+agent: applicability-grade review of the censal alta/modificacion/baja declaration, \
+re-stamped after completing PAGINA 1. DISCLOSURE -- self-review: the same agent authored \
+the ten new casillas in the immediately preceding commit. VERIFIED -- COVERAGE 29 -> 35 of \
+288 derived casillas, 41 casillas in total. Every box number AEAT prints on Pag. 1 is now \
+modelled; 101, 102, 103, 141, 151 and 152 were the six missing. VERIFIED -- TILING: Pag. 1 \
+of aeat-dr-036-2025 tiles 1..500 exactly once, no gap, no overlap, 53 fields. All thirteen \
+records of this design tile clean. VERIFIED -- 141 AND 152 ARE EACH ONE DATE, not three \
+integers: the diseno splits each into dia, mes and ano component fields (@189/@191/@193 \
+and @199/@201/@203), and a composite component is not a casilla of its own. This is the \
+convention modelo 840 settled and its first application to another modelo. VERIFIED -- THE \
+FIRMA BLOCK carries no box numbers and takes slug numbers: lugar @207+40, the fecha \
+components @247/@249/@251 as ONE date, the calidad flag @255+1 and the firmante name \
+@256+125. They are filer-supplied facts so they are casillas, but a slug does not count \
+toward coverage -- which is why ten new casillas moved coverage by exactly six. NOT \
+CLAIMED -- A PROVENANCE GAP ON THE SIBLING FRAGMENT, recorded rather than repeated. The \
+causa-110..150 fragment states its numbers and labels are transcribed verbatim from the \
+AEAT Instrucciones Modelo 036, Anexo 3, PAGINA 1, table columns TIPO / CASILLA / CAUSA DE \
+PRESENTACION, citing instrucciones-cumplimentacion-pagina-1.html. That bundled file is a \
+5.4 KB navigation shell carrying no casilla table, and searched across ALL SIX bundled \
+modelo 036 instruction files the numbers 101, 103, 141, 151 and 152 appear in none of \
+them. The labels are also editorially expanded (pag. rendered as paginas), so they did not \
+come from the diseno either. The claim cannot be checked against what is bundled. The 29 \
+causa casillas are NOT asserted wrong -- only unverifiable from the corpus as it stands. \
+Whoever revisits them should either bundle the real Anexo 3 table or re-ground them on the \
+diseno. NOT CLAIMED -- THE NEW CASILLAS ARE GROUNDED IN aeat-dr-036-2025, the bundled \
+diseno, precisely because it is verifiable; every number and offset was read from its own \
+field description. NOT CLAIMED -- 253 OF 288 DERIVED CASILLAS REMAIN UNCOVERED across the \
+other twelve records. Several are heavily collapsed: Pag. 6 prints 613 and 614 on twelve \
+positions each and Pag. 8 prints 805 on twelve, so those records need the slug convention \
+at scale. Pag. 0, 2A and 2C carry NO box numbers at all and are repeating or structural \
+records rather than flat casilla sets. NOT CLAIMED -- NO CONSTRUCT MEMBERSHIP CHANGE, \
+deliberately: this modelo's construct is a censo-foundation construct listing only \
+profile-bound facts, and all 29 pre-existing causa casillas sit outside it. Adding these \
+would copy modelo 840's shape onto a modelo that does not use it. NOT CLAIMED -- NO EXPORT \
+LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
+worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the audited locales \
+are complete for all 41 labels, verified by counting non-null VALUES rather than keys, but \
+the strings were not audited for accuracy."""
+reviewed_at = 2026-08-22
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
 reason = """\
