@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import assess_profile_password as _assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -31,9 +32,6 @@ PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 #: Largest possible canonical v1 envelope: all fixed-width fields, a present
 #: predecessor digest, and the ten-digit maximum password generation.
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704
-PROFILE_CUSTODY_PASSWORD_MIN_SCALARS: Final = 15
-PROFILE_CUSTODY_PASSWORD_MAX_SCALARS: Final = 256
-PROFILE_CUSTODY_PASSWORD_MAX_BYTES: Final = 1024
 PROFILE_CUSTODY_PASSWORD_GENERATION_MAX: Final = 2_147_483_647
 PROFILE_CUSTODY_KDF_MEMORY_MIB: Final[frozenset[int]] = frozenset({19, 32, 64, 128, 256})
 PROFILE_CUSTODY_KDF_ITERATIONS: Final[frozenset[int]] = frozenset({2, 3, 4, 6, 8, 10})
@@ -74,34 +72,24 @@ def _canonical_json_bytes(value: object) -> bytes:
     )
 
 
-def validate_profile_password(password: str) -> str:
-    """Validate and return a password without normalising or rewriting it."""
-    if any(0xD800 <= ord(character) <= 0xDFFF for character in password):
-        raise ProfileCustodyPasswordError("profile password must not contain Unicode surrogate code points")
-    scalar_count = len(password)
-    if not PROFILE_CUSTODY_PASSWORD_MIN_SCALARS <= scalar_count <= PROFILE_CUSTODY_PASSWORD_MAX_SCALARS:
+def _encode_profile_password(password: str) -> bytes:
+    """Encode an exact password after canonical defense-in-depth assessment."""
+    assessment = _assess_profile_password(password)
+    if assessment.reason is not None:
         raise ProfileCustodyPasswordError(
-            "profile password must contain "
-            f"{PROFILE_CUSTODY_PASSWORD_MIN_SCALARS} to {PROFILE_CUSTODY_PASSWORD_MAX_SCALARS} Unicode scalars",
+            f"profile password refused by canonical policy: {assessment.reason.value}",
         )
-    try:
-        encoded = password.encode(_UTF_8_ENCODING, errors="strict")
-    except UnicodeEncodeError as exc:
-        raise ProfileCustodyPasswordError("profile password is not strict UTF-8") from exc
-    if len(encoded) > PROFILE_CUSTODY_PASSWORD_MAX_BYTES:
-        raise ProfileCustodyPasswordError(
-            f"profile password must encode to at most {PROFILE_CUSTODY_PASSWORD_MAX_BYTES} UTF-8 bytes",
-        )
-    return password
+    return password.encode(_UTF_8_ENCODING, errors="strict")
 
 
-def decode_profile_password(value: bytes) -> str:
-    """Strictly decode and validate a password received through a byte transport."""
+def _decode_profile_password(value: bytes) -> str:
+    """Strictly decode and assess a password received through byte transport."""
     try:
         password = value.decode(_UTF_8_ENCODING, errors="strict")
     except UnicodeDecodeError as exc:
         raise ProfileCustodyPasswordError("profile password transport is not strict UTF-8") from exc
-    return validate_profile_password(password)
+    _encode_profile_password(password)
+    return password
 
 
 class ProfileCustodyKdfParameters(BaseModel):
@@ -277,13 +265,8 @@ __all__ = [
     "PROFILE_CUSTODY_KDF_MEMORY_MIB",
     "PROFILE_CUSTODY_KDF_PARALLELISM",
     "PROFILE_CUSTODY_PASSWORD_GENERATION_MAX",
-    "PROFILE_CUSTODY_PASSWORD_MAX_BYTES",
-    "PROFILE_CUSTODY_PASSWORD_MAX_SCALARS",
-    "PROFILE_CUSTODY_PASSWORD_MIN_SCALARS",
     "ProfileCustodyEnvelope",
     "ProfileCustodyKdfParameters",
     "ProfileCustodyWrappedDek",
-    "decode_profile_password",
     "parse_profile_custody_envelope",
-    "validate_profile_password",
 ]

@@ -9,11 +9,18 @@ from uuid import UUID
 
 import pytest
 
-from ......core import StorageCategory, storage_location
+from ......core import (
+    PROFILE_PASSWORD_MAX_SCALARS,
+    PROFILE_PASSWORD_MAX_UTF8_BYTES,
+    PROFILE_PASSWORD_MIN_SCALARS,
+    ProfilePasswordRefusalReason,
+    StorageCategory,
+    storage_location,
+)
+from ... import __all__ as storage_exports
 from .. import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
-    PROFILE_CUSTODY_PASSWORD_MAX_BYTES,
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyPasswordError,
@@ -22,11 +29,12 @@ from .. import (
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
     ProfileCustodyWrappedDek,
-    decode_profile_password,
     parse_profile_custody_envelope,
     profile_custody_path,
-    validate_profile_password,
 )
+from .. import __all__ as custody_exports
+from .._records import __all__ as record_exports
+from .._records import _decode_profile_password, _encode_profile_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -123,19 +131,64 @@ def test_parser_refuses_duplicate_unknown_digest_and_noncanonical_records() -> N
             parse_profile_custody_envelope(corrupted)
 
 
-def test_password_contract_preserves_unicode_and_rejects_unrepresentable_inputs() -> None:
+def test_password_contract_preserves_exact_unicode_at_every_accepted_boundary() -> None:
     password = "  p\u0001ass phrase with spaces  "  # noqa: S105 - synthetic boundary input
     byte_boundary_password = "😀" * 256
+    composed = "é" * PROFILE_PASSWORD_MIN_SCALARS
+    decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
-    assert validate_profile_password(password) == password
-    assert len(byte_boundary_password.encode("utf-8")) == PROFILE_CUSTODY_PASSWORD_MAX_BYTES
-    assert decode_profile_password(byte_boundary_password.encode("utf-8")) == byte_boundary_password
+    for candidate in (
+        password,
+        "a" * PROFILE_PASSWORD_MIN_SCALARS,
+        "a" * PROFILE_PASSWORD_MAX_SCALARS,
+        byte_boundary_password,
+        composed,
+        decomposed,
+    ):
+        assert _decode_profile_password(_encode_profile_password(candidate)) == candidate
 
-    for invalid in ("a" * 14, "a" * 257, "\ud800" + "a" * 14):
-        with pytest.raises(ProfileCustodyPasswordError):
-            validate_profile_password(invalid)
+    assert len(byte_boundary_password.encode("utf-8")) == PROFILE_PASSWORD_MAX_UTF8_BYTES
+    assert composed != decomposed
+    assert _decode_profile_password(_encode_profile_password(composed)) != decomposed
+
+
+@pytest.mark.parametrize(
+    ("candidate", "reason"),
+    (
+        ("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1), ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
+        (
+            "😀" * PROFILE_PASSWORD_MAX_SCALARS + "a",
+            ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES,
+        ),
+        ("\ud800" + "a" * (PROFILE_PASSWORD_MIN_SCALARS - 1), ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+    ),
+)
+def test_password_contract_maps_every_canonical_reason_to_a_safe_custody_error(
+    candidate: str,
+    reason: ProfilePasswordRefusalReason,
+) -> None:
+    with pytest.raises(ProfileCustodyPasswordError, match=reason.value):
+        _encode_profile_password(candidate)
+
+
+def test_password_transport_refuses_non_utf8_bytes() -> None:
     with pytest.raises(ProfileCustodyPasswordError):
-        decode_profile_password(b"\xff" * 15)
+        _decode_profile_password(b"\xff" * PROFILE_PASSWORD_MIN_SCALARS)
+
+
+def test_obsolete_custody_password_policy_symbols_are_absent_from_every_facade() -> None:
+    obsolete = {
+        "PROFILE_CUSTODY_PASSWORD_MAX_BYTES",
+        "PROFILE_CUSTODY_PASSWORD_MAX_SCALARS",
+        "PROFILE_CUSTODY_PASSWORD_MIN_SCALARS",
+        "decode_profile_password",
+        "validate_profile_password",
+    }
+
+    assert obsolete.isdisjoint(record_exports)
+    assert obsolete.isdisjoint(custody_exports)
+    assert obsolete.isdisjoint(storage_exports)
 
 
 def test_custody_taxonomy_is_closed_to_current_profile_capsule_artifacts() -> None:

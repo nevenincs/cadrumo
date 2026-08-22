@@ -31,7 +31,7 @@ from ._kdf_worker_supervision import (
 from ._records import (
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    decode_profile_password,
+    _decode_profile_password,
 )
 
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
@@ -111,7 +111,7 @@ def _derive_calibration(payload: Mapping[str, object]) -> None:
 def _unwrap(payload: Mapping[str, object]) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
     wrapped_dek = _validated_wrapped_dek(payload["wrapped_dek"])
-    password = decode_profile_password(_decode_b64(payload["password_b64"]))
+    password = _decode_profile_password(_decode_b64(payload["password_b64"]))
     key = _derive_key(secret=password.encode("utf-8", errors="strict"), kdf=kdf)
     associated_data = _decode_b64(payload["associated_data_b64"])
     ciphertext = _decode_b64(wrapped_dek.ciphertext_b64) + _decode_b64(wrapped_dek.tag_b64)
@@ -127,7 +127,7 @@ def _unwrap(payload: Mapping[str, object]) -> bytes:
 
 def _wrap(payload: Mapping[str, object]) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
-    secret = decode_profile_password(_decode_b64(payload["secret_b64"]))
+    secret = _decode_profile_password(_decode_b64(payload["secret_b64"]))
     dek = _decode_b64(payload["dek_b64"])
     if len(dek) != KEY_SIZE:
         raise ValueError("profile custody DEK has invalid length")
