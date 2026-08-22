@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd9a0a248d82d0d3cd5dead6feb3e4472df7dfa668041de9b9d1f8340f5c0441'
+body_hash: 'sha256:f135dec1d00d672eb807e667d8caec9c072bdf84699d264e339e550e91894731'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
@@ -44,9 +44,45 @@ callbacks reach their handlers without opening or resuming a prior active
 session, and restore real-dispatch tests for root-fallback and explicit-URL
 refusal plus recovery-path reachability.
 
+### s53-write-route-authority-review | resolved | Recovery and root-refusal dispatch are proven
+
+The five affected session and repair callbacks now declare the import-light
+bootstrap-root policy. Exact-set gates reconcile mutating session exemptions
+and require a named login-gate justification for bootstrap-root routes outside
+that exemption set. A real root invocation now proves `config login` reaches
+its target resolver on a fresh store, and two additional real root-dispatch
+tests prove callback-attached profile-bound policy refuses both root-fallback
+and explicit-database routes before either database file is created. The
+focused storage-policy, root-guard, typed-projection, operator-surface, and MCP
+parity suites pass with 31 tests; Ruff passes on the corrective surface. The
+high finding is closed.
+
+### s53-write-route-authority-review | medium | Deleted leaf-refusal heuristic remains declared in quality metadata
+
+The production `_delegates_to_leaf_refusal` mutation heuristic was deleted,
+but `dev/quality/modelo_branch_classification.toml` still declares its former
+`storage_write_policy.py` branch and selector. This is a stale consumer of the
+retired legacy mechanism and makes the branch-classification authority claim a
+live M210 decision site that no longer exists. Delete that complete branch
+record and run its owning quality gate so the required legacy deletion is
+truthful beyond production imports.
+
+### s53-write-route-authority-review | resolved | Retired heuristic metadata is absent
+
+The complete stale branch-classification row was deleted. Exhaustive searches
+find no remaining production or quality references to the retired write-path
+catalogue, prefix matcher, mutation heuristic, or leaf-refusal delegation.
+Direct reconciliation reports no unclassified, stale, or broken-citation item
+for `storage_write_policy.py`; the owning full gate remains red only on eight
+unclassified and five stale M303 rows introduced by unrelated shared-tree
+work, with zero broken citations. The S53 medium finding is closed on scoped
+authoritative evidence; the unrelated branch-ledger drift remains owned by its
+concurrent campaign.
+
 ## Recommendations
 
-- Resolve the high finding before closing S53. Derive the root decision solely
-  from the selected callback's validated policy, preserve the login/logout and
-  repair recovery doors, and prove the behavior at the real root dispatch
-  boundary rather than through direct policy-query calls or source inspection.
+- The high finding was resolved in S53; retain the real-dispatch and exact-set
+  reconciliation gates as binding coverage for future callback additions and
+  policy changes.
+- The retired branch-classification record is removed. Preserve the zero-match
+  legacy-symbol search and scoped reconciliation alongside the dispatch gates.

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:d885b43e741821ca0bee100461341f1c3bda48645017bd459d5ee9a38995c8cb'
+body_hash: 'sha256:73472a605d5d56f1dac2d1cbac1b973ba0089a1b409d0410257f9393289807db'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -48,7 +48,7 @@ Make the real installed command tree authoritative for universal enrollment.
 - [x] `W01.P01.S50` - Attach execution policy to every modelo subtree callback and group while retaining legacy risk rows until mandatory S52 consumer migration and complete deletion; `src/cadrumo/entrypoints/cli/ modelo modules`.
 - [x] `W01.P01.S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks; `src/cadrumo/entrypoints/cli/ remaining app modules`.
 - [x] `W01.P01.S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table; `src/cadrumo/application/operator_surface and src/cadrumo/adapters/inbound/mcp`.
-- [ ] `W01.P01.S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue; `src/cadrumo/application/storage_write_policy.py and src/cadrumo/entrypoints/cli/_common.py`.
+- [x] `W01.P01.S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue; `src/cadrumo/application/storage_write_policy.py and src/cadrumo/entrypoints/cli/_common.py`.
 - [ ] `W01.P01.S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
 ### Phase `W01.P02` - Reproducible startup and resolution profiler

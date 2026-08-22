@@ -6,7 +6,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1657718ccde93bd1c169e5528788cb97fdc015c04cca8fde3075b0762ea1ce87'
+body_hash: 'sha256:ec5e0f7df1f000edec8a22a15cf81c73e7ba0d8c24f8baed350ed9b44d44d278'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -16,10 +16,12 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S50]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S51]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S52]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S53]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-s53-write-route-authority-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s03-command-policy-review-audit]]'
@@ -42,6 +44,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 
 ### audit
 
+- `2026-08-22-secure-storage-performance-hardening-s53-write-route-authority-review-audit` - `secure-storage-performance-hardening` audit: `S53 write-route authority review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S01 live command walker review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S02 capability taxonomy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s03-command-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S03 command execution policy review`
@@ -61,6 +64,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S50` - Attach execution policy to modelo subtree callbacks and remove modelo risk path declarations
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table
+- `2026-08-22-secure-storage-performance-hardening-W01-P01-S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue
 
 ### plan
 
