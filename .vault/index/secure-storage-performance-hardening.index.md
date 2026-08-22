@@ -6,14 +6,16 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f0b8a008ca47caa0ef32ac8066b17782a6030b3e10a689b24066e0e8edf794ce'
+body_hash: 'sha256:20c3c33002d23c404a0171267418405c7ff6cb2e5583ef8ef4308b7966f9c40c'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -29,10 +31,12 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 ### audit
 
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S01 live command walker review`
+- `2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S02 capability taxonomy review`
 
 ### exec
 
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S01` - Extend the live command walker to emit stable command paths, node kind, loader owner, and handler owner for every reachable node
+- `2026-08-22-secure-storage-performance-hardening-W01-P01-S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior
 
 ### plan
 

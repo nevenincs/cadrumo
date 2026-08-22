@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
+modified: '2026-08-22'
+body_hash: 'sha256:0db0c31d2d4b893033f623b856342dff9de22c4fefa2543df4b836bf16e6682c'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
-modified: '2026-08-22'
-body_schema: body-v1
-body_hash: 'sha256:7108e420386dae8a3c25ca59b0e54967ee45d459f27fbd940241f4e5d85cd760'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -42,7 +41,7 @@ Establish a reproducible, non-frozen census and attribution baseline for every C
 Make the real installed command tree authoritative for universal enrollment.
 
 - [x] `W01.P01.S01` - Extend the live command walker to emit stable command paths, node kind, loader owner, and handler owner for every reachable node; `src/cadrumo/entrypoints/cli/_command_suggestions.py`.
-- [ ] `W01.P01.S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior; `src/cadrumo/entrypoints/cli/_command_schema.py`.
+- [x] `W01.P01.S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior; `src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [ ] `W01.P01.S03` - Derive declared command risk and capability expectations from the live command authority instead of a second verb inventory; `src/cadrumo/tests/declared_command_risk.py`.
 - [ ] `W01.P01.S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
