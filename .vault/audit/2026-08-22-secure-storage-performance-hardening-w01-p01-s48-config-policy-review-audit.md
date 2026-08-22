@@ -5,29 +5,10 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d5461bac1dd2a1f3aaca437ed31813f55035ce537df7875b8114bb7a28f62ef2'
+body_hash: 'sha256:3a5187745dfe57bce0d83cbd35d34cfe5ba6d27537ef22d167f30db6365b596b'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `W01.P01.S48 config execution-policy review`
 
@@ -57,6 +38,12 @@ through broad custody or Google presets. Specialised immutable declarations now
 carry the actual authorities and effects, and representative live-census tests
 assert registry/calculation, browser/network, and Google/calculation/filing
 closure.
+
+Final re-review confirmed the repair subtree also follows least authority:
+registry integrity is effect-free registry/calculation-only work, bare repair is
+a combined calculation and encrypted read, log inspection is state-free local
+I/O, and connectivity is browser/network-only. No critical or high finding
+remained; the independent focused execution-policy run passed four tests.
 
 ### locale-dependent-parity-assertion | medium | English error prose made the focused gate locale-sensitive
 
