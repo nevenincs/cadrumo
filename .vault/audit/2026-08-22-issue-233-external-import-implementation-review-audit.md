@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7341d74a017b21334ef8ea651be9417fa13f57140b0d3b003c2eb91161cc3e1'
+body_hash: 'sha256:03bb90b9b9d8cec57f4f7fd49e0024323580b21b11d5022adbba042f6a2364b8'
 related: []
 ---
 
@@ -147,6 +147,18 @@ filing-import help string uses the catalogue. Add a real translation key and
 values through the locale CLI for every supported catalogue, use that key in
 the Typer option, and run the locale scaffold/audit gates. This is the sole open
 finding in the corrective CSV/XLSX slice.
+
+### csv-file-help-final-verification | low | The sole corrective blocker is resolved
+
+Final re-review of `f337632d3cf9cca74946184ce0277fbbb70ce5ec`
+confirms `--file` now resolves `cli.app.modelo.filing_record.import_file_help`
+through authored English, Spanish, Catalan, and Hungarian catalogue values.
+The locale tree contains only those four supported catalogues; no French or
+Arabic surface was added. The real CLI integration test passes and touched-file
+Ruff is clean. Global locale scaffold/audit remains red for hundreds of
+pre-existing unrelated registry/application keys, but the new key is present
+and aligned in all four catalogues. No open finding remains for the partial
+CSV/XLSX tranche.
 
 ## Recommendations
 
