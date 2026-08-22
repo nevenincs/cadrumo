@@ -576,6 +576,336 @@ modelo:
               label: Identificacio. Nom comercial
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
               label: Identificacio. Persona fisica resident o no resident a Espanya
+            x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              label: Persona juridica o entitat. Avisos. Alta d'avisos de l'AEAT
+            x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              label: Persona juridica o entitat. Avisos. Baixa d'avisos de l'AEAT
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              label: Persona juridica o entitat. Avisos. Alta a l'aplicacio mobil
+                de l'AEAT
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              label: Persona juridica o entitat. Avisos. Baixa a l'aplicacio mobil
+                de l'AEAT
+            x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              label: Persona juridica o entitat. Avisos. Alta d'avisos de la DGT
+            x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              label: Persona juridica o entitat. Avisos. Baixa d'avisos de la DGT
+            x-e1l2sobmd5pmubb5dlgmir0:
+              label: Persona juridica o entitat. Avisos. Correu electronic
+            x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              label: Persona juridica o entitat. Avisos. Alta o modificacio del correu
+                electronic d'avisos
+            x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              label: Persona juridica o entitat. Avisos. Baixa del correu electronic
+                d'avisos
+            x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              label: Persona juridica o entitat. Avisos. Alta o modificacio del telefon
+                mobil
+            x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              label: Persona juridica o entitat. Avisos. Baixa del telefon mobil
+            x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              label: Persona juridica o entitat. Avisos. Prefix de pais del telefon
+                mobil
+            x-e1l2sobmd5pmubbkclgiqobcehgg:
+              label: Persona juridica o entitat. Avisos. Alta d'avisos del TEA
+            x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              label: Persona juridica o entitat. Avisos. Baixa d'avisos del TEA
+            x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              label: Persona juridica o entitat. Avisos. Telefon mobil
+            x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Codi de pais
+            x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Codi postal
+            x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Complement de domicili
+            x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Domicili
+            x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Indicador de domicili fiscal o social a l'estranger
+            x-e1l2sp35f1q2qs31d5pg:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Pais
+            x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Poblacio o ciutat
+            x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              label: Persona juridica o entitat. Domicili a l'Estat de residencia.
+                Provincia, regio o estat
+            x-e1l2sp36d5pm6bb2dhnn2tb5:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Bloc
+            x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Qualificador
+                del numero
+            x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
+                municipi INE
+            x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi postal
+            x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
+                provincia
+            x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
+                via INE
+            x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Complement
+                de domicili
+            x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Escala
+            x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Indicador
+                de referencia cadastral del domicili fiscal
+            x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Localitat
+                o poblacio
+            x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Nom del
+                municipi
+            x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Nom de
+                la via publica
+            x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Numero
+                de casa
+            x-e1l2sp36d5pm6bbgdhgmst31:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Planta
+            x-e1l2sp36d5pm6bbgdtp78obc:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Portal
+            x-e1l2sp36d5pm6bbgelin4t31:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Porta
+            x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Referencia
+                cadastral
+            x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Tipus
+                de numero
+            x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Tipus
+                de via
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                En qualitat de, per a l'apartat de correus
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi postal de l'apartat de correus
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi de provincia de l'apartat de correus
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Numero d'apartat de correus
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Destinatari de l'apartat de correus, si es diferent del declarant
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Poblacio o ciutat de l'apartat de correus
+            x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Indicador de baixa del domicili de notificacions
+            x-e1l2sp3edtq6ibb2dhnn2tb5:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Bloc (domicili 1)
+            x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                En qualitat de (domicili 1)
+            x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Qualificador del numero (domicili 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi de municipi INE (domicili 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi postal (domicili 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi de provincia (domicili 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Codi de via INE (domicili 1)
+            x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Complement de domicili (domicili 1)
+            x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Destinatari, si es diferent del declarant (domicili 1)
+            x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Escala (domicili 1)
+            x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Localitat o poblacio (domicili 1)
+            x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Nom del municipi (domicili 1)
+            x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Nom de la via publica (domicili 1)
+            x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Numero de casa (domicili 1)
+            x-e1l2sp3edtq6ibbgdhgmst31:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Planta (domicili 1)
+            x-e1l2sp3edtq6ibbgdtp78obc:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Portal (domicili 1)
+            x-e1l2sp3edtq6ibbgelin4t31:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Porta (domicili 1)
+            x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Tipus de numero (domicili 1)
+            x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              label: Persona juridica o entitat. Domicili a efectes de notificacions.
+                Tipus de via (domicili 1)
+            x-e1l2sp3jdthiqojcdtonap8:
+              label: Persona juridica o entitat. Domicili social. Bloc
+            x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Persona juridica o entitat. Domicili social. Qualificador del
+                numero
+            x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Persona juridica o entitat. Domicili social. Codi de municipi
+                INE
+            x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              label: Persona juridica o entitat. Domicili social. Codi postal
+            x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              label: Persona juridica o entitat. Domicili social. Codi de provincia
+            x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              label: Persona juridica o entitat. Domicili social. Codi de via INE
+            x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Persona juridica o entitat. Domicili social. Complement de domicili
+            x-e1l2sp3jdthiqpbjcdgmopbic4:
+              label: Persona juridica o entitat. Domicili social. Escala
+            x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              label: Persona juridica o entitat. Domicili social. Localitat o poblacio
+            x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              label: Persona juridica o entitat. Domicili social. Nom del municipi
+            x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              label: Persona juridica o entitat. Domicili social. Nom de la via publica
+            x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              label: Persona juridica o entitat. Domicili social. Numero de casa
+            x-e1l2sp3jdthiqs3cc5n78o8:
+              label: Persona juridica o entitat. Domicili social. Planta
+            x-e1l2sp3jdthiqs3fe9q62r0:
+              label: Persona juridica o entitat. Domicili social. Portal
+            x-e1l2sp3jdthiqs3lclp78o8:
+              label: Persona juridica o entitat. Domicili social. Porta
+            x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              label: Persona juridica o entitat. Domicili social. Tipus de numero
+            x-e1l2sp3jdthiqt39e1niqtj9c4:
+              label: Persona juridica o entitat. Domicili social. Tipus de via
+            x-e1l2spbgclp6qbb3elgmst3fec:
+              label: Persona juridica o entitat. Establiments permanents. Nombre d'establiments
+                permanents
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              label: Persona juridica o entitat. Establiments permanents. Denominacio
+                de l'establiment permanent 1
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              label: Persona juridica o entitat. Establiments permanents. Denominacio
+                de l'establiment permanent 2
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              label: Persona juridica o entitat. Establiments permanents. Denominacio
+                de l'establiment permanent 3
+            x-e1l2spbgclp6qbbed5j2qc8:
+              label: Persona juridica o entitat. Establiments permanents. N.I.F. de
+                l'establiment permanent 1
+            x-e1l2spbgclp6qbbed5j2qcg:
+              label: Persona juridica o entitat. Establiments permanents. N.I.F. de
+                l'establiment permanent 2
+            x-e1l2spbgclp6qbbed5j2qco:
+              label: Persona juridica o entitat. Establiments permanents. N.I.F. de
+                l'establiment permanent 3
+            x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              label: Persona juridica o entitat. Establiments permanents. Opera a
+                Espanya a traves d'establiment permanent
+            x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              label: Persona juridica o entitat. Identificacio. Anagrama
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              label: Persona juridica o entitat. Identificacio. Domini o adreca d'internet
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              label: Persona juridica o entitat. Identificacio. Domini o adreca d'internet
+                (segon)
+            x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              label: Persona juridica o entitat. Identificacio. Data de l'acord de
+                voluntats
+            x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              label: Persona juridica o entitat. Identificacio. Data de constitucio
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Persona juridica o entitat. Identificacio. Data d'efectes de
+                la residencia fiscal
+            x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              label: Persona juridica o entitat. Identificacio. Data d'inscripcio
+                registral
+            x-e1l2sqb4cln78bbed5j0:
+              label: Persona juridica o entitat. Identificacio. N.I.F.
+            x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              label: Persona juridica o entitat. Identificacio. Codi d'identificacio
+                fiscal de l'Estat de residencia
+            x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              label: Persona juridica o entitat. Identificacio. N.I.F. d'altres paisos
+            x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              label: Persona juridica o entitat. Identificacio. Entitat no resident
+                o constituida a l'estranger
+            x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              label: Persona juridica o entitat. Identificacio. Rao o denominacio
+                social
+            x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              label: Persona juridica o entitat. Identificacio. Entitat resident o
+                constituida a Espanya, o no resident
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Entitat en atribucio de rendes constituida a Espanya amb activitat
+                economica
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Classe d'entitat en atribucio de rendes constituida a Espanya amb
+                activitat economica
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Entitat en atribucio de rendes constituida a Espanya sense activitat
+                economica
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Classe d'entitat en atribucio de rendes constituida a Espanya sense
+                activitat economica
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Entitat en atribucio de rendes constituida a l'estranger amb presencia
+                a Espanya
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Classe d'entitat en atribucio de rendes constituida a l'estranger
+                amb presencia a Espanya
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Entitat en atribucio de rendes constituida a l'estranger sense presencia
+                a Espanya
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Classe d'entitat en atribucio de rendes constituida a l'estranger
+                sense presencia a Espanya
+            x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Persona juridica
+            x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Forma juridica
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Altres entitats
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Altres entitats. Classe d'entitat
+            x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
+                Te personalitat juridica
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Cognoms i nom o rao social del representant (primer representant,

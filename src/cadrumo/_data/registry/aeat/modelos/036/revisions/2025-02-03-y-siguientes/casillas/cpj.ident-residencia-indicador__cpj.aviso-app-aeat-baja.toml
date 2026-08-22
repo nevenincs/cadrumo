@@ -59,7 +59,7 @@
 
 # @11+1. Identificacion. Persona juridica o entidad residente o constituida en Espana, o no residente.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-residencia-indicador"
+id = "pj.ident-residencia-indicador"
 number = "B2"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
@@ -74,7 +74,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @12+2. Identificacion. Persona juridica o entidad no residente o constituida en el extranjero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-pais-constitucion"
+id = "pj.ident-pais-constitucion"
 number = "B3"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
@@ -89,7 +89,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @14+9. Identificacion. N.I.F.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-nif"
+id = "pj.ident-nif"
 number = "B4"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "nif"
@@ -104,7 +104,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @23+125. Identificacion. Razon o denominacion social.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-razon-social"
+id = "pj.ident-razon-social"
 number = "B5"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "name"
@@ -119,7 +119,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @148+25. Identificacion. Anagrama.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-anagrama"
+id = "pj.ident-anagrama"
 number = "B6"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
@@ -134,7 +134,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @173+40. Identificacion. N.I.F. de otros paises.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-nif-otros-paises"
+id = "pj.ident-nif-otros-paises"
 number = "B7"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
@@ -149,7 +149,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @213+8. Identificacion. Fecha del acuerdo de voluntades. ONE casilla over three design components at @213+2 dia, @215+2 mes and @217+4 ano, all three printed under the single number B8.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-fecha-acuerdo-voluntades"
+id = "pj.ident-fecha-acuerdo-voluntades"
 number = "B8"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -164,7 +164,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @221+8. Identificacion. Fecha de constitucion. ONE casilla over three design components at @221+2 dia, @223+2 mes and @225+4 ano, all three printed under the single number B9.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-fecha-constitucion"
+id = "pj.ident-fecha-constitucion"
 number = "B9"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -179,7 +179,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @229+8. Identificacion. Fecha de inscripcion registral. ONE casilla over three design components at @229+2 dia, @231+2 mes and @233+4 ano, all three printed under the single number B10.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-fecha-inscripcion-registral"
+id = "pj.ident-fecha-inscripcion-registral"
 number = "B10"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -194,7 +194,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @237+5. Domicilio fiscal en Espana. Tipo de via.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-tipo-via"
+id = "pj.dfisc-tipo-via"
 number = "B11"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -209,8 +209,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @242+5. Domicilio fiscal en Espana. Codigo de via INE. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-codigo-via-ine"
-number = "pj-domicilio-fiscal-codigo-via-ine"
+id = "pj.dfisc-codigo-via-ine"
+number = "pj-dfisc-codigo-via-ine"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
 required = false
@@ -224,7 +224,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @247+50. Domicilio fiscal en Espana. Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-nombre-via"
+id = "pj.dfisc-nombre-via"
 number = "B12"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -239,7 +239,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @297+3. Domicilio fiscal en Espana. Tipo de numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-tipo-numero"
+id = "pj.dfisc-tipo-numero"
 number = "B13"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -254,7 +254,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @300+5. Domicilio fiscal en Espana. Numero de casa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-numero-casa"
+id = "pj.dfisc-numero-casa"
 number = "B14"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "integer"
@@ -269,7 +269,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @305+3. Domicilio fiscal en Espana. Calificador del numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-calificador-numero"
+id = "pj.dfisc-calificador-numero"
 number = "B15"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -284,7 +284,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @308+3. Domicilio fiscal en Espana. Bloque.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-bloque"
+id = "pj.dfisc-bloque"
 number = "B16"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -299,7 +299,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @311+3. Domicilio fiscal en Espana. Portal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-portal"
+id = "pj.dfisc-portal"
 number = "B17"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -314,7 +314,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @314+3. Domicilio fiscal en Espana. Escalera.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-escalera"
+id = "pj.dfisc-escalera"
 number = "B18"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -329,7 +329,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @317+3. Domicilio fiscal en Espana. Planta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-planta"
+id = "pj.dfisc-planta"
 number = "B19"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -344,7 +344,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @320+3. Domicilio fiscal en Espana. Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-puerta"
+id = "pj.dfisc-puerta"
 number = "B20"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -359,7 +359,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @323+40. Domicilio fiscal en Espana. Complemento de domicilio (urbanizacion, poligono industrial, centro comercial).
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-complemento-domicilio"
+id = "pj.dfisc-complemento-domicilio"
 number = "B21"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -374,7 +374,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @363+30. Domicilio fiscal en Espana. Localidad o poblacion, si es distinta del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-localidad"
+id = "pj.dfisc-localidad"
 number = "B22"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -389,7 +389,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @393+5. Domicilio fiscal en Espana. Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-codigo-postal"
+id = "pj.dfisc-codigo-postal"
 number = "B23"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "postal_code"
@@ -404,8 +404,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @398+5. Domicilio fiscal en Espana. Codigo de municipio INE. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-codigo-municipio-ine"
-number = "pj-domicilio-fiscal-codigo-municipio-ine"
+id = "pj.dfisc-codigo-municipio-ine"
+number = "pj-dfisc-codigo-municipio-ine"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "municipality_code"
 required = false
@@ -419,7 +419,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @403+30. Domicilio fiscal en Espana. Nombre del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-municipio"
+id = "pj.dfisc-municipio"
 number = "B24"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "text"
@@ -434,7 +434,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @433+2. Domicilio fiscal en Espana. Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-fiscal-codigo-provincia"
+id = "pj.dfisc-codigo-provincia"
 number = "B25"
 section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
 data_type = "province_code"
@@ -449,7 +449,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @435+100. Datos de telefonos y direcciones para recibir avisos. E-mail.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-email"
+id = "pj.aviso-email"
 number = "B38"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "text"
@@ -464,8 +464,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @535+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-aeat-alta"
-number = "pj-avisos-aeat-alta"
+id = "pj.aviso-aeat-alta"
+number = "pj-aviso-aeat-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -479,8 +479,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @536+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-aeat-baja"
-number = "pj-avisos-aeat-baja"
+id = "pj.aviso-aeat-baja"
+number = "pj-aviso-aeat-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -494,8 +494,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @537+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos TEA. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-tea-alta"
-number = "pj-avisos-tea-alta"
+id = "pj.aviso-tea-alta"
+number = "pj-aviso-tea-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -509,8 +509,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @538+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos TEA. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-tea-baja"
-number = "pj-avisos-tea-baja"
+id = "pj.aviso-tea-baja"
+number = "pj-aviso-tea-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -524,8 +524,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @539+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos DGT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-dgt-alta"
-number = "pj-avisos-dgt-alta"
+id = "pj.aviso-dgt-alta"
+number = "pj-aviso-dgt-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -539,8 +539,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @540+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos DGT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-dgt-baja"
-number = "pj-avisos-dgt-baja"
+id = "pj.aviso-dgt-baja"
+number = "pj-aviso-dgt-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -554,8 +554,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @541+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del e-mail de avisos. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-email-alta"
-number = "pj-avisos-email-alta"
+id = "pj.aviso-email-alta"
+number = "pj-aviso-email-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -569,8 +569,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @542+1. Datos de telefonos y direcciones para recibir avisos. Baja del e-mail de avisos. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-email-baja"
-number = "pj-avisos-email-baja"
+id = "pj.aviso-email-baja"
+number = "pj-aviso-email-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -584,7 +584,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @562+50. Domicilio fiscal o social en el Estado de residencia (no residentes). Domicilio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-domicilio"
+id = "pj.dext-domicilio"
 number = "B31"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -599,7 +599,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @612+40. Domicilio fiscal o social en el Estado de residencia (no residentes). Complemento de domicilio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-complemento-domicilio"
+id = "pj.dext-complemento-domicilio"
 number = "B32"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -614,7 +614,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @652+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Poblacion o ciudad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-poblacion"
+id = "pj.dext-poblacion"
 number = "B34"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -629,7 +629,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @682+100. Identificacion. Dominio o direccion de internet.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.identificacion-dominio-internet"
+id = "pj.ident-dominio-internet"
 number = "B28"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
@@ -644,7 +644,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @782+10. Domicilio fiscal o social en el Estado de residencia (no residentes). Codigo postal del Estado de residencia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-codigo-postal"
+id = "pj.dext-codigo-postal"
 number = "B33"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -659,7 +659,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @792+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Provincia, region o estado.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-provincia-region"
+id = "pj.dext-provincia-region"
 number = "B35"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -674,7 +674,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @822+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Pais.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-pais"
+id = "pj.dext-pais"
 number = "B36"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "text"
@@ -689,7 +689,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @852+2. Domicilio fiscal o social en el Estado de residencia (no residentes). Codigo de pais.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.domicilio-residencia-extranjero-codigo-pais"
+id = "pj.dext-codigo-pais"
 number = "B37"
 section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
 data_type = "country_code"
@@ -704,7 +704,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @854+4. Datos de telefonos y direcciones para recibir avisos. Prefijo de pais del telefono movil.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-prefijo-pais-movil"
+id = "pj.aviso-prefijo-pais-movil"
 number = "B26"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "text"
@@ -719,7 +719,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @858+15. Datos de telefonos y direcciones para recibir avisos. Telefono movil.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-telefono-movil"
+id = "pj.aviso-telefono-movil"
 number = "B27"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "text"
@@ -734,8 +734,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @873+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del telefono movil. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-movil-alta"
-number = "pj-avisos-movil-alta"
+id = "pj.aviso-movil-alta"
+number = "pj-aviso-movil-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -749,8 +749,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @874+1. Datos de telefonos y direcciones para recibir avisos. Baja del telefono movil. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-movil-baja"
-number = "pj-avisos-movil-baja"
+id = "pj.aviso-movil-baja"
+number = "pj-aviso-movil-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -764,8 +764,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @875+1. Datos de telefonos y direcciones para recibir avisos. Alta en la aplicacion movil AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-app-aeat-alta"
-number = "pj-avisos-app-aeat-alta"
+id = "pj.aviso-app-aeat-alta"
+number = "pj-aviso-app-aeat-alta"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false
@@ -779,8 +779,8 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 
 # @876+1. Datos de telefonos y direcciones para recibir avisos. Baja en la aplicacion movil AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
-id = "pj.avisos-app-aeat-baja"
-number = "pj-avisos-app-aeat-baja"
+id = "pj.aviso-app-aeat-baja"
+number = "pj-aviso-app-aeat-baja"
 section = ["declaracion", "persona_juridica", "avisos"]
 data_type = "boolean"
 required = false

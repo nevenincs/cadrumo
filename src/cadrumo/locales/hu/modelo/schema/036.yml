@@ -525,6 +525,324 @@ modelo:
               label: Azonositas. Kereskedelmi nev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
               label: Azonositas. A termeszetes szemely belfoldi vagy kulfoldi illetosegu-e
+            x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              label: Jogi szemely vagy szervezet. Ertesitesek. AEAT-ertesitesek bejegyzese
+            x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              label: Jogi szemely vagy szervezet. Ertesitesek. AEAT-ertesitesek torlese
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. Regisztracio az AEAT
+                mobilalkalmazasaban
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. Kiiratkozas az AEAT
+                mobilalkalmazasabol
+            x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. DGT-ertesitesek bejegyzese
+            x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. DGT-ertesitesek torlese
+            x-e1l2sobmd5pmubb5dlgmir0:
+              label: Jogi szemely vagy szervezet. Ertesitesek. E-mail
+            x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              label: Jogi szemely vagy szervezet. Ertesitesek. Az ertesitesi e-mail
+                bejegyzese vagy modositasa
+            x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              label: Jogi szemely vagy szervezet. Ertesitesek. Az ertesitesi e-mail
+                torlese
+            x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon bejegyzese
+                vagy modositasa
+            x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon torlese
+            x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon orszaghivo
+                szama
+            x-e1l2sobmd5pmubbkclgiqobcehgg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. TEA-ertesitesek bejegyzese
+            x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              label: Jogi szemely vagy szervezet. Ertesitesek. TEA-ertesitesek torlese
+            x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              label: Jogi szemely vagy szervezet. Ertesitesek. Mobiltelefon
+            x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Orszagkod
+            x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Iranyitoszam
+            x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Cim kiegeszitese
+            x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Cim
+            x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Kulfoldi adougyi cim vagy szekhely jelzoje
+            x-e1l2sp35f1q2qs31d5pg:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Orszag
+            x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Telepules vagy varos
+            x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
+                cim. Tartomany, regio vagy allam
+            x-e1l2sp36d5pm6bb2dhnn2tb5:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Tomb
+            x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
+                kiegeszitoje
+            x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. INE
+                telepuleskod
+            x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Iranyitoszam
+            x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Tartomanykod
+            x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. INE
+                kozterulet-kod
+            x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Cim
+                kiegeszitese
+            x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Lepcsohaz
+            x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Az adougyi
+                cim ingatlan-nyilvantartasi jelzoje
+            x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Helyseg
+                vagy telepules
+            x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Telepules
+                neve
+            x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Kozterulet
+                neve
+            x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
+            x-e1l2sp36d5pm6bbgdhgmst31:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Emelet
+            x-e1l2sp36d5pm6bbgdtp78obc:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Lepcsohaz
+                bejarata
+            x-e1l2sp36d5pm6bbgelin4t31:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Ajto
+            x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Ingatlan-nyilvantartasi
+                hivatkozas
+            x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
+                tipusa
+            x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Kozterulet
+                jellege
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Minosege a postafiok
+                tekinteteben
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok iranyitoszama
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok tartomanykodja
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Postafiok szama
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok cimzettje,
+                ha elter a bevallotol
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok telepulese
+                vagy varosa
+            x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Az ertesitesi cim
+                torlesenek jelzoje
+            x-e1l2sp3edtq6ibb2dhnn2tb5:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Tomb (1. cim)
+            x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Minosege (1. cim)
+            x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam kiegeszitoje
+                (1. cim)
+            x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. INE telepuleskod
+                (1. cim)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Iranyitoszam (1.
+                cim)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Tartomanykod (1.
+                cim)
+            x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. INE kozterulet-kod
+                (1. cim)
+            x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Cim kiegeszitese
+                (1. cim)
+            x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Cimzett, ha elter
+                a bevallotol (1. cim)
+            x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Lepcsohaz (1. cim)
+            x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Helyseg vagy telepules
+                (1. cim)
+            x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Telepules neve (1.
+                cim)
+            x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Kozterulet neve
+                (1. cim)
+            x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam (1. cim)
+            x-e1l2sp3edtq6ibbgdhgmst31:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Emelet (1. cim)
+            x-e1l2sp3edtq6ibbgdtp78obc:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Lepcsohaz bejarata
+                (1. cim)
+            x-e1l2sp3edtq6ibbgelin4t31:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Ajto (1. cim)
+            x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam tipusa (1.
+                cim)
+            x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              label: Jogi szemely vagy szervezet. Ertesitesi cim. Kozterulet jellege
+                (1. cim)
+            x-e1l2sp3jdthiqojcdtonap8:
+              label: Jogi szemely vagy szervezet. Szekhely. Tomb
+            x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Jogi szemely vagy szervezet. Szekhely. Hazszam kiegeszitoje
+            x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Jogi szemely vagy szervezet. Szekhely. INE telepuleskod
+            x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              label: Jogi szemely vagy szervezet. Szekhely. Iranyitoszam
+            x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              label: Jogi szemely vagy szervezet. Szekhely. Tartomanykod
+            x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              label: Jogi szemely vagy szervezet. Szekhely. INE kozterulet-kod
+            x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Jogi szemely vagy szervezet. Szekhely. Cim kiegeszitese
+            x-e1l2sp3jdthiqpbjcdgmopbic4:
+              label: Jogi szemely vagy szervezet. Szekhely. Lepcsohaz
+            x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              label: Jogi szemely vagy szervezet. Szekhely. Helyseg vagy telepules
+            x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              label: Jogi szemely vagy szervezet. Szekhely. Telepules neve
+            x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              label: Jogi szemely vagy szervezet. Szekhely. Kozterulet neve
+            x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              label: Jogi szemely vagy szervezet. Szekhely. Hazszam
+            x-e1l2sp3jdthiqs3cc5n78o8:
+              label: Jogi szemely vagy szervezet. Szekhely. Emelet
+            x-e1l2sp3jdthiqs3fe9q62r0:
+              label: Jogi szemely vagy szervezet. Szekhely. Lepcsohaz bejarata
+            x-e1l2sp3jdthiqs3lclp78o8:
+              label: Jogi szemely vagy szervezet. Szekhely. Ajto
+            x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              label: Jogi szemely vagy szervezet. Szekhely. Hazszam tipusa
+            x-e1l2sp3jdthiqt39e1niqtj9c4:
+              label: Jogi szemely vagy szervezet. Szekhely. Kozterulet jellege
+            x-e1l2spbgclp6qbb3elgmst3fec:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. Az allando
+                telephelyek szama
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. Az 1. allando
+                telephely megnevezese
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. A 2. allando
+                telephely megnevezese
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. A 3. allando
+                telephely megnevezese
+            x-e1l2spbgclp6qbbed5j2qc8:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. Az 1. allando
+                telephely adoazonosito szama
+            x-e1l2spbgclp6qbbed5j2qcg:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. A 2. allando
+                telephely adoazonosito szama
+            x-e1l2spbgclp6qbbed5j2qco:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. A 3. allando
+                telephely adoazonosito szama
+            x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              label: Jogi szemely vagy szervezet. Allando telephelyek. Allando telephelyen
+                keresztul mukodik-e Spanyolorszagban
+            x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              label: Jogi szemely vagy szervezet. Azonositas. Emblema
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              label: Jogi szemely vagy szervezet. Azonositas. Internetes domain vagy
+                cim
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              label: Jogi szemely vagy szervezet. Azonositas. Internetes domain vagy
+                cim (masodik)
+            x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              label: Jogi szemely vagy szervezet. Azonositas. A megallapodas datuma
+            x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              label: Jogi szemely vagy szervezet. Azonositas. Az alapitas datuma
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Jogi szemely vagy szervezet. Azonositas. Az adougyi illetoseg
+                hatalybalepesenek datuma
+            x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              label: Jogi szemely vagy szervezet. Azonositas. A nyilvantartasba vetel
+                datuma
+            x-e1l2sqb4cln78bbed5j0:
+              label: Jogi szemely vagy szervezet. Azonositas. Adoazonosito szam (NIF)
+            x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              label: Jogi szemely vagy szervezet. Azonositas. Az illetoseg szerinti
+                allam adoazonosito kodja
+            x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              label: Jogi szemely vagy szervezet. Azonositas. Mas orszagokbeli adoazonosito
+                szam
+            x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              label: Jogi szemely vagy szervezet. Azonositas. Kulfoldi illetosegu
+                vagy kulfoldon alapitott szervezet
+            x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              label: Jogi szemely vagy szervezet. Azonositas. Cegnev
+            x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              label: Jogi szemely vagy szervezet. Azonositas. Belfoldi illetosegu
+                vagy Spanyolorszagban alapitott, illetve kulfoldi illetosegu szervezet
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Spanyolorszagban alapitott, gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi
+                szervezet
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                A Spanyolorszagban alapitott, gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi
+                szervezet formaja
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Spanyolorszagban alapitott, gazdasagi tevekenyseget nem folytato jovedelem-hozzarendelesi
+                szervezet
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                A Spanyolorszagban alapitott, gazdasagi tevekenyseget nem folytato
+                jovedelem-hozzarendelesi szervezet formaja
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Kulfoldon alapitott, Spanyolorszagban jelenlettel biro jovedelem-hozzarendelesi
+                szervezet
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                A kulfoldon alapitott, Spanyolorszagban jelenlettel biro jovedelem-hozzarendelesi
+                szervezet formaja
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Kulfoldon alapitott, Spanyolorszagban jelenlettel nem biro jovedelem-hozzarendelesi
+                szervezet
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                A kulfoldon alapitott, Spanyolorszagban jelenlettel nem biro jovedelem-hozzarendelesi
+                szervezet formaja
+            x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Jogi szemely
+            x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Jogi forma
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Egyeb szervezetek
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Egyeb szervezetek. Szervezeti forma
+            x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
+                Jogi szemelyiseggel rendelkezik
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: A kepviselo vezetek- es keresztneve vagy cegneve (elso kepviselo,

@@ -556,6 +556,319 @@ modelo:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
               label: Identification. Whether the natural person is resident or non-resident
                 in Spain
+            x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              label: Legal person or entity. Alerts. Registration for AEAT alerts
+            x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              label: Legal person or entity. Alerts. Deregistration from AEAT alerts
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              label: Legal person or entity. Alerts. Registration in the AEAT mobile
+                application
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from the AEAT
+                mobile application
+            x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              label: Legal person or entity. Alerts. Registration for DGT alerts
+            x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from DGT alerts
+            x-e1l2sobmd5pmubb5dlgmir0:
+              label: Legal person or entity. Alerts. E-mail
+            x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              label: Legal person or entity. Alerts. Registration or change of the
+                alert e-mail
+            x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              label: Legal person or entity. Alerts. Deregistration of the alert e-mail
+            x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              label: Legal person or entity. Alerts. Registration or change of the
+                mobile telephone
+            x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              label: Legal person or entity. Alerts. Deregistration of the mobile
+                telephone
+            x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              label: Legal person or entity. Alerts. Country dialling prefix of the
+                mobile telephone
+            x-e1l2sobmd5pmubbkclgiqobcehgg:
+              label: Legal person or entity. Alerts. Registration for TEA alerts
+            x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from TEA alerts
+            x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              label: Legal person or entity. Alerts. Mobile telephone
+            x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              label: Legal person or entity. Address in the State of residence. Country
+                code
+            x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              label: Legal person or entity. Address in the State of residence. Postal
+                code
+            x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Legal person or entity. Address in the State of residence. Address
+                complement
+            x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              label: Legal person or entity. Address in the State of residence. Address
+            x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              label: Legal person or entity. Address in the State of residence. Indicator
+                of a tax address or registered office abroad
+            x-e1l2sp35f1q2qs31d5pg:
+              label: Legal person or entity. Address in the State of residence. Country
+            x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              label: Legal person or entity. Address in the State of residence. Town
+                or city
+            x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              label: Legal person or entity. Address in the State of residence. Province,
+                region or state
+            x-e1l2sp36d5pm6bb2dhnn2tb5:
+              label: Legal person or entity. Tax address in Spain. Block
+            x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Legal person or entity. Tax address in Spain. Number qualifier
+            x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Legal person or entity. Tax address in Spain. INE municipality
+                code
+            x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              label: Legal person or entity. Tax address in Spain. Postal code
+            x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              label: Legal person or entity. Tax address in Spain. Province code
+            x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              label: Legal person or entity. Tax address in Spain. INE street code
+            x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Legal person or entity. Tax address in Spain. Address complement
+            x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              label: Legal person or entity. Tax address in Spain. Stairway
+            x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Legal person or entity. Tax address in Spain. Cadastral reference
+                indicator of the tax address
+            x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              label: Legal person or entity. Tax address in Spain. Locality or town
+            x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              label: Legal person or entity. Tax address in Spain. Municipality name
+            x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              label: Legal person or entity. Tax address in Spain. Street name
+            x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              label: Legal person or entity. Tax address in Spain. House number
+            x-e1l2sp36d5pm6bbgdhgmst31:
+              label: Legal person or entity. Tax address in Spain. Floor
+            x-e1l2sp36d5pm6bbgdtp78obc:
+              label: Legal person or entity. Tax address in Spain. Entrance
+            x-e1l2sp36d5pm6bbgelin4t31:
+              label: Legal person or entity. Tax address in Spain. Door
+            x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              label: Legal person or entity. Tax address in Spain. Cadastral reference
+            x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              label: Legal person or entity. Tax address in Spain. Number type
+            x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              label: Legal person or entity. Tax address in Spain. Street type
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              label: Legal person or entity. Address for notifications. Acting as,
+                for the post office box
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              label: Legal person or entity. Address for notifications. Postal code
+                of the post office box
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              label: Legal person or entity. Address for notifications. Province code
+                of the post office box
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              label: Legal person or entity. Address for notifications. Post office
+                box number
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              label: Legal person or entity. Address for notifications. Addressee
+                of the post office box, if different from the filer
+            x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              label: Legal person or entity. Address for notifications. Town or city
+                of the post office box
+            x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              label: Legal person or entity. Address for notifications. Deregistration
+                indicator of the notification address
+            x-e1l2sp3edtq6ibb2dhnn2tb5:
+              label: Legal person or entity. Address for notifications. Block (address
+                1)
+            x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              label: Legal person or entity. Address for notifications. Acting as
+                (address 1)
+            x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              label: Legal person or entity. Address for notifications. Number qualifier
+                (address 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Legal person or entity. Address for notifications. INE municipality
+                code (address 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              label: Legal person or entity. Address for notifications. Postal code
+                (address 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              label: Legal person or entity. Address for notifications. Province code
+                (address 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              label: Legal person or entity. Address for notifications. INE street
+                code (address 1)
+            x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              label: Legal person or entity. Address for notifications. Address complement
+                (address 1)
+            x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              label: Legal person or entity. Address for notifications. Addressee,
+                if different from the filer (address 1)
+            x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              label: Legal person or entity. Address for notifications. Stairway (address
+                1)
+            x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              label: Legal person or entity. Address for notifications. Locality or
+                town (address 1)
+            x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              label: Legal person or entity. Address for notifications. Municipality
+                name (address 1)
+            x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              label: Legal person or entity. Address for notifications. Street name
+                (address 1)
+            x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              label: Legal person or entity. Address for notifications. House number
+                (address 1)
+            x-e1l2sp3edtq6ibbgdhgmst31:
+              label: Legal person or entity. Address for notifications. Floor (address
+                1)
+            x-e1l2sp3edtq6ibbgdtp78obc:
+              label: Legal person or entity. Address for notifications. Entrance (address
+                1)
+            x-e1l2sp3edtq6ibbgelin4t31:
+              label: Legal person or entity. Address for notifications. Door (address
+                1)
+            x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              label: Legal person or entity. Address for notifications. Number type
+                (address 1)
+            x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              label: Legal person or entity. Address for notifications. Street type
+                (address 1)
+            x-e1l2sp3jdthiqojcdtonap8:
+              label: Legal person or entity. Registered office. Block
+            x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Legal person or entity. Registered office. Number qualifier
+            x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Legal person or entity. Registered office. INE municipality code
+            x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              label: Legal person or entity. Registered office. Postal code
+            x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              label: Legal person or entity. Registered office. Province code
+            x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              label: Legal person or entity. Registered office. INE street code
+            x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Legal person or entity. Registered office. Address complement
+            x-e1l2sp3jdthiqpbjcdgmopbic4:
+              label: Legal person or entity. Registered office. Stairway
+            x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              label: Legal person or entity. Registered office. Locality or town
+            x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              label: Legal person or entity. Registered office. Municipality name
+            x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              label: Legal person or entity. Registered office. Street name
+            x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              label: Legal person or entity. Registered office. House number
+            x-e1l2sp3jdthiqs3cc5n78o8:
+              label: Legal person or entity. Registered office. Floor
+            x-e1l2sp3jdthiqs3fe9q62r0:
+              label: Legal person or entity. Registered office. Entrance
+            x-e1l2sp3jdthiqs3lclp78o8:
+              label: Legal person or entity. Registered office. Door
+            x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              label: Legal person or entity. Registered office. Number type
+            x-e1l2sp3jdthiqt39e1niqtj9c4:
+              label: Legal person or entity. Registered office. Street type
+            x-e1l2spbgclp6qbb3elgmst3fec:
+              label: Legal person or entity. Permanent establishments. Number of permanent
+                establishments
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              label: Legal person or entity. Permanent establishments. Name of permanent
+                establishment 1
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              label: Legal person or entity. Permanent establishments. Name of permanent
+                establishment 2
+            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              label: Legal person or entity. Permanent establishments. Name of permanent
+                establishment 3
+            x-e1l2spbgclp6qbbed5j2qc8:
+              label: Legal person or entity. Permanent establishments. Tax identification
+                number of permanent establishment 1
+            x-e1l2spbgclp6qbbed5j2qcg:
+              label: Legal person or entity. Permanent establishments. Tax identification
+                number of permanent establishment 2
+            x-e1l2spbgclp6qbbed5j2qco:
+              label: Legal person or entity. Permanent establishments. Tax identification
+                number of permanent establishment 3
+            x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              label: Legal person or entity. Permanent establishments. Operates in
+                Spain through a permanent establishment
+            x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              label: Legal person or entity. Identification. Logotype name
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              label: Legal person or entity. Identification. Internet domain or address
+            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              label: Legal person or entity. Identification. Internet domain or address
+                (second)
+            x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              label: Legal person or entity. Identification. Date of the agreement
+                of wills
+            x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              label: Legal person or entity. Identification. Date of incorporation
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Legal person or entity. Identification. Effective date of tax
+                residence
+            x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              label: Legal person or entity. Identification. Date of entry in the
+                register
+            x-e1l2sqb4cln78bbed5j0:
+              label: Legal person or entity. Identification. Tax identification number
+                (NIF)
+            x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              label: Legal person or entity. Identification. Tax identification code
+                of the State of residence
+            x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              label: Legal person or entity. Identification. Tax identification number
+                in other countries
+            x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              label: Legal person or entity. Identification. Non-resident entity or
+                one incorporated abroad
+            x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              label: Legal person or entity. Identification. Legal name
+            x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              label: Legal person or entity. Identification. Whether the entity is
+                resident or incorporated in Spain, or non-resident
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated in Spain with economic activity
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Legal person or entity. Legal personality and class of entity.
+                Class of income-attribution entity incorporated in Spain with economic
+                activity
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated in Spain without economic activity
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              label: Legal person or entity. Legal personality and class of entity.
+                Class of income-attribution entity incorporated in Spain without economic
+                activity
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated abroad with a presence in Spain
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Legal person or entity. Legal personality and class of entity.
+                Class of income-attribution entity incorporated abroad with a presence
+                in Spain
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated abroad without a presence in
+                Spain
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              label: Legal person or entity. Legal personality and class of entity.
+                Class of income-attribution entity incorporated abroad without a presence
+                in Spain
+            x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              label: Legal person or entity. Legal personality and class of entity.
+                Legal person
+            x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              label: Legal person or entity. Legal personality and class of entity.
+                Legal form
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              label: Legal person or entity. Legal personality and class of entity.
+                Other entities
+            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              label: Legal person or entity. Legal personality and class of entity.
+                Other entities. Class of entity
+            x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              label: Legal person or entity. Legal personality and class of entity.
+                Has legal personality
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Surnames and forename, or legal name, of the representative (first
