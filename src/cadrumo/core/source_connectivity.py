@@ -17,17 +17,29 @@ ratchet.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "SourceConnectivityCandidateId",
     "SourceConnectivityCandidateIdentity",
+    "SourceConnectivityCensusRow",
     "SourceConnectivityDisposition",
+    "SourceConnectivityGrounding",
+]
+
+_BoundedText = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
+_GroundingLocator = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=2_048),
 ]
 
 
@@ -82,3 +94,70 @@ class SourceConnectivityDisposition(StrEnum):
 
     NOT_APPLICABLE = "not_applicable"
     """The candidate does not apply to the filing connectivity boundary."""
+
+
+class SourceConnectivityGrounding(BaseModel):
+    """Re-fetchable evidence supporting one census adjudication."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    locator: _GroundingLocator
+    """Stable URL, catalogue identity, or repository locator for the evidence."""
+
+    summary: _BoundedText
+    """The fact this evidence establishes for the candidate."""
+
+
+_BLOCKED_DISPOSITIONS = frozenset(
+    {
+        SourceConnectivityDisposition.GROUNDING_BLOCKED,
+        SourceConnectivityDisposition.INGRESS_BLOCKED,
+        SourceConnectivityDisposition.REGISTRY_BLOCKED,
+    },
+)
+
+
+class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
+    """Governed adjudication record for one stable connectivity candidate.
+
+    Connected-slice proof is intentionally absent until its separate contract
+    is introduced.  This row establishes only the evidence and accountability
+    needed for every disposition, including fail-closed blocked states.
+    """
+
+    disposition: SourceConnectivityDisposition
+    grounding: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+    owner: _BoundedText
+    review_condition: _BoundedText | None = None
+    expires_on: date | None = None
+    bounded_follow_up: _BoundedText | None = None
+
+    @model_validator(mode="after")
+    def _require_actionable_unresolved_state(self) -> SourceConnectivityCensusRow:
+        """Refuse unresolved rows that cannot drive bounded follow-up."""
+        if self.disposition in _BLOCKED_DISPOSITIONS:
+            missing = [
+                field_name
+                for field_name, value in (
+                    ("review_condition", self.review_condition),
+                    ("expires_on", self.expires_on),
+                    ("bounded_follow_up", self.bounded_follow_up),
+                )
+                if value is None
+            ]
+            if missing:
+                rendered = ", ".join(missing)
+                raise ValueError(f"blocked connectivity row requires {rendered}")
+            if self.expires_on <= date.today():
+                raise ValueError("blocked connectivity row expires_on must be in the future")
+        elif self.disposition is SourceConnectivityDisposition.CONNECT_CANDIDATE:
+            if self.review_condition is None or self.bounded_follow_up is None:
+                raise ValueError(
+                    "connectivity candidate requires review_condition and bounded_follow_up",
+                )
+        elif (
+            self.disposition is SourceConnectivityDisposition.MANUAL_BY_DESIGN
+            and self.review_condition is None
+        ):
+            raise ValueError("manual-by-design connectivity row requires review_condition")
+        return self
