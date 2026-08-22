@@ -270,7 +270,11 @@ class ProfileCustodySecureObjectRecordPort(Protocol):
 class ProfileCustodySecureObjectRepositoryPort(Protocol):
     """The small encrypted-object surface needed by a profile capsule."""
 
-    def iter_all_records_raw(self) -> Iterator[ProfileCustodySecureObjectRawRowPort]:
+    def iter_all_records_raw(
+        self,
+        *,
+        namespace: str | None = None,
+    ) -> Iterator[ProfileCustodySecureObjectRawRowPort]:
         """Iterate rows without bypassing the repository's integrity checks."""
         ...
 

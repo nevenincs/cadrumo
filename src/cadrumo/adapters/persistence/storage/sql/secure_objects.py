@@ -432,7 +432,12 @@ class SecureObjectRepository:
             ).scalar_one_or_none()
             return row_id is not None
 
-    def iter_all_records_raw(self, *, batch_size: int = 256) -> Iterator[SecureObjectRawRow]:
+    def iter_all_records_raw(
+        self,
+        *,
+        namespace: str | None = None,
+        batch_size: int = 256,
+    ) -> Iterator[SecureObjectRawRow]:
         """Yield every stored row as a :class:`SecureObjectRawRow` without decryption.
 
         Walks every row in `secure_objects` ordered by `(namespace, object_key)`
@@ -444,6 +449,8 @@ class SecureObjectRepository:
         provider without ever decrypting domain data.
 
         Args:
+            namespace: Optional exact namespace filter applied by SQL before
+                iteration. ``None`` preserves the archive-wide traversal.
             batch_size: SQLAlchemy `yield_per` chunk size. The default
                 keeps memory bounded for very large substrates while
                 still amortising session overhead across multiple rows.
@@ -455,14 +462,19 @@ class SecureObjectRepository:
         """
         self._check_session_freshness()
         with session_scope(self._engine) as session:
-            stmt = text(
+            projection = (
                 "SELECT id, namespace, object_key, classification, schema_version, "
                 "written_at, payload, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
                 "payload_hash, ciphertext_hash, revision_written_at, write_provenance, source_event_id "
                 "FROM secure_objects "
-                "ORDER BY namespace, object_key",
-            ).execution_options(yield_per=batch_size)
-            for raw in session.execute(stmt):
+            )
+            if namespace is None:
+                stmt = text(projection + "ORDER BY namespace, object_key")
+            else:
+                stmt = text(projection + "WHERE namespace = :namespace ORDER BY namespace, object_key")
+            stmt = stmt.execution_options(yield_per=batch_size)
+            parameters = {"namespace": namespace} if namespace is not None else {}
+            for raw in session.execute(stmt, parameters):
                 written_at_raw = raw.written_at
                 if isinstance(written_at_raw, str):
                     written_at_value = datetime.fromisoformat(written_at_raw)

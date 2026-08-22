@@ -121,6 +121,11 @@ _log = get_logger(__name__)
 _TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
 _TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
 TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
+# Row-level projections remain useful for small ledgers and compatibility
+# consumers. At scale the compact count/date-span summary is the canonical
+# diagnostic channel; materialising tens of thousands of Pydantic rows would
+# make excluded transactions dominate a period-scoped read.
+_OUT_OF_WINDOW_ROW_PROJECTION_LIMIT = 1024
 _JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
@@ -735,6 +740,25 @@ class TransactionCatalogueRepository:
         )
         return TransactionCatalogue.from_transactions(transactions)
 
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        """Return only the securely addressed transaction rows.
+
+        This is the targeted counterpart to :meth:`load`: callers that already
+        possess authoritative contributor ids need not decrypt and validate an
+        unrelated full bucket merely to fingerprint those contributors. The
+        same row-schema and addressed-identity checks run in
+        :meth:`_load_transactions_by_ids`; nonexistent ids are omitted exactly
+        as they would be from a full-catalogue lookup.
+        """
+        selected_ids = tuple(sorted(set(transaction_ids)))
+        transactions = self._load_transactions_by_ids(selected_ids, read_context="targeted id read")
+        _log.debug(
+            "loaded transaction catalogue via targeted ids bucket_id=%s entries=%d",
+            self._bucket_id,
+            len(transactions),
+        )
+        return TransactionCatalogue.from_transactions(transactions)
+
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
@@ -817,10 +841,26 @@ class TransactionCatalogueRepository:
         in_window_ids = {transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)}
         transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
 
-        out_of_window_index_entries = tuple(
-            OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=dates.filing_date)
-            for transaction_id, dates in sorted(index_rows.items())
+        out_of_window_rows = tuple(
+            (transaction_id, dates.filing_date)
+            for transaction_id, dates in index_rows.items()
             if transaction_id not in in_window_ids
+        )
+        out_of_window_summary = None
+        if out_of_window_rows:
+            out_of_window_dates = tuple(filing_date for _transaction_id, filing_date in out_of_window_rows)
+            out_of_window_summary = OutOfWindowTransactionSummary(
+                count=len(out_of_window_rows),
+                min_filing_date=min(out_of_window_dates),
+                max_filing_date=max(out_of_window_dates),
+            )
+        out_of_window_index_entries = (
+            tuple(
+                OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=filing_date)
+                for transaction_id, filing_date in sorted(out_of_window_rows)
+            )
+            if len(out_of_window_rows) <= _OUT_OF_WINDOW_ROW_PROJECTION_LIMIT
+            else ()
         )
         _log.debug(
             "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
@@ -828,12 +868,12 @@ class TransactionCatalogueRepository:
             start.isoformat(),
             end.isoformat(),
             len(transactions),
-            len(out_of_window_index_entries),
+            len(out_of_window_rows),
         )
         return LedgerDatePartition(
             in_window=TransactionCatalogue.from_transactions(transactions),
             out_of_window=out_of_window_index_entries,
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window_index_entries),
+            out_of_window_summary=out_of_window_summary,
             index_complete=True,
         )
 
@@ -1139,24 +1179,21 @@ class TransactionCatalogueRepository:
         """Refuse an ordinary read until the explicit S54 cutover has persisted v2."""
         from ..storage.crypto import secure_object_key_digest
 
-        digests = {secure_object_key_digest(key) for key in object_keys}
+        keys = tuple(object_keys)
+        digests = {secure_object_key_digest(key) for key in keys}
         old = [
             row.object_key
-            for row in self._objects.iter_all_records_raw()
-            if row.namespace == TX_BUCKET_NAMESPACE
-            and row.object_key in digests
-            and row.schema_version != _TX_CATALOGUE_VERSION
+            for row in self._objects.iter_all_records_raw(namespace=TX_BUCKET_NAMESPACE)
+            if row.object_key in digests and row.schema_version != _TX_CATALOGUE_VERSION
         ]
         if old:
             raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
-        from ..storage import Envelope
+        from ..storage import Envelope, inner_envelope_version_is_current
 
         index_key = transaction_index_object_key(self._bucket_id)
-        if require_current:
-            self._require_current_rows((index_key,))
         record = self._objects.load(
             TX_BUCKET_NAMESPACE,
             index_key,
@@ -1169,6 +1206,11 @@ class TransactionCatalogueRepository:
             envelope = Envelope[_TransactionIndex].model_validate_json(record.payload)
         except ValidationError as exc:
             raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+        if require_current and not inner_envelope_version_is_current(
+            envelope.schema_version,
+            _TX_CATALOGUE_VERSION,
+        ):
+            raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
         return set(envelope.payload.transaction_ids)
 
     def _serialise_index(self, transaction_ids: set[str]) -> bytes:

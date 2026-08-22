@@ -764,11 +764,11 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
     )
 
 
-def test_modelo_calculate_reports_latency(
+def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     scale_bucket: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Report latency of real M130 quarterly calculate at 30k-row ledger scale.
+    """Enforce real M130 quarterly CPU cost and prove a full scan breaks it.
 
     Exercises :func:`calculate_modelo_revision_from_bucket_aggregation` end to
     end: work-unit creation/lookup, the enrolled ledger income resolver
@@ -791,7 +791,8 @@ def test_modelo_calculate_reports_latency(
     observation_repo = CalculationObservationRepository(objects=scale_bucket)
 
     quarters = ("1T", "2T", "3T", "4T")
-    samples: list[float] = []
+    wall_samples: list[float] = []
+    cpu_samples: list[float] = []
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
         for year in _M130_DIAGNOSTIC_YEARS:
@@ -806,7 +807,8 @@ def test_modelo_calculate_reports_latency(
                     repository=wu_repo,
                     clock=filed_at,
                 )
-                started = time.perf_counter()
+                wall_started = time.perf_counter()
+                cpu_started = time.process_time()
                 revision = calculate_modelo_revision_from_bucket_aggregation(
                     work_unit.work_unit_id,
                     casilla_inputs=_M130_MANUAL_INPUTS,
@@ -816,7 +818,8 @@ def test_modelo_calculate_reports_latency(
                     invoice_repository=invoice_repo,
                     clock=filed_at,
                 )
-                samples.append(time.perf_counter() - started)
+                cpu_samples.append(time.process_time() - cpu_started)
+                wall_samples.append(time.perf_counter() - wall_started)
                 assert revision.casilla_values  # the engine produced real casilla output, not an empty stub
                 persist_filed_revision_observation(
                     revision=revision,
@@ -825,16 +828,41 @@ def test_modelo_calculate_reports_latency(
                     captured_at=filed_at,
                 )
 
-    reported = samples
-    p95 = _p95(reported)
+    calculation_log_messages = tuple(record.getMessage() for record in caplog.records)
+    full_catalogue_reads = tuple(
+        message for message in calculation_log_messages if message.startswith("loaded transaction catalogue bucket_id=")
+    )
+    assert not full_catalogue_reads, (
+        "M130 calculation performed a full-catalogue load instead of targeted contributor reads"
+    )
+    cpu_p95 = _p95(cpu_samples)
+    wall_p95 = _p95(wall_samples)
     partition_messages = _partition_log_messages(caplog.records)
     partition_read_count = len(partition_messages)
     partition_in_window_rows = _partition_in_window_rows(partition_messages)
-    assert partition_read_count >= len(reported)
+    assert partition_read_count >= len(cpu_samples)
+
+    # Anti-vacuity control over the exact degraded operation removed from the
+    # draft anchor: decrypting/validating all 30k rows must still break the
+    # accepted CPU ceiling, or this gate no longer detects that regression.
+    full_scan_cpu_started = time.process_time()
+    full_scan_catalogue = tx_repo.load()
+    full_scan_cpu = time.process_time() - full_scan_cpu_started
+    assert len(full_scan_catalogue.transactions) == _TOTAL_TRANSACTIONS
     print(
-        f"\n[bench] modelo_calculate_diagnostic: n={len(reported)} "
-        f"p95={p95:.3f}s mean={statistics.mean(reported):.3f}s "
-        f"min={min(reported):.3f}s max={max(reported):.3f}s "
-        f"budget_scope=diagnostic_modelo_calculate "
+        f"\n[bench] modelo_130_calculate: n={len(cpu_samples)} "
+        f"cpu_p95={cpu_p95:.3f}s cpu_mean={statistics.mean(cpu_samples):.3f}s "
+        f"cpu_min={min(cpu_samples):.3f}s cpu_max={max(cpu_samples):.3f}s "
+        f"gate=cpu<{_P95_BUDGET_CPU_SECONDS:.1f}s "
+        f"wall_p95={wall_p95:.3f}s wall_mean={statistics.mean(wall_samples):.3f}s "
+        f"full_scan_control_cpu={full_scan_cpu:.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
+    )
+    assert cpu_p95 < _P95_BUDGET_CPU_SECONDS, (
+        f"M130 calculate P95 {cpu_p95:.3f} CPU-s at {_TOTAL_TRANSACTIONS}-row ledger scale exceeds "
+        f"the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget (samples={cpu_samples!r})"
+    )
+    assert full_scan_cpu > _P95_BUDGET_CPU_SECONDS, (
+        f"the removed full-catalogue draft-anchor read measured {full_scan_cpu:.3f} CPU-s and no longer "
+        f"breaks the {_P95_BUDGET_CPU_SECONDS:.1f}s budget; tighten the gate before it becomes vacuous"
     )

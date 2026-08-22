@@ -8,6 +8,7 @@ layer free of adapter imports while still providing a typed port surface.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 from typing import Protocol, runtime_checkable
 
@@ -18,7 +19,7 @@ from ._models import LedgerDatePartition, TransactionCatalogue
 class TransactionCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the transaction catalogue.
 
-    Any object that provides ``exists``, ``load``, ``load_for_date_range``,
+    Any object that provides ``exists``, ``load``, ``load_by_ids``, ``load_for_date_range``,
     ``partition_by_date_range``, and ``save`` over a per-bucket
     :class:`TransactionCatalogue` satisfies this protocol. The concrete
     secure-object-backed implementation is :class:`TransactionCatalogueRepository`.
@@ -51,6 +52,15 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
         Args:
             start: Inclusive lower bound of the filing-date window.
             end: Inclusive upper bound of the filing-date window.
+        """
+        ...
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        """Return only the encrypted rows addressed by ``transaction_ids``.
+
+        Missing identifiers are omitted, matching a full catalogue lookup,
+        while every returned row still passes schema and addressed-row identity
+        validation.
         """
         ...
 

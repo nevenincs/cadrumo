@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -17,12 +18,13 @@ class MemoizedTransactionCatalogueRepository:
     most once while delegating writes directly to the authority repository.
     """
 
-    __slots__ = ("_catalogue", "_date_range_catalogues", "_partition_catalogues", "_repository")
+    __slots__ = ("_catalogue", "_date_range_catalogues", "_id_catalogues", "_partition_catalogues", "_repository")
 
     def __init__(self, repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._repository = repository
         self._catalogue: TransactionCatalogue | None = None
         self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}
+        self._id_catalogues: dict[tuple[str, ...], TransactionCatalogue] = {}
         self._partition_catalogues: dict[tuple[date, date], LedgerDatePartition] = {}
 
     @property
@@ -47,6 +49,24 @@ class MemoizedTransactionCatalogueRepository:
         if cached is None:
             cached = self._repository.load_for_date_range(start, end)
             self._date_range_catalogues[key] = cached
+        return cached
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        """Load one canonical contributor-id set at most once."""
+        key = tuple(sorted(set(transaction_ids)))
+        cached = self._id_catalogues.get(key)
+        if cached is None:
+            requested = set(key)
+            for partition in self._partition_catalogues.values():
+                available = partition.in_window.transactions
+                if requested.issubset(available):
+                    from ...domain.transactions import TransactionCatalogue
+
+                    cached = TransactionCatalogue.from_transactions(available[transaction_id] for transaction_id in key)
+                    break
+            if cached is None:
+                cached = self._repository.load_by_ids(key)
+            self._id_catalogues[key] = cached
         return cached
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:

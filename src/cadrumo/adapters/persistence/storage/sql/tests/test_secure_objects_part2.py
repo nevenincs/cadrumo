@@ -279,6 +279,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
         )
 
         rows = list(repo.iter_all_records_raw())
+        alpha_rows = list(repo.iter_all_records_raw(namespace="cadrumo.alpha"))
 
         assert len(rows) == 3
         assert all(isinstance(row, SecureObjectRawRow) for row in rows)
@@ -286,6 +287,10 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
         # Ordered by (namespace ASC, object_key ASC); the three rows
         # yield as cadrumo.alpha (x2) then cadrumo.beta (x1).
         assert namespaces == ["cadrumo.alpha", "cadrumo.alpha", "cadrumo.beta"]
+        assert [row.namespace for row in alpha_rows] == ["cadrumo.alpha", "cadrumo.alpha"]
+        assert {row.object_key for row in alpha_rows} == {
+            row.object_key for row in rows if row.namespace == "cadrumo.alpha"
+        }
         for row in rows:
             assert len(row.payload) > 0
             assert row.payload not in (b"payload-a-1", b"payload-a-2", b"payload-b-1"), (
