@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:63f5b68642c1f6bad97ae4017f306a9a9461bfe9d8dd04b8667abdfc232a7ee5'
+body_hash: 'sha256:fffe5577d4973225369ae6ce6f203bcb45584b12bad69ade066ef100c2da0752'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11952,6 +11952,79 @@ count:
   update -- currency rulings between two designs claiming one period;
 * modelo 190's HFP/1286/2023 and the remaining orden-titled files -- the orden
   itself is not bundled, so this is a corpus acquisition, not a reading.
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: the open-backwards case unblocked, and a window edge corroborated by its neighbour
+
+Re-measured at tick start: authority CLEAN, locale catalogue clean, registration
+gate at 58 of 218.
+
+### Open backwards was not un-groundable after all
+
+`Ejercicios 2014 y anteriores` was refused two ticks ago as having no floor to
+write. That was right about the title and wrong about the evidence: the orden
+the title names, EHA/3435/2007, is bundled, and it states its own reach --
+effective "para las autoliquidaciones cuyo plazo reglamentario de presentación
+se inicie a partir del 1 de abril de 2008". Modelos 115 and 123 ARE
+autoliquidaciones, so the first ejercicio it governs is 2008, and the title
+supplies the ceiling. Neither edge is inferred.
+
+The distinction worth keeping: a title with no floor is not the same as a
+design with no floor. The floor was one document away.
+
+### A window edge the neighbour proves
+
+Modelo 763's `Ejercicios 2015 a 2018 hasta 3T` carries a trimester ceiling, the
+shape refused elsewhere this campaign. Here it did not need deciding: the
+already-registered `enrolled-modelo-763-layout` begins **2018-10-01**, the 4T
+boundary, so a design running "hasta 3T" of 2018 ends the day before. The
+window is 2015-01-01 to 2018-09-30 and the independent overlap sweep confirms
+the two abut exactly rather than overlapping.
+
+That also settles something about this modelo: 763 uses real period-boundary
+DATES rather than the whole-year windows modelo 202 uses, so the convention is
+per-modelo and reading the neighbour is what tells you which one applies.
+
+### Refused, and why
+
+* Modelo 763's `Ejercicios 2T/3T 2012, 2013 y 2014` -- its ceiling could be
+  grounded the same way but its FLOOR cannot: placing "2T 2012" needs to know
+  which trimesters this modelo is filed in, and no neighbour brackets it from
+  below. One grounded edge is not a window.
+* Two currency conflicts still hold: modelo 193's HAC/1504/2024 and modelo
+  202's `Ejercicios 2019 y siguientes` update, each competing with a registered
+  design for one period.
+
+Modelo 303's `(v1.1)` was refused here on the epoch rule -- a version is "which
+revision of the PDF AEAT published and says nothing about which filings it
+governs" -- and that reasoning was WRONG for this file. The rule forbids two
+designs CLAIMING one epoch, and nothing else claims these years: modelo 303's
+earliest registered design begins 2014, and Orden EHA/3786/2008 states it is
+"aplicable a las operaciones realizadas a partir del 1 de enero de 2009". So it
+is registered as `aeat-dr-303-2009`, 2009-01-01 to 2013-12-31, closing exactly
+where `aeat-dr-303-2014` opens. Checking whether a competitor actually existed,
+rather than applying the rule by its shape, is what separated the two cases.
+
+### Verified
+
+* authority CLEAN; registration gate 58 -> 54 (three grounded designs plus
+  modelo 303's, once its refusal was rechecked).
+* all three resolve through `load_record_design_intermediate` (42, 35 and 192
+  fields).
+* the independent window sweep finds the same five overlapping pairs as before
+  and no new one: three pre-existing modelo 303 mid-ejercicio pairs and the two
+  modelo 202 sub-year pairs. The modelo 763 addition abuts its neighbour rather
+  than overlapping it.
+
+### Still open
+
+Fifty-five files. Of the ones naming an orden, only three remain and all three
+need a ruling rather than a reading: two currency conflicts and one version
+file. The rest need an operator decision on encoding twins, a window ruling for
+trimester-only titles with no bracketing neighbour, or corpus acquisition where
+the orden itself is not bundled.
 
 The three span findings still need per-design epoch authoring: modelo 200's
 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
