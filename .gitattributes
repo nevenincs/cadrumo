@@ -13,6 +13,15 @@ src/cadrumo/_data/corpus/aeat_official/** -text
 # working copy was 104,069, exactly the 134 CRLF pairs git had introduced.
 src/cadrumo/_data/corpus/normatives/** -text
 
+# Every corpus tree, including ones added later. The two rules above name the
+# trees that had already been bitten; this one closes the class. Corpus files
+# are byte-exact evidence whose sha256 and byte count are declared in the
+# registry and checked against disk, so any line-ending translation makes a
+# source fail validation -- and a tree whose sources happen not to declare a
+# byte count would drift silently instead of failing. eu_official's four HTML
+# sources were `text=auto` when this was written and matched only by luck.
+src/cadrumo/_data/corpus/** -text
+
 # Binary content, by extension rather than by location.
 #
 # `* text=auto` above asks git to GUESS which files are text and normalise
