@@ -5,44 +5,11 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3cca86f99addd6af1a00eff8c99e0531b78e851c4ab49fa1ce4ea43ba7cee40'
+body_hash: 'sha256:b93963ef7e5b418c7c68e36f75364237618a50915fe3116936dd407c2d73a39f'
 step_id: 'S144'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S144 and 2026-08-22-source-casilla-integration-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The make repository evidence digest verification descriptor-safe against path replacement races and ## Scope
-
-- `src/cadrumo/application/registry` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # make repository evidence digest verification descriptor-safe against path replacement races
 
@@ -52,10 +19,17 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Open repository evidence once and hash bytes through that verified descriptor.
+- Verify the operating-system final handle path, root containment, exact requested path, and regular-file type before reading.
+- Reject malformed repository references, path traversal, replacement races, and leaf or intermediate link escapes.
+- Exercise real-file, changed-content, non-regular, reparse escape, and controlled descriptor-substitution cases.
 
 ## Outcome
 
+Repository evidence verification now fails closed unless the final path bound to the open descriptor is the exact root-contained file requested. Windows uses `GetFinalPathNameByHandleW`; Linux uses the descriptor link; unsupported platforms refuse verification.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The adversarial replacement test substitutes the `os.open` request with a real descriptor for a different real file. Production still performs final-path, `fstat`, and byte hashing against that descriptor; no digest, descriptor metadata, or authority result is fabricated.
+
+Focused registry authority tests passed with 23 cases. Ruff formatting and lint checks passed for both changed source files. The independent re-review reported no remaining findings. The feature-scoped Vault check passed with only the existing stale feature-index and empty generated Steps-section warnings.

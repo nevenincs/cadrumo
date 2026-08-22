@@ -5,48 +5,32 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f1f33bf8bb59e262105bb0ac8b8fbf544ac255944e45f1d026ba60c5f11ffbc1'
+body_hash: 'sha256:7723cc2d113b6efb9f3bd8f679dba7eecd2126c42de263fcfcd63547061635c9'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `source-casilla-integration` audit: `s144 descriptor safe evidence review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Review descriptor-safe repository evidence verification for replacement races, root escape, malformed locators, platform guarantees, and same-handle hashing.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### s144-descriptor-safe-evidence-review | medium | malformed repository references were normalized before validation
 
-       ### s144 descriptor safe evidence review | {level} | {summary}
+Drive-qualified paths, alternate-data-stream syntax, repeated separators, and dot segments could reach filesystem handling instead of being rejected lexically.
 
-     followed by a paragraph carrying the detail. s144 descriptor safe evidence review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### s144-descriptor-safe-evidence-review | low | changed files required canonical formatting
+
+The initial implementation did not satisfy the focused Ruff format check.
+
+### s144-descriptor-safe-evidence-review | info | descriptor verification is bound to the bytes hashed
+
+The verifier opens once, obtains the final operating-system path from that handle, compares the exact requested path, checks root containment and regular-file mode, and hashes through the same descriptor. Unsupported handle-path platforms fail closed.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Reject every non-canonical repository reference before opening; covered by malformed-path cases.
+- Format and lint the exact changed source surface; completed.
+- Retain deterministic controlled descriptor substitution plus real leaf and intermediate link escapes as adversarial regression coverage.

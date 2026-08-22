@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:514f0b6d9d526f4f70243a8be730bec3df99ed87816d937536894b27e2579b9d'
+body_hash: 'sha256:e7c56b50511ef43675f5a5603c4c6dd4e46bb30b03bde7851ed5fc4d26a8890b'
 ---
 
 # `source-casilla-integration` plan
@@ -51,7 +51,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S141` - bind operator workflow authority validation to the full source connection identity; `src/cadrumo/core`.
 - [x] `W01.P01.S142` - attach canonical calculation-route identity to reconciled supported operator workflows; `src/cadrumo/application/operator_surface`.
 - [x] `W01.P01.S143` - derive live proof enrollment and exact workflow reachability from canonical calculation-route ownership; `src/cadrumo/application/registry`.
-- [ ] `W01.P01.S144` - make repository evidence digest verification descriptor-safe against path replacement races; `src/cadrumo/application/registry`.
+- [x] `W01.P01.S144` - make repository evidence digest verification descriptor-safe against path replacement races; `src/cadrumo/application/registry`.
 - [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.
 
 ### Phase `W01.P02` - derive the registry-side inventory

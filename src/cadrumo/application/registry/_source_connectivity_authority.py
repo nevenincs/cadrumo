@@ -57,9 +57,7 @@ class CalculationRouteManualSourceOwnership(BaseModel):
     owner_id: Literal["manual_input"]
 
 
-type CalculationRouteSourceOwnership = (
-    CalculationRouteResolverSourceOwnership | CalculationRouteManualSourceOwnership
-)
+type CalculationRouteSourceOwnership = CalculationRouteResolverSourceOwnership | CalculationRouteManualSourceOwnership
 
 
 def _canonical_route_source_ownership() -> tuple[
@@ -224,14 +222,24 @@ def _windows_final_path_from_open_descriptor(descriptor: int) -> Path | None:
 
 def _repository_path_without_line(reference: str) -> str | None:
     """Return a safe relative POSIX path from a repository evidence locator."""
-    path, separator, line = reference.rpartition(":")
-    candidate = path if separator and line.isdigit() else reference
+    colon_count = reference.count(":")
+    if colon_count == 0:
+        candidate = reference
+    elif colon_count == 1:
+        path, line = reference.rsplit(":", 1)
+        if not line.isdigit():
+            return None
+        candidate = path
+    else:
+        return None
+    raw_parts = candidate.split("/")
     pure_path = PurePosixPath(candidate)
     if (
         not candidate
         or "\\" in candidate
+        or candidate.startswith("/")
         or pure_path.is_absolute()
-        or any(part in {"", ".", ".."} for part in pure_path.parts)
+        or any(part in {"", ".", ".."} for part in raw_parts)
     ):
         return None
     return candidate
