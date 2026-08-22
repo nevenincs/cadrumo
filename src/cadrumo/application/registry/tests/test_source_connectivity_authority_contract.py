@@ -22,6 +22,7 @@ from ....core import (
 from ....domain.modelos import CalculationSourceRef
 from ...aggregation import BindingSourceDisposition
 from ...operator_surface import (
+    ModeloCalculationRouteId,
     SupportedModeloCalculationWorkflow,
     SupportedModeloCalculationWorkflowCatalogue,
 )
@@ -125,6 +126,7 @@ def test_live_workflow_authority_refuses_cross_connection_proof(tmp_path: Path) 
             workflows=(
                 SupportedModeloCalculationWorkflow(
                     command_id="modelo.work.calculate",
+                    route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
                     canonical_cli_path=("modelo", "work", "calculate"),
                 ),
             ),

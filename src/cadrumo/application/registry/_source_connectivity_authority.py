@@ -126,9 +126,13 @@ class LiveSourceConnectivityProofAuthority:
         proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         """Require the exact reviewed live workflow beside exact source enrollment."""
-        return proof.connection == connection and self.source_is_enrolled(connection) and self.workflows.supports(
-            entrypoint_id=proof.entrypoint_id,
-            command_id=proof.command_id,
+        return (
+            proof.connection == connection
+            and self.source_is_enrolled(connection)
+            and any(
+                workflow.entrypoint_id == proof.entrypoint_id and workflow.command_id == proof.command_id
+                for workflow in self.workflows.workflows
+            )
         )
 
     def encrypted_revision_matches(self, proof: SourceConnectivityEncryptedRevisionProof) -> bool:

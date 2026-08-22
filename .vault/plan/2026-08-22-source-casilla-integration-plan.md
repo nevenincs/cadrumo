@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:6b79e1be27c8d8b2460755cb73826dcbc1196e111b1477cdbf61b0212d10a434'
+body_hash: 'sha256:6e0b3b056395b34560c17378e1729990ca8cce44c2b82f83ee53474793eeb1a3'
 ---
 
 # `source-casilla-integration` plan
@@ -49,7 +49,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S147` - make persisted source provenance internally coherent, identity-bearing, unambiguous, and strictly typed; `src/cadrumo`.
 - [x] `W01.P01.S148` - require source provenance at every revision identity and persistence boundary and correct its identity contract; `src/cadrumo`.
 - [x] `W01.P01.S141` - bind operator workflow authority validation to the full source connection identity; `src/cadrumo/core`.
-- [ ] `W01.P01.S142` - attach canonical calculation-route identity to reconciled supported operator workflows; `src/cadrumo/application/operator_surface`.
+- [x] `W01.P01.S142` - attach canonical calculation-route identity to reconciled supported operator workflows; `src/cadrumo/application/operator_surface`.
 - [ ] `W01.P01.S143` - derive live proof enrollment and exact workflow reachability from canonical calculation-route ownership; `src/cadrumo/application/registry`.
 - [ ] `W01.P01.S144` - make repository evidence digest verification descriptor-safe against path replacement races; `src/cadrumo/application/registry`.
 - [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.

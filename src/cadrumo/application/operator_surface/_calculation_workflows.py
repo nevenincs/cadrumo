@@ -6,17 +6,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core import ModeloCalculationRouteId
 from ._errors import OperatorSurfaceContractError
 from ._manifest import OperatorSurfaceReconciliation
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-_CALCULATION_WORKFLOW_SUBJECTS = frozenset(
-    {
-        "modelo.work.calculate",
-        "modelo.work.wizard",
-        "quickfile",
-    },
-)
+_CALCULATION_WORKFLOW_PATHS = {
+    "modelo.work.calculate": ("app", "modelo", "work", "calculate"),
+    "modelo.work.wizard": ("app", "modelo", "work", "wizard"),
+    "quickfile": ("app", "quickfile"),
+}
+_CALCULATION_WORKFLOW_SUBJECTS = frozenset(_CALCULATION_WORKFLOW_PATHS)
 
 
 class SupportedModeloCalculationWorkflow(BaseModel):
@@ -26,6 +26,7 @@ class SupportedModeloCalculationWorkflow(BaseModel):
 
     entrypoint_id: Literal["cli"] = "cli"
     command_id: str = Field(min_length=1)
+    route_id: ModeloCalculationRouteId
     canonical_cli_path: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("command_id")
@@ -52,7 +53,7 @@ class SupportedModeloCalculationWorkflowCatalogue(BaseModel):
 
     @model_validator(mode="after")
     def _require_unique_deterministic_workflows(self) -> SupportedModeloCalculationWorkflowCatalogue:
-        identities = tuple((row.entrypoint_id, row.command_id) for row in self.workflows)
+        identities = tuple((row.entrypoint_id, row.command_id, row.route_id) for row in self.workflows)
         paths = tuple(row.canonical_cli_path for row in self.workflows)
         if len(set(identities)) != len(identities):
             raise ValueError("supported calculation workflow identities must be unique")
@@ -62,12 +63,22 @@ class SupportedModeloCalculationWorkflowCatalogue(BaseModel):
             raise ValueError("supported calculation workflows must use deterministic identity order")
         return self
 
-    def supports(self, *, entrypoint_id: str, command_id: str) -> bool:
-        """Return whether the exact reconciled workflow identity is supported."""
+    def supports(
+        self,
+        *,
+        entrypoint_id: str,
+        command_id: str,
+        route_id: ModeloCalculationRouteId,
+        canonical_cli_path: tuple[str, ...],
+    ) -> bool:
+        """Return whether the complete reconciled workflow identity is supported."""
         return any(
-            workflow.entrypoint_id == entrypoint_id and workflow.command_id == command_id for workflow in self.workflows
+            workflow.entrypoint_id == entrypoint_id
+            and workflow.command_id == command_id
+            and workflow.route_id is route_id
+            and workflow.canonical_cli_path == canonical_cli_path
+            for workflow in self.workflows
         )
-
 
 def build_supported_modelo_calculation_workflow_catalogue(
     reconciliation: OperatorSurfaceReconciliation,
@@ -82,6 +93,13 @@ def build_supported_modelo_calculation_workflow_catalogue(
         command_id = live_leaf.subject_leaf_key
         if command_id not in _CALCULATION_WORKFLOW_SUBJECTS:
             continue
+        expected_path = _CALCULATION_WORKFLOW_PATHS[command_id]
+        if live_leaf.canonical_cli_path != expected_path:
+            diagnostics.append(
+                f"supported calculation workflow path drift for {command_id}: "
+                + " ".join(live_leaf.canonical_cli_path),
+            )
+            continue
         if command_id in seen_ids:
             diagnostics.append(f"duplicate supported calculation workflow identity: {command_id}")
         if live_leaf.canonical_cli_path in seen_paths:
@@ -93,6 +111,7 @@ def build_supported_modelo_calculation_workflow_catalogue(
         selected.append(
             SupportedModeloCalculationWorkflow(
                 command_id=command_id,
+                route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
                 canonical_cli_path=live_leaf.canonical_cli_path,
             ),
         )
@@ -112,6 +131,7 @@ def build_supported_modelo_calculation_workflow_catalogue(
 
 
 __all__ = [
+    "ModeloCalculationRouteId",
     "SupportedModeloCalculationWorkflow",
     "SupportedModeloCalculationWorkflowCatalogue",
     "build_supported_modelo_calculation_workflow_catalogue",
