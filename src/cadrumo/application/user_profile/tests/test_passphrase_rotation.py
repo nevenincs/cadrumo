@@ -8,7 +8,8 @@ having been made.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from types import MappingProxyType
+from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
 import pytest
@@ -36,6 +37,7 @@ from .. import (
     rotate_profile_passphrase,
     unlock_profile_custody_password,
 )
+from .. import _passphrase_rotation as rotation_module
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -47,6 +49,19 @@ _CURRENT = "passphrase-rotation-current-operator-secret"
 _REPLACEMENT = "passphrase-rotation-replacement-operator-secret"
 _WRONG = "passphrase-rotation-not-the-current-operator-secret"
 _TOO_SHORT = "short"
+
+_REFUSAL_MESSAGES = {
+    ProfilePasswordRefusalReason.CONTAINS_SURROGATE: (
+        "application.user_profile.errors.profile_password_contains_surrogate"
+    ),
+    ProfilePasswordRefusalReason.TOO_FEW_SCALARS: ("application.user_profile.errors.profile_password_too_few_scalars"),
+    ProfilePasswordRefusalReason.TOO_MANY_SCALARS: (
+        "application.user_profile.errors.profile_password_too_many_scalars"
+    ),
+    ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES: (
+        "application.user_profile.errors.profile_password_too_many_utf8_bytes"
+    ),
+}
 
 
 def _register(handed: list[str] | None = None):
@@ -257,8 +272,46 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
         assert payload is not None
         assert payload.reason is reason
         assert candidate not in repr(payload)
-        assert refused.value.context == payload.context
-        assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+        assert type(payload.context) is MappingProxyType
+        assert refused.value.context == dict(payload.context)
+        assert payload.translated_message == _REFUSAL_MESSAGES[reason]
+        assert refused.value.translated_message == _REFUSAL_MESSAGES[reason]
+        expected_context: dict[str, object] = {"reason": reason.value, "scalar_count": len(candidate)}
+        if reason is not ProfilePasswordRefusalReason.CONTAINS_SURROGATE:
+            expected_context["utf8_byte_count"] = len(candidate.encode("utf-8"))
+        if reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
+            expected_context["minimum_scalars"] = 15
+        elif reason is ProfilePasswordRefusalReason.TOO_MANY_SCALARS:
+            expected_context["maximum_scalars"] = 256
+        elif reason is ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES:
+            expected_context["maximum_utf8_bytes"] = 1024
+        assert dict(payload.context) == expected_context
+        with pytest.raises(TypeError):
+            payload.context["candidate"] = candidate  # type: ignore[index]
+
+
+def test_rotation_refusal_bites_before_root_lock_load_unwrap_rehead_and_publication(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Invalid replacement input must not touch any custody or mutation collaborator."""
+
+    def fail_if_called(*_args: object, **_kwargs: object) -> NoReturn:
+        pytest.fail("rotation collaborator ran before replacement-password refusal")
+
+    monkeypatch.setattr(rotation_module, "effective_storage_root", fail_if_called)
+    monkeypatch.setattr(rotation_module, "profile_custody_transaction_lock", fail_if_called)
+    monkeypatch.setattr(rotation_module.custody, "load_committed_profile_password_material", fail_if_called)
+    monkeypatch.setattr(rotation_module, "unlock_profile_custody_password", fail_if_called)
+    monkeypatch.setattr(rotation_module.ProfileRecordStore, "rehead_under_rotated_envelope", fail_if_called)
+    monkeypatch.setattr(rotation_module.custody, "replace_committed_profile_custody_envelope", fail_if_called)
+
+    with pytest.raises(ProfilePassphraseRotationError):
+        rotate_profile_passphrase(
+            profile_id=UUID(int=0),
+            current_passphrase=_CURRENT,
+            new_passphrase="a" * 14,
+            new_passphrase_confirmation="a" * 14,
+        )
 
 
 @pytest.mark.parametrize(

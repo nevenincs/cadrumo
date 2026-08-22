@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from types import MappingProxyType
+from typing import NoReturn
 from uuid import UUID
 
 import pytest
@@ -47,6 +49,7 @@ from .. import (
     register_profile_with_credentials,
     unlock_profile_custody_password,
 )
+from .. import _registration as registration_module
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -182,19 +185,51 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
 
 
 @pytest.mark.parametrize(
-    ("candidate", "reason"),
+    ("candidate", "reason", "translated_message", "context"),
     (
-        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
-        ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
-        ("\U0001f600" * 256 + "a", ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES),
-        ("\ud800" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
-        ("\udfff" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+        (
+            "a" * 14,
+            ProfilePasswordRefusalReason.TOO_FEW_SCALARS,
+            "application.user_profile.errors.profile_password_too_few_scalars",
+            {"reason": "too_few_scalars", "scalar_count": 14, "utf8_byte_count": 14, "minimum_scalars": 15},
+        ),
+        (
+            "a" * (PROFILE_PASSWORD_MAX_SCALARS + 1),
+            ProfilePasswordRefusalReason.TOO_MANY_SCALARS,
+            "application.user_profile.errors.profile_password_too_many_scalars",
+            {"reason": "too_many_scalars", "scalar_count": 257, "utf8_byte_count": 257, "maximum_scalars": 256},
+        ),
+        (
+            "\U0001f600" * 256 + "a",
+            ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES,
+            "application.user_profile.errors.profile_password_too_many_utf8_bytes",
+            {
+                "reason": "too_many_utf8_bytes",
+                "scalar_count": 257,
+                "utf8_byte_count": 1025,
+                "maximum_utf8_bytes": 1024,
+            },
+        ),
+        (
+            "\ud800" + "a" * 14,
+            ProfilePasswordRefusalReason.CONTAINS_SURROGATE,
+            "application.user_profile.errors.profile_password_contains_surrogate",
+            {"reason": "contains_surrogate", "scalar_count": 15},
+        ),
+        (
+            "\udfff" + "a" * 14,
+            ProfilePasswordRefusalReason.CONTAINS_SURROGATE,
+            "application.user_profile.errors.profile_password_contains_surrogate",
+            {"reason": "contains_surrogate", "scalar_count": 15},
+        ),
     ),
 )
 def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
     tmp_path: Path,
     candidate: str,
     reason: ProfilePasswordRefusalReason,
+    translated_message: str,
+    context: dict[str, object],
 ) -> None:
     """Every canonical refusal reaches application code before any persisted state."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -207,8 +242,29 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
         assert payload is not None
         assert payload.reason is reason
         assert candidate not in repr(payload)
-        assert refused.value.context == payload.context
-        assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+        assert type(payload.context) is MappingProxyType
+        assert dict(payload.context) == context
+        assert refused.value.context == context
+        assert payload.translated_message == translated_message
+        assert refused.value.translated_message == translated_message
+        with pytest.raises(TypeError):
+            payload.context["candidate"] = candidate  # type: ignore[index]
+
+
+def test_registration_refusal_bites_before_identity_randomness_and_custody(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Invalid input must not reach any collaborator preceding persistence."""
+
+    def fail_if_called(*_args: object, **_kwargs: object) -> NoReturn:
+        pytest.fail("registration collaborator ran before password refusal")
+
+    monkeypatch.setattr(registration_module, "new_profile_id", fail_if_called)
+    monkeypatch.setattr(registration_module, "token_bytes", fail_if_called)
+    monkeypatch.setattr(registration_module, "create_profile_custody_registration_material", fail_if_called)
+
+    with pytest.raises(ProfileRegistrationError):
+        register_profile_with_credentials(label="Ordering Bite", passphrase="a" * 14)
 
 
 @pytest.mark.parametrize(
