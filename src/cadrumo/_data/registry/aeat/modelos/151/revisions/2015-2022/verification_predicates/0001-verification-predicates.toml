@@ -13,3 +13,29 @@ predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
 expression = 'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-93"]
+
+# Soundness gate for the AHORRO branch, the sibling of the general-branch
+# predicate above. Art. 93.2.e) splits the impatriado cuota integra in two: the
+# general part (1.o) and the part corresponding to the rentas del art. 25.1.f)
+# TRLIRNR (2.o). This revision files that second branch through the operator's
+# own page-08 boxes -- casilla [18] "Base liquidable del ahorro" and casilla
+# [20] "Cuota correspondiente a la base liquidable general del ahorro" -- which
+# together feed casilla [21] "Cuota integra total".
+#
+# Unlike the general branch, casilla [20] is NOT formula-derived in this
+# revision: the operator supplies it. So a positive base liquidable del ahorro
+# with a zero cuota is reachable by plain omission rather than only by a
+# registry regression, which makes this the weaker-guarded of the two branches
+# and the one where silence actually costs something -- a filed declaration
+# that reports savings income and no tax on it.
+#
+# ADVISORY (non-blocking), and implies_nonzero holds trivially when the
+# antecedent is at or below zero, so a filer with no rentas del ahorro never
+# fires. It states no rate and derives no value: the escala that would let this
+# be computed rather than merely checked is not grounded in this tree for the
+# 2015-2022 era, and inventing one would be worse than the advisory.
+[[revisions."2015-2022".verification_predicates]]
+predicate_id = "modelo-151-base-liquidable-ahorro-implica-cuota-del-ahorro"
+expression = 'implies_nonzero(["p08.base-liquidable-del-ahorro-18", "p08.cuota-correspondiente-e-general-del-ahorro-20"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-93"]

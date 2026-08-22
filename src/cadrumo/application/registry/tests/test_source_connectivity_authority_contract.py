@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import stat
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -97,7 +99,7 @@ def test_source_ownership_catalogue_refuses_non_enrolled_sources(
         )
 
 
-def test_repository_digest_verifier_is_deterministic_and_root_contained(tmp_path) -> None:
+def test_repository_digest_verifier_hashes_real_file_and_detects_changed_bytes(tmp_path: Path) -> None:
     repository_root = tmp_path / "repository"
     evidence_path = repository_root / "src" / "cadrumo" / "tests" / "test_evidence.py"
     evidence_path.parent.mkdir(parents=True)
@@ -110,9 +112,73 @@ def test_repository_digest_verifier_is_deterministic_and_root_contained(tmp_path
     expected = sha256(evidence_bytes).hexdigest()
     assert verifier.digest("src/cadrumo/tests/test_evidence.py") == expected
     assert verifier.digest("src/cadrumo/tests/test_evidence.py:1") == expected
+    evidence_path.write_bytes(b"def test_evidence():\n    assert False\n")
+    assert verifier.digest("src/cadrumo/tests/test_evidence.py") != expected
     assert verifier.digest("../outside.py") is None
     assert verifier.digest(str(outside_path)) is None
     assert verifier.digest("src/cadrumo/tests/missing.py") is None
+
+
+def test_repository_digest_verifier_rejects_descriptor_path_replacement(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository_root = tmp_path / "repository"
+    target = repository_root / "src" / "cadrumo" / "tests" / "test_target.py"
+    replacement = repository_root / "src" / "cadrumo" / "tests" / "test_replacement.py"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"target")
+    replacement.write_bytes(b"replacement")
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    real_open = os.open
+
+    def redirect_open(path: os.PathLike[str] | str, flags: int) -> int:
+        if Path(path) == target:
+            return real_open(replacement, flags)
+        return real_open(path, flags)
+
+    monkeypatch.setattr(os, "open", redirect_open)
+    assert verifier.digest("src/cadrumo/tests/test_target.py") is None
+
+
+def test_repository_digest_verifier_rejects_directory_and_nonregular_descriptor(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository_root = tmp_path / "repository"
+    evidence_dir = repository_root / "src" / "cadrumo" / "tests" / "test_directory"
+    evidence_dir.mkdir(parents=True)
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    assert verifier.digest("src/cadrumo/tests/test_directory") is None
+
+    evidence_path = evidence_dir.parent / "test_evidence.py"
+    evidence_path.write_bytes(b"regular")
+    real_fstat = os.fstat
+
+    def nonregular_fstat(descriptor: int) -> os.stat_result:
+        result = real_fstat(descriptor)
+        values = list(result)
+        values[0] = stat.S_IFIFO
+        return os.stat_result(values)
+
+    monkeypatch.setattr(os, "fstat", nonregular_fstat)
+    assert verifier.digest("src/cadrumo/tests/test_evidence.py") is None
+
+
+def test_repository_digest_verifier_rejects_symlink_escape(tmp_path: Path) -> None:
+    repository_root = tmp_path / "repository"
+    evidence_dir = repository_root / "src" / "cadrumo" / "tests"
+    evidence_dir.mkdir(parents=True)
+    outside = tmp_path / "outside.py"
+    outside.write_bytes(b"outside")
+    symlink = evidence_dir / "test_symlink.py"
+    try:
+        symlink.symlink_to(outside)
+    except OSError as exc:
+        pytest.skip(f"platform cannot create a test symlink: {exc}")
+
+    verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
+    assert verifier.digest("src/cadrumo/tests/test_symlink.py") is None
 
 
 def test_registry_facade_exposes_authority_and_injected_verifier_port() -> None:

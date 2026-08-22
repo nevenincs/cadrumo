@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import os
+import stat
+import sys
+from contextlib import suppress
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
@@ -137,21 +141,85 @@ class RepositoryRootEvidenceDigestVerifier:
     repository_root: Path
 
     def digest(self, repository_reference: str) -> str | None:
-        """Digest a contained regular file, refusing traversal and symlink escape."""
+        """Hash one verified open descriptor, refusing path replacement and escape."""
         relative_text = _repository_path_without_line(repository_reference)
         if relative_text is None:
             return None
         try:
             root = self.repository_root.resolve(strict=True)
-            candidate = (root / Path(*PurePosixPath(relative_text).parts)).resolve(strict=True)
         except (OSError, RuntimeError):
             return None
-        if not candidate.is_relative_to(root) or not candidate.is_file():
+        if not root.is_dir():
             return None
+        candidate = root / Path(*PurePosixPath(relative_text).parts)
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
-            return sha256(candidate.read_bytes()).hexdigest()
+            descriptor = os.open(candidate, flags)
         except OSError:
             return None
+        try:
+            opened_path = _final_path_from_open_descriptor(descriptor)
+            if opened_path is None or not _same_filesystem_path(opened_path, candidate):
+                return None
+            if not opened_path.is_relative_to(root):
+                return None
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                return None
+            digest = sha256()
+            with os.fdopen(descriptor, "rb", closefd=False) as opened_file:
+                while chunk := opened_file.read(1024 * 1024):
+                    digest.update(chunk)
+            return digest.hexdigest()
+        except (OSError, RuntimeError, ValueError):
+            return None
+        finally:
+            with suppress(OSError):
+                os.close(descriptor)
+
+
+def _same_filesystem_path(left: Path, right: Path) -> bool:
+    """Compare final-handle and requested paths under platform case semantics."""
+    return os.path.normcase(os.path.normpath(str(left))) == os.path.normcase(os.path.normpath(str(right)))
+
+
+def _final_path_from_open_descriptor(descriptor: int) -> Path | None:
+    """Return the OS-reported final path for one already-open descriptor."""
+    if os.name == "nt":
+        return _windows_final_path_from_open_descriptor(descriptor)
+    if sys.platform.startswith("linux"):
+        try:
+            return Path(os.readlink(f"/proc/self/fd/{descriptor}"))
+        except OSError:
+            return None
+    return None
+
+
+def _windows_final_path_from_open_descriptor(descriptor: int) -> Path | None:
+    """Ask Windows for the stable final path bound to an open file handle."""
+    try:
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        get_final_path = ctypes.WinDLL("kernel32", use_last_error=True).GetFinalPathNameByHandleW
+        get_final_path.argtypes = (wintypes.HANDLE, wintypes.LPWSTR, wintypes.DWORD, wintypes.DWORD)
+        get_final_path.restype = wintypes.DWORD
+        handle = wintypes.HANDLE(msvcrt.get_osfhandle(descriptor))
+        required = get_final_path(handle, None, 0, 0)
+        if required == 0:
+            return None
+        buffer = ctypes.create_unicode_buffer(required + 1)
+        written = get_final_path(handle, buffer, len(buffer), 0)
+        if written == 0 or written >= len(buffer):
+            return None
+        path = buffer.value
+        if path.startswith("\\\\?\\UNC\\"):
+            path = "\\\\" + path[8:]
+        elif path.startswith("\\\\?\\"):
+            path = path[4:]
+        return Path(path)
+    except (ImportError, OSError, ValueError):
+        return None
 
 
 def _repository_path_without_line(reference: str) -> str | None:
