@@ -48,6 +48,11 @@ legacy risk or profile-write catalogues prematurely. Focused Ruff and `ty`
 checks pass, and the combined capability, policy, and command-census suite
 passes 35 tests.
 
+The final path-scoped surface gate passed: Ruff reported `All checks passed!`,
+`ty` reported `All checks passed!`, the two S03-owned integration modules
+completed `21 passed`, and the feature-scoped Vaultspec audit reported every
+check clean.
+
 ## Notes
 
 Semantic discovery used the required targeted-source fallback because the
