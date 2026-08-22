@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:472dac0a77a37c0698f363a92892ee412fd0b5ebfa0c559cd9cc9c9f32f111f4'
+body_hash: 'sha256:7839ce1aba324e0164ea6f9377ddd9d0ca74bb676ea5824c7b3cfcf7ea7fb182'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12597,3 +12597,104 @@ spanning modelo 184, 185 and 193 and belongs with queue item 3 rather than
 ahead of it. Forty-nine unregistered design files. The three span findings still
 need per-design epoch authoring: modelo 200's 2024, modelo 322's 2022, modelo
 347's 2008 and 2010.
+
+## Tick: queue item 2 -- the six 151 casillas do not exist, and the inventory that would have found them was reading two different axes
+
+Queue item 2 asked whether six casillas of modelo 151 / 2015-2022 citing the 2023
+diseño belong to this revision at all.
+
+### The ruling: they do not, and they already do not
+
+There are no such casillas. Every surface of the revision -- its own
+`source_refs`, all 529 casillas, the export layout and its records, and
+`workbook_parity_refs` -- cites `aeat-dr-151-2015` and nothing later. The six
+occurrences of the token are PROSE inside `revision.toml`, five of them
+explaining an earlier boundary correction.
+
+The sixth was a false statement: "The 2023 citation is left in place: judging
+whether it is now redundant here is a separate call." The citation is not in
+place; it was dropped in an earlier tick and the note describing the old state as
+pending outlived it. That is the exact shape the campaign rule names -- a ruling
+recorded but the prose left asserting the unresolved state -- and it is corrected
+in place with the grounding for the ruling: Orden HFP/1338/2023's own Disposicion
+Final Segunda(a) makes the successor apply first for ejercicio 2023, outside this
+span, and AEAT titles the bundled file "01-151-ejercicio-2023-y-siguientes".
+
+A regression now pins the ruling across all four surfaces at once, because a
+stray re-add would otherwise return silently through whichever one nobody looked
+at. It discriminates: it first asserts a later-era 151 design EXISTS in the
+catalogue, so it cannot pass by having nothing to exclude.
+
+### What the investigation actually found
+
+Asking what the "2015-rendered tree does not address" means led to the full-Diseño
+coverage inventory, which reported modelo 151 / 2015-2022 at 1 of 100 covered and
+2025-y-siguientes at 0 of 213. That is not a 99% unauthored form -- the revisions
+declare 535 and 630 casillas. Two independent defects were behind it, and a third
+finding is real:
+
+* **The segmento half of the key was compared verbatim.** The design writes the
+  full sheet name (`714-01 Patrimonio`); the registry declares the leading code
+  (`714-01`). The load-path derivation already knows this correspondence and
+  matches to a word boundary; the coverage report did not, so every modelo whose
+  design prints a trailing sheet description scored zero regardless of what it
+  declared.
+* **The number half was compared verbatim too.** The registry zero-pads (`01`),
+  the design prints the bare numeral (`1`).
+* **Modelo 151 is genuinely on a different axis.** 621 of its 630 declared keys
+  are byte-position RANGES (`124-173`), not box numbers. No normalisation can or
+  should match those, and its coverage is honestly near zero.
+
+Both key defects are fixed by applying the module's OWN existing conventions
+rather than inventing a rule. Modelo 714 goes from 0 of 120 to 85 of 120 --
+exactly its 85 numeric declared casillas.
+
+### The rule I was about to ship was disproved by its own control
+
+The first plan was to flag "the registry declares range-shaped keys" as the sign
+of a position-axis modelo, so the report could say the measure does not apply
+instead of emitting a false gap. Measuring every modelo before implementing
+killed it: modelo 131/2024 declares 20 range keys of 35 and is 100% covered, 604
+declares 40 of 79 and is 100% covered, 309 declares 29 of 62. Range presence does
+not identify the axis, so the flag would have suppressed real gaps.
+
+That is the whole value of running the control first -- the narrowing looked
+tidy, and it would have discarded true positives.
+
+### The regressions pin properties, not tallies
+
+Six tests. Two are the axis guard from both directions: a padded box number
+equals the bare numeral, and a position range is NEVER normalised -- because a
+"fix" that stripped a range to its first component would report byte positions as
+covered boxes and turn a real gap into a clean inventory. One pins the word
+boundary (`714-1` must not claim `714-10 Patrimonio`). Modelo 714's boxes are
+asserted covered as a relationship rather than a count, and modelo 151 is
+asserted to STAY uncovered, so a later change that starts matching across axes
+reds rather than looking like progress.
+
+### Verified
+
+* new coverage-key module: 6 passed. Modelo 151 module: 9 passed, up from 8.
+* generated-tree gates, 151, 184, coverage-key, declared-box-numbers and
+  record-design-completeness together: 85 passed.
+* authority loads CLEAN.
+* the coverage table before and after: the same 18 revisions sit below 100%, none
+  newly demoted, and only modelo 714 moved -- so the change reveals matches
+  rather than manufacturing them.
+* bite proof: re-adding `aeat-dr-151-2023` to the revision's `source_refs` reds
+  the ruling test; tracked `revision.toml` restored byte-exactly and green again.
+
+### Still open, and not caused by this change
+
+`test_revision_span_matches_published_designs` has four failures naming exactly
+the span boundaries already carried as open -- modelo 200's 2024/2025, modelo
+322's 2022/2023, modelo 347's 2009/2010, plus the unattributed-design list. That
+module does not import the coverage code at all, which is how the independence
+was established rather than assumed.
+
+Two coverage findings are recorded rather than fixed, each for a stated reason.
+Modelo 200 stays at 1.7% with 3460 numeric declared keys and matching segmento
+names, so its cause is neither of the two fixed here and needs its own
+measurement. Modelos 220, 763 and 840 declare two casillas each against designs
+of 7596, 143 and 108 -- that gap is real unauthored surface, not an instrument
+defect, and authoring it is the campaign's own endpoint rather than a repair.

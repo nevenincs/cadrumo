@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:054055f884073bf67583792354f68190cd673c8b46e5877b20e0e1accb79a5f3'
+body_hash: 'sha256:754e5c769af8dc2d6434341a323dde698e0912b2df8f9ebb936830b84820a6de'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1807,7 +1807,6 @@ Recorded here because the splits are landing now and the next natural step after
 re-running this gate and expecting improvement -- will show none, which reads as the work
 having failed when it did not.
 
-
 ### split-fallout-leaves-casilla-fragment-names-lying | medium | second piece of feedback for the split work in flight
 
 A regression check after 19 peer commits: the registry suite reads **21 failed / 5171
@@ -1845,7 +1844,6 @@ known fallout with named fixes rather than as the split having gone wrong.
 
 Nothing here was changed by this campaign; the two named renames belong to whoever owns
 the splits.
-
 
 ## Recommendations
 
