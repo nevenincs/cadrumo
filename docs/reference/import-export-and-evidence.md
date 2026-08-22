@@ -14,7 +14,7 @@ it.”
 | --- | --- | --- |
 | Source evidence | Taxpayer document bytes, provenance, and content digests; separately, official source material grounds the registry | The original material supporting the tax position and the sources governing its interpretation |
 | Ledger facts | Typed transactions, direction, category, amount, dates, and linked evidence | The economic events that may participate in a return; the filing period is derived from their dates |
-| Other business aggregates | Typed invoice catalogues, foreign-asset observations, and stock-inventory ledgers in their own encrypted repositories | Reusable business facts that remain separate from a filing until a registered resolver projects them |
+| Other business inputs | Typed invoice catalogues and stock-inventory ledgers in encrypted repositories; typed foreign-asset observations supplied by the caller | Reusable business facts that remain separate from a filing until an enrolled resolver projects them |
 | Registry | {term}`modelo` revision, numbered {term}`casilla` fields, formulas, bindings, legal references, and export layout | The versioned rulebook used to interpret the facts |
 | Calculation revision | Inputs, observations, overrides, calculated casillas, and provenance | A reproducible attempt at calculating one return |
 | Filing record | Current or superseded filing state linked to a calculation revision and optionally carrying external AEAT evidence | What the application records as filed, and the history behind it |
@@ -26,13 +26,13 @@ evidence records which financial facts contributed to it. Review the values in
 the full revision workflow in [Prepare and manage filings](../how-to/filing-spine.md).
 
 A registry binding is a typed projection contract, not a place to attach a
-source record. Binary documents follow the encrypted attachment path. Parsed
-business records remain in their owning typed repositories, and an enrolled
-resolver projects only the scalar or repeating-row fields requested by the
-registry. Modelo 720 foreign-asset rows already follow this route. Stock
-`InventoryLedger` records are encrypted and usable for valuation, but they are
-not currently enrolled as a calculation source and do not flow into a
-calculation revision.
+source record. Binary documents follow the encrypted attachment path.
+Transactions, invoice catalogues, and stock inventory remain in their owning
+typed repositories. Modelo 720 instead accepts typed foreign-asset observations
+from the caller. An enrolled resolver projects only the scalar or repeating-row
+fields requested by the registry. Stock `InventoryLedger` records are encrypted
+and usable for valuation, but they are not currently enrolled as a calculation
+source and do not flow into a calculation revision.
 
 ## What can be imported
 
@@ -56,10 +56,11 @@ calculation revision.
   - PNG or JPEG image evidence
   - CSV or XLSX for structured invoice-catalogue rows
 
-  Document bytes are stored as evidence and can then be linked to ledger facts. Structured
-  invoice rows, document evidence, and bank transactions remain separate records
-  until you link them. They substantiate a transaction or IVA treatment; merely
-  importing an invoice does not automatically make it deductible. See
+  Document bytes are stored as evidence and can then be linked to ledger facts.
+  Structured invoice rows, document evidence, and bank transactions remain
+  separate records until you link them. These records can substantiate a
+  transaction or IVA treatment. Importing an invoice does not automatically
+  make it deductible. See
   [Attach invoices and receipts](../how-to/ledger-evidence.md) and
   [Manage business invoices](../how-to/manage-invoices.md).
 
@@ -156,15 +157,11 @@ This is a portability gap, not a recovery one. Backup and recovery are
 unaffected and run through `aeat config profile archive export` and
 `aeat config profile restore`, which operate on the sealed profile capsule.
 
-The sealed custody archive is not a substitute: it is an encrypted full-custody
-transport for recovery, not a structured, readable copy of one profile's
-records.
-
-The sealed custody archive serves a different purpose. It is an encrypted
-full-custody recovery transport for classified durable custody. Process-local
-and rebuildable derivatives are deliberately excluded. Without a recovery
-passphrase, restoration requires the matching active bucket key. A recovery
-passphrase permits restoration into a fresh storage root.
+The sealed custody archive is an encrypted full-custody recovery transport, not
+a structured, readable copy of one profile's records. It excludes process-local
+and rebuildable derivatives. Without a recovery passphrase, restoration requires
+the matching active bucket key. A recovery passphrase permits restoration into
+a fresh storage root.
 
 ## What an audit export is for
 
@@ -186,7 +183,8 @@ recalculates the tax result. Through the current command-line interface,
 supplied.
 
 The current audit commands do not yet provide a complete one-command audit
-handoff. It has no payload-loader registry or bundle-build command. Every
+handoff. The command-line audit surface has no payload-loader registry or
+bundle-build command. Every
 non-empty audit evidence bundle therefore appears incomplete through the command-line
 interface. A forced incomplete export may omit records and may contain only the
 manifest. Do not treat that output as a complete evidence package.

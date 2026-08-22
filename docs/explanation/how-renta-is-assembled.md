@@ -19,7 +19,7 @@ step-by-step preparation lives in
 
 Modelo 100 is the largest form the tool prepares - the 2025 revision defines
 over two thousand casillas and two hundred formulas. Every value on it
-arrives through a declared data source - the listing below calls each contract
+arrives through a declared data source. The binding listing calls each contract
 a *binding*. The current Renta flow uses four broad routes. They are not the
 complete source-kind taxonomy for every modelo. List them for your
 filing year:
@@ -58,8 +58,8 @@ Stock inventory is one such current boundary. The encrypted inventory register
 can record movements and calculate valuations, but it is not enrolled in the
 Renta source mesh. For the 2025 revision, boxes 0177 (increase in stock
 variation), 0181 (stock purchases), and 0182 (decrease in stock variation)
-remain manual inputs. A dormant inventory helper refers to box 0155; that stale
-name does not connect inventory to the declaration.
+remain manual inputs. Box 0155 is not an inventory input and does not connect
+the inventory register to the declaration.
 
 ## How the quarterly filings fold in
 
@@ -101,8 +101,8 @@ carry rather than silently importing figures computed under different law.
 
 After a calculation, every resolved value carries typed provenance: the
 binding or formula that produced it, its operands, and its legal and source
-references. Read them (the setup steps calculate the employee filer's draft
-the reads inspect, and the last step looks up one box's definition):
+references. The setup steps calculate an employee filer's draft. The read
+commands inspect that draft, and the final step looks up one box's definition:
 
 ```{cli-sequence} renta-assembly-provenance
 :verify: Confirm every resolved value carries its legal and source references.

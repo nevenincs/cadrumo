@@ -279,14 +279,14 @@ owned source family, validates the selector and aggregation, and says how that
 source becomes a filing input. A scalar contract produces one value. Repeating
 record families declare one typed binding per row field. They join the values by
 grouping and one-based row index. The calculation revision freezes the resolved
-row bindings and their validated detail rows. It never attaches an opaque record
-blob to a casilla.
+row bindings. Paths that produce validated detail rows store those separately.
+It never attaches an opaque record blob to a casilla.
 
 Modelo 720 demonstrates the repeating shape: its foreign-asset resolver is
 enrolled in the source mesh and projects typed asset fields into registry row
 bindings. Stock inventory is different. `InventoryLedger` is an implemented,
-encrypted business aggregate, but there is currently no inventory binding source
-kind or enrolled inventory resolver. It therefore remains outside modelo
+encrypted business aggregate. The binding-source taxonomy currently has no
+inventory kind or enrolled inventory resolver. It therefore remains outside modelo
 calculation revisions until a legally grounded projection is added.
 
 (persistence-and-the-safety-boundary)=
@@ -298,7 +298,7 @@ store. The structure, not a convention, keeps it there.
 ```mermaid
 flowchart TD
     OP(["Operator"])
-    subgraph boundary["Encrypted bucket-scoped store — FINANCIAL data never leaves (no temp / scratch / plaintext)"]
+    subgraph boundary["Encrypted bucket-scoped store — financial data never leaves (no temp / scratch / plaintext)"]
         direction TB
         PROF["Active profile — resolve_active_bucket_id"]
         SESS["BucketSession — KEK/DEK · idle-timed · one taxpayer at a time"]
@@ -340,17 +340,19 @@ repository encrypts every payload at the column boundary with a key from the
 `MasterKeyProvider` - the operating system keychain, or a passphrase-derived
 fallback. It persists the ciphertext to a local SQLite database with encrypted
 payload columns.
+
 Evidence bytes - invoices, statements, and decrypted documents - go through the
 content-addressed `AttachmentStore`, which stores the bytes themselves, never a
 link.
 
 Parsed business records do not become attachments merely because they may later
-support a filing. Transactions, invoice catalogues, foreign assets, and stock
-inventory remain separate typed aggregates in encrypted storage. An enrolled
-source resolver projects only the fields requested by the registry into a
-calculation revision. In the current Modelo 100 registry, stock-related boxes
-0177, 0181, and 0182 remain manual inputs. A dormant inventory helper still
-names 0155; that stale name is not evidence of a live inventory-to-Renta route.
+support a filing. Transactions, invoice catalogues, and stock inventory remain
+separate typed aggregates in encrypted storage. Modelo 720 instead receives
+typed foreign-asset observations from the caller. An enrolled source resolver
+projects only the fields requested by the registry into a calculation revision.
+In the current Modelo 100 registry, stock-related boxes 0177, 0181, and 0182
+remain manual inputs. A dormant inventory helper still names 0155; that stale
+name is not evidence of a live inventory-to-Renta route.
 
 Nothing in this store crosses outward to the agency as a write. The read-only
 live checks reach the agency only to read. The single path that reaches the

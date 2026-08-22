@@ -34,7 +34,7 @@ input kind, required flag, and label. Use this before providing any
 These commands read a saved calculation, so run a calculation first. On a fresh
 work unit with no calculation yet, they refuse with `work unit has no selectable
 current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
-[Supply manual casilla values](#supply-manual-casilla-values) below) to produce a
+[Supply manual casilla values](#supply-manual-casilla-values)) to produce a
 saved draft, then come back here.
 
 List the calculation revisions for one filing, show the current revision's
@@ -120,8 +120,9 @@ the selected modelo instead of assuming that an unlisted source is manual.
 
 A manual field always needs a value you enter by hand. A **prior filed revision**
 field also needs one when there is no earlier filing yet to carry it forward.
-See the first-time-filing note below. Profile, ledger, and relation fields are
-filled for you; correct those at their source rather than typing the value.
+See the first-time-filing note that follows. Profile and ledger fields are
+filled from their sources. Relation fields may come from another filing or
+require `--relation`, as identified by the modelo's help.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
@@ -218,7 +219,8 @@ integration.
 
 For specialized calculations, the CLI provides evaluation and comparison commands:
 
-- **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
+- **Joint vs. individual Impuesto sobre la Renta de las Personas Físicas (IRPF)
+  comparison (`compare-taxation`)**: Compare filing
   jointly as a family unit against filing individually for an active Modelo
   100. Create the Modelo 100 draft first, or the command refuses with
   `Ninguna unidad de trabajo activa`:
@@ -235,15 +237,17 @@ For specialized calculations, the CLI provides evaluation and comparison command
   recommendation so you can decide which filing option costs less.
 
 - **Maritime worker exemption preview (`preview-maritime-exemption`)**: Preview
-  the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
+  the IRPF exemption for maritime workers (Art. 7.p LIRPF or the Registro
+  Especial de Buques y Empresas Navieras de Canarias (REBECA) 50% exemption):
   
   ```{cli-sequence} review-values-maritime
   :verify: Confirm the preview reports the RETMAR registration state.
   ```
   
   The command shows which tax boxes are affected by the exemption and the
-  amounts, with references to the applicable law. This applies only to maritime
-  workers. Most filers can skip this section.
+  amounts, with references to the applicable law and the Régimen Especial de
+  Trabajadores del Mar (RETMAR) registration state. This applies only to
+  maritime workers. Most filers can skip this section.
 
 (correct-an-already-filed-local-record)=
 ## Correct an already filed local record
@@ -255,8 +259,8 @@ correct complementaria (supplementary return) record:
 ```{cli-sequence} review-values-amend
 ```
 
-Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not
-submit anything to AEAT.
+Before using this command, import the {term}`justificante` for the filing you're
+correcting. The amendment command does not submit anything to AEAT.
 
 ## Where to go next
 

@@ -35,9 +35,9 @@ business records remain owned by their encrypted domain repositories.
 A binding is not an attachable data blob. It is the contract by which an
 enrolled source resolver projects an owned source record into one of these
 filing-input shapes. Modelo 720 foreign assets use an enrolled repeating-row
-projection. The encrypted `InventoryLedger` currently has no inventory member
-in the binding-source taxonomy and no enrolled calculation resolver, so it is a
-standalone business register rather than a modelo input.
+projection. The binding-source taxonomy currently has no inventory member. No
+calculation resolver is enrolled for the encrypted `InventoryLedger`, so it
+remains a standalone business register.
 
 Use the generated [application command reference](../cli/app.rst) to look up
 registry inspection, modelo description, formula, verification-report, and
