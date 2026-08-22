@@ -5389,3 +5389,66 @@ any conclusion was drawn from it.
 Lanes 314 integration / 1586 unit, both unchanged -- the new gate lives in
 `entrypoints/cli/tests`, outside the domain lane paths, and is reachable through the `unit`
 marker that `just test-unit` selects.
+
+### Closing the prose class, and what a better instrument found
+
+Three iterations were each misled by a docstring, so the class was closed rather than the
+cases. The instrument matters more than the findings here.
+
+**The first detector was wrong in both directions.** Matching a reference's leaf name
+against every symbol defined anywhere in the tree produced 67 hits, mostly builtins and
+stdlib -- and, far worse, it produced false NEGATIVES. Resolving instead by IMPORT --
+walking back from the longest importable dotted prefix, then `getattr` for the remainder --
+found three dangling references in the same packages that the name-matching scan had
+cleared, because each one's leaf name existed somewhere else entirely. Import resolution is
+also the only method that respects this tree's PEP 562 facades: a name reached through
+`__getattr__` is absent from the module's source and present on the module object.
+
+**Four references were wrong, and one implied a missing export.**
+
+- `_section_rows` named `ProfileCapsuleLifecycle.edit_fields` as the write door that
+  "judges a whole fact batch at once". There is no such method, and that class owns no
+  field-editing method at all -- only create, restore, select and the delete trio. The
+  property is real and lives in `reject_invalid_profile_facts`, reached through
+  `apply_profile_fact_changes`, which states it in nearly the same words: "The whole
+  resulting fact sequence is judged rather than the incoming change alone, so a patch is
+  never left half-applied by a later field's refusal." Right about behaviour, wrong about
+  the artifact -- the most durable kind of wrong, because the behaviour checks out when a
+  reader tests the claim and only the name fails.
+- A test cited `SubmissionRepository` in the DOMAIN layer; it is an adapter class, and the
+  domain holds only the port protocol.
+- Another cited `BucketSession` on the storage facade; `master_key` exports it.
+- The trash-removal test cited a converged implementation in a module deleted since.
+
+`CommittedProfileView` was PROMOTED rather than re-pointed. It is the return type of three
+public `ProfileCapsuleLifecycle` methods and was absent from its package facade, while
+`ProfileRestoreAuthority` -- defined in the same module, in the same `__all__` -- is
+exported in all three facade places. The citation was assuming an export that had simply
+been missed, and pointing it at the private module instead would have written the
+architecture violation into the prose.
+
+**The gate's own false-positive risk was the thing to get right.** A pydantic v2 field is
+not a class attribute; `getattr(Invoice, "operation_date")` is nothing. A resolver without
+that knowledge calls every correct `:attr:` reference in the tree stale, and the honest
+response to a gate that cries wolf is to narrow its scope until it means nothing. Fields
+and annotations are therefore counted as present, with both directions pinned. Scope is
+fully-qualified `cadrumo.*` targets only: a bare anchor is ambiguous by design and the docs
+build's resolver owns that question.
+
+**An in-scope regression absorbed on the way past.** `test_wheel_content_boundary` was red,
+asserting the wheel was missing `storage/master_key/_bip39_wordlist.txt`. The file was not
+missing: `3452ca29b6` promoted the mnemonic codec out of `master_key` into `storage` and
+moved the wordlist with it, without sweeping the gate's required-members list. Relocations
+are meant to land every referencing surface in one commit; this surface was missed, and the
+gate had been failing since. Fixed to the real path.
+
+**Attribution for the rest, measured not assumed.** `src/cadrumo/tests` reports 59 failures;
+the wheel one was mine to fix, leaving 58. They group across IVA-stem conformance, taxonomy
+literals, type-ignore rationales, acceptance-wall collection and the self-import gate. The
+two that could plausibly have been caused by this work were checked directly: the
+self-import gate names two registry test files, and the wheel gate named the wordlist. The
+remainder was grouped by module rather than opened one by one, and is reported as
+unattributed rather than as cleared.
+
+Lanes 314 integration / 1586 unit, both unchanged -- the new gate lives in
+`src/cadrumo/tests`, outside the domain lane paths.
