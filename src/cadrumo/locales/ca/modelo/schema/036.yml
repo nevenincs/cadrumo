@@ -263,6 +263,96 @@ modelo:
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
               help: null
               label: Clau del titol de representacio (segon representant, bloc 3.2)
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb15pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb25pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb35pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb45pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb55pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13f)
+            x-edqm6bb65pn6ipg:
+              help: null
+              label: NIF del successor o beneficiari (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13f)
           construct:
             modelo-036-censo-foundation:
               field:

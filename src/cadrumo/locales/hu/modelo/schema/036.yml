@@ -259,6 +259,102 @@ modelo:
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
               help: null
               label: A kepviseleti jogcim kodja (masodik kepviselo, 3.2 blokk)
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13a jogutod)
+            x-edqm6bb15pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13a
+                jogutod)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13a jogutod)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13a jogutod)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13b jogutod)
+            x-edqm6bb25pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13b
+                jogutod)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13b jogutod)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13b jogutod)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13c jogutod)
+            x-edqm6bb35pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13c
+                jogutod)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13c jogutod)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13c jogutod)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13d jogutod)
+            x-edqm6bb45pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13d
+                jogutod)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13d jogutod)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13d jogutod)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13e jogutod)
+            x-edqm6bb55pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13e
+                jogutod)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13e jogutod)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13e jogutod)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13f jogutod)
+            x-edqm6bb65pn6ipg:
+              help: null
+              label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13f
+                jogutod)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13f jogutod)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              help: null
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13f jogutod)
           construct:
             modelo-036-censo-foundation:
               field:
