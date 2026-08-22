@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a63654ba0e2ad9ee423e0c14bfe5e37485a923f0e5c317fc08e3801a9c5f6ca1'
+body_hash: 'sha256:de483e6b2038c7b08ee4e93d66ff6610ddccd24bc095aadc9dd630e757b4ff7a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13598,3 +13598,62 @@ byte-exactly, that module measures 4 failed / 2 passed in BOTH states. The
 seeding change cannot reach them either -- the module's fact set omits
 `identity.tax_id`, so its promotion is refused and its state is what it always
 was.
+
+## Tick: a fixture seeding a state the schema forbids, and a refusal nothing could reach
+
+Re-measured at tick start: authority loads CLEAN. The four
+`test_m303_regimen_simplificado_scope` failures carried from last tick, where a
+control had shown them independent of that tick's work but left them unfixed.
+
+### Three of them: the fixture asked for a state its facts could not support
+
+`active_taxpayer_profile` refuses any profile that is not COMPLETE, with
+`profile_inactive`, BEFORE it reads the IVA composition. The module's fixture
+seeded `setup_state = COMPLETE` with a fact set omitting `identity.tax_id`, so
+the promotion is refused, the record stays incomplete, and every case in the
+module refused for a reason that has nothing to do with what it tests.
+
+The baseline was measured from the schema rather than guessed: exactly three
+paths are required of every record -- `identity.tax_id`,
+`tax_residence.jurisdiction_scope` and `iva.regime`. The fixture carried two of
+the three. Seeding all three makes the profile genuinely COMPLETE, and the three
+composition cases now reach and assert the scope decision they were written for.
+
+### The fourth was asserting a refusal no profile can produce
+
+`test_secure_profile_without_iva_composition_blocks_m303_scope_resolution`
+seeded a record with NO IVA composition and drove the whole resolver, expecting
+`iva_composition_missing`. That scenario is unreachable through a capsule, and
+the schema says why in its own words: `m303_regime_composition` is required
+"when any IVA profile fact claims the IVA block", and `iva.regime` is itself
+schema-required -- so EVERY complete profile carries a composition. A record
+without one is not COMPLETE, and the resolver refuses it with `profile_inactive`
+first. The test was asserting one refusal while the code raised another, and no
+seeding could have closed that gap.
+
+The branch itself is not dead: it fires when the PROJECTION reaches the scope
+resolver with no IVA block at all, which is the state it defends against. The
+test now exercises it there, by calling the function under test directly -- the
+same shape the sibling `test_raw_unknown_composition_is_refused` already uses in
+this module, so it is the established pattern rather than a new one.
+
+Retargeting the test left `_store_profile`'s optional-composition branch with no
+caller, and it is removed rather than left standing.
+
+### Verified
+
+* `test_m303_regimen_simplificado_scope`: 6 passed, from 4 failed / 2 passed.
+* the touched set together -- profile capsule, readiness gate, simplificado
+  scope, work-unit discard, autonomic deducción, simplificado ledger bypass: 46
+  passed.
+* authority loads CLEAN; ruff clean on every file touched.
+
+### Still open
+
+The registry campaign's backlog is unchanged: sixteen standing failures, modelo
+840 needing `bindings` and `export_layouts`, `projection_endpoints` pending a
+layout, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
+
+Modelo 220's two revision files are uncommitted in the shared tree while a peer
+works them; nothing here touches that modelo.
