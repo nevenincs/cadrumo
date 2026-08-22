@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7580e6fc0b0506361eb6bdacd835bb35584bd7440585c47d08a872d05587b504'
+body_hash: 'sha256:a62ee0e0c5075fabfbe573ecd1caca893a8131b78908856061cb7b83ce47a8f5'
 step_id: 'S03'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -27,6 +27,9 @@ related:
 - Bind every proof and executable evidence record to one shared candidate, source kind, source object, resolver, and revision identity.
 - Replace prose command claims with constrained entrypoint and command identities.
 - Require strict boolean truth assertions that reject numeric or textual substitutes.
+- Require a caller-supplied live proof authority before any connected row can validate.
+- Verify canonical source enrollment and operator workflow catalogue membership through that authority.
+- Bind each role-specific executable artifact to a verified content digest rather than ambient filesystem shape.
 
 ## Outcome
 
@@ -37,6 +40,13 @@ source kind, source object, resolver, and calculation revision. The census row
 must name that same candidate. Non-connected dispositions cannot carry connected
 proof, so stale, mismatched, deferred-source, or anticipatory attestations fail
 closed.
+
+Shape alone cannot construct a connected row. Admission uses
+`validate_with_authority(...)`; the caller-supplied authority must confirm live
+source-mesh enrollment, supported entrypoint/command identity, and the current
+digest of every role-specific executable artifact. This keeps core independent
+of application enrollment and keeps persisted validation independent of the
+ambient filesystem while making authority verification mandatory.
 
 ## Notes
 
@@ -53,3 +63,9 @@ integer `1` in every strict proof-boolean field. Executable connected evidence
 must use a stable repository locator naming a test module; implementation-only
 and external grounding cannot attest runtime behavior. The census row docstring
 now describes the landed relational proof contract.
+
+Final authority probes refused `RELATED_PARTY_OPERATION` while deferred, command
+identity `anything`, and a nonexistent test-shaped locator. Direct model
+validation without an authority also refused the otherwise well-shaped connected
+payload. A positive authority-backed payload validated. No application import,
+filesystem read, or network dereference was added to core.

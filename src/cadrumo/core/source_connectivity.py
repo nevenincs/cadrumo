@@ -19,14 +19,14 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Protocol, Self, runtime_checkable
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
-from .identity import CalculationRevisionId
+from .identity import CalculationRevisionId, ContentDigest
 
 __all__ = [
     "SourceConnectivityCandidateId",
@@ -37,11 +37,13 @@ __all__ = [
     "SourceConnectivityDisposition",
     "SourceConnectivityEncryptedRevisionProof",
     "SourceConnectivityExecutableEvidence",
+    "SourceConnectivityExecutableEvidenceRole",
     "SourceConnectivityExpiryPosture",
     "SourceConnectivityFollowUp",
     "SourceConnectivityGrounding",
     "SourceConnectivityGroundingLocatorKind",
     "SourceConnectivityOperatorReachabilityProof",
+    "SourceConnectivityProofAuthority",
     "SourceConnectivityResolverOwnershipProof",
 ]
 
@@ -198,14 +200,24 @@ class SourceConnectivityConnectionIdentity(SourceConnectivityCandidateIdentity):
     calculation_revision_id: CalculationRevisionId
 
 
+class SourceConnectivityExecutableEvidenceRole(StrEnum):
+    """Behavior an executable evidence artifact independently proves."""
+
+    RESOLVER_ENROLLMENT = "resolver_enrollment"
+    ENCRYPTED_REVISION = "encrypted_revision"
+    OPERATOR_REACHABILITY = "operator_reachability"
+
+
 class SourceConnectivityExecutableEvidence(BaseModel):
     """Stable executable proof tied to one exact production connection."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     evidence_id: _StableToken
+    role: SourceConnectivityExecutableEvidenceRole
     connection: SourceConnectivityConnectionIdentity
     locator: SourceConnectivityGrounding
+    content_digest: ContentDigest
 
     @model_validator(mode="after")
     def _require_test_evidence(self) -> SourceConnectivityExecutableEvidence:
@@ -216,6 +228,26 @@ class SourceConnectivityExecutableEvidence(BaseModel):
         if "/tests/" not in path or not path.rsplit("/", maxsplit=1)[-1].startswith("test_"):
             raise ValueError("connected proof evidence must identify a test module")
         return self
+
+
+@runtime_checkable
+class SourceConnectivityProofAuthority(Protocol):
+    """Live authority required to admit a persisted ``connected`` claim."""
+
+    def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
+        """Return whether the canonical source mesh currently enrolls this source."""
+
+    def operator_workflow_is_supported(
+        self,
+        connection: SourceConnectivityConnectionIdentity,
+        *,
+        entrypoint_id: str,
+        command_id: str,
+    ) -> bool:
+        """Return whether the live operator catalogue owns this workflow identity."""
+
+    def executable_evidence_digest(self, evidence: SourceConnectivityExecutableEvidence) -> ContentDigest | None:
+        """Return the verified digest of the existing executable artifact, if any."""
 
 
 class SourceConnectivityResolverOwnershipProof(BaseModel):
@@ -230,7 +262,11 @@ class SourceConnectivityResolverOwnershipProof(BaseModel):
     @model_validator(mode="after")
     def _bind_enrollment_evidence(self) -> SourceConnectivityResolverOwnershipProof:
         """Require every enrollment proof to name this exact connection."""
-        _require_matching_evidence(self.connection, self.enrollment_evidence)
+        _require_matching_evidence(
+            self.connection,
+            self.enrollment_evidence,
+            role=SourceConnectivityExecutableEvidenceRole.RESOLVER_ENROLLMENT,
+        )
         return self
 
 
@@ -252,7 +288,11 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
         """Require true strict-storage claims tied to this exact connection."""
         if not (self.strict_round_trip and self.encrypted_at_rest and self.anti_tautology_mutation):
             raise ValueError("encrypted revision proof requires every strict proof assertion")
-        _require_matching_evidence(self.connection, self.evidence)
+        _require_matching_evidence(
+            self.connection,
+            self.evidence,
+            role=SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
+        )
         return self
 
 
@@ -272,7 +312,11 @@ class SourceConnectivityOperatorReachabilityProof(BaseModel):
         """Require executable observation of this exact resolver and source."""
         if not self.resolver_observed:
             raise ValueError("operator reachability proof requires an observed resolver")
-        _require_matching_evidence(self.connection, self.evidence)
+        _require_matching_evidence(
+            self.connection,
+            self.evidence,
+            role=SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
+        )
         return self
 
 
@@ -302,10 +346,25 @@ class SourceConnectivityConnectedProof(BaseModel):
 def _require_matching_evidence(
     connection: SourceConnectivityConnectionIdentity,
     evidence: tuple[SourceConnectivityExecutableEvidence, ...],
+    *,
+    role: SourceConnectivityExecutableEvidenceRole,
 ) -> None:
     """Refuse executable evidence for another candidate or source path."""
     if any(item.connection != connection for item in evidence):
         raise ValueError("connected proof evidence must identify the asserted connection")
+    if any(item.role is not role for item in evidence):
+        raise ValueError(f"connected proof evidence must carry role {role.value!r}")
+
+
+def _connected_executable_evidence(
+    proof: SourceConnectivityConnectedProof,
+) -> tuple[SourceConnectivityExecutableEvidence, ...]:
+    """Return every role-specific executable artifact in one connected proof."""
+    return (
+        *proof.resolver_ownership.enrollment_evidence,
+        *proof.encrypted_revision.evidence,
+        *proof.operator_reachability.evidence,
+    )
 
 
 _BLOCKED_DISPOSITIONS = frozenset(
@@ -334,7 +393,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
     connected_proof: SourceConnectivityConnectedProof | None = None
 
     @model_validator(mode="after")
-    def _require_actionable_unresolved_state(self) -> SourceConnectivityCensusRow:
+    def _require_actionable_unresolved_state(self, info: ValidationInfo) -> SourceConnectivityCensusRow:
         """Refuse unresolved rows that cannot drive bounded follow-up."""
         if self.disposition in _BLOCKED_DISPOSITIONS:
             missing = [
@@ -364,6 +423,10 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
                 raise ValueError("connected connectivity row requires complete connected_proof")
             if self.connected_proof.connection.candidate_id != self.candidate_id:
                 raise ValueError("connected proof candidate_id must match the census row")
+            authority = (info.context or {}).get("source_connectivity_proof_authority")
+            if not isinstance(authority, SourceConnectivityProofAuthority):
+                raise ValueError("connected connectivity row requires live proof authority validation")
+            self._verify_connected_authority(authority)
         elif self.connected_proof is not None:
             raise ValueError("only a connected connectivity row may carry connected_proof")
         if (
@@ -373,6 +436,41 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
         ):
             raise ValueError("bounded follow-up deadline must not outlive the review expiry")
         return self
+
+    @classmethod
+    def validate_with_authority(
+        cls,
+        value: object,
+        *,
+        authority: SourceConnectivityProofAuthority,
+    ) -> Self:
+        """Validate a census row with the mandatory live connected-proof authority."""
+        return cls.model_validate(
+            value,
+            context={"source_connectivity_proof_authority": authority},
+        )
+
+    def _verify_connected_authority(self, authority: SourceConnectivityProofAuthority) -> None:
+        """Require live enrollment, workflow, and executable-evidence authority."""
+        proof = self.connected_proof
+        if proof is None:
+            raise ValueError("connected connectivity row requires complete connected_proof")
+        connection = proof.connection
+        if not authority.source_is_enrolled(connection):
+            raise ValueError("connected proof source is not enrolled by the live source mesh")
+        operator = proof.operator_reachability
+        if not authority.operator_workflow_is_supported(
+            connection,
+            entrypoint_id=operator.entrypoint_id,
+            command_id=operator.command_id,
+        ):
+            raise ValueError("connected proof operator workflow is not supported")
+        for evidence in _connected_executable_evidence(proof):
+            verified_digest = authority.executable_evidence_digest(evidence)
+            if verified_digest is None or verified_digest != evidence.content_digest:
+                raise ValueError(
+                    f"connected proof executable evidence is absent or changed: {evidence.evidence_id}",
+                )
 
     def expiry_posture(self, *, as_of: date) -> SourceConnectivityExpiryPosture:
         """Evaluate expiry deterministically at the caller's civil-date seam."""
