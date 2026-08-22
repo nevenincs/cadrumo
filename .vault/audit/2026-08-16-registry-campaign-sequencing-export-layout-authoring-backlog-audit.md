@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:de483e6b2038c7b08ee4e93d66ff6610ddccd24bc095aadc9dd630e757b4ff7a'
+body_hash: 'sha256:7f29099c9a905552fea9b4b4af49ea3b35847450cf33c1539983cd12278310fb'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13657,3 +13657,166 @@ ground.
 
 Modelo 220's two revision files are uncommitted in the shared tree while a peer
 works them; nothing here touches that modelo.
+
+## Tick: three standing registry failures closed, two of them the same shape
+
+Re-measured at tick start: authority loads CLEAN, sixteen standing registry
+failures. Six are declared inventories -- the filing-capability worklist, the
+four span-gate rows, the layout-design divergences -- and the rest had never
+been triaged one by one.
+
+### Modelo 347: the pre-split union pinned on the early half
+
+`test_committed_modelo_347_declares_counterpart_source_summary_bindings` reads
+the `2008-2024` half and required its summary bindings to cite
+`orden-hac-1431-2025:art-1` and the 2025 design. That was the pre-split shape:
+one revision then answered for every year and legitimately carried both eras'
+grounding.
+
+The registry data is already correct per half -- measured, not assumed: the
+early half cites the 2008 orden and the 2011 design and nothing from 2025; the
+later half adds `orden-hac-1431-2025:art-1` and `aeat-dr-347-2025`. The test now
+asserts that relationship, and asserts the EXCLUSION on the early half, because
+a binding there citing a December 2025 orden would ground a filing in a norm
+published after every year that half governs.
+
+A second case carries the other direction. Without it the exclusion would pass
+just as well on a tree that had lost the 2025 grounding entirely, which is the
+opposite defect.
+
+### Two tests demanding filing capability to ask a different question
+
+The remaining two are the shape already met in the query service: a test builds
+a FILING-grade snapshot when its subject needs a lower rung, and refuses on a
+capability it never reads.
+
+`test_modelo_117_126_128_136_official_form_arithmetic[136]` runs the revision's
+formulas against AEAT's worked figures -- the CALCULATION question. It asked for
+FILING, which additionally demands an export layout, and modelo 136 cannot have
+one: its export family is declared not applicable with the reason that AEAT
+publishes no positional record design for it. An arithmetic test was refusing on
+a layout that will never exist. It now asks for the rung it uses; the helper's
+own docstring already said a formula-runtime caller should.
+
+`test_registry_snapshot_rejects_identifier_map_key_payload_drift[filing_schedules]`
+borrows modelo 036 only because it populates `filing_schedules`, while testing
+identifier-map key/payload drift on the snapshot model. Same refusal, same fix:
+built at the rung 036 declares.
+
+### A stale aside corrected in passing
+
+The snapshot helper explained its modelo 303 branch partly by saying M303 "has
+no declared export layout today, so it fails on that honest capability gap
+rather than the grade question". All six M303 revisions declare one. The note
+now gives the reason that is still true: the branch goes through the authority
+accessor for the annual-Orden projection, which has no grade parameter.
+
+### Verified
+
+* the three modules together: 59 passed.
+* registry package: 13 failed, 5208 passed, from 16 failed / 5204 passed. The
+  before/after failure sets differ by exactly the three fixed and nothing else
+  -- no test newly fails, and the four extra passes are the three repairs plus
+  the added later-half case.
+* authority loads CLEAN.
+
+### Still open
+
+Thirteen registry failures remain. Six are the declared inventories. The other
+seven have not been triaged: the continuidad ratchet, the formula-parity
+ownership check, `test_every_bundled_design_is_read_or_reported`, the
+unregistered-design list, `test_reconciliation_pair_category_parity`, and two
+modelo 100 cases (the casilla wiring contract and the art. 85 imputed-real-estate
+worked example).
+
+Modelo 840 still needs `bindings` and `export_layouts`, `projection_endpoints`
+decided once a layout exists, and 108 casillas whose Catalan and Hungarian
+labels this session cannot ground.
+
+## Tick: three more standing failures closed, and a grounding loss found behind one of them
+
+Re-measured at tick start: authority loads CLEAN, thirteen standing registry
+failures, seven of them never triaged.
+
+### The continuity ratchet: raised, because that is what it asks for
+
+Modelos 184, 220 and 347 diverged from the committed baseline by 86, 2 and 39
+ungrounded groups. The ratchet's own docstring names the two readings and this
+is unambiguously the second: a new revision of an existing modelo landed
+carrying repeated casilla ids. Modelos 184 and 347 are this campaign's splits
+and 220 is a peer's; the baseline edit is how the corpus records that those
+repeated ids are un-reviewed.
+
+Stamping them instead would be the grounding work itself, and the module says
+what that costs: identity is adjudicated against official AEAT and BOE sources,
+never inferred from a repeated numeric id, because AEAT renumbers between filing
+years. 125 groups of filing-grade adjudication is not something this session can
+ground, so the honest move is the one the gate offers.
+
+The replacement literal was diffed against the committed one before writing:
+every pre-existing entry is byte-identical and the only change is the three new
+modelos. Nothing else was absorbed, and the two entries from a split carry the
+orden that caused it.
+
+### The reconciliation pair: enrolled on the registry's own titles
+
+A derived pair `('296', '216')` had appeared with no entry in the pinned
+inventory -- which is the gate working: its docstring says a new pair "reds this
+test until its author confirms the parity assertion below is right for it".
+
+Confirmed from the registry rather than from memory: it titles them "IRNR
+resumen anual de retenciones e ingresos a cuenta" and "IRNR retenciones e
+ingresos a cuenta". That is the annual-summary-against-periodic shape 190/111
+already carries for IRPF, one domain over, so the parity assertion is right for
+it and the pair is enrolled with that grounding written beside it.
+
+### The wiring contract, and the defect it was standing in front of
+
+`test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible`
+failed on `'projection_only' == 'informational'`: a producer kind had been added
+and the exhaustive terminal branch knew only the older one.
+
+Widening the branch was the obvious fix and it was WRONG on the first attempt --
+the next assertion failed with empty producer refs against a casilla carrying
+three. That is the real finding. `producer_legal_refs` and
+`producer_source_refs` return the casilla's own refs for `manual` and
+`informational` and fall through to `()` for everything else, so
+`projection_only` produced an ungrounded trace.
+
+Measured before changing anything: 366 projection-only casillas, all Modelo 303,
+and every one of them declares legal_refs that the producer trace dropped. A
+projection-only casilla has no producer declaration to carry provenance -- it is
+populated from its canonical typed row, a runtime projection rather than a
+registry row -- so the casilla is the only place its grounding can live, exactly
+as for manual and informational. Both properties now read one declared set that
+says why the three belong together, and all 366 carry their legal AND source
+refs again.
+
+The test's terminal branch keeps its exhaustiveness: a kind added later still
+reds rather than falling through.
+
+### Verified
+
+* the three modules: continuity ratchet 10 passed, reconciliation parity 4
+  passed, wiring contract 8 passed.
+* the restoration measured directly through `producer_inventory()`: 366 of 366
+  projection-only casillas now have trace refs equal to their casilla's.
+* registry package: 11 failed, 5210 passed, from 13 failed / 5208 passed.
+* the before/after failure sets differ by exactly the three fixed, plus ONE new
+  entry that is not this tick's: `aeat-dr-763-2012`'s url mismatch, from a peer
+  commit -- "registry(modelo-763): take the 2012 design's url and date from the
+  corpus manifest" -- that landed while the package was running.
+* authority loads CLEAN.
+
+### Still open
+
+Ten of the eleven remaining are the campaign's own: six declared inventories
+(the filing-capability worklist, four span-gate rows, the layout-design
+divergences) plus the unregistered-design list, the formula-parity ownership
+check, `test_every_bundled_design_is_read_or_reported`, and the modelo 100
+art. 85 imputed-real-estate worked example. The eleventh is the peer's modelo 763
+url, in flight.
+
+Modelo 840 still needs `bindings` and `export_layouts`, `projection_endpoints`
+decided once a layout exists, and 108 casillas whose Catalan and Hungarian
+labels this session cannot ground.

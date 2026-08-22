@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e45e2afd6a1560fa1bac1ea97a46019c81dd59017d6258b7710e824b29123f9'
+body_hash: 'sha256:a391f2b13c4228bdfbf188bb12069ff78642d83609e5ab708d6087f5fb924692'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2102,4 +2102,3 @@ authority off a filename is not the standard, however plausible the date.
 Side effect worth keeping: the registration gate's unregistered-design population went
 **49 → 48**. The remaining 48 span modelos 036, 100, 111, 115, 123 and others — a real
 inventory backlog, not m763-specific.
-
