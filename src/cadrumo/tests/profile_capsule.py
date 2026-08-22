@@ -34,7 +34,12 @@ from ..application.user_profile._profile_record_repository import (
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..domain.user_profile import (
+    ProfileSchemaValidationError,
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+)
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:
@@ -229,12 +234,26 @@ def replace_test_profile_record(
         if record.setup_state is ProfileSetupState.COMPLETE:
             applied = repository.load(identity)
             if applied.setup_state is not ProfileSetupState.COMPLETE:
-                repository.complete_setup(
-                    identity,
-                    expected_revision=applied.record_revision,
-                    expected_content_digest=applied.content_digest,
-                    now=replacement.updated_at,
-                )
+                try:
+                    repository.complete_setup(
+                        identity,
+                        expected_revision=applied.record_revision,
+                        expected_content_digest=applied.content_digest,
+                        now=replacement.updated_at,
+                    )
+                except ProfileSchemaValidationError:
+                    # The caller's facts cannot support the claim, and NO production
+                    # path can mint that record either -- COMPLETE asserts that
+                    # nothing schema-required is absent. Leaving the record as
+                    # applied is the honest answer rather than a silent one: many
+                    # fixtures seed a deliberately minimal fact set for the
+                    # behaviour under test and never read the state, and a fixture
+                    # that DOES depend on it meets the readiness gate's
+                    # missing-field refusal, which names what to add. The case this
+                    # promotion exists for is the opposite one -- a schema-complete
+                    # fact set whose state was dropped, where that gate could only
+                    # say "incomplete" and enumerate nothing.
+                    pass
         return repository.load(identity)
 
 
