@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:69f4eb370914cedbfef00cfab8210c3a0ce4e4f23393fb217789df9aa7a5e5d1'
+body_hash: 'sha256:002ccf395bdf671a0bd0bfbf7824d4f268580f8775e3cb935d60511944847aca'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16115,3 +16115,187 @@ see.
 The eight inventories and five peer surfaces. Modelo 200's 2010 edition keeps
 three holes: the position-10 pair, closed as unrecoverable, and Pág. 31's ord54,
 whose next step is now the rejoin loop's index advancement and nothing else.
+
+## Tick: the Pág. 31 hole closed, after two of my own diagnoses were disproved
+
+Re-measured at tick start: authority loads CLEAN, five of 218 designs partly
+read. This tick closed modelo 200's long-standing `Pág. 31` hole, and the route
+to it ran through disproving two conclusions I had recorded in earlier ticks.
+
+### Both prior diagnoses were wrong, and the second was mine to catch
+
+Last tick I recorded that the reversed-column rejoin produced no row at the
+failing site and that "the next step is the loop's index advancement and nothing
+else". Simulating the loop directly showed index 3292 IS visited with all four
+preconditions true, the join DOES happen, and the row survives every later
+stage. My earlier probe had rebuilt the input differently from the pipeline and
+compared against the wrong line set.
+
+Following the row into record assembly then showed it landing on `Pág. 30`, not
+`Pág. 31` -- because the two are PARALLEL runs, both 107 fields over 1720
+positions, and each was holding half of a damaged pair. That is the fact that
+made the real shape visible, and no amount of further work on the rejoin loop
+would have reached it.
+
+### The real defect: a damaged coordinate column, restated one line later
+
+These two editions lose the coordinate column on some rows and then restate it.
+The damage has two forms:
+
+* the coordinates vanish, leaving `17 N <description>` with no position; or
+* they survive mangled -- `54 827` arrives as `4 82` and parses as a real but
+  WRONG row at ordinal 4, position 82.
+
+Either way the true pair appears on the next line, `54 827 Ajustes por
+valoración [380]`, which is not itself a row: it carries no length and no
+naturaleza. Read together the halves are one row; read apart, the record has a
+hole and is skipped whole.
+
+### The guard is the donor, and it declines three sites on purpose
+
+Coordinates are admitted only when OVER-DETERMINED against the last undamaged
+row -- ordinal follows by one AND position resumes where that row ended, the
+same two facts `_continues` checks everywhere else. Length and naturaleza are
+never inferred; a donor half must state them.
+
+Measured across every bundled design, the direct shape has six sites, all in
+these two editions. Three have no donor at all: `6 11 [213]` sits after a page
+header and states coordinates and a casilla and nothing else. Recovering those
+would mean inventing a naturaleza and truncating a description, so the donor
+requirement excludes them -- a principled refusal, not a carve-out, and the
+regression pins it as one.
+
+### What the control proves
+
+Measured over every bundled design, in TWO SEPARATE PROCESSES because the module
+carries five `lru_cache` layers -- the first single-process control reported
+"0 improved, 0 regressed" purely because the second measurement was served from
+cache, and that near-miss is the finding worth carrying: an in-process
+before/after over a cached read measures nothing.
+
+**216 designs: 2 improved, 0 regressed, 214 unchanged.** Modelo 200's 2010 goes
+from 3 skipped records to 2 and gains a whole 107-field sheet; 2011 from 4 to 3,
+gaining 106. The repair runs only in the path taken by designs that ALREADY skip
+a record, so a design reading cleanly cannot be perturbed.
+
+A quieter fix rode along. `Pág. 30` read whole throughout, but its position 844
+came back with no ordinal -- and the schema states an absent ordinal means AEAT
+LEFT THE CELL BLANK, never that the parser could not read it. That position was
+making a false declaration about the source, and no contiguity check could see
+it because the bytes tiled. It now carries ordinal 55.
+
+### Verified
+
+* the new module: 6 passed. Disabling the repair at runtime from outside the
+  tree reds 4 of the 6; the 2 that stay green are the refusal proofs, which is
+  precisely why the positive companion exists beside them.
+* registry package plus `dev/registry`: 17 failed, 5884 passed. HEAD moved
+  mid-run, so attribution was checked rather than asserted: the four
+  `test_load_census_classification` failures PASS serially both with and without
+  the repair, so they are a parallel-run artifact, not this change. The other 13
+  are the eight declared inventories plus the five attributed peer surfaces.
+* authority loads CLEAN; the four ruff findings in `_record_design.py` are at
+  lines 536, 3098, 3539 and 3744, all outside this change, and the new module is
+  clean.
+
+### Still open
+
+Five designs remain partly read, and that count does NOT move: modelo 200's two
+editions still skip the position-10 pair, so they stay on the list with fewer
+holes rather than leaving it. The position-10 pair remains unrecoverable -- those
+rows arrive carrying no numbers at all -- and modelos 038, 180 and 349 remain
+form diagrams needing AEAT acquisition, an operator decision.
+
+## Tick: queue items 1 and 2 adjudicated, and both were framed wrong
+
+Re-measured at tick start: authority loads CLEAN at `e4a0d69445`.
+
+### Item 1 -- modelo 184 casilla 77: already closed, and the closure is sound
+
+The gate does not fire. `derive_calculation_completeness_casillas` already
+guards the refusal with `if diseno_pairs and ...`, treating an EMPTY pair set as
+no evidence rather than evidence of absence, and its comment names modelo 184 as
+the case.
+
+That narrowing had to be checked rather than accepted, because a suppression
+that makes output tidier is exactly what the method warns about. It survives:
+both 184 designs read WHOLE -- three sheets each, nothing skipped, 19 to 33
+fields per sheet -- and still print ZERO bracketed casilla tags. The emptiness
+is a fact about AEAT's document, not a parser failure wearing a tolerance as a
+disguise.
+
+What was missing is the other half. The tolerance is an implicit allowlist entry
+("this design said nothing") and nothing made it fail when its premise went
+stale. `test_diseno_pair_evidence_tolerance.py` now pins both halves: read whole
+AND silent on tags, asserted together, so a parser improvement that starts
+recovering tags reds the premise instead of silently re-arming a refusal.
+
+It also records what the tolerance is standing in front of: modelo 184's
+segmentos are registry slugs (`184-2-entidad`) while its design names the same
+record `Tipo 2 - Registro De Rentas De La ...`, so the segmento-to-sheet match
+would fail for EVERY casilla, not just a misplaced one. Pinned rather than
+fixed, because the sheet names are parser-derived truncations of AEAT headings
+and making the slugs equal them would bind the registry to an extraction
+artefact.
+
+### Item 2 -- modelo 151: the six belong, and the citation direction was inverted
+
+Measured rather than assumed: 151/2015-2022 declares 535 casillas of which 529
+cite `aeat-dr-151-2015` -- its OWN design. The six cite no 151 design at all,
+and none cites the 2023 diseño. The premise "citing the 2023 diseño" does not
+hold.
+
+The six are `decl.ejercicio`, `decl.periodo`, and the four `impatriado.*`
+calculation nodes. They carry symbolic numbers, no segmento, and cite
+`aeat-modelo-151-procedure` / `boe-modelo-151-layout`, grounded in Ley 35/2006
+art. 93. **They belong.** They are the régimen de impatriados calculation
+surface plus the declaration-scope identifiers, and the rendered export tree
+does not address them because they are not positions in AEAT's fixed-width
+record. The 2025 revision carries the same set plus the ahorro pair, a
+principled delta rather than drift.
+
+`test_modelo_151_calculation_surface_casillas.py` pins that as a PROPERTY, not
+as the six ids: a casilla citing no record design must be design-less
+throughout -- no segmento, no offset-range number -- and still legally grounded,
+with the converse asserted so it cannot pass by nothing being design-backed.
+Freezing the tally would have taught the next author to update a constant.
+
+### The discovery behind item 2: an ahorro tier missing for 2015-2022
+
+Chasing the six surfaced a real gap:
+
+* 151/2015-2022 computes `cuota-diferencial := subtract(cuota-integra-general,
+  retenciones)`.
+* 151/2025 computes `subtract(add(cuota-integra-general, cuota-integra-ahorro),
+  retenciones)`.
+* And the 2015-2022 DESIGN carries the ahorro boxes -- `p08.base-liquidable-del-
+  ahorro-18` at 808-824 and `p08.cuota-correspondiente-e-general-del-ahorro-20`
+  at 842-858 -- so AEAT expects them filled for those years.
+
+An impatriado with rentas del ahorro therefore has the savings tier omitted from
+the cuota diferencial for ejercicios 2015-2022. This is the tier-omitted-from-a-
+total shape, in the direction the under-declaration rule governs.
+
+**Recorded, not fixed, for a stated reason: the rate is filing-grade tax
+semantics this session cannot ground.** The legal catalogue carries
+`ley-35-2006:art-93-ahorro` (2025-onward) and `-2023` (2023-2024) and NOTHING
+for 2015-2022. Authoring the missing cohort needs the redacción of art.
+93.2.e).2.º vigente in that era, which the bundled corpus does not hold -- only
+`ley-35-2006.html` (current) and `ley-35-2006-art-93-2023.html`. Copying either
+cohort backwards would ship a wrong rate under a correct-looking citation, which
+is worse than the open gap.
+
+Next step, concretely: acquire the pre-2023 consolidated redacción (taking the
+LAST version in the payload, asserting the amending norm, never through a
+shell), author the 2015 and 2016-2022 cohorts as separate bracket windows, then
+add `impatriado.base-liquidable-ahorro` / `cuota-integra-ahorro` and widen the
+cuota-diferencial sum. No test was written asserting the current behaviour --
+encoding this defect as the contract would bury it behind a green name.
+
+### Verified
+
+* the two new modules plus the completeness and modelo-184 gates: 32 passed.
+* both new modules bite. Disabling the record-design repair reds the tolerance
+  premise; injecting a segmento onto a design-less 151 casilla from outside the
+  tree reds the property test with the exact casilla named.
+* authority loads CLEAN; ruff clean on both new modules.

@@ -9,8 +9,6 @@ body_hash: 'sha256:7c88b34a557af401648ce6c5daec795c1f14c4cdb001ffaf3ae6eb1487698
 related: []
 ---
 
-
-
 # `issue-408-performance-budgets` audit: `Scale performance budget implementation review`
 
 ## Scope
