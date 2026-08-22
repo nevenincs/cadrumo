@@ -6192,3 +6192,143 @@ consolidated_as_of = 2023-12-20
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
+
+[sources."aeat-dr-111-2004"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2004"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf"
+sha256 = "a37964d357a17636c35de6e9e8d395e58fdc7dae0c7f341cf3476687f164bab3"
+bytes = 46050
+retrieved_at = 2026-05-03
+applies_from = 2004-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_2007.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-111-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2010"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/03-111-ejercicios-2010-a-2011-32-kb-pdf.pdf"
+sha256 = "2290c55c7a745c8447143520474a520be87dc7295535a4386e42991fbf61c787"
+bytes = 29374
+retrieved_at = 2026-05-03
+applies_from = 2010-01-01
+applies_to = 2011-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111v14.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-111-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/05-111-orden-eha-3127-2009-ejercicios-2012-a-2015-35-kb-pdf.pdf"
+sha256 = "72e1821365be6b9b33c4a45e9eba1fafdae0c714837cfc7dd52b2f46c6a4919d"
+bytes = 35270
+retrieved_at = 2026-05-03
+applies_from = 2012-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_v16.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-111-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/06-111-orden-eha-3127-2009-ejercicios-2016-hasta-2018-167-kb-xls.xls"
+sha256 = "86568ecc2250b143355f5e40bcbb4393667960ba8228862f6a2ac3cbcc90e192"
+bytes = 171520
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111e16v17.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-115-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/03-115-orden-eha-3435-2007-ejercicios-2015-hasta-2018-168-kb-xls.xls"
+sha256 = "7da90a84b7002756c1259cffa87d9eed67ff48018706d8b0bd40d53486fe32ec"
+bytes = 171008
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR115e15v12.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/04-123-orden-eha-3435-2007-ejercicios-2015-hasta-2018-164-kb-xls.xls"
+sha256 = "cc24b134697856e14a34b03b85eaeb1195e21e740cfc4d0a6f735a4dd8d6ea70"
+bytes = 167424
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR123e15v12.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-130-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/04-130-orden-eha-580-2009-ejercicios-2009-a-2014-36-kb-pdf.pdf"
+sha256 = "9e3acec5e6620d79f05e96e45b29cc8090e1f498257df8a1358f7da91f912828"
+bytes = 36909
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.09.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-130-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/05-130-orden-hap-258-2015-ejercicios-2015-hasta-2018-170-kb-xls.xls"
+sha256 = "277ee3014f629c1368e16a69991ea046818002e01577a9e3379b3e503abf2a4f"
+bytes = 174592
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR130e15v11.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf"
+sha256 = "d55417b8efc679085b26c0f5215ea76e10072b8ef06ed29fee7ccaa0892df31c"
+bytes = 26903
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.09.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/04-131-ejercicios-2015-2016-2017-y-2018-29-8-kb-pdf.pdf"
+sha256 = "a5c9c5c22aee9f6e8bd9f7881ef6995a15e1f8005d670e4b450df6f17aa751c6"
+bytes = 30521
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR131e2015_v1.02.pdf"
+review_status = "reviewed"

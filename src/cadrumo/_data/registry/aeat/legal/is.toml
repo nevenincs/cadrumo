@@ -1803,3 +1803,101 @@ applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR200-2023.xls"
 review_status = "reviewed"
+
+[sources."aeat-dr-202-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009-orden-eha-3435-2007-32-kb-pdf.pdf"
+sha256 = "83b7f29ea2fc5eaee6f041a52c5f5c479d162f32a7d87b11126e617bb4042526"
+bytes = 54658
+retrieved_at = 2026-05-03
+applies_from = 2008-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/202_2008.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2013-desde-3p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf"
+sha256 = "4a5055d3bd27079083c809c8ba9ddf20451de319f2912645ab33f3b15cc43b3c"
+bytes = 46103
+retrieved_at = 2026-05-03
+applies_from = 2013-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e13v34.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/11-202-orden-hap-523-2015-ejercicios-2015-125-kb-xlsx.xlsx"
+sha256 = "71584d7d3258f83472a486f5e426d7533f1f66dc87d631fb1f2e60b7a4130f46"
+bytes = 127906
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e15v42.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2016-1p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016-early"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx"
+sha256 = "434b31a65fea06d574f412bd7da0d30b30109bb8b79d0f1386f33f5ac3899e8e"
+bytes = 127913
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v43.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2016-desde-2p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016-late"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx"
+sha256 = "046b1a25a5038d229e3c4c5e91a49038001edc646a7ee53be8bd51fca7698b28"
+bytes = 128921
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v44.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/13-202-orden-hfp-227-2017-ejercicio-2017-y-1p-de-2018-129-kb-xlsx.xlsx"
+sha256 = "c5bef798fc270bf6360e33a6ef1f89ea841669462cd8956c4c0edb6983cb76e1"
+bytes = 131851
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v47.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2018-desde-2p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/04-202-orden-hac-941-2018-ejercicio-2018-2p-y-3p-129-kb-xlsx.xlsx"
+sha256 = "7828b3ce0bb64da4a5b2f0fef866e3145be9059f53a682eb89c7475996e73a2a"
+bytes = 132628
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v48.xlsx"
+review_status = "reviewed"
