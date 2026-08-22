@@ -2414,3 +2414,51 @@ static file is the tell that the reported text is not the text on disk. Several 
 spent on cache-poisoning and peer-mutation theories before that registered. Related: a
 `reviewed_by` change on an already-reviewed revision REQUIRES `--reviewed-at`, because an
 omitted date would carry the previous reviewer's date onto the new claim.
+
+## 2026-08-22 — Pag. 2 of modelo 840: two findings that generalise past this modelo
+
+Coverage 48 -> 72 of 108. Two things learned here apply to every casilla set authored
+from a diseño, not just this one.
+
+### The design carries its own type, and it disagrees with the label
+
+`RecordDesignField` exposes `type_code` — `An` (alfanumerico) or `Num` — alongside
+`offset`, `length`, `description`, `validation`, `content` and `components`. **Use it.**
+Box [84] is named "Cuota consignada directamente en las tarifas" and every instinct says
+`money`; the design types it `An`, because it is a *Reservado* box the administration
+fills as text. Across Pag. 2 the split is exact: every Reservado box is `An`, every
+taxpayer-supplied figure is `Num`. The `Num` ones here carry no `ent + dec` hint in their
+description — unlike the repeating rows, which say `7ent + 2dec` explicitly — so they are
+integer counts and surfaces rather than money.
+
+Reading the label instead of the type code would have mis-typed nine of the twenty-four.
+
+### Most fields on a detail record are a REPEATING GROUP, not casillas
+
+Pag. 2 has 110 fields but only **26 distinct box numbers**; the Anexo has 165 fields and
+**4**. The bulk of both is one block restated: Apartado VI's `A) 1.`, `A) 2.`, `A) 3.` …
+each carry the same four fields (`2Cod+30Descrip`, `Numero 7ent+2dec`, `Importe unitario`,
+`Cuota`), and **AEAT prints no box number on any of them**. The Anexo repeats an address
+block the same way.
+
+These are repeating detail rows — the shape modelo 720 models with `binding_record` /
+`repeat = "binding_rows"` — not flat casillas. Minting a byte-span number per repetition
+would model a repeating structure as fixed positions and invent a distinct concept for
+every occurrence. **So a record's field count is a bad estimate of its casilla count**, and
+the ratio of fields to distinct numbers is the tell: 110:26 and 165:4 mean "repeating",
+106:82 means "flat".
+
+This also revises the campaign's own arithmetic. The remaining 36 uncovered derived
+casillas are NOT 36 units of transcription: they are Apartado IV of Pag. 1 (blocked on the
+collapsed-number convention), boxes [86] and [109] (same blocker), and an Anexo that is
+almost entirely a repeating block.
+
+### The typo-twin validator caught a real readability trap
+
+Authoring the C and D blocks as `elem_trib_local_*` and `elem_trib_locales_*` produced
+`elem_trib_local_cuota_elemento` beside `elem_trib_locales_cuota_elemento` — one letter
+apart, two different concepts — and the registry refused both. Declaring them
+`intentional_singleton` would have satisfied the gate and left the trap in place. They were
+renamed instead to the distinction AEAT actually draws: **municipal** (C, cuota municipal)
+versus **provincial-nacional** (D, cuota provincial o nacional). The check was right; the
+names were wrong.
