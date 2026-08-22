@@ -37,7 +37,7 @@ def _test_passphrase() -> str:
 
 
 def _archive_export(label: str, target: Path) -> Result:
-    args = ["config", "profile", "archive", "export", label, "--to", str(target)]
+    args = ["config", "profile", "archive", "export", label, "--output", str(target)]
     return _invoke(args, input=f'{{"password": "{_test_passphrase()}"}}')
 
 

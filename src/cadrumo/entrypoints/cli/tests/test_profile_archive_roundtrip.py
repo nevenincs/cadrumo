@@ -75,7 +75,7 @@ def _create_profile(name: str, *, tax_id: str) -> str:
 
 
 def _archive_export(name: str, out: Path, *, json_format: bool = True) -> Result:
-    args = ["config", "profile", "archive", "export", name, "--to", str(out)]
+    args = ["config", "profile", "archive", "export", name, "--output", str(out)]
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)

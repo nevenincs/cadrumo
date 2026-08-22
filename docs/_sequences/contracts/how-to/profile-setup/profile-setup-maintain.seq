@@ -4,5 +4,5 @@ aeat config profile edit bruno-2026 --quiet --address-postcode 28013
 @step Log in to the profile before backing it up.
 aeat config login bruno-2026
 @step Back up the profile to a sealed, encrypted archive.
-@result aeat --format json config profile archive export bruno-2026 --to bruno-2026.cadrumo-bucket.tar.gz
+@result aeat --format json config profile archive export bruno-2026 --output bruno-2026.cadrumo-bucket.tar.gz
 @expect exit_code == 0
