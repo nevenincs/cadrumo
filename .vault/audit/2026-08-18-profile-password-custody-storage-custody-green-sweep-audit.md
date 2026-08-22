@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e6c4cfc541b40526b1a7a2416f1f01b7c0f5fa1b7d32f9a2f95dab73c73bc855'
+body_hash: 'sha256:284ee947754ca1b910153807599fc50749df57115b28c884a376ec1e221cfebd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6717,3 +6717,46 @@ Durable lesson: when a guard strands a test, the cheapest setup that satisfies t
 not automatically the right one. Ask what the case is ABOUT, and pay only for that. A fixture
 that drags in a heavyweight real subsystem the assertions never mention will eventually fail
 for a reason the test name cannot explain.
+
+### The KDF refusals' `retryable` value is genuinely ambiguous, and was NOT changed
+
+Built and then reverted. Recording it because the next reader will find the same apparent bug
+and should not have to re-derive the reason it is not one.
+
+`ProfileCustodyRefusedError` carries four refusals under one registry entry with
+`retryable=False`: `LEGACY_CUSTODY_DETECTED`, `DEK_ROTATION_UNSUPPORTED`,
+`KDF_RESOURCE_LIMIT` and `KDF_SUPERVISION_UNAVAILABLE`. Measured, not inferred -- all four
+emit `REFUSED_STORAGE_PROFILE_CUSTODY` with `retryable=False`. The first two are permanent
+until re-enrolment. The other two looked misclassified: `profile_kdf_resources` refuses when
+AVAILABLE MEMORY is insufficient, and the supervision refusal fires when the worker could not
+be spawned or answered -- both of which clear on their own. The field's own docstring defines
+`True` as "time alone, or another party finishing, can make the same request work", and a
+sibling custody refusal is deliberately `True` on exactly that reasoning (something else holds
+the receipt open and will release it).
+
+A subclass carrying `retryable=True` was implemented for the supervision refusal alone, on the
+theory that it was the unambiguous half. It is not. The shipped message in all four catalogues
+reads "Key-derivation supervision is unavailable on this HOST" -- the permanent reading, that
+this machine cannot supervise a KDF worker at all. And the raise sites support both: a host
+that cannot spawn subprocesses fails here permanently, while a host merely out of memory this
+second fails here transiently. The same mixture disqualified `KDF_RESOURCE_LIMIT`, whose
+refusal also covers a missing `cpu_count` and a broken `sysconf` -- neither transient.
+
+What decides it is the ASYMMETRY, which the field's docstring already states: the operator is
+an autonomous agent, and "telling it to retry is what produces the loop". `False` on a
+transient failure costs one abandoned operation the operator can repeat by hand. `True` on a
+permanent one costs an unbounded retry loop against a host that will never succeed. With
+causes genuinely mixed under one refusal, the conservative value is the defensible one, and
+the existing `False` is most likely deliberate rather than an oversight.
+
+Correcting this properly is not a `retryable` edit. It requires SPLITTING each refusal by
+cause at the raise site -- "this host cannot supervise" separated from "this host is
+momentarily out of room" -- across roughly forty raise sites, each classified by hand, plus
+new codes and catalogue entries. That is a taxonomy decision with an owner, and it is
+recorded here rather than taken alone.
+
+Durable lesson: a refusal that bundles a permanent and a transient cause cannot carry an
+honest `retryable`, whichever value it picks. The tell is a message that asserts one reading
+("on this host") while the raise sites support both. Check the shipped MESSAGE against the
+raise sites before concluding a classification is wrong -- the message is where the original
+author recorded which cause they meant.
