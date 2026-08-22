@@ -1,0 +1,331 @@
+
+
+[[revisions."2008-2023".casillas]]
+id = "92"
+number = "92"
+section = ["iva", "tributacion_territorio"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f018"]
+
+[[revisions."2008-2023".casillas]]
+id = "93"
+number = "93"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f021"]
+
+[[revisions."2008-2023".casillas]]
+id = "94"
+number = "94"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f022"]
+
+[[revisions."2008-2023".casillas]]
+id = "95"
+number = "95"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f027"]
+
+[[revisions."2008-2023".casillas]]
+id = "96"
+number = "96"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f028"]
+
+[[revisions."2008-2023".casillas]]
+id = "97"
+number = "97"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f029"]
+
+[[revisions."2008-2023".casillas]]
+id = "98"
+number = "98"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f030"]
+
+[[revisions."2008-2023".casillas]]
+id = "99"
+number = "99"
+section = ["iva", "resumen_anual", "operaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f032"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-1.codigo"
+number = "otras-1.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f005"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-1.epigrafe-iae"
+number = "otras-1.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f006"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-2.codigo"
+number = "otras-2.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f007"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-2.epigrafe-iae"
+number = "otras-2.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f008"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-3.codigo"
+number = "otras-3.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f009"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-3.epigrafe-iae"
+number = "otras-3.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f010"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-4.codigo"
+number = "otras-4.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f011"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-4.epigrafe-iae"
+number = "otras-4.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f012"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-5.codigo"
+number = "otras-5.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f013"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.otras-5.epigrafe-iae"
+number = "otras-5.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f014"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.principal.codigo"
+number = "principal.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f003"]
+
+[[revisions."2008-2023".casillas]]
+id = "actividad.principal.epigrafe-iae"
+number = "principal.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-03.f004"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.destinatario-criterio-caja"
+number = "destinatario-criterio-caja"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f014"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.entidad-dominante-nif"
+number = "entidad-dominante-nif"
+section = ["identificacion", "grupo"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f011"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.exonerado-modelo-390"
+number = "exonerado-modelo-390"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f096"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.grupo-numero"
+number = "grupo-numero"
+section = ["identificacion", "grupo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f009"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.grupo-rol"
+number = "grupo-rol"
+section = ["identificacion", "grupo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f010"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.prorrata-especial"
+number = "prorrata-especial"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f015"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.redeme-inscrito"
+number = "redeme-inscrito"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f013"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.regimen-163-sexies-cinco"
+number = "regimen-163-sexies-cinco"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f012"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.tributacion-exclusivamente-foral"
+number = "tributacion-exclusivamente-foral"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f095"]
+
+[[revisions."2008-2023".casillas]]
+id = "decl.volumen-anual-no-cero"
+number = "volumen-anual-no-cero"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
+source_refs = ["aeat-dr-322-2023"]
+export_refs = ["m322-2023.page-01.f094"]

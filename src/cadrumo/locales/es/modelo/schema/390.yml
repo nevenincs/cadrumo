@@ -1487,12 +1487,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
                 10% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                2% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
@@ -1517,12 +1511,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
                 5% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                7,5% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: null
               label: Base imponible total adquisiciones intracomunitarias de bienes
@@ -1555,12 +1543,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
                 tipo 10% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 2% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
@@ -1585,12 +1567,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
                 tipo 5% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 7,5% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: null
               label: Base imponible total adquisiciones intracomunitarias de servicios
@@ -2153,16 +2129,12 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              label: Recargo de equivalencia al tipo 0,26% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: null
               label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
               help: null
               label: Recargo de equivalencia al tipo 0,5% - Cuota
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              label: Recargo de equivalencia al tipo 0,62% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: null
               label: null
@@ -2175,8 +2147,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
               help: null
               label: null
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              label: Recargo de equivalencia al tipo 1% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: null
               label: null
@@ -2207,10 +2177,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
               help: null
               label: Cuota IVA repercutido al tipo 10%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              label: Base imponible IVA repercutido al tipo 2%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              label: Cuota IVA repercutido al tipo 2%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: null
               label: Base imponible IVA repercutido al tipo 21%
@@ -2229,10 +2195,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
               help: null
               label: Cuota IVA repercutido al tipo 5%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              label: Base imponible IVA repercutido al tipo 7,5%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              label: Cuota IVA repercutido al tipo 7,5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
               help: null
               label: Base imponible IVA repercutido al tipo cero (0%)
@@ -2544,12 +2506,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
                 10% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                2% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
@@ -2574,12 +2530,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
                 5% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                7,5% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
-                7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: null
               label: Base imponible total adquisiciones intracomunitarias de bienes
@@ -2612,12 +2562,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
                 tipo 10% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 2% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
@@ -2642,12 +2586,6 @@ modelo:
               help: null
               label: IVA devengado adquisiciones intracomunitarias de servicios al
                 tipo 5% - Cuota
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 7,5% - Base imponible
-            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              label: IVA devengado adquisiciones intracomunitarias de servicios al
-                tipo 7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: null
               label: Base imponible total adquisiciones intracomunitarias de servicios
@@ -3210,8 +3148,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              label: Recargo de equivalencia al tipo 0,26% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: null
               label: null
@@ -3248,8 +3184,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
               help: null
               label: null
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              label: Recargo de equivalencia al tipo 1% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: null
               label: null
@@ -3280,10 +3214,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
               help: null
               label: Cuota IVA repercutido al tipo 10%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              label: Base imponible IVA repercutido al tipo 2%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              label: Cuota IVA repercutido al tipo 2%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: null
               label: Base imponible IVA repercutido al tipo 21%
@@ -3302,10 +3232,6 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
               help: null
               label: Cuota IVA repercutido al tipo 5%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              label: Base imponible IVA repercutido al tipo 7,5%
-            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              label: Cuota IVA repercutido al tipo 7,5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
               help: null
               label: Base imponible IVA repercutido al tipo cero (0%)

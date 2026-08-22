@@ -277,6 +277,28 @@ def _coerce_text(value: Decimal | str | None, *, default: str = "") -> str:
     return str(value)
 
 
+def _coerce_optional_int(value: Decimal | str | None) -> int | None:
+    """Read an optional whole-number cell, treating blank as ABSENT, not zero.
+
+    The distinction is load-bearing across this whole family. Modelo 190's
+    design campo 15 declares AÑO DE NACIMIENTO for claves A, B.01 and C, and
+    the withholding validator refuses such a row when no observation carries
+    it; a blank coerced to 0 would clear that refusal while telling AEAT the
+    perceptor was born in year zero. The same holds for the personal and family
+    circumstance counts: "no descendants declared" and "zero descendants
+    declared" are different statements, and only the second is a declaration.
+    """
+    if value is None or value == "":
+        return None
+    text = _coerce_text(value).strip()
+    if not text:
+        return None
+    try:
+        return int(Decimal(text))
+    except (ArithmeticError, ValueError):
+        return None
+
+
 def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
     if value is None or value == "":
         return default
@@ -488,10 +510,13 @@ def assemble_withholding_observations(
                     # value itself for an empty string, so without this a blank field
                     # reaches the model as "" -- which is neither a country nor the
                     # honest "not stated" this row exists to make representable.
-                    country_code=_coerce_text(fields.get("country_code")) or None,
                     transaction_date=default_date,
                     clave=clave,
                     subclave=_coerce_text(fields.get("subclave")),
+                    perceptor_birth_year=_coerce_optional_int(fields.get("perceptor_birth_year")),
+                    perceptor_situacion_familiar=_coerce_optional_int(fields.get("perceptor_situacion_familiar")),
+                    province_code=_coerce_text(fields.get("province_code")) or None,
+                    territorial_deduction_clave=_coerce_optional_int(fields.get("territorial_deduction_clave")),
                     percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
                     retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
@@ -743,7 +768,6 @@ def assemble_atribucion_observations(
                     # value itself for an empty string, so without this a blank field
                     # reaches the model as "" -- which is neither a country nor the
                     # honest "not stated" this row exists to make representable.
-                    country_code=_coerce_text(fields.get("country_code")) or None,
                     transaction_date=default_date,
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
                     base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),

@@ -46,7 +46,10 @@ def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
 
 def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
     modelo, catalogues = _load_modelo_184()
-    revision = modelo.revisions["2015-y-siguientes"]
+    # The earlier half of the split carries the 2015 start. Orden HAC/1430/2025
+    # partitioned this modelo at ejercicio 2025, so the revision reaching back to
+    # 2015 is `2015-2024`; `2025-y-siguientes` starts at the boundary.
+    revision = modelo.revisions["2015-2024"]
 
     # `valid_from` is the revision's DEVENGO window start, canonicalised to the
     # ejercicio start -- 87 of the tree's 95 revisions sit on January 1, and the
@@ -65,9 +68,30 @@ def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
 
 
 def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
-    for filing_year in (2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026):
+    """Every published year resolves, and resolves to the half the orden governs.
+
+    Before the split one revision answered for every year, so this could only
+    assert that a snapshot built at all. Now it also pins WHICH side of the
+    boundary each year lands on, which is the fact that matters: the two halves
+    carry different byte layouts, so a year resolving to the wrong one would
+    write a filing at the wrong offsets while still building cleanly.
+    """
+    expected_by_year = {
+        2018: "2015-2024",
+        2019: "2015-2024",
+        2020: "2015-2024",
+        2021: "2015-2024",
+        2022: "2015-2024",
+        2023: "2015-2024",
+        2024: "2015-2024",
+        # Orden HAC/1430/2025 art. cuarto is applicable for the first time to
+        # ejercicio 2025 for modelo 184.
+        2025: "2025-y-siguientes",
+        2026: "2025-y-siguientes",
+    }
+    for filing_year, expected in expected_by_year.items():
         snapshot = _committed_snapshot("184", filing_year, "0A")
-        assert snapshot.revision.id == "2015-y-siguientes"
+        assert snapshot.revision.id == expected, filing_year
 
 
 def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
@@ -86,7 +110,7 @@ def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
 
 def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> None:
     modelo, _ = _load_modelo_184()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2025-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
 
     expected = {
@@ -108,7 +132,7 @@ def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> Non
 
 def test_modelo_184_live_cross_references_are_read_only() -> None:
     modelo, _ = _load_modelo_184()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2025-y-siguientes"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-184-static-documentation"]
@@ -141,7 +165,7 @@ def test_modelo_184_live_cross_references_are_read_only() -> None:
 
 def test_modelo_184_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = _load_modelo_184()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2025-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-184-informative")
 
     assert "modelo-184-filing" in construct.application_links
@@ -155,7 +179,7 @@ def test_modelo_184_construct_links_living_filing_and_extractor_surfaces() -> No
 
 def test_modelo_184_filing_schedule_is_annual_february() -> None:
     modelo, _ = _load_modelo_184()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2025-y-siguientes"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-184-anual")
 
     assert schedule.period_kind == "annual"

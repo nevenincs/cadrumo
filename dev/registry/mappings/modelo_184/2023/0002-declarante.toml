@@ -1,0 +1,355 @@
+schema_version = 1
+fragment_id = "declarante"
+modelo = "184"
+design_epoch = "2023"
+source_ref = "aeat-dr-184-2023-2024"
+source_sha256 = "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f001"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 45
+ordinal = "1"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f002"
+kind = "literal"
+literal = "184"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 47
+ordinal = "2"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f003"
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 49
+ordinal = "3"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 52
+ordinal = "4"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f005"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 63
+ordinal = "5"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f006"
+kind = "casilla"
+casilla_id = "decl.tipo-soporte"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 68
+ordinal = "6"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f007"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 83
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f008"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 85
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f009"
+kind = "casilla"
+casilla_id = "decl.numero-justificante"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 89
+ordinal = "8"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f010"
+kind = "casilla"
+casilla_id = "decl.complementaria-sustitutiva"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 96
+ordinal = "9"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f011"
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 116
+ordinal = "10"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f012"
+kind = "casilla"
+casilla_id = "decl.total-socios"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 129
+ordinal = "11"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f013"
+kind = "casilla"
+casilla_id = "decl.entidad-espanola.tipo-entidad"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 139
+ordinal = "13"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f014"
+kind = "casilla"
+casilla_id = "decl.entidad-espanola.actividad-principal"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 147
+ordinal = "14"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f015"
+kind = "casilla"
+casilla_id = "decl.entidad-extranjera.tipo-entidad"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 160
+ordinal = "16"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f016"
+kind = "casilla"
+casilla_id = "decl.entidad-extranjera.objeto"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 176
+ordinal = "17"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f017"
+kind = "casilla"
+casilla_id = "decl.entidad-extranjera.clave-pais"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 186
+ordinal = "18"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f018"
+kind = "casilla"
+casilla_id = "decl.entidad-extranjera.porcentaje-renta-residentes"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 193
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f019"
+kind = "casilla"
+casilla_id = "decl.tributacion-impuesto-sociedades"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 204
+ordinal = "19"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f020"
+kind = "casilla"
+casilla_id = "decl.importe-neto-cifra-negocios"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 222
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f021"
+kind = "casilla"
+casilla_id = "decl.importe-neto-cifra-negocios"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 224
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f022"
+kind = "casilla"
+casilla_id = "decl.representante-nif"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 226
+ordinal = "21"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f023"
+kind = "casilla"
+casilla_id = "decl.representante-nombre"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 237
+ordinal = "22"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f024"
+kind = "filler"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 247
+ordinal = "23"
+record_identity = "PDF record design"
+
+
+[[entries]]
+export_field_id = "m184-2023.declarante.f025"
+kind = "filler"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "PDF record design"
+source_row = 248
+ordinal = "24"
+record_identity = "PDF record design"
+

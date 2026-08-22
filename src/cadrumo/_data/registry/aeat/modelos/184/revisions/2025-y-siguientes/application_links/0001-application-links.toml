@@ -1,0 +1,31 @@
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-184-portal"
+surface = "portal"
+consumer = "portal_m184_atribucion_rentas"
+requires_snapshot = true
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-184-procedure"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-184-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-184-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-184-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]

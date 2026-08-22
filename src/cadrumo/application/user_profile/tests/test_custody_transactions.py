@@ -193,19 +193,32 @@ def _hold_transaction_lock_in_sibling(
     release_event: Any,
     result_queue: Any,
 ) -> None:
-    """Take the actual root-before-profile lock in a separate process."""
+    """Take the actual root-before-profile lock in a separate process.
+
+    ``ready`` is published once the interpreter is up and the lock call is the
+    only thing left to do. Without it a caller timing "did the sibling acquire?"
+    is timing a Windows spawn plus a cadrumo import -- seconds of startup that
+    swallow any window short enough to be a useful contention probe.
+    """
     from .._custody_repository import profile_custody_transaction_lock
 
+    result_queue.put("ready")
     with profile_custody_transaction_lock(Path(root_text), UUID(profile_id_text)):
         result_queue.put("locked")
         release_event.wait(30)
 
 
 def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result_queue: Any) -> None:
-    """Perform a production pointer write in an independent interpreter."""
+    """Perform a production pointer write in an independent interpreter.
+
+    ``ready`` is published once the interpreter is up and the pointer
+    transaction is the only work left, so a caller timing "did the sibling get
+    in?" measures the lock rather than the seconds a spawn spends importing.
+    """
     from ....core import BucketPointer
     from .._profile_pointer_transaction import active_profile_pointer_transaction
 
+    result_queue.put("ready")
     with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
         pointer_transaction.write(BucketPointer(bucket_id=bucket_id_text, schema_version=1))
     result_queue.put("written")
@@ -281,11 +294,20 @@ def _create_labeled_capsule_in_sibling(
     profile_id_text: str,
     label: str,
     result_queue: Any,
+    barrier: Any = None,
 ) -> None:
-    """Attempt the actual complete create transaction in an independent process."""
+    """Attempt the actual complete create transaction in an independent process.
+
+    The barrier is released once the envelope material exists and the
+    transaction is the only work left. Without it the siblings reach the create
+    whenever their own KDF setup happens to finish, so the race is loose and
+    the collision is decided by scheduling luck rather than by the lock.
+    """
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
     envelope, sentinel, data_files = _create_capsule_input(profile_id=profile_id)
+    if barrier is not None:
+        barrier.wait(60)
     try:
         ProfileCustodyTransactionService(root=root).create_capsule(
             profile_id=profile_id,
@@ -795,13 +817,14 @@ def test_create_root_lock_serializes_duplicate_labels_across_real_processes(tmp_
     """Two independently scheduled creates expose at most one matching label."""
     context = get_context("spawn")
     result_queue = context.Queue()
+    barrier = context.Barrier(2)
     first = context.Process(
         target=_create_labeled_capsule_in_sibling,
-        args=(str(tmp_path), str(_PROFILE_ID), "Same label", result_queue),
+        args=(str(tmp_path), str(_PROFILE_ID), "Same label", result_queue, barrier),
     )
     second = context.Process(
         target=_create_labeled_capsule_in_sibling,
-        args=(str(tmp_path), str(_OTHER_PROFILE_ID), "same LABEL", result_queue),
+        args=(str(tmp_path), str(_OTHER_PROFILE_ID), "same LABEL", result_queue, barrier),
     )
     first.start()
     second.start()
@@ -852,10 +875,18 @@ def test_transaction_lock_serializes_siblings_and_releases_after_process_death(t
     )
     first.start()
     try:
+        assert result_queue.get(timeout=20) == "ready"
         assert result_queue.get(timeout=20) == "locked"
+
+        # The exclusion window opens only after the sibling reports itself
+        # ready, so it measures the LOCK rather than the seconds a spawned
+        # interpreter spends importing before it can even attempt one. Timed
+        # from `second.start()` this assertion was satisfied by startup latency
+        # and passed with the root lock removed entirely.
         second.start()
+        assert result_queue.get(timeout=20) == "ready"
         with pytest.raises(Empty):
-            result_queue.get(timeout=0.25)
+            result_queue.get(timeout=2.0)
 
         first.terminate()
         first.join(10)
@@ -890,8 +921,14 @@ def test_pointer_cas_and_active_pointer_writer_share_one_root_lock(tmp_path: Pat
         with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
             captured = ProfileCustodyPointerSnapshot.capture(tmp_path)
             writer.start()
+
+            # Opened only after the sibling reports ready: timed from start()
+            # this window closed before a spawned interpreter could finish
+            # importing, so it passed with the root lock removed entirely and
+            # proved nothing about exclusion.
+            assert result_queue.get(timeout=20) == "ready"
             with pytest.raises(Empty):
-                result_queue.get(timeout=0.25)
+                result_queue.get(timeout=2.0)
             compare_and_swap_profile_pointer(root=tmp_path, expected=captured, replacement=None)
 
         assert result_queue.get(timeout=20) == "written"

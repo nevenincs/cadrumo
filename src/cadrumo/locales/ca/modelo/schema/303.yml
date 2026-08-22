@@ -685,6 +685,8 @@ modelo:
               label: null
             '107':
               help: Casella 107 del model 303, exercici 2022.
+              label: 'Informació de la tributació per raó de territori: territori
+                comú'
             '11':
               help: null
               label: null
@@ -705,12 +707,19 @@ modelo:
               label: null
             '125':
               help: Casella 125 del model 303, exercici 2022.
+              label: Operacions subjectes amb inversió del subjecte passiu
             '126':
               help: Casella 126 del model 303, exercici 2022.
+              label: Operacions no subjectes per regles de localització acollides
+                als règims especials de finestreta única
             '127':
               help: Casella 127 del model 303, exercici 2022.
+              label: OSS. Operacions subjectes i acollides als règims especials de
+                finestreta única
             '128':
               help: Casella 128 del model 303, exercici 2022.
+              label: Operacions intragrup valorades conforme al que disposen els arts.
+                78 i 79 LIVA
             '13':
               help: null
               label: null
@@ -824,60 +833,85 @@ modelo:
               label: null
             '500':
               help: Casella 500 del model 303, exercici 2022.
+              label: Prorrates - 1 - Codi CNAE
             '501':
               help: Casella 501 del model 303, exercici 2022.
+              label: Prorrates - 1 - Import d'operacions
             '502':
               help: Casella 502 del model 303, exercici 2022.
+              label: Prorrates - 1 - Import d'operacions amb dret a deducció
             '503':
               help: Casella 503 del model 303, exercici 2022.
+              label: Prorrates - 1 - Tipus de prorrata
             '504':
               help: Casella 504 del model 303, exercici 2022.
+              label: Prorrates - 1 - % de prorrata
             '505':
               help: Casella 505 del model 303, exercici 2022.
+              label: Prorrates - 2 - Codi CNAE
             '506':
               help: Casella 506 del model 303, exercici 2022.
+              label: Prorrates - 2 - Import d'operacions
             '507':
               help: Casella 507 del model 303, exercici 2022.
+              label: Prorrates - 2 - Import d'operacions amb dret a deducció
             '508':
               help: Casella 508 del model 303, exercici 2022.
+              label: Prorrates - 2 - Tipus de prorrata
             '509':
               help: Casella 509 del model 303, exercici 2022.
+              label: Prorrates - 2 - % de prorrata
             '51':
               help: null
               label: null
             '510':
               help: Casella 510 del model 303, exercici 2022.
+              label: Prorrates - 3 - Codi CNAE
             '511':
               help: Casella 511 del model 303, exercici 2022.
+              label: Prorrates - 3 - Import d'operacions
             '512':
               help: Casella 512 del model 303, exercici 2022.
+              label: Prorrates - 3 - Import d'operacions amb dret a deducció
             '513':
               help: Casella 513 del model 303, exercici 2022.
+              label: Prorrates - 3 - Tipus de prorrata
             '514':
               help: Casella 514 del model 303, exercici 2022.
+              label: Prorrates - 3 - % de prorrata
             '515':
               help: Casella 515 del model 303, exercici 2022.
+              label: Prorrates - 4 - Codi CNAE
             '516':
               help: Casella 516 del model 303, exercici 2022.
+              label: Prorrates - 4 - Import d'operacions
             '517':
               help: Casella 517 del model 303, exercici 2022.
+              label: Prorrates - 4 - Import d'operacions amb dret a deducció
             '518':
               help: Casella 518 del model 303, exercici 2022.
+              label: Prorrates - 4 - Tipus de prorrata
             '519':
               help: Casella 519 del model 303, exercici 2022.
+              label: Prorrates - 4 - % de prorrata
             '52':
               help: null
               label: null
             '520':
               help: Casella 520 del model 303, exercici 2022.
+              label: Prorrates - 5 - Codi CNAE
             '521':
               help: Casella 521 del model 303, exercici 2022.
+              label: Prorrates - 5 - Import d'operacions
             '522':
               help: Casella 522 del model 303, exercici 2022.
+              label: Prorrates - 5 - Import d'operacions amb dret a deducció
             '523':
               help: Casella 523 del model 303, exercici 2022.
+              label: Prorrates - 5 - Tipus de prorrata
             '524':
               help: Casella 524 del model 303, exercici 2022.
+              label: Prorrates - 5 - % de prorrata
             '53':
               help: null
               label: null
@@ -925,79 +959,149 @@ modelo:
               label: null
             '700':
               help: Casella 700 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+                interiors - Béns i serveis corrents - Base imposable
             '701':
               help: Casella 701 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+                interiors - Béns i serveis corrents - Quota deduïble
             '702':
               help: Casella 702 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+                interiors - Béns d'inversió - Base imposable
             '703':
               help: Casella 703 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+                interiors - Béns d'inversió - Quota deduïble
             '704':
               help: Casella 704 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+                - Béns corrents - Base imposable
             '705':
               help: Casella 705 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+                - Béns corrents - Quota deduïble
             '706':
               help: Casella 706 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+                - Béns d'inversió - Base imposable
             '707':
               help: Casella 707 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+                - Béns d'inversió - Quota deduïble
             '708':
               help: Casella 708 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+                intracomunitàries - Béns corrents i serveis - Base imposable
             '709':
               help: Casella 709 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+                intracomunitàries - Béns corrents i serveis - Quota deduïble
             '71':
               help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de la liquidació
             '710':
               help: Casella 710 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+                intracomunitàries - Béns d'inversió - Base imposable
             '711':
               help: Casella 711 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+                intracomunitàries - Béns d'inversió - Quota deduïble
             '712':
               help: Casella 712 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Compensació, règim
+                especial d'agricultura, ramaderia i pesca - Base imposable
             '713':
               help: Casella 713 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Compensació, règim
+                especial d'agricultura, ramaderia i pesca - Quota deduïble
             '714':
               help: Casella 714 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Rectificació de deduccions
+                - Base imposable
             '715':
               help: Casella 715 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Rectificació de deduccions
+                - Quota deduïble
             '716':
               help: Casella 716 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Regularització de béns
+                d'inversió
             '717':
               help: Casella 717 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 1 - Suma de deduccions
             '718':
               help: Casella 718 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+                interiors - Béns i serveis corrents - Base imposable
             '719':
               help: Casella 719 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+                interiors - Béns i serveis corrents - Quota deduïble
             '720':
               help: Casella 720 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+                interiors - Béns d'inversió - Base imposable
             '721':
               help: Casella 721 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+                interiors - Béns d'inversió - Quota deduïble
             '722':
               help: Casella 722 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+                - Béns corrents - Base imposable
             '723':
               help: Casella 723 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+                - Béns corrents - Quota deduïble
             '724':
               help: Casella 724 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+                - Béns d'inversió - Base imposable
             '725':
               help: Casella 725 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+                - Béns d'inversió - Quota deduïble
             '726':
               help: Casella 726 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+                intracomunitàries - Béns corrents i serveis - Base imposable
             '727':
               help: Casella 727 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+                intracomunitàries - Béns corrents i serveis - Quota deduïble
             '728':
               help: Casella 728 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+                intracomunitàries - Béns d'inversió - Base imposable
             '729':
               help: Casella 729 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+                intracomunitàries - Béns d'inversió - Quota deduïble
             '730':
               help: Casella 730 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Compensació, règim
+                especial d'agricultura, ramaderia i pesca - Base imposable
             '731':
               help: Casella 731 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Compensació, règim
+                especial d'agricultura, ramaderia i pesca - Quota deduïble
             '732':
               help: Casella 732 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Rectificació de deduccions
+                - Base imposable
             '733':
               help: Casella 733 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Rectificació de deduccions
+                - Quota deduïble
             '734':
               help: Casella 734 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Regularització de béns
+                d'inversió
             '735':
               help: Casella 735 del model 303, exercici 2022.
+              label: 13. Règims de deducció diferenciats - 2 - Suma de deduccions
             '74':
               help: null
               label: null
@@ -1012,40 +1116,68 @@ modelo:
               label: null
             '79':
               help: Casella 79 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Lliuraments de béns immobles,
+                operacions financeres i relatives a l'or d'inversió no habituals
             '80':
               help: Casella 80 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim general
             '81':
               help: Casella 81 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim especial
+                del criteri de caixa conforme a l'art. 75 LIVA
             '83':
               help: Casella 83 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions exemptes sense
+                dret a deducció
             '84':
               help: Casella 84 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions no subjectes
+                per regles de localització (excepte les incloses a la casella 126)
             '86':
               help: Casella 86 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim simplificat
             '88':
               help: Casella 88 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Total volum d'operacions
             '89':
               help: Casella 89 del model 303, exercici 2022.
+              label: 'Informació de la tributació per raó de territori: Àlaba'
             '90':
               help: Casella 90 del model 303, exercici 2022.
+              label: 'Informació de la tributació per raó de territori: Guipúscoa'
             '91':
               help: Casella 91 del model 303, exercici 2022.
+              label: 'Informació de la tributació per raó de territori: Biscaia'
             '92':
               help: Casella 92 del model 303, exercici 2022.
+              label: 'Informació de la tributació per raó de territori: Navarra'
             '93':
               help: Casella 93 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Lliuraments intracomunitaris
+                de béns i serveis
             '94':
               help: Casella 94 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Exportacions i altres
+                operacions exemptes amb dret a deducció
             '95':
               help: Casella 95 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim especial
+                de l'agricultura, ramaderia i pesca
             '96':
               help: Casella 96 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions realitzades
+                per subjectes passius acollits al règim especial del recàrrec d'equivalència
             '97':
               help: Casella 97 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim especial
+                de béns usats, objectes d'art, antiguitats i objectes de col·lecció
             '98':
               help: Casella 98 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Operacions en règim especial
+                d'agències de viatges
             '99':
               help: Casella 99 del model 303, exercici 2022.
+              label: Operacions realitzades en l'exercici - Lliuraments de béns d'inversió
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null

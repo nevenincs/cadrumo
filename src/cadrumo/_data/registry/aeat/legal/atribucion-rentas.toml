@@ -149,3 +149,23 @@ published_at = 2015-10-29
 applies_from = 2015-10-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596"
 review_status = "reviewed"
+
+[legal."orden-hac-1430-2025:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1430-2025.html#articulo-4"
+document_id = "BOE-A-2025-25389"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25389"
+published_at = 2025-12-12
+effective_from = 2025-12-13
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-22
+notes = "Articulo cuarto de la Orden HAC/1430/2025: modifica los disenos de registro del modelo 184 aprobados por la Orden HAP/2250/2015. El apartado Uno introduce el campo NUMERO TOTAL DE REGISTROS DE ENTIDAD en las posiciones 221-229 del tipo de registro 1 (registro del declarante) y desplaza BLANCOS a 230-487; el apartado Dos reescribe la relacion de subclaves del campo SUBCLAVE (posiciones 94-95) del tipo de registro 2. La propia orden fija la frontera temporal entre los dos disenos empaquetados: sera aplicable por primera vez a las declaraciones informativas correspondientes al ejercicio 2025 para el modelo 184."
+required_text = [
+    "Artículo cuarto.",
+    "NÚMERO TOTAL DE REGISTROS DE ENTIDAD",
+    "221‑229",
+]

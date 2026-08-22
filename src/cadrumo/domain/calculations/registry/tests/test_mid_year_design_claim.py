@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Revisions scoped to part of one year, each citing a single design.
 _MID_YEAR_HALVES = {("303", "2024-hasta-08-y-2t"), ("303", "2024-desde-09-y-3t"), ("490", "2022-1t"), ("490", "2022-2t-4t")}
 #: Revisions that genuinely cross a design re-layout between YEARS.
-_CROSS_YEAR_SPANS = {("184", "2015-y-siguientes"), ("200", "2024-y-siguientes"), ("322", "2008-2025"), ("347", "2008-y-siguientes")}
+_CROSS_YEAR_SPANS = {("200", "2024-y-siguientes"), ("322", "2008-2025"), ("347", "2008-y-siguientes")}
 
 
 def _by_subject() -> dict[tuple[str, str], dict]:

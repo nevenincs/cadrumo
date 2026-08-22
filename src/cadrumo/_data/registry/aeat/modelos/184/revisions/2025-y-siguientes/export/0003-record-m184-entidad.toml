@@ -1,0 +1,348 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-184-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm184-entidad'
+record_type = 'entidad'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f067'
+offset = 428
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.intereses-gastos-reparacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f068'
+offset = 430
+length = 8
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.tributos-recargos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f069'
+offset = 438
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.tributos-recargos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f070'
+offset = 440
+length = 9
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.saldos-dudoso-cobro'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f071'
+offset = 449
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.saldos-dudoso-cobro'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f072'
+offset = 451
+length = 8
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.cantidades-devengadas-terceros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f073'
+offset = 459
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.cantidades-devengadas-terceros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f074'
+offset = 461
+length = 8
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.primas-seguros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f075'
+offset = 469
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.primas-seguros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f076'
+offset = 471
+length = 8
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.amortizacion-inmueble'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f077'
+offset = 479
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.amortizacion-inmueble'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f078'
+offset = 481
+length = 6
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.amortizacion-bienes-muebles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f079'
+offset = 487
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.amortizacion-bienes-muebles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f080'
+offset = 489
+length = 7
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.otros-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f081'
+offset = 496
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.otros-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm184-2025.entidad.f082'
+offset = 498
+length = 3
+kind = 'casilla'
+casilla_id = 'tipo2.dias-arrendamiento'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2025']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

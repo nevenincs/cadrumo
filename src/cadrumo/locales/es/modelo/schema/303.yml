@@ -735,6 +735,8 @@ modelo:
               label: null
             '107':
               help: Casilla 107 del modelo 303, ejercicio 2022.
+              label: 'Información de la tributación por razón de territorio: Territorio
+                común'
             '11':
               help: null
               label: null
@@ -755,12 +757,19 @@ modelo:
               label: null
             '125':
               help: Casilla 125 del modelo 303, ejercicio 2022.
+              label: Operaciones sujetas con inversión del sujeto pasivo
             '126':
               help: Casilla 126 del modelo 303, ejercicio 2022.
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única
             '127':
               help: Casilla 127 del modelo 303, ejercicio 2022.
+              label: OSS. Operaciones sujetas y acogidas a los regímenes especiales
+                de ventanilla única
             '128':
               help: Casilla 128 del modelo 303, ejercicio 2022.
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA
             '13':
               help: null
               label: null
@@ -874,60 +883,85 @@ modelo:
               label: null
             '500':
               help: Casilla 500 del modelo 303, ejercicio 2022.
+              label: Prorratas - 1 - Código CNAE
             '501':
               help: Casilla 501 del modelo 303, ejercicio 2022.
+              label: Prorratas - 1 - Importe de operaciones
             '502':
               help: Casilla 502 del modelo 303, ejercicio 2022.
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
             '503':
               help: Casilla 503 del modelo 303, ejercicio 2022.
+              label: Prorratas - 1 - Tipo de prorrata
             '504':
               help: Casilla 504 del modelo 303, ejercicio 2022.
+              label: Prorratas - 1 - % de prorrata
             '505':
               help: Casilla 505 del modelo 303, ejercicio 2022.
+              label: Prorratas - 2 - Código CNAE
             '506':
               help: Casilla 506 del modelo 303, ejercicio 2022.
+              label: Prorratas - 2 - Importe de operaciones
             '507':
               help: Casilla 507 del modelo 303, ejercicio 2022.
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
             '508':
               help: Casilla 508 del modelo 303, ejercicio 2022.
+              label: Prorratas - 2 - Tipo de prorrata
             '509':
               help: Casilla 509 del modelo 303, ejercicio 2022.
+              label: Prorratas - 2 - % de prorrata
             '51':
               help: null
               label: null
             '510':
               help: Casilla 510 del modelo 303, ejercicio 2022.
+              label: Prorratas - 3 - Código CNAE
             '511':
               help: Casilla 511 del modelo 303, ejercicio 2022.
+              label: Prorratas - 3 - Importe de operaciones
             '512':
               help: Casilla 512 del modelo 303, ejercicio 2022.
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción
             '513':
               help: Casilla 513 del modelo 303, ejercicio 2022.
+              label: Prorratas - 3 - Tipo de prorrata
             '514':
               help: Casilla 514 del modelo 303, ejercicio 2022.
+              label: Prorratas - 3 - % de prorrata
             '515':
               help: Casilla 515 del modelo 303, ejercicio 2022.
+              label: Prorratas - 4 - Código CNAE
             '516':
               help: Casilla 516 del modelo 303, ejercicio 2022.
+              label: Prorratas - 4 - Importe de operaciones
             '517':
               help: Casilla 517 del modelo 303, ejercicio 2022.
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
             '518':
               help: Casilla 518 del modelo 303, ejercicio 2022.
+              label: Prorratas - 4 - Tipo de prorrata
             '519':
               help: Casilla 519 del modelo 303, ejercicio 2022.
+              label: Prorratas - 4 - % de prorrata
             '52':
               help: null
               label: null
             '520':
               help: Casilla 520 del modelo 303, ejercicio 2022.
+              label: Prorratas - 5 - Código CNAE
             '521':
               help: Casilla 521 del modelo 303, ejercicio 2022.
+              label: Prorratas - 5 - Importe de operaciones
             '522':
               help: Casilla 522 del modelo 303, ejercicio 2022.
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción
             '523':
               help: Casilla 523 del modelo 303, ejercicio 2022.
+              label: Prorratas - 5 - Tipo de prorrata
             '524':
               help: Casilla 524 del modelo 303, ejercicio 2022.
+              label: Prorratas - 5 - % de prorrata
             '53':
               help: null
               label: null
@@ -977,80 +1011,148 @@ modelo:
               label: null
             '700':
               help: Casilla 700 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '701':
               help: Casilla 701 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '702':
               help: Casilla 702 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '703':
               help: Casilla 703 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '704':
               help: Casilla 704 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '705':
               help: Casilla 705 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '706':
               help: Casilla 706 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '707':
               help: Casilla 707 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '708':
               help: Casilla 708 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '709':
               help: Casilla 709 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '71':
               help: Dato declarado en el modelo 303, tomado del diseno de registro
                 oficial.
               label: Resultado de la liquidación
             '710':
               help: Casilla 710 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '711':
               help: Casilla 711 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '712':
               help: Casilla 712 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '713':
               help: Casilla 713 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '714':
               help: Casilla 714 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Base impon.
             '715':
               help: Casilla 715 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Cuota deduc.
             '716':
               help: Casilla 716 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Regularización de bienes de inversión
             '717':
               help: Casilla 717 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones
             '718':
               help: Casilla 718 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '719':
               help: Casilla 719 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '720':
               help: Casilla 720 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '721':
               help: Casilla 721 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '722':
               help: Casilla 722 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '723':
               help: Casilla 723 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '724':
               help: Casilla 724 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '725':
               help: Casilla 725 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '726':
               help: Casilla 726 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '727':
               help: Casilla 727 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '728':
               help: Casilla 728 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '729':
               help: Casilla 729 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '730':
               help: Casilla 730 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '731':
               help: Casilla 731 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '732':
               help: Casilla 732 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Base impon.
             '733':
               help: Casilla 733 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Cuota deduc.
             '734':
               help: Casilla 734 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Regularización de bienes de inversión
             '735':
               help: Casilla 735 del modelo 303, ejercicio 2022.
+              label: 13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones
             '74':
               help: null
               label: null
@@ -1065,40 +1167,72 @@ modelo:
               label: null
             '79':
               help: Casilla 79 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes inmuebles,
+                operaciones financieras y relativas al oro de inversión no habituales
             '80':
               help: Casilla 80 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                general
             '81':
               help: Casilla 81 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial del criterio de caja conforme art. 75 LIVA
             '83':
               help: Casilla 83 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones exentas
+                sin derecho a deducción
             '84':
               help: Casilla 84 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones no sujetas
+                por reglas de localización (excepto las incluidas en la casilla 126)
             '86':
               help: Casilla 86 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                simplificado
             '88':
               help: Casilla 88 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Total volumen de operaciones
             '89':
               help: Casilla 89 del modelo 303, ejercicio 2022.
+              label: 'Información de la tributación por razón de territorio: Álava'
             '90':
               help: Casilla 90 del modelo 303, ejercicio 2022.
+              label: 'Información de la tributación por razón de territorio: Guipuzcoa'
             '91':
               help: Casilla 91 del modelo 303, ejercicio 2022.
+              label: 'Información de la tributación por razón de territorio: Vizcaya'
             '92':
               help: Casilla 92 del modelo 303, ejercicio 2022.
+              label: 'Información de la tributación por razón de territorio: Navarra'
             '93':
               help: Casilla 93 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Entregas intracomunitarias
+                de bienes y servicios
             '94':
               help: Casilla 94 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Exportaciones y otras
+                operaciones exentas con derecho a deducción
             '95':
               help: Casilla 95 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de la agricultura, ganadería y pesca
             '96':
               help: Casilla 96 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
             '97':
               help: Casilla 97 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección
             '98':
               help: Casilla 98 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de Agencias de Viajes
             '99':
               help: Casilla 99 del modelo 303, ejercicio 2022.
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes de
+                inversión
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null

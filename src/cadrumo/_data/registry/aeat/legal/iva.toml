@@ -297,6 +297,20 @@ applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-322-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls"
+sha256 = "be029175f11e632cfefb48b26058766f827612be9e06ad12de7157f15901830f"
+bytes = 955392
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR322e22.xls"
+review_status = "reviewed"
+
 [sources."aeat-dr-322-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

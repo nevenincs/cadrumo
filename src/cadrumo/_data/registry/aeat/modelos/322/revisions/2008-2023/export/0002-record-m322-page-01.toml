@@ -1,0 +1,114 @@
+[[revisions.2008-2023.export_layouts]]
+id = 'generated-modelo-322-2008-2023-fichero'
+
+[[revisions.2008-2023.export_layouts.records]]
+id = 'm322-page-01'
+record_type = 'page-01'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f093'
+offset = 1291
+length = 17
+kind = 'casilla'
+casilla_id = '62'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f094'
+offset = 1308
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.volumen-anual-no-cero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+]
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f095'
+offset = 1309
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.tributacion-exclusivamente-foral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f096'
+offset = 1310
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.exonerado-modelo-390'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f097'
+offset = 1311
+length = 165
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f098'
+offset = 1476
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2008-2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f099'
+offset = 1489
+length = 12
+kind = 'literal'
+literal = '</T32201000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[revisions.2008-2023.export_layouts.records.row_field_casilla_ids]

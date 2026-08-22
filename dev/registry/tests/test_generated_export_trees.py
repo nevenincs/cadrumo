@@ -80,18 +80,33 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
     _GeneratedTree("353", "2026-y-siguientes", "aeat-dr-353-2026", "2026", 2026, "01"),
     _GeneratedTree("353", "2008-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
-    _GeneratedTree("322", "2008-2025", "aeat-dr-322-2024-2025", "2024", 2024, "01"),
+    # Split at the 2023/2024 re-layout, where the 2024 design adds nine
+    # fields and revives DR32201 offset 1311 out of reserved space. The
+    # earlier 2022/2023 boundary is NOT split: no key pairs those two
+    # designs totally, so 2008-2022 still emits the 2023 layout.
+    _GeneratedTree("322", "2008-2023", "aeat-dr-322-2023", "2023", 2023, "01"),
+    _GeneratedTree("322", "2024-2025", "aeat-dr-322-2024-2025", "2024", 2024, "01"),
     _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P"),
     _GeneratedTree("202", "2023-2024", "aeat-dr-202-2023", "2023", 2023, "1P"),
     _GeneratedTree("202", "2025-y-siguientes", "aeat-dr-202-2025", "2025", 2025, "1P"),
     _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
     _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
-    _GeneratedTree("184", "2015-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
+    # Split at Orden HAC/1430/2025 art. cuarto, which introduces NUMERO TOTAL DE
+    # REGISTROS DE ENTIDAD at 221-229 of tipo 1 and is applicable for the first
+    # time to ejercicio 2025. One revision carries one layout, so the years
+    # before that boundary emit the 2023 design and the years after it the 2025.
+    _GeneratedTree("184", "2015-2024", "aeat-dr-184-2023-2024", "2023", 2024, "0A"),
+    _GeneratedTree("184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
     # Enrolled late, and its absence is why its map went stale unnoticed: 347 was
     # published without a row here, so nothing compared its committed tree against a
     # fresh render, and two anchors kept naming parent rows the parser had already
     # descended past.
-    _GeneratedTree("347", "2008-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
+    # Split at the 2024/2025 boundary. The 2011 epoch was derivable because
+    # 347's printed ordinal IS a box identity (unlike modelo 322, where it is
+    # a contiguous position); the 2008 and 2010 designs pair with nothing, so
+    # 2008-2010 still emits the 2011 layout and keeps reporting.
+    _GeneratedTree("347", "2008-2024", "aeat-dr-347-2011", "2011", 2011, "0A"),
+    _GeneratedTree("347", "2025-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
     # Enrolled with the layout, not after it, which is the whole lesson of the 347
     # entry above: a published tree that nothing compares against a fresh render
     # is free to drift, and 347's map did exactly that unnoticed.

@@ -10,40 +10,9 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás tárgyát képező adóév
-            x-chim6r1ed5mn0rriehiiqt3fehgmo:
-              help: A bevallott adományok, ajándékok és hozzájárulások teljes összege
-                és/vagy értéke. A nyomtatvány egész és tizedes részre bontja.
-              label: AZ ADOMÁNYOK ÖSSZEGE ÉS/VAGY ÉRTÉKELÉSE
-            x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: 'A bevalló jellege: 1 a 49/2002 törvény III. címe szerinti kedvezményezett
-                szervezet, 2 elszámolásra kötelezett, jogszerűen elismert alapítvány,
-                3 védett vagyon tulajdonosa vagy kezelője, 4 politikai párt, szövetség
-                vagy koalíció.'
-              label: A BEVALLÓ JELLEGE
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: E bevallást azonosító 13 karakteres igazolásszám.
-              label: A BEVALLÁS IGAZOLÁSSZÁMA
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: A bevallás típusa (eredeti / helyettesítő / kiegészítő)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: Az adathordozó, amelyen a bevallást benyújtják.
-              label: ADATHORDOZÓ TÍPUSA
-            x-chim6r1eehnn8obc5li6aorcc5p62p3fec:
-              help: A bevallásban szereplő 2-es típusú (bejelentett személy) rekordok
-                teljes száma.
-              label: A BEJELENTETT SZEMÉLYEK REKORDJAINAK SZÁMA
-            x-ehkn0rpi5phmoobmck:
-              help: Az adomány, ajándék vagy hozzájárulás kódja a nyomtatvány felsorolása
-                szerint.
-              label: KÓD
-            x-ehkn0rpi5phmup39ctniqs3idtr6irj3d5gg:
-              help: A bejelentett személy tartományának kétjegyű kódja.
-              label: TARTOMÁNYKÓD
-            x-ehkn0rpi5pi6ap3lcdhmirre5lhm6ob1:
-              help: Annak az autonóm közösségnek a kódja, amelynek levonása az adományra
-                alkalmazandó.
-              label: AUTONÓM KÖZÖSSÉGI LEVONÁS
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
               help: null
               label: Az adományozó adóazonosító száma (magánszemély, jogi személy
@@ -51,53 +20,18 @@ modelo:
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
               help: null
               label: Az adományozó neve (családi és utónév, vagy cégnév)
-            x-ehkn0rpi5pimkpbicdkm6qbf5li6urj1cdkmurhde9incrr3c5i62:
-              help: A visszavont adomány évének négy számjegye.
-              label: A VISSZAVONT ADOMÁNY ÉVE
-            x-ehkn0rpi5pimsbb5edo6aor9ck:
-              help: Jelzi, hogy az adomány, hozzájárulás vagy rendelkezés természetben
-                történt-e.
-              label: TERMÉSZETBENI ADOMÁNY, HOZZÁJÁRULÁS VAGY RENDELKEZÉS
-            x-ehkn0rpi5pkm8pbeehkmcqb3c5hmirre5lh6ipbe:
-              help: Az adományozott vagyontárgy azonosítása természetbeni adománynál.
-              label: A VAGYONTÁRGY AZONOSÍTÁSA
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
               help: null
               label: Az adóévben kapott adomány vagy hozzájárulás összege (előjel
                 nélkül, euróban)
-            x-ehkn0rpi5pn62t3le9gmopbqc4mm8pb3dhgn4ob4ds:
-              help: 'A bejelentett személy jellege az A vagy B kódnál: F természetes
-                személy, J jogi személy, E jövedelem-hozzárendelési szervezet.'
-              label: A BEJELENTETT SZEMÉLY JELLEGE
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsqb6:
-              help: Annak a védett vagyonnak a tulajdonosi NIF száma, amelyre a hozzájárulás
-                vagy rendelkezés vonatkozik.
-              label: A VÉDETT VAGYON TULAJDONOSÁNAK NIF SZÁMA
-            x-ehkn0rpi5po62t3id5mmurj9dsmn0sjfehimeqb4dsmmsrrdc9p6a:
-              help: A védett vagyon tulajdonosának vezeték- és utóneve.
-              label: A VÉDETT VAGYON TULAJDONOSÁNAK VEZETÉK- ÉS UTÓNEVE
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
               help: null
               label: Az adományra alkalmazandó levonási százalék (az adományozó adózási
                 rendje, LIRPF 68.3 cikk / Ley 49/2002 különleges rendszer)
-            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdomm6or1c4:
-              help: Az alkalmazandó autonóm közösségi levonás százaléka. A nyomtatvány
-                egész és tizedes részre bontja, hiányában nullákkal kitöltve.
-              label: AZ AUTONÓM KÖZÖSSÉGI LEVONÁS %-A
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
               help: null
               label: Ismétlődő adomány jelzője (több évre szóló adomány ugyanazon
                 kedvezményezett szervezetnek, két vagy több egymást követő adóévben)
-            x-ehkn0rpi5pp6as3iclpmarjkc5n78p9ddhimeobc5ln6ipg:
-              help: A bejelentett személy törvényes képviselőjének NIF száma, ha az
-                érintett kiskorú vagy cselekvőképtelen.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-            x-ehkn0rpi5pp6atjfcdgm6qbfdo:
-              help: Jelzi, hogy a bevallott adományt visszavonták.
-              label: VISSZAVONÁS
-            x-ehkn0rpi5pq6is3f5lh6ipbe:
-              help: Az adományozott vagyontárgy típusa természetbeni adománynál.
-              label: VAGYONTÁRGY TÍPUSA
           construct:
             modelo-182-informative:
               field:

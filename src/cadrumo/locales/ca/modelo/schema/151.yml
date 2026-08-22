@@ -47,18 +47,6 @@ modelo:
             x-chkm8bjjdtm6ior9ehgiqr315li6atjfdhqm6qbfdomn0rri5lq74obeedj6asj5dphmio8:
               help: null
               label: Sol·licita la devolució per transferència
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              label: Guany patrimonial
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              label: NIF de la societat o fons d'inversió
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              label: Retenció o ingrés a compte
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              label: Tipus de renda
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              label: Total de guanys patrimonials
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              label: Total de retencions o ingressos a compte
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: null
               label: Base liquidable general (règim d'impatriats, exclosa la part

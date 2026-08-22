@@ -180,20 +180,12 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
-        2024-y-siguientes:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              label: A visszatartások és előlegfizetések teljes alapja
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: A visszatartások és előlegfizetések teljes összege
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              label: A kedvezményezettek teljes száma
           construct:
             modelo-193-annual-summary:
               field:
-                title: null
+                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
           field:
-            label: null
+            label: 193-as modelo, 2024. adóév
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -372,3 +364,9 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
+          field:
+            label: 193-as modelo, 2025. adóévtől

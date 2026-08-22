@@ -22,6 +22,7 @@ a module reachable by nothing fails here naming itself.
 from __future__ import annotations
 
 import ast
+from collections.abc import Callable
 
 import pytest
 
@@ -36,13 +37,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: reachable despite carrying neither of the other two.
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 
-#: A module that would never run: architectural markers only.
-_ORPHAN_SAMPLE = (
-    "import pytest\n"
-    "pytestmark = [pytest.mark.hex_application]\n"
-    "def test_something():\n"
-    "    assert True\n"
+#: The declared lanes, as the marker EXPRESSIONS they actually select on.
+#:
+#: Carrying an execution marker is not the same as being selected. The lanes
+#: also EXCLUDE markers, and a combination excluded by every one of them is
+#: reachable by nothing while still looking marked -- ``integration and serial
+#: and perf`` is refused by the parallel lane for being serial and by the
+#: serial lane for being perf. The `dev/` reachability gate evaluates its lane
+#: expressions for this reason; this one now does too, rather than checking
+#: only that some execution marker is present.
+_LANE_SELECTORS: tuple[tuple[str, Callable[[frozenset[str]], bool]], ...] = (
+    (
+        "just test-unit",
+        lambda m: "unit" in m and "external_tool" not in m and "os_keychain" not in m,
+    ),
+    (
+        "just test-integration (parallel)",
+        lambda m: "integration" in m and "serial" not in m and "os_keychain" not in m,
+    ),
+    (
+        "just test-integration (serial)",
+        lambda m: "integration" in m and "serial" in m and "perf" not in m and "os_keychain" not in m,
+    ),
+    ("just test-os-keychain", lambda m: "os_keychain" in m),
+    ("just test-live", lambda m: "aeat_live" in m),
 )
+
+#: A module that would never run: architectural markers only.
+_ORPHAN_SAMPLE = "import pytest\npytestmark = [pytest.mark.hex_application]\ndef test_something():\n    assert True\n"
 
 #: The same module with an execution marker, reachable by the unit lane.
 _REACHABLE_SAMPLE = (
@@ -136,3 +158,36 @@ def test_the_live_only_modules_are_reachable_through_their_own_lane() -> None:
     for path in live_only:
         markers = _declared_markers(ast.parse(path.read_text(encoding="utf-8")))
         assert "aeat_live" in markers, f"{repo_relative(path)} is reachable by no lane"
+
+
+def _selecting_lanes(markers: frozenset[str]) -> list[str]:
+    """Return the declared lanes whose expression selects a module's markers."""
+    return [name for name, selects in _LANE_SELECTORS if selects(markers)]
+
+
+def test_no_test_module_is_excluded_by_every_lane() -> None:
+    """DISCRIMINATING: a module can carry an execution marker and still be run by nothing.
+
+    The exclusions are the hole. A module the parallel lane drops for being
+    serial and the serial lane drops for being perf carries ``integration``
+    throughout and passes a presence check, while no lane ever runs it.
+    """
+    stranded = [
+        f"{repo_relative(path)}: markers={sorted(markers)}"
+        for path in _test_modules()
+        for markers in [frozenset(_declared_markers(ast.parse(path.read_text(encoding="utf-8"))))]
+        if not _selecting_lanes(markers)
+    ]
+
+    assert not stranded, "these modules are excluded by every declared lane expression: " + "; ".join(sorted(stranded))
+
+
+def test_the_lane_expressions_reject_the_doubly_excluded_combination() -> None:
+    """ANTI-TAUTOLOGY: the selectors must be able to say no.
+
+    A selector set that accepted everything would clear the tree above without
+    checking anything. This pins the combination both integration lanes drop.
+    """
+    assert _selecting_lanes(frozenset({"integration", "serial", "perf"})) == []
+    assert _selecting_lanes(frozenset({"integration", "serial"})) == ["just test-integration (serial)"]
+    assert _selecting_lanes(frozenset({"unit"})) == ["just test-unit"]

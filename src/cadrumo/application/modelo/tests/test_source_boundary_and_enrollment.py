@@ -232,7 +232,7 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     """M184 ``atribucion_member`` rows resolve from real attribution-entity profile facts."""
     _seed_attribution_entity_profile()
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
-    work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
+    work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
@@ -300,7 +300,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
             ),
         )
         wu_repo, cr_repo, tx_repo, invoice_repo = _repos(objects)
-        work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
+        work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
 
         seed_test_profile_record(
             UserProfileRecord(

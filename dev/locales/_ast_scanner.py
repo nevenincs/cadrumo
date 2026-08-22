@@ -206,7 +206,7 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
     from being misread as a locale-key declaration.
     """
     findings: set[str] = set()
-    flow_confirmed = _flow_confirmed_locale_key_dicts(tree)
+    flow_confirmed = _flow_confirmed_locale_key_dicts(tree) | _flow_confirmed_locale_key_row_tables(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -390,6 +390,96 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
     """
     candidates = _shape_candidate_locale_key_dicts(tree)
     confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates))
+    return {name: value for name, value in candidates.items() if name in confirmed_names}
+
+
+def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
+    """Return True when ``node`` is a table of string ROWS carrying a key column.
+
+    The dict shape above covers ``{token: "some.key"}``. A second table shape
+    ships in this codebase and the dict test cannot see it: a tuple of
+    equal-width tuples where one COLUMN holds the translation key and the
+    others hold the framework's English source strings and defaults, iterated
+    as ``for prefix, key, default, _ in TABLE`` and reaching ``tr(key)``.
+    Requiring every value to be a dotted key -- as the dict shape does -- is
+    exactly wrong here, because the sibling columns are prose by design.
+
+    The signal is POSITIONAL instead: every row is all-string, every row has
+    the same width, and there is at least one index where EVERY row carries a
+    dotted-key-shaped string. A column that is a key in one row and prose in
+    the next is not a key column, so an ordinary table of English pairs cannot
+    qualify. Prose does not collide with the key shape in any case, since
+    :data:`_KEY_LITERAL_RE` admits no spaces.
+    """
+    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+        return False
+    rows: list[list[str]] = []
+    for element in node.elts:
+        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
+            return False
+        values = [
+            item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        ]
+        if len(values) != len(element.elts):
+            return False
+        rows.append(values)
+    width = len(rows[0])
+    if any(len(row) != width for row in rows):
+        return False
+    return any(all(_is_dotted_literal(row[index]) for row in rows) for index in range(width))
+
+
+def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
+    """Return every ``Name -> row-table-literal`` pair shaped as a locale-key registry."""
+    candidates: dict[str, ast.expr] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            target = node.target
+            value = node.value
+        if isinstance(target, ast.Name) and _is_locale_key_row_table_literal(value):
+            candidates[target.id] = value
+    return candidates
+
+
+def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+    """Return the candidate row-table names whose loop variable reaches a translator.
+
+    The dict sink tracks ``.get(...)``/subscript access. A row table is not
+    read that way -- it is ITERATED, and the key arrives at ``tr`` as one of
+    the loop's unpacked target names. Confirming through that binding is what
+    separates a genuine locale-key table from a same-shaped table of unrelated
+    string tuples that never reaches the translator.
+    """
+    tr_names = _translation_call_names(tree)
+    bound_to_table: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.For | ast.AsyncFor):
+            continue
+        if not (isinstance(node.iter, ast.Name) and node.iter.id in candidate_names):
+            continue
+        targets = [node.target] if isinstance(node.target, ast.Name) else list(getattr(node.target, "elts", []))
+        for target in targets:
+            if isinstance(target, ast.Name):
+                bound_to_table[target.id] = node.iter.id
+    confirmed: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in bound_to_table:
+                confirmed.add(bound_to_table[argument.id])
+    return frozenset(confirmed)
+
+
+def _flow_confirmed_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
+    """Return shape-candidate row tables actually iterated into a translator sink."""
+    candidates = _shape_candidate_locale_key_row_tables(tree)
+    confirmed_names = _row_table_names_iterated_into_a_sink(tree, frozenset(candidates))
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
