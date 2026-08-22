@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:30ad53100285152d020ba1488a1052ca25775d60c50ec3ca33e331f8130766db'
+body_hash: 'sha256:e1018222f6b058f86e0a67ca36b0ef2a98c17d584d70ade1c803902fefb480a3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15868,3 +15868,67 @@ The eight inventories. Modelo 200's position-10 holes are now CLOSED as
 unrecoverable and should not be chased again; its three mid-record runs are the
 remaining parser work on that design, and they are the shape earlier fixes
 already handled elsewhere.
+
+## Tick: modelo 200's Pág. 5 recovered -- a coordinate the source states twice
+
+Re-measured at tick start: authority CLEAN. Last tick closed the position-10
+holes as unrecoverable and named the three mid-record runs as the remaining
+work. This tick took them.
+
+### All three rows exist, each refused for a different reason
+
+Using last tick's instrumentation, the three holed records each lack exactly ONE
+ordinal whose coordinates its neighbours fix completely:
+
+* Pág. 5 lacks ord 137 `@1777+15`; Pág. 16 lacks ord 79 `@1236+17`; Pág. 31
+  lacks ord 54 `@827+17`.
+
+Searching the line stream found all three PRESENT, and refused for three
+unrelated reasons:
+
+    '137 1777 15 1777 15 AnC B Participaciones directas ...'   (Pag. 5)
+    '79 1236 (2 a 6) [021]'                                     (Pag. 16)
+    '54 827 17 N Cuenta de perdidas y ganancias ...'            (Pag. 31, one of 22 lines carrying 827)
+
+Only the first was taken. The others are a reversed-column head whose tail is
+not adjacent, and an ordinal/offset identity shared across many records where
+the rejoin's duplicate guard is in play. Three repairs, three different
+guards -- doing them together would have made one corpus control answer for
+three unrelated changes.
+
+### Why this one could be repaired when last tick's could not
+
+The distinction is the whole point and worth stating precisely. Last tick's ord5
+line carried NO numbers at all, so recovering it meant inferring ordinal, offset
+and length from neighbours with nothing in the line to check them against --
+inventing a position.
+
+This line states its coordinate TWICE. The repair is a backreference: the second
+``offset length`` pair must match the first exactly, so the source itself
+confirms the reading, and the row must additionally continue the previous one.
+The naturaleza is separated on its own evidence, being a closed set. **No number
+written out was inferred; every one was read from the line.**
+
+Proved on all four refusal paths rather than only the passing one: a differing
+offset repeat, a differing length repeat, a wrong ordinal and a wrong offset are
+each refused; only the exact-repeat-and-continues case collapses.
+
+### Verified
+
+* **216 designs compared: 1 improved, 0 regressed, 215 unchanged.** Modelo 200's
+  2010 edition goes from 5 skipped sheets to 4 and from 40 sheets to 41,
+  recovering **278 fields**.
+* registry + generated-tree + application/registry: **15 failed, 5,958 passed**.
+  Eight are the declared inventories; two pass in isolation and have been
+  confirmed as parallel artefacts before; the remaining five are peer surfaces
+  already attributed.
+* ruff on the parser: the same four findings it carries at HEAD.
+
+### Still open
+
+The partly-read inventory still reads **5 of 218** and will until modelo 200's
+2010 edition reads whole -- it counts designs, not sheets, so recovering one
+record of five moves fields rather than the headline figure. Two of its four
+remaining holes are the position-10 pair closed last tick as unrecoverable; the
+other two are the Pág. 16 and Pág. 31 rows above, each needing its own repair
+and its own control.

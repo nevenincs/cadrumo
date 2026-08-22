@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e55f56432906e23043436d75a87822c6346f39cac6249240163c1104a92629b3'
+body_hash: 'sha256:c0e457da2c5edffc4f0aad150517e85934c85270d00e8deebd26a96465c2df0f'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -1022,3 +1022,25 @@ before and after each refusal, proving no capsule, directory, or file mutation.
 
 Recovery integration passes 22 cases, authentication mapping passes 27 cases, and Ruff
 lint and format checks are clean. The MEDIUM is closed and S12 is review-clean.
+
+#### Independent S12 presentation-matrix closure verification
+
+Commits `e02fab1b68` and `ebeeca7bf9` fully close
+`s12-recovery-presentation-matrix-bite`. The parameterized real recovery door at
+`src/cadrumo/application/user_profile/tests/test_recovery_custody.py:257-309`
+executes the wrong-mnemonic and malformed-high-surrogate candidates separately.
+Each case requires the exact Spanish `ErrorEnvelope` field set and values, the
+exact single rendered refusal line, context `None`, and absence of both custody
+diagnostics, the translation key, `INTERNAL`, traceback, and the candidate's
+safe representation. The surrogate is constructed with `chr(0xD800)` and only
+its ASCII backslash representation participates in leak assertions, avoiding
+unsafe terminal or test-identifier transport.
+
+Each parameter captures the full storage tree as relative path, filesystem
+kind, and exact file bytes before proof, then requires an identical snapshot
+after refusal. This bites creation of empty directories as well as capsule or
+record writes. Serial recovery integration passes all 22 cases, authentication
+mapping passes all 27 cases, Ruff lint and format checks pass, commit diff
+hygiene passes, the retired test and mapper names are absent, and Vaultspec
+frontmatter validation is clean. No LOW-to-CRITICAL S12 finding remains. S12 is
+review-clean and S13 may proceed.
