@@ -143,7 +143,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
 
       - name: Require an evidence source for every channel this release claims
         run: |
@@ -324,7 +323,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
 
       - name: Re-download and verify the sealed cohort (no rebuild)
         env:
@@ -730,7 +728,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Alert the operator that this release-path run failed
