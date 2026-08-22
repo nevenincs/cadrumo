@@ -2305,3 +2305,44 @@ executed on any of the 13. The prerequisite work is casilla and binding authorin
 bundled designs — which is exactly the "NEEDS CASILLA AUTHORING AT SCALE" category the previous
 campaign had already identified and set aside. That category was never a separate backlog from
 this one; it IS this one.
+
+### Correction: it is the CASILLA set, not bindings — and modelo 181 proves it
+
+The entry above states "60 of 86 shipped layouts DERIVE their fields from bindings". That is
+wrong as a causal claim. 60 of 86 is the count of revisions that have bindings AND a layout —
+correlation. **26 of 86 shipped layouts have no bindings at all**, and modelo 181 is the
+decisive counter-example:
+
+- modelo 181/2009-y-siguientes: **42 casillas, 0 bindings**, 2 records, and its layout is
+  5 literal + 2 draft + 2 header + **40 casilla** + 1 filler.
+
+So a fixed-width layout is driven by the **casilla set**. Binding-derived records (modelo 720's
+`binding_record = "type_1"`) are a second, additive mechanism for repeating rows, not the
+general one. The worklist gate's docstring line "layouts are derived from bindings first"
+describes the resolution ORDER inside the filing boundary, not a requirement that bindings
+exist.
+
+**The conclusion from the previous entry survives, with a corrected reason.** Modelo 840 still
+cannot get a substantive layout — but because it declares 2 casillas against a 381-field
+design, not because it lacks bindings. The prerequisite is authoring the casilla set from the
+bundled design, which is what modelo 181 already did (42 casillas for a 2-record informative
+return).
+
+**This makes the queue tractable again, on a corrected axis.** The right ordering is by how
+many casillas remain to author, i.e. design fields not yet covered by a declared casilla:
+
+| revision | casillas | design fields | records |
+|---|---|---|---|
+| 188/2019 | 5 | 40 | 2 |
+| 194/2019 | 5 | 41 | 2 |
+| 182/2007 | 7 | 38 | 2 |
+| 187/2019 | 4 | 46 | 2 |
+| 840/2003 | 2 | 381 | 3 |
+| 036/2025 | 31 | 1047 | 13 |
+| 220/2024 | 2 | 16079 | 137 |
+
+The four informative returns are ~35 casillas each — the same scale modelo 181 already carries
+— and their designs tile clean. They remain subject to Filter 2 (year coverage), which is a
+separate and still-real blocker for a LAYOUT, but authoring their casilla sets is useful work
+that is not blocked by it.
+
