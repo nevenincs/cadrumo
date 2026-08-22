@@ -572,9 +572,7 @@ def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
     batch_selects = [statement for statement in secure_object_selects if "object_key in" in statement]
     point_key_selects = [statement for statement in secure_object_selects if "object_key =" in statement]
 
-    assert len(batch_selects) == 3, (
-        "the schema guard, atomic cutover check, and payload load must each remain addressed batches"
-    )
+    assert len(batch_selects) == 1, "schema cutover and payload integrity must share one addressed snapshot"
     assert len(point_key_selects) == 1, "only the membership-index lookup should use a point secure-object read"
     assert not any(
         "from secure_objects" in statement and "object_key in" not in statement and "object_key =" not in statement

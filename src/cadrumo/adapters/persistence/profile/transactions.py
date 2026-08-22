@@ -891,18 +891,16 @@ class TransactionCatalogueRepository:
             for transaction_id in selected_ids
         }
         object_keys = tuple(transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids)
-        self._require_current_rows(object_keys)
         transactions_by_id: dict[str, Transaction] = {}
-        migrated = self._objects.migrate_many_atomically(
+        records = self._objects.load_many_current(
             TX_BUCKET_NAMESPACE,
             object_keys,
             expected_class=_TX_CATALOGUE_SENSITIVITY,
             current_version=_TX_CATALOGUE_VERSION,
-            validate_upgraded_payloads=self._refuse_targeted_implicit_migration,
-            write_provenance="transaction-catalogue:schema-migration",
+            refuse_legacy=self._refuse_targeted_implicit_migration,
         )
-        for object_key, record in migrated.items():
-            transaction_id = transaction_id_by_digest.get(secure_object_key_digest(object_key))
+        for record in records:
+            transaction_id = transaction_id_by_digest.get(bytes(record.object_key))
             if transaction_id is None:
                 continue
             try:
@@ -925,7 +923,7 @@ class TransactionCatalogueRepository:
         ]
 
     @staticmethod
-    def _refuse_targeted_implicit_migration(_payloads: Mapping[str, bytes]) -> None:
+    def _refuse_targeted_implicit_migration(_object_keys: tuple[str, ...]) -> None:
         """Keep exact-ID reads behind the explicit whole-authority cutover."""
         raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
 

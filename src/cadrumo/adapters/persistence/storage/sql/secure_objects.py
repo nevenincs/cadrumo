@@ -702,6 +702,79 @@ class SecureObjectRepository:
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
+    def load_many_current(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        current_version: int,
+        refuse_legacy: Callable[[tuple[str, ...]], None],
+    ) -> Iterator[SecureObjectRecord]:
+        """Load exact current-version rows in one addressed snapshot.
+
+        Every selected outer row is checked before any payload is decrypted or
+        yielded.  A legacy row therefore reaches the owning repository's
+        explicit-cutover refusal without an implicit upgrade or partial read.
+        """
+        self._check_session_freshness(namespace)
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
+        keys = tuple(dict.fromkeys(object_keys))
+        if not keys:
+            return
+        key_by_digest = {secure_object_key_digest(key): key for key in keys}
+        with session_scope(self._engine) as session:
+            rows = tuple(
+                session.execute(
+                    text(
+                        "SELECT id, object_key, classification, schema_version, "
+                        "written_at, payload, revision_id, previous_revision_id, "
+                        "payload_hash, ciphertext_hash, previous_payload_hash "
+                        "FROM secure_objects WHERE namespace = :namespace "
+                        "AND object_key IN :object_keys ORDER BY object_key",
+                    )
+                    .bindparams(
+                        bindparam("namespace", value=namespace),
+                        bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
+                    )
+                    .columns(
+                        id=SecureObjectRow.__table__.c.id.type,
+                        object_key=SecureObjectRow.__table__.c.object_key.type,
+                        classification=SecureObjectRow.__table__.c.classification.type,
+                        schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                        written_at=SecureObjectRow.__table__.c.written_at.type,
+                    ),
+                )
+            )
+            legacy_keys: list[str] = []
+            for row in rows:
+                try:
+                    is_legacy = int(row.schema_version) != current_version
+                except (TypeError, ValueError):
+                    is_legacy = False
+                if is_legacy:
+                    legacy_keys.append(key_by_digest[bytes(row.object_key)])
+            if legacy_keys:
+                refuse_legacy(tuple(legacy_keys))
+            items = tuple(
+                self._list_item_from_raw_row(
+                    row,
+                    namespace=namespace,
+                    expected_class=expected_class,
+                    max_supported_version=current_version,
+                    namespace_definition=namespace_definition,
+                )
+                for row in rows
+            )
+        for item in items:
+            if isinstance(item, SecureObjectRecord):
+                yield item
+                continue
+            raise SecureObjectUnreadableError(namespace, item.row_id)
+
     def migrate_many_atomically(
         self,
         namespace: str,
