@@ -683,22 +683,6 @@ and the numeric literals are field widths and offsets.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_schema_exports.py"
-classification = "machinery"
-justification = """
-Export-record schema types, including the Modelo 303 filing-envelope prefix
-declarations. These describe the envelope's field STRUCTURE -- prefix roles and
-their declarations -- consumed by the generic export schema, and carry no
-regulatory value.
-"""
-
-[[classification.evidence_disposition]]
-enclosing_symbol = "_semantic_payload_failure"
-kind = "regulatory_prose_literal"
-symbol = "declared_description"
-reason = "The name matches the prose-suffix detector but the values are a ',' join separator and the literal 'none' placeholder inside a diagnostic message; neither is authored prose."
-
-[[classification]]
 path = "src/cadrumo/domain/calculations/registry/_supplementary_orden.py"
 classification = "machinery"
 justification = """
@@ -739,3 +723,187 @@ Registry-build revision rule validator. Its modelo-specific name is the Modelo
 codes match the registry parameters; the codes themselves live in registry
 data. Its numeric literals are month, day and sentinel bounds.
 """
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_errors.py"
+classification = "machinery"
+justification = """
+The registry error catalogue. Its modelo-specific content is one constructor,
+``for_prorrata_activity_rows_incomplete``, whose message and context name the
+Modelo 303 ejercicio a DP30305 activity-row collection is incomplete for. That
+is a DIAGNOSTIC naming the modelo it reports on, and its operator-facing
+sentence lives in the four locale catalogues rather than here. No regulatory
+value is carried: which ejercicios have prorrata, and what the rows must hold,
+are decided by the register and the registry TOML this error reports against.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_modelo_localization.py"
+classification = "machinery"
+justification = """
+The dotted-key encoder and resolver for modelo localization. The Modelo 303
+reference is one member of ``_MODEL_SCOPED_CONSTRUCTS``, a pairing of a modelo
+with a construct id whose localization keys are scoped per-modelo rather than
+shared: a KEY-SHAPE coordinate telling the resolver where to look, not a
+translated string and not a regulatory value. The strings it addresses live in
+the four locale catalogues, which are the single home the locales rule fixes.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_census_artefact.py"
+classification = "machinery"
+justification = """
+The read/write seam for the build-generated annual-Orden census. The module
+name carries the modelo coordinate and its symbols name the artefact, but the
+census CONTENT is not resident here: it is extracted at build time from the
+digest-pinned BOE HTML the release already carries and committed as a separate
+manifest, which this module reads back so a warm load need not re-parse it.
+Deleting the module would cost the runtime the parse, not the corpus a value.
+No literal evidence is detected, which agrees with that reading.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_gasto193_bindings.py"
+classification = "machinery"
+justification = """
+The Modelo 193 gasto binding family: the observation model, its per-contributor
+fan-in and the resolver. The modelo-specific names are the binding family's own
+identity -- which registry source kind it owns and which rows it folds -- while
+every declared amount arrives from persisted observations. The only Decimal
+literals are zero, in the three roles the authority-flow rule already sanctions:
+an absent-amount default, a non-negativity guard and a summation seed.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Gasto193Observation"
+kind = "decimal_literal"
+symbol = "importe_gastos"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Gasto193Observation._non_negative_gastos"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') as the right-hand side of the non-negativity guard on a declared gasto; a shape check on an input, not a threshold the law sets."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_gasto193_rows"
+kind = "decimal_literal"
+symbol = "identity"
+reason = "Decimal('0') seeding the per-party accumulator identity before summation; the sentinel zero the authority-flow rule names as an acceptable literal."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "resolve_gasto193_binding_values"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') as the start value of the sum over available observations; the accumulator seed, the same sentinel zero the sibling families use."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_withholding296_bindings.py"
+classification = "machinery"
+justification = """
+The Modelo 296 withholding binding family: the observation model, its
+per-perceptor fan-in and the resolver. As with its Modelo 193 sibling, the
+modelo-specific names are the family's own identity and every declared figure
+arrives from persisted observations. The literals are zero defaults on optional
+amount fields, the definitional 0..100 bounds of a percentage, a structural
+year range and an accumulator seed -- no rate, threshold or period is fixed here.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "base_retenciones"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "compensaciones"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "garantias"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "ingreso_a_cuenta_repercutido"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "otros_importes"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "porcentaje_retencion"
+reason = "Decimal('0') default with ge=0/le=100 bounds: the arithmetic range of a percentage share, a definitional range for the unit rather than the retencion rate the law fixes, which lives in registry TOML."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "decimal_literal"
+symbol = "retencion_practicada"
+reason = "Decimal('0') as the pydantic default of an optional declared amount: the value that stands for an ABSENT figure on an unfiled line, not an amount the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Withholding296Observation"
+kind = "filing_year_literal"
+symbol = "accrual_year"
+reason = "pydantic ge/le bounds (1900..2100) on an optional devengo year: a structural sanity range on an input, not a claim about which years the corpus covers."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_withholding296_rows"
+kind = "decimal_literal"
+symbol = "identity"
+reason = "Decimal('0') seeding the per-party accumulator identity before summation; the sentinel zero the authority-flow rule names as an acceptable literal."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_validate_previous_filing_year_coverage.py"
+classification = "machinery"
+justification = """
+The build-time validator asking whether a previous-filing binding's SOURCE
+modelo has a revision for every year the binding could ask for. The Modelo 100
+and 720 references are the source modelos of the gaps currently open, and the
+year literals are the coordinates of those gaps -- the first year each source
+is missing -- recorded in ``_ALLOWANCES`` beside the reason and what would
+discharge it, rather than passed silently. They describe the state of the
+CORPUS, not the content of the law, and an entry outliving its gap is itself a
+build failure, so they cannot quietly become a claim about coverage.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "filing_year_literal"
+symbol = "_ALLOWANCES"
+reason = "The first missing year of an open, named gap in a source modelo's revision set: a finding coordinate the allowlist records so the gap stays visible, not a year the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "filing_year_literal"
+symbol = "_ALLOWANCES"
+reason = "As above: a second recorded gap's first missing year, carrying its own reason and discharge condition."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "filing_year_literal"
+symbol = "_ALLOWANCES"
+reason = "As above: a third recorded gap's first missing year, carrying its own reason and discharge condition."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "filing_year_literal"
+symbol = "_REGISTRY_MIN_FILING_YEAR"
+reason = "A structural floor below which no registry revision is expected to exist; a sanity bound on the scan range, not a claim about which years the corpus covers."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_append_previous_filing_gap_failures"
+kind = "regulatory_prose_literal"
+symbol = "year_label"
+reason = "The name matches the prose-suffix detector but the value is a diagnostic label rendering a year into the failure message; not authored regulatory prose."
