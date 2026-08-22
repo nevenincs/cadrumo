@@ -10,25 +10,25 @@ modelo:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
               help: null
-              label: null
+              label: Actividad principal
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
               help: null
-              label: null
+              label: Ano en que se inicio la actividad por primera vez
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: Bonificacion aplicable (codigo y descripcion)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
               help: null
-              label: null
+              label: La actividad se realiza dentro de un campamento turistico
             x-c5hn8bj3c5qn6o9dc9gmko8:
               help: null
-              label: null
+              label: Causa de la baja (codigo y descripcion)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
               help: null
-              label: null
+              label: Causa de la declaracion complementaria
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
               help: null
-              label: null
+              label: Causa de la variacion
             x-c5hn8bj3dhgn6p9dcdqmut31:
               help: null
               label: Clase de cuota (M municipal, N nacional, P provincial, o blanco)
@@ -77,16 +77,16 @@ modelo:
               label: 'Domicilio de la actividad: nombre de la via publica'
             x-c5hn8bj5f1imsor9dtn0:
               help: null
-              label: null
+              label: Exencion aplicable (codigo y descripcion)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
               help: null
-              label: null
+              label: Fecha de inicio, variacion, cese u otras causas
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
               help: null
               label: Grupo o epigrafe de las tarifas del IAE
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
               help: null
-              label: null
+              label: Informacion adicional
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
               help: null
               label: Existe local afecto indirectamente a la actividad
@@ -107,10 +107,10 @@ modelo:
               label: 'Notas que son de aplicacion: epigrafe, primera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
               help: null
-              label: null
+              label: 'Notas que son de aplicacion: epigrafe, segunda'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
               help: null
-              label: null
+              label: 'Notas que son de aplicacion: epigrafe, tercera'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
               help: null
               label: 'Notas que son de aplicacion: grupo, primera'
@@ -122,7 +122,7 @@ modelo:
               label: 'Notas que son de aplicacion: grupo, tercera'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
               help: null
-              label: null
+              label: Numero de referencia de la actividad
             x-c5hn8bjge9nncqbecdkm2:
               help: null
               label: Codigo de provincia donde se ejerce la actividad
@@ -131,13 +131,13 @@ modelo:
               label: Provincia a la que corresponde la cuota provincial
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
               help: null
-              label: null
+              label: Se realiza la recepcion de loterias y apuestas
             x-c5hn8bjicljmoo9d6gmj4bb6:
               help: null
-              label: null
+              label: 'Regla que es de aplicacion: Regla 4a apartado 2 F)'
             x-c5hn8bjjclhm6qbfdo:
               help: null
-              label: null
+              label: Seccion de las tarifas del IAE (reservado a la Administracion)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               help: null
               label: Tipo de actividad (E empresarial, P profesional, A artistica)

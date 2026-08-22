@@ -9,25 +9,25 @@ modelo:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
               help: null
-              label: null
+              label: Fotevekenyseg
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
               help: null
-              label: null
+              label: A tevekenyseg elso megkezdesenek eve
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: Alkalmazando kedvezmeny (kod es leiras)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
               help: null
-              label: null
+              label: A tevekenyseget turisztikai kempingen belul vegzik
             x-c5hn8bj3c5qn6o9dc9gmko8:
               help: null
-              label: null
+              label: A torles oka (kod es leiras)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
               help: null
-              label: null
+              label: A kiegeszito bevallas oka
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
               help: null
-              label: null
+              label: A valtozas oka
             x-c5hn8bj3dhgn6p9dcdqmut31:
               help: null
               label: Kvota tipusa (M onkormanyzati, N orszagos, P tartomanyi, vagy
@@ -77,16 +77,16 @@ modelo:
               label: 'A tevekenyseg cime: kozteruletnev'
             x-c5hn8bj5f1imsor9dtn0:
               help: null
-              label: null
+              label: Alkalmazando mentesseg (kod es leiras)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
               help: null
-              label: null
+              label: A megkezdes, valtozas, megszunes vagy egyeb ok datuma
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
               help: null
               label: Az IAE tarifak csoportja vagy tetele
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
               help: null
-              label: null
+              label: Tovabbi informaciok
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
               help: null
               label: Van a tevekenyseghez kozvetve kapcsolodo helyiseg
@@ -104,13 +104,13 @@ modelo:
               label: 'Alkalmazando megjegyzesek: csoportositas, harmadik'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
               help: null
-              label: null
+              label: 'Alkalmazando megjegyzesek: tetel, elso'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
               help: null
-              label: null
+              label: 'Alkalmazando megjegyzesek: tetel, masodik'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
               help: null
-              label: null
+              label: 'Alkalmazando megjegyzesek: tetel, harmadik'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
               help: null
               label: 'Alkalmazando megjegyzesek: csoport, elso'
@@ -122,7 +122,7 @@ modelo:
               label: 'Alkalmazando megjegyzesek: csoport, harmadik'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
               help: null
-              label: null
+              label: A tevekenyseg hivatkozasi szama
             x-c5hn8bjge9nncqbecdkm2:
               help: null
               label: A tevekenyseg vegzesenek tartomanykodja
@@ -131,13 +131,13 @@ modelo:
               label: A tartomanyi kvotahoz tartozo tartomany
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
               help: null
-              label: null
+              label: Lottó- es fogadasi atvetel tortenik
             x-c5hn8bjicljmoo9d6gmj4bb6:
               help: null
-              label: null
+              label: 'Alkalmazando szabaly: 4. szabaly, 2. F) bekezdes'
             x-c5hn8bjjclhm6qbfdo:
               help: null
-              label: null
+              label: Az IAE tarifak szakasza (az adohatosag tolti ki)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               help: null
               label: Tevekenyseg tipusa (E uzleti, P szakmai, A muveszeti)

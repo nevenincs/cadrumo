@@ -9,25 +9,25 @@ modelo:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
               help: null
-              label: null
+              label: Activitat principal
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
               help: null
-              label: null
+              label: Any en que es va iniciar l'activitat per primera vegada
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: Bonificacio aplicable (codi i descripcio)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
               help: null
-              label: null
+              label: L'activitat es realitza dins d'un campament turistic
             x-c5hn8bj3c5qn6o9dc9gmko8:
               help: null
-              label: null
+              label: Causa de la baixa (codi i descripcio)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
               help: null
-              label: null
+              label: Causa de la declaracio complementaria
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
               help: null
-              label: null
+              label: Causa de la variacio
             x-c5hn8bj3dhgn6p9dcdqmut31:
               help: null
               label: Classe de quota (M municipal, N nacional, P provincial, o en
@@ -77,16 +77,16 @@ modelo:
               label: 'Domicili de l''activitat: nom de la via publica'
             x-c5hn8bj5f1imsor9dtn0:
               help: null
-              label: null
+              label: Exempcio aplicable (codi i descripcio)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
               help: null
-              label: null
+              label: Data d'inici, variacio, cessament o altres causes
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
               help: null
               label: Grup o epigraf de les tarifes de l'IAE
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
               help: null
-              label: null
+              label: Informacio addicional
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
               help: null
               label: Hi ha local afecte indirectament a l'activitat
@@ -104,13 +104,13 @@ modelo:
               label: 'Notes que son aplicables: agrupacio, tercera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
               help: null
-              label: null
+              label: 'Notes que son aplicables: epigraf, primera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
               help: null
-              label: null
+              label: 'Notes que son aplicables: epigraf, segona'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
               help: null
-              label: null
+              label: 'Notes que son aplicables: epigraf, tercera'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
               help: null
               label: 'Notes que son aplicables: grup, primera'
@@ -122,7 +122,7 @@ modelo:
               label: 'Notes que son aplicables: grup, tercera'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
               help: null
-              label: null
+              label: Numero de referencia de l'activitat
             x-c5hn8bjge9nncqbecdkm2:
               help: null
               label: Codi de provincia on s'exerceix l'activitat
@@ -131,13 +131,13 @@ modelo:
               label: Provincia a la qual correspon la quota provincial
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
               help: null
-              label: null
+              label: Es realitza la recepcio de loteries i apostes
             x-c5hn8bjicljmoo9d6gmj4bb6:
               help: null
-              label: null
+              label: 'Regla que es d''aplicacio: Regla 4a apartat 2 F)'
             x-c5hn8bjjclhm6qbfdo:
               help: null
-              label: null
+              label: Seccio de les tarifes de l'IAE (reservat a l'Administracio)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               help: null
               label: Tipus d'activitat (E empresarial, P professional, A artistica)
