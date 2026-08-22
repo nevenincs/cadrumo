@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:3743c44aeaf6f8d78fbdf9a83e5a43150226336e0859c0ecc5e7a5820b2f5a7a'
+body_hash: 'sha256:1547c84f82f1ef45b3666e69e24dcbf16e76e603479e89eadb39701c9d491e61'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14808,3 +14808,64 @@ both counts where they were. Moving a count off 175 fired it.
 The eight inventories. Modelo 188's layout needs its perceptor detail-record
 bindings authored before the declarante record can be landed with it; that pair
 is one unit and should be taken as one.
+
+## Tick: a modelling hypothesis for modelo 188, tested and disproved by a grounded gate
+
+Re-measured at tick start: authority CLEAN, tree quiescent, modelo 188 still on
+the filing-capability worklist. Last tick named its layout plus perceptor
+detail-record bindings as one "tick-sized" unit. **That estimate was wrong** and
+the correction is worth recording: modelo 190, the worked precedent, needed
+**70 casillas and 71 bindings** for its detail record, and its layout is 1,201
+lines. Modelo 188 is smaller but the same shape, not a tick.
+
+### What was attempted, and how it failed
+
+The completable sub-unit looked like the casilla schema the endpoint names
+explicitly. Modelo 188's Tipo 2 record was read from the bundled diseño, and 18
+perceptor-row casillas were authored against it -- byte ranges taken from the
+parse, `data_type` per AEAT's widths, `legal_refs` grounded by READING the
+corpus text of Orden de 17 de noviembre de 1999 apartado quinto, which approves
+modelo 188 and names its components: "a) Hoja resumen ... b) hojas interiores de
+relación de perceptores". The authority loaded clean, all 72 labels were set
+across four locales, and the locale parity, honesty and drift gates went green.
+
+Then the full run surfaced
+`test_modelo_187_188_194_casilla_set_is_the_printed_box_set`. That gate asserts
+modelo 188's casillas are exactly `01`-`05`, and its docstring records that the
+author READ the printed annexes to establish it: the 1999 ordenes' ANEXO IV
+numbers 01 to 05 and no more. In this registry a casilla is a printed, numbered
+box; the hojas interiores carry record POSITIONS, which are not boxes.
+
+The hypothesis was wrong, the gate was right, and it was not narrowed. The 18
+casillas, the construct enrolment and all 72 locale strings were reverted, and
+the three gates -- printed-box-set, the modelo 188 resumen grounding, and the
+reviewability budget -- are green again.
+
+### The inconsistency this exposes, which the next attempt must settle first
+
+Modelo 190 models its detail rows AS casillas: 60 `perc.*` entries whose
+`number` is a byte range like `18-26`, exactly the shape just rejected for 188.
+So the tree holds both conventions, and a grounded gate forbids for 187/188/194
+precisely what 190 does.
+
+That is not a defect to fix by picking a side in passing. It is the modelling
+question that gates all three of these worklist lines, and authoring against the
+wrong answer costs the whole unit -- as it did here. **Recommendation:** treat
+190's byte-range casillas as the exception that needs its own justification
+(its perceptor sheet may genuinely be a numbered annex), and model 187/188/194
+detail rows as BINDINGS in the `donativo_donor` shape modelo 182 already uses,
+because that is what the printed-annex evidence supports.
+
+### Verified
+
+* the revert is complete: modelo 188 declares `01`-`05` again, authority loads
+  CLEAN, and 15 tests across the three affected gates pass.
+* tree-wide `scaffold` collateral was restored: those runs emitted blank stubs
+  for the peer's unscaffolded modelo 840 casillas, and the 840 shards were
+  returned to HEAD rather than left carrying my scaffold's output.
+
+### Still open
+
+The eight inventories. Modelo 840's 43 blank Spanish labels are the peer's
+in-flight work -- their own commit says "72 of 108 coverage" -- and that honesty
+gate is red from it, not from this tick.
