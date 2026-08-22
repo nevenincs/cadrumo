@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c8a4a3899f800032727cae5e45e930f907c7fd2e80c4daa925657081abc0459b'
+body_hash: 'sha256:35a9f2a5366e9c65d97cfff2450d711a2ccb71ac3f310e9d95be5f4531c4c087'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6206,3 +6206,36 @@ the shared tree, so it picked the new name up. Regenerating rather than hand-edi
 still the right move; the page simply needed no write by the time it was checked.
 
 Lanes 314 integration / 1589 unit.
+
+### The agent-facing refusal contract, verified by driving it
+
+This CLI's operator is an autonomous agent, so the JSON error envelope is the real
+operability surface. Driven against a cold storage root rather than read:
+
+- The envelope carries the full spine on every refusal: `schema_version`, `command`,
+  `status`, `notices`, `error`, `active_profile`.
+- Refusals carry a registered `code` and a `retryable` answer.
+- Where a REMEDY exists, the error carries a structured action: `censo pull` without a
+  profile returns `action_id: operator.profile.create` with its `cli_path`, so an agent
+  learns the exact command to run without parsing prose.
+- Where no remedy exists, the refusal does not merely omit the action -- it declares WHY,
+  through `no_recovery_outcome`, alongside `conditionality` and a `failed_condition_id`.
+
+**Two readings were tested and both dissolved**, which is the result worth recording.
+`delete <unknown>` returns `action: null` while its TEXT names a next command, which looked
+like a human-gets-guidance / machine-gets-nothing asymmetry. It is not: the same guidance is
+in the JSON `message`, and the structured channel correctly reports no RECOVERY action
+because listing profiles does not make that call succeed. Then `no_recovery_outcome:
+operator_decision` looked like a silent default -- it IS a default parameter value in several
+precondition helpers -- but the distribution refutes the concern: TERMINAL 16, SAFETY 9,
+OPERATOR_DECISION 18 across the tree, with per-domain defaults (`SAFETY` in calculations and
+live). The vocabulary is genuinely exercised, unlike `runbook_id`, which is null 634 times
+out of 634.
+
+**One judgement left to its owner.** `delete <unknown>` is classified `operator_decision`
+because that is the default in `cli_exception_preconditions`, not because someone chose it
+for this refusal. TERMINAL is arguable -- nothing makes that exact call succeed. It is
+defensible either way and belongs to whoever owns the CLI refusal vocabulary.
+
+No defect found. Recorded so this axis is not re-probed: the domain's refusals are
+well-formed, discriminable, and actionable for the operator they were written for.
