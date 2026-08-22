@@ -2516,3 +2516,63 @@ Apartado IV of Pag. 1 ([33]-[67], including the [53]/[54]/[55] triplets, the [62
 the [63] dual cause) is now authorable. The Anexo remains a separate matter: 165 fields
 carrying 4 distinct numbers, almost entirely one repeating relacion-de-locales block, which
 is a `binding_record` shape rather than a casilla set.
+
+## 2026-08-22 — modelo 840 reaches 108 of 108, and one false claim on the way
+
+The derived casilla set is complete: 121 casillas covering all 108 AEAT box numbers the
+bundled aeat-dr-840 diseño prints, from 0 of 108 at the campaign start.
+
+| unit | casillas | coverage |
+|---|---|---|
+| Apartado I [1]-[13] + regrounding [14][15] | 15 | 15 |
+| Apartado II [16], Apartado III [17]-[32] | 17 | 32 |
+| Apartado V [68]-[83] | 16 | 48 |
+| Pag. 2 [84]-[108] | 24 | 72 |
+| collapsed [86] and [109] | 5 | 74 |
+| Apartado IV [33]-[67] | 44 | **108** |
+
+**121 casillas against 108 boxes is the convention working, not an inconsistency.** A
+slug-numbered casilla models a physical position without claiming an AEAT box, so the
+casilla count tracks positions and coverage tracks boxes.
+
+### Three refusals that mattered more than the transcription
+
+**Box [56] does not exist and none was invented.** The printed sequence runs [55], then two
+UNNUMBERED flags at @698 and @699 (campamento turístico, recepción de loterías), then [57].
+The gap sits exactly where a [56] would fall — which is why minting one would have been easy,
+plausible, and wrong. Both flags carry slugs.
+
+**Box [79] and box [48] are "Pto." and their labels keep that abbreviation.** The diseño
+never expands it, and each sits a few boxes from a "Pta." (Puerta). In AEAT address blocks
+Pto. is ordinarily Portal — but "ordinarily" is not the standard for a filing-grade label
+rendered in four languages. Expanding it needs an official source.
+
+**`type_code` decides `data_type`, with one refinement.** Every Reservado box is `An` and
+every taxpayer figure is `Num`. But a `Num` field whose value is a fixed-width CODE stays
+`text`, because a leading zero is significant and an integer round-trip drops it — the
+código postal, código de municipio, número, teléfono and the 13-digit N. Ref. Following
+`type_code` blindly would have mis-typed five; following the label would have mis-typed nine.
+
+### A tautological self-check, and the correction
+
+One commit claimed 176 locale strings were applied when only 6 of 44 labels carried a value.
+Two errors compounded:
+
+1. The locale sets ran in the background and the GENERATOR's output ("wrote 176 set
+   commands") was read as confirmation the SETS had run. The generator only writes the script.
+2. **The verification could not have failed.** It checked whether each locale KEY appeared in
+   the shard — but `scaffold` creates keys as empty drafts, so that check passes identically
+   whether 176 values were set or zero were.
+
+`test_every_casilla_label_resolves_in_the_mandatory_spanish_source` caught it and named all 38.
+**The right check is the one the gate makes: count non-null `label:` values**, which is now
+44 of 44 in each of es/en/ca/hu. A verification that cannot distinguish success from failure
+is worse than none, because it is reported as evidence.
+
+### What remains on this modelo, and it is not casillas
+
+The Anexo is 165 fields carrying only 4 distinct box numbers — almost entirely one
+relación-de-locales block restated with no number on any repetition. Same for most of Pag. 2,
+where 24 of 110 fields are casillas. Those repetitions are the `binding_record` /
+`repeat = "binding_rows"` shape modelo 720 uses. **The next question for modelo 840 is a
+binding set, then a layout — not more casillas.**
