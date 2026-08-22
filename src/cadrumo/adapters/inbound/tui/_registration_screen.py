@@ -25,8 +25,8 @@ See Also:
     :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
         The application door this screen drives; it creates the profile,
         provisions the key material, and leaves the session unlocked.
-    :func:`~cadrumo.application.user_profile.assess_passphrase`
-        The advisory banding behind the live strength line.
+    :func:`~cadrumo.core.assess_profile_password`
+        The canonical assessment behind validation and the live strength line.
     :class:`~cadrumo.adapters.inbound.tui.LoginApp`
         The other credential surface; the two share their attempt
         lifecycle and panel layout through ``CredentialApp``.
@@ -43,7 +43,11 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
-from ....core import PassphraseStrength
+from ....core import (
+    PROFILE_PASSWORD_MIN_SCALARS,
+    PassphraseStrength,
+    ProfilePasswordRefusalReason,
+)
 from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
@@ -61,8 +65,8 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileRecoveryEnrollment, ProfileRegistrationOutcome
 
 
-class PassphraseVerdict(Protocol):
-    """What the screen needs to know about a candidate passphrase.
+class ProfilePasswordVerdict(Protocol):
+    """What the screen needs to know about a candidate profile password.
 
     Structural rather than concrete: the application's assessment already
     has this shape, so it satisfies the protocol without the screen
@@ -76,12 +80,12 @@ class PassphraseVerdict(Protocol):
         ...  # pragma: no cover
 
     @property
-    def minimum_length(self) -> int:
-        """Shortest passphrase the storage layer will accept."""
+    def reason(self) -> ProfilePasswordRefusalReason | None:
+        """Typed refusal reason, or ``None`` when accepted."""
         ...  # pragma: no cover
 
     @property
-    def acceptable(self) -> bool:
+    def accepted(self) -> bool:
         """Whether a profile can be created with this passphrase."""
         ...  # pragma: no cover
 
@@ -106,8 +110,8 @@ class RegistrationAttempt:
     enrollment: ProfileRecoveryEnrollment | None = None
 
 
-def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
-    """Resolve the advisory line for one band.
+def assessment_copy(assessment: ProfilePasswordVerdict) -> str:
+    """Resolve localized validation or advisory copy for one assessment.
 
     Every key is written as a literal ``tr(...)`` argument rather than
     looked up through a mapping. That is not style: the locale scaffolder
@@ -116,9 +120,11 @@ def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
     them out here keeps the copy scaffoldable and greppable, and the
     exhaustive match means a new band cannot ship without its own line.
     """
-    match strength:
-        case PassphraseStrength.TOO_SHORT:
-            return tr("flows.registration.strength.too_short", minimum_length=minimum_length)
+    if assessment.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
+        return tr("flows.registration.strength.too_short", minimum_length=PROFILE_PASSWORD_MIN_SCALARS)
+    if assessment.reason is not None:
+        return tr("errors.refused.refused_storage_profile_custody")
+    match assessment.strength:
         case PassphraseStrength.WEAK:
             return tr("flows.registration.strength.weak")
         case PassphraseStrength.FAIR:
@@ -128,7 +134,6 @@ def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
 
 
 _STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {
-    PassphraseStrength.TOO_SHORT: "strength-refused",
     PassphraseStrength.WEAK: "strength-weak",
     PassphraseStrength.FAIR: "strength-fair",
     PassphraseStrength.STRONG: "strength-strong",
@@ -176,12 +181,12 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def __init__(
         self,
         *,
-        assess: Callable[[str], PassphraseVerdict],
+        assess: Callable[[str], ProfilePasswordVerdict],
         register: Callable[[str, str, str], RegistrationAttempt],
         suggested_name: str | None = None,
     ) -> None:
         super().__init__()
-        self._assess_passphrase = assess
+        self._assess_profile_password = assess
         """Passphrase banding, injected rather than imported.
 
         The adapter tier renders; it does not reach up into the application
@@ -326,12 +331,8 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         self.query_one("#label-username", Label).update(tr("flows.registration.username_label"))
         self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint"))
         self.query_one("#label-password", Label).update(tr("flows.registration.password_label"))
-        # The hint names the floor, so it has to be told what the floor
-        # is; the assessor already reports it, and asking it for the
-        # empty string is how this surface learns it without importing
-        # the policy that owns it.
         self.query_one("#hint-password", Static).update(
-            tr("flows.registration.password_hint", minimum_length=self._assess_passphrase("").minimum_length)
+            tr("flows.registration.password_hint", minimum_length=PROFILE_PASSWORD_MIN_SCALARS)
         )
         self.query_one("#label-confirm", Label).update(tr("flows.registration.confirm_label"))
         self.query_one("#label-output-language", Label).update(tr("wizard.setup.profile.output-language.prompt"))
@@ -361,13 +362,13 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def _render_strength(self, candidate: str) -> None:
         """Update the band line, or clear it while the field is empty."""
         line = self.query_one("#strength-line", Static)
-        line.remove_class(*_STRENGTH_CLASSES.values())
+        line.remove_class("strength-refused", *_STRENGTH_CLASSES.values())
         if not candidate:
             line.update("")
             return
-        assessment = self._assess_passphrase(candidate)
-        line.add_class(_STRENGTH_CLASSES[assessment.strength])
-        line.update(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+        assessment = self._assess_profile_password(candidate)
+        line.add_class("strength-refused" if not assessment.accepted else _STRENGTH_CLASSES[assessment.strength])
+        line.update(assessment_copy(assessment))
 
     def selected_output_language(self) -> str:
         """Return the closed language selection for the profile being created."""
@@ -394,7 +395,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         """Validate the form locally, then create the profile and exit.
 
         Local checks cover only what the screen can see — a blank name, a
-        mismatched confirmation, a too-short password. Everything else
+        mismatched confirmation, an invalid password. Everything else
         (a duplicate label, a storage refusal) is the application door's
         decision, surfaced here as its translated message rather than
         re-derived, so the screen never becomes a second authority on what
@@ -411,9 +412,9 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             self.refuse(tr("flows.registration.refusal.username_required"))
             self.query_one("#field-username", Input).focus()
             return
-        assessment = self._assess_passphrase(password)
-        if not assessment.acceptable:
-            self.refuse(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+        assessment = self._assess_profile_password(password)
+        if not assessment.accepted:
+            self.refuse(assessment_copy(assessment))
             self.query_one("#field-password", Input).focus()
             return
         if password != confirm:
@@ -485,7 +486,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 
 def run_registration_tui(
     *,
-    assess: Callable[[str], PassphraseVerdict],
+    assess: Callable[[str], ProfilePasswordVerdict],
     register: Callable[[str, str, str], RegistrationAttempt],
     suggested_name: str | None = None,
 ) -> ProfileRegistrationOutcome | None:
@@ -500,4 +501,4 @@ def run_registration_tui(
     )
 
 
-__all__ = ["PassphraseVerdict", "RegistrationApp", "RegistrationAttempt", "run_registration_tui"]
+__all__ = ["ProfilePasswordVerdict", "RegistrationApp", "RegistrationAttempt", "run_registration_tui"]

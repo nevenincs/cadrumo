@@ -37,7 +37,8 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from typing import Any, override
+from dataclasses import dataclass
+from typing import Any, Literal, override
 
 import typer
 from typer._click.core import Command as TyCommand
@@ -119,6 +120,106 @@ class LazySubcommand:
             command.name = self.name
             self._command = command
         return self._command
+
+    @property
+    def loader_owner(self) -> str:
+        """Return the stable Python owner of this deferred loader."""
+        return _callable_owner(self._factory)
+
+
+CommandNodeKind = Literal["root", "group", "leaf"]
+
+
+@dataclass(frozen=True, slots=True)
+class LiveCommandNode:
+    """One runtime CLI node with its loading and handling ownership.
+
+    ``path`` includes the executable token so independently collected censuses
+    share one canonical namespace. Owners use ``module:qualname`` strings: they
+    identify the registration callable that materialises a lazy node and the
+    callback that handles the node, while remaining serialisable and stable
+    across fresh processes. ``loader_owner`` is ``None`` for an eagerly
+    registered node because no runtime loader exists; it never aliases handler
+    ownership to conceal that distinction.
+    """
+
+    path: tuple[str, ...]
+    kind: CommandNodeKind
+    loader_owner: str | None
+    handler_owner: str
+
+
+def _callable_owner(callback: object | None) -> str:
+    """Project a callable to a stable owner string, or ``<none>``."""
+    if callback is None:
+        return "<none>"
+    module = getattr(callback, "__module__", type(callback).__module__)
+    qualname = getattr(callback, "__qualname__", type(callback).__qualname__)
+    return f"{module}:{qualname}"
+
+
+def _is_command_group(command: object) -> bool:
+    """Recognise a group across Typer's vendored Click type boundary."""
+    return callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
+
+
+def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
+    """Return a stable census of every command reachable from ``app``.
+
+    The walk resolves children through the same ``list_commands`` /
+    ``get_command`` protocol used by Click dispatch. Lazy ownership is captured
+    before resolution triggers the loader. The returned tuple is sorted by
+    operator-facing path, independent of registration or dictionary order.
+
+    Args:
+        app: Runtime Typer application to census.
+
+    Returns:
+        Immutable command-node records including the root, all groups, and all
+        leaves reachable from the runtime tree.
+    """
+    root = _typer_get_command(app)
+    root.name = app.info.name or root.name
+    root_token = root.name or "<root>"
+    nodes: list[LiveCommandNode] = []
+
+    def visit(
+        command: TyCommand,
+        path: tuple[str, ...],
+        *,
+        loader_owner: str | None,
+        ancestors: frozenset[int],
+    ) -> None:
+        if id(command) in ancestors:
+            return
+        child_ancestors = ancestors | {id(command)}
+        is_group = _is_command_group(command)
+        nodes.append(
+            LiveCommandNode(
+                path=path,
+                kind="root" if len(path) == 1 else "group" if is_group else "leaf",
+                loader_owner=loader_owner,
+                handler_owner=_callable_owner(getattr(command, "callback", None)),
+            )
+        )
+        if not is_group:
+            return
+
+        context = TyContext(command, info_name=path[-1])
+        try:
+            lazy_table = _LAZY_REGISTRY.get(command.name or "", {})
+            for child_name in command.list_commands(context):
+                lazy = lazy_table.get(child_name)
+                child = command.get_command(context, child_name)
+                if child is None:
+                    continue
+                owner = lazy.loader_owner if lazy is not None else None
+                visit(child, (*path, child_name), loader_owner=owner, ancestors=child_ancestors)
+        finally:
+            context.close()
+
+    visit(root, (root_token,), loader_owner=None, ancestors=frozenset())
+    return tuple(sorted(nodes, key=lambda node: node.path))
 
 
 #: Lazy-subcommand registry keyed by the owning group's command
@@ -321,6 +422,8 @@ __all__ = [
     "INVOCATION_REMAINDER_META_KEY",
     "CadrumoTyperGroup",
     "LazySubcommand",
+    "LiveCommandNode",
     "materialise_lazy_subcommands",
     "register_lazy_subcommand",
+    "walk_live_command_tree",
 ]

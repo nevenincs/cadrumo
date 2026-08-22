@@ -31,12 +31,16 @@ from base64 import b64encode
 from contextlib import ExitStack
 from datetime import UTC, datetime
 from secrets import token_bytes
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
-from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passphrase_strength
+from ...core import (
+    PROFILE_PASSWORD_MIN_SCALARS,
+    ProfilePasswordRefusalReason,
+    assess_profile_password,
+)
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
@@ -60,17 +64,6 @@ if TYPE_CHECKING:
     from ._recovery_custody import ProfileRecoveryEnrollment
 
 
-PASSPHRASE_MINIMUM_LENGTH: Final[int] = NIST_PASSPHRASE_MIN_LENGTH
-"""The enforced verifier minimum, re-exposed for operator-facing surfaces.
-
-A credential screen needs this to give live feedback while the operator
-types. Re-exposing it on the application facade keeps the inbound adapter
-off :mod:`cadrumo.core` internals for a value it only ever reads through a
-registration flow; the policy itself is owned by
-:data:`~cadrumo.core.NIST_PASSPHRASE_MIN_LENGTH`.
-"""
-
-
 class ProfileRegistrationError(CadrumoError):
     """Raised when a registration request cannot be honoured as supplied."""
 
@@ -89,30 +82,6 @@ class ProfileRegistrationConflictError(ProfileRegistrationError):
     handler catching :class:`ProfileRegistrationError` keeps catching this,
     and only the published code and its retryability differ.
     """
-
-
-class PassphraseAssessment(BaseModel):
-    """Advisory verdict on a candidate passphrase, for live field feedback.
-
-    Carries no secret: only the derived length and band, so a surface can
-    render guidance without holding the candidate anywhere but the widget.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    length: int = Field(ge=0)
-    minimum_length: int = Field(ge=1)
-    strength: PassphraseStrength
-
-    @property
-    def acceptable(self) -> bool:
-        """Whether this candidate clears the enforced minimum.
-
-        The only hard gate. Every band above ``TOO_SHORT`` is acceptable —
-        a ``WEAK`` passphrase is guidance, not a refusal (NIST SP 800-63B
-        §5.1.1.2 advises against composition requirements).
-        """
-        return self.strength is not PassphraseStrength.TOO_SHORT
 
 
 class ProfileRegistrationOutcome(BaseModel):
@@ -137,20 +106,6 @@ class ProfileRegistrationOutcome(BaseModel):
     chance. It carries no secret -- the 24 words never reach this model -- so
     it is safe on every envelope the flag is meant to be reported on.
     """
-
-
-def assess_passphrase(candidate: str) -> PassphraseAssessment:
-    """Band ``candidate`` against the enforced minimum for live UI feedback.
-
-    Pure and side-effect free: safe to call on every keystroke. Nothing is
-    persisted, logged, or hashed, and the returned model deliberately holds
-    the length rather than the candidate.
-    """
-    return PassphraseAssessment(
-        length=len(candidate),
-        minimum_length=PASSPHRASE_MINIMUM_LENGTH,
-        strength=assess_passphrase_strength(candidate, minimum_length=PASSPHRASE_MINIMUM_LENGTH),
-    )
 
 
 def register_profile_with_credentials(
@@ -178,9 +133,9 @@ def register_profile_with_credentials(
     Args:
         label: Operator-chosen display name. Must be non-blank and must not
             collide with an existing profile's label.
-        passphrase: The credential protecting the bucket. Must clear the
-            NIST verifier minimum; never logged, never echoed, and held only
-            for the duration of the create span.
+        passphrase: The credential protecting the bucket. Must satisfy the
+            canonical profile-password contract; never logged, never echoed,
+            and held only for the duration of the create span.
         facts: Optional initial facts. Empty by default — the whole point of
             this door is that a profile needs no tax data to exist.
         recovery_handover: The channel the 24 words reach the operator
@@ -211,7 +166,7 @@ def register_profile_with_credentials(
 
     Raises:
         ProfileRegistrationError: When the label is blank or the passphrase
-            is shorter than :data:`PASSPHRASE_MINIMUM_LENGTH`.
+            does not satisfy the canonical profile-password contract.
         ProfileRegistrationError: When the label is already bound.
         ProfileSchemaValidationError: When an initial fact names an unknown or
             engine-derived path, or carries a value its field will not take.
@@ -224,14 +179,18 @@ def register_profile_with_credentials(
             translated_message="application.user_profile.errors.registration_label_blank",
         )
 
-    assessment = assess_passphrase(passphrase)
-    if not assessment.acceptable:
+    assessment = assess_profile_password(passphrase)
+    if not assessment.accepted:
         # Refuse here rather than letting the provider raise mid-span: a
         # failure after the bucket directory exists would leave a partially
         # created profile for the operator to clean up by hand.
+        if assessment.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
+            raise ProfileRegistrationError(
+                translated_message="application.user_profile.errors.registration_passphrase_too_short",
+                context={"minimum_length": str(PROFILE_PASSWORD_MIN_SCALARS)},
+            )
         raise ProfileRegistrationError(
-            translated_message="application.user_profile.errors.registration_passphrase_too_short",
-            context={"minimum_length": str(assessment.minimum_length)},
+            translated_message="errors.refused.refused_storage_profile_custody",
         )
 
     identity = UUID(new_profile_id())
@@ -366,10 +325,7 @@ def register_profile_with_credentials(
 
 
 __all__ = [
-    "PASSPHRASE_MINIMUM_LENGTH",
-    "PassphraseAssessment",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
-    "assess_passphrase",
     "register_profile_with_credentials",
 ]

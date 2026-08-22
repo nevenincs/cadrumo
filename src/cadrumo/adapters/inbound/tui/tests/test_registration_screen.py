@@ -26,7 +26,7 @@ from .....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from .....application.user_profile import assess_passphrase
+from .....core import assess_profile_password
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
@@ -49,7 +49,7 @@ def _screen(**kwargs) -> RegistrationApp:
     exercise the same path an operator does: a stub here would prove the
     widgets talk to a stub.
     """
-    return RegistrationApp(assess=assess_passphrase, register=attempt_registration, **kwargs)
+    return RegistrationApp(assess=assess_profile_password, register=attempt_registration, **kwargs)
 
 
 async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:

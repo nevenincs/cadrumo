@@ -52,7 +52,7 @@ from ._manager_screen import (
 )
 from ._modelo_work_review_screen import ModeloWorkReviewApp, ModeloWorkReviewScreen
 from ._registration_screen import (
-    PassphraseVerdict,
+    ProfilePasswordVerdict,
     RegistrationApp,
     RegistrationAttempt,
     run_registration_tui,
@@ -114,9 +114,9 @@ __all__ = [
     "ModeloWorkReviewApp",
     "ModeloWorkReviewScreen",
     "NoticeBand",
-    "PassphraseVerdict",
     "PinnedStatusBar",
     "ProfileManagerApp",
+    "ProfilePasswordVerdict",
     "RegistrationApp",
     "RegistrationAttempt",
     "StatusApp",

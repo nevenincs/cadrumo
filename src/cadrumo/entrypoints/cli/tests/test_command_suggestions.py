@@ -9,8 +9,11 @@ command (``app status`` -> ``app overview status``).
 from __future__ import annotations
 
 import pytest
+import typer
 
 from ....tests.cli_runner import invoke_cached_cli
+from .. import app
+from .._command_suggestions import CadrumoTyperGroup, LazySubcommand, register_lazy_subcommand, walk_live_command_tree
 from ._runtime_profile_cli_fixture import _isolated_cli_state
 
 __all__ = ["_isolated_cli_state"]
@@ -50,3 +53,58 @@ def test_unknown_command_with_no_synonym_still_fails_cleanly() -> None:
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
+
+
+def test_live_command_walker_censuses_every_runtime_node_stably() -> None:
+    """The census reaches deep lazy leaves and emits stable ownership."""
+    first = walk_live_command_tree(app)
+    second = walk_live_command_tree(app)
+
+    assert first == second
+    assert first == tuple(sorted(first, key=lambda node: node.path))
+    assert len({node.path for node in first}) == len(first)
+    assert first[0].path == ("aeat",)
+    assert first[0].kind == "root"
+
+    by_path = {node.path: node for node in first}
+    assert by_path[("aeat", "config")].kind == "group"
+    assert by_path[("aeat", "config", "profile", "delete")].kind == "leaf"
+    assert by_path[("aeat", "app", "modelo", "work", "calculate")].kind == "leaf"
+    assert all(node.handler_owner != "<none>" for node in first if node.kind == "leaf")
+    assert any(node.loader_owner is not None for node in first)
+    assert all(":" in node.loader_owner for node in first if node.loader_owner is not None)
+    assert all(":" in node.handler_owner for node in first if node.handler_owner != "<none>")
+
+
+def test_live_command_walker_distinguishes_eager_and_lazy_ownership() -> None:
+    """An eager mount never borrows its handler's identity as loader ownership."""
+    root = typer.Typer(name="command-census-proof", cls=CadrumoTyperGroup)
+    eager = typer.Typer(name="eager", cls=CadrumoTyperGroup)
+
+    @eager.command("show")
+    def _show() -> None:
+        pass
+
+    root.add_typer(eager, name="eager")
+
+    def _load_lazy() -> typer.Typer:
+        lazy = typer.Typer(name="lazy", cls=CadrumoTyperGroup)
+
+        @lazy.command("run")
+        def _run() -> None:
+            pass
+
+        return lazy
+
+    register_lazy_subcommand("command-census-proof", LazySubcommand("lazy", _load_lazy))
+
+    first = walk_live_command_tree(root)
+    second = walk_live_command_tree(root)
+    by_path = {node.path: node for node in first}
+
+    assert first == second
+    assert by_path[("command-census-proof", "eager")].loader_owner is None
+    assert by_path[("command-census-proof", "lazy")].loader_owner == (
+        f"{__name__}:test_live_command_walker_distinguishes_eager_and_lazy_ownership.<locals>._load_lazy"
+    )
+    assert by_path[("command-census-proof", "lazy")].handler_owner.endswith(".<locals>._run")

@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input
 
-from .....application.user_profile import assess_passphrase
+from .....core import assess_profile_password
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
@@ -31,7 +31,7 @@ _TYPED_PASSWORD = "recovery-words-screen-operator-secret"  # noqa: S105 - synthe
 
 def _screen() -> RegistrationApp:
     return RegistrationApp(
-        assess=assess_passphrase,
+        assess=assess_profile_password,
         register=attempt_registration,
         suggested_name="",
     )

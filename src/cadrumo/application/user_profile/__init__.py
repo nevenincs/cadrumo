@@ -713,12 +713,6 @@ if TYPE_CHECKING:
         restore_profile_with_password as restore_profile_with_password,
     )
     from ._registration import (
-        PASSPHRASE_MINIMUM_LENGTH as PASSPHRASE_MINIMUM_LENGTH,
-    )
-    from ._registration import (
-        PassphraseAssessment as PassphraseAssessment,
-    )
-    from ._registration import (
         ProfileRegistrationConflictError as ProfileRegistrationConflictError,
     )
     from ._registration import (
@@ -726,9 +720,6 @@ if TYPE_CHECKING:
     )
     from ._registration import (
         ProfileRegistrationOutcome as ProfileRegistrationOutcome,
-    )
-    from ._registration import (
-        assess_passphrase as assess_passphrase,
     )
     from ._registration import (
         register_profile_with_credentials as register_profile_with_credentials,
@@ -848,8 +839,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "EncryptedProfileBundleError": "._bundle_encryption",
     "EncryptedProfileBundleExport": "._bundle_encryption",
     "MASKED_PLACEHOLDER": "._overview",
-    "PASSPHRASE_MINIMUM_LENGTH": "._registration",
-    "PassphraseAssessment": "._registration",
     "PreparedProfileExport": "._bundle_export",
     "ProfileBucketSessionPort": "._custody_ports",
     "ProfileBundleExportJournalRepository": "._bundle_export_operation",
@@ -923,7 +912,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "apply_censal_read": "._censo_sync",
     "apply_cotejo": "._cotejo_apply",
     "apply_profile_fact_changes": "._fact_write",
-    "assess_passphrase": "._registration",
     "bound_profile_record_session": "._profile_record_repository",
     "build_profile_overview": "._overview",
     "build_profile_preflight_requirement": "._preflight",
@@ -1039,7 +1027,6 @@ __all__ = [
     "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "COMPLETENESS_ISSUE_CODES",
     "MASKED_PLACEHOLDER",
-    "PASSPHRASE_MINIMUM_LENGTH",
     "PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TYPED_CATEGORY_NAMESPACES",
@@ -1056,7 +1043,6 @@ __all__ = [
     "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
-    "PassphraseAssessment",
     "PreparedProfileExport",
     "ProfileBucketSessionPort",
     "ProfileBundleExportJournalRepository",
@@ -1135,7 +1121,6 @@ __all__ = [
     "apply_censal_read",
     "apply_cotejo",
     "apply_profile_fact_changes",
-    "assess_passphrase",
     "bind_resumed_profile_session",
     "bound_profile_record_session",
     "build_profile_overview",

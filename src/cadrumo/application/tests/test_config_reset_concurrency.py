@@ -198,12 +198,35 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
 )
 
 
+def _release_parent_bucket_handles(root: Path) -> None:
+    """Drop this process's database handles before a child touches the store.
+
+    The child is a FRESH process, which is the whole point of these cases: it
+    resumes a reset the way a real one does. But this process created the
+    profiles, so its engine cache still holds their SQLite files open, and a
+    reset renaming a bucket directory is refused while another process has a
+    file inside it open. That refusal is an artefact of the harness, not of the
+    scenario -- no real operator has a second process sitting on the capsule --
+    so the handles are released here rather than left to disguise themselves as
+    a reset defect.
+    """
+    from ...adapters.persistence.storage import BUCKETS_DIRNAME, dispose_engines_for_bucket
+
+    buckets = root / BUCKETS_DIRNAME
+    if not buckets.is_dir():
+        return
+    for entry in buckets.iterdir():
+        if entry.is_dir():
+            dispose_engines_for_bucket(entry.name)
+
+
 def _run_child(
     root: Path,
     harness: str,
     *args: str,
     check: bool = False,
 ) -> subprocess.CompletedProcess[str]:
+    _release_parent_bucket_handles(root)
     return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
         [sys.executable, "-c", harness, str(root), *args],
         cwd=Path.cwd(),
@@ -360,6 +383,13 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
         assert original_fingerprint is not None
         assert original_retention is not None
         _persist_filing(_PROFILE_A_ID, filing_year=2024, seed="2")
+        # The filing grows the retained set, which is what the retention
+        # recheck below asserts -- but it does NOT move the capsule digest: it
+        # lands in the database, which the inventory covers by path only, and
+        # in a retention snapshot outside the capsule. The target-changed pause
+        # this case also asserts needs a change the digest actually sees, so
+        # the capsule itself is perturbed here as well.
+        (bucket_paths(root, _PROFILE_A_ID).bucket_dir / "planted.v1.json").write_bytes(b'{"planted": true}')
 
         before_unconfirmed_recheck = journal_path.read_bytes()
         unconfirmed = _run_child(

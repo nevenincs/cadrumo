@@ -31,15 +31,15 @@ from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from ....core import PassphraseStrength
+from ....core import (
+    PROFILE_PASSWORD_MIN_SCALARS,
+    PassphraseStrength,
+    ProfilePasswordRefusalReason,
+    assess_profile_password,
+)
 from ....domain.user_profile import ProfileSetupState
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import (
-    PASSPHRASE_MINIMUM_LENGTH,
-    ProfileRegistrationError,
-    assess_passphrase,
-    register_profile_with_credentials,
-)
+from .. import ProfileRegistrationError, register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -167,7 +167,10 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
-            register_profile_with_credentials(label="Too Short", passphrase="a" * (PASSPHRASE_MINIMUM_LENGTH - 1))
+            register_profile_with_credentials(
+                label="Too Short",
+                passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
+            )
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
 
@@ -181,30 +184,30 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
 # ── advisory banding ────────────────────────────────────────────────────────
 
 
-def test_the_enforced_floor_is_the_only_hard_gate() -> None:
-    """A short candidate is refused; a weak but long-enough one is accepted.
+def test_strength_is_advisory_and_profile_policy_is_the_hard_gate() -> None:
+    """A short candidate is refused independently of its advisory strength.
 
     NIST SP 800-63B §5.1.1.2 advises against composition requirements, so an
-    all-lowercase passphrase at the minimum length must be *acceptable* even
-    though it bands weak. Asserting acceptance here pins that the band is
+    all-lowercase passphrase at the minimum length must be accepted regardless
+    of its band. Asserting acceptance here pins that the band is
     advice, not a second gate.
     """
-    too_short = assess_passphrase("a" * (PASSPHRASE_MINIMUM_LENGTH - 1))
-    assert too_short.strength is PassphraseStrength.TOO_SHORT
-    assert not too_short.acceptable
+    too_short = assess_profile_password("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1))
+    assert too_short.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS
+    assert not too_short.accepted
 
-    weak_but_long_enough = assess_passphrase("a" * PASSPHRASE_MINIMUM_LENGTH)
-    assert weak_but_long_enough.strength is PassphraseStrength.WEAK
-    assert weak_but_long_enough.acceptable
+    long_enough = assess_profile_password("a" * PROFILE_PASSWORD_MIN_SCALARS)
+    assert long_enough.strength is PassphraseStrength.FAIR
+    assert long_enough.accepted
 
 
 def test_a_long_single_class_passphrase_bands_strong() -> None:
     """Length is the dominant entropy term, so a passphrase clears on it alone."""
-    assert assess_passphrase("correct horse battery staple").strength is PassphraseStrength.STRONG
+    assert assess_profile_password("correct horse battery staple").strength is PassphraseStrength.STRONG
 
 
 def test_the_assessment_never_carries_the_candidate() -> None:
     """The advisory model holds a length, never the secret it measured."""
     candidate = "a-very-distinctive-candidate-value"
-    assessment = assess_passphrase(candidate)
-    assert candidate not in assessment.model_dump_json()
+    assessment = assess_profile_password(candidate)
+    assert candidate not in repr(assessment)
