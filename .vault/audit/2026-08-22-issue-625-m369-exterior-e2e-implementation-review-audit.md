@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:440bc63a1c1bf41bf3c895291b1b44d937a17d002508fb8ee1777314b4f6806e'
+body_hash: 'sha256:f80ae8d92e15afe57b17250a28833e2893b885202d66844ec6cdd548562c4615'
 related: []
 ---
 
@@ -53,6 +53,18 @@ not parse the rendered payload or assert the mandatory T36901 occurrence and its
 type/ordinal fields, leaving the claimed period-to-devengo and record-level end-to-end
 authority tautological.
 
+### exterior-vat-kind-wire-token | high | General-rate invoice rows emit a token outside AEAT's closed vocabulary
+
+Corrective commit `f16a4b280c92c5f91ec6470b6546e5fec7f5773b` adds the
+invoice-owned enum handoff for T36901, but maps `IvaRateKind.GENERAL` to `"G"`
+and `IvaRateKind.SUPER_REDUCED` to `"S"`. The bundled AEAT Modelo 369
+presentation authority defines this field's complete vocabulary as `R` (reducido) and
+`S` (estándar); it defines no `G`. The strengthened E2E then asserts the implementation's
+`G`, so its independent parser only proves writer/registry agreement and enshrines an
+officially invalid byte. A real Exterior general-rate invoice therefore exports `G` at
+T36901 instead of the official standard-rate marker `S`. The same mapping also labels a
+super-reduced tier as standard without an authority-backed collapse policy.
+
 No additional defects were identified in the reviewed implementation. Exterior periods
 are converted only for invoice date-span selection, leaving the canonical typed token
 unchanged; text observation integrity now checks the string input channel; the header
@@ -77,5 +89,35 @@ one pre-existing M303 lexical-vocabulary assertion unrelated to this diff.
   mandatory T36901 with year, type `T`, ordinal `1` through `4`, and the invoice-derived
   economic values; separately prove absent corrections omit optional T36902 and malformed
   T36902 bytes are refused.
-- Do not integrate the commit or close issue 625 until both findings are resolved and the
+- For `exterior-vat-kind-wire-token`, derive the two-value M369 wire classification from
+  the official `R`/`S` vocabulary: emit `S` for estándar/general and document and test the
+  authority-backed treatment of every internal reduced tier. Add a negative parser or
+  field-policy gate proving `G` is refused rather than merely round-tripped.
+- Do not integrate the commit or close issue 625 until all HIGH and MEDIUM findings are resolved and the
   focused producer, M369 calculate/review/export, and parser gates pass together.
+
+## Corrective resolution verification
+
+Corrective commit `f16a4b280c92c5f91ec6470b6546e5fec7f5773b` resolves
+`producer-vocabulary-exhaustiveness` structurally and resolves
+`exterior-e2e-caller-shadow`. The filing producer now exposes an exhaustive ownership map
+over every typed `FilingProducerKey`; the shared snapshot resolver separately asserts an
+exact set equality over the keys it owns, without manufacturing `None` entries for
+modelo-specific owners. Its value projection is otherwise unchanged, so non-M369 shared
+producer behavior and required-field refusal remain intact. The formerly failing dedicated
+vocabulary gate passes. Source enum values are merged into the trusted backend handoff and
+an explicit caller value retains final precedence.
+
+All four Exterior-quarter E2E cases now omit caller bindings entirely. Each invoice's
+operation date is in the selected quarter while its issue date is in a later quarter, so
+the devengo path must genuinely attribute the source for the asserted cuota to exist. The
+test parses the real exported payload through the registry parser and proves T36901's year,
+period type, ordinal, country, rate, base and cuota; proves mandatory T36903 is present;
+proves absent corrections omit optional T36902; and proves a malformed/truncated T36902
+prefix is refused. This closes the original MEDIUM finding.
+
+Focused producer-vocabulary, M369, filing-renderer and fixed-width parser coverage produced
+199 passes. One pre-existing M303 lexical-vocabulary assertion remains red because it
+forbids the already-present `m303.annual_volume_nonzero` typed key; the corrective diff did
+not introduce or alter that key. Ruff and structural checks remained clean. The new
+`exterior-vat-kind-wire-token` HIGH keeps issue 625 unsafe to integrate or close.
