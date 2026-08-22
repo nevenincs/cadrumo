@@ -26,38 +26,44 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the IAE alta/variacion/baja declaration, re-stamped \
-after authoring Apartados I, II[16] and III. DISCLOSURE -- self-review: the same agent \
-authored all 30 new casillas, re-grounded the two pre-existing ones onto AEAT's bracket \
-numbers, and swept construct membership. VERIFIED -- COVERAGE 0 -> 32 of 108 derived \
+after authoring Apartados I, II(16), III and V. DISCLOSURE -- self-review: the same agent \
+authored all 46 new casillas, re-grounded the two pre-existing ones onto AEAT's bracket \
+numbers, and swept construct membership. VERIFIED -- COVERAGE 0 -> 48 of 108 derived \
 casillas. The two original casillas had carried SLUG numbers, which match no design box \
-and were the sole reason the report read zero; they now carry AEAT's [14] Ejercicio @270+4 \
-and [15] Declaracion de: @274+1, the same fix already applied to modelo 604. VERIFIED -- \
-TILING re-checked before every transcription: Pag. 1 of aeat-dr-840 tiles 1..1132 exactly \
-once, no gap, no overlap, 106 fields. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 32 of 32 \
-both directions. VERIFIED -- RESERVADO BOXES ARE DECLARED where AEAT numbers them ([16], \
-[21], [30], [32]), required = false recording that the administration and not the filer \
-supplies them; the UNNUMBERED reserved run at @250+6 is correctly NOT a casilla. The \
+and were the sole reason the report read zero; they now carry AEAT's 14 (Ejercicio @270+4) \
+and 15 (Declaracion de: @274+1). VERIFIED -- TILING re-checked before every transcription: \
+Pag. 1 tiles 1..1132 exactly once, no gap, no overlap, 106 fields. VERIFIED -- CONSTRUCT \
+MEMBERSHIP exact, 48 of 48 both directions. VERIFIED -- NON-MONOTONIC NUMBERING, the \
+hazard that would have corrupted this silently: AEAT numbers by the printed form, not byte \
+order. Nine of the forty-eight fields are out of sequence -- 11@213 before 10@215; 31@485, \
+29@487, 30@522; 72@1018, 70@1020, 71@1055, 73@1061. Pairing numbers to offsets by sorting \
+would mis-assign every one, and nothing downstream would notice because the offsets still \
+tile. Each was read from its own field description. VERIFIED -- RESERVADO BOXES DECLARED \
+where AEAT numbers them (16, 21, 30, 32, 71, 73, 76), required = false recording that the \
+administration and not the filer supplies them; the UNNUMBERED reserved runs at @250+6 and \
+@1025+30 carry no box number, are not derived, and are correctly not casillas. The \
 discriminator is the bracket number, not the word Reservado, settled by enumerating the \
-derived set rather than reading labels. VERIFIED -- NON-MONOTONIC NUMBERING handled \
-explicitly: AEAT numbers by printed form, so [11]@213 precedes [10]@215, and [31]@485, \
-[29]@487, [30]@522 run out of order; sorting by number would have mis-assigned five \
-fields. All code-like fields (postal, municipio, provincia, telefono, numero, kilometro) \
-are text, never integer, because a leading zero is significant. NOT CLAIMED -- 76 OF 108 \
-DERIVED CASILLAS REMAIN UNCOVERED: Apartados IV and V are unauthored, as are the Pag. 2 \
-and Anexo records entirely. NOT CLAIMED -- A KNOWN BLIND SPOT GATES APARTADO IV: the \
-derived set holds 108 DISTINCT numbers, but five of its numbers label MULTIPLE physical \
-positions -- [53], [54] and [55] each head a triplet (Agrupacion / Grupo / Epigrafe 1o, \
-2o, 3o), [62] is a date split into dia/mes/ano components, and [63] labels both Causa de \
-la baja and Causa de la variacion. They collapse to one derived casilla each, so declaring \
-one casilla per number would read as FULLY COVERED while eleven real positions stay \
-unmodelled -- a false green, not a gap. Apartado IV must not be authored until that is \
-resolved. NOT CLAIMED -- NO EXPORT LAYOUT: this application still cannot file the modelo, \
-it stays on the filing-capability worklist, and model_law_authority_scope remains \
-inspection_only. NOT CLAIMED -- the earlier review's reasoning that this modelo 'is not a \
-return this application emits' is NOT relied on; the worklist gate's docstring treats an \
+derived set. NOT CLAIMED -- 60 OF 108 DERIVED CASILLAS REMAIN UNCOVERED: Apartado IV of \
+Pag. 1 is unauthored, as are the Pag. 2 and Anexo records entirely. NOT CLAIMED -- \
+APARTADO IV IS BLOCKED ON A FALSE-GREEN RISK, not on effort. The derived set holds 108 \
+DISTINCT numbers, but five of Apartado IV's numbers label MULTIPLE physical positions: 53, \
+54 and 55 each head a triplet (Agrupacion / Grupo / Epigrafe 1o, 2o, 3o), 62 is a date \
+split into dia/mes/ano components, and 63 labels both Causa de la baja and Causa de la \
+variacion. They collapse to one derived casilla each, so declaring one casilla per number \
+would make the coverage report read FULLY COVERED while eleven real positions stay \
+unmodelled -- invisible, and worse than the gap it replaces. It needs a distinguishing \
+convention chosen deliberately (modelo 604 used slugs for its eight signo casillas; modelo \
+181 used byte spans). NOT CLAIMED -- BOX 79 IS \"Pto.\" AND ITS LABEL KEEPS THAT \
+ABBREVIATION. The diseno never expands it, and it sits three boxes from 82 \"Pta.\" \
+(Puerta). In AEAT address blocks Pto. is ordinarily Portal, but that is not the standard \
+for a filing-grade label in four languages; expanding it needs an official source. NOT \
+CLAIMED -- NO EXPORT LAYOUT: the application still cannot file this modelo, it stays on \
+the filing-capability worklist, and model_law_authority_scope remains inspection_only. NOT \
+CLAIMED -- the earlier review's reasoning that this modelo \"is not a return this \
+application emits\" is NOT relied on; the worklist gate's docstring treats an \
 individually-defensible withdrawal record as the historical defect, not a justification. \
 NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- \
-locales complete for all 32 labels across es/en/ca/hu, not audited for accuracy."""
+locales complete for all 48 labels across es/en/ca/hu, not audited for accuracy."""
 reviewed_at = 2026-08-22
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
