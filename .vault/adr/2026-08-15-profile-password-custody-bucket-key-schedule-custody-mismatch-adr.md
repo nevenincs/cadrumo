@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:01540f99e7ec79482f2d718c5afd0da9337b6bcdbdee9d56355d0a1eaa83465c'
+body_hash: 'sha256:0b1d23db7ea8a1db1ac8b672bb02a8ad4bbe4d81d67a3ab6c79fad0b0140efc7'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -169,9 +169,9 @@ cutover entirely, measured 2026-08-15:
 
 | bucket | label | manifest status | `db/cadrumo.db` |
 |---|---|---|---|
-| `3806b406-2d0c-47fb-a576-13644e08e737` | `wgergely` | `setup_incomplete` | 5,316,608 B |
+| `3806b406-2d0c-47fb-a576-13644e08e737` | `<operator-username>` | `setup_incomplete` | 5,316,608 B |
 | `d06d093f-f1cc-4f79-bb0d-219541836a99` | `operator` | `active` | 106,496 B |
-| `f5556acb-6a12-4266-be5e-e3cfdc73c325` | `wgergely` | `tombstoned` | 516,096 B |
+| `f5556acb-6a12-4266-be5e-e3cfdc73c325` | `<operator-username>` | `tombstoned` | 516,096 B |
 | `faa52bed-5708-4bf2-b974-ad9c658f5871` | `sync-test` | `tombstoned` | 311,296 B |
 
 6,250,496 bytes of encrypted data in total, and the `active-profile` pointer

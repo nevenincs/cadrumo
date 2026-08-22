@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c29669356ebb130cbfea0d3c1b0906cc036ed8836c000cfc667619f30129bcd1'
+body_hash: 'sha256:cfe67cded98b00ceacf07c22bba58b5ca92fc9d9575f245edc448b70c42ea7b4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6592,3 +6592,35 @@ absence.
 No production change this iteration. The finding is that a lane the whole team pushes through
 is failing on 25 items with at least four owners, which nobody is likely to see while it stays
 red for reasons each of them treats as somebody else's.
+
+### This campaign's own documents leaked the operator's OS username
+
+The doc-privacy gate is one of the 25 red items above, and its offender list was previously
+dismissed here as "other campaigns' vault docs plus a legal TOML". Re-reading it against the
+feature tags disproves that: two of the offenders carry `#profile-password-custody` and are
+this campaign's own work -- the bucket-key-schedule ADR and the capabilities-removed audit,
+both of which pasted the operator's Windows account name into committed prose as a bucket
+label. A finding filed under someone else's name does not get fixed, and this one had been
+sitting in the "needs an operator ruling" bucket while two thirds of it needed no ruling at
+all. Read an offender list by OWNER before deciding it is not yours.
+
+The label carried one piece of evidence -- two of the four pre-capsule buckets share an owner,
+distinct from the `sync-test` and `operator` buckets -- and a placeholder carries it intact.
+The substitution is `<operator-username>` rather than `<operator>` deliberately: the same
+table lists a bucket genuinely labelled `operator`, and the shorter placeholder would have
+silently merged two distinct labels into one and corrupted the inventory the table exists to
+record.
+
+Scrubbing prose invalidates the `body_hash` the `modified:` stamp attests, which is the
+mechanism working: the reconciliation check named both edited documents and nothing else.
+Running it `--feature profile-password-custody` scopes the re-attestation to this campaign, so
+a shared worktree's peer documents are not restamped in passing. Two peer registry audits did
+show modified afterwards, and their mtimes (22:02:22, against 22:06:50 for the fix) place them
+minutes BEFORE the run -- a peer's own edit, not the filter leaking. In a tree where several
+agents commit continuously, "my command touched it" and "it was already dirty" look identical
+in `git status` and are separated by the clock.
+
+The gate stays red: seven offenders remain across four other campaigns plus the legal TOML
+whose `reviewed_by` the grounding rule positively requires. That last one is a genuine
+standing conflict between two rules and still needs the operator's ruling. What changed is
+that this campaign is no longer part of the problem it was reporting.

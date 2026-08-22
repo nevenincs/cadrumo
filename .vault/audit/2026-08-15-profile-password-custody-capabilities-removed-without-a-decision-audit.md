@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4572ab4b2699cf27579dd5205532bcb9669ed0d532d7b08cf3a4a0b7841df6b3'
+body_hash: 'sha256:3185031fe6b7a92915026742800cb9c6f549ceedcad364e9233f82e98c7eaec6'
 related: []
 ---
 
@@ -245,9 +245,10 @@ your artefact before building on it, by reading what the source says it touches.
 
 A halt was called on the key-schedule deletion because four buckets in the
 operator's live store carry the legacy keystore artefact with real encrypted
-databases -- 5.3 MB, 516 KB, 311 KB and 106 KB, labelled `wgergely`, `wgergely`,
-`sync-test` and `operator`, two of them already tombstoned. The stated reason
-was that deleting the legacy route would strand roughly six megabytes.
+databases -- 5.3 MB, 516 KB, 311 KB and 106 KB, two of them labelled for the
+operator's own account, the others `sync-test` and `operator`, and two of them
+already tombstoned. The stated reason was that deleting the legacy route would
+strand roughly six megabytes.
 
 **That framing was wrong and is corrected here.** Those buckets are already
 unreadable by the current tree, three independent refusals deep, and none of the
