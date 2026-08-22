@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe1a412e08ec13999389611debbf833adb5dc6bf261b023f0386c2c6422d4557'
+body_hash: 'sha256:7b6f84be38ca61e03cd852952b9f801619afeef36bc35b1223a393bd93a89015'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16659,3 +16659,86 @@ The eight modelo 200 records, needing a `dev/registry` regeneration.
 The 2015-2022 impatriado escala: a SECOND retrieval route was tried this tick --
 the amending norm, Ley 26/2014 -- and it truncates at article 58, short of the
 provision that amends art. 93. Two routes tested, both short. Operator-side.
+
+## Tick: CORRECTION -- modelo 200 does not write into reserved bytes; the revision spans two layouts
+
+Re-measured at tick start: authority loads CLEAN at `6d4a830641`, standing gates
+green (16 passed).
+
+### The previous finding is withdrawn
+
+The previous section recorded eight modelo 200/2024-y-siguientes records as
+writing data-bearing fields into AEAT-reserved positions and overrunning their
+declared record length. **That is wrong, and it is withdrawn.**
+
+The revision cites TWO record designs -- `aeat-dr-200-2024` and
+`aeat-dr-200-2025` -- and the comparison took the FIRST one the revision lists,
+while the export tree was generated from the second. Its generation provenance
+says so plainly: `design_epoch: "2025"`, `source_refs: ["aeat-dr-200-2025"]`.
+
+Re-measured against the design the generator actually used, all eight records
+tile EXACTLY -- extent equal to the sheet's declared positions, zero fields
+intruding on any reserved run. Against the 2024 design, all eight disagree.
+The records were right the whole time.
+
+The failed control is the one the method names explicitly: compare against the
+RIGHT member of the set. Where a revision cites more than one design, "the
+design" is not well defined, and taking the first is not taking the right one.
+Every downstream conclusion built on it -- the reserved-block intrusion, the
+displaced end-of-record marker, the one-byte shift at 489 -- was an artefact of
+diffing a 2025-rendered record against a 2024 sheet.
+
+`test_modelo_200_reserved_block_authority.py` has been DELETED rather than
+adjusted. It passed, because it only asserted design-side facts that are true,
+but its stated rationale told the next reader the records were defective and
+named the 2024 coordinates as a regeneration target. A green test carrying a
+false explanation is worse than no test.
+
+### What is actually wrong, and it is filing-grade
+
+The span itself. Revision `2024-y-siguientes` is valid from 2024-01-01 with no
+end date and cites both designs, and AEAT re-laid the form out between them: the
+standing relayout gate measures **1140 of 3194 shared boxes moved** (e.g.
+`[00016]` 880 -> 897), and the designs carry 75 and 77 sheets respectively.
+
+The tree implements the 2025 geometry. So an ejercicio 2024 filing made under
+this revision is written at the 2025 layout -- one year's return laid out under
+another year's design. That is the defect class the revision-resolution rule
+exists to prevent, and it makes splitting this revision a filing correctness
+matter rather than a tidiness one.
+
+This is not a new discovery: `test_no_revision_spans_a_design_relayout` is one of
+the standing declared inventories and has been reporting it. What is new is the
+measured consequence -- WHICH layout the tree implements, and therefore which
+side of a split is already correct and needs no re-rendering.
+
+### What was landed
+
+`test_modelo_200_revision_spans_two_layouts.py` replaces the withdrawn module. It
+pins that the revision cites both designs, that both read cleanly (so the
+comparison means something), that the committed tree matches the 2025 geometry
+exactly for the eight continuation records, and that the 2024 design declares a
+different length for every one of them.
+
+The last check is asserted as INEQUALITY rather than by pinning the 2024
+numbers, because the point is that the two disagree; pinning both sides would
+turn the eventual split into a test edit for no gain.
+
+Its docstring carries the mis-reading as the cautionary note, so the next reader
+meets the trap before repeating it.
+
+### Verified
+
+* the new module: 4 passed; 19 passed across it and the 193, 369, 390 and 720
+  gates. Authority loads CLEAN; ruff clean.
+* it bites: pointing `_RENDERED_AGAINST` at the 2024 design reds three of its
+  four checks.
+
+### Still open
+
+Splitting modelo 200's `2024-y-siguientes` into per-design revisions, with the
+2024 side re-rendered through `dev/registry`'s validate-then-publish path. The
+2025 side is already correct and should not be re-rendered.
+
+The 2015-2022 impatriado escala, unchanged: two retrieval routes tested, both
+truncate short of art. 93. Operator-side.

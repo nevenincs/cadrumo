@@ -9,8 +9,6 @@ body_hash: 'sha256:0ed7fc9f9b15d607e28e3fe2be29a7257dfe9dcc3eca1c04ae3c8d14ca084
 related: []
 ---
 
-
-
 # `issue-625-m369-exterior-e2e` audit: `M369 Exterior end-to-end implementation review`
 
 ## Scope
