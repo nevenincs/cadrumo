@@ -4997,3 +4997,44 @@ context already excludes, plus a handful of theme colour assertions.
 The lesson is the one this campaign keeps meeting from a new direction: a fallback that
 makes a value *printable* is not the same as making it *readable*, and a test that asserts
 something was displayed says nothing about whether it could be understood.
+
+### The renderer that seam needed already existed
+
+Following the previous finding one step further asked the obvious question: where *else*
+does this domain hand `str(error)` to an operator? The sweep found the answer to a
+different question. Of the twelve `str(exc)` sites in scope, eleven wrap a pydantic or OS
+exception into a domain error's message, where `str()` genuinely *is* the prose. The
+twelfth was the sibling login seam at `_login_frontend.py:186` -- and it was already
+correct, calling `resolve_error_message(refusal)`.
+
+So a canonical renderer existed the whole time, and the fix authored one iteration earlier
+had reinvented a weaker copy of it. `core/errors/_registry.py:492` does three things the
+hand-rolled `_refusal_text` did not:
+
+- it reduces the context through `_coerce_interpolation_kwargs`, dropping non-identifier
+  keys so a free-form context entry cannot break the `tr(...)` interpolation contract --
+  the hand-rolled version splatted the raw mapping and would have raised `TypeError`;
+- it falls back to `args[0]` when there is no key;
+- it falls back to `tr(code.message_key)` off the **registered** error code, so a refusal
+  carrying no `translated_message` at all still reaches the screen as words.
+
+Neither gap is reachable today: all five refusals that can arrive at this boundary were
+enumerated from their raise sites, and each carries a `translated_message` with
+identifier-shaped context keys. Both renderers were then driven over all five and produced
+byte-identical output, so the swap is behaviour-preserving now and strictly stronger for
+whatever is raised next. `_refusal_text` was deleted rather than kept beside its twin.
+
+**The general shape, worth carrying:** a duplicate is most dangerous when it is *correct*.
+Nothing failed, no lane moved, and the copy would have sat there being right until the
+first refusal without a key -- at which point the two seams would have disagreed about what
+an operator sees, and only one of them would have been wrong. Checking for an existing
+authority is cheaper before writing the second one than after.
+
+**Provenance note, not a defect.** Both files were swept into `d86551026e`
+(*"src(registry): record-design type-code rendering coverage with the IS catalogue"*) by a
+peer's broad commit while the domain lanes were running, so the `git commit` that followed
+found a clean tree. The content on `main` is complete and unmangled -- verified by reading
+both files back out of `HEAD` -- but it is filed under an unrelated subject, and no
+pathspec discipline on this side could have prevented it. This is the third time the shared
+worktree has absorbed in-flight work; the durable lesson is that verifying the change
+landed has to be done by reading `HEAD`, never by trusting the commit to be one's own.
