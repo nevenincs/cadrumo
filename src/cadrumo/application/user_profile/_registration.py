@@ -36,11 +36,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import (
-    PROFILE_PASSWORD_MIN_SCALARS,
-    ProfilePasswordRefusalReason,
-    assess_profile_password,
-)
+from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
@@ -54,6 +50,7 @@ from ._custody_transactions import (
     ProfileCustodyTransactionConflictError,
 )
 from ._lifecycle import ProfileCapsuleLifecycle
+from ._prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 from ._recovery_custody import enroll_profile_recovery
 from ._validation import reject_invalid_profile_facts
 
@@ -66,6 +63,18 @@ if TYPE_CHECKING:
 
 class ProfileRegistrationError(CadrumoError):
     """Raised when a registration request cannot be honoured as supplied."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: dict[str, object] | None = None,
+        translated_message: str | None = None,
+        password_refusal: ProspectiveProfilePasswordRefusal | None = None,
+    ) -> None:
+        """Retain a typed prospective refusal without retaining the password."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self.password_refusal = password_refusal
 
 
 class ProfileRegistrationConflictError(ProfileRegistrationError):
@@ -179,18 +188,15 @@ def register_profile_with_credentials(
             translated_message="application.user_profile.errors.registration_label_blank",
         )
 
-    assessment = assess_profile_password(passphrase)
-    if not assessment.accepted:
+    password_refusal = prospective_profile_password_refusal(assess_profile_password(passphrase))
+    if password_refusal is not None:
         # Refuse here rather than letting the provider raise mid-span: a
         # failure after the bucket directory exists would leave a partially
         # created profile for the operator to clean up by hand.
-        if assessment.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
-            raise ProfileRegistrationError(
-                translated_message="application.user_profile.errors.registration_passphrase_too_short",
-                context={"minimum_length": str(PROFILE_PASSWORD_MIN_SCALARS)},
-            )
         raise ProfileRegistrationError(
-            translated_message="errors.refused.refused_storage_profile_custody",
+            translated_message=password_refusal.translated_message,
+            context=password_refusal.context,
+            password_refusal=password_refusal,
         )
 
     identity = UUID(new_profile_id())

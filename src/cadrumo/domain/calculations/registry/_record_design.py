@@ -745,6 +745,54 @@ def _reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(folded)
 
 
+def _split_row_from_wrapped_content(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Separate a row from a preceding fragment of the previous cell's content.
+
+    AEAT's ``Contenido`` column wraps, and its last fragment can be emitted on
+    the same line as the NEXT row. Modelo 131's 2009 design does exactly that:
+    the payment-form codes wrap over three lines and the third arrives as
+    ``Domiciliacion 48 465 1 Num Ingreso (4) - Forma de pago``. The line does
+    not begin with its ordinal, so the row is refused and position 465 is the
+    record's only hole.
+
+    Splitting on appearance alone would fabricate rows out of prose, so the
+    suffix must satisfy the same OVER-DETERMINATION the reversed-column repair
+    relies on: it parses as a row AND its ordinal follows the previous row's by
+    one AND its offset resumes exactly where that row ended. Two independent
+    facts from an already-read row must both agree, which prose beginning with
+    two numbers cannot do by accident.
+
+    The stripped fragment is emitted as its own line rather than discarded. It
+    is content, the parser already ignores standalone content lines, and
+    dropping text to make a row appear would be the same defect in reverse.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        recovered = False
+        if previous is not None:
+            tokens = line.split()
+            for cut in range(1, len(tokens)):
+                suffix = " ".join(tokens[cut:])
+                candidate = _parse_pdf_row(suffix, index + 1)
+                if candidate is None or candidate.ordinal is None:
+                    continue
+                if _continues(previous, candidate.ordinal, candidate.offset):
+                    split.append(" ".join(tokens[:cut]))
+                    split.append(suffix)
+                    previous = candidate
+                    recovered = True
+                    break
+        if not recovered:
+            split.append(line)
+    return tuple(split)
+
+
 def _join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Reattach a description AEAT wrapped onto the line after its row.
 
@@ -825,7 +873,9 @@ def _extract_record_design_pdf_stream(
     pdf_bytes = stream.read()
     base_lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     lines = _reattach_stranded_casilla_tags(
-        _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+        _split_row_from_wrapped_content(
+            _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+        ),
     )
     if _uses_page_record_layout(base_lines):
         page_lines = _reattach_stranded_casilla_tags(

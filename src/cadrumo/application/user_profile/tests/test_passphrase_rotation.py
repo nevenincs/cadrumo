@@ -18,6 +18,7 @@ from ....adapters.persistence.storage.custody import (
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
+from ....core import PROFILE_PASSWORD_MAX_SCALARS, ProfilePasswordRefusalReason
 from ....domain.buckets import BucketEventType
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
@@ -216,3 +217,49 @@ def test_a_new_passphrase_below_the_verifier_minimum_refuses(tmp_path: Path) -> 
 
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
+
+
+@pytest.mark.parametrize(
+    ("candidate", "reason"),
+    (
+        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
+        ("\U0001f600" * 256 + "a", ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES),
+        ("\ud800" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+        ("\udfff" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+    ),
+)
+def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
+    tmp_path: Path,
+    candidate: str,
+    reason: ProfilePasswordRefusalReason,
+) -> None:
+    """Prospective refusal precedes locks, unwrap, re-heading and publication."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        outcome = _register()
+        profile_id = UUID(outcome.profile_id)
+        before = _storage_snapshot(storage_root)
+
+        with pytest.raises(ProfilePassphraseRotationError) as refused:
+            rotate_profile_passphrase(
+                profile_id=profile_id,
+                current_passphrase=_CURRENT,
+                new_passphrase=candidate,
+                new_passphrase_confirmation=candidate,
+            )
+
+        assert _storage_snapshot(storage_root) == before
+        payload = refused.value.password_refusal
+        assert payload is not None
+        assert payload.reason is reason
+        assert candidate not in repr(payload)
+        assert refused.value.context == payload.context
+        assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+
+
+def _storage_snapshot(root: Path) -> dict[str, bytes | None]:
+    """Capture capsule, inventory, session, record and envelope state exactly."""
+    return {
+        path.relative_to(root).as_posix(): None if path.is_dir() else path.read_bytes()
+        for path in sorted(root.rglob("*"))
+    }

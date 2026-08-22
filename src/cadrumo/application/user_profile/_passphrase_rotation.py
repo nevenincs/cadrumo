@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import custody
-from ...core import PROFILE_PASSWORD_MIN_SCALARS, ProfilePasswordRefusalReason, assess_profile_password
+from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.hashing import prefixed_digest
 from ...core.identity import ProfileId
@@ -48,6 +48,7 @@ from ._custody_ports import (
     unlock_profile_custody_password,
 )
 from ._custody_repository import profile_custody_transaction_lock
+from ._prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,6 +59,18 @@ _ENVELOPE_KDF_SALT_BYTES = 16
 
 class ProfilePassphraseRotationError(CadrumoError):
     """Raised when a passphrase change cannot be honoured as supplied."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: dict[str, object] | None = None,
+        translated_message: str | None = None,
+        password_refusal: ProspectiveProfilePasswordRefusal | None = None,
+    ) -> None:
+        """Retain a typed prospective refusal without retaining the password."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self.password_refusal = password_refusal
 
 
 class ProfilePassphraseRotationOutcome(BaseModel):
@@ -113,15 +126,12 @@ def rotate_profile_passphrase(
         raise ProfilePassphraseRotationError(
             translated_message="application.user_profile.errors.passphrase_confirmation_mismatch",
         )
-    assessment = assess_profile_password(new_passphrase)
-    if not assessment.accepted:
-        if assessment.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
-            raise ProfilePassphraseRotationError(
-                translated_message="application.user_profile.errors.registration_passphrase_too_short",
-                context={"minimum_length": str(PROFILE_PASSWORD_MIN_SCALARS)},
-            )
+    password_refusal = prospective_profile_password_refusal(assess_profile_password(new_passphrase))
+    if password_refusal is not None:
         raise ProfilePassphraseRotationError(
-            translated_message="errors.refused.refused_storage_profile_custody",
+            translated_message=password_refusal.translated_message,
+            context=password_refusal.context,
+            password_refusal=password_refusal,
         )
 
     storage_root = effective_storage_root(root)
