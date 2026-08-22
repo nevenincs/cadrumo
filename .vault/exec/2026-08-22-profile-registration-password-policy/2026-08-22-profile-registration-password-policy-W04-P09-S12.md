@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:daf11b3096be06afbb216550f6728755657487d58acb9e770951e4c67c4d9f16'
+body_hash: 'sha256:ea78628dbad7dc90445efeb6c25ad0a9818d649cb4cc717b438ff2bcf34b71ff'
 step_id: 'S12'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -34,3 +34,5 @@ No shipped operator guide or README states the retired policy, so no user-facing
 Focused recovery unit tests passed 10 tests and its integration lane passed 27 tests. Error-registry tests passed 23 tests plus 7 enforcement tests. Ruff lint and format checks pass on the owned surface. The API generator was run in apply, check, and audit modes; after retaining only feature-owned deltas it reports unrelated baseline drift in operator-surface and source-connectivity modules. The broad exception-hygiene scan is also blocked by unrelated concurrent `ContentDigest` facade drift. These baselines belong to other active work and were not consumed.
 
 Review remediation maps wrong and malformed recovery-artifact secrets to the existing localized, context-free authentication refusal at the application proof boundary. The mapper is credential-neutral and every proof operation is explicit; no compatibility alias remains. A real Spanish renderer regression excludes adapter English, the translation key, `INTERNAL`, traceback, and the candidate, while malformed input proves no publication. Mapping tests pass 27 cases and recovery integration passes 22 cases; Ruff lint and format checks remain clean.
+
+The final presentation-matrix bite makes both hostile candidates independently assert the exact Spanish envelope and rendered message plus a complete path-kind-byte storage snapshot. No raw surrogate is emitted in test identifiers or diagnostics. Recovery integration remains 22 passing cases and mapping remains 27 passing cases.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a813892ebc86afceae668da205820bfa1bd3b768de7a3581bda9942be0b136e9'
+body_hash: 'sha256:e55f56432906e23043436d75a87822c6346f39cac6249240163c1104a92629b3'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -967,3 +967,58 @@ non-oracular message while excluding the adapter English, translation key, `INTE
 traceback, and submitted mnemonic. A malformed-surrogate restore produces the same public
 type and publishes no capsule. Focused mapping tests pass 27 cases, recovery integration
 passes 22 cases, and Ruff lint and format checks are clean. The HIGH is closed.
+
+#### Independent S12 HIGH closure verification
+
+Commits `f60746befe` and `1ca33b9cf1` close
+`s12-recovery-raw-presentation` in production. The single credential-neutral
+`map_profile_authentication_proof_failure` entry point has no retired
+password-named alias or export. At
+`src/cadrumo/application/user_profile/_custody_ports.py:1014-1028`, only
+`ProfileCustodyRecoverySecretError` under the explicit `RECOVERY_RESTORE`
+operation and `ProfileCustodyPasswordError` under the four password-proof
+operations collapse to the same context-free
+`ProfileAuthenticationRefusedError`; the cross-type cases remain unmapped.
+The five-operation matrix also leaves representative record-integrity,
+transaction, resource, supervision, and keyring failures unchanged.
+
+The real Spanish wrong-mnemonic restore excludes the custody diagnostic,
+translation key, `INTERNAL`, traceback, and submitted mnemonic. The real
+malformed high-surrogate restore reaches the same context-free public type and
+publishes no capsule. Focused mapping tests pass 27 cases and serial recovery
+integration passes 22 cases. Ruff lint and format checks pass on all eight
+owned Python files. Exact negative search finds no retired mapper name in the
+application or entrypoint trees. The original HIGH is therefore independently
+verified closed.
+
+### s12-recovery-presentation-matrix-bite | medium | Recovery refusal assertions split presentation and atomicity across cases
+
+`src/cadrumo/application/user_profile/tests/test_recovery_custody.py:245-276`
+does not yet prove the complete promised public contract for either hostile
+candidate in one real boundary test. The wrong-mnemonic case renders in Spanish
+and checks leak absence, but does not assert that the destination capsule was
+not published. Its localization assertion is message containment rather than
+an exact rendered-envelope assertion. The malformed-surrogate case asserts
+only context-free type and non-publication; it never renders in Spanish or
+excludes raw adapter text, the translation key, `INTERNAL`, traceback, or the
+candidate from the rendered result.
+
+The production mapping is coherent and the original security leak is closed,
+so this is not a remaining raw-presentation defect. It is a regression-proof
+gap against the accepted S12 review contract. Extend both real restore cases
+to assert the same exact Spanish public envelope, all leak exclusions, and no
+destination publication. This MEDIUM should be closed before treating S12 as
+review-clean or proceeding to S13.
+
+#### S12 presentation-matrix remediation resolution
+
+Commit `e02fab1b68` closes `s12-recovery-presentation-matrix-bite`. One parameterized
+real-boundary test now exercises both a wrong mnemonic and a malformed surrogate without
+placing the raw surrogate in test identifiers or output. Each case independently requires
+the exact Spanish `ErrorEnvelope` fields, exact rendered text, context `None`, and the
+absence of adapter English, translation key, `INTERNAL`, traceback, and a safe candidate
+representation. A complete path-kind-byte snapshot of the test storage tree is identical
+before and after each refusal, proving no capsule, directory, or file mutation.
+
+Recovery integration passes 22 cases, authentication mapping passes 27 cases, and Ruff
+lint and format checks are clean. The MEDIUM is closed and S12 is review-clean.
