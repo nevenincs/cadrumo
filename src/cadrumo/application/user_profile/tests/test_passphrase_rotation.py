@@ -15,6 +15,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage.custody import (
+    ProfileCustodyPasswordError,
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
@@ -32,7 +33,6 @@ from .. import (
     login_profile,
     logout_active_profile,
     profile_custody_recovery_envelope_path,
-    profile_is_password_authentication_failure,
     register_profile_with_credentials,
     rotate_profile_passphrase,
     unlock_profile_custody_password,
@@ -93,7 +93,7 @@ def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp
         assert unlock_profile_custody_password(material, password=_REPLACEMENT).dek is not None
         with pytest.raises(Exception) as refused:
             unlock_profile_custody_password(material, password=_CURRENT)
-        assert profile_is_password_authentication_failure(refused.value)
+        assert isinstance(refused.value, ProfileCustodyPasswordError)
 
 
 def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -> None:
@@ -366,7 +366,7 @@ def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
         assert unlock_profile_custody_password(material, password=replacement).dek is not None
         with pytest.raises(Exception) as refused:
             unlock_profile_custody_password(material, password=equivalent)
-        assert profile_is_password_authentication_failure(refused.value)
+        assert isinstance(refused.value, ProfileCustodyPasswordError)
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes | None]:

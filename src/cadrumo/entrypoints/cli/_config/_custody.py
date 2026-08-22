@@ -217,7 +217,7 @@ def _login_through_the_prompt(
     console-less one keeps the substrate's own refusal and exit code
     rather than acquiring this package's; neither behaviour moves.
     """
-    from ....application.user_profile import login_profile, profile_is_password_authentication_failure
+    from ....application.user_profile import ProfileAuthenticationRefusedError, login_profile
     from ....core.config import load_settings
     from .. import _headless_secret_channel_active
     from .._errors import CliRefusedBoundaryError
@@ -252,7 +252,7 @@ def _login_through_the_prompt(
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
-    except SecretStoreError as exc:
+    except (ProfileAuthenticationRefusedError, SecretStoreError) as exc:
         # Distinguish "no password was offered" from "the password was wrong".
         # Custody refuses both through one error, and its absent-channel
         # wording is necessarily terse: it cannot name --secrets-stdin,
@@ -266,7 +266,7 @@ def _login_through_the_prompt(
         # login legitimately proceeds with no callback at all -- a configured
         # passphrase and a resumed session are both unlocked inside it.
         if (
-            profile_is_password_authentication_failure(exc)
+            isinstance(exc, SecretStoreError)
             and passphrase_callback is None
             and load_settings().cadrumo_secret_passphrase is None
         ):

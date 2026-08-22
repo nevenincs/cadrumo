@@ -9,7 +9,7 @@ related:
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
 modified: '2026-08-22'
-body_hash: 'sha256:dcb7acf37140afd3cf336d21c537b5f12d22929027b7528492982b41deadb91f'
+body_hash: 'sha256:aa184477adde1fa2af48830b0ae61ffe5787c2c1e4672e19f5892a673c19c723'
 ---
 
 <!-- RETIRED: S01 -->
@@ -76,7 +76,7 @@ Deliver typed prospective-password refusals before KDF, locking, staging, journa
 
 Deliver one public proof refusal for malformed and incorrect passwords while preserving operational classifications.
 
-- [ ] `W02.P05.S08` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then collapse malformed and incorrect existing-password proofs without hiding operational faults and prove login restore and recovery authorization behavior; `src/cadrumo/application/user_profile`.
+- [x] `W02.P05.S08` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then collapse malformed and incorrect existing-password proofs without hiding operational faults and prove login restore and recovery authorization behavior; `src/cadrumo/application/user_profile`.
 
 ## Wave `W03` - localize and harden every inbound credential surface
 

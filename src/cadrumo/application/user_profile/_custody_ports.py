@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 from ...adapters.persistence.storage import custody
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
+from ._authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
 
 if TYPE_CHECKING:
     from ...core import ProfileSessionRefusalReason, SecureObjectWrite
@@ -1010,9 +1011,16 @@ def unlock_profile_custody_password(
     )
 
 
-def profile_is_password_authentication_failure(error: BaseException) -> bool:
-    """Recognise only the current custody password-proof refusal."""
-    return isinstance(error, custody.ProfileCustodyPasswordError)
+def map_profile_password_proof_failure(
+    error: BaseException,
+    *,
+    operation: ProfilePasswordProofOperation,
+) -> ProfileAuthenticationRefusedError | None:
+    """Collapse password shape and proof failures for one named capability."""
+    if not isinstance(error, custody.ProfileCustodyPasswordError):
+        return None
+    _ = operation
+    return ProfileAuthenticationRefusedError()
 
 
 def refuse_profile_login_without_password_channel() -> NoReturn:
@@ -1191,6 +1199,7 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
+    "map_profile_password_proof_failure",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_custody_owner_root",
@@ -1200,7 +1209,6 @@ __all__ = [
     "profile_custody_secure_object_repository",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
-    "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
     "profile_session_serves_bucket",
     "prove_profile_recovery_artifact",

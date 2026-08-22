@@ -45,7 +45,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     ProfileRegistrationError,
     logout_active_profile,
-    profile_is_password_authentication_failure,
     register_profile_with_credentials,
     unlock_profile_custody_password,
 )
@@ -301,8 +300,8 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
             unlock_profile_custody_password(composed_material, password=decomposed)
         with pytest.raises(Exception) as decomposed_refusal:
             unlock_profile_custody_password(decomposed_material, password=composed)
-        assert profile_is_password_authentication_failure(composed_refusal.value)
-        assert profile_is_password_authentication_failure(decomposed_refusal.value)
+        assert isinstance(composed_refusal.value, ProfileCustodyPasswordError)
+        assert isinstance(decomposed_refusal.value, ProfileCustodyPasswordError)
 
 
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:

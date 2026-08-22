@@ -106,6 +106,12 @@ if TYPE_CHECKING:
     from ._aggregate import (
         ProfileRestoreAuthority as ProfileRestoreAuthority,
     )
+    from ._authentication import (
+        ProfileAuthenticationRefusedError as ProfileAuthenticationRefusedError,
+    )
+    from ._authentication import (
+        ProfilePasswordProofOperation as ProfilePasswordProofOperation,
+    )
     from ._bundle import (
         SUPPORTED_BUNDLE_SCHEMA_VERSIONS as SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     )
@@ -455,6 +461,9 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
+        map_profile_password_proof_failure as map_profile_password_proof_failure,
+    )
+    from ._custody_ports import (
         profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
     )
     from ._custody_ports import (
@@ -480,9 +489,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         profile_is_keyring_unavailable as profile_is_keyring_unavailable,
-    )
-    from ._custody_ports import (
-        profile_is_password_authentication_failure as profile_is_password_authentication_failure,
     )
     from ._custody_ports import (
         profile_is_persisted_session as profile_is_persisted_session,
@@ -802,7 +808,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_custody_secure_object_repository": "._custody_ports",
     "profile_is_authentication_failure": "._custody_ports",
     "profile_is_keyring_unavailable": "._custody_ports",
-    "profile_is_password_authentication_failure": "._custody_ports",
+    "map_profile_password_proof_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",
@@ -882,6 +888,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePreflightReport": "._commands",
     "ProfilePreflightRequirement": "._commands",
     "ProfilePreflightService": "._preflight",
+    "ProfileAuthenticationRefusedError": "._authentication",
+    "ProfilePasswordProofOperation": "._authentication",
     "ProspectiveProfilePasswordRefusal": "._prospective_password",
     "ProfilePassphraseRotationError": "._passphrase_rotation",
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
@@ -1044,6 +1052,7 @@ __all__ = [
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
     "PreparedProfileExport",
+    "ProfileAuthenticationRefusedError",
     "ProfileBucketSessionPort",
     "ProfileBundleExportJournalRepository",
     "ProfileBundleExportPurpose",
@@ -1090,6 +1099,7 @@ __all__ = [
     "ProfileOverview",
     "ProfilePassphraseRotationError",
     "ProfilePassphraseRotationOutcome",
+    "ProfilePasswordProofOperation",
     "ProfilePersistedSessionPort",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",

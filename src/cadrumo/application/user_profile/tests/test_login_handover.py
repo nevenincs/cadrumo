@@ -28,7 +28,6 @@ from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
-    ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
     load_committed_profile_password_material,
@@ -48,6 +47,7 @@ from ....core.config import Settings
 from ....core.time import now as _now
 from ....domain.buckets import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._authentication import ProfileAuthenticationRefusedError
 from .._login_session import (
     _HANDOVER_JOURNAL_MAX_BYTES,
     _clear_handover_journal,
@@ -846,7 +846,8 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
             child.join(timeout=30)
 
 
-def test_wrong_b_password_leaves_active_a_and_pointer_bytes_intact(tmp_path: Path) -> None:
+@pytest.mark.parametrize("candidate", ("wrong-password-for-b", "short"))
+def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path: Path, candidate: str) -> None:
     """A rejected B password cannot change any active A handover authority."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
@@ -856,8 +857,17 @@ def test_wrong_b_password_leaves_active_a_and_pointer_bytes_intact(tmp_path: Pat
             record_a = require_profile_record_session(profile_a)
             pointer_a = capture_pointer(storage_root)
 
-            with pytest.raises(ProfileCustodyPasswordError):
-                login_profile(name=profile_b, passphrase_callback=lambda: "wrong-password-for-b")
+            with pytest.raises(ProfileAuthenticationRefusedError) as refused:
+                login_profile(name=profile_b, passphrase_callback=lambda: candidate)
+
+            assert refused.value.translated_message == "application.user_profile.errors.profile_authentication_refused"
+            assert refused.value.context is None
+            assert candidate not in repr(refused.value)
+            assert master_key.evaluate_login_throttle(
+                storage_root=storage_root,
+                bucket_id=profile_b,
+                now=_now(),
+            ).throttled
 
             assert capture_pointer(storage_root) == pointer_a
             assert master_key.current_active_bucket_session() is active_a

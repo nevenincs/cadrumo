@@ -40,11 +40,12 @@ from ...core.identity import ProfileId
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...domain.buckets import BucketEventType
+from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from ._custody_ports import (
     create_profile_custody_registration_material,
+    map_profile_password_proof_failure,
     profile_custody_recovery_envelope_path,
-    profile_is_password_authentication_failure,
     unlock_profile_custody_password,
 )
 from ._custody_repository import profile_custody_transaction_lock
@@ -146,14 +147,18 @@ def rotate_profile_passphrase(
             # that keeps the adapter's error family off this port. Anything
             # that is not a password-proof refusal is a different fault and
             # travels on unchanged.
-            if not profile_is_password_authentication_failure(exc):
+            refusal = map_profile_password_proof_failure(
+                exc,
+                operation=ProfilePasswordProofOperation.ROTATION,
+            )
+            if refusal is None:
                 raise
             # Refused before anything is written, so the existing wrapper is
             # byte-identical to what it was and still opens under the password
             # the operator already has.
             raise ProfilePassphraseRotationError(
                 translated_message="application.user_profile.errors.passphrase_current_rejected",
-            ) from exc
+            ) from refusal
 
         rotated = create_profile_custody_registration_material(
             profile_id=profile_id,
