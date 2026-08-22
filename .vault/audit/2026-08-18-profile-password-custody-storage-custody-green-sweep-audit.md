@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1fe1ccab0d53ab6f8561190475005ea1721a052f17d73c902937c27b52fe6632'
+body_hash: 'sha256:d4303545fed7a2c6186c544cb20a53bfd9f89a051b1467d18280194824158ff3'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6930,3 +6930,36 @@ caller can produce.
 
 Landed in `dev/ci/tests`, which the per-push dev lane runs. That lane is independently red on
 items belonging to four other owners; this gate passes inside it, so nothing red was enrolled.
+
+### Every marker held out of the main lanes, measured: no live gap, two fragile scopes
+
+Having gated the os-keychain lane's scope, the same question was asked of every other marker
+the main lanes EXCLUDE, since each needs a dedicated selector or its cases run nowhere. All
+four are covered today. Recorded so this is not re-derived:
+
+- `os_keychain` -- 11 marked files, all inside the six paths the recipe names. Directory
+  scoped, and now self-enforcing via `dev/ci/tests/test_os_keychain_lane_scope.py`.
+- `external_tool` -- 1 marked file, and the recipe names exactly that MODULE.
+- `perf` -- 1 marked file, and the ci-full lane names exactly that MODULE.
+- `resident_service` -- 2 marked files, both inside the two directories the recipe names.
+
+`unit and serial` collects ZERO cases across the package, which resolves what looked like a
+gap: CI invokes `test-integration-serial` but never `test-unit-serial`, so a serial-marked
+unit case would be held out of the parallel unit lane and run nowhere. There are none, and
+that recipe is documented as a rerun aid after a parallel failure rather than a coverage lane.
+Worth keeping in mind before anyone marks a unit case `serial` -- the marker hook HOLDS such
+cases out when xdist is active and says so in a warning, so they would not fail, they would
+silently not execute.
+
+The two MODULE-scoped lanes are one commit from the historical os-keychain defect: a second
+`external_tool` or `perf` case added beside the named module is selected by nothing, and
+neither marker can fail loudly (one needs LibreOffice, the other is a dispatch-only benchmark),
+so the absence would read as coverage. Both belong to other campaigns -- registry and
+packaging -- and generalising this domain's gate to cover their markers would be exactly the
+dev-tooling drift the operator has already corrected once in this campaign. Flagged for their
+owners; the one-line fix is naming the DIRECTORY instead of the module, as the os-keychain
+recipe already does.
+
+With this, selection-order item 6 is exhausted for this domain: every marker is accounted for,
+every lane's scope is measured, and the one property that protects this domain's own custody
+lane is enforced rather than merely true.
