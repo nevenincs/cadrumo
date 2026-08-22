@@ -2732,3 +2732,57 @@ capture dropped its table -- two independent transcription problems in one corpu
 The scan is cheap and worth re-running on any newly registered design: match a closing
 bracket with no opening one, and a bracket holding two numbers separated by whitespace or
 a comma, beside the normal well-formed form, then diff the sets.
+
+## 2026-08-22 (later) — the denominator is 659, not 288 and not 348, and I was wrong twice
+
+This entry supersedes the "348" figure recorded above. Measuring properly, the modelo 036
+diseño prints **659 distinct box numbers**. The derived set sees **288** — 44% of them.
+
+| class | count | why the regex misses it |
+|---|---|---|
+| plain `[NNN]` | 288 | visible; this is the derived set |
+| **lettered `[A4]`, `[B94]`** | **223** | the pattern matches digits only |
+| only inside a LIST bracket | 129 | `[300,301,302]`, `[B1,B2]` |
+| only via a MALFORMED bracket | 19 | `921]` — closing bracket, no opening |
+| **TRUE distinct boxes** | **659** | |
+
+### Two things I asserted that were wrong
+
+**"348" was itself an undercount.** The first correction scanned for malformed and
+multi-number brackets but not for LETTERED boxes, which are the largest class by far. A
+scan that finds one invisibility class is not evidence there is only one.
+
+**"Pág. 0, 2A and 2C carry no box numbers at all, being repeating or structural records"
+— stated in a stamp — is wrong for two of the three.** Measured per record:
+
+| record | fields | plain digits | real boxes |
+|---|---|---|---|
+| Pág. 0 | 15 | 0 | **0** — genuinely the envelope, the claim holds here |
+| Pág. 2A | 118 | 0 | **83** |
+| Pág. 2C | 85 | 0 | **57** |
+
+Pág. 2A is the *persona física* identity and domicilio record — `[A4]` N.I.F./N.I.E.,
+`[A5]` Apellido 1, `[A11]` Tipo de vía. It is not structural and never was. The reason it
+looked structural is exactly the reason it is uncovered: **its boxes are lettered, so the
+derived set reports zero for it, and zero derived reads as "no boxes" if you do not
+check the descriptions.**
+
+### The lesson, which is about the instrument and not this modelo
+
+Three times now a measurement has been taken from a derived count without asking what
+the deriving code can see. The tiling check, the coverage report and this box census all
+answer a narrower question than the one being asked of them. **A derived zero is not
+evidence of absence; it is evidence the deriver found nothing it recognises.**
+
+Scope, re-measured with the full pattern: `aeat-dr-840` and `aeat-dr-220-2024` still show
+**zero** undercount — they use plain numbering throughout — so modelo 840's "108 of 108"
+remains the true box set and its stamps stand. The defect is the modelo 036 diseño's
+alone, and it now has three independent transcription problems: lettered boxes the regex
+cannot read, malformed brackets, and an instructions capture that dropped its table.
+
+### What this does to the campaign's figures
+
+m036 coverage reads "65 of 288". Against the true set it is **65 of 659 — under 10%**.
+Nothing authored is wrong; the casillas and their numbers are all read from the design.
+What was wrong is every denominator I have reported for this modelo, and the direction of
+the error consistently flattered progress.
