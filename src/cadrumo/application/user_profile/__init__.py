@@ -700,6 +700,9 @@ if TYPE_CHECKING:
     from ._prospective_password import (
         ProspectiveProfilePasswordRefusal as ProspectiveProfilePasswordRefusal,
     )
+    from ._prospective_password import (
+        prospective_profile_password_refusal as prospective_profile_password_refusal,
+    )
     from ._recovery_custody import (
         ProfileRecoveryArtifactReceipt as ProfileRecoveryArtifactReceipt,
     )
@@ -891,6 +894,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileAuthenticationRefusedError": "._authentication",
     "ProfilePasswordProofOperation": "._authentication",
     "ProspectiveProfilePasswordRefusal": "._prospective_password",
+    "prospective_profile_password_refusal": "._prospective_password",
     "ProfilePassphraseRotationError": "._passphrase_rotation",
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
     "ProfileRecordRepository": "._profile_record_repository",
@@ -1175,6 +1179,7 @@ __all__ = [
     "profile_record_session_if_authenticated",
     "profile_section_rows",
     "projection_for_taxpayer",
+    "prospective_profile_password_refusal",
     "publish_prepared_export",
     "read_profile_capsule_archive",
     "read_profile_capsule_source",

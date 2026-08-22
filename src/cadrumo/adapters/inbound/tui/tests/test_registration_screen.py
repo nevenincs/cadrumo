@@ -27,9 +27,11 @@ from .....adapters.persistence.storage.custody import (
     unlock_profile_custody,
 )
 from .....core import ProfilePasswordRefusalReason, assess_profile_password
+from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
+from .._registration_screen import assessment_refusal
 from .._status_bar import PinnedStatusBar
 
 pytestmark = [
@@ -39,7 +41,6 @@ pytestmark = [
 
 _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test fixture
-_TOO_SHORT_PASSWORD = "abc"  # noqa: S105 - synthetic test fixture, deliberately under the floor
 
 
 @pytest.mark.parametrize(
@@ -68,6 +69,7 @@ def test_submission_refusals_stay_typed_secret_free_and_create_nothing(
 
         assert attempt.outcome is None
         assert attempt.expected_refusal is not None
+        assert attempt.expected_refusal == assessment_refusal(assess_profile_password(candidate))
         assert attempt.expected_refusal.message_key.endswith(message_key)
         assert dict(attempt.expected_refusal.context)["reason"] == reason.value
         assert candidate not in repr(attempt)
@@ -161,18 +163,58 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
 
 
 @pytest.mark.asyncio
-async def test_short_password_refuses_and_creates_nothing(tmp_path) -> None:
+async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagnostics(tmp_path) -> None:
+    candidate = "a" * 14
+    assert len(candidate) == 14
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await _fill(pilot, username="Short", password=_TOO_SHORT_PASSWORD, confirm=_TOO_SHORT_PASSWORD)
+            await _fill(pilot, username="Short", password=candidate, confirm=candidate)
+            strength = app.query_one("#strength-line", Static)
+            live_rendered = str(strength.render())
+            assert live_rendered
+            assert candidate not in live_rendered
+            assert "INTERNAL" not in live_rendered.upper()
+            assert "profile password must contain 15 to 256 Unicode scalars" not in live_rendered
             await pilot.click("#btn-create")
             await pilot.pause()
 
             assert app.outcome is None
+            assert app.error is None
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            rendered = str(status.message)
+            assert status.tone == "error"
+            assert rendered
+            assert candidate not in rendered
+            assert "INTERNAL" not in rendered.upper()
+            assert "profile password must contain 15 to 256 Unicode scalars" not in rendered
+            assert "Traceback" not in rendered
             app.exit(None)
 
         assert not list(storage_root.glob("*/manifest.json"))
+
+
+@pytest.mark.asyncio
+async def test_unkeyed_unexpected_registration_failure_keeps_internal_classification(tmp_path) -> None:
+    fault = RuntimeError("synthetic registration transport failure")
+
+    def fail_registration(_label: str, _password: str, _language: str):
+        raise fault
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        app = RegistrationApp(assess=assess_profile_password, register=fail_registration)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await _fill(pilot, username="Unexpected", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
+            await pilot.click("#btn-create")
+            await app.workers.wait_for_complete()
+            await pilot.pause()
+
+            assert app.error is fault
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            assert status.tone == "error"
+            assert status.message
+            assert status.message == tr("errors.internal.internal_cli_unexpected_boundary")
+            app.exit(None)
 
 
 @pytest.mark.asyncio

@@ -44,8 +44,6 @@ from textual.containers import Vertical
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core import (
-    PROFILE_PASSWORD_MAX_SCALARS,
-    PROFILE_PASSWORD_MAX_UTF8_BYTES,
     PROFILE_PASSWORD_MIN_SCALARS,
     PassphraseStrength,
     ProfilePasswordRefusalReason,
@@ -140,28 +138,16 @@ class RegistrationAttempt:
 
 
 def assessment_refusal(assessment: ProfilePasswordVerdict) -> RegistrationRefusal | None:
-    """Map a canonical verdict to its stable, secret-free application message."""
-    reason = assessment.reason
-    if reason is None:
+    """Project a canonical verdict through the application presentation authority."""
+    from ....application.user_profile import prospective_profile_password_refusal
+
+    refusal = prospective_profile_password_refusal(assessment)
+    if refusal is None:
         return None
-    context: dict[str, object] = {
-        "reason": reason.value,
-        "scalar_count": assessment.scalar_count,
-    }
-    if assessment.utf8_byte_count is not None:
-        context["utf8_byte_count"] = assessment.utf8_byte_count
-    if reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
-        context["minimum_scalars"] = PROFILE_PASSWORD_MIN_SCALARS
-        key = "application.user_profile.errors.profile_password_too_few_scalars"
-    elif reason is ProfilePasswordRefusalReason.TOO_MANY_SCALARS:
-        context["maximum_scalars"] = PROFILE_PASSWORD_MAX_SCALARS
-        key = "application.user_profile.errors.profile_password_too_many_scalars"
-    elif reason is ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES:
-        context["maximum_utf8_bytes"] = PROFILE_PASSWORD_MAX_UTF8_BYTES
-        key = "application.user_profile.errors.profile_password_too_many_utf8_bytes"
-    else:
-        key = "application.user_profile.errors.profile_password_contains_surrogate"
-    return RegistrationRefusal(message_key=key, context=tuple(context.items()))
+    return RegistrationRefusal(
+        message_key=refusal.translated_message,
+        context=tuple(refusal.context.items()),
+    )
 
 
 def assessment_copy(assessment: ProfilePasswordVerdict) -> str:
