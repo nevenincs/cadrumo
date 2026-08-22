@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:01dd70aa4d1487289b2a57a174452e3f9d7427aaafa34125c8e3687a1b0918b1'
+body_hash: 'sha256:52720c7af6570ac93bf1fa742c4ebb13bd16fb7839d6221edd816b3a91b44515'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13397,3 +13397,81 @@ is deliberate and uncommitted: modelo 322's `2008-2023` revision, where HEAD
 still carries last tick's bite mutation ("This revision calculates none" on a
 revision declaring three formulas) and the working copy restores the correct
 "applies none".
+
+## Tick: a read API that demanded filing capability, and a profile that loads back incomplete
+
+Re-measured at tick start: authority loads CLEAN, seventeen standing registry
+failures.
+
+### The introspection service was building filing-grade snapshots
+
+`describe 036 --period ALTA` refused with "modelo 036 revision
+2025-02-03-y-siguientes declares no export layout, so no filing artifact can be
+produced from it" -- while answering a question about which revision governs an
+event kind.
+
+`RegistryQueryService` is the typed READ API behind the CLI's describe,
+casillas, formulas and bindings commands. Its scoped resolver built every
+snapshot at the default FILING rung, so all five scoped query methods demanded
+filing capability from a modelo they were only introspecting. The sibling
+year-scoped resolver never did -- it selects a revision directly and builds no
+snapshot -- which is why the unscoped `describe` passed and only the scoped one
+failed.
+
+The `grade` parameter exists for exactly this and its own docstring names the
+case: "a modelo whose registry declares authority_grade = applicability --
+modelo 036 ... refused every caller that only wanted to know which revision
+governs an event kind." The resolver now asks for the APPLICABILITY rung.
+
+Checked before changing rather than after: the rung gates three things and only
+three -- revision review status, filing capability, and legal review status,
+each a filing assertion. Legal applicability, reference identity, export-layout
+derivation from bindings, record-family validation and the revision-scoped legal
+and source window checks all run at every rung, so the reports lose nothing they
+read. All five callers were read: every one returns an introspection report and
+none produces a filing artifact.
+
+### A seeded COMPLETE profile loads back INCOMPLETE
+
+Running the query surface's consumers surfaced 41 failures in
+`application/modelo`, 36 of them sharing one cause:
+`profile_readiness_setup_incomplete`. The attribution control settles that they
+are not this tick's doing -- with the grade change and without it, that
+selection measures 41 failed / 118 passed / 3 errors identically, and the
+readiness gate itself has not changed since 2026-08-14.
+
+The cause is measured rather than guessed. Seeding a record with
+`setup_state = COMPLETE` and sixteen facts, then loading it back through the
+gate's own path, returns a record with the SAME sixteen facts, `setup_state =
+incomplete`, and a different `created_at`. The facts survive the write; those
+two fields do not. The generic refusal rather than the "missing fields" one
+confirms it from the other side: every schema-required field is populated, so
+nothing is absent -- the state simply did not persist.
+
+That is a filing-relevant defect in its own right: a profile whose setup
+genuinely completed would read as incomplete and be refused for modelo work.
+
+Recorded rather than fixed, with the reason evidenced: the mechanism sits in the
+profile-custody write/load path, and six commits landed there TODAY -- including
+one on the storage repository itself. A fix authored against a surface being
+rewritten underneath would be guesswork, and profile-record semantics are not
+somewhere to guess.
+
+### Verified
+
+* `test_queries`: 25 passed, from 24 passed / 1 failed.
+* registry package: 16 failed, 5202 passed, from 17 failed / 5201 passed. The
+  failure that disappeared is the censo-casing query; the failure set is
+  otherwise unchanged.
+* CLI modelo surface: 17 passed.
+* attribution control on the 41 application failures: identical counts with and
+  without this tick's change, the tracked file restored byte-exactly.
+* authority loads CLEAN.
+
+### Still open
+
+The profile setup-state persistence defect, reproduced above and owned by the
+custody work in flight. The sixteen standing registry failures. Modelo 840 needs
+`bindings` and `export_layouts`, `projection_endpoints` decided once a layout
+exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
