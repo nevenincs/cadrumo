@@ -52,10 +52,15 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Introduce an exact strict-UTF-8 recovery-secret codec with no password-policy dependency or normalization.
+- Split parent supervision and isolated-worker protocol operations into explicit password and recovery capabilities.
+- Remove the conflated material entry points and migrate every custody caller to the capability it owns.
+- Prove exact Unicode preservation, malformed transport refusal, negative-space policy separation, and worker-backed roundtrips.
 
 ## Outcome
 
+Recovery mnemonics now retain their exact UTF-8 bytes through both supervision boundaries without invoking canonical profile-password assessment. Password operations retain canonical validation. Focused worker and codec tests passed, and the full custody surface remains lint-clean.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The first parallel full-custody run encountered a pre-existing xdist worker crash in a path-identity test. The deterministic focused suite passed with xdist disabled; no byte-parity or ADR conflict was found.
