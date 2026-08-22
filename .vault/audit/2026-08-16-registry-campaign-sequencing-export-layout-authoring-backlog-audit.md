@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4cc923651324c64de5a48934bfbf585745859dddcfde69eccaa583ebbfc0cb1'
+body_hash: 'sha256:cc522e1fa9163ca111e50dcbbe5356e50d66c6060266a7b4b450d5430d39a4ba'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15062,3 +15062,74 @@ classifier is too generous for exactly this reason: it asks whether a revision
 cites a registered design, not whether that design covers the years the revision
 claims. Those are different questions and this tick cost three modelos to learn
 it.
+
+## Tick: the worklist classifier now asks the question that cost three modelos
+
+Re-measured at tick start: authority CLEAN, last tick's withdrawal holding
+(187, 188 and 194 declare no layout and no bindings).
+
+### The defect was in the classifier, and it was mine
+
+The classifier added three ticks ago marks a line AUTHORABLE when the revision
+CITES a registered record design. That is not the question. The question is
+whether that design COVERS the ejercicios the revision claims, and the two come
+apart exactly where it matters: modelos 187, 188 and 194 each cite a design
+declaring `applies_from` 2022, 2023 or 2024 while claiming ejercicios from 2019.
+
+The classifier said AUTHORABLE, last tick authored from it, and the result was a
+trade -- one gate green, another red, and emitted records at offsets no bundled
+design evidences. The information needed to refuse was already in the tree, in
+each design's own `applies_from` and each revision's `period_selector`.
+
+It now asks. `_uncovered_claimed_years` intersects the revision's claimed
+ejercicios against every cited design's declared era and reports the years no
+design covers.
+
+### What it reclassifies
+
+AUTHORABLE drops from **10 of 13 to 4**:
+
+* **AUTHORABLE (4)**: modelos 036, 038, 220/2024 and 840 -- each cites a design
+  whose declared era covers every claimed ejercicio.
+* **BLOCKED on design coverage (6)**: 182 (17 uncovered years), 187 (3), 188
+  (4), 194 (4), 220/2025-y-siguientes (1) and 763 (1).
+* **BLOCKED on corpus (2)**: 136 and 721, no design bundled.
+* **BLOCKED on era (1)**: 185/2003-2025.
+
+Modelo 182 is worth naming: it carries five `donativo_donor` bindings and reads
+as the most nearly-authorable line in the list, and its cited design leaves
+**seventeen** claimed ejercicios uncovered. It was a strong candidate for the
+same mistake.
+
+### Controlled both ways
+
+The check discriminates rather than blocking everything: 187 reports 3 uncovered
+years, 840 and 036 report none, and a deliberate mismatch -- modelo 840's
+2003-onward claim against modelo 187's 2022 design -- reports 19.
+
+One suspicion was raised and disproved rather than assumed: a design declaring
+NO era would read as covering everything, which is the same generosity that
+caused the original defect. Every cited design in the worklist declares an
+`applies_from`, so no line is classified on an absent window. Had one been, the
+check would need a fourth verdict.
+
+### A distinction this tick had to draw, and did not blur
+
+Modelo 038 is AUTHORABLE by this check and still appears on the span gate with
+"0 comparable bundled design year(s)". Those ask different questions. The span
+gate wants a SECOND edition to prove no relayout happened mid-span -- a flag 60
+of 80 stamped revisions carry. This check wants the cited design's own declared
+era to cover the claim, and modelo 038's does: `applies_from` 2002-01-16 against
+a 2002-onward claim. Modelo 187's design, by contrast, declared 2022 against a
+2019 claim: the design itself said it did not cover those years.
+
+Authoring modelo 038 is therefore defensible on evidence 187 never had. It was
+not started this tick -- the classifier was the unit -- but the reasoning is
+recorded so the next attempt does not have to redo it.
+
+### Verified
+
+* registry + generated-tree + application/registry: **8 failed, 5957 passed** --
+  the eight declared inventories and nothing else, tree quiescent.
+* the worklist still fails with all 13 lines and the same count; only the verdict
+  on each line changed. Ruff clean.

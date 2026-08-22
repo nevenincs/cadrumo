@@ -6,9 +6,10 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:becc62945505fc52a5f891adbc070678f876b109301273e95768c00e03253a1b'
+body_hash: 'sha256:c74d58df1475489211fb8c74358eb1fdb2a15fac4360336c2a0a6de0191fdeda'
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
+  - '[[2026-08-22-source-casilla-integration-plan]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
 ---
 
@@ -20,7 +21,11 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 
 ### adr
 
-- `2026-08-22-source-casilla-integration-adr` - `source-casilla-integration` adr: `ratcheted source-domain-to-casilla connectivity` | (**status:** `proposed`)
+- `2026-08-22-source-casilla-integration-adr` - `source-casilla-integration` adr: `ratcheted source-domain-to-casilla connectivity` | (**status:** `accepted`)
+
+### plan
+
+- `2026-08-22-source-casilla-integration-plan` - `source-casilla-integration` plan
 
 ### research
 

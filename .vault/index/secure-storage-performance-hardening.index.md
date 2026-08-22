@@ -6,11 +6,14 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b742b147317afedc5c8a1c4885ba6cf87454723d22f1bd062ca01b91555e8272'
+body_hash: 'sha256:f0b8a008ca47caa0ef32ac8066b17782a6030b3e10a689b24066e0e8edf794ce'
 related:
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -21,7 +24,19 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 
 ### adr
 
-- `2026-08-22-secure-storage-performance-hardening-adr` - `secure-storage-performance-hardening` adr: `command-scoped loading and pure secure-storage reads` | (**status:** `proposed`)
+- `2026-08-22-secure-storage-performance-hardening-adr` - `secure-storage-performance-hardening` adr: `command-scoped loading and pure secure-storage reads` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S01 live command walker review`
+
+### exec
+
+- `2026-08-22-secure-storage-performance-hardening-W01-P01-S01` - Extend the live command walker to emit stable command paths, node kind, loader owner, and handler owner for every reachable node
+
+### plan
+
+- `2026-08-22-secure-storage-performance-hardening-plan` - `secure-storage-performance-hardening` plan
 
 ### reference
 
