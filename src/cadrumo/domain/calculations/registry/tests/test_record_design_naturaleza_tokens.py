@@ -75,33 +75,41 @@ def test_the_bundled_modelo_100_editions_carry_no_position_holes(prefix: str) ->
 @pytest.mark.parametrize(
     "prefix", ["17-100-ejercicio-2012", "18-100-ejercicio-2013", "19-100-ejercicio-2014"]
 )
-def test_the_later_editions_still_lose_one_doubly_glued_row(prefix: str) -> None:
-    """The limit of what reading a token can recover, pinned rather than hidden.
+def test_the_later_editions_recover_the_doubly_glued_row(prefix: str) -> None:
+    """The doubly-glued row is now read, and position 9 is no longer a hole.
 
     These three editions write the same row as ``59 1A Indicador de pagina
     complementaria`` -- BOTH spaces lost, so ordinal 5 and position 9 are glued
-    into ``59`` as well as length and type into ``1A``. ``1A`` splits on its own
-    evidence because length is digits and type is a closed set. ``59`` does not:
-    it is equally readable as ordinal 59, and only the surrounding sequence --
-    the previous row being ordinal 4 at position 8 -- would say otherwise. That
-    is inference from context rather than reading a declared value, and this
-    reader does not invent positions.
+    into ``59`` as well as length and type into ``1A``.
 
-    The declared-correction sidecar cannot express it either, and for a related
-    reason: a single-position correction attaches to a line that presents a
-    position candidate, and this line presents none at all, because its first
-    token is not a bare position.
+    This test previously pinned that byte as an accepted loss, on the reasoning
+    that ``59`` is equally readable as ordinal 59 and that separating it would
+    be inference from context rather than reading a declared value. What
+    changed is not the reader's willingness to infer but the STRENGTH of the
+    evidence demanded: the split is accepted only when the previous row's
+    ordinal-plus-one and its end-plus-one, concatenated, reproduce the fused
+    token exactly. ``4`` at position 8 with length 1 forces ordinal 5 and
+    position 9, and ``5`` then ``9`` gives ``59``.
 
-    So exactly one byte per edition stays unread and stays REPORTED. This test
-    exists so that is a recorded limit with its reason attached rather than an
-    absence someone later reads as coverage -- and so that anyone who does
-    ground a fix sees this expectation fail and knows to remove it.
+    That is the same over-determination :func:`_continues` already requires
+    before admitting a reversed-column half -- two independent facts from a row
+    already read, both of which must agree -- rather than a new licence to
+    guess. A line whose neighbours do not produce its exact token is still left
+    alone, and the reader still invents no positions.
     """
     matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
     assert matches, f"the bundled design {prefix!r} is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])
-    holes = [sheet for sheet in extraction.skipped if "not read at all" in sheet.reason]
 
-    assert len(holes) == 1, [sheet.reason[:120] for sheet in holes]
-    assert "but 9 were not read at all" in holes[0].reason
+    assert not [
+        sheet for sheet in extraction.skipped if "but 9 were not read at all" in sheet.reason
+    ], "position 9 is a hole again; the doubly-glued row stopped being recovered"
+
+    recovered = [
+        field
+        for sheet in extraction.sheets
+        for field in sheet.fields
+        if field.offset == 9 and field.length == 1
+    ]
+    assert recovered, "no record carries the one-byte field the doubly-glued row declares at position 9"

@@ -745,6 +745,56 @@ def _reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(folded)
 
 
+#: A row whose ORDINAL and OFFSET arrived fused into one token and whose LENGTH
+#: and NATURALEZA arrived fused into another: ``59 1A Indicador ...`` for what
+#: AEAT prints as ``5 9 1 A Indicador ...``.
+_FUSED_ROW_RE = re.compile(r"^\s*(\d+)\s+(\d+)([A-Za-z][A-Za-z.]*)\s+(\S.*)$")
+
+
+def _split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Separate a row whose first two columns were emitted without a space.
+
+    Modelo 100's 2012, 2013 and 2014 editions each lose exactly one position --
+    9 -- and always the same row: the ``Indicador de pagina complementaria``
+    flag arrives as ``59 1A ...`` where AEAT prints ``5 9 1 A ...``. Both the
+    ordinal/offset pair and the length/naturaleza pair are fused, so no
+    column-shaped pattern matches and the row is refused.
+
+    Splitting ``59`` needs no guesswork, and that is what makes this safe: the
+    previous row already fixes both values. The ordinal must follow by one and
+    the offset must resume where that row ended, so the split is accepted ONLY
+    when concatenating those two expected numbers reproduces the fused token
+    exactly. ``5`` and ``9`` give ``59``; any other reading of that token, and
+    any line whose neighbours do not agree, is left alone.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        fused = _FUSED_ROW_RE.match(line)
+        if (
+            fused is not None
+            and previous is not None
+            and previous.ordinal is not None
+            and previous.ordinal.isdigit()
+        ):
+            ordinal = int(previous.ordinal) + 1
+            offset = previous.offset + previous.length
+            if fused.group(1) == f"{ordinal}{offset}":
+                rebuilt = f"{ordinal} {offset} {fused.group(2)} {fused.group(3)} {fused.group(4)}"
+                candidate = _parse_pdf_row(rebuilt, index + 1)
+                if candidate is not None:
+                    previous = candidate
+                    split.append(rebuilt)
+                    continue
+        split.append(line)
+    return tuple(split)
+
+
 def _split_row_from_wrapped_content(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Separate a row from a preceding fragment of the previous cell's content.
 
@@ -874,7 +924,9 @@ def _extract_record_design_pdf_stream(
     base_lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     lines = _reattach_stranded_casilla_tags(
         _split_row_from_wrapped_content(
-            _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+            _split_fused_ordinal_offset_rows(
+                _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+            ),
         ),
     )
     if _uses_page_record_layout(base_lines):
