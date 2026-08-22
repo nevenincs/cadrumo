@@ -353,3 +353,51 @@ def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() 
         ),
     ):
         assert filing_projection_ref_casilla_id(slotless) is None
+
+
+def test_a_reference_survives_its_own_python_mode_serialisation() -> None:
+    """``model_dump()`` emits StrEnum members, and the compiler must accept them.
+
+    The exact-type guards refuse anything that is not literally ``str``, which a
+    StrEnum member is not -- although a member's value IS the wire primitive.
+    That made a dumped reference unreadable by the model that produced it, and
+    it reached real data: seven committed export layouts (Modelo 200's 2024 and
+    all six Modelo 303 revisions) could not be re-validated from their own dump.
+
+    Asserted as strict equality through the real compiler, so a narrowing that
+    merely stopped raising while losing a field would still fail.
+    """
+    reference = M303RegimenSimplificadoActivityProjectionRef(
+        projection_kind="m303_regimen_simplificado_activity",
+        cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+        slot=1,
+        field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
+    )
+    payload = reference.model_dump()
+
+    assert isinstance(payload["field"], M303RegimenSimplificadoActivityField), (
+        "python-mode dump no longer emits enum members, so this proof no longer "
+        "exercises the narrowing it was written for"
+    )
+    assert compile_filing_projection_ref(payload) == reference
+
+
+def test_the_enum_narrowing_did_not_loosen_the_primitive_guards() -> None:
+    """Narrowing an enum to its value must not admit genuine non-primitives.
+
+    The integer guard in particular has to keep refusing ``bool``: ``True`` is an
+    ``int`` subclass, and a slot silently reading as 1 would address the wrong
+    projection row.
+    """
+    base = {
+        "projection_kind": "m303_regimen_simplificado_activity",
+        "cohort": M303RegimenSimplificadoCohort.AGRICOLA.value,
+        "field": M303RegimenSimplificadoActivityField.ACTIVITY_CODE.value,
+    }
+
+    with pytest.raises(ValueError, match="must be an exact integer"):
+        compile_filing_projection_ref(base | {"slot": True})
+    with pytest.raises(ValueError, match="must be an exact string"):
+        compile_filing_projection_ref(base | {"slot": 1, "field": 7})
+    with pytest.raises(ValueError, match="must not contain surrounding whitespace"):
+        compile_filing_projection_ref(base | {"slot": 1, "cohort": " agricola "})
