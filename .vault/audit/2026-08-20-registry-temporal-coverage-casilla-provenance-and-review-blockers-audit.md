@@ -2922,3 +2922,74 @@ names as Pag. 2A's (`codigo-via-ine`, `aeat-alta`), and `(segmento, number)`
 uniqueness is enforced revision-wide. The collision was surfaced by the loader
 refusing the first attempt, not anticipated — worth remembering when authoring any
 second record of a modelo whose records repeat a block structure.
+
+## 2026-08-22 — modelo 220 opened: the first position mapping, and the design is fully overlap-clean
+
+### What landed
+
+Record **T22001000** of modelo 220 revision 2024: **77 casillas**, taking the revision
+from 2 to 79. It is the grupo fiscal declarante record — identificación of the
+representante or dominante, periodo impositivo, the dominante, fourteen CNAE
+activities, twelve tipo-de-grupo flags, the INCN tranche, three legal representatives
+and the incidencias contact.
+
+This is the **first casilla-to-position mapping ever authored for this modelo**. The
+revision's own fragment previously recorded that none existed, so a number was not
+invented; that prose was corrected in the same commit rather than left describing a
+state that no longer holds.
+
+### The whole design is overlap-clean — measured once, useful for every future iteration
+
+The filing-capability worklist names its own precondition for authoring against this
+design: the extraction must be checked for **partial overlap**, not merely for gaps,
+because partial overlap leaves no holes and a gap-only check passes straight over it.
+
+Measured across **all 137 records / 16 079 fields of `aeat-dr-220-2024`: zero partial
+overlaps, zero gaps.** The precondition is satisfied for the entire design, not just
+the record authored here. That removes a per-record risk from every remaining
+iteration on this modelo — though each record's own tiling is still worth asserting
+before its offsets are used, since the check is cheap.
+
+### A stronger completeness discipline than previous iterations
+
+Earlier records were verified by confirming that every authored row matched its design
+row. That catches fabrication but not omission. This record adds the complement:
+**every one of the design's 91 fields is either authored or explicitly excluded with a
+stated reason**, and the set difference is asserted empty. Nothing is unaccounted for.
+
+The fourteen exclusions, each named in the fragment: the six-field modelo/página
+identifier envelope; the two página-complementaria mechanics fields (borderline —
+recorded as such rather than silently dropped); the administration-reserved tipo de
+declaración; `@106` ejercicio (the same fact as the existing `decl.ejercicio`, which a
+layout will bind to that position — a second casilla would double-declare one value);
+the filing-program "inoperatividad de la ayuda al cálculo" flag; and the reservado,
+sello electrónico and fin-de-registro runs.
+
+**This is worth adopting as the standard check.** "Every authored row is real" and
+"every real field is accounted for" are different claims, and only the second one
+bounds the undercount.
+
+### Generated runs are proven against the design, not trusted to arithmetic
+
+Two runs in this record are regular enough to generate: the fourteen CNAE
+epigrafe/descripción pairs step 65 positions from 258, and the three representante
+legal blocks step 65 from 1196. Both were confirmed to land exactly where the next
+declared block begins (1168 and 1391 respectively) — but each generated offset was
+still cross-checked individually against its own design row. A stride that lands
+correctly at both ends can still be wrong in the middle.
+
+### Scale, stated honestly
+
+7604 distinct AEAT box numbers in the design; **12 modelled** (the bracket-numbered
+caracteres flags), 7592 remaining. This record is roughly **one half of one percent**
+of the box set, and 136 of 137 records are untouched. Modelo 220 is a long haul at one
+record per iteration; the value of this iteration is that the modelo is now open and
+its conventions are settled, not that the backlog moved materially.
+
+### Suite
+
+14 failures, unchanged in count. One new entry —
+`test_loader_cache_isolation::test_bundled_root_disk_cache_is_shared_across_processes`
+— **is a parallel-run flake, not a regression**: all 11 tests in that module pass
+single-process (`-n0`). The m390 fragment-naming failure was fixed by a peer in the
+same window.
