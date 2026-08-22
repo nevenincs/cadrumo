@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:180745ef22db98973ffa5cd2d037ddf11319568be91b4cbbcaf215fcca5fcb44'
+body_hash: 'sha256:a85965f5de17a8af2eabc913ef0fe8620fa03b27e66d5f0454df5874b1ecf2cd'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -1096,3 +1096,58 @@ rerun the asserted scoped gates. Append the literal commands (including paths,
 markers, serial/xdist choice, and bounded/interrupted command status) beside
 each result. S13 is not independently reproducible until that correction, so
 S14 should not start yet.
+
+#### S13 command-evidence remediation follow-up
+
+Commit `d507ab80d9` materially improves the S13 record and independently
+re-running its literal ten-path default command reproduces `67 passed / 82
+deselected` with `-n 0` (35.81 seconds on this review HEAD). The seven-path
+integration command is the same command independently reproduced during the
+initial review at `104 passed / 5 deselected`. The feature Vault command also
+exits zero with clean behavioral checks and the expected stale-index warning.
+The recorded test paths, marker expressions, serial choice, custody/recovery
+commands, Ruff scopes, structural commands, and interruption condition are now
+visible rather than inferred.
+
+`s13-command-evidence-absent` is not fully closed. The literal recovery
+negative-space command at S13 execution-record lines 149-150 is not executable
+as recorded in this Windows PowerShell workspace. `rg` receives
+`src/cadrumo/adapters/persistence/storage/custody/*recovery*` as a literal
+invalid path, emits OS error 123, and exits 2; the record claims that command
+exited 1 with a trustworthy no-match result. Replace the shell-dependent path
+wildcard with reproducible `--glob`/directory arguments, rerun it, and record
+the actual exit.
+
+The transcript also still does not preserve exact diagnostics for several
+failed gates it describes as "above" or "already listed": the original prose
+gives only examples/categories for full Ruff and the 13 nitpicky diagnostics,
+and the transient fifth harness collection failure has neither its original
+path nor the narrowed direct-collection command. Durations are absent for many
+bounded commands despite the remediation contract requesting status, count,
+duration, and failure paths. Record the available exact output facts and say
+explicitly when a duration was not captured; do not reconstruct or guess them.
+The MEDIUM remains open, no HIGH/CRITICAL exists, and S14 remains blocked.
+
+#### S13 command-evidence final closure verification
+
+Commit `ccdf3fe591` closes `s13-command-evidence-absent`. Both corrected
+recovery negative searches use PowerShell-safe `rg --glob` or explicit file
+arguments; independent literal execution returns exit 1 with no matches for
+each, without filesystem errors. The complete transcript now contains
+syntactically valid literal commands for every executed test, Ruff, search,
+Vault, import, locale, API, documentation, harness, and interrupted docs gate.
+
+Available failure facts are embedded at their owning commands: exact captured
+Ruff paths/codes and format count, API 4/2/4 paths, the documented-command
+sequence and invalid tokens, all 13 nitpicky paths/lines and mismatches, and the
+four exact harness collection paths/missing exports. Facts not captured at
+execution time are explicitly identified as unavailable rather than inferred,
+including complete Ruff/locale diagnostics, individual locale exit statuses,
+several durations, the transient fifth harness path and direct-collection
+command, and the interrupted docs terminal state. Exact search finds no
+dangling "above", "already listed", or former bounded-command reference. Commit
+diff hygiene and Vaultspec frontmatter validation pass.
+
+The previously reproduced `67 passed / 82 deselected` and `104 passed / 5
+deselected` commands remain the authoritative paired credential lanes. No
+LOW-to-CRITICAL S13 finding remains. S13 is review-clean and S14 may proceed.
