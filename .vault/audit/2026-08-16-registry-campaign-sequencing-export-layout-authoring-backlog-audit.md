@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7172d511d330881cdd10c7fad42011aae70ea137512b598f3870a4eaed3ae8a'
+body_hash: 'sha256:96fe9aa45fbeb3f5524ee0fcfc59ed6f329fd5d215bc8b9080f14acccc1e2e85'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15330,3 +15330,71 @@ the capability worklist marks modelo 038 blocked on its artefact, and the
 partly-read inventory marks modelos 180 and 349 as diagrams. Between them, three
 designs are now known to need AEAT acquisition rather than engineering -- which
 is an operator decision and the third time this campaign has reached one.
+
+## Tick: modelo 131 reads whole -- a row hidden behind its neighbour's wrapped content
+
+Re-measured at tick start: authority CLEAN, the partly-read inventory now
+labelled by shape, its seven TABLE lines the only lane open to this campaign.
+Modelo 131's was the smallest and was taken.
+
+### One byte, one row, one cause
+
+The design declares 1,012 positions and left exactly one unread: 465. Ordinal 47
+ends at 464 and ordinal 49 begins at 466, so ordinal 48 was not dropped by the
+reader -- it never became a row at all.
+
+The raw extraction says why. AEAT's ``Contenido`` cell for that row lists the
+payment forms and wraps over three lines, and the third fragment is emitted on
+the SAME line as the next row:
+
+    '"0" No consta, "1" Efectivo, '
+    '"2" Adeudo en cuenta, "3" '
+    'Domiciliacion 48 465 1 Num Ingreso (4) - Forma de pago'
+
+The line does not begin with its ordinal, so it is refused, and the record loses
+the byte AEAT gives to ``Forma de pago``.
+
+### The split, and what stops it inventing rows
+
+Splitting on appearance would fabricate rows out of prose, so the suffix must
+satisfy the OVER-DETERMINATION this parser already relies on elsewhere: it
+parses as a row, AND its ordinal follows the previous row's by one, AND its
+offset resumes exactly where that row ended. Two independent facts from an
+already-read row must agree.
+
+Proven directly rather than assumed: the real line splits; the same line with a
+wrong ordinal (60 instead of 48) does not; the same line with a wrong offset
+(999 instead of 465) does not.
+
+The stripped fragment is emitted as its own line rather than discarded -- it is
+content, standalone content lines are already ignored, and dropping text to make
+a row appear would be the same defect inverted.
+
+### Corpus-wide, and it reached further than its own modelo
+
+**216 designs compared: 5 improved, 0 regressed, 211 unchanged.**
+
+* modelo 131's 2009 design: 1 sheet skipped and 0 fields read -> reads WHOLE,
+  63 fields.
+* modelo 200's 2011 edition: 5 skipped sheets -> 4, and 40 sheets -> 41,
+  recovering **283 fields** and a whole record.
+* modelo 200's 2012, 2013 and 2014 editions: one field each.
+
+The partly-read inventory drops from **9 of 218 to 8**, and the shape labels
+added last tick made the choice of target obvious rather than lucky.
+
+### Verified
+
+* the guard controlled on both failing directions, not only the passing one.
+* registry + generated-tree + application/registry: the eight declared
+  inventories, plus two reds that pass in isolation (the modelo 036 label
+  coverage and a censo query test, both peer work in flight). Tree quiescent.
+* ruff: `_record_design.py` carries the same four findings at HEAD as after the
+  change, so none was introduced here.
+
+### Still open
+
+Seven partly-read designs: five TABLE lines that remain parser work -- modelo
+100's three editions and modelo 200's three, minus the sheet recovered here --
+and the two DIAGRAM lines that need AEAT acquisition. The next smallest TABLE
+target is modelo 200's 2010 edition at five skipped sheets.

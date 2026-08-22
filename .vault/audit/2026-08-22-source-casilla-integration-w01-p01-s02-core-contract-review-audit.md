@@ -5,13 +5,11 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:cd96b3ef4a79c85158d657e9d20ad7ff36b209ad10a921d1f9d50d058198281d'
+body_hash: 'sha256:7fb27a7b831381cfd2f5cb7dea7638a5c801d5ef6d6a32a4524d7313c6c669f8'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
 
 # `source-casilla-integration` audit: `W01.P01.S02 core contract review`
 

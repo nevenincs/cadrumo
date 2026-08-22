@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:73e520b61d6629cfd526ace9091e5d13afa6e91c48754c347c23bb0229e8a89c'
+body_hash: 'sha256:319e99577c1436350617a1a1d4bd498240c637ded097b86270e15cfade88019f'
 step_id: 'S06'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"

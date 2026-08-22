@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e932d0f64bbaab1b49ad63e5432217f33bd7d8a0cedf25b57fb36f3240a678c'
+body_hash: 'sha256:520c6e696b814df0e49a60f520e76191b553d3018a3b8e40d263875b8b0da69b'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -323,3 +323,98 @@ record rather than relying on its assertion.
 
 Both S06 MEDIUM findings are closed. No unresolved HIGH, CRITICAL, or MEDIUM finding
 remains from this review chain, and W01.P03.S07 may proceed.
+
+### s07-refusal-context-mutability | medium | The frozen refusal exposes a mutable context
+
+The mandatory S07 review grounded the application implementation in commits
+`cee3240301`, `8b01182fb9`, and `f0fcbb9681` against the accepted ADR, research,
+incident reference, live plan, current source, execution record, history, and shared
+worktree state. The production ordering is correct today: registration assesses at
+`src/cadrumo/application/user_profile/_registration.py:191-200` before identity
+generation, random key material, custody creation, session construction, or lifecycle
+publication; rotation assesses at
+`src/cadrumo/application/user_profile/_passphrase_rotation.py:125-135` before root
+resolution, transaction locking, committed-material loading, unwrap, re-heading, or
+publication. Exact search finds no stale minimum-only application policy, compatibility
+alias, or parallel validator. The real integration tests cover all four reasons, both
+surrogate-range endpoints, 14/15/256/257 scalars, the 1,024/1,025-byte boundary and
+precedence, and exact composed/decomposed usability. Whole-root byte snapshots prove
+that refused registration and rotation leave every extant capsule, inventory, session,
+record, recovery, and envelope path unchanged. Successful rotation coverage retains the
+DEK epoch, recovery door, generation, record history, and new-password session behavior.
+
+However, `ProspectiveProfilePasswordRefusal` is only shallowly frozen. Its declaration
+at `src/cadrumo/application/user_profile/_prospective_password.py:32-39` stores
+`context` as a mutable `dict`; callers can add, remove, or replace presentation facts
+despite `frozen=True`, and both application errors retain that same object. This violates
+the Step's immutable stable-context contract and lets a downstream surface accidentally
+turn a reviewed secret-free payload into an expanded or inconsistent one. Store a truly
+immutable mapping (constructed from a fresh private mapping) and add a test that mutation
+is refused. Pin the exact translation key and exact finite context keys/values for each
+reason, rather than the current prefix assertion and the tautological comparison between
+an error and its own payload. This is a current contract defect, not evidence of a
+present secret leak.
+
+### s07-preflight-order-bite | medium | Storage snapshots do not prove the claimed preflight boundary
+
+The refusal matrices at
+`src/cadrumo/application/user_profile/tests/test_registration.py:184-211` and
+`src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py:226-261` prove
+typed outcomes and durable no-mutation. They do not prove the stronger ordering claimed
+by the ADR and execution record. Registration could generate an identity and key
+material or enter custody before returning the same application refusal; rotation could
+resolve the root, acquire and release the transaction lock, load the envelope, or unwrap
+the current password before assessing the replacement. Those regressions can leave the
+whole-root snapshot byte-identical, so every current test would remain green.
+
+Add collaborator-boundary bites that make `new_profile_id`, randomness, and custody
+material creation fail if reached during invalid registration, and make root resolution,
+lock acquisition, material loading, and unwrap fail if reached during invalid rotation.
+Keep the existing whole-storage snapshots because they prove the separate durable-state
+guarantee. The implementation is correctly ordered now; this is a regression-coverage
+and evidence-completeness defect.
+
+### s07-format-evidence | medium | Four S07-owned files fail the formatter gate
+
+Ruff lint passes, and the correctly selected serial integration lane independently
+passes all 35 registration and rotation tests in 44.31 seconds. But `ruff format
+--check` reports that `src/cadrumo/application/user_profile/__init__.py`,
+`_passphrase_rotation.py`, `_prospective_password.py`, and `_registration.py` would be
+reformatted. The mixed-commit diff introduced inconsistent line endings in the S07
+regions and also leaves a formatter-owned layout change in the new message mapping.
+This contradicts the execution record's focused Ruff evidence. Format exactly the S07
+owned files, verify the diff is non-semantic, rerun Ruff and the 35-test integration
+lane, and amend the execution evidence.
+
+No HIGH or CRITICAL finding was found. These three MEDIUM findings block review-clean
+S07 closure and therefore block S08 until remediated and independently rechecked.
+
+#### S07 remediation closure
+
+Current-HEAD re-review of commit `8b50c24566`, after repeated semantic code and
+governing-ADR discovery plus exact-symbol confirmation, closes all three S07 MEDIUM
+findings. `ProspectiveProfilePasswordRefusal` at
+`src/cadrumo/application/user_profile/_prospective_password.py:32-56` now stores only
+frozen typed scalar fields and derives a fresh `MappingProxyType` context from them.
+There is no mutable context retained inside the result; attempted writes through the
+read surface raise `TypeError` and cannot alter the underlying refusal. The application
+errors continue to make their own plain-dictionary copy through the established
+`CadrumoError` convention.
+
+Both refusal matrices now pin the exact finite translation key and the exact safe
+context keys and values for every canonical reason, including the absence of a byte
+measurement for surrogate refusal. They independently exclude the submitted candidate
+from the typed payload. Registration's fail-if-called bite at
+`src/cadrumo/application/user_profile/tests/test_registration.py:254-268` guards profile
+identity generation, every randomness call, and custody material/KDF entry. Rotation's
+bite at `src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py:293-315`
+guards root resolution, transaction locking, material loading, unwrap, record re-heading,
+and envelope publication. The existing whole-root byte snapshots remain separate proof
+that capsule, inventory, session, record, recovery, and envelope state is unchanged.
+
+Commit diff hygiene passes. Independent Ruff lint and format checks pass over all six
+owned files, reporting them already formatted. The correctly selected serial integration
+lane passes all 37 registration and rotation tests in 48.19 seconds, consistent with the
+execution record's 37-test result. `s07-refusal-context-mutability`,
+`s07-preflight-order-bite`, and `s07-format-evidence` are closed. No unresolved HIGH,
+CRITICAL, or MEDIUM finding remains, and W02.P05.S08 may proceed.
