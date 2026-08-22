@@ -16,6 +16,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import RegistryValidationError, parse_export_payload
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import (
     Invoice,
@@ -208,12 +210,12 @@ def _m369_invoice(
 
 
 @pytest.mark.parametrize(
-    ("period_token", "operation_date", "expected_wire_period"),
+    ("period_token", "operation_date", "issued_at", "expected_wire_period"),
     (
-        ("EXT-1T", date(2026, 2, 15), b"01"),
-        ("EXT-2T", date(2026, 5, 15), b"02"),
-        ("EXT-3T", date(2026, 8, 15), b"03"),
-        ("EXT-4T", date(2026, 11, 15), b"04"),
+        ("EXT-1T", date(2026, 2, 15), date(2026, 5, 15), b"01"),
+        ("EXT-2T", date(2026, 5, 15), date(2026, 8, 15), b"02"),
+        ("EXT-3T", date(2026, 8, 15), date(2026, 11, 15), b"03"),
+        ("EXT-4T", date(2026, 11, 15), date(2027, 2, 15), b"04"),
     ),
 )
 def test_m369_exterior_period_calculate_review_export_e2e(
@@ -221,6 +223,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     tmp_path: Path,
     period_token: str,
     operation_date: date,
+    issued_at: date,
     expected_wire_period: bytes,
 ) -> None:
     """Every Exterior quarter retains its token and renders the official ordinal."""
@@ -233,7 +236,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             (
                 _m369_invoice(
                     invoice_number=f"OSS-EXT-{period_token}",
-                    issued_at=operation_date,
+                    issued_at=issued_at,
                     operation_date=operation_date,
                     counterparty_name="DE Exterior Consumer",
                     counterparty_tax_id=f"DE{period_token[-2]}23456789",
@@ -258,15 +261,6 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        binding_values={
-            "modelo-369-exterior-fichero.223-227.3-prestaciones-de-servicios-tipo-de-iva-1": Decimal("19.00"),
-            "modelo-369-exterior-fichero.229-245.3-prestaciones-de-servicios-base-imponible-1": Decimal("100.00"),
-            "modelo-369-exterior-fichero.246-262.3-prestaciones-de-servicios-cuota-iva-1": Decimal("19.00"),
-        },
-        enum_binding_values={
-            "modelo-369-exterior-fichero.221-222.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1": "DE",
-            "modelo-369-exterior-fichero.228-228.3-prestaciones-de-servicios-tipo-iva-1": "G",
-        },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -304,6 +298,34 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     wire = output_path.read_bytes()
     assert wire[10:12] == expected_wire_period
     assert period_token.encode("ascii") not in wire
+    layout = (
+        resources()
+        .modelos.authority.snapshot("369", filing_year=_M369_YEAR, period=period_token, revision_id="esquema-exterior")
+        .revision.export_layouts[0]
+    )
+    parsed = parse_export_payload(layout, wire)
+    detail = tuple(field for field in parsed.fields if field.record_id == "modelo-369-exterior-t36901")
+
+    def detail_value(offset_token: str) -> object:
+        matches = [field.value for field in detail if offset_token in str(field.binding_id)]
+        assert len(matches) == 1, [(field.field_id, field.binding_id, field.value) for field in detail]
+        return matches[0]
+
+    assert detail_value(".213-216.") == 2026
+    assert detail_value(".217-217.") == "T"
+    assert detail_value(".218-219.") == int(period_token[-2])
+    assert detail_value(".221-222.") == "DE"
+    assert detail_value(".223-227.") == Decimal("19")
+    assert detail_value(".228-228.") == "G"
+    assert detail_value(".229-245.") == Decimal("100")
+    assert detail_value(".246-262.") == Decimal("19")
+    record_ids = {field.record_id for field in parsed.fields}
+    assert "modelo-369-exterior-t36902" not in record_ids
+    assert "modelo-369-exterior-t36903" in record_ids
+    closure_start = wire.index(b"<T36903>")
+    malformed_optional = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
+    with pytest.raises(RegistryValidationError):
+        parse_export_payload(layout, malformed_optional)
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(

@@ -23,6 +23,7 @@ declarable OSS observations that no ``ledger_oss_aggregation`` binding consumes.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
@@ -241,6 +242,56 @@ def aggregate_oss_ioss_bindings(
     """
     observations = validate_oss_ioss_observations(candidates)
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
+
+
+def _exterior_detail_binding_values(
+    revision: ModeloRevision,
+    observations: Sequence[OssIossLedgerObservation],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Project Exterior service rows from validated invoice observations.
+
+    The record-design bindings are generated from AEAT's positional workbook,
+    so discover their semantic field names from the revision instead of
+    duplicating generated binding ids here.  One row represents one
+    destination/rate tier; repeated invoice lines in that tier are summed.
+    """
+    if revision.id != "esquema-exterior":
+        return {}, {}
+    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
+    for observation in observations:
+        if (
+            observation.regime is OssIossRegime.EXTERNAL_SCHEME
+            and observation.transaction_kind is TransactionKind.EXTERNAL_SCHEME_SERVICES
+        ):
+            grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
+    rate_codes = {
+        IvaRateKind.GENERAL: "G",
+        IvaRateKind.REDUCED: "R",
+        IvaRateKind.SUPER_REDUCED: "S",
+    }
+    for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
+        rate = lookup_rate(country, rate_kind, rows[0].transaction_date).pct
+        fields = {
+            f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
+            f"3-prestaciones-de-servicios-tipo-iva-{row}": rate_codes[rate_kind],
+        }
+        decimals = {
+            f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
+            f"3-prestaciones-de-servicios-base-imponible-{row}": sum((item.base_amount for item in rows), Decimal("0")),
+            f"3-prestaciones-de-servicios-cuota-iva-{row}": sum((item.iva_amount for item in rows), Decimal("0")),
+        }
+        for binding in revision.bindings:
+            selector = binding.selector
+            if getattr(selector, "record", None) != "modelo-369-exterior-t36901":
+                continue
+            field = getattr(selector, "field", None)
+            if field in fields:
+                enum_values[binding.id] = fields[field]
+            elif field in decimals:
+                decimal_values[binding.id] = decimals[field]
+    return decimal_values, enum_values
 
 
 def _candidate_for_invoice_line(
@@ -526,6 +577,7 @@ class OssIossLedgerSourceResolver:
                 diagnostics=self._no_live_source_diagnostics(context),
             )
         observations = validate_oss_ioss_observations(candidates)
+        exterior_values, exterior_enum_values = _exterior_detail_binding_values(context.revision, observations)
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # OSS line whose classification tuple matches no ledger_oss_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).
@@ -533,7 +585,11 @@ class OssIossLedgerSourceResolver:
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
+            binding_values={
+                **resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
+                **exterior_values,
+            },
+            enum_binding_values=exterior_enum_values,
             source_transaction_ids=tuple(
                 sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
             ),
