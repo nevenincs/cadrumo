@@ -35,6 +35,10 @@ modelo:
               help: null
               label: Porcentaje sobre el que se aplica el incremento (reservado a
                 la Administracion)
+            x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
+              help: null
+              label: Cuota de maquinas recreativas o de autoventa (reservado a la
+                Administracion)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
               label: Cuota de tarifa o importe minimo (reservado a la Administracion)
@@ -151,6 +155,18 @@ modelo:
               help: null
               label: Nombre de la vía pública del local afecto indirectamente a la
                 actividad
+            x-dlgn2tb9dpgn6bjjelmm2:
+              help: null
+              label: Suma de maquinas recreativas o de autoventa (reservado a la Administracion)
+            x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
+              help: null
+              label: 'Calidad en la que firma: titular o representante'
+            x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
+              help: null
+              label: Fecha de la notificacion
+            x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
+              help: null
+              label: Lugar de la notificacion
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: null
               label: Apellidos y nombre o razón social del representante

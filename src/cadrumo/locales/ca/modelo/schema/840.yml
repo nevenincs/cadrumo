@@ -32,6 +32,9 @@ modelo:
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
               help: null
               label: Percentatge sobre el qual s'aplica l'increment (reservat a l'Administracio)
+            x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
+              help: null
+              label: Quota de maquines recreatives o d'autovenda (reservat a l'Administracio)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
               label: Quota de tarifa o import minim (reservat a l'Administracio)
@@ -143,6 +146,18 @@ modelo:
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               help: null
               label: Nom de la via pública del local afecte indirectament a l'activitat
+            x-dlgn2tb9dpgn6bjjelmm2:
+              help: null
+              label: Suma de maquines recreatives o d'autovenda (reservat a l'Administracio)
+            x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
+              help: null
+              label: 'Qualitat en que signa: titular o representant'
+            x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
+              help: null
+              label: Data de la notificacio
+            x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
+              help: null
+              label: Lloc de la notificacio
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: null
               label: Cognoms i nom o raó social del representant

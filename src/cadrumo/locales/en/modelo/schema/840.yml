@@ -33,6 +33,10 @@ modelo:
               help: null
               label: Percentage to which the increase applies (reserved for the tax
                 administration)
+            x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
+              help: null
+              label: Quota for gaming machines or vending activity (reserved for the
+                tax administration)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
               label: Tariff quota or minimum amount (reserved for the tax administration)
@@ -148,6 +152,19 @@ modelo:
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               help: null
               label: Street name of the premises indirectly used for the activity
+            x-dlgn2tb9dpgn6bjjelmm2:
+              help: null
+              label: Sum for gaming machines or vending activity (reserved for the
+                tax administration)
+            x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
+              help: null
+              label: 'Capacity in which the return is signed: holder or representative'
+            x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
+              help: null
+              label: Date of the notification
+            x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
+              help: null
+              label: Place of the notification
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: null
               label: Surnames and forename, or legal name, of the representative
