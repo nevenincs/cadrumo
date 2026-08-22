@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d43b7da2b32675c33d4cea31045e27b3c2e4e9ac7d92fc3812384c09d018eb79'
+body_hash: 'sha256:347368d908d3484c6e3f9f2470baa57a1ea04f3fe8ca6fdf4c5849bfab83f71c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6378,3 +6378,32 @@ losing their password. If the rebuild lands the export door, the gap closes on i
 does not, the help is a promise the product cannot keep.
 
 No production change this iteration.
+
+### Settling an "unclassified" register entry, narrowly
+
+The unused-export register carried `bound_profile_record_session` as explicitly undecided:
+*"used by eight TEST modules as their binding fixture and by no production caller. That shape
+-- heavily used by tests, unused by the tree -- is what a test-support helper looks like, and
+its home is likely the tests package rather than the boundary; unclassified pending that
+judgement."*
+
+**The measurement narrows the question rather than confirming the guess.** All eight test
+consumers import it through the PRIVATE module path, `.._profile_record_repository`, which is
+an intra-package import the architecture rules explicitly allow. So the tests are not reaching
+across a boundary at all, and the function's LOCATION is not the problem. What has no
+justification is the public contract wrapped around it: three facade registrations --
+TYPE_CHECKING import, lazy map, `__all__` -- for a name no production code loads, inside the
+package or out.
+
+So the fix is de-export, not relocation. That removes exactly the unearned part, leaves the
+helper where a future production caller would find it, and is reversible if one appears.
+Moving it into the tests package would decide something stronger -- that it may never have a
+production caller -- on evidence that only shows it has none today.
+
+**The gate made the second half of the change mandatory, which is good design.**
+`test_no_record_outlives_the_name_it_describes` fails on a record naming a name the facade no
+longer exports, so the register entry had to go in the same commit. Proven by re-adding the
+entry from outside the repo: the guard fires. An allowlist that cannot go stale is worth more
+than one that merely holds reasons.
+
+Lanes 314 integration / 1592 unit.
