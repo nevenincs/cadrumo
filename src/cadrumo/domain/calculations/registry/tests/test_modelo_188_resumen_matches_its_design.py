@@ -31,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: The diseño this revision cites, and the record carrying the hoja-resumen.
 _DESIGN = "01-188-diseno-de-registro-actualizado-en-2023.pdf"
 _SUMMARY_SHEET = "PDF record design"
+_PERCEPTOR_SHEET = "Tipo 2 - Registro De Perceptor"
 #: AEAT's widths for the summary block: a perceptor COUNT is 9 characters and a
 #: monetary total is 15. The block begins after the declarante identity fields.
 _COUNT_WIDTH, _AMOUNT_WIDTH = 9, 15
@@ -94,3 +95,61 @@ def test_the_two_perceptor_counts_sit_where_the_registry_says_they_do() -> None:
         f"the registry documents the two perceptor counts at offsets 136 and 175; the diseño "
         f"carries counts at {counts}"
     )
+
+
+def _perceptor_design_ranges() -> set[str]:
+    """Return every ``offset-end`` range the Tipo 2 record declares."""
+    design = bundled_path(
+        "corpus", "aeat_official", "disenos_registro", "modelo_188", "files", _DESIGN
+    )
+    extraction = extract_record_design(design)
+    sheet = next(s for s in extraction.sheets if s.name == _PERCEPTOR_SHEET)
+    ranges = set()
+    for field in sheet.fields:
+        end = field.offset + field.length - 1
+        ranges.add(str(field.offset) if end == field.offset else f"{field.offset}-{end}")
+    return ranges
+
+
+def test_every_perceptor_casilla_number_is_a_real_range_in_the_tipo_2_record() -> None:
+    """The perceptor casillas carry byte ranges, so the diseño can check them.
+
+    These casillas describe the repeating ``hojas interiores de relación de
+    perceptores`` that Orden de 17 de noviembre de 1999, apartado quinto,
+    approves alongside the hoja resumen. Their ``number`` is not an AEAT box
+    number -- a detail row has none -- but the byte range the diseño gives the
+    field, which is exactly what an export layout will bind against.
+
+    Asserting them against the parsed design is the difference between a
+    declared range and a checked one: a transcription slip of a single offset
+    would place a field on bytes AEAT uses for something else, and every file
+    would still parse.
+    """
+    modelo = next(m for m in bundled_authority().modelos if str(m.id) == "188")
+    revision = modelo.revisions["2019-y-siguientes"]
+    perceptor = [c for c in revision.casillas if "perceptor" in tuple(c.section or ())]
+    design_ranges = _perceptor_design_ranges()
+
+    assert perceptor, "modelo 188 declares no perceptor casillas"
+    stray = sorted(str(c.id) for c in perceptor if str(c.number) not in design_ranges)
+    assert not stray, (
+        f"these perceptor casillas declare a byte range the Tipo 2 record does not carry: {stray}"
+    )
+
+
+def test_the_perceptor_casillas_do_not_claim_the_records_structural_bytes() -> None:
+    """Record plumbing is not a casilla, so those ranges must stay unclaimed.
+
+    The first four fields and the trailing BLANCOS are tipo de registro, modelo,
+    ejercicio, NIF del declarante and filler. They belong to the layout as
+    literals, drafts and padding; declaring them as casillas would invent
+    operator inputs AEAT never asks a filer for.
+    """
+    modelo = next(m for m in bundled_authority().modelos if str(m.id) == "188")
+    revision = modelo.revisions["2019-y-siguientes"]
+    claimed = {str(c.number) for c in revision.casillas if "perceptor" in tuple(c.section or ())}
+
+    for structural in ("1", "2-4", "5-8", "9-17", "211-250"):
+        assert structural not in claimed, (
+            f"range {structural} is record plumbing in the Tipo 2 record, not an operator input"
+        )
