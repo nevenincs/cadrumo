@@ -20,6 +20,7 @@ from __future__ import annotations
 from datetime import date
 from enum import StrEnum
 from typing import Annotated
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
@@ -30,16 +31,23 @@ __all__ = [
     "SourceConnectivityCandidateIdentity",
     "SourceConnectivityCensusRow",
     "SourceConnectivityDisposition",
+    "SourceConnectivityExpiryPosture",
+    "SourceConnectivityFollowUp",
     "SourceConnectivityGrounding",
+    "SourceConnectivityGroundingLocatorKind",
 ]
 
 _BoundedText = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
-_GroundingLocator = Annotated[
+_Reference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=2_048),
+]
+_StableToken = Annotated[
+    str,
+    Field(min_length=1, max_length=160, pattern=r"^[a-z0-9][a-z0-9._:-]*$"),
 ]
 
 
@@ -96,16 +104,80 @@ class SourceConnectivityDisposition(StrEnum):
     """The candidate does not apply to the filing connectivity boundary."""
 
 
+class SourceConnectivityGroundingLocatorKind(StrEnum):
+    """Closed resolver family for one grounding reference."""
+
+    HTTPS = "https"
+    LEGAL_REFERENCE = "legal_reference"
+    SOURCE_REFERENCE = "source_reference"
+    REPOSITORY = "repository"
+
+
 class SourceConnectivityGrounding(BaseModel):
     """Re-fetchable evidence supporting one census adjudication."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    locator: _GroundingLocator
-    """Stable URL, catalogue identity, or repository locator for the evidence."""
-
+    locator_kind: SourceConnectivityGroundingLocatorKind
+    reference: _Reference
     summary: _BoundedText
-    """The fact this evidence establishes for the candidate."""
+
+    @model_validator(mode="after")
+    def _validate_re_fetchable_reference(self) -> SourceConnectivityGrounding:
+        """Refuse references the declared locator resolver cannot fetch."""
+        if self.locator_kind is SourceConnectivityGroundingLocatorKind.HTTPS:
+            parsed = urlsplit(self.reference)
+            if parsed.scheme != "https" or not parsed.netloc or parsed.username is not None:
+                raise ValueError("https grounding requires an absolute credential-free HTTPS URL")
+        elif self.locator_kind in {
+            SourceConnectivityGroundingLocatorKind.LEGAL_REFERENCE,
+            SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE,
+        }:
+            if not _is_stable_token(self.reference):
+                raise ValueError("catalogue grounding requires a canonical reference identity")
+        elif not _is_repository_locator(self.reference):
+            raise ValueError("repository grounding requires a production repository path and optional line")
+        return self
+
+
+def _is_stable_token(value: str) -> bool:
+    """Return whether ``value`` follows the canonical stable-token grammar."""
+    return bool(value) and len(value) <= 160 and value[0].isalnum() and all(
+        character.islower() or character.isdigit() or character in "._:-" for character in value
+    )
+
+
+def _is_repository_locator(value: str) -> bool:
+    """Return whether ``value`` names a stable in-repository evidence location."""
+    path, separator, line = value.rpartition(":")
+    candidate_path = path if separator and line.isdigit() else value
+    return (
+        candidate_path.startswith(("src/", "dev/", "docs/"))
+        and "\\" not in candidate_path
+        and "//" not in candidate_path
+        and ".." not in candidate_path.split("/")
+    )
+
+
+class SourceConnectivityFollowUp(BaseModel):
+    """Finite action that can resolve or re-adjudicate one census row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action_id: _StableToken
+    owner: _BoundedText | None = None
+    """Action owner; ``None`` explicitly inherits the census-row owner."""
+
+    deadline: date
+    completion_criterion: _BoundedText
+
+
+class SourceConnectivityExpiryPosture(StrEnum):
+    """Expiry state evaluated at an explicit caller-supplied civil date."""
+
+    NOT_SCHEDULED = "not_scheduled"
+    CURRENT = "current"
+    EXPIRED = "expired"
 
 
 _BLOCKED_DISPOSITIONS = frozenset(
@@ -130,7 +202,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
     owner: _BoundedText
     review_condition: _BoundedText | None = None
     expires_on: date | None = None
-    bounded_follow_up: _BoundedText | None = None
+    bounded_follow_up: SourceConnectivityFollowUp | None = None
 
     @model_validator(mode="after")
     def _require_actionable_unresolved_state(self) -> SourceConnectivityCensusRow:
@@ -148,8 +220,6 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             if missing:
                 rendered = ", ".join(missing)
                 raise ValueError(f"blocked connectivity row requires {rendered}")
-            if self.expires_on <= date.today():
-                raise ValueError("blocked connectivity row expires_on must be in the future")
         elif self.disposition is SourceConnectivityDisposition.CONNECT_CANDIDATE:
             if self.review_condition is None or self.bounded_follow_up is None:
                 raise ValueError(
@@ -160,4 +230,24 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             and self.review_condition is None
         ):
             raise ValueError("manual-by-design connectivity row requires review_condition")
+        if (
+            self.expires_on is not None
+            and self.bounded_follow_up is not None
+            and self.bounded_follow_up.deadline > self.expires_on
+        ):
+            raise ValueError("bounded follow-up deadline must not outlive the review expiry")
         return self
+
+    def expiry_posture(self, *, as_of: date) -> SourceConnectivityExpiryPosture:
+        """Evaluate expiry deterministically at the caller's civil-date seam."""
+        if self.expires_on is None:
+            return SourceConnectivityExpiryPosture.NOT_SCHEDULED
+        if as_of >= self.expires_on:
+            return SourceConnectivityExpiryPosture.EXPIRED
+        return SourceConnectivityExpiryPosture.CURRENT
+
+    def follow_up_owner(self) -> str | None:
+        """Return the accountable action owner, inheriting the row owner."""
+        if self.bounded_follow_up is None:
+            return None
+        return self.bounded_follow_up.owner or self.owner
