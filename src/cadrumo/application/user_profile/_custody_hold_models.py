@@ -163,9 +163,9 @@ class ProfileCustodyHoldEvidence(BaseModel):
     @field_validator("source_record_digest")
     @classmethod
     def _validate_source_record_digest(cls, value: str) -> str:
-        from ._custody_transactions import validate_sha256_digest
+        from ...core.hashing import validate_prefixed_digest
 
-        return validate_sha256_digest(value, subject="hold source record digest")
+        return validate_prefixed_digest(value, field_name="hold source record digest")
 
     @model_validator(mode="after")
     def _validate_proof(self) -> ProfileCustodyHoldEvidence:

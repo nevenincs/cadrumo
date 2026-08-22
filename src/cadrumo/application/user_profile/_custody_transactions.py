@@ -105,10 +105,6 @@ class ProfileCustodyTransactionState(StrEnum):
     ROLLED_BACK = "rolled_back"
 
 
-def validate_sha256_digest(value: str, *, subject: str) -> str:
-    return validate_prefixed_digest(value, field_name=subject)
-
-
 def _canonical_bytes(value: object, *, maximum_bytes: int, subject: str) -> bytes:
     try:
         return bounded_canonical_json_bytes(value, maximum_bytes=maximum_bytes, subject=subject)
@@ -221,7 +217,7 @@ class ProfileCustodyInventoryWitness(BaseModel):
     @field_validator("digest")
     @classmethod
     def _validate_digest(cls, value: str) -> str:
-        return validate_sha256_digest(value, subject="inventory digest")
+        return validate_prefixed_digest(value, field_name="inventory digest")
 
     @classmethod
     def from_inventory(cls, inventory: ProfileCustodyInventory) -> ProfileCustodyInventoryWitness:
@@ -286,7 +282,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     def _validate_optional_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        return validate_sha256_digest(value, subject="custody digest")
+        return validate_prefixed_digest(value, field_name="custody digest")
 
     @field_validator("label")
     @classmethod
@@ -460,5 +456,4 @@ __all__ = [
     "ProfileCustodyTransactionReceipt",
     "ProfileCustodyTransactionRefusalError",
     "ProfileCustodyTransactionState",
-    "validate_sha256_digest",
 ]
