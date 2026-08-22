@@ -27,7 +27,7 @@
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.uso-destino"
 number = "68"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_uso_destino"
 required = false
@@ -39,7 +39,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.codigo-postal"
 number = "69"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_codigo_postal"
 required = false
@@ -51,7 +51,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.municipio"
 number = "70"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_municipio"
 required = false
@@ -63,7 +63,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.codigo-municipio"
 number = "71"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_codigo_municipio"
 required = false
@@ -75,7 +75,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.provincia"
 number = "72"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_provincia"
 required = false
@@ -87,7 +87,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.codigo-provincia"
 number = "73"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_codigo_provincia"
 required = false
@@ -99,7 +99,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.sigla-via"
 number = "74"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_sigla_via"
 required = false
@@ -111,7 +111,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.via-publica"
 number = "75"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_via_publica"
 required = false
@@ -123,7 +123,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.codigo-via"
 number = "76"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_codigo_via"
 required = false
@@ -135,7 +135,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.numero"
 number = "77"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_numero"
 required = false
@@ -147,7 +147,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.kilometro"
 number = "78"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_kilometro"
 required = false
@@ -159,7 +159,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.pto"
 number = "79"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_pto"
 semantic_role_cardinality = "intentional_singleton"
@@ -173,7 +173,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.escalera"
 number = "80"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_escalera"
 required = false
@@ -185,7 +185,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.piso"
 number = "81"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_piso"
 semantic_role_cardinality = "intentional_singleton"
@@ -199,7 +199,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.puerta"
 number = "82"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_puerta"
 required = false
@@ -211,7 +211,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.telefono"
 number = "83"
-section = ["local-afecto-indirectamente"]
+section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_telefono"
 required = false
