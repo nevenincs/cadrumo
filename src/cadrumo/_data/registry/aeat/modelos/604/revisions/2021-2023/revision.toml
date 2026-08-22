@@ -21,9 +21,20 @@ authority_grade = "applicability"
 # unwritten deliberately rather than filled with a wrong identity. See the
 # layout file for that reasoning.
 #
-# No deadline_windows and no deadline application link: the only windows this
-# modelo ever declared were the twelve 2025 monthly windows, which belong to
-# the 2024-y-siguientes revision. No window is fabricated for a past year.
+# Deadline windows: thirty-six monthly windows, 2021-01 through 2023-12, the
+# complete derivable set for this closed span. They were absent until 2026-08-22,
+# and the absence was an omission rather than a reasoned one -- this registry
+# already carries historical windows on closed spans (m232/2016-2017 declares
+# windows for exactly its own two years), and this modelo's plazo is a fixed
+# monthly calendar rule its own orden states verbatim, so the set is derivable
+# without inventing anything.
+#
+# The derivation is NOT uniform across the span. Orden HAC/510/2021 was published
+# 27 May 2021, after the tax's first four liquidation periods had closed, so its
+# art 3 cadence cannot have governed them; the disposición transitoria única
+# folds enero-abril 2021 into the mayo-2021 plazo, making 2021-01 through 2021-05
+# one shared window of 10-20 June 2021. Twelve ordinary 2021 windows would have
+# fabricated five deadlines.
 id = "2021-2023"
 valid_from = 2021-01-01
 valid_to = 2023-12-31
@@ -32,6 +43,7 @@ orden_aplicabilidad = ["orden-hac-510-2021:art-1"]
 legal_refs = [
     "orden-hac-510-2021:art-1",
     "orden-hac-510-2021:art-3",
+    "orden-hac-510-2021:dt-unica",
     "ley-58-2003:art-93",
 ]
 source_refs = [

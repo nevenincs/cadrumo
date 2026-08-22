@@ -30,10 +30,29 @@ effective_from = 2021-05-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 art 3; pending operator re-stamp)"
-notes = "Orden HAC/510/2021 art 3: plazo de presentación del modelo 604. Se presenta e ingresa entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual."
+notes = "Orden HAC/510/2021 art 3: plazo de presentación del modelo 604. El periodo de liquidación es el mes natural (Ley 5/2020 art 8.3) y el modelo se presenta e ingresa entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual (RD 366/2021 arts 6.1 y 8). Para los meses de enero a abril de 2021 rige en su lugar la disposición transitoria única."
 required_text = [
     "entre los días diez y veinte del mes siguiente",
     "periodo de liquidación mensual",
+]
+
+[legal."orden-hac-510-2021:dt-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-510-2021.html#dtunica"
+document_id = "BOE-A-2021-8878"
+article = "disposicion-transitoria-unica"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878#dtunica"
+published_at = 2021-05-27
+effective_from = 2021-05-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 disposición transitoria única, re-fetched 2026-08-22 from two BOE surfaces that agree verbatim; pending operator re-stamp)"
+notes = "Orden HAC/510/2021 disposición transitoria única, primeras autoliquidaciones del Impuesto: las autoliquidaciones de enero, febrero, marzo y abril de 2021 se presentan e ingresan en el plazo de la autoliquidación correspondiente al mes de mayo de 2021. La orden se publicó el 27 de mayo de 2021, después de esos cuatro periodos, por lo que el plazo general del art 3 no pudo regirlos. Combinada con el art 3, la ventana de los cinco primeros periodos de 2021 es del 10 al 20 de junio de 2021."
+required_text = [
+    "los meses de enero, febrero, marzo y abril de 2021",
+    "el plazo para la presentación e ingreso de la autoliquidación correspondiente al mes de mayo de 2021",
 ]
 
 [sources."enrolled-modelo-604-procedure"]
@@ -41,8 +60,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-510-2021.html"
-sha256 = "e7af2c40d06c459fcd17b0ae9ce08c6c6e04813107ecebd53d40b65b453ee38f"
-bytes = 1009
+sha256 = "da2cedb2875a29141540dffa76c292508e07e14ae77035aad5b8079bc051b529"
+bytes = 2583
 retrieved_at = 2026-07-04
 published_at = 2021-05-27
 applies_from = 2021-05-28
@@ -60,8 +79,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-510-2021.html"
-sha256 = "e7af2c40d06c459fcd17b0ae9ce08c6c6e04813107ecebd53d40b65b453ee38f"
-bytes = 1009
+sha256 = "da2cedb2875a29141540dffa76c292508e07e14ae77035aad5b8079bc051b529"
+bytes = 2583
 retrieved_at = 2026-07-04
 published_at = 2021-05-27
 applies_from = 2021-05-28
