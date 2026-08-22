@@ -158,6 +158,13 @@ from ._diff import (
     diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+from ._source_connectivity_authority import (
+    LiveSourceConnectivityProofAuthority,
+    LiveSourceResolverCatalogue,
+    LiveSourceResolverEnrollment,
+    RepositoryEvidenceDigestVerifier,
+    RepositoryRootEvidenceDigestVerifier,
+)
 
 _import_module("cadrumo.domain.renta")
 
@@ -551,6 +558,9 @@ __all__ = [
     "FiledStateVerificationReport",
     "FormulaDiff",
     "LatestRevisionSupportProbe",
+    "LiveSourceConnectivityProofAuthority",
+    "LiveSourceResolverCatalogue",
+    "LiveSourceResolverEnrollment",
     "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
@@ -579,6 +589,8 @@ __all__ = [
     "RegistryTopicProjection",
     "RegistryTreeReport",
     "RenumberedCasilla",
+    "RepositoryEvidenceDigestVerifier",
+    "RepositoryRootEvidenceDigestVerifier",
     "RevisionCapabilityFacts",
     "RevisionCasillaProducerTrace",
     "RevisionConformanceRow",
