@@ -93,6 +93,7 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..filing import modelo_record_repository_for_application
@@ -325,7 +326,7 @@ def _draft_ledger_anchor(
     *,
     work_unit: WorkUnit,
     source_transaction_ids: tuple[str, ...],
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     captured_at: datetime,
 ) -> LedgerFilingSnapshot | None:
     """Return the ledger snapshot this calculation consumed, or ``None``.
@@ -354,7 +355,7 @@ def _draft_ledger_anchor(
     tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     return compute_ledger_filing_snapshot(
         source_transaction_ids=source_transaction_ids,
-        catalogue=tx_repo.load(),
+        catalogue=tx_repo.load_by_ids(source_transaction_ids),
         captured_at=captured_at,
     )
 
@@ -372,7 +373,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
+    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
@@ -688,6 +689,7 @@ def _resolve_bucket_source_mesh(
     work_unit: WorkUnit,
     *,
     transaction_repository: TransactionCatalogueRepository | None,
+    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepository | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -720,7 +722,9 @@ def _resolve_bucket_source_mesh(
     resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
         bucket_id=work_unit.bucket_id,
     )
-    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    memoized_transaction_repository = transaction_read_repository or MemoizedTransactionCatalogueRepository(
+        resolved_transaction_repository,
+    )
     prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
     iva_investment_asset_register = None
     iva_investment_asset_profile_id = None
@@ -1183,6 +1187,7 @@ def _resolve_bucket_aggregation_source_resolution(
     *,
     preparation: _BucketAggregationPreparation,
     transaction_repository: TransactionCatalogueRepository | None,
+    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None,
     invoice_repository: InvoiceCatalogueRepository | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
@@ -1198,6 +1203,7 @@ def _resolve_bucket_aggregation_source_resolution(
         preparation.snapshot,
         preparation.work_unit,
         transaction_repository=transaction_repository,
+        transaction_read_repository=transaction_read_repository,
         invoice_repository=invoice_repository,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
@@ -1349,9 +1355,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
     )
+    resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
+        bucket_id=preparation.work_unit.bucket_id,
+    )
+    transaction_reads = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
-        transaction_repository=transaction_repository,
+        transaction_repository=resolved_transaction_repository,
+        transaction_read_repository=transaction_reads,
         invoice_repository=invoice_repository,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1365,7 +1376,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     channels = _bucket_aggregation_channels(
         preparation=preparation,
         source_resolution=source_resolution,
-        transaction_repository=transaction_repository,
+        transaction_repository=resolved_transaction_repository,
         detail_rows=detail_rows,
     )
     revision = _calculate_modelo_revision_with_trusted_mesh_sources(
@@ -1381,7 +1392,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
-        ledger_preflight_transaction_repository=transaction_repository,
+        ledger_preflight_transaction_repository=transaction_reads,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=channels.reconciliation.merged_relation_values,

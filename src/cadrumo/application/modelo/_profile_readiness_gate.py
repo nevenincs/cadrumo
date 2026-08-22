@@ -28,7 +28,7 @@ from datetime import date
 from ...core import Modelo, Period
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
-from ...core.resources import bundled_path, resources
+from ...core.resources import resources
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     ModeloRevision,
@@ -38,7 +38,6 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
     derive_modelo_applicability,
-    load_registry_tree,
     select_revision,
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
@@ -293,8 +292,8 @@ def _report_for_target(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     try:
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-        modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+        resolved_authority = authority or resources().modelos.authority
+        modelo_definition = resolved_authority.modelo(modelo)
         selected = select_revision(
             modelo_definition,
             filing_year=filing_year,
@@ -359,8 +358,14 @@ def _require_modelo_applicable_for_local_work(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> None:
-    refusal = modelo_applicability_refusal(record=record, bucket_id=bucket_id, modelo=modelo)
+    refusal = modelo_applicability_refusal(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        authority=authority,
+    )
     if refusal is None:
         return
     message, context = refusal
@@ -375,6 +380,7 @@ def modelo_applicability_refusal(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, dict[str, str]] | None:
     """Return the local-work applicability refusal for a target, if any.
 
@@ -384,10 +390,13 @@ def modelo_applicability_refusal(
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
+        authority: Already-resolved registry authority for this application
+            operation. When omitted, applicability resolves the current
+            bundled-tree authority itself.
     """
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record)
-    applicability = derive_modelo_applicability(profile, modelo_code)
+    applicability = derive_modelo_applicability(profile, modelo_code, authority=authority)
     if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
@@ -573,6 +582,7 @@ def require_profile_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            authority=authority,
         )
     _require_profile_filing_ready(
         record=record,
@@ -587,6 +597,7 @@ def require_profile_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            authority=authority,
         )
     report = modelo_work_profile_preflight_report(
         record=record,

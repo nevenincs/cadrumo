@@ -432,7 +432,12 @@ class SecureObjectRepository:
             ).scalar_one_or_none()
             return row_id is not None
 
-    def iter_all_records_raw(self, *, batch_size: int = 256) -> Iterator[SecureObjectRawRow]:
+    def iter_all_records_raw(
+        self,
+        *,
+        namespace: str | None = None,
+        batch_size: int = 256,
+    ) -> Iterator[SecureObjectRawRow]:
         """Yield every stored row as a :class:`SecureObjectRawRow` without decryption.
 
         Walks every row in `secure_objects` ordered by `(namespace, object_key)`
@@ -444,6 +449,8 @@ class SecureObjectRepository:
         provider without ever decrypting domain data.
 
         Args:
+            namespace: Optional exact namespace filter applied by SQL before
+                iteration. ``None`` preserves the archive-wide traversal.
             batch_size: SQLAlchemy `yield_per` chunk size. The default
                 keeps memory bounded for very large substrates while
                 still amortising session overhead across multiple rows.
@@ -455,14 +462,19 @@ class SecureObjectRepository:
         """
         self._check_session_freshness()
         with session_scope(self._engine) as session:
-            stmt = text(
+            projection = (
                 "SELECT id, namespace, object_key, classification, schema_version, "
                 "written_at, payload, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
                 "payload_hash, ciphertext_hash, revision_written_at, write_provenance, source_event_id "
                 "FROM secure_objects "
-                "ORDER BY namespace, object_key",
-            ).execution_options(yield_per=batch_size)
-            for raw in session.execute(stmt):
+            )
+            if namespace is None:
+                stmt = text(projection + "ORDER BY namespace, object_key")
+            else:
+                stmt = text(projection + "WHERE namespace = :namespace ORDER BY namespace, object_key")
+            stmt = stmt.execution_options(yield_per=batch_size)
+            parameters = {"namespace": namespace} if namespace is not None else {}
+            for raw in session.execute(stmt, parameters):
                 written_at_raw = raw.written_at
                 if isinstance(written_at_raw, str):
                     written_at_value = datetime.fromisoformat(written_at_raw)
@@ -690,6 +702,79 @@ class SecureObjectRepository:
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
+    def load_many_current(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        current_version: int,
+        refuse_legacy: Callable[[tuple[str, ...]], None],
+    ) -> Iterator[SecureObjectRecord]:
+        """Load exact current-version rows in one addressed snapshot.
+
+        Every selected outer row is checked before any payload is decrypted or
+        yielded.  A legacy row therefore reaches the owning repository's
+        explicit-cutover refusal without an implicit upgrade or partial read.
+        """
+        self._check_session_freshness(namespace)
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
+        keys = tuple(dict.fromkeys(object_keys))
+        if not keys:
+            return
+        key_by_digest = {secure_object_key_digest(key): key for key in keys}
+        with session_scope(self._engine) as session:
+            rows = tuple(
+                session.execute(
+                    text(
+                        "SELECT id, object_key, classification, schema_version, "
+                        "written_at, payload, revision_id, previous_revision_id, "
+                        "payload_hash, ciphertext_hash, previous_payload_hash "
+                        "FROM secure_objects WHERE namespace = :namespace "
+                        "AND object_key IN :object_keys ORDER BY object_key",
+                    )
+                    .bindparams(
+                        bindparam("namespace", value=namespace),
+                        bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
+                    )
+                    .columns(
+                        id=SecureObjectRow.__table__.c.id.type,
+                        object_key=SecureObjectRow.__table__.c.object_key.type,
+                        classification=SecureObjectRow.__table__.c.classification.type,
+                        schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                        written_at=SecureObjectRow.__table__.c.written_at.type,
+                    ),
+                )
+            )
+            legacy_keys: list[str] = []
+            for row in rows:
+                try:
+                    is_legacy = int(row.schema_version) != current_version
+                except (TypeError, ValueError):
+                    is_legacy = False
+                if is_legacy:
+                    legacy_keys.append(key_by_digest[bytes(row.object_key)])
+            if legacy_keys:
+                refuse_legacy(tuple(legacy_keys))
+            items = tuple(
+                self._list_item_from_raw_row(
+                    row,
+                    namespace=namespace,
+                    expected_class=expected_class,
+                    max_supported_version=current_version,
+                    namespace_definition=namespace_definition,
+                )
+                for row in rows
+            )
+        for item in items:
+            if isinstance(item, SecureObjectRecord):
+                yield item
+                continue
+            raise SecureObjectUnreadableError(namespace, item.row_id)
+
     def migrate_many_atomically(
         self,
         namespace: str,
@@ -751,27 +836,74 @@ class SecureObjectRepository:
         self,
         target_by_stored_key: Mapping[tuple[str, bytes], SecureObjectMigrationTarget],
     ) -> dict[tuple[str, bytes], int]:
-        return {
-            (row.namespace, row.object_key): row.schema_version
-            for row in self.iter_all_records_raw()
-            if (row.namespace, row.object_key) in target_by_stored_key
-        }
+        targets_by_namespace: dict[str, list[SecureObjectMigrationTarget]] = {}
+        for target in target_by_stored_key.values():
+            targets_by_namespace.setdefault(target.namespace, []).append(target)
+        versions: dict[tuple[str, bytes], int] = {}
+        for namespace, targets in targets_by_namespace.items():
+            versions_by_key = self.peek_many_schema_versions(namespace, (target.object_key for target in targets))
+            versions.update(
+                ((namespace, secure_object_key_digest(object_key)), schema_version)
+                for object_key, schema_version in versions_by_key.items()
+            )
+        return versions
 
     def _load_migration_records(
         self,
         targets: Sequence[SecureObjectMigrationTarget],
     ) -> dict[tuple[str, str], SecureObjectRecord]:
         records: dict[tuple[str, str], SecureObjectRecord] = {}
+        targets_by_contract: dict[tuple[str, SensitivityClass, int], list[SecureObjectMigrationTarget]] = {}
         for target in targets:
-            record = self.load(
-                target.namespace,
-                target.object_key,
-                expected_class=target.expected_class,
-                max_supported_version=target.current_version,
-            )
-            if record is not None:
-                records[(target.namespace, target.object_key)] = record
+            contract = (target.namespace, target.expected_class, target.current_version)
+            targets_by_contract.setdefault(contract, []).append(target)
+        for (namespace, expected_class, current_version), contract_targets in targets_by_contract.items():
+            object_key_by_digest = {
+                secure_object_key_digest(target.object_key): target.object_key for target in contract_targets
+            }
+            for record in self._load_many_for_migration(
+                namespace,
+                (target.object_key for target in contract_targets),
+                expected_class=expected_class,
+                max_supported_version=current_version,
+            ):
+                object_key = object_key_by_digest[bytes(record.object_key)]
+                records[(namespace, object_key)] = record
         return records
+
+    def _load_many_for_migration(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> Iterator[SecureObjectRecord]:
+        """Batch exact migration targets while preserving validation exceptions."""
+        self._check_session_freshness(namespace)
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
+        object_key_digests = tuple(dict.fromkeys(secure_object_key_digest(key) for key in object_keys))
+        if not object_key_digests:
+            return
+        with session_scope(self._engine) as session:
+            rows = session.execute(
+                select(SecureObjectRow)
+                .where(
+                    SecureObjectRow.namespace == namespace,
+                    SecureObjectRow.object_key.in_(object_key_digests),
+                )
+                .order_by(SecureObjectRow.object_key),
+            ).scalars()
+            for row in rows:
+                yield self._record_from_row(
+                    row,
+                    expected_class=expected_class,
+                    max_supported_version=max_supported_version,
+                    namespace_definition=namespace_definition,
+                )
 
     @staticmethod
     def _old_migration_targets(
@@ -1714,6 +1846,31 @@ class SecureObjectRepository:
             written_at=coerce_utc_aware(raw.written_at),
             byte_length=len(bytes(raw.payload)),
         )
+
+    def peek_many_schema_versions(self, namespace: str, object_keys: Iterable[str]) -> Mapping[str, int]:
+        """Return schema versions for exact natural keys without loading ciphertext."""
+        self._check_session_freshness(namespace)
+        keys = tuple(dict.fromkeys(object_keys))
+        if not keys:
+            return dict[str, int]()
+        key_by_digest = {secure_object_key_digest(key): key for key in keys}
+        with session_scope(self._engine) as session:
+            stmt = (
+                text(
+                    "SELECT object_key, schema_version "
+                    "FROM secure_objects WHERE namespace = :namespace AND object_key IN :object_keys",
+                )
+                .bindparams(
+                    bindparam("namespace", value=namespace),
+                    bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
+                )
+                .columns(
+                    object_key=SecureObjectRow.__table__.c.object_key.type,
+                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                )
+            )
+            rows = session.execute(stmt).all()
+        return {key_by_digest[bytes(raw.object_key)]: int(raw.schema_version) for raw in rows}
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
