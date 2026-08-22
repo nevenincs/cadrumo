@@ -5745,3 +5745,40 @@ in the per-push lane, unlike `dev/tests`.
 
 Lanes 314 integration / 1587 unit, unchanged. The two standing `dev/quality` failures are
 the ones attributed in the previous entry and are unchanged by this work.
+
+### Deciding a deferral question rather than widening to make a gate green
+
+The located refusal from the previous entry named
+`src/cadrumo/tests/seeded_isolated_backend_fixture.py:87`: a factory deriving its second
+pytest fixture name from its first, `origin_name = f"{name}_origin"`. The census defers a
+BARE parameter -- the call site supplies that -- and refuses a derived expression. The open
+question was whether a derived-from-parameter name is equally "not-yet-known" and should
+defer too.
+
+**It should not, and the reason is specific rather than conservative.** No caller passes
+`name`, so the effective value comes from a parameter DEFAULT composed into an f-string.
+Deferring would record the template's own function name while pytest actually registers
+`_isolated_backend_origin` — an ownership manifest naming a fixture that does not exist,
+which is precisely the guess the census refuses to make. Deferral is only honest when the
+binding site can state the value, and here it cannot without the census learning to
+evaluate defaults through string composition. Widening the carve-out to turn the gate green
+is also how a narrow rule stops being narrow.
+
+**Measured before deciding.** Every consumer was enumerated by symbol: three test modules,
+all binding `live_fx_seeded_backend(seed=...)` and none overriding `name`. So the derivation
+served a generality nothing uses, and stating both names as parameters with literal defaults
+is byte-identical for every caller — confirmed by running all three consumer modules, 26
+passed. It uses the census's EXISTING deferral rather than a new rule, and it moves the real
+hazard into the signature: a module using this factory twice must now give both names
+distinct values, where before the derivation implied that protection without stating it.
+
+**One blocker was hiding another.** With the census clean, the gate advanced to a second
+refusal it had never reached: `active_profile_isolated_backend_fixture.py:28` bound at
+`application/auth/tests/test_certificate_source_tax_id.py:50`, "cannot uniquely resolve the
+nested fixture closure". Different factory, different failure mode, and present all along
+behind the first. The substitutable-duplicate check the manifest exists for has therefore
+still never run — which is the thing worth knowing: this gate has been reporting a blocked
+scan, not a clean population, and the previous entry's locating fix is what makes each
+successive blocker addressable instead of anonymous.
+
+Lanes 314 integration / 1587 unit, unchanged.
