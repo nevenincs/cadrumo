@@ -56,6 +56,47 @@ def _reset_all_caches() -> None:
     ve.reset_corpus_text_cache()
 
 
+
+def _tree_state(root: Path) -> dict[str, tuple[int, int]]:
+    """Return size and mtime for every file under ``root``."""
+    state: dict[str, tuple[int, int]] = {}
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        stat = path.stat()
+        state[str(path)] = (stat.st_size, stat.st_mtime_ns)
+    return state
+
+
+def _require_quiescent_tree(root: Path, before: dict[str, tuple[int, int]]) -> None:
+    """Fail with the real cause when the tree moved while the test ran.
+
+    The verdict is keyed on the registry tree's fingerprint, so a tree that
+    changes between two constructions makes the second MISS -- correctly. In a
+    shipped install the bundled tree is immutable and that cannot happen; in
+    this shared worktree a peer commit lands in the middle of a five-minute
+    suite run and does exactly this.
+
+    Without this check the symptom is a bare ``1 == 0`` on a write counter,
+    which reads as a verdict-cache defect and costs a triage cycle. It has done
+    so at least once: a modelo 840 authoring commit landed seven seconds before
+    a run ended, adding one casilla file and touching two others.
+    """
+    after = _tree_state(root)
+    if after == before:
+        return
+    added = sorted(set(after) - set(before))
+    removed = sorted(set(before) - set(after))
+    changed = sorted(key for key in after.keys() & before.keys() if after[key] != before[key])
+    raise AssertionError(
+        "the bundled registry tree changed WHILE this test ran "
+        f"({len(added)} added, {len(removed)} removed, {len(changed)} changed; "
+        f"first: {(added + removed + changed)[:1]}). The verdict is keyed on this tree's "
+        "fingerprint, so a miss here is that mutation rather than a verdict-cache defect. "
+        "Re-run against a quiescent tree.",
+    )
+
+
 def test_direct_registry_validator_performs_zero_corpus_cache_writes(tmp_path: Path) -> None:
     """A bare ``RegistryValidator`` accumulates dirty state but never flushes."""
     with override_settings(cadrumo_corpus_text_cache_dir=tmp_path / "corpus"):
@@ -78,6 +119,7 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
         cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
     ):
         _reset_all_caches()
+        tree_before = _tree_state(root)
 
         authority = bundled_authority()
         assert authority._registry_validated is True
@@ -95,6 +137,9 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
         _reset_all_caches()
 
         skipped_authority = bundled_authority()
+
+        # Diagnose a moving tree BEFORE blaming the verdict cache.
+        _require_quiescent_tree(root, tree_before)
 
         assert skipped_authority._registry_validated is True, "the verdict hit must construct as validated"
         assert ve._disk_cache_write_count == 0, "a verdict hit must not re-extract or flush"
