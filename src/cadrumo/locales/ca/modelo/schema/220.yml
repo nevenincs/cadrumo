@@ -131,6 +131,50 @@ modelo:
               label: Entitat dominant. Numero d'identificacio
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
               label: Entitat dominant. Pais o territori foral
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35dpnmqqbec5hmirre5lpmuor9c5m0:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Denominacio social
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35e9im6q3fecmncrrkds:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Percentatge de drets de vot
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp3fdlkm6qbcd5niqpj9edhm2r0:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Domicili fiscal
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiispj5cdk62bb9dphmusjgdtp62or9dtn0:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Data d'incorporacio al grup
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisqjledq6ipj9cdgmst355li6aorcc5p62or9dtn2qqbechkncqb4elgmo:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Numero de justificant de presentacio de la declaracio individual
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrj9co:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                N.I.F.
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrrgcdkmurhdcpp62or3d5nmsobdd5imst3f:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Opcio de fraccionament de l'art. 19.1 LIS
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiiss31e9q6ior9e1gm6qbfdo:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Participacio directa i indirecta al final de l'exercici
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiissrfdhniqq31cdkmarj4c4mmcrric5m0:
+              label: Entitats del grup. Entitat dependent o cooperativa integrant.
+                Declaracio individual presentada unicament a Hisenda Foral
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6arjfdlkmsob3d5nmsbbjdthmiobc:
+              label: Entitats del grup. Entitat dominant. Denominacio social
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6urb9cdkmoqbf5lj6isr3c5m0:
+              label: Entitats del grup. Entitat dominant. Domicili fiscal
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pj6aor8c4mmirj3dtp70rric5hmirre:
+              label: Entitats del grup. Entitat dominant. Data d'incorporacio al grup
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pl7asrkd5j6ior1dpq6abb4clhmoobic5hmirre5lkmsp39epkm8tb1dg:
+              label: Entitats del grup. Entitat dominant. Numero de justificant de
+                presentacio de la declaracio individual
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pn6ipg:
+              label: Entitats del grup. Entitat dominant. N.I.F.
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pnn0or9dtn2qpjic5hm6qbfdpgmqqb5dpq6u:
+              label: Entitats del grup. Entitat dominant. Opcio de fraccionament de
+                l'art. 19.1 LIS
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355ppmur3f5lk62or9cln68o9dcpnn4obc:
+              label: Entitats del grup. Entitat dominant. Declaracio individual presentada
+                unicament a Hisenda Foral
             x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               label: Entitat representant o dominant. Cognoms o rao social
             x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:

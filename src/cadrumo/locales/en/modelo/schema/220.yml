@@ -130,6 +130,50 @@ modelo:
               label: Parent entity. Identification number
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
               label: Parent entity. Country or chartered territory
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35dpnmqqbec5hmirre5lpmuor9c5m0:
+              label: Group entities. Subsidiary entity or member cooperative. Legal
+                name
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35e9im6q3fecmncrrkds:
+              label: Group entities. Subsidiary entity or member cooperative. Percentage
+                of voting rights
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp3fdlkm6qbcd5niqpj9edhm2r0:
+              label: Group entities. Subsidiary entity or member cooperative. Tax
+                address
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiispj5cdk62bb9dphmusjgdtp62or9dtn0:
+              label: Group entities. Subsidiary entity or member cooperative. Date
+                of joining the group
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisqjledq6ipj9cdgmst355li6aorcc5p62or9dtn2qqbechkncqb4elgmo:
+              label: Group entities. Subsidiary entity or member cooperative. Reference
+                number of the individual return filed
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrj9co:
+              label: Group entities. Subsidiary entity or member cooperative. Tax
+                identification number (NIF)
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrrgcdkmurhdcpp62or3d5nmsobdd5imst3f:
+              label: Group entities. Subsidiary entity or member cooperative. Election
+                for the instalment option of art. 19.1 LIS
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiiss31e9q6ior9e1gm6qbfdo:
+              label: Group entities. Subsidiary entity or member cooperative. Direct
+                and indirect holding at the end of the financial year
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiissrfdhniqq31cdkmarj4c4mmcrric5m0:
+              label: Group entities. Subsidiary entity or member cooperative. Individual
+                return filed only with the chartered tax authority
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6arjfdlkmsob3d5nmsbbjdthmiobc:
+              label: Group entities. Parent entity. Legal name
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6urb9cdkmoqbf5lj6isr3c5m0:
+              label: Group entities. Parent entity. Tax address
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pj6aor8c4mmirj3dtp70rric5hmirre:
+              label: Group entities. Parent entity. Date of joining the group
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pl7asrkd5j6ior1dpq6abb4clhmoobic5hmirre5lkmsp39epkm8tb1dg:
+              label: Group entities. Parent entity. Reference number of the individual
+                return filed
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pn6ipg:
+              label: Group entities. Parent entity. Tax identification number (NIF)
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pnn0or9dtn2qpjic5hm6qbfdpgmqqb5dpq6u:
+              label: Group entities. Parent entity. Election for the instalment option
+                of art. 19.1 LIS
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355ppmur3f5lk62or9cln68o9dcpnn4obc:
+              label: Group entities. Parent entity. Individual return filed only with
+                the chartered tax authority
             x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               label: Representative or parent entity. Surnames or legal name
             x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:

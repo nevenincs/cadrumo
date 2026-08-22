@@ -128,6 +128,50 @@ modelo:
               label: Anyavallalat. Azonosito szam
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
               label: Anyavallalat. Orszag vagy kulon jogallasu terulet
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35dpnmqqbec5hmirre5lpmuor9c5m0:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Cegnev
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp35e9im6q3fecmncrrkds:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Szavazati
+                jogok szazaleka
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisp3fdlkm6qbcd5niqpj9edhm2r0:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Adougyi
+                cim
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiispj5cdk62bb9dphmusjgdtp62or9dtn0:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. A csoporthoz
+                valo csatlakozas datuma
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisqjledq6ipj9cdgmst355li6aorcc5p62or9dtn2qqbechkncqb4elgmo:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Az egyedi
+                bevallas benyujtasanak bizonylatszama
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrj9co:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Adoazonosito
+                szam (NIF)
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiisrrgcdkmurhdcpp62or3d5nmsobdd5imst3f:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Az LIS
+                19.1. cikke szerinti reszletfizetes valasztasa
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiiss31e9q6ior9e1gm6qbfdo:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Kozvetlen
+                es kozvetett reszesedes az uzleti ev vegen
+            x-cln78qb4c5i6aspdctp7as3f5li6as35dpi6ipbeehiissrfdhniqq31cdkmarj4c4mmcrric5m0:
+              label: A csoport tagjai. Leanyvallalat vagy tag szovetkezet. Az egyedi
+                bevallast kizarolag a helyi adohatosaghoz nyujtottak be
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6arjfdlkmsob3d5nmsbbjdthmiobc:
+              label: A csoport tagjai. Anyavallalat. Cegnev
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pi6urb9cdkmoqbf5lj6isr3c5m0:
+              label: A csoport tagjai. Anyavallalat. Adougyi cim
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pj6aor8c4mmirj3dtp70rric5hmirre:
+              label: A csoport tagjai. Anyavallalat. A csoporthoz valo csatlakozas
+                datuma
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pl7asrkd5j6ior1dpq6abb4clhmoobic5hmirre5lkmsp39epkm8tb1dg:
+              label: A csoport tagjai. Anyavallalat. Az egyedi bevallas benyujtasanak
+                bizonylatszama
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pn6ipg:
+              label: A csoport tagjai. Anyavallalat. Adoazonosito szam (NIF)
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355pnn0or9dtn2qpjic5hm6qbfdpgmqqb5dpq6u:
+              label: A csoport tagjai. Anyavallalat. Az LIS 19.1. cikke szerinti reszletfizetes
+                valasztasa
+            x-cln78qb4c5i6aspdctp7as3f5li6urb9dpgmst355ppmur3f5lk62or9cln68o9dcpnn4obc:
+              label: A csoport tagjai. Anyavallalat. Az egyedi bevallast kizarolag
+                a helyi adohatosaghoz nyujtottak be
             x-d5i6arjkd5j6ior1cdkmurhec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               label: Kepviselo vagy anyavallalat. Vezeteknev vagy cegnev
             x-d5i6arjkd5j6ior1cdkmurheclpiqp3fdlkmsobeehig:

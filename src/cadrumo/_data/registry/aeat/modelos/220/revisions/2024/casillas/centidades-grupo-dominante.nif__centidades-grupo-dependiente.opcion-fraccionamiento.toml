@@ -1,0 +1,223 @@
+# Modelo 220 RECORD T22002000 -- entidades del grupo en regimen de consolidacion
+# fiscal: the entidad dominante, and the entidades dependientes o cooperativas
+# integrantes del grupo.
+#
+# THIS FRAGMENT DECLARES THE DOMINANTE BLOCK AND ONE DEPENDIENTE ROW -- sixteen
+# casillas -- NOT the record's twenty dependiente blocks. That is the design decision
+# worth reading before changing it.
+#
+# The record carries the dominante block at @16..@127, then TWENTY dependiente blocks
+# of nine fields each from @128, at a stride of 122 positions, ending exactly at @2568
+# where the reservado run begins. The block count is arithmetic, not an estimate:
+# (2568 - 128) / 122 = 20 exactly.
+#
+# THE RECORD PRINTS NO BOX NUMBERS AT ALL. Every field is unnumbered, so each casilla
+# takes the sheet-qualified byte span modelo 181 established. The twenty blocks are
+# distinguished in the design only by an ordinal appended to each description --
+# "NIF. 1", "NIF. 2" -- never by a box number.
+#
+# That is why one row is declared rather than twenty. The byte-span number is OUR
+# convention, not AEAT's; minting twenty sets of it would assert 180 distinct declared
+# boxes where the design declares one repeating row of nine fields. A casilla is
+# offset-free -- it carries a number, never a position -- so one row is the complete
+# description of what a member entity declares, and the twenty repetitions are a
+# LAYOUT concern for the repeat mechanism, as modelo 720's binding_record does.
+#
+# CONTRAST modelo 036 Pagina 10, which IS authored block by block: its six blocks each
+# print DISTINCT AEAT numbers (1000-1003, 1004-1007 and so on), so collapsing them
+# would have lost eighteen real numbers. The rule established across both modelos is
+# the same one: the NUMBER SET decides, not the repetition. Where AEAT numbers the
+# rows apart, author them apart; where it does not, author the row.
+#
+# A LAYOUT AUTHOR MUST NOT MISS THIS: mapping these nine dependiente casillas once, at
+# @128..@249, leaves nineteen blocks unfilled. The repeat is required, stride 122,
+# count 20, starting at @128.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22002000 tiles
+# 1..2729 exactly once with NO gap and NO PARTIAL OVERLAP, both checked, and every
+# offset, length and type below was read from its own field description.
+#
+# NOT MODELLED, deliberately: the modelo and pagina identifier envelope at @1..@11,
+# the pagina-complementaria mechanics at @12+1 and @13+3, the "RESERVADO PARA LA
+# ADMINISTRACION" run at @2568+150, and the end-of-record marker at @2718+12. None is
+# filer-supplied.
+#
+# NOT CLAIMED: this is the second of the design's 137 records to be authored. The
+# revision still carries no export layout and cannot be filed.
+
+# @16+9. Entidades del grupo. Entidad dominante. N.I.F. de la entidad dominante, excepto en grupos compuestos solo por entidades dependientes.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.nif"
+number = "t22002000.16-24"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+40. Entidades del grupo. Entidad dominante. Denominacion social de la entidad dominante.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.denominacion-social"
+number = "t22002000.25-64"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @65+40. Entidades del grupo. Entidad dominante. Domicilio fiscal de la entidad dominante.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.domicilio-fiscal"
+number = "t22002000.65-104"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @105+8. Entidades del grupo. Entidad dominante. Fecha de incorporacion al grupo, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.fecha-incorporacion"
+number = "t22002000.105-112"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @113+13. Entidades del grupo. Entidad dominante. Numero de justificante de presentacion de la declaracion individual.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.justificante-declaracion-individual"
+number = "t22002000.113-125"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @126+1. Entidades del grupo. Entidad dominante. Declaracion individual presentada unicamente a Hacienda Foral.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.solo-hacienda-foral"
+number = "t22002000.126"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @127+1. Entidades del grupo. Entidad dominante. Opcion de fraccionamiento del art. 19.1 LIS.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dominante.opcion-fraccionamiento"
+number = "t22002000.127"
+section = ["declarante", "entidades_grupo_dominante"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @128+9. Entidades del grupo. Entidad dependiente o cooperativa integrante. N.I.F. de la entidad dependiente o cooperativa integrante del grupo.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.nif"
+number = "t22002000.128-136"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @137+40. Entidades del grupo. Entidad dependiente o cooperativa integrante. Denominacion social de la entidad dependiente.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.denominacion-social"
+number = "t22002000.137-176"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @177+40. Entidades del grupo. Entidad dependiente o cooperativa integrante. Domicilio fiscal de la entidad dependiente.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.domicilio-fiscal"
+number = "t22002000.177-216"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @217+8. Entidades del grupo. Entidad dependiente o cooperativa integrante. Fecha de incorporacion al grupo, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.fecha-incorporacion"
+number = "t22002000.217-224"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @225+5. Entidades del grupo. Entidad dependiente o cooperativa integrante. Participacion directa e indirecta al final del ejercicio, en porcentaje.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.participacion"
+number = "t22002000.225-229"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @230+5. Entidades del grupo. Entidad dependiente o cooperativa integrante. Porcentaje de derechos de voto.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.derechos-voto"
+number = "t22002000.230-234"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @235+13. Entidades del grupo. Entidad dependiente o cooperativa integrante. Numero de justificante de presentacion de la declaracion individual.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.justificante-declaracion-individual"
+number = "t22002000.235-247"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @248+1. Entidades del grupo. Entidad dependiente o cooperativa integrante. Declaracion individual presentada unicamente a Hacienda Foral.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.solo-hacienda-foral"
+number = "t22002000.248"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @249+1. Entidades del grupo. Entidad dependiente o cooperativa integrante. Opcion de fraccionamiento del art. 19.1 LIS.
+[[revisions."2024".casillas]]
+id = "entidades-grupo-dependiente.opcion-fraccionamiento"
+number = "t22002000.249"
+section = ["declarante", "entidades_grupo_dependiente"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
