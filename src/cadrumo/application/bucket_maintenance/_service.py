@@ -13,6 +13,7 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from uuid import UUID
 
+from ...adapters.persistence.storage import custody
 from ...application.filing import FilingRetentionAuthority
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
@@ -21,7 +22,6 @@ from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from ..user_profile import (
-    committed_profile_custody_inventory,
     default_profile_bucket_storage,
 )
 from ..workflow import read_profile_bucket_by_id
@@ -166,7 +166,7 @@ def _observed_deletion_fingerprint(
     substituted or omitted value would make that detector silently blind.
     """
     try:
-        inventory = committed_profile_custody_inventory(profile_id, root=root)
+        inventory = custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
     # Broad on purpose: any inventory failure at all must block, never soften.
     except Exception as exc:
         raise BucketDeleteRefusedError(

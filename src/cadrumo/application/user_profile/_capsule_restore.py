@@ -42,7 +42,6 @@ from ._custody_ports import (
     PROFILE_CAPSULE_SENTINEL_MAX_BYTES,
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
-    parse_profile_custody_sentinel,
 )
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
@@ -116,7 +115,7 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     envelope = parse_profile_custody_envelope(
         _require_member(source, _ENVELOPE_RELATIVE, "password envelope", PROFILE_CAPSULE_ENVELOPE_MAX_BYTES),
     )
-    sentinel = parse_profile_custody_sentinel(
+    sentinel = custody.parse_profile_custody_sentinel_record(
         _require_member(source, _SENTINEL_RELATIVE, "DEK sentinel", PROFILE_CAPSULE_SENTINEL_MAX_BYTES),
     )
     database_bytes = _require_member(source, _DATABASE_RELATIVE, "profile database", PROFILE_CAPSULE_DATABASE_MAX_BYTES)

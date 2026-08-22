@@ -95,12 +95,9 @@ from ._custody_ports import (
     profile_bucket_session_open_resumed,
     profile_close_bucket_session,
     profile_current_bucket_session,
-    profile_delete_session,
     profile_is_keyring_unavailable,
     profile_is_password_authentication_failure,
     profile_is_persisted_session,
-    profile_mint_session,
-    profile_resume_session,
     profile_session_path,
     profile_session_serves_bucket,
     refuse_profile_login_without_password_channel,
@@ -617,7 +614,7 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
         storage_root: The Cadrumo storage root owning the bucket keystore.
         bucket_id: Identifier of the profile whose stored session to revoke.
     """
-    profile_delete_session(storage_root=storage_root, profile_id=UUID(bucket_id))
+    custody.delete_profile_session(storage_root=storage_root, profile_id=UUID(bucket_id))
     master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
@@ -810,7 +807,7 @@ def _resume_acceleration_receipt(
     profile_id = UUID(bucket_id)
     material = load_profile_custody_password_material(profile_id, root=storage_root)
     envelope = material.envelope
-    return profile_resume_session(
+    return custody.resume_profile_session(
         storage_root=storage_root,
         profile_id=profile_id,
         custody_generation=envelope.password_generation,
@@ -1454,7 +1451,7 @@ def _rollback_candidate_promotion(
 ) -> None:
     """Restore A and erase every B candidate artefact after swap failure."""
     try:
-        profile_delete_session(storage_root=storage_root, profile_id=candidate.material.envelope.profile_id)
+        custody.delete_profile_session(storage_root=storage_root, profile_id=candidate.material.envelope.profile_id)
     finally:
         if previous_live is not None:
             profile_bind_bucket_session(previous_live)
@@ -1531,7 +1528,7 @@ def _mint_or_warn(
     """
     try:
         idle_minutes, absolute_minutes = _bucket_session_windows()
-        profile_mint_session(
+        custody.mint_profile_session(
             storage_root=storage_root,
             profile_id=material.envelope.profile_id,
             custody_generation=material.envelope.password_generation,

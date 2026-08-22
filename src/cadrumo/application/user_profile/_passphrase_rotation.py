@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import custody
 from ...core.errors import CadrumoError
 from ...core.hashing import prefixed_digest
 from ...core.identity import ProfileId
@@ -44,7 +45,6 @@ from ._custody_ports import (
     load_profile_custody_password_material,
     profile_custody_recovery_envelope_path,
     profile_is_password_authentication_failure,
-    replace_profile_custody_envelope,
     unlock_profile_custody_password,
 )
 from ._custody_repository import profile_custody_transaction_lock
@@ -174,7 +174,7 @@ def rotate_profile_passphrase(
                     occurred_at=occurred_at.isoformat(),
                 ),
             )
-            replace_profile_custody_envelope(
+            custody.replace_committed_profile_custody_envelope(
                 profile_id,
                 rotated.canonical_json_bytes(),
                 expected_sha256=prefixed_digest(current.canonical_json_bytes()),

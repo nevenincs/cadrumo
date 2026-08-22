@@ -434,9 +434,6 @@ if TYPE_CHECKING:
         canonical_snapshot_payload as canonical_snapshot_payload,
     )
     from ._custody_ports import (
-        committed_profile_custody_inventory as committed_profile_custody_inventory,
-    )
-    from ._custody_ports import (
         create_profile_custody_registration_material as create_profile_custody_registration_material,
     )
     from ._custody_ports import (
@@ -470,9 +467,6 @@ if TYPE_CHECKING:
         parse_profile_custody_recovery_envelope as parse_profile_custody_recovery_envelope,
     )
     from ._custody_ports import (
-        parse_profile_custody_sentinel as parse_profile_custody_sentinel,
-    )
-    from ._custody_ports import (
         profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
     )
     from ._custody_ports import (
@@ -497,16 +491,10 @@ if TYPE_CHECKING:
         profile_custody_recovery_envelope_path as profile_custody_recovery_envelope_path,
     )
     from ._custody_ports import (
-        profile_custody_secure_object_key_digest as profile_custody_secure_object_key_digest,
-    )
-    from ._custody_ports import (
         profile_custody_secure_object_namespace as profile_custody_secure_object_namespace,
     )
     from ._custody_ports import (
         profile_custody_secure_object_repository as profile_custody_secure_object_repository,
-    )
-    from ._custody_ports import (
-        profile_delete_session as profile_delete_session,
     )
     from ._custody_ports import (
         profile_is_authentication_failure as profile_is_authentication_failure,
@@ -521,12 +509,6 @@ if TYPE_CHECKING:
         profile_is_persisted_session as profile_is_persisted_session,
     )
     from ._custody_ports import (
-        profile_mint_session as profile_mint_session,
-    )
-    from ._custody_ports import (
-        profile_resume_session as profile_resume_session,
-    )
-    from ._custody_ports import (
         profile_session_path as profile_session_path,
     )
     from ._custody_ports import (
@@ -537,9 +519,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         refuse_profile_login_without_password_channel as refuse_profile_login_without_password_channel,
-    )
-    from ._custody_ports import (
-        replace_profile_custody_envelope as replace_profile_custody_envelope,
     )
     from ._custody_ports import (
         unlock_profile_custody_password as unlock_profile_custody_password,
@@ -853,23 +832,17 @@ _LAZY_EXPORTS: dict[str, str] = {
     "export_profile_recovery_artifact": "._recovery_custody",
     "parse_profile_custody_envelope": "._custody_ports",
     "parse_profile_custody_recovery_envelope": "._custody_ports",
-    "parse_profile_custody_sentinel": "._custody_ports",
     "profile_advance_session_idle_deadline": "._custody_ports",
     "profile_custody_record_session_material": "._custody_ports",
-    "profile_custody_secure_object_key_digest": "._custody_ports",
     "profile_custody_secure_object_namespace": "._custody_ports",
     "profile_custody_secure_object_repository": "._custody_ports",
-    "profile_delete_session": "._custody_ports",
     "profile_is_authentication_failure": "._custody_ports",
     "profile_is_keyring_unavailable": "._custody_ports",
     "profile_is_password_authentication_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
-    "profile_mint_session": "._custody_ports",
-    "profile_resume_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",
     "refuse_profile_login_without_password_channel": "._custody_ports",
-    "replace_profile_custody_envelope": "._custody_ports",
     "unlock_profile_custody_password": "._custody_ports",
     "verify_profile_custody_dek_against_sentinel": "._custody_ports",
     "profile_custody_recovery_envelope_path": "._custody_ports",
@@ -880,7 +853,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "default_profile_custody_local_record_store": "._custody_ports",
     "ensure_profile_custody_owner_root": "._custody_ports",
     "profile_custody_owner_root": "._custody_ports",
-    "committed_profile_custody_inventory": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",
     "default_profile_secure_object_inventory": "._custody_ports",
     "load_profile_custody_password_material": "._custody_ports",

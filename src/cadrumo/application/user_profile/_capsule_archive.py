@@ -45,6 +45,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.storage import custody
 from ...adapters.persistence.storage.bucket import (
     ARCHIVE_SCHEMA_VERSION,
     ExportArchiveHeader,
@@ -62,7 +63,6 @@ from ._custody_ports import (
     load_profile_custody_password_material,
     parse_profile_custody_envelope,
     parse_profile_custody_recovery_envelope,
-    parse_profile_custody_sentinel,
 )
 
 if TYPE_CHECKING:
@@ -261,7 +261,7 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
     if payload.get("profile_id") != expected_bucket_id:
         raise ProfileCapsuleArchiveError("archive payload names a different profile than its header")
     envelope = parse_profile_custody_envelope(_member(payload, "password_envelope"))
-    sentinel = parse_profile_custody_sentinel(_member(payload, "sentinel"))
+    sentinel = custody.parse_profile_custody_sentinel_record(_member(payload, "sentinel"))
     database_bytes = _member(payload, "database")
     recovery = _decode_recovery_slot(_member(payload, "recovery_slot"))
     if str(envelope.profile_id) != expected_bucket_id or sentinel.profile_id != envelope.profile_id:

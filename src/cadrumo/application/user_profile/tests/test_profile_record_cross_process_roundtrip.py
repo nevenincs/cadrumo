@@ -36,11 +36,10 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage import DecryptionError
+from ....adapters.persistence.storage import DecryptionError, crypto
 from ....domain.user_profile import UserProfileRecord
 from ....tests.subprocess_cli import run_subprocess_cli_harness
 from .. import (
-    profile_custody_secure_object_key_digest,
     profile_custody_secure_object_repository,
 )
 from .._capsule_record import (
@@ -229,7 +228,7 @@ def test_object_key_written_by_another_process_is_byte_identical(
         dek=session.encryption_key(),
         root=root,
     ):
-        derived = profile_custody_secure_object_key_digest(profile_record_object_key(PROFILE_ID))
+        derived = crypto.secure_object_key_digest(profile_record_object_key(PROFILE_ID))
 
     assert derived == stored
 
