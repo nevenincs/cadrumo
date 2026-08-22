@@ -55,6 +55,14 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 #: description and 51 share a length. The 2008 and 2010 designs are NOT
 #: derivable: their box numbers agree with 2010's on 11 of 43, so a derivation
 #: would carry semantics onto the wrong boxes.
+#: That verdict is about the KEY, not the layouts, and it reads wider than it
+#: is: these two designs print no bracketed box numbers AT ALL, so the low
+#: agreement rate was never evidence they fail to correspond. Read on BYTES
+#: they nest exactly -- no field of either partially overlaps a field of the
+#: other, the re-layout being four merges plus a 4-byte EJERCICIO carved out
+#: of trailing BLANCOS. Proved in
+#: test_modelo_347_designs_are_boundary_compatible.py, which supplies the
+#: pairing this split needs.
 #:
 #: `("322", "2008-2025")` became `("322", "2008-2023")`: the LATER of its two
 #: boundaries was split -- the 2024 design adds nine fields and revives
