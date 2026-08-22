@@ -182,24 +182,31 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
         assert proved.dek == unlock_profile_custody_password(material, password=_REPLACEMENT).dek
 
 
-def test_a_wrong_current_passphrase_refuses_and_changes_nothing(tmp_path: Path) -> None:
+@pytest.mark.parametrize("current_candidate", (_WRONG, "short"))
+def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
+    tmp_path: Path,
+    current_candidate: str,
+) -> None:
     """Fail closed: the existing wrapper must survive a refused attempt intact."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
-        before = load_committed_profile_password_material(profile_id).envelope.canonical_json_bytes()
+        before = _storage_snapshot(storage_root)
 
-        with pytest.raises(ProfilePassphraseRotationError):
+        with pytest.raises(ProfilePassphraseRotationError) as refused:
             rotate_profile_passphrase(
                 profile_id=profile_id,
-                current_passphrase=_WRONG,
+                current_passphrase=current_candidate,
                 new_passphrase=_REPLACEMENT,
                 new_passphrase_confirmation=_REPLACEMENT,
             )
 
         material = load_committed_profile_password_material(profile_id)
-        assert material.envelope.canonical_json_bytes() == before
+        assert _storage_snapshot(storage_root) == before
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
+        assert refused.value.translated_message == "application.user_profile.errors.passphrase_current_rejected"
+        assert refused.value.context is None
+        assert current_candidate not in repr(refused.value)
 
 
 def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Path) -> None:

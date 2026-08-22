@@ -2380,6 +2380,15 @@ _PDF_RECORD_ANEXO_HEADING_RE = re.compile(
     r"^ANEXO\s+[«“\"'](?P<title>[^»”\"']{4,120})",
     re.IGNORECASE,
 )
+#: A bare anexo IDENTIFIER standing alone on its line: modelo 100's 2014 edition
+#: heads its extra record ``Anexo B.5``, with no quoted title for
+#: :data:`_PDF_RECORD_ANEXO_HEADING_RE` to take and no ``DISEÑO DE REGISTRO``
+#: for :data:`_PDF_ANEXO_PAGE_RECORD_RE`. Without it that record body restarts
+#: at position 1 with no read identity and the design reports PARTIAL.
+#:
+#: Anchored to the WHOLE line and to the ``letter.digit`` shape, so a sentence
+#: mentioning an anexo cannot match: the identifier must be all the line says.
+_PDF_RECORD_BARE_ANEXO_RE = re.compile(r"^ANEXO\s+(?P<tag>[A-Z]\.\d{1,2})$", re.IGNORECASE)
 
 #: A bare ``<modelo>-<page>`` tag standing alone on its line, which is how the
 #: Modelo 100 PDFs head each of their record bodies -- "100-01", "100-02" and so
@@ -3667,6 +3676,9 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
         return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
+    bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
+    if bare_anexo is not None:
+        return "Anexo " + bare_anexo.group("tag").upper()
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
