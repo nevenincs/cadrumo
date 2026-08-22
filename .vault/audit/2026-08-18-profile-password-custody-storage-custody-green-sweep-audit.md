@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a27025d2e5845fad80bb8717b555ddaafd0eb2df18dd9335a3983d29bf849281'
+body_hash: 'sha256:1fe1ccab0d53ab6f8561190475005ea1721a052f17d73c902937c27b52fe6632'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6889,3 +6889,44 @@ is the tier working. And the classification belongs to this domain even though t
 belongs to another campaign: the inventory and the confidentiality rule it enforces are
 storage-owned, so leaving it red for its author to notice would have blocked every push in the
 meantime.
+
+### The os-keychain lane's scope is now self-enforcing
+
+Selection-order item 6 asks for slices nothing runs. Every lane in the justfile EXCLUDES
+`os_keychain`, so `just test-os-keychain` is the only selector for these cases -- and that
+recipe scopes itself by PATH. Lane membership is therefore a property of where a file sits,
+not of how it is marked, and a marked case outside those paths is selected by nothing.
+
+Measured first: all eleven files carrying the marker today fall inside the six paths the
+recipe names, so there is no live gap and nothing to fix. What is missing is the property
+being enforced rather than true by luck. The recipe once named
+`test_profile_session_root_resume.py` alone and three custody cases in sibling files ran in no
+lane at all -- including the cross-process "custody survives logout and reopens on login"
+contract this lane exists for. Widening to directories fixed those three; it did not stop the
+next one.
+
+The exposure is one directory wide, and it is in this domain. The recipe names
+`entrypoints/cli/tests` but NOT `entrypoints/cli/_config/tests`, and both hold
+custody-adjacent CLI cases. What makes this worth a gate rather than vigilance is that an
+orphaned case is invisible in the ordinary way: these cases cannot PASS on a headless or
+network logon anyway, so nobody's red build notices one going missing -- its absence reads
+exactly like coverage.
+
+`dev/ci/tests/test_os_keychain_lane_scope.py` reads the declared paths out of the recipe (never
+a second hardcoded copy, which would drift), resolves marked modules through the AST rather
+than a text search (a module DISCUSSING the marker in prose is not marked by it, and this
+audit's own entries would otherwise red the gate), and refuses to run vacuously: it asserts
+the scan found marked files at all, that exactly one recipe selects the marker, and that every
+declared path exists -- a stale path silently shrinks the lane, because pytest given a target
+matching nothing collects nothing and exits green.
+
+Proven from outside the repo by replaying the historical narrowing: a scratchpad plugin
+returned the one-module scope, and the gate named all ten now-orphaned files with the remedy.
+A first attempt pointed the scan at a synthetic tree OUTSIDE the repository root; the gate
+detected the orphan correctly but its message then raised on `relative_to`. That is an
+artifact of an impossible input -- the scan root is always inside the repository, so a real
+orphan always renders -- and it was left unhardened rather than defended against a case no
+caller can produce.
+
+Landed in `dev/ci/tests`, which the per-push dev lane runs. That lane is independently red on
+items belonging to four other owners; this gate passes inside it, so nothing red was enrolled.
