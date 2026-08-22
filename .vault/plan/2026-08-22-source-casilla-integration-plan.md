@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:1d926fd5b79e4ee0984e5caa03d15ed15a3ecdbd09f9848ed8d1c7cc497a486e'
+body_hash: 'sha256:2917fe17b4f7ff0b248e9409002b8dab6660b08702380354bc51e65b5216bad1'
 ---
 
 # `source-casilla-integration` plan
@@ -38,6 +38,8 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S03` - define the connected-slice proof contract for resolver ownership, revision persistence, and operator reachability; `src/cadrumo/core/source_connectivity.py`.
 - [x] `W01.P01.S04` - expose the canonical connectivity models through the core public surface; `src/cadrumo/core/__init__.py`.
 - [x] `W01.P01.S05` - verify invalid dispositions, incomplete blocked rows, expired review conditions, and unsupported connected claims are refused; `src/cadrumo/core/tests/test_source_connectivity.py`.
+- [ ] `W01.P01.S134` - implement the concrete connected-proof authority from live source enrollment, supported workflow catalogues, repository evidence digests, and encrypted revision reads; `src/cadrumo/application/registry`.
+- [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.
 
 ### Phase `W01.P02` - derive the registry-side inventory
 
