@@ -32,12 +32,14 @@ from collections.abc import Callable
 
 import pytest
 
+from ....core import Modelo
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     ApplicabilityVerdict,
     TaxRoute,
     derive_modelo_applicability,
     derive_tax_route,
+    has_applicability_rule,
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
     verify_legal_catalogue,
@@ -214,13 +216,31 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
-def test_modelo_without_seed_rule_is_incomplete() -> None:
-    """A modelo outside the seed rule set has no derived rule yet:
-    it reports incomplete (the deferred expansion completes coverage)
-    rather than a confident guess. Modelo 232 (operaciones con personas
-    o entidades vinculadas) carries no seed rule."""
+def _an_unruled_modelo() -> str:
+    """Return a modelo the engine has no applicability rule for, chosen at run time.
 
-    result = derive_modelo_applicability(_autonomo(), "232")
+    This was hardcoded as Modelo 232, and it rotted: 232's rule was authored in
+    the registry and enrolled, so the test asserting the UN-RULED path began
+    asserting it against a ruled modelo. The subject here is the un-ruled
+    rationale, not any particular modelo, so the subject is selected from what
+    the engine actually reports and cannot go stale the same way.
+    """
+    unruled = sorted(modelo.value for modelo in Modelo if not has_applicability_rule(modelo.value))
+    assert unruled, (
+        "every modelo now carries an applicability rule, so the un-ruled rationale is "
+        "unreachable and these two tests should be retired along with it"
+    )
+    return unruled[0]
+
+
+def test_modelo_without_seed_rule_is_incomplete() -> None:
+    """A modelo outside the rule set has no derived rule yet.
+
+    It reports incomplete -- the deferred expansion completes coverage -- rather
+    than a confident guess.
+    """
+
+    result = derive_modelo_applicability(_autonomo(), _an_unruled_modelo())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
@@ -231,15 +251,15 @@ def test_modelo_without_seed_rule_is_incomplete() -> None:
 
 
 def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
-    """A fully declared profile asking about an un-ruled modelo (232)
-    gets the *un-ruled* rationale — a statement about seed coverage, not
-    a wrong instruction to declare the taxpayer type the operator has
-    already declared."""
+    """A fully declared profile asking about an un-ruled modelo gets the
+    *un-ruled* rationale — a statement about rule coverage, not a wrong
+    instruction to declare the taxpayer type the operator has already
+    declared."""
 
     profile = _landlord()
     assert taxpayer_model_is_declared(profile) is True
 
-    result = derive_modelo_applicability(profile, "232")
+    result = derive_modelo_applicability(profile, _an_unruled_modelo())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
     # The un-ruled rationale must NOT tell a declared operator to
