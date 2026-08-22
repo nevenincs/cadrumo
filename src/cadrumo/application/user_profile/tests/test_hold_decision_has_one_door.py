@@ -28,18 +28,11 @@ _OWNING_MODULE = "_custody_hold_models.py"
 
 
 def _production_modules() -> list[Path]:
-    return [
-        path
-        for path in _SRC_ROOT.rglob("*.py")
-        if "tests" not in path.parts and path.name != _OWNING_MODULE
-    ]
+    return [path for path in _SRC_ROOT.rglob("*.py") if "tests" not in path.parts and path.name != _OWNING_MODULE]
 
 
 def _reads_the_raw_property(tree: ast.AST) -> bool:
-    return any(
-        isinstance(node, ast.Attribute) and node.attr == "permits_local_deletion"
-        for node in ast.walk(tree)
-    )
+    return any(isinstance(node, ast.Attribute) and node.attr == "permits_local_deletion" for node in ast.walk(tree))
 
 
 def test_no_production_site_reads_the_raw_hold_property() -> None:

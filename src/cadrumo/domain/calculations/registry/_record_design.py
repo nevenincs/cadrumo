@@ -687,6 +687,64 @@ _BARE_COMPACT_PDF_ROW_RE = re.compile(
 )
 
 
+#: A casilla reference AEAT emitted on a line of its own, orphaned from the
+#: description it terminates.
+_STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
+
+#: A bracketed casilla reference already closing a line.
+_TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
+
+
+def _reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Fold a casilla reference emitted alone back onto the row it terminates.
+
+    Residue of the same wrapping the neighbouring repairs address, in two
+    shapes. Modelo 200's 2010 editions split a row across its columns and then
+    put the casilla on a THIRD line -- ``102 1529`` / ``17 Num Deducciones ...
+    aplic`` / ``[121]`` -- while its 2011-2012 editions keep the row intact and
+    strand only the tag: ``15 164 17 N Balance: ... Acciones y partic`` /
+    ``[194]``. Modelo 390's 2015 edition strands one the same way. In every
+    shape the tag sits immediately after the description it closes, because
+    extraction emits in reading order and the tag is that description's tail.
+
+    Nothing downstream recovers it. :func:`_join_wrapped_row_descriptions`
+    absorbs a following line only into a row that has NO description, which
+    neither shape is, and :data:`_REVERSED_ROW_HEAD_RE` admits a casilla only
+    where it rides on the head half. So the tag is simply lost, and a position
+    that loses its tag contributes no casilla number to coverage -- the quiet
+    half of the damage found on modelo 390's ``@115``.
+
+    The tag is folded onto the PRECEDING line, never a following one, and only
+    where that line is itself field-shaped: a row, or one of the two halves of a
+    split row. A heading carries a record boundary and prose carries nothing, so
+    a tag next to either is left stranded and reported rather than attached to
+    bytes AEAT did not put it on -- which is the failure this repair could
+    otherwise cause, and the one a tiling mis-attribution proved can pass
+    quietly.
+    """
+    folded: list[str] = []
+    for line in lines:
+        if folded and _STRANDED_CASILLA_TAG_RE.match(line):
+            previous = folded[-1]
+            cleaned = _clean_pdf_line(previous)
+            if (
+                previous.strip()
+                and not _TRAILING_CASILLA_TAG_RE.search(previous)
+                and _pdf_page_name(cleaned) is None
+                and _pdf_record_heading_name(cleaned) is None
+                and _pdf_candidate_record_name(cleaned) is None
+                and (
+                    _parse_pdf_row(previous, len(folded)) is not None
+                    or _REVERSED_ROW_TAIL_RE.match(previous) is not None
+                    or _REVERSED_ROW_HEAD_RE.match(previous) is not None
+                )
+            ):
+                folded[-1] = f"{previous.rstrip()} {line.strip()}"
+                continue
+        folded.append(line)
+    return tuple(folded)
+
+
 def _join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Reattach a description AEAT wrapped onto the line after its row.
 
@@ -766,11 +824,15 @@ def _extract_record_design_pdf_stream(
 
     pdf_bytes = stream.read()
     base_lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
-    lines = _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines))
+    lines = _reattach_stranded_casilla_tags(
+        _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+    )
     if _uses_page_record_layout(base_lines):
-        page_lines = _collapse_stuttered_row_prefix(
-            _join_wrapped_row_descriptions(
-                _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
+        page_lines = _reattach_stranded_casilla_tags(
+            _collapse_stuttered_row_prefix(
+                _join_wrapped_row_descriptions(
+                    _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
+                ),
             ),
         )
         lines = _better_page_record_lines(
@@ -913,8 +975,10 @@ def _read_with_reversed_column_repair(
     first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
     if not first.skipped:
         return first
-    repaired_lines = _collapse_stuttered_row_prefix(
-        _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
+    repaired_lines = _reattach_stranded_casilla_tags(
+        _collapse_stuttered_row_prefix(
+            _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
+        ),
     )
     try:
         repaired = _extract_pdf_lines(

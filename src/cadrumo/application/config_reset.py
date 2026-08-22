@@ -843,6 +843,24 @@ def _delete_targets(
             continue
         fingerprint = target.fingerprint
         assert fingerprint is not None
+        # Re-derive retention against the LIVE assessment before anything reads
+        # it. A target reaching DELETING is skipped by the auth-clearing sweep
+        # (it is already past AUTH_CLEARED), so without this its recorded
+        # decision -- and the override built from it below -- is whatever the
+        # snapshot said, however long ago. `_retention_decision_from_record`
+        # carries the growth guard, so an approved override drops when the
+        # retained set has grown beyond what the operator was shown.
+        target = _update_target(
+            target,
+            retention=_retention_decision_from_record(
+                BucketMaintenanceService()
+                .assess_deletion(AssessBucketDeletionCommand(bucket_id=target.bucket_id))
+                .retention,
+                target.retention,
+            ),
+        )
+        operation = _replace_target(operation, index, target)
+        repository.save(operation)
         _refuse_erase_inside_the_retention_floor(target)
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(
