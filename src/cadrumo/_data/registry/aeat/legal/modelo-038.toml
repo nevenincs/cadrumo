@@ -64,7 +64,7 @@ review_status = "reviewed"
 # correspondiente a junio de 2024, a presentar en julio de 2024" -- hence applies_from
 # 2024-06-01. Not inferred from the filename: the date is AEAT's own statement.
 [sources."enrolled-modelo-038-layout"]
-record_design_epoch = "2024"
+record_design_epoch = "2002"
 applies_from = 2002-01-16
 evidence_tier = "layout_authority"
 authority = "aeat"

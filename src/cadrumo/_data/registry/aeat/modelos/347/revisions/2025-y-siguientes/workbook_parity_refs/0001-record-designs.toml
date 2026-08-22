@@ -8,14 +8,3 @@ tolerance = "0.00"
 legal_refs = ["orden-hac-1431-2025:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 
-[[revisions."2025-y-siguientes".workbook_parity_refs]]
-id = "modelo-347-dr-2011"
-workbook_source = "aeat-dr-347-2011"
-fixture_id = "modelo-347-2011-record-design-layout"
-formula_coverage = "record_design_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
-
-

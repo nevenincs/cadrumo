@@ -9,13 +9,11 @@ period_selector = { year_from = 2008, year_to = 2024, periods = ["0A"] }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
 orden_aplicabilidad = [
     "orden-eha-3012-2008:art-1",
-    "orden-hac-1431-2025:art-1",
 ]
 source_refs = [
     "aeat-dr-347-2011",
@@ -39,7 +37,6 @@ reviewed_at = 2026-08-16
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "orden-eha-3012-2008:art-1",
-    "orden-hac-1431-2025:art-1",
 ]
 source_refs = [
     "aeat-dr-347-2011",
@@ -55,7 +52,6 @@ transition; the casilla_continuidad_evolutions family is empty by construction, 
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
@@ -71,7 +67,6 @@ reason = "Modelo 347 declares calculation_class = \"informative\". validate_info
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
@@ -86,7 +81,6 @@ source_refs = [
 reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 347 derives from none. It reports the declarant's own operations with third parties above the article 33 threshold, read from the declarant's books rather than folded in from another return -- unlike modelo 180, whose declarante totals classify a dependency on the modelo 115 retenciones it summarises. The family is inapplicable by this modelo's nature, not merely unpopulated."
 legal_refs = [
     "orden-eha-3012-2008:art-1",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
 ]
 source_refs = [
@@ -100,7 +94,6 @@ A verification predicate guards a CALCULATED result -- characteristically that a
 reports, not a liability derived from them. With no computed result to constrain, there is no implication to assert. The under-declaration risk this family exists to catch does not vanish -- it lives on the counterparty's own IVA and renta returns, where the operations reported here are actually taxed, and on the article 33 threshold that decides whether a counterparty must be listed at all."""
 legal_refs = [
     "orden-eha-3012-2008:art-1",
-    "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]

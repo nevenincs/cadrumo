@@ -10,7 +10,7 @@ source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e80
 export_field_id = "m347-2011.declarado.f001"
 kind = "literal"
 literal = "2"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -24,7 +24,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f002"
 kind = "literal"
 literal = "347"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -38,7 +38,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f003"
 kind = "draft"
 draft_attribute = "filing_year"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -52,7 +52,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f004"
 kind = "header"
 producer_key = "taxpayer.tax_id"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -66,7 +66,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f005"
 kind = "casilla"
 casilla_id = "contraparte.nif"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -80,7 +80,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f006"
 kind = "casilla"
 casilla_id = "contraparte.representante-legal-nif"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -94,7 +94,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f007"
 kind = "casilla"
 casilla_id = "contraparte.nombre"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -108,7 +108,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f008"
 kind = "literal"
 literal = "D"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -122,7 +122,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f009"
 kind = "casilla"
 casilla_id = "contraparte.pais-codigo"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -135,7 +135,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 [[entries]]
 export_field_id = "m347-2011.declarado.f010"
 kind = "filler"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -149,7 +149,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f011"
 kind = "casilla"
 casilla_id = "contraparte.clave-operacion"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -163,7 +163,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f012"
 kind = "casilla"
 casilla_id = "contraparte.importe-anual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -177,7 +177,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f013"
 kind = "casilla"
 casilla_id = "contraparte.operacion-seguro"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -191,7 +191,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f014"
 kind = "casilla"
 casilla_id = "contraparte.arrendamiento-local-negocio"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -205,7 +205,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f015"
 kind = "casilla"
 casilla_id = "contraparte.importe-metalico"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -219,7 +219,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f016"
 kind = "casilla"
 casilla_id = "contraparte.importe-metalico"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -233,7 +233,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f017"
 kind = "casilla"
 casilla_id = "contraparte.importe-transmisiones-inmuebles"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -247,7 +247,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f018"
 kind = "casilla"
 casilla_id = "contraparte.ejercicio-operacion"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -261,7 +261,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f019"
 kind = "casilla"
 casilla_id = "contraparte.importe-Q1"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -275,7 +275,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f020"
 kind = "casilla"
 casilla_id = "contraparte.importe-transmisiones-Q1"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -289,7 +289,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f021"
 kind = "casilla"
 casilla_id = "contraparte.importe-Q2"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -303,7 +303,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f022"
 kind = "casilla"
 casilla_id = "contraparte.importe-transmisiones-Q2"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -317,7 +317,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f023"
 kind = "casilla"
 casilla_id = "contraparte.importe-Q3"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -331,7 +331,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f024"
 kind = "casilla"
 casilla_id = "contraparte.importe-transmisiones-Q3"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -345,7 +345,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f025"
 kind = "casilla"
 casilla_id = "contraparte.importe-Q4"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -359,7 +359,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f026"
 kind = "casilla"
 casilla_id = "contraparte.importe-transmisiones-Q4"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]
@@ -373,7 +373,7 @@ record_identity = "Tipo 2 - Registro De Declarado"
 export_field_id = "m347-2011.declarado.f027"
 kind = "casilla"
 casilla_id = "contraparte.nif-operador-comunitario"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [entries.anchor]

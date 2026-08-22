@@ -23,7 +23,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -43,7 +42,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -64,7 +62,6 @@ value_policy = 'four-digit-year'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -84,7 +81,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -104,7 +100,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -124,7 +119,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -144,7 +138,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -164,7 +157,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -183,7 +175,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -204,7 +195,6 @@ value_policy = 'integer-part'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -225,7 +215,6 @@ value_policy = 'fractional-digits'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -252,7 +241,6 @@ allowed_values = [
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -272,7 +260,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -292,7 +279,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]
@@ -311,7 +297,6 @@ signed = false
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
-    'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
     'ley-58-2003:art-93',
 ]

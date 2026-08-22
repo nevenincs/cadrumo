@@ -6430,3 +6430,17 @@ applies_from = 2008-01-01
 applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/123_2008.pdf"
 review_status = "reviewed"
+
+[sources."aeat-dr-190-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf"
+sha256 = "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb"
+bytes = 386645
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_190_2023.pdf"
+review_status = "reviewed"

@@ -5,7 +5,7 @@ fixture_id = "modelo-347-2025-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-hac-1431-2025:art-1", "ley-58-2003:art-93"]
+legal_refs = ["ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
 [[revisions."2008-2024".workbook_parity_refs]]

@@ -6,7 +6,7 @@ data_type = "nif"
 semantic_role = "arrendatario_nif"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f005"]
 [[revisions."2008-2024".casillas]]
@@ -17,7 +17,7 @@ data_type = "nif"
 semantic_role = "arrendatario_representante_legal_nif"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f006"]
 [[revisions."2008-2024".casillas]]
@@ -28,7 +28,7 @@ data_type = "text"
 semantic_role = "arrendatario_nombre"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f007"]
 [[revisions."2008-2024".casillas]]
@@ -39,7 +39,7 @@ data_type = "money"
 semantic_role = "importe_operacion_arrendamiento"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f010", "m347-2011.inmueble.f011"]
 [[revisions."2008-2024".casillas]]
@@ -50,7 +50,7 @@ data_type = "integer"
 semantic_role = "situacion_inmueble"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f012"]
 [[revisions."2008-2024".casillas]]
@@ -61,7 +61,7 @@ data_type = "text"
 semantic_role = "referencia_catastral"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f013"]
 [[revisions."2008-2024".casillas]]
@@ -72,6 +72,6 @@ data_type = "text"
 semantic_role = "direccion_inmueble"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f014"]

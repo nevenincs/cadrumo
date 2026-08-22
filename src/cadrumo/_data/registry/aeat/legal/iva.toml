@@ -2751,3 +2751,59 @@ applies_from = 2009-01-01
 applies_to = 2013-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e12v11.pdf"
 review_status = "reviewed"
+
+[sources."aeat-dr-390-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/10-390-ejercicio-2017-492-kb-xlsx.xlsx"
+sha256 = "e94e3a5471cde24105197e13362a4e3d12284ba4aeb3585bfd812c85dc0bd4cd"
+bytes = 500274
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr390e2017v3.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/11-390-ejercicio-2018-488-kb-xlsx.xlsx"
+sha256 = "6ad240de8090017dca775ed4234a90a43b163e3bb44e042502b5c74a9a9e2d61"
+bytes = 496068
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr390e2018v101.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/12-390-ejercicio-2019-y-2020-actualizado-23-12-2020-485-kb-xlsx.xlsx"
+sha256 = "7d4caff7bbdd668fa2ddd03f8751632394ed4010a81301b5fc787272f2371bc1"
+bytes = 496560
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_19/dr390e2019v101.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx"
+sha256 = "0164fbea6f500a63950b762f5b5e43c5d771f84ac8d260e70dc1497acaed4246"
+bytes = 497063
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/dr390e2021.xlsx"
+review_status = "reviewed"
