@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:953766a7d33e05e55abe66685181fc425b03d73111fd0866624268419a61e030'
+body_hash: 'sha256:e1127da28a570cf6fe8c307c582da306a95391ae18a8f30d40493c43485b9d51'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6814,3 +6814,43 @@ minutes old. Committed state is sound; the working tree is mid-edit. No fix belo
 campaign, and none was attempted -- editing a peer's file during a sweep that is repairing
 itself would collide with an author who is actively in it. The last trustworthy reading for
 this domain remains 361 integration and 1,644 unit.
+
+### A tracked PATH is not committed CONTENT: a false "HEAD is broken" caught before it shipped
+
+The lanes failed again, this time with 45 collection errors and a different signature:
+`ImportError: cannot import name 'ModeloCalculationRouteId' from 'cadrumo.core'`, with the
+source parsing clean. Following it produced what looked like a serious committed defect.
+`src/cadrumo/core/_calculation_route.py`, which defines the symbol, is UNTRACKED;
+`core/__init__.py` is modified; and `git ls-files --error-unmatch` reported the consuming
+module `application/modelo/_calculation_route.py` as TRACKED. Consumer committed, definition
+never added: a `git add` omission that would break every fresh clone and CI.
+
+That conclusion was WRONG, and the check that disproved it was `git grep -l
+ModeloCalculationRouteId HEAD` returning EMPTY -- no committed file mentions the symbol at
+all. HEAD's copy of the consumer imports only `BindingSourceKind`; the second import is an
+uncommitted working-tree edit belonging to the same peer who has not yet added the new core
+module. HEAD is sound. The whole thing is one more in-flight edit.
+
+The error was conflating two different questions. `git ls-files --error-unmatch <path>` answers
+"is this PATH tracked" -- it says nothing about whether HEAD's CONTENT of that path contains
+what the working tree contains. Combining it with a WORKING-TREE grep produces a confident,
+fully-evidenced, false conclusion: every individual observation was true. Any claim about HEAD
+has to be read from HEAD -- `git show HEAD:<path>` or `git grep <pattern> HEAD` -- never from a
+tracked-path check plus a live-file search.
+
+This matters more than an ordinary slip because of what the claim was. "A peer broke the build
+for everyone" is escalating, names another owner, and invites someone to commit a file they do
+not own to fix it. The cost of being wrong is asymmetric, so the verification bar before making
+it should be higher than for a finding that only costs a wasted look.
+
+### Three consecutive iterations, one condition
+
+The domain lanes have now been unreadable three iterations running, each time from a different
+surface of the same cause: another campaign's in-flight edits in the shared worktree --
+repeated keyword arguments, then a half-added core symbol. Every time, HEAD was sound and the
+working tree was not. That is not a defect in this domain and nothing here was changed for it.
+
+The reusable diagnostic, now used three times: read HEAD's own content for the file the error
+names, and check the file's mtime. Committed-clean plus a mtime minutes old means an author is
+in the file right now, and the correct action is to leave it alone -- twice the sweep repaired
+itself within minutes without any intervention.
