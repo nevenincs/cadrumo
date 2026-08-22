@@ -3451,3 +3451,62 @@ one-row declaration still prove it left nothing behind.
 modelled numbers are all on T22001000. **This record adds none, because it prints none.**
 Progress on modelo 220 must not be read from the casilla count — 95 casillas describe
 two records out of 137.
+
+## 2026-08-23 — modelo 220 T22012000: 180 numbered casillas, and a decomposition that had to be checked
+
+### What landed
+
+Modelo 220 record **T22012000** — deducciones por doble imposición (interna RDLEG
+4/2004, interna DT 23ª LIS, internacional RDLEG 4/2004, internacional LIS, plus the tipo
+de gravamen): **180 casillas, every one carrying a real AEAT box number.** Revision 95 →
+**275 casillas**. Third of 137 records.
+
+First record on this modelo where *every* casilla is numbered — T22001000 numbered 12 of
+77, T22002000 numbered none because it prints none. This one is a numbered grid: 179
+money cells of 17 positions plus the tipo de gravamen, a distinct number on each, so
+there is nothing to collapse and no slug anywhere.
+
+Suite: **13 failures, zero new**, and the previous iteration's CLI-help entry is gone —
+confirming it was the flake it looked like.
+
+### The finding: a derived id needs a uniqueness check, or it silently merges cells
+
+The 180 descriptions were decomposed into four closed axes — **family** (5 values),
+**group** (6), **scope** (22), **column** (6) — and the decomposition was verified two
+ways *before any id was minted*:
+
+1. every one of the 180 resolves into known vocabulary, **nothing unresolved**;
+2. the resulting four-part keys are **unique across all 180, no collision**.
+
+**Check 2 earned its keep immediately.** A first attempt used only three axes and
+produced **seven colliding keys covering nineteen numbers** — ids that would have merged
+distinct cells and silently mis-declared them. The missing axis was the group qualifier
+AEAT prints before a colon: `DI interna ejerc. anteriores:`, `DI jurídica … art. 31 LIS`,
+`DI económica … art. 32 LIS`, `Total 2024`.
+
+Nothing downstream would have caught it. The registry enforces unique `number`, and the
+numbers were fine — it was the *ids* that collided, and an id collision inside one
+generator run just means the later row overwrites the earlier in a dict, or trips an
+assert only if you wrote one. **Whenever a casilla id is derived rather than transcribed,
+assert the derived keys are unique before minting them.**
+
+A third, independent confirmation came free: the 180 Spanish labels are composed from the
+same four axes and are **all distinct, zero duplicates**. Two casillas describing the same
+thing would have surfaced there.
+
+### AEAT misspells its own section heading four ways
+
+`RDLEG 4/2004`, `RDLEG4/2004`, `RDL 4/2004`, `RDLRG 4/2004` — plus two truncated column
+labels (`licado en esta liquidación`). All are **matched deliberately** so the
+decomposition reflects what the design says; the casilla *labels* use the corrected form,
+because a label is read by an operator while the match is read against AEAT. Third
+distinct class of source-text noise found on these designs, after the unit strings (`m2`)
+and the footnote markers (`(1)`, `(2)`).
+
+### Stated so a complete record is not mistaken for a modelled calculation
+
+These 180 casillas **declare** the deduction grid; none of them **computes** it. No
+formula, construct or binding is attached, so nothing reconciles a carried-forward
+deduction against the amount applied, and nothing checks that pendiente-futuro equals
+pendiente minus aplicado. 134 of 137 records remain unauthored and **7412 of 7604 AEAT
+numbers remain unmodelled** — 275 casillas describe three records.
