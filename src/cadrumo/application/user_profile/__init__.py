@@ -574,6 +574,9 @@ if TYPE_CHECKING:
     from ._custody_transactions import (
         ProfileCustodyDeleteConfirmation as ProfileCustodyDeleteConfirmation,
     )
+    from ._custody_hold_models import (
+        ProfileCustodyRetentionOverride as ProfileCustodyRetentionOverride,
+    )
     from ._custody_transactions import (
         ProfileCustodyHoldAssessment as ProfileCustodyHoldAssessment,
     )
@@ -945,6 +948,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodyDeleteConfirmation": "._custody_transactions",
     "ProfileCustodyEnvelopePort": "._custody_ports",
     "ProfileCustodyHoldAssessment": "._custody_transactions",
+    "ProfileCustodyRetentionOverride": "._custody_hold_models",
     "ProfileCustodyHoldEvidence": "._custody_transactions",
     "ProfileCustodyInventoryWitness": "._custody_transactions",
     "ProfileCustodyPasswordMaterialPort": "._custody_ports",
@@ -1156,6 +1160,7 @@ __all__ = [
     "ProfileCustodyDeleteConfirmation",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyHoldAssessment",
+    "ProfileCustodyRetentionOverride",
     "ProfileCustodyHoldEvidence",
     "ProfileCustodyInventoryWitness",
     "ProfileCustodyPasswordMaterialPort",

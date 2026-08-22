@@ -33,7 +33,11 @@ from ...core.hashing import (
 )
 from ...core.identity import PrefixedContentDigest, ProfileLabel
 from ...core.time import validate_utc_aware
-from ._custody_hold_models import ProfileCustodyHoldAssessment, ProfileCustodyHoldEvidence
+from ._custody_hold_models import (
+    ProfileCustodyHoldAssessment,
+    ProfileCustodyHoldEvidence,
+    ProfileCustodyRetentionOverride,
+)
 from ._custody_pointer import ProfileCustodyPointerSnapshot
 
 CUSTODY_TRANSACTION_SCHEMA_VERSION = 1
@@ -263,6 +267,11 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     staged_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     inventory: ProfileCustodyInventoryWitness | None = None
     hold_assessment: ProfileCustodyHoldAssessment | None = None
+    #: The operator authorisation, if any, to proceed past the FILING half of
+    #: ``hold_assessment``. Digest-bound like every other field here, so the
+    #: authorisation cannot be edited into a journal after the fact, and the
+    #: recorded reason survives with the transaction that acted on it.
+    retention_override: ProfileCustodyRetentionOverride | None = None
     confirmation_challenge: str | None = Field(default=None, min_length=64, max_length=64)
     tombstone_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     self_digest: str = Field(min_length=71, max_length=71)

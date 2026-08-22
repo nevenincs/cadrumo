@@ -20,6 +20,7 @@ from ._capsule_record import (
     stage_initial_profile_record_database,
     validate_staged_profile_record_database,
 )
+from ._custody_hold_models import ProfileCustodyRetentionOverride
 from ._custody_ports import (
     ProfileCustodyEnvelopePort,
     ProfileCustodyRecoveryEnvelopePort,
@@ -205,9 +206,23 @@ class ProfileCapsuleLifecycle:
             pointer.write(BucketPointer(bucket_id=aggregate.profile_id, schema_version=1))
         return aggregate
 
-    def prepare_delete(self, *, profile_id: UUID) -> ProfileCustodyTransactionJournal:
+    def prepare_delete(
+        self,
+        *,
+        profile_id: UUID,
+        retention_override: ProfileCustodyRetentionOverride | None = None,
+    ) -> ProfileCustodyTransactionJournal:
+        """Prepare one local deletion, carrying any operator retention authorisation.
+
+        The override is forwarded rather than interpreted here: the custody
+        capability owns the hold decision, and a second opinion at this layer
+        would be a place for the two to disagree.
+        """
         self._profiles.load(profile_id)
-        return self._transactions.prepare_delete(profile_id=profile_id)
+        return self._transactions.prepare_delete(
+            profile_id=profile_id,
+            retention_override=retention_override,
+        )
 
     def confirm_delete(self, journal: ProfileCustodyTransactionJournal) -> ProfileCustodyDeleteConfirmation:
         return self._transactions.confirmation_for(journal)

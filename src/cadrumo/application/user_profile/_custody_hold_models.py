@@ -21,6 +21,58 @@ from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION: Final[int] = 1
 
 
+class ProfileCustodyRetentionOverride(BaseModel):
+    """One operator authorisation to erase despite an asserted filing hold.
+
+    A model rather than a boolean because a bare ``True`` can be defaulted or
+    passed by accident, while this cannot be constructed empty: the mandatory
+    non-empty reason the CLI promises is enforced by the type at every entry
+    instead of re-checked per caller. It is persisted into the digest-bound
+    delete journal, so the authorisation travels with the transaction as
+    durable evidence rather than as a transient argument, and cannot be edited
+    in afterwards.
+
+    It authorises exactly one thing: proceeding past a FILING hold, which is
+    the statutory retention floor. It carries no power over a legal hold.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reason: str = Field(min_length=1, max_length=512)
+    approved_at: datetime
+    retained_record_count: int = Field(ge=1)
+    latest_safe_erase_date: datetime | None = None
+
+    @model_validator(mode="after")
+    def _validate_instants(self) -> ProfileCustodyRetentionOverride:
+        validate_utc_aware(self.approved_at)
+        if self.latest_safe_erase_date is not None:
+            validate_utc_aware(self.latest_safe_erase_date)
+        return self
+
+
+def hold_permits_local_deletion(
+    assessment: ProfileCustodyHoldAssessment,
+    *,
+    retention_override: ProfileCustodyRetentionOverride | None,
+) -> bool:
+    """The ONE place a gate decides whether holds permit this deletion.
+
+    Single-sited on purpose. Two custody gates ask this question -- delete
+    preparation and the pre-effect re-validation -- and inlining the boolean at
+    both is how one of them silently keeps refusing an authorisation the other
+    honours, which is the defect this function exists to end.
+
+    A legal hold is absolute: no operator authorisation clears it, which is why
+    it short-circuits first. A filing hold is the statutory retention floor,
+    and the reset's own backstop has always let a recorded override past it --
+    so an override presented here clears that half and only that half.
+    """
+    if assessment.legal_hold:
+        return False
+    return not assessment.filing_hold or retention_override is not None
+
+
 class ProfileCustodyHoldAssessment(BaseModel):
     """The bound outcome from the independent legal and filing hold owners."""
 
@@ -40,6 +92,19 @@ class ProfileCustodyHoldAssessment(BaseModel):
 
     @property
     def permits_local_deletion(self) -> bool:
+        """The RAW owner fact: do both owners currently permit local deletion?
+
+        Deliberately override-blind. This is what the owners assessed, and the
+        evidence record must keep saying ``filing_hold=True`` when a filing
+        hold exists -- an override is a decision ABOUT that fact, never a
+        different fact, and falsifying the assessment to clear a gate would
+        make ``evidence_digest`` attest something the owners never found.
+
+        Every gate deciding whether a deletion may PROCEED calls
+        :func:`hold_permits_local_deletion` instead, which weighs this fact
+        against a recorded operator authorisation. A gate reading this property
+        directly would silently ignore that authorisation.
+        """
         return not self.legal_hold and not self.filing_hold
 
     @classmethod

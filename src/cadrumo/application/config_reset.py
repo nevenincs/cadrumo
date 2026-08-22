@@ -45,6 +45,7 @@ from .bucket_maintenance import (
 )
 from .user_profile import (
     ProfileCapsuleLifecycle,
+    ProfileCustodyRetentionOverride,
     active_profile_pointer_transaction,
 )
 from .workflow import list_profile_buckets
@@ -700,6 +701,17 @@ def _retention_decision_from_record(
             retention_override_reason=None,
         )
     if recorded is not None and recorded.override_approved:
+        # The operator approved erasing a SET, not a predicate. Re-stamping the
+        # approval onto a refreshed assessment that now retains more records
+        # than they were shown would extend their consent to filings they never
+        # saw, so a grown set drops the override and forces it to be given
+        # again against the count that actually blocks.
+        if len(assessment.retained) > recorded.retained_record_count:
+            return _retention_decision(
+                assessment,
+                acknowledge_retention_override=False,
+                retention_override_reason=None,
+            )
         return _retention_decision(
             assessment,
             acknowledge_retention_override=True,
@@ -783,6 +795,31 @@ def _refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
     )
 
 
+def _custody_retention_override(
+    target: ConfigResetTarget,
+) -> ProfileCustodyRetentionOverride | None:
+    """Project this target's journaled retention decision into a custody token.
+
+    Built from the operation's own durable record rather than from the live
+    call arguments, so the authorisation the custody gates weigh is the one the
+    operator gave and this operation persisted -- not a value a later caller
+    could supply. Absent an approved override the answer is ``None``, which is
+    what keeps a target with no operator decision blocked at the custody gate.
+    """
+    retention = target.retention
+    if retention is None or not retention.override_approved:
+        return None
+    reason = retention.override_reason
+    if reason is None:
+        raise ConfigResetError("an approved retention override carries no recorded reason")
+    return ProfileCustodyRetentionOverride(
+        reason=reason,
+        approved_at=retention.assessed_at,
+        retained_record_count=retention.retained_record_count,
+        latest_safe_erase_date=retention.latest_safe_erase_date,
+    )
+
+
 def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
@@ -820,7 +857,10 @@ def _delete_targets(
             )
             operation = _replace_target(operation, index, target)
             repository.save(operation)
-        journal = lifecycle.prepare_delete(profile_id=UUID(target.bucket_id))
+        journal = lifecycle.prepare_delete(
+            profile_id=UUID(target.bucket_id),
+            retention_override=_custody_retention_override(target),
+        )
         confirmation = lifecycle.confirm_delete(journal)
         result = lifecycle.delete(confirmation)
         target = _update_target(
