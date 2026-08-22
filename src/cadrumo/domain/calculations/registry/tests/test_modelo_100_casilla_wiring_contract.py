@@ -102,7 +102,12 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
                         for trace in traces
                     )
                 else:
-                    assert producer_kind == "informational"
+                    # The two kinds that produce no calculation edge at all, so
+                    # their grounding is the casilla's own. Asserted together
+                    # because they share a SHAPE rather than a name; a kind
+                    # added later still reds here instead of falling through,
+                    # which is what keeps this branch exhaustive.
+                    assert producer_kind in {"informational", "projection_only"}, producer_kind
                     assert len(traces) == 1
                     trace = traces[0]
                     assert trace.formula is None and trace.binding is None and trace.relation is None
