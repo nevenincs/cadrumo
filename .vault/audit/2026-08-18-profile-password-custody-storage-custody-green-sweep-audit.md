@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2e9ad23225be0200f8cf78814bd95ff32e82d890fc61c0c6ba65d7a37f6860e'
+body_hash: 'sha256:2fc4c5ec7d7c4d477fde3ce547ef6b4845e47720f2e254b7be183c42c0cacdeb'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -5497,3 +5497,51 @@ assert.** My own missing stub sat on main through several pushes as the live pro
 
 Lanes 314 integration / 1586 unit, both unchanged. `scaffold --check` now clean, and the
 nitpicky docs build passes with the new stub (17 tests).
+
+### The same shape again, and this time the fix is not mine to make
+
+The stub-gate finding was that a per-push lane ran a test directory whose SUBJECT was a
+`tmp_path` round-trip rather than the committed tree. That instance was safe to fix because
+the real gate was green. Asking whether the shape repeats found that it is systemic.
+
+**Measured, not inferred:**
+
+- `pyproject.toml` sets `testpaths = ["src/cadrumo", "src/cadrumo-harness",
+  "dev/packaging/tests/test_installed_oracles.py"]`, so `just test-unit` -- which names no
+  paths -- never collects `dev/`. Confirmed empirically: a default `--collect-only` run
+  matches `test_import_hygiene_gate` **zero** times.
+- The lanes `ci.yml` runs per push are `test-dev-ci`, `test-per-push-integration-gates`,
+  `test-unit` and `test-harness`. `dev/tests` appears in none of them; it is named by
+  `test-dev-tooling` and `test-ratchets`, and by `test-per-push-integration-gates` for
+  exactly ONE module (`test_suggestion_command_conformance.py`).
+- `ci-full.yml`, which runs `test-dev-tooling`, is `workflow_dispatch:` **only** -- no push,
+  no pull request, no schedule.
+- **28 modules under `dev/tests` scan the real `src/cadrumo` tree.** One of them is
+  per-push. The rest produce a verdict only when a human manually dispatches a workflow.
+
+**The shape is identical to the stub case, one layer along.** `dev/quality/tests` IS
+per-push -- and its tests drive the scanners over `tmp_path` and synthetic path strings
+like `"src/cadrumo/provider.py"`. So the per-push lane proves the TOOL works; the gate that
+asks whether the TREE is clean is the one nobody runs. Twice now the enrolled thing has
+been the tool's own unit tests, which are green by construction, sitting where a tree
+verdict was assumed to be.
+
+**This predicted a symptom already recorded here.** Two iterations ago the import-hygiene
+gate was found red, with the test-only cross-package private-import count regressed from a
+documented 69 to 108 -- 39 undocumented sites across the TUI, invoices, modelo, filing, live
+and aggregation packages. That is not a lapse by 39 authors; it is what a ratchet does when
+nothing pulls it on a push. The debt is the visible consequence of the blindness measured
+above.
+
+**Why this one is left open rather than fixed.** The remedy is one path on one recipe line,
+identical to the stub fix. But that gate is currently RED, so enrolling it per-push would
+fail every peer's next push until 39 sites in six packages this campaign does not own are
+either fixed or documented. That is an outward-facing change with a blast radius across
+other people's work, and the sequencing -- fix or document the debt first, enrol second --
+is a call for whoever owns those packages, not something to impose from here. Documenting
+the 39 entries to make the gate green would be worse: it would rubber-stamp the violations
+the ratchet exists to prevent.
+
+Recorded with the evidence so the decision can be made on measurement rather than
+re-derived. **No production change this iteration**, and the lanes were not re-run because
+nothing ran.
