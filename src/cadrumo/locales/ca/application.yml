@@ -1454,13 +1454,20 @@ application:
         no s'ha canviat
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
+      profile_authentication_refused: No s'ha acceptat la contrasenya del perfil.
+      profile_password_contains_surrogate: La contrasenya del perfil conté un valor
+        que no es pot codificar com a UTF-8 estricte.
+      profile_password_too_few_scalars: La contrasenya del perfil ha de contenir almenys
+        {minimum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
+      profile_password_too_many_scalars: La contrasenya del perfil ha de contenir
+        com a màxim {maximum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
+      profile_password_too_many_utf8_bytes: La contrasenya del perfil ha d'ocupar
+        com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
       registration_displaced_session_not_retired: No s'ha pogut crear el perfil. No
         s'ha pogut eliminar la sessió emmagatzemada del perfil que substitueix. Tanca
         qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho
         a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
-      registration_passphrase_too_short: La contrasenya ha de tenir com a mínim {minimum_length}
-        caràcters.
       repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
         està registrat amb sensibilitat %{expected}, però la classificació del registre
         emmagatzemat és %{classification}.

@@ -185,6 +185,23 @@ def test_scripted_create_refuses_when_no_passphrase_channel_is_available(tmp_pat
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
+def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_path: Path) -> None:
+    """The machine credential channel reaches the same prospective refusal as the TUI."""
+    candidate = "a" * 14
+    with override_settings(**_storage_overrides(tmp_path, passphrase=candidate)):
+        refused = invoke_cached_cli(("--format", "json", "config", "profile", "create", "Boundary Refusal", "--quiet"))
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    combined = refused.stdout + refused.stderr
+    assert refused.exit_code != 0
+    assert "profile_password_too_few_scalars" not in combined
+    assert "profile password must contain 15 to 256 Unicode scalars" not in combined
+    assert "Traceback" not in combined
+    assert "INTERNAL" not in combined.upper()
+    assert candidate not in combined
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
     """A blank subject is refused before any credential is consumed."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):

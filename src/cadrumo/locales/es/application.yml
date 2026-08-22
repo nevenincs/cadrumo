@@ -1456,13 +1456,20 @@ application:
         no se ha cambiado
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
+      profile_authentication_refused: No se aceptó la contraseña del perfil.
+      profile_password_contains_surrogate: La contraseña del perfil contiene un valor
+        que no puede codificarse como UTF-8 estricto.
+      profile_password_too_few_scalars: La contraseña del perfil debe contener al
+        menos {minimum_scalars} escalares Unicode; se recibieron {scalar_count}.
+      profile_password_too_many_scalars: La contraseña del perfil debe contener como
+        máximo {maximum_scalars} escalares Unicode; se recibieron {scalar_count}.
+      profile_password_too_many_utf8_bytes: La contraseña del perfil debe ocupar como
+        máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       registration_displaced_session_not_retired: No se ha podido crear el perfil.
         No se ha podido eliminar la sesión almacenada del perfil al que sustituye.
         Cierra cualquier programa que esté usando el almacén de perfiles e inténtalo
         de nuevo.
       registration_label_blank: El nombre del perfil no puede estar vacío.
-      registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
-        caracteres.
       repository_classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
         está registrado con sensibilidad %{expected}, pero la clasificación del registro
         almacenado es %{classification}.

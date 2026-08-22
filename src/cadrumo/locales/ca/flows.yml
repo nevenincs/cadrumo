@@ -302,7 +302,6 @@ flows:
     strength:
       fair: Raonable.
       strong: Forta.
-      too_short: 'Massa curta: calen com a mínim {minimum_length} caràcters.'
       weak: Acceptada, però feble. Allargar-la ajuda més que afegir-hi símbols.
     title: Crea el teu perfil
     username_hint: Com apareix aquest perfil a les llistes. El pots canviar més endavant.

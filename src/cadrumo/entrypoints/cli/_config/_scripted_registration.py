@@ -117,7 +117,7 @@ def register_profile_from_scripted_invocation(
     for it: a profile is born incomplete on purpose, so a rejected fact
     leaves a real profile the operator can correct instead of nothing.
     """
-    from ....application.user_profile import ProfileRegistrationError, register_profile_with_credentials
+    from ....application.user_profile import register_profile_with_credentials
     from ....application.wizard import ConfigProfileCreateResult, ProfileWizardStatus, scripted_profile_facts
     from ....core.wizard_catalogue import get_setup_flow
 
@@ -142,8 +142,6 @@ def register_profile_from_scripted_invocation(
             facts=facts,
             recovery_handover=_recovery_handover_or_none(),
         )
-    except ProfileRegistrationError:
-        raise
     finally:
         del passphrase
 

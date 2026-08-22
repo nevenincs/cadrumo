@@ -301,7 +301,6 @@ flows:
     strength:
       fair: Razonable.
       strong: Fuerte.
-      too_short: 'Demasiado corta: se requieren al menos {minimum_length} caracteres.'
       weak: Aceptada, pero débil. Alargarla ayuda más que añadir símbolos.
     title: Crea tu perfil
     username_hint: Cómo aparece este perfil en las listas. Puedes cambiarlo más adelante.

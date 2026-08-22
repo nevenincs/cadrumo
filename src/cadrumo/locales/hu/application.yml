@@ -1391,13 +1391,20 @@ application:
       profile_already_exists: A(z) %{profile} profil már létezik; futtassa az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
+      profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
+        amely nem kódolható szigorú UTF-8 formában.
+      profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
+        Unicode skalárértéket kell tartalmaznia; a kapott érték {scalar_count}.
+      profile_password_too_many_scalars: A profiljelszó legfeljebb {maximum_scalars}
+        Unicode skalárértéket tartalmazhat; a kapott érték {scalar_count}.
+      profile_password_too_many_utf8_bytes: A profiljelszó UTF-8 kódolása legfeljebb
+        {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       registration_displaced_session_not_retired: A profilt nem sikerült létrehozni.
         Nem sikerült eltávolítani annak a profilnak a tárolt munkamenetét, amelyet
         felvált. Zárj be minden programot, amely a profiltárat használja, és próbáld
         újra.
       registration_label_blank: A profil neve nem lehet üres.
-      registration_passphrase_too_short: A jelszónak legalább {minimum_length} karakter
-        hosszúnak kell lennie.
       repository_classification_mismatch: A(z) %{namespace} biztonságos objektum névtér
         a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása
         %{classification}.
