@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:cfe67cded98b00ceacf07c22bba58b5ca92fc9d9575f245edc448b70c42ea7b4'
+body_hash: 'sha256:984ccb65e1ac817222e843e6fda9fbc19b85e676c57fc7fe0f91fa6dcff1f7b5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6624,3 +6624,48 @@ The gate stays red: seven offenders remain across four other campaigns plus the 
 whose `reviewed_by` the grounding rule positively requires. That last one is a genuine
 standing conflict between two rules and still needs the operator's ruling. What changed is
 that this campaign is no longer part of the problem it was reporting.
+
+### A peer's write-policy consolidation silently stranded three tests behind the guard
+
+The integration lane, green all campaign, came back with three failures minutes after
+`980605f15a` routed the storage write policy through one authority and retired the duplicate
+verb gate. Two distinct symptoms, one cause: `config profile censo file` returned
+`REFUSED_CLI_BOUNDARY` where the case asserted `FAIL_CERTIFICADO_CENSAL_PARSE`, and the
+secret-taking verb returned "No active profile" where the case asserted the `--secrets-stdin`
+hint. Both refusals carry `failed_condition_id: profile.active` with evidence
+`route_kind: root_fallback_database`.
+
+The verbs declare `write_route = "profile-bound"`, and that declaration PREDATES the commit --
+what changed is that it now bites. So the consolidated authority is doing its job; three cases
+were passing only because the old duplicate gate let them through to a stage the guard should
+always have stopped them reaching without a profile. Sequential re-run confirmed it is
+deterministic and not this share's parallel-I/O race, and eleven commits landed on top without
+anyone noticing, which is what a red lane nobody owns looks like.
+
+**The fix is NOT to re-baseline the expectation to `REFUSED_CLI_BOUNDARY`.** That code is
+already covered by the sibling `test_missing_artefact_is_refused_at_the_cli_boundary`, so
+adopting it would have retired the parser contract while leaving two green tests that look
+like they still cover it -- the "encode the current defect as the contract" failure. The cases
+assert a PARSER refusal that lives downstream of the guard, so the honest repair is to give
+them the active profile the verb is bound to. That is also the truthful scenario: a cotejo
+compares a certificate against the active profile's censo facts and has nothing to compare
+against without one.
+
+The censo module had no storage isolation at all, having never needed any -- it was refused
+before the artefact was opened. Registering a profile without adding isolation first would
+have written into the operator's real store, so the fixture requests `_isolated_cli_backend`
+explicitly rather than leaning on autouse ordering. `register_cli_profile` already defaults to
+the canonical minimal fact set, so nothing duplicates the twenty-line dict the sibling module
+carries.
+
+Proven from outside the repo: a scratchpad plugin replaced
+`adapters.inbound.censo.parse_certificado_censal_bytes` with a raiser. The traceback shows the
+substitute REACHED, called from the verb, and both cases reddened -- which is precisely what
+the boundary refusal previously prevented. Nothing tracked was mutated to run the proof. Lanes
+back to 361 integration and 1644 unit.
+
+Durable lesson: when a guard is correctly tightened, the tests it strands do not all deserve
+the same treatment. Ask for each whether it was asserting something DOWNSTREAM of the new
+refusal. If it was, the assertion is still the contract and the setup is what is stale;
+adopting the new refusal as the expectation quietly deletes coverage while turning the lane
+green.

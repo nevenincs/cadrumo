@@ -323,6 +323,12 @@ def test_secret_taking_verb_without_interactive_stdin_refuses_instructively() ->
     prompt callback only on a real console and otherwise defers to the storage
     substrate's own env-var precedence and refusal.
     """
+    # The verb declares a ``profile-bound`` write route, so with no active
+    # profile the CLI root refuses at the boundary before the secure-input
+    # channel is ever consulted -- and this case is about that channel's
+    # isatty pre-check, which is downstream of the guard.
+    _create_profile()
+
     result = invoke_cached_cli(["config", "auth", "certificate", "secret", "set", "--name", "operator-cert"])
 
     assert result.exit_code == 2, result.output

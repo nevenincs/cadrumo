@@ -8,8 +8,31 @@ from pathlib import Path
 import pytest
 
 from .....tests.cli_runner import invoke_cached_cli
+from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _active_profile(_isolated_cli_backend: Path) -> None:  # noqa: F811 - requesting an
+    # imported fixture by name necessarily shadows the import; the dependency is the point
+    """Register the active profile the censo verbs are bound to.
+
+    ``config profile censo file`` declares a ``profile-bound`` write route, so
+    with no active profile the CLI root refuses at the boundary
+    (``REFUSED_CLI_BOUNDARY``, failed condition ``profile.active``) and the
+    artefact is never opened. These cases assert the PARSER's refusal, which
+    lives downstream of that guard, so without a profile they would be asserting
+    a contract they never reach. Registering one is also the honest scenario:
+    a cotejo compares a certificate against the active profile's censo facts,
+    and there is nothing to compare against without one.
+
+    The isolated backend is requested by name rather than relied on
+    implicitly: it must be established BEFORE a profile is registered, or the
+    registration would land in the operator's real store.
+    """
+    register_cli_profile(label="censo-operator")
 
 
 def _invoke_with_artefact(tmp_path: Path, payload: bytes):
