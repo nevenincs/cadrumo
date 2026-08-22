@@ -28,8 +28,10 @@ from uuid import UUID
 import typer
 
 from ....core.i18n import OutputLanguage, tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._execution_policies import BOOTSTRAP_WRITE, PROFILE_READ, declare_metadata_group
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -85,6 +87,7 @@ def register_archive_commands(
     )
 
     @archive_app.command("export", help=tr("cli.config.profile.archive.export_help"))
+    @command_execution_policy(BOOTSTRAP_WRITE)
     def archive_export(
         ctx: typer.Context,
         name: str = typer.Argument(..., help=tr("cli.config.profile.archive.export_name_help")),
@@ -129,6 +132,7 @@ def register_archive_commands(
         )
 
     @archive_app.command("inspect", help=tr("cli.config.profile.archive.inspect_help"))
+    @command_execution_policy(PROFILE_READ)
     def archive_inspect(
         ctx: typer.Context,
         file: Path = typer.Option(
@@ -166,6 +170,7 @@ def register_archive_commands(
             lines=list(_inspect_lines(inspection)),
         )
 
+    declare_metadata_group(archive_app)
     profile_app.add_typer(archive_app, name="archive")
 
 

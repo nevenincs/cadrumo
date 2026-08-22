@@ -465,10 +465,10 @@ def present_registration(*, suggested_name: str | None = None) -> ProfileRegistr
     than an error.
     """
     from ....adapters.inbound.tui import run_registration_tui
-    from ....application.user_profile import assess_passphrase
+    from ....core import assess_profile_password
 
     return run_registration_tui(
-        assess=assess_passphrase,
+        assess=assess_profile_password,
         register=attempt_registration,
         suggested_name=suggested_name,
     )

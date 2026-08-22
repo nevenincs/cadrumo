@@ -167,12 +167,6 @@ _EXPORTED_BUT_UNCONSTRUCTED: dict[str, str] = {
         "written on a live path is a calculations-side question, not one this campaign has "
         "measured."
     ),
-    "bound_profile_record_session": (
-        "A record-session helper used by eight TEST modules as their binding fixture and by no "
-        "production caller. That shape -- heavily used by tests, unused by the tree -- is what a "
-        "test-support helper looks like, and its home is likely the tests package rather than the "
-        "boundary; unclassified pending that judgement."
-    ),
     "censo_unadopted_evidence": (
         "Censal cotejo helper with no consumer anywhere, tests included. The strongest deletion "
         "candidate of this set, and left because the censo surface belongs to another campaign."

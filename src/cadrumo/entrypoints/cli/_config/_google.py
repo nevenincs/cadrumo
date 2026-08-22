@@ -90,8 +90,10 @@ from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import GOOGLE_DESTRUCTIVE, GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
 from ._google_credential_source_cli import register_google_credential_source_commands
 from ._google_errors import _google_refusal
 from ._google_folder import register_google_folder_commands
@@ -196,6 +198,7 @@ def _coerce_client_json(path: Path) -> OAuthClient:
 
 
 @google_app.command("register", help=tr("cli.config.google.register_help"))
+@command_execution_policy(GOOGLE_WRITE)
 def google_register(
     ctx: typer.Context,
     client_json: Path = typer.Option(
@@ -235,6 +238,7 @@ def google_register(
 
 
 @google_app.command("login", help=tr("cli.config.google.login_help"))
+@command_execution_policy(GOOGLE_WRITE)
 def google_login(
     ctx: typer.Context,
     refresh_only: bool = typer.Option(
@@ -303,6 +307,7 @@ def google_login(
 
 
 @google_app.command("status", help=tr("cli.config.google.status_help"))
+@command_execution_policy(GOOGLE_READ)
 def google_status(
     ctx: typer.Context,
 ) -> None:
@@ -347,6 +352,7 @@ def google_status(
 
 
 @google_app.command("logout", help=tr("cli.config.google.logout_help"))
+@command_execution_policy(GOOGLE_DESTRUCTIVE)
 def google_logout(
     ctx: typer.Context,
 ) -> None:
@@ -394,6 +400,7 @@ sync_app = typer.Typer(
 
 
 @sync_app.command("probe", help=tr("cli.config.google.sync.probe_help"))
+@command_execution_policy(GOOGLE_READ)
 def google_sync_probe(
     ctx: typer.Context,
     read_only: bool = typer.Option(
@@ -1096,6 +1103,7 @@ def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[No
 
 
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
+@command_execution_policy(GOOGLE_WRITE)
 def google_sync_push(
     ctx: typer.Context,
     namespace_filter: str | None = typer.Option(
@@ -1163,5 +1171,8 @@ google_app.add_typer(sync_app, name="sync")
 # both are part of the public surface the sync sub-commands consume.
 _ = (load_token, REQUIRED_SCOPES)
 
+
+declare_metadata_group(google_app)
+declare_metadata_group(sync_app)
 
 __all__ = ["google_app", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"]

@@ -44,9 +44,11 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....domain.contribuyente import DescendantInfo, serialise_meses_trabajo
+from .._command_policy import command_execution_policy
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -298,6 +300,7 @@ def _emit_descendiente_list(
 
 
 @descendiente_app.callback()
+@command_execution_policy(ENCRYPTED_READ)
 def descendiente_door(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -492,6 +495,7 @@ def _check_count(candidate: str) -> str | None:
         "cli.config.profile.descendiente.add_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def descendiente_add(
     ctx: typer.Context,
     descendiente: list[str] = typer.Option(
@@ -592,6 +596,7 @@ def descendiente_add(
         "cli.config.profile.descendiente.list_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def descendiente_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -613,6 +618,7 @@ def descendiente_list(
         "cli.config.profile.descendiente.remove_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def descendiente_remove(
     ctx: typer.Context,
     index: int = typer.Argument(..., help=tr("cli.config.profile.descendiente.remove_index_help")),

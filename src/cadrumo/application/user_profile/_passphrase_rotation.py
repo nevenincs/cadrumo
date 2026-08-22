@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import custody
+from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.hashing import prefixed_digest
 from ...core.identity import ProfileId
@@ -47,7 +48,7 @@ from ._custody_ports import (
     unlock_profile_custody_password,
 )
 from ._custody_repository import profile_custody_transaction_lock
-from ._registration import PASSPHRASE_MINIMUM_LENGTH, assess_passphrase
+from ._prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,6 +59,18 @@ _ENVELOPE_KDF_SALT_BYTES = 16
 
 class ProfilePassphraseRotationError(CadrumoError):
     """Raised when a passphrase change cannot be honoured as supplied."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: dict[str, object] | None = None,
+        translated_message: str | None = None,
+        password_refusal: ProspectiveProfilePasswordRefusal | None = None,
+    ) -> None:
+        """Retain a typed prospective refusal without retaining the password."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self.password_refusal = password_refusal
 
 
 class ProfilePassphraseRotationOutcome(BaseModel):
@@ -86,7 +99,7 @@ def rotate_profile_passphrase(
     """Re-wrap ``profile_id``'s data key under ``new_passphrase``.
 
     Fails closed at every step before the swap: a wrong current passphrase, a
-    new one below the verifier minimum, or a confirmation that does not match
+    new one outside the profile-password contract, or a confirmation that does not match
     all refuse with the committed envelope untouched and still usable.
 
     The confirmation is compared here as well as at whatever surface collected
@@ -96,8 +109,8 @@ def rotate_profile_passphrase(
     Args:
         profile_id: The profile whose password wrapper to replace.
         current_passphrase: Proof of the existing credential. Never logged.
-        new_passphrase: The replacement credential. Must clear the NIST
-            verifier minimum.
+        new_passphrase: The replacement credential. Must satisfy the canonical
+            profile-password contract.
         new_passphrase_confirmation: Must equal ``new_passphrase``.
         root: Storage root override; the effective root when omitted.
 
@@ -106,18 +119,19 @@ def rotate_profile_passphrase(
 
     Raises:
         ProfilePassphraseRotationError: When the confirmation does not match,
-            the new passphrase is too short, or the current one does not open
+            the new passphrase is invalid, or the current one does not open
             the committed envelope.
     """
     if new_passphrase != new_passphrase_confirmation:
         raise ProfilePassphraseRotationError(
             translated_message="application.user_profile.errors.passphrase_confirmation_mismatch",
         )
-    assessment = assess_passphrase(new_passphrase)
-    if not assessment.acceptable:
+    password_refusal = prospective_profile_password_refusal(assess_profile_password(new_passphrase))
+    if password_refusal is not None:
         raise ProfilePassphraseRotationError(
-            translated_message="application.user_profile.errors.registration_passphrase_too_short",
-            context={"minimum_length": str(PASSPHRASE_MINIMUM_LENGTH)},
+            translated_message=password_refusal.translated_message,
+            context=password_refusal.context,
+            password_refusal=password_refusal,
         )
 
     storage_root = effective_storage_root(root)

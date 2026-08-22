@@ -91,11 +91,11 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 @contextmanager
 def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
-    from .....application.user_profile import assess_passphrase
+    from .....core import assess_profile_password
     from .....entrypoints.cli._config._manager_frontend import attempt_registration
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
-    yield RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+    yield RegistrationApp(assess=assess_profile_password, register=attempt_registration)
 
 
 @contextmanager

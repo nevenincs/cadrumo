@@ -198,10 +198,10 @@ def _registration_screen() -> RegistrationApp:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
-    from .....application.user_profile import assess_passphrase
+    from .....core import assess_profile_password
     from .....entrypoints.cli._config._manager_frontend import attempt_registration
 
-    return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+    return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
 
 
 def _gutters(app: App[Any]) -> tuple[int, int]:

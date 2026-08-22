@@ -166,6 +166,13 @@ references are indexed, and its referential integrity is checked at build time.
 Runtime consumers - filing schema providers, formula execution, export parsing,
 and verification - read from snapshots, never from the raw loader.
 
+The snapshot is also the filing read-model authority. Its casilla definitions
+say which numbered fields exist, whether each field is manual, bound, or
+calculated, which formulas and binding contracts apply, and which repeating
+fields and export positions belong to that revision. It describes what one
+filing requires; it does not own a taxpayer's transactions, invoices, foreign
+assets, or stock movements.
+
 The split matters. The authoring and compilation stages before the authority are
 implementation details. Production code requests validated modelos, deadline
 windows, and snapshots through the authority, so the loader stays behind that
@@ -267,6 +274,21 @@ carrying its `legal_refs`, `source_refs`, and `formula_id`. That observation
 rides inside the persisted `CalculationRevision`, then into the CLI payloads,
 then to the operator. The provenance never drops on the way out.
 
+A binding is a projection contract, not an attachment slot. It identifies the
+owned source family, validates the selector and aggregation, and says how that
+source becomes a filing input. A scalar contract produces one value. Repeating
+record families declare one typed binding per row field. They join the values by
+grouping and one-based row index. The calculation revision freezes the resolved
+row bindings. Paths that produce validated detail rows store those separately.
+It never attaches an opaque record blob to a casilla.
+
+Modelo 720 demonstrates the repeating shape: its foreign-asset resolver is
+enrolled in the source mesh and projects typed asset fields into registry row
+bindings. Stock inventory is different. `InventoryLedger` is an implemented,
+encrypted business aggregate. The binding-source taxonomy currently has no
+inventory kind or enrolled inventory resolver. It therefore remains outside modelo
+calculation revisions until a legally grounded projection is added.
+
 (persistence-and-the-safety-boundary)=
 ## Persistence and the safety boundary
 
@@ -276,7 +298,7 @@ store. The structure, not a convention, keeps it there.
 ```mermaid
 flowchart TD
     OP(["Operator"])
-    subgraph boundary["Encrypted bucket-scoped store — FINANCIAL data never leaves (no temp / scratch / plaintext)"]
+    subgraph boundary["Encrypted bucket-scoped store — financial data never leaves (no temp / scratch / plaintext)"]
         direction TB
         PROF["Active profile — resolve_active_bucket_id"]
         SESS["BucketSession — KEK/DEK · idle-timed · one taxpayer at a time"]
@@ -318,9 +340,19 @@ repository encrypts every payload at the column boundary with a key from the
 `MasterKeyProvider` - the operating system keychain, or a passphrase-derived
 fallback. It persists the ciphertext to a local SQLite database with encrypted
 payload columns.
+
 Evidence bytes - invoices, statements, and decrypted documents - go through the
 content-addressed `AttachmentStore`, which stores the bytes themselves, never a
 link.
+
+Parsed business records do not become attachments merely because they may later
+support a filing. Transactions, invoice catalogues, and stock inventory remain
+separate typed aggregates in encrypted storage. Modelo 720 instead receives
+typed foreign-asset observations from the caller. An enrolled source resolver
+projects only the fields requested by the registry into a calculation revision.
+In the current Modelo 100 registry, stock-related boxes 0177, 0181, and 0182
+remain manual inputs. A dormant inventory helper still names 0155; that stale
+name is not evidence of a live inventory-to-Renta route.
 
 Nothing in this store crosses outward to the agency as a write. The read-only
 live checks reach the agency only to read. The single path that reaches the

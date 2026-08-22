@@ -31,14 +31,21 @@ from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from ....core import PassphraseStrength
+from ....core import (
+    PROFILE_PASSWORD_MAX_SCALARS,
+    PROFILE_PASSWORD_MIN_SCALARS,
+    PassphraseStrength,
+    ProfilePasswordRefusalReason,
+    assess_profile_password,
+)
 from ....domain.user_profile import ProfileSetupState
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
-    PASSPHRASE_MINIMUM_LENGTH,
     ProfileRegistrationError,
-    assess_passphrase,
+    logout_active_profile,
+    profile_is_password_authentication_failure,
     register_profile_with_credentials,
+    unlock_profile_custody_password,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -167,8 +174,79 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
-            register_profile_with_credentials(label="Too Short", passphrase="a" * (PASSPHRASE_MINIMUM_LENGTH - 1))
+            register_profile_with_credentials(
+                label="Too Short",
+                passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
+            )
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
+
+
+@pytest.mark.parametrize(
+    ("candidate", "reason"),
+    (
+        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
+        ("\U0001f600" * 256 + "a", ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES),
+        ("\ud800" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+        ("\udfff" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+    ),
+)
+def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
+    tmp_path: Path,
+    candidate: str,
+    reason: ProfilePasswordRefusalReason,
+) -> None:
+    """Every canonical refusal reaches application code before any persisted state."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        before = _storage_snapshot(storage_root)
+        with pytest.raises(ProfileRegistrationError) as refused:
+            register_profile_with_credentials(label="Refused Candidate", passphrase=candidate)
+
+        assert _storage_snapshot(storage_root) == before
+        payload = refused.value.password_refusal
+        assert payload is not None
+        assert payload.reason is reason
+        assert candidate not in repr(payload)
+        assert refused.value.context == payload.context
+        assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    (
+        "a" * PROFILE_PASSWORD_MIN_SCALARS,
+        "a" * PROFILE_PASSWORD_MAX_SCALARS,
+        "\U0001f600" * 256,
+    ),
+)
+def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, candidate: str) -> None:
+    """The application accepts both scalar bounds and the 1,024-byte boundary."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = register_profile_with_credentials(label=f"Boundary {len(candidate)}", passphrase=candidate)
+        material = load_committed_profile_password_material(UUID(outcome.profile_id))
+        assert unlock_profile_custody_password(material, password=candidate).dek is not None
+
+
+def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_path: Path) -> None:
+    """Visually equivalent credentials stay distinct; registration never normalises."""
+    composed = "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS
+    decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        composed_profile = register_profile_with_credentials(label="Composed", passphrase=composed)
+        logout_active_profile()
+        decomposed_profile = register_profile_with_credentials(label="Decomposed", passphrase=decomposed)
+
+        composed_material = load_committed_profile_password_material(UUID(composed_profile.profile_id))
+        decomposed_material = load_committed_profile_password_material(UUID(decomposed_profile.profile_id))
+        assert unlock_profile_custody_password(composed_material, password=composed).dek is not None
+        assert unlock_profile_custody_password(decomposed_material, password=decomposed).dek is not None
+        with pytest.raises(Exception) as composed_refusal:
+            unlock_profile_custody_password(composed_material, password=decomposed)
+        with pytest.raises(Exception) as decomposed_refusal:
+            unlock_profile_custody_password(decomposed_material, password=composed)
+        assert profile_is_password_authentication_failure(composed_refusal.value)
+        assert profile_is_password_authentication_failure(decomposed_refusal.value)
 
 
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:
@@ -181,30 +259,38 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
 # ── advisory banding ────────────────────────────────────────────────────────
 
 
-def test_the_enforced_floor_is_the_only_hard_gate() -> None:
-    """A short candidate is refused; a weak but long-enough one is accepted.
+def test_strength_is_advisory_and_profile_policy_is_the_hard_gate() -> None:
+    """A short candidate is refused independently of its advisory strength.
 
     NIST SP 800-63B §5.1.1.2 advises against composition requirements, so an
-    all-lowercase passphrase at the minimum length must be *acceptable* even
-    though it bands weak. Asserting acceptance here pins that the band is
+    all-lowercase passphrase at the minimum length must be accepted regardless
+    of its band. Asserting acceptance here pins that the band is
     advice, not a second gate.
     """
-    too_short = assess_passphrase("a" * (PASSPHRASE_MINIMUM_LENGTH - 1))
-    assert too_short.strength is PassphraseStrength.TOO_SHORT
-    assert not too_short.acceptable
+    too_short = assess_profile_password("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1))
+    assert too_short.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS
+    assert not too_short.accepted
 
-    weak_but_long_enough = assess_passphrase("a" * PASSPHRASE_MINIMUM_LENGTH)
-    assert weak_but_long_enough.strength is PassphraseStrength.WEAK
-    assert weak_but_long_enough.acceptable
+    long_enough = assess_profile_password("a" * PROFILE_PASSWORD_MIN_SCALARS)
+    assert long_enough.strength is PassphraseStrength.FAIR
+    assert long_enough.accepted
 
 
 def test_a_long_single_class_passphrase_bands_strong() -> None:
     """Length is the dominant entropy term, so a passphrase clears on it alone."""
-    assert assess_passphrase("correct horse battery staple").strength is PassphraseStrength.STRONG
+    assert assess_profile_password("correct horse battery staple").strength is PassphraseStrength.STRONG
 
 
 def test_the_assessment_never_carries_the_candidate() -> None:
     """The advisory model holds a length, never the secret it measured."""
     candidate = "a-very-distinctive-candidate-value"
-    assessment = assess_passphrase(candidate)
-    assert candidate not in assessment.model_dump_json()
+    assessment = assess_profile_password(candidate)
+    assert candidate not in repr(assessment)
+
+
+def _storage_snapshot(root: Path) -> dict[str, bytes | None]:
+    """Capture every persisted path and byte before a refused operation."""
+    return {
+        path.relative_to(root).as_posix(): None if path.is_dir() else path.read_bytes()
+        for path in sorted(root.rglob("*"))
+    }

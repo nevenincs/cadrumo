@@ -41,8 +41,10 @@ import typer
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, _state
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
+from ._execution_policies import ENCRYPTED_WRITE, LIVE_PROFILE_WRITE, declare_metadata_group
 
 # The divergence helper selects one of these keys by data rather than passing a
 # literal directly to ``tr()``. Keep the bounded selection scanner-visible so
@@ -76,6 +78,7 @@ def register_censo_commands(profile_app: typer.Typer) -> None:
     "file",
     help=tr("cli.config.profile.censo.file_help"),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def censo_file(
     ctx: typer.Context,
     file: Path = typer.Option(
@@ -136,6 +139,7 @@ def censo_file(
         "cli.config.profile.censo.pull_help",
     ),
 )
+@command_execution_policy(LIVE_PROFILE_WRITE)
 def censo_pull(
     ctx: typer.Context,
     apply: bool = typer.Option(
@@ -405,5 +409,7 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
         )
     return notices
 
+
+declare_metadata_group(censo_app)
 
 __all__ = ["censo_app", "register_censo_commands"]

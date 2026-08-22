@@ -22,8 +22,8 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
-from .....application.user_profile import assess_passphrase, login_profile
-from .....core import require_active_bucket_id
+from .....application.user_profile import login_profile
+from .....core import assess_profile_password, require_active_bucket_id
 from .....core.i18n import output_language, tr
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.profile_capsule import load_test_profile_record
@@ -46,7 +46,7 @@ _OUTPUT_LANGUAGE_PATH = "preferences.output_language"
 
 def _screen() -> RegistrationApp:
     """The production composition, wired to the doors the CLI gives it."""
-    return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+    return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
 
 
 def _text(app: RegistrationApp, selector: str) -> str:

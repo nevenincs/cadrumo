@@ -7,6 +7,9 @@ modelo:
       revision:
         2025-02-03-y-siguientes:
           casilla:
+            x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Surnames if a natural person, or legal name if a legal entity
             x-chim6r1ecdgnasr15koj2c0:
               help: null
               label: Application for a Tax Identification Number (NIF)
@@ -77,7 +80,7 @@ modelo:
                 7)
             x-chim6r1ecdgnasr15koj6do:
               help: null
-              label: Change of data on other taxes (page 7)
+              label: Change to data on other taxes and registers (page 7)
             x-chim6r1ecdgnasr15koj6e0:
               help: null
               label: Change of data on special intra-Community trade regimes (page
@@ -112,12 +115,158 @@ modelo:
               help: null
               label: Deregistration from the census of entrepreneurs, professionals
                 and withholders
+            x-chim6r1ecdgnasr15lh62qj1:
+              help: null
+              label: Reason for deregistration from the census of traders, professionals
+                and withholders
             x-chim6r1eclr6arjk5llmirj4:
               help: null
               label: Census return type
+            x-chim6r1ecpim6q315limcpb3ehknco9dc9gmko8:
+              help: null
+              label: Effective date of deregistration from the census
+            x-chim6r1ecpim6q315limcpb3ehknco9dcdin6p8:
+              help: null
+              label: Effective date of cessation of all business or professional activities
+            x-chim6r1ecpkn4rb15lhm2r39chgm8:
+              help: null
+              label: Capacity in which the return is signed
+            x-chim6r1ecpkn4rb15lj6aor8c4:
+              help: null
+              label: Date on which the return is signed
+            x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
+              help: null
+              label: Forename and surnames of the person signing the return
+            x-chim6r1ecpkn4rb15lm7apr1e8:
+              help: null
+              label: Place where the return is signed
+            x-chim6r1edpkmc:
+              help: null
+              label: Tax identification number (NIF) of the declarant
+            x-chim6r1edpnmqojick:
+              help: null
+              label: Forename, for natural persons
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Regulation in force from 3 February 2025
+            x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Surnames and forename, or legal name, of the representative (first
+                representative, block 3.1)
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Reason for filing: registration, deregistration or change of
+                the representative (first representative, block 3.1)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Reason for the representation (first representative, block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: First surname of the designated natural person (first representative,
+                block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Second surname of the designated natural person (first representative,
+                block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Reason for filing regarding the designated natural person (first
+                representative, block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Effective date of the reason for filing regarding the designated
+                natural person (first representative, block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: Tax identification number (NIF) of the designated natural person
+                (first representative, block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Forename of the designated natural person (first representative,
+                block 3.1)
+            x-e9in0c9ecpim6q315lhm2tbjc4:
+              help: null
+              label: Effective date of the reason for filing regarding the representative
+                (first representative, block 3.1)
+            x-e9in0c9edpkmc:
+              help: null
+              label: Tax identification number (NIF) of the representative (first
+                representative, block 3.1)
+            x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Code of the legal representation (first representative, block
+                3.1)
+            x-e9in0c9ee9in6qb4cln78p8:
+              help: null
+              label: 'Whether the representative is resident: yes or no (first representative,
+                block 3.1)'
+            x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Code of the type of representation (first representative, block
+                3.1)
+            x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Code of the title of representation (first representative, block
+                3.1)
+            x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Surnames and forename, or legal name, of the representative (second
+                representative, block 3.2)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Reason for filing: registration, deregistration or change of
+                the representative (second representative, block 3.2)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Reason for the representation (second representative, block 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: First surname of the designated natural person (second representative,
+                block 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Second surname of the designated natural person (second representative,
+                block 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Reason for filing regarding the designated natural person (second
+                representative, block 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Effective date of the reason for filing regarding the designated
+                natural person (second representative, block 3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: Tax identification number (NIF) of the designated natural person
+                (second representative, block 3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Forename of the designated natural person (second representative,
+                block 3.2)
+            x-e9in0checpim6q315lhm2tbjc4:
+              help: null
+              label: Effective date of the reason for filing regarding the representative
+                (second representative, block 3.2)
+            x-e9in0chedpkmc:
+              help: null
+              label: Tax identification number (NIF) of the representative (second
+                representative, block 3.2)
+            x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Code of the legal representation (second representative, block
+                3.2)
+            x-e9in0chee9in6qb4cln78p8:
+              help: null
+              label: 'Whether the representative is resident: yes or no (second representative,
+                block 3.2)'
+            x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Code of the type of representation (second representative, block
+                3.2)
+            x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Code of the title of representation (second representative, block
+                3.2)
           construct:
             modelo-036-censo-foundation:
               field:

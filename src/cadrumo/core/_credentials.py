@@ -1,69 +1,78 @@
-"""Passphrase policy: the enforced length floor and its advisory banding.
+"""Canonical profile-password policy and independent strength guidance.
 
-The only *enforced* passphrase policy is the length floor
-(:data:`NIST_PASSPHRASE_MIN_LENGTH`), which the master-key provider applies
-at the point of use. This module adds the advisory band a credential surface
-renders beside the field so the operator gets feedback while typing rather
-than a refusal after submitting.
+Profile-password validity is an exact-sequence capability contract: accepted
+passwords contain 15 through 256 Unicode scalar values and encode to at most
+1,024 strict UTF-8 bytes. The assessment never normalises, rewrites, retains,
+or returns the submitted password. Its result contains only a finite refusal
+reason and numeric measurements that are safe for prospective-password
+guidance.
 
-The distinction is deliberate and load-bearing. NIST SP 800-63B §5.1.1.2
-explicitly recommends *against* imposing composition rules — "verifiers
-SHOULD NOT impose other composition rules for memorized secrets" — because
-they push operators toward predictable substitutions without materially
-raising entropy. So the character-class signal below feeds the advisory band
-ONLY; it never gates. A long all-lowercase passphrase is accepted, and is
-correctly banded as strong once it is long enough, because length is the
-dominant entropy term.
+Strength is deliberately advisory. Character-class variety can improve the
+display band for a shorter passphrase, but no composition rule affects profile
+password validity.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
-#: NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length. This is
-#: the one passphrase rule that refuses rather than advises: the master-key
-#: provider enforces it when unwrapping, and credential surfaces read it to
-#: reject a short candidate before submission. It lives here, beside the
-#: advisory bands it anchors, because a published verifier floor is policy
-#: rather than a property of any one persistence backend.
-NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
+PROFILE_PASSWORD_MIN_SCALARS: Final[int] = 15
+"""Minimum Unicode scalar count for a profile password."""
 
-#: Length at which a passphrase is banded STRONG regardless of composition.
-#: Grounded in the NIST SP 800-63B §5.1.1.2 guidance that length is the
-#: primary entropy contributor and long memorized secrets should be
-#: encouraged; a passphrase of this many characters is treated as strong
-#: even when it uses a single character class.
+PROFILE_PASSWORD_MAX_SCALARS: Final[int] = 256
+"""Maximum Unicode scalar count for a profile password."""
+
+PROFILE_PASSWORD_MAX_UTF8_BYTES: Final[int] = 1024
+"""Maximum strict UTF-8 byte count for a profile password."""
+
 LENGTH_ALONE_IS_STRONG: Final[int] = 20
+"""Length at which a passphrase is advised as strong without composition."""
 
-#: Length at which a passphrase can reach STRONG with mixed character
-#: classes, or FAIR on its own.
 LENGTH_FAIR_FLOOR: Final[int] = 12
+"""Length at which a passphrase is at least advised as fair."""
+
+
+class ProfilePasswordRefusalReason(StrEnum):
+    """Finite, secret-free reasons a prospective profile password is refused."""
+
+    CONTAINS_SURROGATE = "contains_surrogate"
+    TOO_FEW_SCALARS = "too_few_scalars"
+    TOO_MANY_SCALARS = "too_many_scalars"
+    TOO_MANY_UTF8_BYTES = "too_many_utf8_bytes"
 
 
 class PassphraseStrength(StrEnum):
-    """Advisory band shown beside a passphrase field.
+    """Advisory display band that never determines password validity."""
 
-    Only :attr:`TOO_SHORT` corresponds to a refusal; it means the candidate
-    is below the enforced NIST verifier minimum and the credential surface
-    must not let it be submitted. The remaining members are guidance and
-    never block: a :attr:`WEAK` passphrase is still accepted.
-    """
-
-    TOO_SHORT = "too_short"
     WEAK = "weak"
     FAIR = "fair"
     STRONG = "strong"
 
 
-def character_class_count(candidate: str) -> int:
-    """Return how many of the four character classes ``candidate`` uses.
+@dataclass(frozen=True, slots=True)
+class ProfilePasswordAssessment:
+    """Secret-free assessment of a prospective profile password.
 
-    The classes are lowercase, uppercase, digit, and everything else
-    (symbols and non-ASCII letters alike). Used only to lift a
-    middling-length passphrase into a higher advisory band — never to
-    refuse one, per the NIST guidance in this module's docstring.
+    ``utf8_byte_count`` is unavailable only when a surrogate prevents strict
+    UTF-8 encoding. No field retains or derives a reproducible fingerprint of
+    the candidate.
     """
+
+    reason: ProfilePasswordRefusalReason | None
+    scalar_count: int
+    utf8_byte_count: int | None
+    strength: PassphraseStrength
+
+    @property
+    def accepted(self) -> bool:
+        """Return whether the candidate satisfies the profile-password contract."""
+        return self.reason is None
+
+
+def _character_class_count(candidate: str) -> int:
+    """Count character classes for advisory strength only."""
     return sum(
         (
             any(character.islower() for character in candidate),
@@ -74,36 +83,56 @@ def character_class_count(candidate: str) -> int:
     )
 
 
-def assess_passphrase_strength(candidate: str, *, minimum_length: int) -> PassphraseStrength:
-    """Band ``candidate`` for display beside a passphrase field.
-
-    ``minimum_length`` is the enforced verifier minimum. It stays an explicit
-    parameter — rather than defaulting to :data:`NIST_PASSPHRASE_MIN_LENGTH` —
-    so a caller banding a candidate against a stricter floor than the one the
-    master-key provider enforces cannot silently band it against the looser
-    published minimum instead.
-
-    A candidate shorter than the minimum is :attr:`PassphraseStrength.TOO_SHORT`
-    — the one band that corresponds to a refusal. Above it, length dominates:
-    a passphrase of :data:`LENGTH_ALONE_IS_STRONG` characters is strong on
-    length alone, while a shorter one needs character-class variety to clear
-    the same band.
-    """
+def assess_passphrase_strength(candidate: str) -> PassphraseStrength:
+    """Return advisory strength without applying a validity threshold."""
     length = len(candidate)
-    if length < minimum_length:
-        return PassphraseStrength.TOO_SHORT
     if length >= LENGTH_ALONE_IS_STRONG:
         return PassphraseStrength.STRONG
     if length >= LENGTH_FAIR_FLOOR:
-        return PassphraseStrength.STRONG if character_class_count(candidate) >= 3 else PassphraseStrength.FAIR
-    return PassphraseStrength.FAIR if character_class_count(candidate) >= 3 else PassphraseStrength.WEAK
+        return PassphraseStrength.STRONG if _character_class_count(candidate) >= 3 else PassphraseStrength.FAIR
+    return PassphraseStrength.FAIR if _character_class_count(candidate) >= 3 else PassphraseStrength.WEAK
+
+
+def assess_profile_password(candidate: str) -> ProfilePasswordAssessment:
+    """Assess ``candidate`` exactly without retaining or rewriting it."""
+    scalar_count = len(candidate)
+    strength = assess_passphrase_strength(candidate)
+
+    if any(0xD800 <= ord(character) <= 0xDFFF for character in candidate):
+        return ProfilePasswordAssessment(
+            reason=ProfilePasswordRefusalReason.CONTAINS_SURROGATE,
+            scalar_count=scalar_count,
+            utf8_byte_count=None,
+            strength=strength,
+        )
+
+    utf8_byte_count = len(candidate.encode("utf-8", errors="strict"))
+    if scalar_count < PROFILE_PASSWORD_MIN_SCALARS:
+        reason = ProfilePasswordRefusalReason.TOO_FEW_SCALARS
+    elif utf8_byte_count > PROFILE_PASSWORD_MAX_UTF8_BYTES:
+        reason = ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES
+    elif scalar_count > PROFILE_PASSWORD_MAX_SCALARS:
+        reason = ProfilePasswordRefusalReason.TOO_MANY_SCALARS
+    else:
+        reason = None
+
+    return ProfilePasswordAssessment(
+        reason=reason,
+        scalar_count=scalar_count,
+        utf8_byte_count=utf8_byte_count,
+        strength=strength,
+    )
 
 
 __all__ = [
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
-    "NIST_PASSPHRASE_MIN_LENGTH",
+    "PROFILE_PASSWORD_MAX_SCALARS",
+    "PROFILE_PASSWORD_MAX_UTF8_BYTES",
+    "PROFILE_PASSWORD_MIN_SCALARS",
     "PassphraseStrength",
+    "ProfilePasswordAssessment",
+    "ProfilePasswordRefusalReason",
     "assess_passphrase_strength",
-    "character_class_count",
+    "assess_profile_password",
 ]

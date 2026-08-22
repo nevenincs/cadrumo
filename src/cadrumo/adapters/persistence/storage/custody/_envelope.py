@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ._kdf_supervision import profile_password_wrap_aad, wrap_profile_custody_material
+from ._kdf_supervision import profile_password_wrap_aad, wrap_profile_custody_password_material
 from ._records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ def create_profile_custody_password_envelope(
     settings: Settings | None = None,
 ) -> ProfileCustodyEnvelope:
     """Create a password wrapper through the S03 supervised KDF boundary."""
-    wrapped_dek = wrap_profile_custody_material(
+    wrapped_dek = wrap_profile_custody_password_material(
         secret=password,
         dek=dek,
         kdf=kdf,

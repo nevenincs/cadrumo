@@ -16,8 +16,10 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._execution_policies import ENCRYPTED_READ
 
 if TYPE_CHECKING:
     from .._config_bucket_history_payloads import BucketHistoryEventPayload
@@ -27,6 +29,7 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
     """Register the ``config profile history`` event-history command on ``profile_app``."""
 
     @profile_app.command("history", help=tr("cli.config.profile.history_help"))
+    @command_execution_policy(ENCRYPTED_READ)
     def profile_history(
         ctx: typer.Context,
         profile: typing.Annotated[

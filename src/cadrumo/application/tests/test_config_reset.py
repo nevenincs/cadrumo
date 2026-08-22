@@ -221,9 +221,22 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
             resume_config_reset("a" * 64, confirmed=False)
 
 
-def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
+def test_start_discovers_live_and_dangling_targets_then_completes(
     tmp_path: Path,
 ) -> None:
+    """Discovery covers a live capsule and a dangling pointer, and erases both.
+
+    A profile already deleted through custody is deliberately NOT among them.
+    Discovery lists committed capsules, and a completed custody deletion leaves
+    none -- it removes the tombstone as its final step. This case once asserted
+    such a profile was still discovered, which was true of the deletion
+    primitive it originally used and stopped being true when it was re-pointed
+    onto the custody transaction; the expectations were not carried across.
+
+    The profile deleted here therefore stays in the fixture as the thing that
+    must NOT reappear, and the acquisition lock moved to a live target, where
+    clearing it is a contract the reset actually holds.
+    """
     from ...adapters.persistence.storage.bucket import bucket_paths
     from ...core import AuthProviderKind, StorageCategory, pointer_path, storage_location
     from ...core.config import load_settings
@@ -270,11 +283,14 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         settings = load_settings()
         secret_blob_root = settings.cadrumo_blob_store_dir
         assert any(path.is_file() for path in iter_directory(secret_blob_root, recursive=True))
-        _write_active_pointer(root, _PROFILE_B_ID)
+        # The lock is acquired for whichever profile the pointer names, so the
+        # pointer picks the subject here; the reset's own pointer is written
+        # below.
+        _write_active_pointer(root, _PROFILE_A_ID)
         lock_path = auth_acquisition_lock_path(
             settings,
             AuthProviderKind.CLAVE_PERMANENTE,
-            bucket_id=_PROFILE_B_ID,
+            bucket_id=_PROFILE_A_ID,
         )
         with acquire_auth_acquisition_lock(
             settings,
@@ -290,7 +306,6 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert operation.status is ConfigResetOperationStatus.COMPLETE
         assert tuple(target.bucket_id for target in operation.targets) == (
             _PROFILE_A_ID,
-            _PROFILE_B_ID,
             _DANGLING_ID,
         )
         assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
@@ -298,8 +313,8 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert operation.pointer_snapshot.bucket_id == _DANGLING_ID
         assert operation.pointer_snapshot.content_sha256 is not None
         assert operation.summary is not None
-        assert operation.summary.target_count == 3
-        assert operation.summary.deleted_count == 2
+        assert operation.summary.target_count == 2
+        assert operation.summary.deleted_count == 1
         assert operation.summary.already_absent_count == 1
         for target in operation.targets:
             assert target.phase is ConfigResetTargetPhase.DELETED
@@ -338,8 +353,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
             for target in operation.targets
             if target.auth_clearance is not None
         }
-        assert cleared_locks[_PROFILE_B_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
-        assert cleared_locks[_PROFILE_A_ID] == ()
+        assert cleared_locks[_PROFILE_A_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
         assert cleared_locks[_DANGLING_ID] == ()
         assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 

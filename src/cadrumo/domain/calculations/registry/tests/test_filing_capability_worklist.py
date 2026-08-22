@@ -38,11 +38,16 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
+from .test_cited_design_field_bounds_are_self_consistent import (
+    _KNOWN_SELF_CONTRADICTING_DESIGN,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -100,6 +105,29 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
 
     Sequencing the remaining work needs that distinction, and deriving it costs
     one directory listing per line.
+
+    What this does NOT establish is that the cited design can be READ reliably.
+    Modelo 038 cites a design whose declared era covers every claimed ejercicio
+    -- so it reads AUTHORABLE here -- while that design's extraction places
+    fields across each other's bytes, which
+    ``test_cited_design_field_bounds_are_self_consistent`` already names and
+    refuses to let a layout cite. Authoring from it produced records that tiled
+    1..250 with no HOLES, because partial overlap leaves none, and the offsets
+    were still untrustworthy.
+
+    That check is deliberately not repeated here in general: it must extract
+    every cited design, which would turn a listing into minutes of parsing --
+    modelo 220's design alone carries 137 sheets and 16,079 fields. The verdict
+    says "AUTHORABLE on era" rather than "AUTHORABLE" so the remaining
+    precondition is named where it will be read.
+
+    The ONE design the corpus already knows to be self-contradicting is named
+    outright, by importing the sibling gate's own anchor rather than copying the
+    string. Modelo 038's bundled artefact is a form DIAGRAM -- a byte ruler and
+    free-floating labels, with no ordinal/offset/length rows anywhere -- so its
+    coordinates are inferred and overlap. Reading AUTHORABLE for it invited an
+    authoring attempt that had to be withdrawn; the anchor moves or retires
+    through the sibling gate, which fails loudly if the corpus changes.
     """
     modelo_id = str(modelo.id)
     designs = _bundled_designs(modelo_id)
@@ -128,10 +156,76 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             f"BLOCKED on era: {len(registered)} registered design(s) for this modelo, none cited by this "
             "revision -- the design governing THIS window is not among them"
         )
+
+    if _KNOWN_SELF_CONTRADICTING_DESIGN in cited:
+        return (
+            f"BLOCKED on design extraction: cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose "
+            "extraction places fields across each other's bytes -- the bundled artefact is a form "
+            "DIAGRAM with a position ruler, not a field table, so no coordinate read from it can be "
+            "trusted and no parser repair changes that"
+        )
+
+    uncovered = _uncovered_claimed_years(revision, cited, sources)
+    if uncovered:
+        span = f"{uncovered[0]}-{uncovered[-1]}" if len(uncovered) > 1 else str(uncovered[0])
+        return (
+            f"BLOCKED on design coverage: cites {cited[0]}, but ejercicio(s) {span} "
+            f"({len(uncovered)} year(s)) fall outside every cited design's era -- a layout authored "
+            "from it would write those years at offsets no bundled design evidences"
+        )
     return (
-        f"AUTHORABLE: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
-        "-- needs its semantic map and layout"
+        f"AUTHORABLE on era: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
+        "-- needs its semantic map and layout, AND its design's extraction checked for partial "
+        "overlap first (see test_cited_design_field_bounds_are_self_consistent)"
     )
+
+
+#: Open-ended designs are treated as covering to this horizon, matching
+#: :mod:`test_layout_design_applies_to_claimed_years`, which asks the same
+#: question about revisions that already declare a layout.
+_OPEN_ENDED_HORIZON = 2026
+
+
+def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: object) -> list[int]:
+    """Return the ejercicios this revision claims that no cited design covers.
+
+    The distinction this draws is the one that cost three modelos. A revision
+    can cite a registered record design and still be unauthorable, because
+    citing a design is not the same as that design covering the years the
+    revision claims. Modelos 187, 188 and 194 each cite a design beginning in
+    2022, 2023 or 2024 while claiming ejercicios from 2019: authoring a layout
+    from those designs satisfied THIS gate and immediately put the same
+    revisions on `test_layout_design_applies_to_claimed_years`, having replaced
+    a refusal with an emitted record at unevidenced offsets.
+
+    Their own review stamps had already recorded it -- "0 comparable bundled
+    design year(s) inside this revision's claimed span" -- so the information
+    was in the tree before the mistake and this classifier simply did not ask.
+    """
+    selector = revision.period_selector
+    if selector.years:
+        claimed = sorted(selector.years)
+    elif selector.year_from is None:
+        return []
+    else:
+        upper = selector.year_to if selector.year_to is not None else _OPEN_ENDED_HORIZON
+        claimed = list(range(selector.year_from, upper + 1))
+
+    windows: list[tuple[int | None, int | None]] = []
+    for ref in cited:
+        source = sources.get(ref)
+        start = getattr(source, "applies_from", None)
+        end = getattr(source, "applies_to", None)
+        windows.append(
+            (start.year if isinstance(start, date) else None, end.year if isinstance(end, date) else None),
+        )
+    return [
+        year
+        for year in claimed
+        if not any(
+            (start is None or year >= start) and (end is None or year <= end) for start, end in windows
+        )
+    ]
 
 
 def test_every_registry_revision_can_produce_a_filing_artifact() -> None:

@@ -39,6 +39,11 @@ profile](profile-setup.md).
   ```{cli-sequence} modelo-100-preflight
   :verify: Confirm the year's ledger reads back clean for the annual period.
   ```
+
+  The transaction ledger is not the stock-inventory register. If your activity
+  holds stock, maintain its encrypted inventory ledger separately, then enter
+  the applicable Renta stock figures manually. There is no automatic
+  inventory-to-Modelo-100 projection in this version.
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
@@ -58,7 +63,7 @@ profile](profile-setup.md).
 The example below follows an employee filer - a Madrid-resident salaried
 taxpayer filing an individual 2025 return, with no self-employed activity, so
 the Modelo 130/131 and retención-model folds are scoped out and the annual
-grants on the employment figures alone. If you also file quarterly Modelo 130
+calculation uses the employment figures alone. If you also file quarterly Modelo 130
 instalments, they fold in as payments on account - see [Prepare a Modelo 130
 IRPF instalment](modelo-130.md).
 
@@ -83,6 +88,11 @@ Find what applies to you and what is still missing:
 :verify: Confirm the declaration's missing bindings, required casillas, and observations read back.
 ```
 
+For stock under estimación directa, inspect and supply boxes 0177, 0181, and
+0182 when they apply. They are manual inputs in the current registry. Do not use
+0155 as an inventory substitute. Calculation does not treat it as an inventory
+input.
+
 Supply a manual casilla and recalculate by passing `--casilla 0003=24000` on
 the calculate command, alongside the bindings the declaration still needs (the
 main sequence above shows the full form). Recalculating replaces the current
@@ -99,8 +109,8 @@ spreadsheet review of the assembled declaration, see
 The verify step in the sequence above ran the annual completeness check,
 including the cross-period gates: every dependency filing must be filed and
 evidenced, and every carried figure must still point at the revision it was
-filed under. A blocked report names the dependency in the way - resolve it and
-re-run. See [Verify a draft filing](verification-reports.md).
+filed under. A blocked report names the unresolved dependency. Resolve it, then
+rerun verification. See [Verify a draft filing](verification-reports.md).
 
 Export the verified declaration. Export is the local finish line. Recording the
 filed marker afterwards is optional and applies only while the obligation

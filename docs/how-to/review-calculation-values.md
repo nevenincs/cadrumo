@@ -34,7 +34,7 @@ input kind, required flag, and label. Use this before providing any
 These commands read a saved calculation, so run a calculation first. On a fresh
 work unit with no calculation yet, they refuse with `work unit has no selectable
 current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
-[Supply manual casilla values](#supply-manual-casilla-values) below) to produce a
+[Supply manual casilla values](#supply-manual-casilla-values)) to produce a
 saved draft, then come back here.
 
 List the calculation revisions for one filing, show the current revision's
@@ -59,8 +59,9 @@ It is the same number you see on the paper or PDF
 version of the modelo. Run `aeat app modelo casillas 130` to see the list (the
 inspect sequence above shows this), and check the `input` column first.
 
-`--casilla` works only on manual boxes. A `bound` box is filled from your ledger
-or another source, so `--casilla` refuses it with `cannot override bucket-derived
+`--casilla` works only on manual boxes. A `bound` box is filled through a
+registry binding contract from an enrolled source resolver, so `--casilla`
+refuses it with `cannot override bucket-derived
 source-bound casillas` (for example, Modelo 130 box `02` Gastos is `bound`). Fix
 the source instead. See [Supply a missing field value](#supply-a-missing-field-value).
 
@@ -98,7 +99,7 @@ The `bindings list` output shows, for each field, a `source` and a `readiness`
 label. The `source` tells you who supplies the value; the `readiness` label
 restates that source in plain language (for example, `ledger source` or `prior
 filed revision`). Use the `source` to decide how to supply the value. The
-`source` is one of:
+common source categories are:
 
 - **Profile fact** - Cadrumo fills it from your taxpayer profile, such as
   residence, declaration type, or family composition. Update your profile instead
@@ -112,10 +113,16 @@ filed revision`). Use the `source` to decide how to supply the value. The
 - **Manual** - this kind always needs you to type a value, with `--binding
   KEY=VALUE`, or `--casilla` for a box.
 
+This reader-oriented list is not the complete `BindingSourceKind` reference.
+Other modelos use additional typed sources, including invoice, withholding,
+counterparty, and repeating-record families. Consult the binding listing for
+the selected modelo instead of assuming that an unlisted source is manual.
+
 A manual field always needs a value you enter by hand. A **prior filed revision**
 field also needs one when there is no earlier filing yet to carry it forward.
-See the first-time-filing note below. Profile, ledger, and relation fields are
-filled for you; correct those at their source rather than typing the value.
+See the first-time-filing note that follows. Profile and ledger fields are
+filled from their sources. Relation fields may come from another filing or
+require `--relation`, as identified by the modelo's help.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
@@ -202,11 +209,18 @@ set:
 The saved rows appear in the calculation output as `detail_row` lines. Check
 them to confirm what was recorded.
 
+Direct `--row` support is only one way repeating data can reach a calculation.
+Modelo 720 foreign assets already use registry row-field bindings and an
+enrolled resolver even though Modelo 720 is not in the direct `--row` allowlist
+above. Do not treat the absence of a direct row command as an absent source
+integration.
+
 ## Special calculation tools (IRPF comparison and exemptions)
 
 For specialized calculations, the CLI provides evaluation and comparison commands:
 
-- **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
+- **Joint vs. individual Impuesto sobre la Renta de las Personas Físicas (IRPF)
+  comparison (`compare-taxation`)**: Compare filing
   jointly as a family unit against filing individually for an active Modelo
   100. Create the Modelo 100 draft first, or the command refuses with
   `Ninguna unidad de trabajo activa`:
@@ -223,15 +237,17 @@ For specialized calculations, the CLI provides evaluation and comparison command
   recommendation so you can decide which filing option costs less.
 
 - **Maritime worker exemption preview (`preview-maritime-exemption`)**: Preview
-  the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
+  the IRPF exemption for maritime workers (Art. 7.p LIRPF or the Registro
+  Especial de Buques y Empresas Navieras de Canarias (REBECA) 50% exemption):
   
   ```{cli-sequence} review-values-maritime
   :verify: Confirm the preview reports the RETMAR registration state.
   ```
   
   The command shows which tax boxes are affected by the exemption and the
-  amounts, with references to the applicable law. This applies only to maritime
-  workers. Most filers can skip this section.
+  amounts, with references to the applicable law and the Régimen Especial de
+  Trabajadores del Mar (RETMAR) registration state. This applies only to
+  maritime workers. Most filers can skip this section.
 
 (correct-an-already-filed-local-record)=
 ## Correct an already filed local record
@@ -243,8 +259,8 @@ correct complementaria (supplementary return) record:
 ```{cli-sequence} review-values-amend
 ```
 
-Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not
-submit anything to AEAT.
+Before using this command, import the {term}`justificante` for the filing you're
+correcting. The amendment command does not submit anything to AEAT.
 
 ## Where to go next
 

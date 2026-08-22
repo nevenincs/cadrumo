@@ -32,8 +32,19 @@ from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import (
+    BROWSER_CONNECTIVITY,
+    CALCULATION_READ,
+    ENCRYPTED_READ,
+    ENCRYPTED_WRITE,
+    LOCAL_READ,
+    PROFILE_DESTRUCTIVE,
+    REGISTRY_READ,
+    declare_metadata_group,
+)
 
 if TYPE_CHECKING:
     from ....application.diagnostics import ConfigRepairReport
@@ -145,6 +156,7 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
 
 def _register_repair_root_callback(repair_app: typer.Typer) -> None:
     @repair_app.callback()
+    @command_execution_policy(CALCULATION_READ)
     def repair(ctx: typer.Context) -> None:
         """Diagnose and repair local configuration, registry, profile, auth, and log state."""
         if ctx.invoked_subcommand is not None:
@@ -163,6 +175,7 @@ def _register_repair_root_callback(repair_app: typer.Typer) -> None:
 
 def _register_repair_logs_command(repair_app: typer.Typer) -> None:
     @repair_app.command("logs", help=tr("cli.config.repair.logs_help"))
+    @command_execution_policy(LOCAL_READ)
     def repair_logs(
         ctx: typer.Context,
         lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.repair.logs_lines_help")),
@@ -183,6 +196,7 @@ def _register_repair_logs_command(repair_app: typer.Typer) -> None:
 
 def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
     @repair_app.command("quarantine", help=tr("cli.config.repair.quarantine_help"))
+    @command_execution_policy(ENCRYPTED_WRITE)
     def repair_quarantine(
         ctx: typer.Context,
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.quarantine_yes_help")),
@@ -269,6 +283,7 @@ def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
 
 def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
     @repair_app.command("reset-progress", help=tr("cli.config.repair.reset_progress_help"))
+    @command_execution_policy(PROFILE_DESTRUCTIVE)
     def repair_reset_progress(
         ctx: typer.Context,
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_progress_yes_help")),
@@ -342,6 +357,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
             "cli.config.repair.integrity.objects_help",
         ),
     )
+    @command_execution_policy(ENCRYPTED_READ)
     def repair_integrity_objects(
         ctx: typer.Context,
         namespace: str | None = typer.Option(
@@ -392,6 +408,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
             "cli.config.repair.integrity.registry_help",
         ),
     )
+    @command_execution_policy(REGISTRY_READ)
     def repair_integrity_registry(ctx: typer.Context) -> None:
         """Report calculation registry authority and bundled snapshot integrity."""
         from .._config_payloads import RepairIntegrityRegistryResult
@@ -410,11 +427,13 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
             ),
         )
 
+    declare_metadata_group(integrity_app)
     repair_app.add_typer(integrity_app, name="integrity")
 
 
 def _register_repair_connectivity_command(repair_app: typer.Typer) -> None:
     @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
+    @command_execution_policy(BROWSER_CONNECTIVITY)
     def repair_connectivity(ctx: typer.Context, headless: bool = typer.Option(True, "--headless/--headed")) -> None:
         """Probe browser connectivity to the AEAT Sede landing page."""
         from .._config_payloads import RepairConnectivityResult

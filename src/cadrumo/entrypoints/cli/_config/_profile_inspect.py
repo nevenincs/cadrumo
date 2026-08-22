@@ -26,10 +26,12 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....domain.calculations.registry import RevisionId
+from .._command_policy import command_execution_policy
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ._execution_policies import CALCULATION_READ, ENCRYPTED_READ
 from ._profile_readiness import (
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
@@ -204,7 +206,9 @@ def _register_show_command(
         if blocking:
             raise typer.Exit(code=2)
 
-    profile_app.command("show", help=tr("cli.config.profile.show_help"))(config_profile_show)
+    profile_app.command("show", help=tr("cli.config.profile.show_help"))(
+        command_execution_policy(ENCRYPTED_READ)(config_profile_show)
+    )
 
 
 def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: RevisionId | None) -> str:
@@ -410,7 +414,9 @@ def _register_preflight_command(
         if not report.ready:
             raise typer.Exit(code=2)
 
-    profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))(config_profile_preflight)
+    profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))(
+        command_execution_policy(CALCULATION_READ)(config_profile_preflight)
+    )
 
 
 def _resolve_validate_target_pointer(
@@ -534,7 +540,9 @@ def _register_validate_command(
         if blocking:
             raise typer.Exit(code=2)
 
-    profile_app.command("validate", help=tr("cli.config.profile.validate_help"))(config_profile_validate)
+    profile_app.command("validate", help=tr("cli.config.profile.validate_help"))(
+        command_execution_policy(CALCULATION_READ)(config_profile_validate)
+    )
 
 
 def _record_validity_verdict(*, blocking_count: int, issue_count: int) -> tuple[str, str]:

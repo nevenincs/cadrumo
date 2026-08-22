@@ -19,9 +19,11 @@ from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ._execution_policies import ENCRYPTED_WRITE
 from ._status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:
@@ -45,6 +47,7 @@ def register_repair_profile_command(
         "profile",
         help=tr("cli.config.repair.profile_help"),
     )
+    @command_execution_policy(ENCRYPTED_WRITE)
     def repair_profile(
         ctx: typer.Context,
         profile: str | None = typer.Option(

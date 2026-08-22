@@ -48,8 +48,15 @@ from ....domain.calculations.registry import (
     RelationId,
 )
 from ....domain.calculations.registry import bundled_authority as _bundled_authority
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import (
+    GOOGLE_CALCULATION_HANDOFF,
+    GOOGLE_CALCULATION_READ,
+    GOOGLE_CALCULATION_WRITE,
+    declare_metadata_group,
+)
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleSyncCalcComputeCasillaPayload,
@@ -166,6 +173,7 @@ def _pull_operator_edits_for_command(
 
 
 @calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
+@command_execution_policy(GOOGLE_CALCULATION_HANDOFF)
 def google_sync_calc_export(
     ctx: typer.Context,
     modelo: _ModeloArg,
@@ -347,6 +355,7 @@ def _emit_calc_export_preview(
 
 
 @calc_app.command("verify", help=tr("cli.config.google.sync.calc.verify_help"))
+@command_execution_policy(GOOGLE_CALCULATION_READ)
 def google_sync_calc_verify(
     ctx: typer.Context,
     modelo: _ModeloArg,
@@ -489,6 +498,7 @@ def google_sync_calc_verify(
 
 
 @calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
+@command_execution_policy(GOOGLE_CALCULATION_WRITE)
 def google_sync_calc_pull(
     ctx: typer.Context,
     modelo: _ModeloArg,
@@ -619,6 +629,7 @@ def google_sync_calc_pull(
 
 
 @calc_app.command("compute", help=tr("cli.config.google.sync.calc.compute_help"))
+@command_execution_policy(GOOGLE_CALCULATION_WRITE)
 def google_sync_calc_compute(
     ctx: typer.Context,
     modelo: _ModeloArg,
@@ -739,6 +750,8 @@ def register_google_sync_calc_commands(sync_app: typer.Typer) -> None:
     """Register the Google Sheets calculation sync subgroup."""
     sync_app.add_typer(calc_app, name="calc")
 
+
+declare_metadata_group(calc_app)
 
 __all__ = [
     "calc_app",

@@ -47,8 +47,10 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._execution_policies import BOOTSTRAP_WRITE
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileCapsuleSource, ProfileRestoreOutcome
@@ -133,6 +135,7 @@ def register_restore_commands(profile_app: typer.Typer) -> None:
     """Mount ``config profile restore`` on ``profile_app``."""
 
     @profile_app.command("restore", help=tr("cli.config.profile.restore.help"))
+    @command_execution_policy(BOOTSTRAP_WRITE)
     def profile_restore(
         ctx: typer.Context,
         label: str = typer.Argument(..., help=tr("cli.config.profile.restore.label_help")),

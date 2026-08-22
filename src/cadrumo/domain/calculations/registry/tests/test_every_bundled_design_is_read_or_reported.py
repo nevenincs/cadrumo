@@ -42,6 +42,7 @@ next author to bump a constant, and then detect nothing.
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -57,6 +58,12 @@ from .. import (
     RecordDesignHeaderCellCorrection,
     RecordDesignSinglePositionCorrection,
     extract_record_design,
+)
+from .._record_design import (
+    _collapse_stuttered_row_prefix,
+    _extract_pdf_text_lines,
+    _join_wrapped_row_descriptions,
+    _parse_pdf_row,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -134,6 +141,9 @@ class _Outcome:
     design: str
     kind: Literal["complete", "corrected", "partial", "refused"]
     detail: str
+    #: For a partial read, whether the artefact is a field TABLE (a parser gap)
+    #: or a form DIAGRAM (a corpus defect). Empty for every other outcome.
+    shape: str = ""
 
 
 def _bundled_designs() -> tuple[Path, ...]:
@@ -186,8 +196,42 @@ def _classify(path: Path) -> _Outcome:
         modelo=modelo,
         design=path.name,
         kind="partial",
+        shape=_partial_read_shape(path),
         detail=", ".join(f"{item.name!r} ({item.reason})" for item in extraction.skipped),
     )
+
+
+#: A published byte RULER: a long run of ascending positions AEAT prints across
+#: the top of a form diagram. Six is comfortably past any field row's numbers.
+_POSITION_RULER = re.compile(r"^\s*\d+(\s+\d+){6,}\s*$")
+
+
+def _partial_read_shape(path: Path) -> str:
+    """Return whether a partly-read design is a field TABLE or a form DIAGRAM.
+
+    The two need opposite work and the worklist could not tell them apart. A
+    TABLE is a real parser gap: thousands of rows parse and some drop, so fixing
+    it is parser work on this repository. A DIAGRAM is a corpus defect: AEAT
+    published a PICTURE of the form -- a position ruler along the top and
+    free-floating labels -- with no ordinal/offset/length rows anywhere, so no
+    parser change can read it and the fix is acquiring the tabular diseño.
+
+    Measured, not guessed: modelo 180's 2000 orden design yields 43 lines, ZERO
+    parseable rows and 8 rulers; modelo 200's 2010 edition yields 5,949 lines
+    and 2,654 parseable rows. Sending anyone to "fix the parser" for the former
+    would spend a tick proving it cannot be done -- which is how modelo 038's
+    identically-shaped design was found, the expensive way.
+    """
+    if path.suffix.lower() != ".pdf":
+        return "TABLE"
+    lines = _collapse_stuttered_row_prefix(
+        _join_wrapped_row_descriptions(_extract_pdf_text_lines(path.read_bytes(), source_label=path.name)),
+    )
+    rows = sum(1 for index, line in enumerate(lines) if _parse_pdf_row(line, index + 1) is not None)
+    if rows:
+        return "TABLE"
+    rulers = sum(1 for line in lines if _POSITION_RULER.match(line))
+    return f"DIAGRAM ({rulers} position ruler(s), 0 parseable field rows)"
 
 
 def _outcomes() -> tuple[_Outcome, ...]:
@@ -299,7 +343,12 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
         if outcome.kind in {"complete", "corrected"}:
             continue
         label = outcome.detail if outcome.kind == "refused" else "partial read: sheets skipped"
-        grouped[f"{outcome.kind.upper()} -- {label}"].append(f"modelo {outcome.modelo} {outcome.design!r}")
+        # A partial read carries its SHAPE on the line: the group tells you the
+        # symptom, the shape tells you which kind of work fixes it.
+        shape = f" [{outcome.shape}]" if outcome.shape else ""
+        grouped[f"{outcome.kind.upper()} -- {label}"].append(
+            f"modelo {outcome.modelo} {outcome.design!r}{shape}",
+        )
 
     report = "\n".join(
         f"  [{len(entries)}] {label}\n" + "\n".join(f"      {entry}" for entry in sorted(entries))

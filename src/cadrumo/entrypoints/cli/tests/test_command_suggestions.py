@@ -9,13 +9,37 @@ command (``app status`` -> ``app overview status``).
 from __future__ import annotations
 
 import pytest
+import typer
 
 from ....tests.cli_runner import invoke_cached_cli
+from .. import app
+from .._command_policy import CommandExecutionPolicy, command_execution_policy
+from .._command_schema import CommandCapabilityClass
+from .._command_suggestions import CadrumoTyperGroup, LazySubcommand, register_lazy_subcommand, walk_live_command_tree
 from ._runtime_profile_cli_fixture import _isolated_cli_state
 
 __all__ = ["_isolated_cli_state"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+_STATE_FREE_POLICY = CommandExecutionPolicy(
+    classification=CommandCapabilityClass(
+        capabilities=frozenset({"state-free"}),
+        side_effects=frozenset({"none"}),
+        performance="metadata",
+    ),
+    write_route="none",
+)
+
+_PROFILE_WRITE_POLICY = CommandExecutionPolicy(
+    classification=CommandCapabilityClass(
+        capabilities=frozenset({"encrypted-facts"}),
+        side_effects=frozenset({"local-state"}),
+        performance="local-io",
+    ),
+    write_route="profile-bound",
+)
 
 
 def test_profile_modify_suggests_edit() -> None:
@@ -50,3 +74,124 @@ def test_unknown_command_with_no_synonym_still_fails_cleanly() -> None:
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
+
+
+def test_live_command_walker_censuses_every_runtime_node_stably() -> None:
+    """The census reaches deep lazy leaves and emits stable ownership."""
+    first = walk_live_command_tree(app)
+    second = walk_live_command_tree(app)
+
+    assert first == second
+    assert first == tuple(sorted(first, key=lambda node: node.path))
+    assert len({node.path for node in first}) == len(first)
+    assert first[0].path == ("aeat",)
+    assert first[0].kind == "root"
+
+    by_path = {node.path: node for node in first}
+    assert by_path[("aeat", "config")].kind == "group"
+    assert by_path[("aeat", "config", "profile", "delete")].kind == "leaf"
+    assert by_path[("aeat", "app", "modelo", "work", "calculate")].kind == "leaf"
+    assert all(node.handler_owner != "<none>" for node in first if node.kind == "leaf")
+    assert any(node.loader_owner is not None for node in first)
+    assert all(":" in node.loader_owner for node in first if node.loader_owner is not None)
+    assert all(":" in node.handler_owner for node in first if node.handler_owner != "<none>")
+
+
+def test_live_command_walker_distinguishes_eager_and_lazy_ownership() -> None:
+    """An eager mount never borrows its handler's identity as loader ownership."""
+    root = typer.Typer(name="command-census-proof", cls=CadrumoTyperGroup)
+    eager = typer.Typer(name="eager", cls=CadrumoTyperGroup)
+
+    @eager.command("show")
+    def _show() -> None:
+        pass
+
+    root.add_typer(eager, name="eager")
+
+    def _load_lazy() -> typer.Typer:
+        lazy = typer.Typer(name="lazy", cls=CadrumoTyperGroup)
+
+        @lazy.command("run")
+        def _run() -> None:
+            pass
+
+        return lazy
+
+    register_lazy_subcommand("command-census-proof", LazySubcommand("lazy", _load_lazy))
+
+    first = walk_live_command_tree(root)
+    second = walk_live_command_tree(root)
+    by_path = {node.path: node for node in first}
+
+    assert first == second
+    assert by_path[("command-census-proof", "eager")].loader_owner is None
+    assert by_path[("command-census-proof", "lazy")].loader_owner == (
+        f"{__name__}:test_live_command_walker_distinguishes_eager_and_lazy_ownership.<locals>._load_lazy"
+    )
+    assert by_path[("command-census-proof", "lazy")].handler_owner.endswith(".<locals>._run")
+
+
+def test_live_command_walker_reads_policy_from_real_eager_and_lazy_callbacks() -> None:
+    """Policy survives both Typer decorator orders and lazy materialisation."""
+    root = typer.Typer(name="policy-census-proof", cls=CadrumoTyperGroup)
+    eager = typer.Typer(name="eager", cls=CadrumoTyperGroup, invoke_without_command=True)
+
+    @command_execution_policy(_STATE_FREE_POLICY)
+    @eager.callback()
+    def _eager_group() -> None:
+        pass
+
+    @eager.command("show")
+    @command_execution_policy(_STATE_FREE_POLICY)
+    def _show() -> None:
+        pass
+
+    root.add_typer(eager, name="eager")
+
+    def _load_lazy() -> typer.Typer:
+        lazy = typer.Typer(name="lazy", cls=CadrumoTyperGroup)
+
+        @lazy.callback()
+        def _lazy_group() -> None:
+            pass
+
+        @command_execution_policy(_PROFILE_WRITE_POLICY)
+        @lazy.command("run")
+        def _run() -> None:
+            pass
+
+        return lazy
+
+    register_lazy_subcommand("policy-census-proof", LazySubcommand("lazy", _load_lazy))
+
+    by_path = {node.path: node for node in walk_live_command_tree(root)}
+
+    assert by_path[("policy-census-proof",)].execution_policy is None
+    assert by_path[("policy-census-proof", "eager")].execution_policy == _STATE_FREE_POLICY
+    assert by_path[("policy-census-proof", "eager", "show")].execution_policy == _STATE_FREE_POLICY
+    assert by_path[("policy-census-proof", "lazy")].execution_policy is None
+    assert by_path[("policy-census-proof", "lazy", "run")].execution_policy == _PROFILE_WRITE_POLICY
+    assert by_path[("policy-census-proof", "lazy", "run")].handler_owner.endswith(".<locals>._run")
+
+
+def test_live_command_policy_is_callback_attached_not_path_inferred() -> None:
+    """The same operator path reports the callback's changed declaration."""
+
+    def census(policy: CommandExecutionPolicy) -> CommandExecutionPolicy | None:
+        probe = typer.Typer(name="policy-anti-tautology", cls=CadrumoTyperGroup)
+
+        @probe.callback()
+        def _root() -> None:
+            pass
+
+        @probe.command("same-path")
+        @command_execution_policy(policy)
+        def _handler() -> None:
+            pass
+
+        nodes = {node.path: node for node in walk_live_command_tree(probe)}
+        return nodes[("policy-anti-tautology", "same-path")].execution_policy
+
+    assert census(_STATE_FREE_POLICY) == _STATE_FREE_POLICY
+    assert census(_PROFILE_WRITE_POLICY) == _PROFILE_WRITE_POLICY
+    assert _STATE_FREE_POLICY != _PROFILE_WRITE_POLICY
