@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ffa8abc201a9b61febb15b33bf0c32da400314343c695467d4aac70a7600cccf'
+body_hash: 'sha256:84da50f79ccb1e889dd87dd92c1670d839ff5ee46740035f184c2a9f9604d55d'
 step_id: 'S03'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
