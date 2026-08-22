@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:ff4114b3c645a0b1ff6334bd48250b8e293e5fc2e19a6daf7fde479d458e3ce2'
+body_hash: 'sha256:11cf47c7f034b971256ecc1604835ac83bd7355fcc7d777d6b021e271842fcd2'
 ---
 
 # `source-casilla-integration` plan
@@ -47,6 +47,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S146` - make calculation-route ownership validation refuse renamed resolvers, invented pseudo-owners, and stage drift; `src/cadrumo/application/modelo`.
 - [x] `W01.P01.S145` - persist resolver identity through calculation source provenance and encrypted revision round trips; `src/cadrumo`.
 - [x] `W01.P01.S147` - make persisted source provenance internally coherent, identity-bearing, unambiguous, and strictly typed; `src/cadrumo`.
+- [ ] `W01.P01.S148` - require source provenance at every revision identity and persistence boundary and correct its identity contract; `src/cadrumo`.
 - [ ] `W01.P01.S141` - bind operator workflow authority validation to the full source connection identity; `src/cadrumo/core`.
 - [ ] `W01.P01.S142` - attach canonical calculation-route identity to reconciled supported operator workflows; `src/cadrumo/application/operator_surface`.
 - [ ] `W01.P01.S143` - derive live proof enrollment and exact workflow reachability from canonical calculation-route ownership; `src/cadrumo/application/registry`.
