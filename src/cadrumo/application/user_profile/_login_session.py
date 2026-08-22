@@ -91,7 +91,7 @@ from ._custody_ports import (
     ProfileSessionResumeOutcomePort,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
-    map_profile_password_proof_failure,
+    map_profile_authentication_proof_failure,
     profile_advance_session_idle_deadline,
     profile_bind_bucket_session,
     profile_is_keyring_unavailable,
@@ -1124,7 +1124,7 @@ def _authenticate_candidate_or_record_failure(
     try:
         unlocked = unlock_profile_custody_password(material, password=password)
     except BaseException as exc:
-        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
+        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
         if refusal is not None:
             master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
             raise refusal from exc

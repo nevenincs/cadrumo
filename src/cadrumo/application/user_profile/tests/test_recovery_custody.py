@@ -28,10 +28,11 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryArtifactWarning,
-    ProfileCustodyRecoverySecretError,
     create_profile_custody_sentinel,
 )
 from ....core.config import override_settings
+from ....core.errors import render_error_text
+from ....core.i18n import tr
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from .. import ProfileAuthenticationRefusedError, create_profile_custody_registration_material
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
@@ -246,7 +247,7 @@ def test_a_wrong_recovery_secret_is_refused(enrolled: _EnrolledProfile, tmp_path
     enrolled.export(target)
     wrong = " ".join(["abandon"] * 23 + ["art"])
 
-    with pytest.raises((ProfileCustodyRecoverySecretError, ProfileCustodyRecordError)):
+    with pytest.raises(ProfileAuthenticationRefusedError) as refused:
         restore_profile_from_recovery_artifact(
             label="Refused",
             artifact_source=target,
@@ -256,6 +257,40 @@ def test_a_wrong_recovery_secret_is_refused(enrolled: _EnrolledProfile, tmp_path
             database_bytes=enrolled.database_bytes,
             root=tmp_path / "refused",
         )
+    assert refused.value.translated_message == "application.user_profile.errors.profile_authentication_refused"
+    assert refused.value.context is None
+    with override_settings(cadrumo_output_language="es"):
+        rendered = render_error_text(refused.value)
+    assert tr("application.user_profile.errors.profile_authentication_refused", locale="es") in rendered
+    assert "profile recovery secret did not authenticate" not in rendered
+    assert "application.user_profile.errors.profile_authentication_refused" not in rendered
+    assert "INTERNAL" not in rendered
+    assert "Traceback" not in rendered
+    assert wrong not in rendered
+
+
+def test_a_malformed_recovery_secret_is_the_same_public_refusal(
+    enrolled: _EnrolledProfile,
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "exports" / "malformed-recovery.json"
+    destination = tmp_path / "malformed-refused"
+    malformed_candidate = "\ud800"
+    enrolled.export(target)
+
+    with pytest.raises(ProfileAuthenticationRefusedError) as refused:
+        restore_profile_from_recovery_artifact(
+            label="Refused",
+            artifact_source=target,
+            recovery_secret=malformed_candidate,
+            password_envelope=enrolled.envelope,
+            sentinel=enrolled.sentinel,
+            database_bytes=enrolled.database_bytes,
+            root=destination,
+        )
+
+    assert refused.value.context is None
+    assert not (destination / "buckets" / str(enrolled.profile_id)).exists()
 
 
 def test_an_artifact_cannot_become_another_profiles_authority(
@@ -581,7 +616,7 @@ def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
 
     with generate_recovery_key() as impostor:
         assert impostor.mnemonic != enrolled.enrollment.recovery_key.mnemonic
-        with pytest.raises(ProfileCustodyRecoverySecretError):
+        with pytest.raises(ProfileAuthenticationRefusedError) as refused:
             restore_profile_from_recovery_artifact(
                 label="Refused",
                 artifact_source=artifact,
@@ -591,5 +626,7 @@ def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
                 database_bytes=enrolled.database_bytes,
                 root=destination,
             )
+
+    assert refused.value.context is None
 
     assert not (destination / "buckets" / str(enrolled.profile_id)).exists()

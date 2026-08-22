@@ -1011,15 +1011,19 @@ def unlock_profile_custody_password(
     )
 
 
-def map_profile_password_proof_failure(
+def map_profile_authentication_proof_failure(
     error: BaseException,
     *,
     operation: ProfilePasswordProofOperation,
 ) -> ProfileAuthenticationRefusedError | None:
-    """Collapse password shape and proof failures for one named capability."""
-    if not isinstance(error, custody.ProfileCustodyPasswordError):
+    """Collapse credential shape and proof failures for one named capability."""
+    expected = (
+        custody.ProfileCustodyRecoverySecretError
+        if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE
+        else custody.ProfileCustodyPasswordError
+    )
+    if not isinstance(error, expected):
         return None
-    _ = operation
     return ProfileAuthenticationRefusedError()
 
 
@@ -1199,7 +1203,7 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "map_profile_password_proof_failure",
+    "map_profile_authentication_proof_failure",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_custody_owner_root",

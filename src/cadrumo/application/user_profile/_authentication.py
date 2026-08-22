@@ -8,11 +8,12 @@ from ...core.errors import CadrumoError
 
 
 class ProfilePasswordProofOperation(StrEnum):
-    """Existing-secret capabilities that deliberately share one public refusal."""
+    """Existing-credential capabilities that deliberately share one public refusal."""
 
     LOGIN = "login"
     RESTORE = "password_restore"
     RECOVERY_EXPORT = "recovery_export"
+    RECOVERY_RESTORE = "recovery_restore"
     ROTATION = "password_rotation"
 
 

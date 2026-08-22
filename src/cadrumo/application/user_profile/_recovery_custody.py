@@ -47,7 +47,7 @@ from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
     create_profile_recovery_enrollment_material,
-    map_profile_password_proof_failure,
+    map_profile_authentication_proof_failure,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
 )
@@ -173,7 +173,7 @@ def export_profile_recovery_artifact(
             target=target,
         )
     except BaseException as exc:
-        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.RECOVERY_EXPORT)
+        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.RECOVERY_EXPORT)
         if refusal is None:
             raise
         raise refusal from exc
@@ -213,7 +213,7 @@ def restore_profile_with_password(
             password=password,
         )
     except BaseException as exc:
-        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.RESTORE)
+        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.RESTORE)
         if refusal is None:
             raise
         raise refusal from exc
@@ -260,13 +260,21 @@ def restore_profile_from_recovery_artifact(
     epoch, checked once on read and again on unlock, so an artifact minted
     for another profile cannot become this one's authority.
     """
-    proof = prove_profile_recovery_artifact(
-        artifact_source,
-        recovery_secret=recovery_secret,
-        expected_profile_id=password_envelope.profile_id,
-        expected_dek_epoch=password_envelope.dek_epoch,
-        sentinel=sentinel,
-    )
+    try:
+        proof = prove_profile_recovery_artifact(
+            artifact_source,
+            recovery_secret=recovery_secret,
+            expected_profile_id=password_envelope.profile_id,
+            expected_dek_epoch=password_envelope.dek_epoch,
+            sentinel=sentinel,
+        )
+    except BaseException as exc:
+        refusal = map_profile_authentication_proof_failure(
+            exc, operation=ProfilePasswordProofOperation.RECOVERY_RESTORE
+        )
+        if refusal is None:
+            raise
+        raise refusal from exc
     return _publish_restored_capsule(
         label=label,
         password_envelope=password_envelope,

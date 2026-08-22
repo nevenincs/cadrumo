@@ -44,7 +44,7 @@ from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from ._custody_ports import (
     create_profile_custody_registration_material,
-    map_profile_password_proof_failure,
+    map_profile_authentication_proof_failure,
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,
 )
@@ -152,7 +152,7 @@ def rotate_profile_passphrase(
             # that keeps the adapter's error family off this port. Anything
             # that is not a password-proof refusal is a different fault and
             # travels on unchanged.
-            refusal = map_profile_password_proof_failure(
+            refusal = map_profile_authentication_proof_failure(
                 exc,
                 operation=ProfilePasswordProofOperation.ROTATION,
             )
