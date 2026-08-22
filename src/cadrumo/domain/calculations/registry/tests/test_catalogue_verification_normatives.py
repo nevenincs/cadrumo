@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -604,7 +605,14 @@ def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_art
         if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
             offenders.append(rel_path)
 
-    assert "revisions/2025/formulas/0068-renta-2025-retenciones-arrendamientos-urbanos.toml" in checked
+    # Anchored on the fragment's IDENTITY, not on its ordinal prefix. The prefix
+    # is a position within the directory and renumbers whenever a sibling
+    # fragment is added or removed -- this pinned `0068-` and broke when the
+    # same fragment became `0069-`, which says nothing about the property under
+    # test. The stem names the formula; that is what has to still be checked.
+    anchor = "revisions/2025/formulas/renta-2025-retenciones-arrendamientos-urbanos.toml"
+    stems = {re.sub(r"/\d+-", "/", rel_path) for rel_path in checked}
+    assert anchor in stems, f"{anchor} is no longer among the checked retención formulas: {sorted(stems)[:6]}"
     assert offenders == []
 
 
