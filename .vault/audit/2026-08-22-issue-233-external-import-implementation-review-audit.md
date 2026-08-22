@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:8863d184dbd9051a4ad5ae56420dfe223f2da9acad8449f78e343ccbd24d71fc'
+body_hash: 'sha256:dd63badce0066ae4df5156fed65408e10b8fab052ca8a7b04fdb06222634ec02'
 related: []
 ---
 
@@ -113,6 +113,34 @@ The hyphenated justificante fixtures and the strict uppercase-alphanumeric
 that failure and does not weaken or rewrite it. The corrective application,
 spreadsheet, and CLI lanes are green.
 
+### corrective-csv-slice-verification | low | The four prior HIGH findings are resolved for the bounded CSV/XLSX tranche
+
+Independent re-review of corrective commit
+`53bb9890bfbcec5bb085c94f9f620ca319a756e6` confirms the production CLI now
+routes a real CSV/XLSX manifest through lexical parsing and the shared source
+service; registry-required numeric IDs independently define completeness; all
+source, registry, policy, actor, and justificante refusal checks visible on the
+new path occur before a missing work unit can be created; and secure baseline
+persistence continues through the established filing/revision/work-unit/event
+co-commit. The focused application/parser lane passed 37 selected tests, the
+explicit integration lane passed its real CLI test, and Ruff passed every
+touched Python file. The two previously reported adjacent tests remain red for
+conditions byte-identical to `origin/main`: the hyphenated justificante fixture
+is rejected before import and the pre-existing no-op amendment expectation does
+not raise. This correction does not connect PDF/live casilla extraction and its
+CLI contract requires an existing positional work unit, so it is partial
+CSV/XLSX progress rather than issue closure.
+
+### csv-file-help-is-not-localized | medium | The new CLI option bypasses the supported locale contract
+
+The `--file` option introduces the raw English help literal `CSV/XLSX casilla
+manifest source` instead of resolving a `tr(...)` key. The option is therefore
+English-only across the supported locale surface even though every sibling
+filing-import help string uses the catalogue. Add a real translation key and
+values through the locale CLI for every supported catalogue, use that key in
+the Typer option, and run the locale scaffold/audit gates. This is the sole open
+finding in the corrective CSV/XLSX slice.
+
 ## Recommendations
 
 Do not integrate or close issue 233 at this commit. Wire at least the authorized
@@ -121,3 +149,9 @@ registry/source authority, make create-plus-import atomic, and restore the
 adjacent import/amendment gate. Preserve the useful exact-token behavior: the
 new focused test proves outer whitespace survives unchanged while Decimal
 values and all three evidence enums reach an immediately amendable baseline.
+
+Corrective re-review recommendation: retain the CSV/XLSX implementation and
+its independent completeness/prevalidation tests, but correct the localized
+CLI help before merging this partial tranche. Do not close issue 233 on that
+merge: PDF/live source wiring and a create-capable operator flow remain outside
+the demonstrated production path.
