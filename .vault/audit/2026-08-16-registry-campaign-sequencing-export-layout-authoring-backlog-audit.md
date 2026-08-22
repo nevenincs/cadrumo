@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c70d40c5aa411551564e5dd99d9e3e23cbfbb15cf1f7416c7fb1493d4d722798'
+body_hash: 'sha256:1032d0e572cc61ab21cc1f797b2c6db0382957e1f38934490e027a27e35d0d87'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13021,3 +13021,116 @@ casilla-schema and deadline-window job before it is a layout job.
 
 The other five blocked revisions need an era-matching design acquired before any
 layout can be authored against them.
+
+## Tick: modelo 840's applicability authored, and nine authored rules found dead
+
+Re-measured at tick start: authority loads CLEAN. With the queue closed, the work
+is the twelve revisions that declare no export layout, and modelo 840 was last
+tick's next target on evidence.
+
+### The family worklist, and the one piece that was groundable
+
+Modelo 840 needs eight families resolved before it could claim the filing rung:
+applicability, bindings, dependency_classifications, export_layouts, parameters,
+projection_endpoints, verification_expectations and verification_predicates. Its
+`deadline_windows` family is already resolved at zero, which is right -- an IAE
+alta, variación or baja is filed on an event, and its schedule is declared
+`modelo-840-ad-hoc`.
+
+`applicability` is the one of those eight that is fully groundable from sources
+the revision already cites, so it is what was authored.
+
+### Grounded on the exemption article, read from the bundled corpus
+
+The IAE taxes the mere exercise of an activity in Spanish territory (TRLRHL art.
+78), and Modelo 840 declares alta, variación or baja in the impuesto's matrícula
+(art. 90; Orden HAC/2572/2003, apartado primero). What decides who the modelo
+reaches is the EXEMPTION article, and it was read rather than recalled:
+
+art. 82.1.c) exempts "las personas físicas, sean o no residentes en territorio
+español" with NO turnover condition attached. A natural person therefore never
+causes alta through this modelo, however large the activity. The same letter
+exempts IS taxpayers and art. 35.4 LGT entities only while their importe neto de
+la cifra de negocios stays under 1.000.000 euros -- a conditional exemption on an
+axis the taxpayer profile does not carry, so the rule scopes on entity type and
+says in its own prose that the turnover cut is resolved elsewhere.
+
+The rule is `legal_entity` + `attribution_entity`, resident route, and NOT
+cuota-bearing: `cuota_bearing` marks a cuota SELF-ASSESSMENT, and the IAE cuota
+is liquidated by the administration from the matrícula. Getting that flag wrong
+would also have changed the attribution-entity verdict, so it is load-bearing
+rather than decorative. The non-resident route is deliberately out of scope and
+says why: art. 82.1.c) conditions the IRNR exemption on operating through an
+establecimiento permanente, an axis the profile does not model -- the same
+reason modelo 200 states for its own residency scope.
+
+### Nine authored applicability rules were dead
+
+Authoring 840 exposed a much larger defect. A registry-authored rule only reaches
+the engine if its modelo is enrolled in `REGISTRY_RESOLVED_APPLICABILITY_MODELOS`,
+and nine modelos -- 136, 145, 151, 210, 216, 232, 296, 360 and 714 -- carried
+applicability rules authored and loader-validated in their trees while absent
+from that set. `has_applicability_rule` answered False for every one of them and
+every profile got INCOMPLETE. Authored regulatory data that nothing reads is the
+dormant-capacity failure this registry keeps meeting, and it had gone unnoticed
+because the test guarding the surface pinned a hand-maintained LIST OF IDS, which
+agreed with itself while the gap opened.
+
+All nine are enrolled and now produce real verdicts with grounded citations.
+Modelos 216 and 296 answer INCOMPLETE for a plain sociedad profile, which is
+correct rather than dead -- they scope on axes that profile does not declare, and
+`has_applicability_rule` is now True for them. Only modelo 390 remains authored
+and unenrolled, which is the documented literal-table case.
+
+The guarding test now asserts the PROPERTY: what the package exposes equals what
+the registry authors plus the modelos still resolved from the literal table. A
+rule authored without enrolment fails it, and so does an enrolment with no rule
+behind it. No id list to maintain, and no tally to go stale.
+
+### The cutover docstring said something that stopped being true
+
+It described its members as arriving by MIGRATION, each "hydration-verified equal
+to the literal it replaces". Modelo 840 has no literal to be verified against --
+it arrived by AUTHORING, grounded on the articles and asserted with real-profile
+verdicts. The docstring now distinguishes the two provenances, because a migrated
+entry's guarantee is equivalence while an authored entry's is its citations and
+its tests, and it no longer states a count of either.
+
+### Two tests were asserting the un-ruled path against a ruled modelo
+
+`test_modelo_without_seed_rule_is_incomplete` and its sibling both used modelo
+232 as their example of a modelo with no rule. 232 now has one, so both were
+asserting the un-ruled rationale against a modelo that is ruled. Their subject is
+the un-ruled PATH, not 232, so the subject is now selected at run time from what
+the engine actually reports, with an assertion that names the day this becomes
+unreachable: when every modelo carries a rule, the rationale is dead code and
+these tests retire with it.
+
+### Verified
+
+* modelo 840 applicability: 7 passed, including the enrolment property test.
+* every applicability test across the tree: 200 passed, up from 198.
+* authority loads CLEAN.
+* bite proof: deleting the authored rule file reds all seven, and the tracked
+  fragment restored byte-exactly.
+* attribution control on the three filing-layer failures: with the nine
+  enrolments removed and restored byte-exactly, those modules fail 12 and pass 7
+  in BOTH states, so they are independent of this tick's change rather than
+  assumed to be.
+
+### Still open
+
+`filing_producer_values` asserts it resolves every `FilingProducerKey` and
+raises otherwise. Measured by AST: the enum declares 508 members while the
+resolver references 38. The bulk are generated per-modelo keys -- m200 135, m296
+112, irnr 102, m360 70, m222 23, m202 18 -- against roughly forty hand-written
+cross-modelo identities (taxpayer, contact_person, amendment_evidence,
+selected_account, m303). The exhaustiveness assertion cannot be satisfied by the
+hand-written resolver while generated per-modelo keys share the one enum, so this
+is a design question -- split the enum, or compose per-modelo producers -- on a
+surface the export-fragment-generator-authority campaign owns. Recorded rather
+than fixed for that reason: it is a filing-grade architecture decision, not a
+mechanical fill, and guessing it would be inventing a contract.
+
+Modelo 840 still needs seven more families before the filing rung, and its 381
+design fields need casilla schemas before a layout can anchor to anything.

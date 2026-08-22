@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcd074e7ac982673ec96696d6707b93ff9ef97d5333330fae3631e68ed111c41'
+body_hash: 'sha256:a61971fea9d7d3d9a8e22ce051a51f4e95bcf378bd68c8d821958da796c07b9a'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1888,7 +1888,6 @@ done), committed baselines that shift by exactly the duplicated-casilla count, b
 and export records that move relative to their revision, and a layout gate that the split
 does not satisfy at all.
 
-
 ### the-m347-binding-failure-is-the-test-not-the-data | medium | and a false content-loss finding was caught mid-diagnosis
 
 The last undiagnosed split-fallout failure,
@@ -1929,7 +1928,6 @@ With this the split-fallout map is complete: stale fragment names (fixed), a rat
 baseline shifted by exactly the duplicated-casilla count (diagnosed, branch identified),
 a layout gate the split cannot satisfy (recorded), and a test expectation that followed a
 revision id but not its semantics.
-
 
 ## Recommendations
 
