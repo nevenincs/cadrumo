@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b17b93ed9de4927bd066b1eaf58f54a935560b4a47524804af6b0beec931f711'
+body_hash: 'sha256:9baf4833595caa62bd601eeaa155b0e806d6efc672b223db0b3ece4b66d90623'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -124,6 +124,29 @@ The corrected `SourceConnectivityCensusRow` docstring describes evidence and
 accountability for all dispositions and the additional relational proof required
 for a connected row. This closes `stale-connected-proof-docstring`.
 
+### live-authority-correction | low | Explicit enrollment, workflow, and digest authority closes the remaining connected-proof blocker
+
+Corrective commit `fdaa3930ad` makes authority-backed validation mandatory for
+every `connected` row. Direct model validation without authority is refused. The
+core-owned `SourceConnectivityProofAuthority` protocol asks its caller to verify
+live source enrollment, supported entrypoint and command membership, and the
+current content digest of every executable artifact. Core imports no application
+policy and reads no filesystem, network, wall clock, or process-global state, so
+the protocol creates neither a circular dependency nor ambient validation.
+
+A final probe used a review authority that admitted only
+`BindingSourceKind.PROFILE`, the exact `cli.modelo` / `modelo.calculate`
+workflow, and SHA-256 recomputed from an existing repository test module. The
+coherent proof passed. The same authority refused the deferred
+`RELATED_PARTY_OPERATION` source, command id `anything`, a nonexistent
+test-shaped locator, and a mismatched digest. Validation without authority also
+failed. Separate mutation probes confirmed that evidence carrying the wrong
+role or a different connection remains invalid. Role-specific evidence identity,
+shared candidate/source-object/resolver/revision identity, strict true booleans,
+and digest equality therefore compose into one fail-closed admission contract.
+This closes `enrollment-evidence-remains-asserted` and the remaining portion of
+`disconnected-attestations`; S04 is unblocked.
+
 ## Recommendations
 
 - For `disconnected-attestations`, bind all proof components to one stable
@@ -156,3 +179,8 @@ for a connected row. This closes `stale-connected-proof-docstring`.
 - S04 remains blocked until the remaining HIGH finding is closed or the same
   commit establishes a mandatory, non-bypassable live-authority validator that
   makes invented/deferred proof records impossible at census admission.
+- `live-authority-correction` satisfies that condition. Proceed to S04 while
+  preserving authority-backed construction as the only admission path for
+  connected census rows. The later census builder and ratchet must implement the
+  protocol from canonical live enrollment, command-catalogue, and repository
+  digest authorities rather than caller assertions.
