@@ -17,6 +17,7 @@ from typing import Annotated
 import typer
 
 from ...application.modelo import (
+    ExternalFilingBaselineSource,
     ExternalModeloImportError,
     ModeloLocalObservationError,
     ModeloRecordNotFoundError,
@@ -25,9 +26,12 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     get_filing_record,
     get_verification_report,
+    get_work_unit,
     import_external_filing_evidence,
+    import_external_filing_source,
     list_filing_records,
     list_verification_reports,
+    parse_casilla_lexical_spreadsheet,
     parse_casilla_value_spreadsheet,
     record_operator_local_observation,
 )
@@ -256,6 +260,15 @@ def filing_record_import(
             help=tr("cli.app.modelo.filing_record.import_casilla_help"),
         ),
     ] = None,
+    file: Annotated[
+        Path | None,
+        typer.Option(
+            "--file",
+            exists=True,
+            dir_okay=False,
+            help=tr("cli.app.modelo.filing_record.import_file_help"),
+        ),
+    ] = None,
 ) -> None:
     """Import AEAT external evidence as a current :class:`ModeloRecord`.
 
@@ -268,30 +281,50 @@ def filing_record_import(
     this application.
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
+    if file is not None and set_overrides:
+        raise typer.BadParameter("filing-record import accepts either --file or --set, not both")
     casilla_values: dict[CasillaId, Decimal] = {}
     for spec in set_overrides or ():
         key, value = _casilla_value(spec)
         casilla_values[key] = value
-    if not casilla_values:
+    if not casilla_values and file is None:
         raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
 
     try:
         from ...application.workflow import workflow_state_repository
 
         expected_tax_id = _declared_tax_id(workflow_state_repository().load().active_profile_record())
-        record = import_external_filing_evidence(
-            work_unit_id=validated_work_unit_id,
-            casilla_values=casilla_values,
-            evidence_kind=evidence_kind,
-            evidence_reference_id=evidence_reference_id,
-            actor=actor or _actor(),
-            expected_tax_id=expected_tax_id,
-        )
+        if file is not None:
+            work_unit = get_work_unit(validated_work_unit_id)
+            record = import_external_filing_source(
+                ExternalFilingBaselineSource(
+                    modelo=str(work_unit.modelo),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                    registry_revision_id=work_unit.revision_id,
+                    evidence_kind=evidence_kind,
+                    evidence_reference_id=evidence_reference_id,
+                    tax_id=expected_tax_id or "",
+                    casilla_lexicals=parse_casilla_lexical_spreadsheet(file),
+                ),
+                bucket_id=work_unit.bucket_id,
+                actor=actor or _actor(),
+            )
+        else:
+            record = import_external_filing_evidence(
+                work_unit_id=validated_work_unit_id,
+                casilla_values=casilla_values,
+                evidence_kind=evidence_kind,
+                evidence_reference_id=evidence_reference_id,
+                actor=actor or _actor(),
+                expected_tax_id=expected_tax_id,
+            )
     except WorkUnitMutationRefusedError:
         raise
     except (
         WorkUnitNotFoundError,
         ExternalModeloImportError,
+        ModeloLocalObservationError,
     ) as exc:
         raise _bad_from_error(exc) from exc
 

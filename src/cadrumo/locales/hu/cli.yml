@@ -793,6 +793,8 @@ cli:
         filing_record_id_help: Stabil benyújtási rekord-azonosító.
         import_casilla_help: Importált mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
+        import_file_help: A külső bevallási forrásból exportált CSV- vagy XLSX-casillajegyzék
+          elérési útja.
         import_help: Külsőleg benyújtott bevallás megőrzése alap-benyújtási rekordként,
           importált AEAT-igazolt bizonyítékkal.
         import_set_required: A --set legalább egyszer kötelező importáláshoz.
