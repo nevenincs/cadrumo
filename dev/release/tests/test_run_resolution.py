@@ -410,7 +410,7 @@ def test_dispatch_workflow_invokes_gh_workflow_run_with_expected_arguments(tmp_p
 
     rr.dispatch_workflow(
         _WORKFLOW,
-        ref="main",
+        ref=_HEAD_SHA,
         repo_slug="nevenincs/cadrumo",
         gh_executable=str(script),
     )
@@ -419,7 +419,7 @@ def test_dispatch_workflow_invokes_gh_workflow_run_with_expected_arguments(tmp_p
     assert argv[:2] == ["workflow", "run"]
     assert _WORKFLOW in argv
     assert "--repo" in argv and "nevenincs/cadrumo" in argv
-    assert "--ref" in argv and "main" in argv
+    assert "--ref" in argv and _HEAD_SHA in argv
 
 
 def test_dispatch_workflow_passes_inputs_as_repeated_f_flags(tmp_path: Path) -> None:
@@ -429,6 +429,7 @@ def test_dispatch_workflow_passes_inputs_as_repeated_f_flags(tmp_path: Path) -> 
 
     rr.dispatch_workflow(
         _WORKFLOW,
+        ref=_HEAD_SHA,
         inputs={"source_run_id": "123", "source_commit": _HEAD_SHA},
         gh_executable=str(script),
     )
@@ -443,7 +444,7 @@ def test_dispatch_workflow_raises_on_gh_failure(tmp_path: Path) -> None:
     """A non-zero gh exit becomes a RunResolutionError, never a silent no-op."""
     script = _write_probe_gh(tmp_path / "bin", payload="boom", exit_code=1)
     with pytest.raises(rr.RunResolutionError, match="failed"):
-        rr.dispatch_workflow(_WORKFLOW, gh_executable=str(script))
+        rr.dispatch_workflow(_WORKFLOW, ref=_HEAD_SHA, gh_executable=str(script))
 
 
 def test_list_workflow_runs_parses_real_subprocess_output(tmp_path: Path) -> None:
@@ -476,13 +477,13 @@ def test_an_explicit_nonexistent_gh_executable_raises_instructively(tmp_path: Pa
     """Mirrors ``environment_inventory``'s injection contract: an explicit path is trusted, not searched."""
     missing = tmp_path / "bin" / "definitely-not-gh"
     with pytest.raises(rr.RunResolutionError, match="could not be run"):
-        rr.dispatch_workflow(_WORKFLOW, gh_executable=str(missing))
+        rr.dispatch_workflow(_WORKFLOW, ref=_HEAD_SHA, gh_executable=str(missing))
 
 
 def test_gh_absent_from_path_raises_instructively() -> None:
     """With no explicit override, resolution falls back to a real PATH search."""
     with scoped_env_var("PATH", ""), pytest.raises(rr.RunResolutionError, match="not found on PATH"):
-        rr.dispatch_workflow(_WORKFLOW, gh_executable=None)
+        rr.dispatch_workflow(_WORKFLOW, ref=_HEAD_SHA, gh_executable=None)
 
 
 # ---------------------------------------------------------------------------
@@ -505,6 +506,41 @@ def test_dispatch_and_resolve_composes_dispatch_then_resolve(tmp_path: Path) -> 
         now=lambda: fixed_now,
         sleep=lambda _seconds: None,
     )
+    assert resolved.run_id == "77"
+
+
+def test_dispatch_and_resolution_share_the_same_immutable_revision_when_main_advances(tmp_path: Path) -> None:
+    """A moved ``main`` cannot make dispatch and resolution watch different commits.
+
+    The release chose ``_HEAD_SHA`` before another commit advanced ``main`` to
+    ``_OTHER_SHA``. The real subprocess boundary must receive the chosen SHA as
+    ``--ref`` while resolution ignores the newer main run and selects the run
+    created at that same chosen SHA.
+    """
+    capture = tmp_path / "argv.txt"
+    script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
+    fixed_now = datetime(2026, 8, 2, 9, 0, 0, tzinfo=UTC)
+    advanced_main = _run_record(
+        run_id=78,
+        head_sha=_OTHER_SHA,
+        created_at=fixed_now + timedelta(milliseconds=500),
+    )
+    chosen_revision = _run_record(run_id=77, created_at=fixed_now + timedelta(seconds=1))
+
+    resolved = rr.dispatch_and_resolve(
+        _WORKFLOW,
+        head_sha=_HEAD_SHA,
+        resolve_budget=rr.PollBudget(total_seconds=30, initial_interval_seconds=1, max_interval_seconds=5),
+        gh_executable=str(script),
+        list_runs=lambda: (advanced_main, chosen_revision),
+        now=lambda: fixed_now,
+        sleep=lambda _seconds: None,
+    )
+
+    argv = _read_argv(capture)
+    assert argv[argv.index("--ref") + 1] == _HEAD_SHA
+    assert _OTHER_SHA not in argv
+    assert resolved.head_sha == _HEAD_SHA
     assert resolved.run_id == "77"
 
 

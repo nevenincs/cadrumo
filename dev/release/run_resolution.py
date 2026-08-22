@@ -16,7 +16,8 @@ identify-MY-run hazard this module exists to close. It closes both gaps:
   in the API yet). More than one match raises :class:`RunResolutionError`
   naming every candidate — a competing run landed in the same window, and this
   module never guesses which is "mine".
-* :func:`dispatch_and_resolve` composes both, capturing the created-after
+* :func:`dispatch_and_resolve` composes both, dispatching the exact immutable
+  ``head_sha`` it will use for resolution and capturing the created-after
   timestamp itself immediately before dispatching.
 * :func:`wait_for_run` and :func:`wait_for_conclusion` wrap resolution and
   conclusion polling in a bounded exponential-backoff loop against an
@@ -161,7 +162,7 @@ def _run_gh(gh: str, arguments: Sequence[str]) -> str:
 def dispatch_workflow(
     workflow_path: str,
     *,
-    ref: str = "main",
+    ref: str,
     inputs: Mapping[str, str] | None = None,
     repo_slug: str = _DEFAULT_REPO_SLUG,
     gh_executable: str | None = None,
@@ -362,7 +363,6 @@ def dispatch_and_resolve(
     workflow_path: str,
     *,
     head_sha: str,
-    ref: str = "main",
     inputs: Mapping[str, str] | None = None,
     resolve_budget: PollBudget,
     repo_slug: str = _DEFAULT_REPO_SLUG,
@@ -374,13 +374,22 @@ def dispatch_and_resolve(
     """Dispatch one workflow and resolve the run IT started.
 
     Captures ``created_after`` from ``now()`` immediately before dispatching,
-    then dispatches and polls for the dispatch's own run. This is the single
-    entry point the orchestrator (built in a later Wave) is expected to call;
+    dispatches the workflow at the same immutable ``head_sha`` resolution will
+    match, then polls for that run. A mutable branch ref is deliberately not an
+    option here: if ``main`` advances between the release bump and dispatch,
+    dispatching ``main`` while resolving the bumped SHA can never converge.
+    This is the single entry point the orchestrator is expected to call;
     :func:`dispatch_workflow` and :func:`resolve_dispatched_run` stay exposed
     separately for finer-grained composition and testing.
     """
     created_after = now()
-    dispatch_workflow(workflow_path, ref=ref, inputs=inputs, repo_slug=repo_slug, gh_executable=gh_executable)
+    dispatch_workflow(
+        workflow_path,
+        ref=head_sha,
+        inputs=inputs,
+        repo_slug=repo_slug,
+        gh_executable=gh_executable,
+    )
     return wait_for_run(
         workflow_path=workflow_path,
         head_sha=head_sha,
@@ -504,7 +513,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Dispatch a workflow and wait for the run this dispatch started.")
     parser.add_argument("--workflow", required=True)
     parser.add_argument("--head-sha", required=True)
-    parser.add_argument("--ref", default="main")
     parser.add_argument("--input", action="append", default=[], metavar="KEY=VALUE")
     parser.add_argument("--repository", default=_DEFAULT_REPO_SLUG)
     parser.add_argument("--resolve-seconds", type=float, default=600.0)
@@ -523,7 +531,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     run = dispatch_and_resolve(
         args.workflow,
         head_sha=args.head_sha,
-        ref=args.ref,
         inputs=inputs,
         resolve_budget=PollBudget(total_seconds=args.resolve_seconds),
         repo_slug=args.repository,
