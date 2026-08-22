@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1547c84f82f1ef45b3666e69e24dcbf16e76e603479e89eadb39701c9d491e61'
+body_hash: 'sha256:793c9718962e26eb38491a80b42ffa644d742560f133edf86af62d43a73a93a0'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14869,3 +14869,62 @@ because that is what the printed-annex evidence supports.
 The eight inventories. Modelo 840's 43 blank Spanish labels are the peer's
 in-flight work -- their own commit says "72 of 108 coverage" -- and that honesty
 gate is red from it, not from this tick.
+
+## Tick: modelo 188 can file -- the first capability line closed, on the model the annex evidence supports
+
+Re-measured at tick start: authority CLEAN, last tick's revert holding (188
+declares `01`-`05`), the printed-box gate green. Last tick ended on a modelling
+question that gated three worklist lines; this tick settled it with evidence and
+then authored against the answer.
+
+### The question, settled by reading the tree rather than choosing
+
+Last tick's failed attempt modelled the perceptor rows as casillas and a grounded
+gate refused it. The open question was whether modelo 190 -- which DOES carry 60
+`perc.*` casillas with byte-range numbers -- is the exception or the rule.
+
+It is neither, and the dichotomy was false. **Modelo 720 declares a
+binding-derived record with no row casillas at all**: `binding_record =
+"type_1"`, fields supplied entirely by bindings whose ids encode the
+coordinates (`modelo-720-2013.type_1.18-57.apellidos-y-nombre-...`). So a detail
+record does not require detail casillas; 190's are the layout's row-field
+targets, which a `row_field_casilla_ids` record needs and a plain
+`binding_record` record does not.
+
+That resolves the conflict without touching either gate: casillas stay what the
+printed annex numbers, and record positions become bindings.
+
+### What was authored
+
+* **40 field bindings**, generated from the bundled diseño so every offset and
+  length is read rather than transcribed -- 17 for the hoja resumen and 23 for
+  the hojas interiores de relación de perceptores, the two records Orden de 17 de
+  noviembre de 1999 apartado quinto approves.
+* **The fichero AEAT layout**, two records, the perceptor one repeating.
+* **An `export` application link**, which the registry demanded outright: a
+  revision declaring an export layout must name the consumer that emits it. That
+  refusal is a good one -- it caught a layout that would otherwise have been
+  declared with nothing able to emit it.
+
+No casillas and therefore no new locale strings: the binding model avoids the
+72-label burden the casilla attempt carried, which is a second reason to prefer
+it here.
+
+### Verified
+
+* both records derive to **exactly 250 bytes with zero holes**, tiling the
+  length the diseño declares. That is the property queue items 3 and 4 are about,
+  proved here at authoring time rather than found later as a short record.
+* the filing-capability worklist drops from **13 revisions across 12 modelos to
+  12 across 11**. Modelo 188 is the first line this campaign has closed.
+* the printed-box-set gate, the modelo 188 resumen grounding gate and schema
+  hygiene all pass -- 23 tests across the gates this change touches.
+* registry + generated-tree + application/registry: **8 failed, 5956 passed**,
+  the eight declared inventories and nothing else, with the tree measured
+  quiescent (0/0/0) across the whole run.
+
+### Still open
+
+The eight inventories. The same binding-derived shape now applies directly to
+modelos 187 and 194, whose designs are the same informativa layout and whose
+printed-box gates pin the same `01`-`05` casilla sets; each is a tick.

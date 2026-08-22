@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f2ac44d3bfadf26d3ca21d6b5d895bed68bd803e8acea65549f130f9df3ba5f'
+body_hash: 'sha256:1cce47278183818287ac45056db5586faea2158a1df923ec6eec79cf89e9d1b6'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
 ---
